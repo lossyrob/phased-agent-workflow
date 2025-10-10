@@ -32,7 +32,31 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 ## Getting Started
 
 - Copy the .github/chatmodes into your repository's `.github/chatmodes` folder. This will make them available in VS Code's Github Copilot chat.
-- Follow the workflow as laid out in the [PAW Specification](paw-specification.md).
+- Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
+
+## Workflow
+
+![full workflow](./img/full-workflow.png)
+
+### Stage 1: Creating the spec
+
+![stage 1](./img/workflow-stage-1.png)
+
+### Stage 2: Creating the Implementation Plan
+
+![stage 2](./img/workflow-stage-2.png)
+
+### Stage 3: Phased implementation
+
+![stage 3](./img/workflow-stage-3.png)
+
+### Stage 4: Documentation
+
+![stage 4](./img/workflow-stage-4.png)
+
+### Stage 5: Final PR
+
+![stage 5](./img/workflow-stage-5.png)
 
 ## Credits
 

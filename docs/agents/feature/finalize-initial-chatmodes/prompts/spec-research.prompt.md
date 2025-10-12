@@ -1,85 +1,48 @@
 # Spec Research Prompt: Finalize Initial Agent Chatmodes
+Perform research to answer the following questions.
 
-## Research Context
+Target Branch: feature/finalize-initial-chatmodes
+GitHub Issue: #1
+Additional Inputs: paw-specification.md, README.md, existing chatmode files in .github/chatmodes/
 
-This research aims to understand how the current chatmode files are structured, what patterns exist from the Human Layer-derived agents, and what the PAW specification defines for each agent's role and workflow.
+## Questions
 
-The goal is to gather factual information about:
-1. The current state of each chatmode file (completeness, structure, content)
-2. The patterns and guidance present in proven chatmodes (Code Researcher, Implementer)
-3. The requirements defined in the PAW specification for each agent
-4. The gaps between current chatmodes and PAW specification requirements
+### Internal System
 
-## Research Questions
+1. What is the complete structure and content of each existing chatmode file (.github/chatmodes/PAW-*.chatmode.md)? What sections, guidance patterns, and instructions does each contain?
 
-### Current Chatmode Analysis
+2. What specific guidance patterns appear in the Human Layer-derived chatmodes (PAW-02A Code Researcher, PAW-03A Implementer) that don't appear in other chatmodes? (e.g., "CRITICAL:", "Important notes:", step-by-step numbered workflows, explicit "what not to do" sections)
 
-1. **What is the current state of each chatmode file?**
-   - Which chatmodes are complete vs incomplete/empty?
-   - What is the structure and content of each existing chatmode?
-   - Which chatmodes have been tested/proven in production?
-   - What formatting conventions are used (frontmatter, sections, code blocks)?
+3. How do the current chatmodes differ from the agent descriptions in paw-specification.md? What responsibilities or guidance are missing, inconsistent, or misaligned?
 
-2. **What patterns exist in the proven Human Layer-derived chatmodes?**
-   - What specific guidance and instructions appear in the Code Researcher chatmode?
-   - What specific guidance and instructions appear in the Implementer chatmode?
-   - What "important notes" sections exist and what do they address?
-   - What "do not" instructions are present and why?
-   - What step-by-step processes are defined?
-   - What file reading and research patterns are documented?
-   - How do these chatmodes handle edge cases and errors?
-   - What communication patterns are used (response formats, status updates)?
+4. What are the specific concerns raised in Issue #1 about current chatmodes? (e.g., Code Researcher's line-number focus potentially being too burdensome, untested chatmodes, splitting Implementer into two agents)
 
-3. **What is the chatmode file format and metadata structure?**
-   - What YAML frontmatter fields are used?
-   - How are sections organized within each chatmode?
-   - What markdown formatting conventions are followed?
+5. What is the current branching and workflow process described in paw-specification.md that the chatmodes need to support? What artifacts do they create/consume at each stage?
 
-### PAW Specification Requirements
+6. How do the Spec Research Agent and Code Research Agent differ in their responsibilities, outputs, and when they're invoked in the workflow?
 
-4. **What does the PAW specification define for each agent?**
-   - Spec Agent (PAW-01A): What are its responsibilities, inputs, outputs, and workflow?
-   - Spec Research Agent (PAW-01B): What are its responsibilities, inputs, outputs, and workflow?
-   - Code Research Agent (PAW-02A): What are its responsibilities, inputs, outputs, and workflow?
-   - Implementation Plan Agent (PAW-02B): What are its responsibilities, inputs, outputs, and workflow?
-   - Implementation Agent (PAW-03A): What are its responsibilities, inputs, outputs, and workflow?
-   - Implementation Review Agent (PAW-03B): What are its responsibilities, inputs, outputs, and workflow?
-   - Documentation Agent (PAW-04): What are its responsibilities, inputs, outputs, and workflow?
-   - PR Agent (PAW-05): What are its responsibilities, inputs, outputs, and workflow?
-   - Status Agent (PAW-X): What are its responsibilities, inputs, outputs, and workflow?
+7. What are the exact responsibilities that distinguish the Implementation Agent from the Implementation Review Agent based on the PAW specification and Issue #1 notes?
 
-5. **What are the workflow interactions between agents?**
-   - How do agents hand off work to each other?
-   - What artifacts does each agent consume and produce?
-   - What decision points require human interaction?
-   - How do agents update and track progress?
+8. What quality standards and guardrails appear in the proven chatmodes that should be replicated across all agents?
 
-### Gap Analysis
+### External Knowledge & Standards
 
-6. **What are the gaps between current chatmodes and PAW requirements?**
-   - For each chatmode, what PAW-specified functionality is missing?
-   - What guidance from proven chatmodes should be propagated to others?
-   - What inconsistencies exist between chatmodes and PAW workflows?
-   - What new sections or instructions need to be added?
+1. What are industry best practices for structuring AI agent prompts to ensure clarity, consistency, and reliable behavior? (Focus on prompt engineering patterns for agent systems)
 
-7. **What are the specific issues mentioned in the GitHub Issue?**
-   - What problems exist with the current Implementer and Impl Reviewer split?
-   - What burden does the Code Researcher's specific code location requirement create?
-   - How should Spec Research and Code Research be differentiated?
-   - What guidance from Human Layer chatmodes should be preserved?
+2. What are established patterns for "system prompts" vs "user instructions" in AI agent design, particularly for multi-agent workflows?
 
-## Files/Directories Likely Relevant
+3. What are recommended approaches for preventing AI agents from hallucinating or going beyond their defined scope? (Focus on guardrails and constraint patterns)
 
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/` - All chatmode files
-- `/home/rob/proj/paw/phased-agent-workflow/paw-specification.md` - PAW process specification
-- GitHub Issue #1: https://github.com/lossyrob/phased-agent-workflow/issues/1
+4. What are best practices for structuring "do/don't" guidance in AI prompts to maximize adherence?
 
-## Expected Deliverable
+5. What are proven patterns for agent handoffs in multi-stage workflows? How should agents communicate about artifacts, state, and next steps?
 
-A comprehensive `SpecResearch.md` document that:
-- Describes the current state of all chatmode files with specific examples
-- Catalogs the patterns and guidance from proven chatmodes
-- Documents PAW specification requirements for each agent
-- Identifies specific gaps and inconsistencies
-- Provides evidence from actual file content with line references where helpful
-- Stays factual and descriptive without making recommendations
+6. What are industry standards for technical documentation agents and code review agents? What capabilities and constraints should they have?
+
+7. What are best practices for prompt versioning, iteration, and quality assessment when building agent systems? (optional)
+
+## Notes for Research Agent
+
+- Cite internal behavior factually (no code line refs required at this stage)
+- Cite external authoritative sources (Title – URL) or mark assumptions
+- If no external search: add a "User-Provided External Knowledge" checklist

@@ -16,8 +16,10 @@ Also share the feature branch name so I save outputs in the right folder.
 ```
 
 ## Method
-1) For internal questions: explore the repo to answer factual questions (files, flows, data, APIs) without suggesting changes.
-4) Produce `SpecResearch.md` with clearly separated sections:
+* For internal questions: explore the repo, including code and documentation, to answer factual questions (files, flows, data, APIs) without suggesting changes.
+* Go question-by-question, building the SpecResearch.md file incrementally.
+* **Be concise**: Provide direct, factual answers without exhaustive detail. Avoid context bloat—the goal is to give the Spec Agent enough information to write clear requirements, not to document every edge case or implementation nuance.
+* Produce `SpecResearch.md` with clearly separated sections:
    - Internal System Behavior
    - Open Unknowns (internal only)
    - User-Provided External Knowledge (manual fill; list of external/context questions)
@@ -58,14 +60,14 @@ One-paragraph factual overview of internal findings. Optional external/context q
 
 ## Output
 - Save at: `docs/agents/<target_branch>/SpecResearch.md` (canonical path)
-- If external research skipped, clearly mark that and list potential impact areas.
-- Provide content to user if you cannot write the file directly.
+- Build the document incrementally, appending sections as you answer questions. Do not try to output the entire document at once.
 
 ## Guardrails
 - No proposals, refactors, “shoulds”.
 - No speculative claims—state only what exists or mark as open unknown.
 - Distinguish answered internal behavior from manual external/context list.
-- If a question cannot be answered, list it under “Open Unknowns” with rationale.
+- If a question cannot be answered AFTER consulting internal spec(s), overview docs, existing artifacts, config, and relevant code, list it under “Open Unknowns” with rationale.
+- **Keep answers concise**: Answer questions directly with essential facts only. Avoid exhaustive lists, lengthy examples, or unnecessary detail that inflates context without adding clarity for specification writing.
 - Do not commit changes or post comments to GitHub Issues or PRs - this is handled by other agents.
 
 ## Coordinator hooks

@@ -64,7 +64,7 @@ If the user explicitly says research is already done and provides a `SpecResearc
    - High‑impact uncertainties (scope, security/privacy, user experience, compliance) that lack a defensible default become explicit clarification questions; resolve them via user dialogue before proceeding.
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
 4. **Research Prompt Generation**: Create `prompts/spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
-5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved).
+5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting.
 7. **Specification Assembly**: Produce full spec with section order below. Insert FR-###, SC-### enumerations, link user stories to FRs (traceability note in each FR referencing user story IDs where applicable).
 8. **Quality Checklist Pass**: Evaluate spec against the Spec Quality Checklist (below). Show pass/fail. Iterate until all pass (or user accepts explicit residual risks).
@@ -73,6 +73,9 @@ If the user explicitly says research is already done and provides a `SpecResearc
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:
 ```
+---
+mode: 'PAW-01B Spec Research Agent'
+---
 # Spec Research Prompt: <feature>
 Perform research to answer the following questions.
 
@@ -212,7 +215,6 @@ Any failed item blocks finalization unless user explicitly overrides (override l
 - Edge cases & notable failure modes enumerated (or explicitly none beyond standard error handling).
 
 ## Communication Patterns
-- Use concise confirmations: “Draft prompt ready – proceed to write file?”
 - When pausing for research, clearly enumerate pending research question IDs
 - Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`.
 
@@ -225,7 +227,7 @@ Research shows: ...
 Impact: ...
 How should we reconcile?
 ```
-- If user insists on skipping research with many unknowns, proceed but add a temporary “Assumptions” section— MUST be removed before finalization.
+- If user insists on skipping research with many unknowns, proceed but add a temporary “Assumptions” section.
 
 ## Guardrails (Enforced)
 - NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs.
@@ -252,7 +254,7 @@ Specification Ready for Planning Stage:
 Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent to update Issue.
 ```
 
-If research was skipped: include a Risks note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
+If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
 
 ### GitHub Issues (if relevant)
 

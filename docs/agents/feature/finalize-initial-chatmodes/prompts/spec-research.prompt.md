@@ -1,48 +1,33 @@
+---
+mode: 'PAW-01B Spec Research Agent'
+---
+
 # Spec Research Prompt: Finalize Initial Agent Chatmodes
 Perform research to answer the following questions.
 
 Target Branch: feature/finalize-initial-chatmodes
-GitHub Issue: #1
-Additional Inputs: paw-specification.md, README.md, existing chatmode files in .github/chatmodes/
+GitHub Issue: 1
+Additional Inputs: Existing chatmode markdown files under .github/chatmodes
 
 ## Questions
-
 ### Internal System
-
-1. What is the complete structure and content of each existing chatmode file (.github/chatmodes/PAW-*.chatmode.md)? What sections, guidance patterns, and instructions does each contain?
-
-2. What specific guidance patterns appear in the Human Layer-derived chatmodes (PAW-02A Code Researcher, PAW-03A Implementer) that don't appear in other chatmodes? (e.g., "CRITICAL:", "Important notes:", step-by-step numbered workflows, explicit "what not to do" sections)
-
-3. How do the current chatmodes differ from the agent descriptions in paw-specification.md? What responsibilities or guidance are missing, inconsistent, or misaligned?
-
-4. What are the specific concerns raised in Issue #1 about current chatmodes? (e.g., Code Researcher's line-number focus potentially being too burdensome, untested chatmodes, splitting Implementer into two agents)
-
-5. What is the current branching and workflow process described in paw-specification.md that the chatmodes need to support? What artifacts do they create/consume at each stage?
-
-6. How do the Spec Research Agent and Code Research Agent differ in their responsibilities, outputs, and when they're invoked in the workflow?
-
-7. What are the exact responsibilities that distinguish the Implementation Agent from the Implementation Review Agent based on the PAW specification and Issue #1 notes?
-
-8. What quality standards and guardrails appear in the proven chatmodes that should be replicated across all agents?
+1. What are the explicit behavioral responsibilities, guardrails, and step sequences already defined in each existing chatmode (Spec Agent, Spec Research Agent, Code Researcher, Impl Planner, Implementer, Impl Reviewer, Documenter, PR, Status Update), and where are there inconsistencies or gaps between them? (Focus on behavioral intent; no implementation suggestions.)
+2. How do the current chatmodes overlap or duplicate guidance (e.g., repeated instructions about reading files fully, creating TODOs, pausing for verification) and which instructions are unique to a single mode?
+3. For each stage (Spec, Spec Research, Code Research, Implementation Planning, Implementation, Implementation Review, Documentation, PR, Status), what concrete inputs, outputs, and transition artifacts are CURRENTLY stated (or implicitly relied upon) in the chatmodes (e.g., Spec.md, SpecResearch.md, Implementation Plan file, branch naming patterns, research documents)?
+4. Which mandatory pausing / hand‑off points are explicitly described vs absent across the modes (e.g., pause after research prompt generation, pause after phase implementation, pause for manual verification, pause for re-review)?
+5. What risk mitigation or anti-pattern prevention language exists (e.g., "DO NOT" directives) per chatmode, and where are critical risk categories (scope creep, missing traceability, premature optimization, undocumented assumptions) not covered by any mode?
+6. How is traceability (stories ↔ FRs ↔ SCs ↔ artifacts) presently enforced or referenced across modes, and where are there missing links or inconsistent terminology?
+7. What assumptions about naming conventions (branches, files, document paths) are embedded inconsistently across chatmodes (e.g., plan file locations, research doc paths)?
+8. Where do chatmodes instruct actions out of scope for their stage (violations of explicit non-responsibilities), creating potential role bleed?
+9. What existing measurable success/quality checklists are defined, and which stages lack an equivalent explicit checklist?
+10. How are clarification vs research vs assumption distinctions currently enforced in the Spec and Research related modes, and where are ambiguities or contradictions present?
 
 ### External Knowledge & Standards
-
-1. What are industry best practices for structuring AI agent prompts to ensure clarity, consistency, and reliable behavior? (Focus on prompt engineering patterns for agent systems)
-
-2. What are established patterns for "system prompts" vs "user instructions" in AI agent design, particularly for multi-agent workflows?
-
-3. What are recommended approaches for preventing AI agents from hallucinating or going beyond their defined scope? (Focus on guardrails and constraint patterns)
-
-4. What are best practices for structuring "do/don't" guidance in AI prompts to maximize adherence?
-
-5. What are proven patterns for agent handoffs in multi-stage workflows? How should agents communicate about artifacts, state, and next steps?
-
-6. What are industry standards for technical documentation agents and code review agents? What capabilities and constraints should they have?
-
-7. What are best practices for prompt versioning, iteration, and quality assessment when building agent systems? (optional)
+1. What established best-practice categories (e.g., specification quality, research rigor, code review hygiene, documentation completeness) should minimally be represented as behavioral checklists to reduce omissions, and which are already mirrored internally (to avoid duplication)?
+2. What widely recognized risk areas for multi-agent software development workflows (e.g., role overlap, stale artifact drift, unclear handoffs, missing verification gates) should be explicitly represented as guardrails if not already present internally?
+3. Which standard forms of traceability (requirements → tests → implementation commits) are generally expected in mature engineering workflows and need to be reflected behaviorally (without specifying tooling) if missing?
 
 ## Notes for Research Agent
-
-- Cite internal behavior factually (no code line refs required at this stage)
-- Cite external authoritative sources (Title – URL) or mark assumptions
-- If no external search: add a "User-Provided External Knowledge" checklist
+- Cite internal behavior (behavioral description; do not copy entire files) and summarize by chatmode name.
+- Cite external authoritative sources (Title – URL) or mark items as assumptions if no reputable source is used.
+- If no external sources are consulted for a question, add a "User-Provided External Knowledge" checklist in the research output for that question.

@@ -1,357 +1,138 @@
----
-date: 2025-10-11T00:00:00-00:00
-target_branch: feature/finalize-initial-chatmodes
-status: complete
-last_updated: 2025-10-11
-summary: "Research on PAW chatmode current state and external best practices for AI agent prompt engineering"
-tags: [research, chatmodes, prompt-engineering, humanlayer-patterns]
-ticket: 1
----
-
 # Spec Research: Finalize Initial Agent Chatmodes
 
 ## Summary
-
-This research examines the current state of PAW (Phased Agent Workflow) chatmode files and gathers external best practices for AI agent prompt engineering. Internal findings show a mix of proven chatmodes adapted from HumanLayer (Code Researcher, Implementer) and first-pass untested chatmodes. The proven chatmodes contain specific guidance patterns (CRITICAL/Important notes, explicit "do/don't" sections, numbered workflows) that should be propagated to other agents. External research reveals industry best practices around prompt clarity, guardrails, multi-agent handoffs, and structured constraint patterns that can inform chatmode improvements.
+Internal review identified comprehensive behavioral definitions for Spec, Spec Research, Code Research, Implementation Planning, Implementation Execution, and Status Update modes, with missing/empty definitions for Implementation Reviewer, Documenter, and PR Agent. Core internal strengths: explicit specification quality checklist, rigorous research vs clarification taxonomy at spec stage, execution phase pause gates, and status surface maintenance. Gaps: absent review/documentation/PR behaviors, inconsistent artifact directory conventions (`docs/agents/<branch>` vs `docs/agent/<description>`), incomplete traceability past specification, lack of unified quality checklists for research, planning, implementation review, documentation, PR readiness, and no defined documentation or reviewer artifacts. External standards (requirements quality—ISO/IEC/IEEE 29148; traceability & test documentation—IEEE 829; security assurance—OWASP ASVS & Top 10; code review hygiene—Google Engineering Practices; documentation structure—Diátaxis & Write the Docs; multi‑agent workflow risks—industry articles; empirical research rigor—ACM SIGSOFT empirical standards) highlight additional best‑practice categories not fully mirrored internally (systematic review rigor checklist, documentation content taxonomy, formal code review criteria, security risk referencing, RTM maintenance, multi‑agent handoff validation). No design changes proposed—only current state documented with external context.
 
 ## Internal System Behavior
 
-### Current Chatmode Structure and Content
+### Spec Agent (PAW-01A)
+* Responsibilities: Convert issue/brief to structured specification (user stories, FR-###, SC-###, edge cases, assumptions, risks, scope, traceability, references). Generates research prompt when needed; pauses until research and clarifications resolved; produces readiness checklist.
+* Guardrails: Prohibits implementation details, commits, PR/Issue updates; never fabricate; must pause after research prompt creation; ensures all clarifications resolved before drafting; enumerated “NEVER/ALWAYS” rules and Spec Quality Checklist.
+* Step Sequence: Intake → Story drafting → Unknown classification (clarification vs research vs assumption) → Research prompt file creation → Pause → Integrate research → Assemble spec (traceability mapping) → Quality checklist validation → Hand-off.
+* Traceability: Explicit story ↔ FR ↔ SC linkage, IDs FR-### / SC-###; references research doc path.
+* Inputs/Outputs: Inputs (Issue, constraints, SpecResearch.md); Outputs (`prompts/spec-research.prompt.md`, spec text, optional `Spec.md`).
+* Pauses: After prompt generation; if clarifications unresolved; before finalization pending checklist pass.
+* Naming: Research prompt path fixed; research doc referenced at `docs/agents/<branch>/SpecResearch.md`.
 
-The repository contains 9 chatmode files in `.github/chatmodes/`:
+### Spec Research Agent (PAW-01B)
+* Responsibilities: Answer internal system & external knowledge questions from `SpecResearch.prompt.md`; produce `SpecResearch.md` with separated sections; cite sources; list open unknowns.
+* Guardrails: No proposals; no speculative external claims without citation; must separate internal vs external; list unanswered questions; no commits/issue updates.
+* Step Sequence: Read prompt → Explore repo for internal answers → Perform external searches → If tools absent, produce manual checklist → Produce `SpecResearch.md` at `docs/agents/<branch>/SpecResearch.md` → Provide content.
+* Traceability: Provides research evidence and citations; does not create requirement IDs.
+* Inputs/Outputs: Input (prompt file); Output (`SpecResearch.md`).
+* Pauses: Not explicitly defined (single pass behavior).
+* Naming: Branch-based directory under `docs/agents/<branch>/`.
 
+### Codebase Researcher Agent (PAW-02A)
+* Responsibilities: Document existing codebase (what, where, how) via code location, analysis, pattern finder; produce research document with frontmatter and sections (Summary, Detailed Findings, Architecture, etc.).
+* Guardrails: Extensive DO NOT list—no improvements, critiques, refactors, recommendations, or speculation; must read mentioned files fully first.
+* Step Sequence: Initial query intake → Read mentioned files fully → Decompose research → Todo plan → Comprehensive research (location, analysis, patterns) → Synthesize → Gather metadata (script) → Generate document → Present findings → Handle follow-ups with versioned updates.
+* Traceability: Provides file:line references; no structured FR/SC mapping.
+* Inputs/Outputs: Input (research question or Spec.md); Output (`docs/agent/<description>/YYYY-MM-DD(-ENG-XXXX)-research.md`).
+* Pauses: Wait after initial prompt if no query; otherwise continuous until presenting findings.
+* Naming: Uses `docs/agent/` (singular) path and date/topic naming differing from Spec Research.
 
-**Initially Completed and partiall tested Chatmodes:**
-- `PAW-01A Spec Agent.chatmode.md` - Extensive prompt (686 lines) with detailed workflow, quality standards, and guardrails
-- `PAW-01B Spec Research Agent.chatmode.md` - Well-defined research agent with clear separation of internal vs external knowledge
-- `PAW-02A Code Researcher.chatmode.md` - Proven chatmode adapted from HumanLayer with comprehensive research methodology
-- `PAW-03A Implementer.chatmode.md` - HumanLayer-derived chatmode with detailed implementation guidance
+### Implementation Planner (PAW-02B)
+* Responsibilities: Create detailed implementation plan (phases, success criteria—automated vs manual, what not doing, testing strategy, performance, migration notes). Requires full context gathering and code verification.
+* Guardrails: Mandates full file reading, skepticism, interactive iteration, no open questions in final plan; lacks explicit formal “DO NOT” list.
+* Step Sequence: Gather & read context → Verify understanding & ask focused questions → Research & discovery with todos → Present design options → Plan structure proposal (pause for feedback) → Detailed plan writing using template → Review & iterate.
+* Traceability: Not formally linking back to FR/SC IDs; references research docs optionally.
+* Inputs/Outputs: Inputs (Issue, spec, research docs); Output (`docs/agent/{description}/YYYY-MM-DD(-ENG-XXXX)-plan.md`).
+* Pauses: After structure proposal; iterative questions.
+* Naming: Same `docs/agent/` pattern as code research.
 
-**Empty/Untested Chatmodes:**
-- `PAW-03B Impl Reviewer.chatmode.md` - Empty file (0 bytes)
-- `PAW-04 Documenter.chatmode.md` - Empty file (0 bytes)
-- `PAW-05 PR.chatmode.md` - Empty file (0 bytes)
+### Implementation Agent (PAW-03A)
+* Responsibilities: Execute plan phases; manage phase branches (`_phaseN` or `_phaseM-N`); update plan checkboxes; handle PR review comments individually; enforce pause for manual verification per phase.
+* Guardrails: Only commit related changes; pause on plan mismatch; structured phase completion status message; do not mark manual tests without user confirmation.
+* Step Sequence: Ensure branch naming & plan reading → Phase implementation → Automated verification → Pause for manual verification → Commit & PR updates → Next phase / review cycle.
+* Traceability: Indirect—depends on plan; no mandated FR/SC/test mapping.
+* Inputs/Outputs: Inputs (implementation plan, PR review comments); Outputs (code commits, updated plan, phase PRs).
+* Pauses: After each phase (unless multi-phase directive); after addressing review comments.
+* Naming: Branch suffix `_phaseN` / `_phaseM-N` pattern; no explicit doc file creation.
 
-**Partially Complete Chatmodes:**
-- `PAW-02B Impl Planner.chatmode.md` - Detailed planning agent (437 lines)
-- `PAW-X Status Update.chatmode.md` - Status management agent (59 lines)
+### Implementation Reviewer (PAW-03B)
+* File empty: No responsibilities, guardrails, steps, artifacts defined.
 
-### Specific Guidance Patterns in Human Layer-Derived Chatmodes
+### Documenter (PAW-04)
+* File empty: No documentation process, artifact naming, completeness criteria.
 
-**PAW-02A Code Researcher.chatmode.md** contains these distinctive patterns:
+### PR Agent (PAW-05)
+* File empty: No PR creation strategy, description template, readiness checklist.
 
-1. **Strong Negative Constraints (DO NOT sections)**:
-   ```
-   ## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY
-   - DO NOT suggest improvements or changes unless the user explicitly asks for them
-   - DO NOT perform root cause analysis unless the user explicitly asks for them
-   - DO NOT propose future enhancements unless the user explicitly asks for them
-   [... 10 total DO NOT items]
-   ```
+### Status Updater Agent (PAW-X)
+* Responsibilities: Maintain Issue top status block and PR summary blocks with artifacts list, PR states, checklist; idempotent updates; add milestone comments.
+* Guardrails: Never alter content outside markers; not merging, assigning reviewers, or modifying code; idempotency enforced; add TODO lines if missing artifacts.
+* Step Sequence: Trigger-driven updates (spec approval, PR open/merge events, etc.)—no defined interactive pause.
+* Traceability: Lists artifacts and phase states but no FR/SC/test linkage.
+* Inputs/Outputs: Inputs (artifact paths, Issue/PR references); Outputs (updated Issue/PR text blocks, milestone comments).
+* Pauses: None defined.
+* Naming: Uses generic artifact file names; does not enforce directory conventions.
 
-2. **Numbered Step-by-Step Workflows**:
-   - 9 detailed steps with sub-steps for the initial workflow
-   - Separate numbered strategies for Code Location, Code Analysis, and Code Pattern Finder
+### Cross-Cutting Internal Observations
+* Auth/security/observability: Not addressed in any chatmode definitions (left to future design or plan content).
+* Error handling patterns: Only spec stage defines discrepancy handling (Issue vs research). Implementation Agent defines mismatch reporting between plan and code reality.
+* Quality checklists exist only for spec stage (Spec Quality Checklist) and partially embedded success criteria patterns in planning/implementation. No formal research, code review, documentation, or PR readiness checklists.
+* Consistency Gaps: Directory naming mismatch (`docs/agents/<branch>` vs `docs/agent/<description>`), absent roles, mixed pause semantics, only partial traceability continuation past specification.
 
-3. **Important Notes** scattered throughout:
-   - "**IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters"
-   - "**CRITICAL**: Read these files yourself in the main context before spawning any sub-tasks"
-   - "**NEVER** read files partially"
+## Endpoints/CLIs/Jobs
+(No code endpoints or scripts enumerated inside chatmode definitions except reference to running a metadata script in Codebase Researcher; details of that script not described.)
 
-4. **Explicit "What not to do" sections** for each research type:
-   ```
-   **What not to do**
-   - Don't guess about implementation
-   - Don't skip error handling or edge cases
-   [... continues with 12 items]
-   ```
-
-5. **Metadata Generation Instructions**:
-   - Explicit script to run: `scripts/copilot/spec-metadata.sh`
-   - Detailed filename format with date/ticket conventions
-   - YAML frontmatter structure specification
-
-**PAW-03A Implementer.chatmode.md** patterns:
-
-1. **Conditional Response Logic**:
-   ```
-   When given just a plan path:
-   - Read the plan completely...
-   
-   When also given a PR with review comments:
-   - Read the PR description...
-   ```
-
-2. **Branch Setup Validation**:
-   - Explicit branch naming conventions
-   - Pre-work verification steps
-
-3. **Pause Points for Human Verification**:
-   ```
-   Phase [N] Complete - Ready for Manual Verification
-   [formatted output template]
-   ```
-
-4. **Commit Hygiene Guidance**:
-   - "ONLY commit changes you made to implement the plan"
-   - "Do not include unrelated changes"
-
-### Differences Between Current Chatmodes and PAW Specification
-
-**Alignment Issues:**
-
-1. **Spec Research Agent**: 
-   - Chatmode correctly implements internal vs external knowledge separation
-   - Matches specification's requirement to cite sources and handle missing external search tools
-   - Uses correct output path: `docs/agents/<target_branch>/SpecResearch.md`
-
-2. **Code Research Agent**:
-   - Issue #1 notes: "specific code files and lines of code, which has value for the implementation but I believe is burdensome to the process of detailing how the system works currently"
-   - Current chatmode heavily emphasizes file:line references in all sections
-   - May be too granular for spec research phase vs implementation planning phase
-
-3. **Implementation Agents Split**:
-   - Spec describes two agents: Implementation Agent and Implementation Review Agent
-   - PAW-03A exists and is detailed
-   - PAW-03B is empty (not yet created)
-   - Spec indicates split is based on model testing: "GPT 5 Codex's code implementation to be preferred, while Claude Sonnet 4.5 was better at documenting code"
-
-4. **Empty Chatmodes**:
-   - PAW-04 Documenter, PAW-05 PR, and PAW-03B Impl Reviewer have no content
-   - Specification provides detailed descriptions of their responsibilities
-
-### Concerns Raised in Issue #1
-
-**Key Points:**
-
-1. **Implementer Split**:
-   - "This work splits the Implementer into two agents - an Implementation Agent and Implementation Reviewer Agent"
-   - Based on model testing showing different strengths
-   - "The Impl Reviewer chatmode has not been used or proven out yet"
-   - "Implementer chatmode likely has some inconsistencies with the new PAW process and the splitting of the two agents"
-
-2. **Code Researcher Line-Number Focus**:
-   - "current prompting asks for specific code files and lines of code, which has value for the implementation but I believe is burdensome to the process of detailing how the system works currently"
-   - "some runs of the agent missed important parts of the system I was working on - I suspect because it's attention and context was spent on gathering specific code locations"
-   - Goal: "enable more focus on how the system works behaviorally vs how the code implementations are in the codebase"
-
-3. **Untested Agents**:
-   - "All other agents are first passes and untested"
-
-4. **Preserve HumanLayer Guidance**:
-   - "The prompts in the Human Layer derived chatmodes have a lot of specific guidance that comes from Human Layer's development and testing in production"
-   - "They should be used as examples for the other agents, and there should not be guidance dropped from these agents"
-   - Examples cited: "details about the set of steps to follow, the strong language about what the agent should not do, the 'important notes'"
-   - "These are likely prompt components that were built from seeing the models (the use Claude) do something wrong, and guiding it to avoid the wrong thing"
-
-### Current Branching and Workflow Process
-
-From `paw-specification.md`:
-
-**Branch Naming Conventions:**
-- Target branch: `feature/<slug>` or `user/<username>/<slug>`
-- Planning branch: `<target_branch>_plan`
-- Implementation phase branches: `<target_branch>_phase<N>` or `<target_branch>_phase<M-N>`
-
-**Artifact Locations:**
-```
-/docs/agents/<target_branch>/
-  prompts/
-    spec-research.prompt.md
-    code-research.prompt.md
-  Spec.md
-  SpecResearch.md
-  CodeResearch.md
-  ImplementationPlan.md
-  Docs.md
-```
-
-**Stage Flow:**
-1. **Stage 01 - Specification**: Spec Agent + Spec Research Agent → produces Spec.md, SpecResearch.md
-2. **Stage 02 - Implementation Plan**: Code Research Agent + Implementation Plan Agent → produces CodeResearch.md, ImplementationPlan.md, opens Planning PR
-3. **Stage 03 - Phased Implementation**: Implementation Agent + Implementation Review Agent → opens Phase PRs
-4. **Stage 04 - Documentation**: Documenter Agent → produces Docs.md, opens Docs PR
-5. **Stage 05 - Final PR**: PR Agent → opens final PR to main
-
-### Spec Research Agent vs Code Research Agent Distinction
-
-**Spec Research Agent** (`PAW-01B`):
-- Purpose: "describe how the system works today AND gather relevant external knowledge"
-- Scope: Behavioral and architectural facts, NOT implementation details
-- Output: Answers questions for specification writing
-- Does NOT include: "Specific file paths or line numbers", "Implementation details or code structure"
-- Key distinction stated in spec: "SpecResearch.md: Behavioral view for specification writing ('The authentication system requires email and password and returns a session token')"
-
-**Code Research Agent** (`PAW-02A`):
-- Purpose: Maps "WHERE and HOW" relevant code works
-- Scope: File paths, line numbers, implementation details, code patterns
-- Output: Technical mapping for implementation planning
-- Key distinction stated in spec: "CodeResearch.md: Implementation view for planning ('Authentication is implemented in `auth/handlers.go:45` using bcrypt for password hashing')"
-
-**However**, the current Code Research chatmode says:
-```
-## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY
-```
-
-This aligns with the intention but doesn't explicitly reference that it's for *implementation planning* specifically vs behavioral understanding.
-
-### Implementation Agent vs Implementation Review Agent Distinction
-
-From `paw-specification.md`:
-
-**Implementation Agent** (`PAW-03A`):
-- Executes plan phases by making code changes
-- Ensures quality by running automated checks
-- Addresses review comments with focused commits
-- Creates implementation branch if it doesn't exist
-
-**Implementation Review Agent** (`PAW-03B`):
-- Reviews code changes made by Implementation Agent
-- Suggests improvements
-- Generates docstrings and code comments for clarity/readability/maintainability
-- Commits changes with clear messages
-- Pushes implementation branch and opens Phase PRs
-- When responding to review comments: reviews each change, replies comment-by-comment on PR, makes overall summary comment
-
-**Key Insight from Issue #1:**
-The split is based on empirical testing showing different model strengths:
-- "GPT 5 Codex's code implementation to be preferred"
-- "Claude Sonnet 4.5 was better at documenting code and making it more readable/maintainable"
-- "Splitting into two agents gives the best of both worlds"
-
-### Quality Standards and Guardrails in Proven Chatmodes
-
-**Patterns to replicate:**
-
-1. **CRITICAL/IMPORTANT prefixes** for non-negotiable requirements
-2. **Explicit DO NOT lists** with 8-12 items preventing common mistakes
-3. **Numbered workflows** with clear step sequences
-4. **What not to do** sections after each major procedure
-5. **Conditional logic** for different invocation scenarios (e.g., "When given X vs When given Y")
-6. **Pause points** with formatted output templates for human handoffs
-7. **File reading discipline**: "NEVER read files partially", "Use Read tool WITHOUT limit/offset"
-8. **Context-first ordering**: "Read all mentioned files FULLY BEFORE proceeding"
-9. **Metadata generation specifics**: Exact script names, filename formats, YAML frontmatter structures
-10. **Role boundaries**: Clear statements of what the agent does NOT do (e.g., "DO NOT commit/push", "Status Agent does that")
+## Cross-cutting (Internal)
+* Pausing/Gating: Implemented at spec research handoff, spec drafting readiness, plan structure approval, per implementation phase; absent for review, documentation, final PR, and status updates.
+* Traceability: Strong at spec stage; weak downstream (no enforcement to tie plan phases or tests back to FR/SC).
+* Risk Controls: Fabrication prevention and scope boundaries present early; drift, review quality, documentation completeness, and security oversight not explicitly controlled later.
 
 ## External Knowledge & Best Practices
-
 ### Standards & Guidelines
-
-**Prompt Engineering for AI Agents:**
-
-1. **Clarity and Specificity** - Use simple, direct language; avoid verbosity that dilutes effectiveness (PromptHub, 2024)
-2. **Contextual Information** - Provide ample background and constraints; consistent context maintains accuracy (PromptHub, God of Prompt, 2025)
-3. **Multi-Step Prompts** - Break complex tasks into smaller, manageable steps for better sequential processing (God of Prompt, 2025)
-4. **Adaptive Prompts** - Self-adjusting systems based on user inputs reduce repetitive instructions (God of Prompt, 2025)
-5. **Memory Management** - Cache system messages to reduce latency and costs (PromptHub, 2024)
-6. **Iterative Refinement** - Continuously refine prompts based on testing and feedback (PromptHub, 2024)
-
-**System Prompts vs User Instructions:**
-
-1. **System Prompt Components** - Behavioral framing (role/personality), constraint setting (rules/limitations), context provision, ethical guidance (PromptLayer, PowerGentic, 2025)
-2. **Purpose of System Prompts** - Establish consistent framework, ensure operation within parameters, provide reliable outputs (PromptLayer, Microsoft, 2025)
-3. **Define Clear Roles** - Each agent should have distinct system prompt clarifying role, tone, and boundaries (Microsoft, 2025)
-4. **Balance Instructions** - Avoid overloading user prompts with what should be in system prompts (PowerGentic, 2025)
-
-**Preventing Hallucinations & Scope Creep:**
-
-1. **Direct and Specific Prompts** - Clearly define task and limit scope; ask for sources; set refusal rules like "If you can't confirm, say 'I don't know'" (yW!an, OpenAI, 2024)
-2. **Output Constraints** - System-level constraints to block inappropriate content or off-context responses (yW!an, 2024)
-3. **Retrieval-Augmented Generation (RAG)** - Ground responses in verified documents and data sources (yW!an, 2024)
-4. **Layered Verification** - Automated checks plus human-in-the-loop reviews to catch errors (yW!an, GeeksforGeeks, 2024)
-5. **Rule-based Monitoring** - Algorithmic filters to detect anomalies in real-time (GeeksforGeeks, 2024)
-
-**Structuring Do/Don't Guidance:**
-
-1. **Be Unambiguous and Precise** - Vague language leads to unpredictable responses (Codecademy, Optimizely, 2024)
-2. **Comprehensive Details** - Provide context to ensure full understanding and mitigate incorrect outputs (Codecademy, Atlassian, 2024)
-3. **Avoid Sensitive Information** - Refrain from including private data (Codecademy, 2024)
-4. **Use Natural Language** - Write as if conversing with a person (Atlassian, 2024)
-5. **Role Definition and Context** - Clearly define AI's role and target audience (Optimizely, 2024)
+* ISO/IEC/IEEE 29148 – Requirements engineering quality characteristics (completeness, unambiguity, consistency, traceability, feasibility, verifiability). (https://cdn.standards.iteh.ai/...)
+* IEEE 829 – Structured test documentation enabling traceability from test plans to test cases. (https://people.eecs.ku.edu/~hossein/Teaching/Stds/829-1998.pdf)
+* OWASP ASVS – Application security verification levels (1–3) guiding security control depth. (https://devguide.owasp.org/en/03-requirements/05-asvs/)
+* OWASP Top 10 (2021) – Common web application risk categories (Broken Access Control, Injection, etc.). (https://sucuri.net/guides/owasp_top_10_2021_edition/)
+* ACM SIGSOFT Empirical Standards – Criteria for empirical research rigor, transparency, and reporting. (https://www2.sigsoft.org/EmpiricalStandards/)
 
 ### Comparable Patterns / Industry Norms
+* Google Engineering Code Review Practices – Emphasis on code health improvement, design/functionality validation, adequate tests, respectful feedback. (https://sourceforge.net/projects/google-engineering-docs.mirror/)
+* Diátaxis Framework – Documentation partitioned into Tutorials, How-To Guides, Reference, Explanation, clarifying content purpose separation. (https://diataxis.fr/)
+* Write the Docs Guide – Documentation lifecycle: audience targeting, structure, accuracy, maintenance, feedback loops. (https://www.writethedocs.org/guide/index.html)
+* Multi-agent Workflow Orchestration Best Practices – Emphasis on reliable handoffs, artifact schema validation, role specialization, drift prevention. (https://skywork.ai/blog/ai-agent-orchestration-best-practices-handoffs/)
 
-**Multi-Agent Workflow Handoffs:**
+### Performance / Reliability Benchmarks (If applicable)
+* (Not explicitly sourced in current internal materials; external sources above focus on quality, security, documentation, process. No specific numeric performance benchmarks gathered—outside scope of chatmode finalization.)
 
-1. **Task Definition and Distribution** - Specify what must be accomplished and assign to capable agents (Strands Agents, 2024)
-2. **Dependency Management**:
-   - Sequential dependencies for ordered execution
-   - Parallel execution for simultaneous tasks
-   - Join points where parallel tasks converge (Strands Agents, 2024)
-3. **Information Flow**:
-   - Input/Output mapping between agents
-   - Context preservation throughout workflow
-   - State management for progress tracking and error recovery (Strands Agents, Microsoft, 2024)
-4. **Artifact and State Communication**:
-   - Central repository or message queue for storage/retrieval
-   - Logging mechanisms to track state changes
-   - Consistent naming and documentation conventions (ServiceNow, Microsoft Power Apps, 2024)
-5. **Next Steps Definition**:
-   - Clear exit conditions for each agent
-   - Notifications/callbacks for downstream agents
-   - Shared understanding of workflow status (Strands Agents, Microsoft, 2024)
-
-**Technical Documentation Agents:**
-
-1. **Adherence to Industry Standards** - Compliance with regulations like ISO/IEC 26514 for software documentation (Guidde, DataCalculus, 2024)
-2. **Clarity and Accuracy** - Grammatical correctness, consistent terminology, clear language (DataCalculus, 2024)
-3. **Interoperability and Usability** - Facilitate interoperability; be user-friendly (Guidde, 2024)
-4. **Comprehensive Coverage** - Complete documentation of methods, properties, parameters; visual representations (GitHub Claude Agents, 2024)
-
-**Code Review Agents:**
-
-1. **Security and Compliance** - Integrate SAST/DAST checks; comply with HIPAA/PCI-DSS (Graphite, 2024)
-2. **Traceability and Audit Trails** - Maintain timestamps, reviewer IDs, changes made (Graphite, 2024)
-3. **Automated and Consistent Checks** - AI tools for repeatable feedback; supplement with human oversight (Graphite, Microsoft Agent Governance, 2024)
-4. **Coding Standards Enforcement** - Linters and static analyzers for consistency (Graphite, 2024)
-5. **Role-Based Access Control** - RBAC to prevent unauthorized merges (Graphite, 2024)
+### Risks / Compliance / Regulatory Notes
+* Security verification depth (OWASP ASVS) aligns with need for stage-specific security consideration (currently absent internally outside spec assumptions).
+* Common vulnerability classes (OWASP Top 10) indicate risk categories not explicitly referenced in any chatmode guidance.
+* Requirements/test traceability (IEEE 829) underscores missing end-to-end FR→Test mapping in downstream roles.
+* Research rigor standards (ACM SIGSOFT) highlight absent formal research quality checklist for Spec Research and Codebase Research roles.
+* Documentation taxonomy (Diátaxis) indicates missing structured documentation role behaviors (Documenter empty file).
 
 ### Source Citations
-
-1. **Prompt Engineering for AI Agents** – PromptHub https://www.prompthub.us/blog/prompt-engineering-for-ai-agents (accessed 2025-10-11)
-2. **Prompt Engineering Evolution: Adapting to 2025 Changes** – God of Prompt https://www.godofprompt.ai/blog/prompt-engineering-evolution-adapting-to-2025-changes (accessed 2025-10-11)
-3. **Prompt Engineering For Advanced Multi-Agent AI Prompting** – Forbes https://www.forbes.com/sites/lanceeliot/2025/03/01/prompt-engineering-for-advanced-multi-agent-ai-prompting/ (accessed 2025-10-11)
-4. **System Prompt vs User Prompt in AI: What's the difference?** – PromptLayer https://blog.promptlayer.com/system-prompt-vs-user-prompt-a-comprehensive-guide-for-ai-prompts/ (accessed 2025-10-11)
-5. **The Hidden Architecture of AI Conversations: System Prompts vs. User Prompts** – PowerGentic https://powergentic.beehiiv.com/p/the-hidden-architecture-of-ai-conversations-system-prompts-vs-user-prompts (accessed 2025-10-11)
-6. **How do I control how my agent responds?** – Microsoft Community Hub https://techcommunity.microsoft.com/blog/azuredevcommunityblog/how-do-i-control-how-my-agent-responds/4426547 (accessed 2025-10-11)
-7. **The AI Hallucination Reduction Playbook** – yW!an https://www.ywian.com/blog/ai-hallucination-reduction-playbook (accessed 2024)
-8. **Developing Hallucination Guardrails** – OpenAI https://cookbook.openai.com/examples/developing_hallucination_guardrails (accessed 2024)
-9. **What are AI Guardrails?** – GeeksforGeeks https://www.geeksforgeeks.org/artificial-intelligence/what-are-ai-guardrails/ (accessed 2024)
-10. **The Do's and Don'ts of Writing AI Prompts** – Codecademy https://www.codecademy.com/resources/blog/ai-prompt-engineering-tips (accessed 2024)
-11. **How to write 10/10 AI instructions** – Optimizely https://www.optimizely.com/insights/blog/how-to-write-ai-instructions/ (accessed 2024)
-12. **The ultimate guide to writing effective AI prompts** – Atlassian https://www.atlassian.com/blog/artificial-intelligence/ultimate-guide-writing-ai-prompts (accessed 2024)
-13. **Workflow - Strands Agents** – Strands Agents https://strandsagents.com/latest/documentation/docs/user-guide/concepts/multi-agent/workflow/ (accessed 2024)
-14. **AI Agents: The Multi-Agent Design Pattern - Part 8** – Microsoft Tech Community https://techcommunity.microsoft.com/blog/educatordeveloperblog/ai-agents-the-multi-agent-design-pattern---part-8/4402246 (accessed 2024)
-15. **Migrate Legacy Workflows to Flows and Playbooks** – ServiceNow https://www.servicenow.com/community/workflow-automation-articles/migrate-legacy-workflows-to-flows-and-playbooks-workflow/ta-p/3132026 (accessed 2024)
-16. **Configure real-time workflow stages and steps in Power Apps** – Microsoft https://learn.microsoft.com/en-us/power-apps/maker/data-platform/configure-workflow-steps (accessed 2024)
-17. **A Guide to Industry-specific Standards and Regulations for Technical Writing** – Guidde https://www.guidde.com/blog/a-guide-to-industry-specific-standards-and-regulations-for-technical-writing (accessed 2024)
-18. **Ensuring Compliance with Industry Standards in Documentation** – DataCalculus https://datacalculus.com/en/blog/writing-and-editing/technical-editor/ensuring-compliance-with-industry-standards-in-documentation (accessed 2024)
-19. **Claude Code Agents Documentation** – GitHub https://github.com/lelandg/ClaudeAgents/blob/main/Claude-Code-Agents-Documentation.md (accessed 2024)
-20. **Code review in regulated industries: Best practices for compliance** – Graphite https://graphite.dev/guides/regulated-industry-code-review-best-practices (accessed 2024)
-21. **Agent Governance Whitepaper** – Microsoft https://adoption.microsoft.com/files/copilot-studio/Agent-governance-whitepaper.pdf (accessed 2024)
+1. ISO/IEC/IEEE 29148:2018 – Requirements engineering characteristics – https://cdn.standards.iteh.ai/samples/72089/d67a2360308046938cad282e229a39ca/ISO-IEC-IEEE-29148-2018.pdf (accessed 2025-10-12)
+2. IEEE 829 Standard for Software Test Documentation – https://people.eecs.ku.edu/~hossein/Teaching/Stds/829-1998.pdf (accessed 2025-10-12)
+3. OWASP ASVS Developer Guide – https://devguide.owasp.org/en/03-requirements/05-asvs/ (accessed 2025-10-12)
+4. OWASP Top Ten 2021 (summary) – https://sucuri.net/guides/owasp_top_10_2021_edition/ (accessed 2025-10-12)
+5. Google Engineering Practices (Code Review) – https://sourceforge.net/projects/google-engineering-docs.mirror/ (accessed 2025-10-12)
+6. Diátaxis Framework – https://diataxis.fr/ (accessed 2025-10-12)
+7. Write the Docs Guide – https://www.writethedocs.org/guide/index.html (accessed 2025-10-12)
+8. Multi-Agent Orchestration Handoffs – https://skywork.ai/blog/ai-agent-orchestration-best-practices-handoffs/ (accessed 2025-10-12)
+9. ACM SIGSOFT Empirical Standards – https://www2.sigsoft.org/EmpiricalStandards/ (accessed 2025-10-12)
+10. IEEE 829 overview (Reqtest) – https://reqtest.com/en/knowledgebase/how-to-write-a-test-plan-2/ (accessed 2025-10-12)
 
 ## Evidence
+* Internal: Chatmode files in `.github/chatmodes/` (see Internal System Behavior section for per-file mapping). Empty files: Implementation Reviewer, Documenter, PR Agent.
+* External: Source list above (1–10) underpinning quality, security, documentation, code review, traceability, multi-agent coordination, research rigor categories.
 
-### Internal File References
+## Open unknowns
+* Intended behavioral definitions for Implementation Reviewer (scope, checklist, artifact naming, handoff points) – file empty.
+* Intended behavioral definitions for Documenter (documentation artifact type, completeness checklist, taxonomy usage) – file empty.
+* Intended behavioral definitions for PR Agent (when to open planning/phase/final PRs, description template, readiness checklist) – file empty.
+* Decision on unifying directory naming (`docs/agents/<branch>` vs `docs/agent/<description>`) – currently inconsistent; no internal guidance.
+* Mechanism (if any) for maintaining traceability (FR/SC) through planning, implementation, tests, PRs – absent.
+* Strategy for documenting or validating security considerations across phases (beyond spec assumptions) – undefined.
+* Formal research quality checklist (Spec Research & Codebase Research) – not defined internally.
+* Code review quality criteria and Reviewer role responsibilities – undefined.
+* Documentation artifact path and required sections (e.g., alignment to Diátaxis types) – unspecified.
+* Final PR readiness or release checklist (integration of all artifacts) – absent.
 
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-01A Spec Agent.chatmode.md` - 686-line detailed spec agent with extensive guardrails
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md` - Research agent with internal/external knowledge separation
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-02A Code Researcher.chatmode.md` - HumanLayer-derived with comprehensive DO NOT lists and numbered workflows
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-02B Impl Planner.chatmode.md` - 437-line planning agent
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-03A Implementer.chatmode.md` - HumanLayer-derived with conditional logic and pause points
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` - Empty (0 bytes)
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-04 Documenter.chatmode.md` - Empty (0 bytes)
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-05 PR.chatmode.md` - Empty (0 bytes)
-- `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-X Status Update.chatmode.md` - 59-line status agent
-- `/home/rob/proj/paw/phased-agent-workflow/paw-specification.md` - Comprehensive PAW specification (35KB)
-- `/home/rob/proj/paw/phased-agent-workflow/README.md` - Project overview
-- GitHub Issue #1: https://github.com/lossyrob/phased-agent-workflow/issues/1
-
-### External Source List
-
-See "Source Citations" section above for full list of 21 external sources covering prompt engineering best practices, multi-agent workflows, documentation standards, and code review patterns.
-
-## Open Unknowns
-
-None. All internal questions from the spec-research.prompt.md have been answered through file exploration and specification review. All external knowledge questions have been answered through web search with authoritative sources cited.
+## User-Provided External Knowledge (Optional Manual Fill Section)
+(No external tool limitations encountered; all required external categories sourced. Leave blank unless user wants to augment with organization-specific standards.)

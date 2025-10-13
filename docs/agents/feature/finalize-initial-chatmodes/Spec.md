@@ -1,717 +1,282 @@
----
-date: 2025-10-11T00:00:00-00:00
-target_branch: feature/finalize-initial-chatmodes
-status: complete
-last_updated: 2025-10-11
-summary: "Specification for aligning all PAW chatmodes with proven HumanLayer patterns and adding YAML frontmatter"
-tags: [specification, chatmodes, alignment, frontmatter]
-issue: 1
----
+# Feature Specification: Finalize Initial Agent Chatmodes
 
-# Finalize Initial Agent Chatmodes Spec
+**Branch**: feature/finalize-initial-chatmodes  |  **Created**: 2025-10-13  |  **Status**: Draft  
+**Input Brief**: Mature and standardize all PAW agent chatmodes, completing first-pass agents and ensuring consistency across all stages with proven guidance patterns from production-tested agents.
 
-## Problem & Goals
+## User Scenarios & Testing
 
-The PAW (Phased Agent Workflow) system currently has 9 chatmode files in varying states of completeness and alignment with the PAW specification. Some chatmodes were adapted from proven HumanLayer implementations with battle-tested guidance patterns, while others are untested first-pass outputs or empty placeholders. This inconsistency creates risks for workflow reliability and prevents the PAW system from operating at its full potential.
+### User Story P1 – Complete Empty Chatmodes
+**Narrative**: As a PAW workflow user, I need all agent chatmodes to have complete instructions so that every workflow stage can be executed without encountering empty or placeholder files.
 
-**Success Definition**: All PAW chatmode files are complete, tested-ready, aligned with the PAW specification, and incorporate proven guidance patterns (CRITICAL/Important notes, explicit DO NOT lists, numbered workflows, pause points) from HumanLayer-derived chatmodes.
+**Independent Test**: Open any chatmode file in `.github/chatmodes/` and verify it contains structured sections with actionable instructions.
+
+**Acceptance Scenarios**:
+1. Given the PAW-03B Impl Reviewer chatmode, When I open the file, Then it contains complete review instructions, quality criteria, commit guidance, and PR interaction steps
+2. Given the PAW-04 Documenter chatmode, When I open the file, Then it contains documentation generation instructions, scope boundaries, and artifact format specifications
+3. Given the PAW-05 PR chatmode, When I open the file, Then it contains pre-flight validation, prerequisite checks, and PR description crafting instructions
+
+### User Story P2 – Standardize Agent Naming
+**Narrative**: As a PAW workflow user, I need consistent agent naming across all documentation and files so that I can reference agents unambiguously without confusion.
+
+**Independent Test**: Search all chatmode files and `paw-specification.md` for agent references and verify naming consistency.
+
+**Acceptance Scenarios**:
+1. Given all chatmode filenames, titles, and paw-specification.md references, When I compare agent names, Then each agent has one canonical name used consistently
+2. Given chatmode file paths, When I inspect artifact path references, Then they use the canonical structure `/docs/agents/<target_branch>/` with standard filenames
+3. Given agent-to-agent hand-off instructions, When I read the next-step statements, Then they reference agents by their canonical names
+
+### User Story P3 – Preserve Proven Guidance Patterns
+**Narrative**: As a PAW workflow user, I need critical guardrails from production-tested chatmodes (Code Researcher, Impl Planner, Implementer) and useful patterns from lightly tested chatmodes (Spec Agent, Spec Research Agent) propagated to all agents so that hard-won patterns prevent common failure modes across the workflow.
+
+**Independent Test**: Review a chatmode file and verify it contains appropriate guardrail categories (scope boundaries, fabrication prevention, pause points, etc.) relevant to its role.
+
+**Acceptance Scenarios**:
+1. Given the Code Researcher's anti-evaluation guardrails (production-tested), When I review the Spec Research Agent, Then it contains similar pure-documentation-role guardrails
+2. Given the Implementer's surgical change discipline (production-tested), When I review the Impl Reviewer and Documenter, Then they contain similar unrelated-change exclusion rules
+3. Given the Spec Agent's blocking-on-unresolved-questions pattern (lightly tested), When I review planning and implementation agents, Then they have similar question-resolution requirements
+
+### User Story P4 – Clarify Spec vs Code Research Boundary
+**Narrative**: As a PAW user executing Stage 01 and 02, I need clear differentiation between Spec Research (behavioral) and Code Research (implementation with file paths) so that I understand what each stage produces and can avoid redundant work.
+
+**Independent Test**: Compare SpecResearch.md and CodeResearch.md outputs and verify one focuses on behavioral system description while the other includes file paths and code snippets.
+
+**Acceptance Scenarios**:
+1. Given the Spec Research Agent chatmode, When I read its instructions, Then it emphasizes behavioral documentation without file:line references
+2. Given the Code Research Agent chatmode, When I read its instructions, Then it requires file paths and code snippets but builds upon behavioral understanding from SpecResearch.md
+3. Given both research chatmodes, When I compare their output specifications, Then SpecResearch.md format excludes code implementation detail while CodeResearch.md format includes it
+
+### User Story P5 – Define Implementer vs Reviewer Split
+**Narrative**: As a PAW user executing Stage 03, I need clear role separation between the Implementation Agent (forward momentum, making changes work) and Implementation Review Agent (maintainability, documentation, review responses) so that I can use specialized models for each task.
+
+**Independent Test**: Execute a phase with Implementer followed by Reviewer and verify Implementer focuses on functionality while Reviewer adds documentation and polish.
+
+**Acceptance Scenarios**:
+1. Given the Implementer chatmode, When I read its responsibilities, Then it focuses on executing plan phases, running verification, and pausing for human approval
+2. Given the Impl Reviewer chatmode, When I read its responsibilities, Then it focuses on code review, docstring generation, comment responses, and maintainability improvements
+3. Given both chatmodes, When I compare their commit instructions, Then Implementer commits functional changes while Reviewer commits documentation and review-response changes
+
+### User Story P6 – Add Explicit Stage Hand-offs
+**Narrative**: As a PAW user progressing through workflow stages, I need explicit input requirements and next-agent invocations at each stage boundary so that I know when prerequisites are met and which agent to invoke next.
+
+**Independent Test**: Read any chatmode's hand-off section and verify it lists required outputs, prerequisite checks, and the next agent name.
+
+**Acceptance Scenarios**:
+1. Given the Spec Research Agent, When it completes, Then it states "return to Spec Agent with SpecResearch.md"
+2. Given the Impl Planner, When it completes, Then it states "Invoke Implementation Agent (Stage 03) with ImplementationPlan.md"
+3. Given the Implementer, When all phases complete, Then it states "Invoke Documenter Agent (Stage 04) when all Phase PRs merged"
+
+### User Story P7 – Add Quality Checklists
+**Narrative**: As a PAW agent, I need explicit quality checklists to validate my outputs so that I can self-verify completeness before handing off to the next stage.
+
+**Independent Test**: Review a chatmode and verify it contains a quality checklist with measurable criteria relevant to its outputs.
+
+**Acceptance Scenarios**:
+1. Given research agents (Spec Research, Code Research), When I review their checklists, Then they include factual accuracy, precision, and neutrality checks
+2. Given planning agents (Spec, Impl Planner), When I review their checklists, Then they include traceability, testability, and completeness checks
+3. Given implementation agents (Implementer, Reviewer, Documenter), When I review their checklists, Then they include verification, documentation quality, and scope adherence checks
+
+### User Story P8 – Reduce Ambiguous Language
+**Narrative**: As a PAW agent, I need actionable instructions with clear thresholds instead of ambiguous verbs so that I can execute my role without interpretation variance.
+
+**Independent Test**: Search chatmode instructions for ambiguous verbs (update, refine, comprehensive, relevant, complete) and verify each has clarifying context or examples.
+
+**Acceptance Scenarios**:
+1. Given any instruction using "update", When I read the context, Then it specifies what to update (checkboxes, AUTOGEN blocks, etc.) and how (append, replace, modify)
+2. Given any instruction using "comprehensive", When I read the context, Then it provides stopping conditions or scope boundaries
+3. Given any instruction using "complete", When I read the context, Then it defines completion criteria (all checkboxes, all questions answered, human approval, etc.)
+
+### User Story P9 – Align Artifact Paths
+**Narrative**: As a PAW workflow user, I need all agents to reference the canonical artifact path structure so that documents are consistently located and linked across stages.
+
+**Independent Test**: Search all chatmode files for artifact path references and verify they use `/docs/agents/<target_branch>/` with standard filenames.
+
+**Acceptance Scenarios**:
+1. Given any chatmode referencing research documents, When I read the path, Then it uses `docs/agents/<target_branch>/SpecResearch.md` or `CodeResearch.md`
+2. Given any chatmode referencing the implementation plan, When I read the path, Then it uses `docs/agents/<target_branch>/ImplementationPlan.md` (not ImplPlan.md)
+3. Given any chatmode referencing documentation, When I read the path, Then it uses `docs/agents/<target_branch>/Docs.md` (not Documentation.md)
+
+### User Story P10 – Standardize Status Agent Triggers
+**Narrative**: As a PAW workflow coordinator, I need complete trigger documentation for the Status Agent so that I know when to invoke it for Issue and PR updates.
+
+**Independent Test**: Compare Status Agent triggers to paw-specification.md Stage descriptions and verify all PR lifecycle events are covered.
+
+**Acceptance Scenarios**:
+1. Given the Status Agent chatmode, When I read the Triggers section, Then it lists "Planning PR opened/updated/merged"
+2. Given the Status Agent chatmode, When I read the Triggers section, Then it lists "Docs PR opened/updated/merged" (not just merged)
+3. Given the Status Agent chatmode, When I read the Triggers section, Then all trigger types from paw-specification.md are represented
+
+### Edge Cases
+- **Empty chatmode files**: PAW-03B, PAW-04, PAW-05 currently have no content; must be fully populated
+- **Legacy path structures**: Code Researcher and Impl Planner reference old path patterns (`docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-*.md`); must migrate to canonical paths
+- **Naming variations within single chatmode**: Implementation Plan Agent has three different names in PAW-02B; must standardize internally
+- **Contradictory guidance**: Code Researcher contains "no code paths" in principles but "file:line references" in instructions; must resolve tension
+- **Optional external questions**: SpecResearch.md contains manual-fill section that may remain unanswered; agents must handle gracefully
+- **Cross-stage guardrail applicability**: Some guardrails (e.g., idempotency) valuable across multiple agents but currently only in Status Agent; must migrate selectively
+
+## Requirements
+
+### Functional Requirements
+
+#### Chatmode Completeness
+- **FR-001**: All chatmode files (PAW-03B Impl Reviewer, PAW-04 Documenter, PAW-05 PR) SHALL contain complete structured instructions including: role statement, start/initial response, core principles, inputs, process steps, outputs, guardrails, error handling, and quality checklist. (Stories: P1)
+- **FR-002**: Impl Reviewer chatmode SHALL specify code review criteria, docstring generation instructions, commit structuring, PR comment handling, and coordination with Implementer. (Stories: P1, P5)
+- **FR-003**: Documenter chatmode SHALL specify scope boundaries (what not to change), input validation, documentation types, Docs.md artifact format, and project documentation update guidance. (Stories: P1)
+- **FR-004**: PR chatmode SHALL specify pre-flight validation checks, prerequisite verification (phases merged, docs merged, branch updated), blocking conditions, and comprehensive PR description generation. (Stories: P1)
+
+#### Naming and Path Consistency
+- **FR-005**: All agent references across chatmode files, filenames, and paw-specification.md SHALL use a single canonical name per agent. (Stories: P2)
+- **FR-006**: All artifact path references in chatmode instructions SHALL use the canonical structure `/docs/agents/<target_branch>/` with standard filenames: `Spec.md`, `SpecResearch.md`, `CodeResearch.md`, `ImplementationPlan.md`, `Docs.md`. (Stories: P2, P9)
+- **FR-007**: Chatmode filenames SHALL follow the pattern `PAW-<code> <canonical-name>.chatmode.md` where canonical-name matches the name used in paw-specification.md. (Stories: P2)
+
+#### Guardrail Propagation
+- **FR-008**: Spec Research Agent chatmode SHALL include anti-evaluation guardrails (no suggestions, no critique, no improvements) consistent with Code Researcher pattern. (Stories: P3)
+- **FR-009**: Impl Reviewer and Documenter chatmodes SHALL include surgical change discipline guardrails (only related changes, no unrelated modifications) consistent with Implementer pattern. (Stories: P3)
+- **FR-010**: Planning and implementation chatmodes SHALL include question-resolution requirements (block if critical questions unresolved) consistent with Spec Agent pattern. (Stories: P3)
+- **FR-011**: All chatmodes that modify existing files SHALL include idempotency and block-boundary enforcement guardrails consistent with Status Agent pattern. (Stories: P3)
+
+#### Research Differentiation
+- **FR-012**: Spec Research Agent chatmode SHALL emphasize behavioral system documentation without file:line references or code snippets. (Stories: P4)
+- **FR-013**: Code Research Agent chatmode SHALL require file paths and code snippets while building upon behavioral understanding documented in SpecResearch.md. (Stories: P4)
+- **FR-014**: Code Research Agent chatmode SHALL resolve contradictory guidance between "no code paths" principle and "file:line references" instruction by clarifying that behavioral mapping is high-level summary while comprehensive research requires implementation detail. (Stories: P4)
+
+#### Role Separation (Stage 03)
+- **FR-015**: Implementer chatmode SHALL focus on executing plan phases, running automated verification, committing functional changes, and pausing for human verification. (Stories: P5)
+- **FR-016**: Impl Reviewer chatmode SHALL focus on code review, docstring generation, comment handling, committing documentation changes, and maintainability improvements. (Stories: P5)
+- **FR-017**: Implementer and Impl Reviewer chatmodes SHALL have distinct commit scopes with Implementer committing functionality and Reviewer committing documentation/polish. (Stories: P5)
+
+#### Stage Hand-offs
+- **FR-018**: Each chatmode SHALL include explicit hand-off section listing: required outputs, completion checklist, and next agent invocation statement. (Stories: P6)
+- **FR-019**: Spec Research Agent hand-off SHALL state "Return to Spec Agent with completed SpecResearch.md". (Stories: P6)
+- **FR-020**: Code Research Agent start section SHALL state prerequisite: "Requires Spec.md and SpecResearch.md from Stage 01". (Stories: P6)
+- **FR-021**: Impl Planner hand-off SHALL state "Invoke Implementation Agent (Stage 03) with ImplementationPlan.md". (Stories: P6)
+- **FR-022**: Implementer hand-off (after all phases) SHALL state "Invoke Documenter Agent (Stage 04) when all Phase PRs merged". (Stories: P6)
+
+#### Quality Standards
+- **FR-023**: Each chatmode SHALL include role-appropriate quality checklist with measurable criteria for output validation. (Stories: P7)
+- **FR-024**: Research agent checklists SHALL include: factual accuracy, precision, traceability, neutrality, and completeness dimensions. (Stories: P7)
+- **FR-025**: Planning agent checklists SHALL include: traceability, testability, completeness, ambiguity control, and scope clarity dimensions. (Stories: P7)
+- **FR-026**: Implementation agent checklists SHALL include: verification passing, documentation quality, scope adherence, and commit discipline dimensions. (Stories: P7)
+
+#### Language Clarity
+- **FR-027**: All chatmode instructions SHALL provide clarifying context or examples for ambiguous verbs (update, refine, comprehensive, relevant, complete). (Stories: P8)
+- **FR-028**: Instructions using "update" SHALL specify target (what to update) and method (append, replace, modify in-place). (Stories: P8)
+- **FR-029**: Instructions using "comprehensive" or "complete" SHALL provide stopping conditions, scope boundaries, or completion criteria. (Stories: P8)
+
+#### Status Agent Triggers
+- **FR-030**: Status Agent triggers section SHALL list all PR lifecycle events: Planning PR opened/updated/merged, Phase PR opened/updated/merged, Docs PR opened/updated/merged, Final PR opened/merged. (Stories: P10)
+
+### Key Entities
+
+- **Chatmode File**: Markdown file in `.github/chatmodes/` containing agent instructions, structured with YAML frontmatter and markdown sections
+- **Agent**: Role-specific AI assistant executing one stage or sub-stage of the PAW workflow
+- **Stage Hand-off**: Transition point between workflow stages with explicit input/output requirements and next-agent invocation
+- **Guardrail**: Directive constraining agent behavior using NEVER/ALWAYS/DO NOT patterns to prevent failure modes
+- **Quality Checklist**: Enumerated validation criteria for agent outputs
+- **Artifact Path**: Canonical file location under `/docs/agents/<target_branch>/` for workflow documents
+
+## Success Criteria
+
+- **SC-001**: All chatmode files compile without syntax errors and render correctly in Markdown viewers. (FR-001, FR-002, FR-003, FR-004)
+- **SC-002**: Zero naming inconsistencies when comparing agent references across all chatmode files and paw-specification.md. (FR-005, FR-007)
+- **SC-003**: Zero artifact path mismatches when comparing references across all chatmode files. (FR-006)
+- **SC-004**: All research and planning agents contain at least 5 explicit guardrail directives in dedicated Guardrails section. (FR-008, FR-009, FR-010, FR-011)
+- **SC-005**: Spec Research Agent produces SpecResearch.md without file paths or code snippets; Code Research Agent produces CodeResearch.md with file paths and code snippets. (FR-012, FR-013, FR-014)
+- **SC-006**: Implementer and Impl Reviewer have zero overlapping responsibilities in their respective scope sections. (FR-015, FR-016, FR-017)
+- **SC-007**: Every chatmode contains explicit "Next: Invoke [Agent Name]" or "Return to [Agent Name]" statement. (FR-018, FR-019, FR-020, FR-021, FR-022)
+- **SC-008**: Every chatmode contains quality checklist with minimum 5 measurable criteria appropriate to agent role. (FR-023, FR-024, FR-025, FR-026)
+- **SC-009**: Zero instances of ambiguous verbs (update, refine, comprehensive, relevant, complete) without clarifying context when searched across all chatmodes. (FR-027, FR-028, FR-029)
+- **SC-010**: Status Agent triggers section matches all trigger types enumerated in paw-specification.md without omissions. (FR-030)
+
+## Assumptions
+
+- **Assumption 1**: The PAW-02A Code Researcher, PAW-02B Impl Planner, and PAW-03A Implementer chatmodes are production-tested from Human Layer and their detailed guidance patterns (specific steps, strong corrective language, "important notes") should serve as primary templates for other agents. The PAW-01A Spec Agent and PAW-01B Spec Research Agent are lightly tested and provide additional structural patterns. PAW-X Status Update provides specialized patterns for idempotent updates. *Rationale*: Issue explicitly states Code Researcher and Impl Planner are "taken from Human Layer and have been used effectively," and Implementer was "modified from Human Layer and used effectively in another codebase."
+
+- **Assumption 2**: Canonical agent names will follow the pattern used in paw-specification.md Stage descriptions (e.g., "Implementation Plan Agent" not "Impl Planner"). *Rationale*: Main specification document is the authoritative source for terminology.
+
+- **Assumption 3**: The split between Implementation Agent and Implementation Review Agent is finalized and both will be used in Stage 03 sequentially (Implementer then Reviewer per phase). *Rationale*: Issue description states this split is based on testing with multiple models showing specialization benefits.
+
+- **Assumption 4**: Guardrails using strong corrective language (CRITICAL, NEVER, ALWAYS, DO NOT) are valuable and should be preserved/propagated, not softened. *Rationale*: Issue description states these patterns come from production experience fixing model failures.
+
+- **Assumption 5**: Optional external/context questions in SpecResearch.md may remain unanswered without blocking subsequent stages; agents should handle missing optional knowledge gracefully. *Rationale*: Research distinguishes between internal (must answer) and optional external (manual) questions.
+
+- **Assumption 6**: The human verification pause in Implementer is non-negotiable and should be reflected in Reviewer and potentially other agents. *Rationale*: Critical safety gate preventing automated propagation of implementation errors.
+
+- **Assumption 7**: All chatmodes will be updated in-place (overwriting empty files, modifying mature files) rather than creating new versioned files. *Rationale*: Standard practice for evolving prompt templates.
+
+- **Assumption 8**: The Code Research Agent's emphasis on file:line granularity is intentional for Stage 02 (planning needs implementation detail) despite tension with behavioral focus. *Rationale*: Research findings note this is explicitly for implementation planning, contrasting with Spec Research's behavioral abstraction.
+
+- **Assumption 9**: Status Agent will be updated to include Docs PR opened/updated triggers even though paw-specification.md shows it, as this was identified as an omission not an intentional exclusion. *Rationale*: Consistency across all PR types throughout workflow.
+
+- **Assumption 10**: Quality checklists are for agent self-validation and should be embedded in chatmode instructions, not external rubrics. *Rationale*: Pattern from Spec Agent showing checklist as part of workflow instructions.
 
 ## Scope
 
-### In-Scope
-
-- **Spec Agent Chatmode (PAW-01A)**: Align with proven HumanLayer guidance patterns (was first-pass output)
-- **Spec Research Agent Chatmode (PAW-01B)**: Align with proven HumanLayer guidance patterns (was first-pass output)
-- **Code Researcher Chatmode (PAW-02A)**: Refactor to focus on behavioral understanding over line-number specificity while preserving all proven guidance patterns
-- **Implementation Planner Chatmode (PAW-02B)**: Align with proven HumanLayer guidance patterns (was first-pass output)
-- **Implementer Chatmode (PAW-03A)**: Update to align with two-agent split (Implementation + Review) and current PAW specification
-- **Implementation Review Chatmode (PAW-03B)**: Create complete chatmode incorporating proven patterns and model-specific strengths (Claude for documentation/review)
-- **Documenter Chatmode (PAW-04)**: Create complete chatmode with HumanLayer-style guidance patterns
-- **PR Agent Chatmode (PAW-05)**: Create complete chatmode with HumanLayer-style guidance patterns
-- **Status Update Agent Chatmode (PAW-X)**: Align with proven HumanLayer guidance patterns (was first-pass output)
-- **All Chatmodes**: Ensure consistent application of proven guidance patterns (DO NOT lists, CRITICAL/Important notes, numbered workflows, pause points, explicit role boundaries)
-- **Validation**: Each chatmode clearly states what it does NOT do and where human handoffs occur
-- **Cross-references**: Each chatmode correctly references artifact locations and next-stage agents
-
-### Out-of-Scope
-
-- Creating new stages or agents beyond the 9 existing chatmodes
-- Testing chatmodes in production workflows (that's implementation validation work)
-- Changing the PAW specification itself (chatmodes must align TO the spec, not vice versa)
-- Creating scripts or tooling referenced by chatmodes (e.g., metadata generation scripts)
-
-## Stakeholders & Interfaces
-
-**Human Developers**:
-- Read chatmode files to understand agent responsibilities and invoke agents correctly
-- Review agent outputs at defined pause points
-- Provide clarifications when agents encounter ambiguities
-
-**AI Agent Runtime (VS Code Copilot Chat)**:
-- Loads chatmode content as system prompts
-- Executes agent workflows following chatmode instructions
-- Respects role boundaries and non-responsibilities defined in chatmodes
-
-**PAW Workflow Stages**:
-- Stage 01 (Specification): Uses PAW-01A, PAW-01B
-- Stage 02 (Implementation Plan): Uses PAW-02A, PAW-02B
-- Stage 03 (Phased Implementation): Uses PAW-03A, PAW-03B
-- Stage 04 (Documentation): Uses PAW-04
-- Stage 05 (Final PR): Uses PAW-05
-- Cross-stage: PAW-X (Status Update)
-
-**Artifact Files**:
-- Each chatmode references correct paths for reading/writing artifacts in `/docs/agents/<target_branch>/`
-- Chatmodes specify correct prompt file naming conventions in `/docs/agents/<target_branch>/prompts/`
-
-## Functional Requirements
-
-### FR-1: Spec Agent Alignment
-As a Spec Agent, when drafting specifications from GitHub Issues, then I SHALL incorporate all proven HumanLayer guidance patterns to ensure rigorous, testable requirement generation.
-
-**Specific Behaviors**:
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT fabricate answers", "DO NOT proceed to final spec if unanswered critical questions remain")
-- Chatmode includes numbered workflow (currently has detailed steps, ensure all proven patterns applied)
-- Chatmode includes 3+ IMPORTANT notes about pausing for research, integrating external knowledge, quality standards
-- Chatmode includes "What not to do" section
-- Chatmode includes explicit pause points (after research prompt generation, before final spec draft)
-- Chatmode preserves existing detailed template and quality bar sections
-- Chatmode explicitly states: "DO NOT commit, push, open PRs, or update Issues"
-- Chatmode specifies YAML frontmatter template for `Spec.md` with fields: `date`, `target_branch`, `status`, `last_updated`, `summary` (one-sentence description), optional `tags` and `issue`
-
-### FR-2: Spec Research Agent Alignment
-As a Spec Research Agent, when gathering internal system facts and external knowledge, then I SHALL incorporate all proven HumanLayer guidance patterns to ensure comprehensive, cited research.
-
-**Specific Behaviors**:
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT fabricate sources", "DO NOT skip internal file reading")
-- Chatmode includes numbered workflow for research execution
-- Chatmode includes 3+ IMPORTANT notes about file reading discipline, citation requirements, handling missing external search tools
-- Chatmode includes "What not to do" section
-- Chatmode preserves existing internal vs external knowledge separation
-- Chatmode explicitly states output path: `docs/agents/<target_branch>/SpecResearch.md`
-- Chatmode specifies YAML frontmatter template for `SpecResearch.md` with fields: `date`, `target_branch`, `status`, `last_updated`, `summary` (one-sentence description), optional `tags` and `issue`
-
-### FR-3: Code Researcher Behavioral Focus
-As a Code Research Agent, when analyzing the current system to inform implementation planning, then I SHALL produce research that emphasizes behavioral understanding and architectural patterns over exhaustive file:line mappings, WHILE retaining all proven HumanLayer guidance patterns (CRITICAL/DO NOT lists, numbered workflows, Important notes).
-
-**Specific Behaviors**:
-- Research output describes WHAT the system does and WHERE relevant code lives, without requiring line-by-line citations for every behavior
-- File paths and key entry points are cited, but not every implementation detail
-- Architectural patterns and code organization principles are explicitly documented
-- All existing DO NOT items are preserved
-- All existing IMPORTANT/CRITICAL notes are preserved
-- Numbered step-by-step workflow is preserved
-- Chatmode preserves existing YAML frontmatter template (already includes proper metadata structure with `date`, `git_commit`, `branch`, `repository`, `topic`, `tags`, `status`, `last_updated`)
-
-### FR-4: Implementation Planner Alignment
-As an Implementation Planner Agent, when creating phased implementation plans, then I SHALL incorporate all proven HumanLayer guidance patterns to ensure executable, testable phase definitions.
-
-**Specific Behaviors**:
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT create phases without clear verification criteria", "DO NOT skip dependency analysis")
-- Chatmode includes numbered workflow for plan creation
-- Chatmode includes 3+ IMPORTANT notes about phase sizing, dependency management, verification planning
-- Chatmode includes "What not to do" section
-- Chatmode includes pause point before creating Planning PR
-- Chatmode explicitly states output path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- Chatmode defines Planning PR workflow (branch: `<target_branch>_plan`)
-- Chatmode specifies YAML frontmatter template for `ImplementationPlan.md` with fields: `date`, `target_branch`, `status`, `last_updated`, `summary` (one-sentence description), optional `tags` and `issue`
-
-### FR-5: Implementer/Reviewer Split Alignment
-As a Code Research Agent, when analyzing the current system to inform implementation planning, then I SHALL produce research that emphasizes behavioral understanding and architectural patterns over exhaustive file:line mappings, WHILE retaining all proven HumanLayer guidance patterns (CRITICAL/DO NOT lists, numbered workflows, Important notes).
-
-**Specific Behaviors**:
-- Research output describes WHAT the system does and WHERE relevant code lives, without requiring line-by-line citations for every behavior
-- File paths and key entry points are cited, but not every implementation detail
-- Architectural patterns and code organization principles are explicitly documented
-- All existing DO NOT items are preserved
-- All existing IMPORTANT/CRITICAL notes are preserved
-- Numbered step-by-step workflow is preserved
-
-### FR-5: Implementer/Reviewer Split Alignment
-As an Implementation Agent (PAW-03A), when executing implementation phases, then I SHALL focus on code changes and automated quality checks, explicitly delegating documentation, code commenting, and PR creation to the Implementation Review Agent (PAW-03B).
-
-As an Implementation Review Agent (PAW-03B), when reviewing implementation phase outputs, then I SHALL add docstrings and code comments for maintainability, create/update Phase PRs, and respond to review comments with detailed replies.
-
-**Specific Behaviors**:
-- PAW-03A chatmode explicitly states: "DO NOT generate docstrings or code comments — Implementation Review Agent handles that"
-- PAW-03A chatmode explicitly states: "DO NOT open Phase PRs — Implementation Review Agent handles that"
-- PAW-03A workflow ends with: "Phase [N] Complete - Handoff to Implementation Review Agent"
-- PAW-03B chatmode explicitly states: "DO NOT make functional code changes unless addressing review comments — Implementation Agent handles that"
-- PAW-03B chatmode includes conditional logic: "When invoked post-implementation" vs "When responding to PR review comments"
-- Both chatmodes reference the model-testing rationale (GPT Codex for implementation, Claude for documentation)
-
-### FR-6: Implementation Review Chatmode Creation
-As an Implementation Agent (PAW-03A), when executing implementation phases, then I SHALL focus on code changes and automated quality checks, explicitly delegating documentation, code commenting, and PR creation to the Implementation Review Agent (PAW-03B).
-
-As an Implementation Review Agent (PAW-03B), when reviewing implementation phase outputs, then I SHALL add docstrings and code comments for maintainability, create/update Phase PRs, and respond to review comments with detailed replies.
-
-**Specific Behaviors**:
-- PAW-03A chatmode explicitly states: "DO NOT generate docstrings or code comments — Implementation Review Agent handles that"
-- PAW-03A chatmode explicitly states: "DO NOT open Phase PRs — Implementation Review Agent handles that"
-- PAW-03A workflow ends with: "Phase [N] Complete - Handoff to Implementation Review Agent"
-- PAW-03B chatmode explicitly states: "DO NOT make functional code changes unless addressing review comments — Implementation Agent handles that"
-- PAW-03B chatmode includes conditional logic: "When invoked post-implementation" vs "When responding to PR review comments"
-- Both chatmodes reference the model-testing rationale (GPT Codex for implementation, Claude for documentation)
-
-### FR-6: Implementation Review Chatmode Creation
-As a PAW system user, when I invoke the Implementation Review Agent (PAW-03B), then I SHALL receive a complete, tested-ready chatmode with all proven guidance patterns from HumanLayer-derived chatmodes.
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` exists and contains > 200 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items
-- Chatmode includes numbered workflow with clear steps
-- Chatmode includes 3+ IMPORTANT notes about tool usage, file reading, or handoff protocols
-- Chatmode includes "What not to do" section
-- Chatmode includes explicit pause points with formatted output templates
-- Chatmode references correct artifact paths: `/docs/agents/<target_branch>/ImplementationPlan.md`
-- Chatmode defines Phase PR creation workflow (branch naming, PR title format, description template)
-
-### FR-7: Documenter Chatmode Creation
-As a PAW system user, when I invoke the Implementation Review Agent (PAW-03B), then I SHALL receive a complete, tested-ready chatmode with all proven guidance patterns from HumanLayer-derived chatmodes.
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` exists and contains > 200 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items
-- Chatmode includes numbered workflow with clear steps
-- Chatmode includes 3+ IMPORTANT notes about tool usage, file reading, or handoff protocols
-- Chatmode includes "What not to do" section
-- Chatmode includes explicit pause points with formatted output templates
-- Chatmode references correct artifact paths: `/docs/agents/<target_branch>/ImplementationPlan.md`
-- Chatmode defines Phase PR creation workflow (branch naming, PR title format, description template)
-
-### FR-7: Documenter Chatmode Creation
-As a PAW system user, when I invoke the Documenter Agent (PAW-04), then I SHALL receive a complete chatmode that produces comprehensive documentation artifacts aligned with industry standards (ISO/IEC 26514).
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-04 Documenter.chatmode.md` exists and contains > 200 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT suggest code changes", "DO NOT reimplement features")
-- Chatmode includes numbered workflow for documentation generation
-- Chatmode includes IMPORTANT notes about accuracy verification and consistency
-- Chatmode defines output path: `/docs/agents/<target_branch>/Docs.md`
-- Chatmode specifies documentation components: API reference, user guide, architectural overview, change summary
-- Chatmode includes "What not to do" section emphasizing documentation-only role
-- Chatmode includes pause point before opening Docs PR
-- Chatmode references next stage: "Handoff to PR Agent (Stage 05)"
-- Chatmode specifies YAML frontmatter template for `Docs.md` with fields: `date`, `target_branch`, `status`, `last_updated`, `summary` (one-sentence description), optional `tags` and `issue`
-
-### FR-8: PR Agent Chatmode Creation
-As a PAW system user, when I invoke the Documenter Agent (PAW-04), then I SHALL receive a complete chatmode that produces comprehensive documentation artifacts aligned with industry standards (ISO/IEC 26514).
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-04 Documenter.chatmode.md` exists and contains > 200 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT suggest code changes", "DO NOT reimplement features")
-- Chatmode includes numbered workflow for documentation generation
-- Chatmode includes IMPORTANT notes about accuracy verification and consistency
-- Chatmode defines output path: `/docs/agents/<target_branch>/Docs.md`
-- Chatmode specifies documentation components: API reference, user guide, architectural overview, change summary
-- Chatmode includes "What not to do" section emphasizing documentation-only role
-- Chatmode includes pause point before opening Docs PR
-- Chatmode references next stage: "Handoff to PR Agent (Stage 05)"
-
-### FR-8: PR Agent Chatmode Creation
-As a PAW system user, when I invoke the PR Agent (PAW-05), then I SHALL receive a complete chatmode that orchestrates final PR creation with comprehensive validation checks.
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-05 PR.chatmode.md` exists and contains > 150 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT merge PRs", "DO NOT skip validation checks")
-- Chatmode includes numbered workflow: validate all phase PRs merged, consolidate documentation, create final PR, add comprehensive description
-- Chatmode includes IMPORTANT notes about PR description formatting and validation requirements
-- Chatmode defines PR title format: `[Feature] <brief description>` based on target branch
-- Chatmode defines PR description template sections: Overview, Changes Summary, Testing Notes, Documentation, References
-- Chatmode includes validation checklist: all phase PRs merged, tests passing, docs updated, no merge conflicts
-- Chatmode includes pause point after PR creation: "Final PR created - ready for human review"
-- Chatmode explicitly states: "DO NOT merge the PR — human approval required"
-
-### FR-9: Status Update Agent Alignment
-As a Status Update Agent, when synchronizing workflow state with GitHub Issues and PRs, then I SHALL incorporate all proven HumanLayer guidance patterns to ensure accurate, non-intrusive status management.
-
-**Specific Behaviors**:
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT modify issue content", "DO NOT close issues without explicit instruction")
-- Chatmode includes numbered workflow for status synchronization
-- Chatmode includes 3+ IMPORTANT notes about comment formatting, label management, status validation
-- Chatmode includes "What not to do" section
-- Chatmode explicitly states it does NOT make code changes or perform implementation work
-- Chatmode defines status comment templates for each workflow stage
-
-### FR-10: Consistent Guidance Pattern Application
-As a PAW system user, when I invoke the PR Agent (PAW-05), then I SHALL receive a complete chatmode that orchestrates final PR creation with comprehensive validation checks.
-
-**Specific Behaviors**:
-- File `/home/rob/proj/paw/phased-agent-workflow/.github/chatmodes/PAW-05 PR.chatmode.md` exists and contains > 150 lines
-- Chatmode includes CRITICAL section with 8+ DO NOT items (e.g., "DO NOT merge PRs", "DO NOT skip validation checks")
-- Chatmode includes numbered workflow: validate all phase PRs merged, consolidate documentation, create final PR, add comprehensive description
-- Chatmode includes IMPORTANT notes about PR description formatting and validation requirements
-- Chatmode defines PR title format: `[Feature] <brief description>` based on target branch
-- Chatmode defines PR description template sections: Overview, Changes Summary, Testing Notes, Documentation, References
-- Chatmode includes validation checklist: all phase PRs merged, tests passing, docs updated, no merge conflicts
-- Chatmode includes pause point after PR creation: "Final PR created - ready for human review"
-- Chatmode explicitly states: "DO NOT merge the PR — human approval required"
-
-### FR-10: Consistent Guidance Pattern Application
-As a chatmode author, when creating or updating any PAW chatmode, then I SHALL apply all proven guidance patterns identified in HumanLayer-derived chatmodes (PAW-02A, PAW-03A).
-
-**Specific Behaviors**:
-- Each chatmode includes a CRITICAL section at or near the top defining core responsibilities
-- Each chatmode includes 8-12 DO NOT items preventing common mistakes
-- Each chatmode includes 3+ IMPORTANT or CRITICAL inline notes about tool usage, context management, or workflow discipline
-- Each chatmode includes numbered workflow steps (5-10 steps) for primary execution path
-- Each chatmode includes "What not to do" sections after major procedures
-- Each chatmode includes conditional logic for different invocation scenarios (where applicable)
-- Each chatmode includes explicit pause points with formatted output templates for human handoffs
-- Each chatmode includes explicit role boundary statements (what the agent does NOT do)
-- Each chatmode uses consistent formatting: CRITICAL in all caps, Important with **bold**, numbered lists with sub-bullets
-
-### FR-11: Artifact Path Correctness
-As a chatmode author, when creating or updating any PAW chatmode, then I SHALL apply all proven guidance patterns identified in HumanLayer-derived chatmodes (PAW-02A, PAW-03A).
-
-**Specific Behaviors**:
-- Each chatmode includes a CRITICAL section at or near the top defining core responsibilities
-- Each chatmode includes 8-12 DO NOT items preventing common mistakes
-- Each chatmode includes 3+ IMPORTANT or CRITICAL inline notes about tool usage, context management, or workflow discipline
-- Each chatmode includes numbered workflow steps (5-10 steps) for primary execution path
-- Each chatmode includes "What not to do" sections after major procedures
-- Each chatmode includes conditional logic for different invocation scenarios (where applicable)
-- Each chatmode includes explicit pause points with formatted output templates for human handoffs
-- Each chatmode includes explicit role boundary statements (what the agent does NOT do)
-- Each chatmode uses consistent formatting: CRITICAL in all caps, Important with **bold**, numbered lists with sub-bullets
-
-### FR-11: Artifact Path Correctness
-As any PAW agent, when reading or writing workflow artifacts, then I SHALL use paths conforming to the PAW specification: `/docs/agents/<target_branch>/` for documents and `/docs/agents/<target_branch>/prompts/` for prompt files.
-
-**Specific Behaviors**:
-- PAW-01A references: `docs/agents/<target_branch>/prompts/spec-research.prompt.md` (output), `docs/agents/<target_branch>/Spec.md` (output)
-- PAW-01B references: `docs/agents/<target_branch>/prompts/spec-research.prompt.md` (input), `docs/agents/<target_branch>/SpecResearch.md` (output)
-- PAW-02A references: `docs/agents/<target_branch>/SpecResearch.md` (input), `docs/agents/<target_branch>/prompts/code-research.prompt.md` (output), `docs/agents/<target_branch>/CodeResearch.md` (output)
-- PAW-02B references: `docs/agents/<target_branch>/CodeResearch.md` (input), `docs/agents/<target_branch>/ImplementationPlan.md` (output)
-- PAW-03A references: `docs/agents/<target_branch>/ImplementationPlan.md` (input)
-- PAW-03B references: `docs/agents/<target_branch>/ImplementationPlan.md` (input), creates Phase PRs
-- PAW-04 references: `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/ImplementationPlan.md`, all Phase PRs (inputs); `docs/agents/<target_branch>/Docs.md` (output)
-- PAW-05 references: all Phase PRs, `docs/agents/<target_branch>/Docs.md` (inputs); creates final PR to main
-
-### FR-12: Cross-Stage Handoff Clarity
-As any PAW agent, when reading or writing workflow artifacts, then I SHALL use paths conforming to the PAW specification: `/docs/agents/<target_branch>/` for documents and `/docs/agents/<target_branch>/prompts/` for prompt files.
-
-**Specific Behaviors**:
-- PAW-02A references: `docs/agents/<target_branch>/SpecResearch.md` (input), `docs/agents/<target_branch>/prompts/code-research.prompt.md` (output), `docs/agents/<target_branch>/CodeResearch.md` (output)
-- PAW-02B references: `docs/agents/<target_branch>/CodeResearch.md` (input), `docs/agents/<target_branch>/ImplementationPlan.md` (output)
-- PAW-03A references: `docs/agents/<target_branch>/ImplementationPlan.md` (input)
-- PAW-03B references: `docs/agents/<target_branch>/ImplementationPlan.md` (input), creates Phase PRs
-- PAW-04 references: `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/ImplementationPlan.md`, all Phase PRs (inputs); `docs/agents/<target_branch>/Docs.md` (output)
-- PAW-05 references: all Phase PRs, `docs/agents/<target_branch>/Docs.md` (inputs); creates final PR to main
-
-### FR-12: YAML Frontmatter for Artifacts
-As any PAW agent producing non-prompt artifacts (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md), when writing these documents, then I SHALL include standardized YAML frontmatter at the top of each file for metadata tracking and document identification.
-
-**Specific Behaviors**:
-- All non-prompt artifact files include YAML frontmatter delimited by `---`
-- Frontmatter includes required fields: `date` (ISO 8601 with timezone), `target_branch`, `status`, `last_updated` (YYYY-MM-DD), `summary` (one-sentence description)
-- Frontmatter may include optional fields: `tags` (array), `issue` (Issue number)
-- Status values align with workflow stage: `draft`, `in-review`, `approved`, `complete`
-- Summary provides human-readable context for quick document identification when browsing artifacts
-- Format example:
-  ```yaml
-  ---
-  date: 2025-10-11T14:23:45-07:00
-  target_branch: feature/finalize-initial-chatmodes
-  status: complete
-  last_updated: 2025-10-11
-  summary: "Specification for aligning all PAW chatmodes with proven HumanLayer patterns"
-  tags: [specification, chatmodes, alignment]
-  issue: 1
-  ---
-  ```
-
-### FR-13: Cross-Stage Handoff Clarity
-As any PAW agent, when completing my stage, then I SHALL explicitly state the next stage and agent in my final output, providing the human user with clear instructions for workflow continuation.
-
-**Specific Behaviors**:
-- PAW-01A final output includes: "Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent to update Issue."
-- PAW-01B final output includes: "Return to Spec Agent with this research."
-- PAW-02A final output includes: "Next: Invoke Implementation Plan Agent (PAW-02B)."
-- PAW-02B final output includes: "Next: Invoke Implementation Agent (PAW-03A) for Phase [N]."
-- PAW-03A final output includes: "Phase [N] Complete - Handoff to Implementation Review Agent (PAW-03B)."
-- PAW-03B final output includes: "Phase [N] PR created. Next: Continue with Implementation Agent (PAW-03A) for Phase [N+1] or proceed to Documenter Agent (PAW-04) if all phases complete."
-- PAW-04 final output includes: "Docs PR created. Next: Invoke PR Agent (PAW-05) to create final PR."
-- PAW-05 final output includes: "Final PR created. Ready for human review and merge."
-- PAW-X describes when it should be invoked (optionally at stage transitions to update Issue status)
-As any PAW agent, when completing my stage, then I SHALL explicitly state the next stage and agent in my final output, providing the human user with clear instructions for workflow continuation.
-
-**Specific Behaviors**:
-- PAW-01A final output includes: "Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent to update Issue."
-- PAW-01B final output includes: "Return to Spec Agent with this research."
-- PAW-02A final output includes: "Next: Invoke Implementation Plan Agent (PAW-02B)."
-- PAW-02B final output includes: "Next: Invoke Implementation Agent (PAW-03A) for Phase [N]."
-- PAW-03A final output includes: "Phase [N] Complete - Handoff to Implementation Review Agent (PAW-03B)."
-- PAW-03B final output includes: "Phase [N] PR created. Next: Continue with Implementation Agent (PAW-03A) for Phase [N+1] or proceed to Documenter Agent (PAW-04) if all phases complete."
-- PAW-04 final output includes: "Docs PR created. Next: Invoke PR Agent (PAW-05) to create final PR."
-- PAW-05 final output includes: "Final PR created. Ready for human review and merge."
-
-## Non-Functional Requirements
-
-### NFR-1: Maintainability
-- Each chatmode is structured with clear section headings
-- Guidance patterns are consistent across all chatmodes (same terminology, same formatting conventions)
-- Changes to proven patterns (from HumanLayer-derived chatmodes) are explicitly justified in comments or documentation
-
-### NFR-2: Clarity
-- Each chatmode can be understood by a developer unfamiliar with PAW in < 10 minutes of reading
-- DO NOT lists use specific, actionable language (not vague prohibitions)
-- Workflows use imperative verbs and avoid ambiguous language ("might", "should consider", "could")
-
-### NFR-3: Completeness
-- No chatmode contains TODO, TBD, or placeholder text
-- All referenced scripts, files, or commands are either: (a) existing and functional, or (b) clearly marked as "to be created separately"
-- Each chatmode addresses error handling (what to do if a file doesn't exist, a command fails, or research is incomplete)
-
-### NFR-4: Consistency with PAW Specification
-- No chatmode contradicts the workflow stages, artifact locations, or agent responsibilities defined in `/home/rob/proj/paw/phased-agent-workflow/paw-specification.md`
-- Branch naming conventions match specification: `feature/<slug>`, `<target_branch>_plan`, `<target_branch>_phase<N>`
-- Artifact naming conventions match specification: `Spec.md`, `SpecResearch.md`, `CodeResearch.md`, `ImplementationPlan.md`, `Docs.md`
-
-### NFR-5: Preservation of Proven Patterns
-- Zero DO NOT items from PAW-02A or PAW-03A are removed unless explicitly justified
-- Zero IMPORTANT/CRITICAL notes from PAW-02A or PAW-03A are removed unless explicitly justified
-- Numbered workflow steps from PAW-02A or PAW-03A are retained in updated versions
-- Any removal or modification of proven patterns is documented in the chatmode with a comment explaining the rationale
-
-## Data / Schema (Behavioral Description)
-
-### Chatmode File Entities
-
-**Chatmode File**:
-- Path: `.github/chatmodes/PAW-<stage><letter> <name>.chatmode.md`
-- Format: Markdown with structured sections
-- Required Sections: CRITICAL (responsibilities), Workflow (numbered steps), DO NOT list, IMPORTANT notes, Handoff instructions
-- Optional Sections: Conditional logic blocks, What not to do, Error handling, Examples
-
-**Guidance Pattern Types**:
-- **CRITICAL Section**: All-caps header, bullet list of core responsibilities and prohibitions (8-12 items)
-- **IMPORTANT Note**: Inline **bold** prefix, specific instruction about tool usage or workflow discipline
-- **Numbered Workflow**: Sequential steps (1, 2, 3...) with sub-bullets (a, b, c...) for details
-- **Pause Point**: Formatted block with template output, explicit "wait for human" instruction
-- **Handoff Statement**: Final sentence or paragraph directing user to next agent/stage
-
-### Artifact References
-
-Each chatmode must correctly reference:
-- **Input artifacts**: Files read at workflow start (e.g., `SpecResearch.md`, `ImplementationPlan.md`)
-- **Output artifacts**: Files written during workflow (e.g., `CodeResearch.md`, `Docs.md`)
-- **Prompt files**: Prompt templates written for sub-agents (e.g., `prompts/code-research.prompt.md`)
-
-## Acceptance Criteria
-
-### AC-1: Spec Agent Alignment (FR-1)
-- [ ] PAW-01A chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-01A chatmode includes numbered workflow (currently detailed, ensure all proven patterns applied)
-- [ ] PAW-01A chatmode includes 3+ IMPORTANT notes about research pausing, external knowledge integration, quality standards
-- [ ] PAW-01A chatmode includes "What not to do" section
-- [ ] PAW-01A chatmode includes explicit pause points (after research prompt generation, before final spec)
-- [ ] PAW-01A chatmode includes DO NOT item: "DO NOT commit, push, open PRs, or update Issues"
-- [ ] PAW-01A chatmode preserves existing template and quality bar sections
-- [ ] PAW-01A chatmode specifies YAML frontmatter template for `Spec.md` including fields: `date`, `target_branch`, `status`, `last_updated`, `summary`
-- [ ] Manual review confirms: chatmode aligns with proven HumanLayer patterns
-
-### AC-2: Spec Research Agent Alignment (FR-2)
-- [ ] PAW-01B chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-01B chatmode includes numbered workflow for research execution
-- [ ] PAW-01B chatmode includes 3+ IMPORTANT notes about file reading discipline, citation requirements
-- [ ] PAW-01B chatmode includes "What not to do" section
-- [ ] PAW-01B chatmode preserves internal vs external knowledge separation
-- [ ] PAW-01B chatmode references correct output path: `docs/agents/<target_branch>/SpecResearch.md`
-- [ ] PAW-01B chatmode specifies YAML frontmatter template for `SpecResearch.md` including fields: `date`, `target_branch`, `status`, `last_updated`, `summary`
-- [ ] Manual review confirms: chatmode aligns with proven HumanLayer patterns
-
-### AC-3: Code Researcher Refactor (FR-3)
-- [ ] PAW-02A chatmode contains explicit guidance: "Focus on behavioral descriptions and architectural patterns; cite file paths for key components but avoid exhaustive line-number listings"
-- [ ] PAW-02A chatmode retains all existing DO NOT items (count: 10 in current version)
-- [ ] PAW-02A chatmode retains all existing IMPORTANT/CRITICAL notes (count: 5+ in current version)
-- [ ] PAW-02A chatmode retains numbered workflow structure (9 main steps in current version)
-- [ ] PAW-02A chatmode includes "What not to do" section after research strategies
-- [ ] PAW-02A chatmode preserves existing YAML frontmatter template (currently has proper structure)
-- [ ] Manual review confirms: no proven guidance removed without justification
-
-### AC-4: Implementation Planner Alignment (FR-4)
-- [ ] PAW-02B chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-02B chatmode includes numbered workflow for plan creation
-- [ ] PAW-02B chatmode includes 3+ IMPORTANT notes about phase sizing, dependency management, verification
-- [ ] PAW-02B chatmode includes "What not to do" section
-- [ ] PAW-02B chatmode includes pause point before creating Planning PR
-- [ ] PAW-02B chatmode references correct paths: `docs/agents/<target_branch>/CodeResearch.md` (input), `docs/agents/<target_branch>/ImplementationPlan.md` (output)
-- [ ] PAW-02B chatmode defines Planning PR workflow (branch: `<target_branch>_plan`)
-- [ ] PAW-02B chatmode specifies YAML frontmatter template for `ImplementationPlan.md` including fields: `date`, `target_branch`, `status`, `last_updated`, `summary`
-- [ ] Manual review confirms: chatmode aligns with proven HumanLayer patterns
-
-### AC-5: Implementer Split Alignment (FR-5)
-- [ ] PAW-02A chatmode contains explicit guidance: "Focus on behavioral descriptions and architectural patterns; cite file paths for key components but avoid exhaustive line-number listings"
-- [ ] PAW-02A chatmode retains all existing DO NOT items (count: 10 in current version)
-- [ ] PAW-02A chatmode retains all existing IMPORTANT/CRITICAL notes (count: 5+ in current version)
-- [ ] PAW-02A chatmode retains numbered workflow structure (9 main steps in current version)
-- [ ] PAW-02A chatmode includes "What not to do" section after research strategies
-- [ ] Manual review confirms: no proven guidance removed without justification
-
-### AC-5: Implementer Split Alignment (FR-5)
-- [ ] PAW-03A chatmode includes DO NOT item: "DO NOT generate docstrings or code comments — Implementation Review Agent handles that"
-- [ ] PAW-03A chatmode includes DO NOT item: "DO NOT open Phase PRs — Implementation Review Agent handles that"
-- [ ] PAW-03A workflow ends with: "Phase [N] Complete - Handoff to Implementation Review Agent (PAW-03B)"
-- [ ] PAW-03A chatmode retains all existing proven guidance (DO NOTs, IMPORTANT notes, conditional logic, pause points from current version)
-- [ ] Manual review confirms: role boundaries between 03A and 03B are unambiguous
-
-### AC-6: Implementation Review Chatmode (FR-6)
-- [ ] PAW-03A chatmode includes DO NOT item: "DO NOT generate docstrings or code comments — Implementation Review Agent handles that"
-- [ ] PAW-03A chatmode includes DO NOT item: "DO NOT open Phase PRs — Implementation Review Agent handles that"
-- [ ] PAW-03A workflow ends with: "Phase [N] Complete - Handoff to Implementation Review Agent (PAW-03B)"
-- [ ] PAW-03A chatmode retains all existing proven guidance (DO NOTs, IMPORTANT notes, conditional logic, pause points from current version)
-- [ ] Manual review confirms: role boundaries between 03A and 03B are unambiguous
-
-### AC-6: Implementation Review Chatmode (FR-6)
-- [ ] File `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` exists
-- [ ] PAW-03B chatmode contains > 200 lines
-- [ ] PAW-03B chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-03B chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-03B chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-03B chatmode includes "What not to do" section
-- [ ] PAW-03B chatmode includes pause point before opening Phase PR
-- [ ] PAW-03B chatmode references artifact path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03B chatmode defines Phase PR creation workflow (branch naming: `<target_branch>_phase<N>`)
-- [ ] PAW-03B chatmode includes conditional logic: "When invoked post-implementation" vs "When responding to PR review comments"
-
-### AC-7: Documenter Chatmode (FR-7)
-- [ ] File `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` exists
-- [ ] PAW-03B chatmode contains > 200 lines
-- [ ] PAW-03B chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-03B chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-03B chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-03B chatmode includes "What not to do" section
-- [ ] PAW-03B chatmode includes pause point before opening Phase PR
-- [ ] PAW-03B chatmode references artifact path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03B chatmode defines Phase PR creation workflow (branch naming: `<target_branch>_phase<N>`)
-- [ ] PAW-03B chatmode includes conditional logic: "When invoked post-implementation" vs "When responding to PR review comments"
-
-### AC-7: Documenter Chatmode (FR-7)
-- [ ] File `.github/chatmodes/PAW-04 Documenter.chatmode.md` exists
-- [ ] PAW-04 chatmode contains > 200 lines
-- [ ] PAW-04 chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-04 chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-04 chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-04 chatmode includes "What not to do" section
-- [ ] PAW-04 chatmode defines output path: `docs/agents/<target_branch>/Docs.md`
-- [ ] PAW-04 chatmode specifies documentation components: API reference, user guide, architectural overview, change summary
-- [ ] PAW-04 chatmode includes pause point before opening Docs PR
-- [ ] PAW-04 chatmode includes handoff statement: "Next: Invoke PR Agent (PAW-05)"
-- [ ] PAW-04 chatmode specifies YAML frontmatter template for `Docs.md` including fields: `date`, `target_branch`, `status`, `last_updated`, `summary`
-
-### AC-8: PR Agent Chatmode (FR-8)
-- [ ] File `.github/chatmodes/PAW-04 Documenter.chatmode.md` exists
-- [ ] PAW-04 chatmode contains > 200 lines
-- [ ] PAW-04 chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-04 chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-04 chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-04 chatmode includes "What not to do" section
-- [ ] PAW-04 chatmode defines output path: `docs/agents/<target_branch>/Docs.md`
-- [ ] PAW-04 chatmode specifies documentation components: API reference, user guide, architectural overview, change summary
-- [ ] PAW-04 chatmode includes pause point before opening Docs PR
-- [ ] PAW-04 chatmode includes handoff statement: "Next: Invoke PR Agent (PAW-05)"
-
-### AC-8: PR Agent Chatmode (FR-8)
-- [ ] File `.github/chatmodes/PAW-05 PR.chatmode.md` exists
-- [ ] PAW-05 chatmode contains > 150 lines
-- [ ] PAW-05 chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-05 chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-05 chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-05 chatmode defines PR title format based on target branch
-- [ ] PAW-05 chatmode defines PR description template with sections: Overview, Changes Summary, Testing Notes, Documentation, References
-- [ ] PAW-05 chatmode includes validation checklist: all phase PRs merged, tests passing, docs updated, no merge conflicts
-- [ ] PAW-05 chatmode includes pause point after PR creation
-- [ ] PAW-05 chatmode includes DO NOT item: "DO NOT merge the PR — human approval required"
-
-### AC-9: Status Update Agent Alignment (FR-9)
-- [ ] PAW-X chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-X chatmode includes numbered workflow for status synchronization
-- [ ] PAW-X chatmode includes 3+ IMPORTANT notes about comment formatting, label management
-- [ ] PAW-X chatmode includes "What not to do" section
-- [ ] PAW-X chatmode explicitly states: "DO NOT make code changes or perform implementation work"
-- [ ] PAW-X chatmode defines status comment templates for each workflow stage
-- [ ] Manual review confirms: chatmode aligns with proven HumanLayer patterns
-
-### AC-10: Guidance Pattern Consistency (FR-10)
-- [ ] All 9 chatmodes (PAW-01A, PAW-01B, PAW-02A, PAW-02B, PAW-03A, PAW-03B, PAW-04, PAW-05, PAW-X) include CRITICAL section
-- [ ] All 9 chatmodes include 8+ DO NOT items
-- [ ] All 9 chatmodes include 3+ IMPORTANT/CRITICAL inline notes
-- [ ] All 9 chatmodes include numbered workflows
-- [ ] All 9 chatmodes include "What not to do" or equivalent prohibitive guidance section
-- [ ] All 9 chatmodes include explicit pause points for human handoffs (where applicable)
-- [ ] All 9 chatmodes use consistent formatting: CRITICAL (all caps), Important (**bold**), numbered lists
-
-### AC-11: Artifact Path Correctness (FR-11)
-- [ ] PAW-01A references correct paths: `docs/agents/<target_branch>/prompts/spec-research.prompt.md`, `docs/agents/<target_branch>/Spec.md`
-- [ ] PAW-01B references correct paths: `docs/agents/<target_branch>/prompts/spec-research.prompt.md`, `docs/agents/<target_branch>/SpecResearch.md`
-- [ ] PAW-02A references correct paths: `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/prompts/code-research.prompt.md`, `docs/agents/<target_branch>/CodeResearch.md`
-- [ ] PAW-02B references correct paths: `docs/agents/<target_branch>/CodeResearch.md`, `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03A references correct path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03B references correct path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-04 references correct paths: `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/ImplementationPlan.md`, `docs/agents/<target_branch>/Docs.md`
-- [ ] PAW-05 references correct path: `docs/agents/<target_branch>/Docs.md`
-
-### AC-12: Cross-Stage Handoff Clarity (FR-13)
-- [ ] PAW-01A final output template includes: "Next: Invoke Implementation Plan Agent (Stage 02)"
-- [ ] PAW-01B final output template includes: "Return to Spec Agent with this research"
-- [ ] PAW-02A final output template includes: "Next: Invoke Implementation Plan Agent (PAW-02B)"
-- [ ] PAW-02B final output template includes: "Next: Invoke Implementation Agent (PAW-03A) for Phase [N]"
-- [ ] PAW-03A final output template includes: "Handoff to Implementation Review Agent (PAW-03B)"
-- [ ] PAW-03B final output template includes conditional: "Next phase" or "Proceed to Documenter Agent (PAW-04)"
-- [ ] PAW-04 final output template includes: "Next: Invoke PR Agent (PAW-05)"
-- [ ] PAW-05 final output template includes: "Final PR created. Ready for human review and merge"
-- [ ] PAW-X describes when it should be invoked (stage transitions)
-
-### AC-13: YAML Frontmatter for Artifacts (FR-12)
-- [ ] PAW-01A chatmode specifies YAML frontmatter template for `Spec.md` with required fields: `date`, `target_branch`, `status`, `last_updated`, `summary`
-- [ ] PAW-01B chatmode specifies YAML frontmatter template for `SpecResearch.md` with required fields
-- [ ] PAW-02A chatmode specifies YAML frontmatter template for `CodeResearch.md` with required fields
-- [ ] PAW-02B chatmode specifies YAML frontmatter template for `ImplementationPlan.md` with required fields
-- [ ] PAW-04 chatmode specifies YAML frontmatter template for `Docs.md` with required fields
-- [ ] All frontmatter templates exclude `git_commit` and `repository` fields (unlike Code Researcher pattern)
-- [ ] All frontmatter templates use `summary` field instead of `topic` field
-- [ ] Frontmatter format example included in each relevant chatmode showing proper YAML structure
-- [ ] Status field values are defined: `draft`, `in-review`, `approved`, `complete`
-
-### AC-14: Preservation of Proven Patterns (NFR-5)
-- [ ] Manual review of PAW-02A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-02A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-03A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: numbered workflow structure preserved
-- [ ] Any modifications to proven patterns include inline comment explaining rationale
-
-### AC-15: Completeness (NFR-3)
-- [ ] File `.github/chatmodes/PAW-05 PR.chatmode.md` exists
-- [ ] PAW-05 chatmode contains > 150 lines
-- [ ] PAW-05 chatmode includes CRITICAL section with 8+ DO NOT items
-- [ ] PAW-05 chatmode includes numbered workflow (5+ steps)
-- [ ] PAW-05 chatmode includes 3+ IMPORTANT notes
-- [ ] PAW-05 chatmode defines PR title format based on target branch
-- [ ] PAW-05 chatmode defines PR description template with sections: Overview, Changes Summary, Testing Notes, Documentation, References
-- [ ] PAW-05 chatmode includes validation checklist: all phase PRs merged, tests passing, docs updated, no merge conflicts
-- [ ] PAW-05 chatmode includes pause point after PR creation
-- [ ] PAW-05 chatmode includes DO NOT item: "DO NOT merge the PR — human approval required"
-
-### AC-6: Guidance Pattern Consistency (FR-6)
-- [ ] All 5 updated/created chatmodes (PAW-02A, PAW-03A, PAW-03B, PAW-04, PAW-05) include CRITICAL section
-- [ ] All 5 chatmodes include 8+ DO NOT items
-- [ ] All 5 chatmodes include 3+ IMPORTANT/CRITICAL inline notes
-- [ ] All 5 chatmodes include numbered workflows
-- [ ] All 5 chatmodes include "What not to do" or equivalent prohibitive guidance section
-- [ ] All 5 chatmodes include explicit pause points for human handoffs
-- [ ] All 5 chatmodes use consistent formatting: CRITICAL (all caps), Important (**bold**), numbered lists
-
-### AC-7: Artifact Path Correctness (FR-7)
-- [ ] PAW-02A references correct paths: `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/prompts/code-research.prompt.md`, `docs/agents/<target_branch>/CodeResearch.md`
-- [ ] PAW-02B references correct paths: `docs/agents/<target_branch>/CodeResearch.md`, `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03A references correct path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-03B references correct path: `docs/agents/<target_branch>/ImplementationPlan.md`
-- [ ] PAW-04 references correct paths: `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/ImplementationPlan.md`, `docs/agents/<target_branch>/Docs.md`
-- [ ] PAW-05 references correct path: `docs/agents/<target_branch>/Docs.md`
-
-### AC-8: Cross-Stage Handoff Clarity (FR-8)
-- [ ] PAW-02A final output template includes: "Next: Invoke Implementation Plan Agent (PAW-02B)"
-- [ ] PAW-02B final output template includes: "Next: Invoke Implementation Agent (PAW-03A) for Phase [N]"
-- [ ] PAW-03A final output template includes: "Handoff to Implementation Review Agent (PAW-03B)"
-- [ ] PAW-03B final output template includes conditional: "Next phase" or "Proceed to Documenter Agent (PAW-04)"
-- [ ] PAW-04 final output template includes: "Next: Invoke PR Agent (PAW-05)"
-- [ ] PAW-05 final output template includes: "Final PR created. Ready for human review and merge."
-
-### AC-13: Preservation of Proven Patterns (NFR-5)
-- [ ] Manual review of PAW-02A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-02A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-03A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: numbered workflow structure preserved
-- [ ] Any modifications to proven patterns include inline comment explaining rationale
-
-### AC-14: Completeness (NFR-3)
-- [ ] Manual review of PAW-02A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-02A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: zero DO NOT items removed
-- [ ] Manual review of PAW-03A diff confirms: zero IMPORTANT/CRITICAL notes removed
-- [ ] Manual review of PAW-03A diff confirms: numbered workflow structure preserved
-- [ ] Any modifications to proven patterns include inline comment explaining rationale
-
-### AC-15: Completeness (NFR-3)
-- [ ] Zero chatmodes contain "TODO", "TBD", or "[placeholder]" text
-- [ ] All referenced scripts/commands either exist or are marked "to be created separately"
-- [ ] All 9 chatmodes include error handling guidance (what to do if inputs missing or commands fail)
-
-## Risks & Constraints
-
-### Risks
-
-**R-1: Unintended Removal of Critical Guidance**
-- Risk: During refactoring, subtle but important guidance from HumanLayer chatmodes is accidentally removed
-- Mitigation: Line-by-line comparison of before/after versions; manual review checklist; preserve original versions in git history
-
-**R-2: Code Researcher Over-Simplification**
-- Risk: Removing line-number emphasis makes research too vague for implementation planning
-- Mitigation: Retain file path citations and key entry point references; emphasize "WHERE the code lives" even if not "every line"
-
-**R-3: Implementer/Reviewer Boundary Confusion**
-- Risk: Unclear role split causes agents to duplicate work or leave gaps
-- Mitigation: Explicit DO NOT items in both chatmodes; clear handoff statements; model-specific rationale documented
-
-**R-4: Chatmode Length and Complexity**
-- Risk: Longer, more detailed chatmodes may hit token limits or reduce effectiveness
-- Mitigation: Industry research shows detailed system prompts improve consistency (PromptLayer, 2024); prioritize clarity over brevity; remove only truly redundant content
-
-### Constraints
-
-**C-1: No PAW Specification Changes**
-- Chatmodes must align to the current PAW specification; any discovered misalignment in the spec itself is out of scope
-
-**C-2: Preserve HumanLayer Patterns**
-- DO NOT items, IMPORTANT notes, and numbered workflows from PAW-02A and PAW-03A must be retained unless explicitly justified
-
-**C-3: No Testing Infrastructure**
-- This work produces chatmode files; actual testing in production workflows is a separate effort
-
-**C-4: Model Availability**
-- Chatmodes reference specific models (GPT Codex, Claude Sonnet 4.5) but cannot enforce model selection at runtime
+### In Scope
+- Completing empty chatmode files (PAW-03B, PAW-04, PAW-05) with full structured content
+- Standardizing agent naming across all chatmode files and paw-specification.md
+- Migrating proven guardrail patterns from mature chatmodes to all agents
+- Clarifying Spec Research vs Code Research differentiation in respective chatmodes
+- Defining Implementer vs Impl Reviewer role split and coordination
+- Adding explicit stage hand-offs to all chatmodes
+- Adding quality checklists to all chatmodes
+- Clarifying ambiguous language throughout all chatmodes
+- Aligning artifact path references to canonical structure
+- Completing Status Agent trigger documentation
+
+### Out of Scope
+- Creating new workflow stages or agents beyond the existing PAW structure
+- Modifying paw-specification.md structure or stage definitions (only terminology alignment)
+- Implementing automated testing for chatmode effectiveness
+- Creating example outputs or sample runs for each agent
+- Integrating chatmodes with GitHub Copilot features beyond file structure
+- Performance optimization of agent execution
+- Multi-language translations of chatmodes
+- Version control or rollback mechanisms for chatmode changes
+- External LLM provider configuration or model selection
+- UI/UX improvements to chatmode invocation in VS Code
+
+## Dependencies
+
+- Access to all existing chatmode files in `.github/chatmodes/`
+- SpecResearch.md (already completed and provided)
+- CodeResearch.md (to be generated during Stage 02)
+- paw-specification.md as authoritative source for workflow structure
+- GitHub repository structure at `/docs/agents/<target_branch>/` for artifact paths
+
+## Risks & Mitigations
+
+- **Risk: Overwriting production-tested chatmodes breaks working agents**: Impact: High. Mitigation: Create implementation phases where production-tested chatmodes (Code Researcher, Impl Planner, Implementer) are modified incrementally with validation after each change; preserve proven patterns explicitly in implementation plan. Lightly tested chatmodes (Spec Agent, Spec Research Agent) have lower risk but still require careful validation.
+
+- **Risk: Guardrail propagation introduces contradictions between agents**: Impact: Medium. Mitigation: Map guardrails to agent roles during planning; only propagate guardrails relevant to specific agent capabilities and scope.
+
+- **Risk: Ambiguous language clarification makes instructions overly verbose**: Impact: Low. Mitigation: Provide clarifying context inline or in footnotes; use examples where brief text is insufficient.
+
+- **Risk: Canonical naming changes break existing workflows**: Impact: Medium. Mitigation: Document name mappings in implementation plan; update all references atomically in a single phase to avoid partial state.
+
+- **Risk: Stage hand-off additions create circular dependencies**: Impact: Low. Mitigation: Validate hand-off chain during planning to ensure linear or branching flow without cycles.
+
+- **Risk: Quality checklists become maintenance burden**: Impact: Low. Mitigation: Keep checklists concise (5-10 items); focus on high-impact validation criteria; use consistent categories across similar agents.
+
+- **Risk: Contradictory guidance resolution in Code Researcher misinterprets intent**: Impact: Medium. Mitigation: During Stage 03 implementation, pause after resolving contradiction for human review before proceeding with remaining changes.
+
+- **Risk: Missing external research knowledge creates false assumptions**: Impact: Low. Mitigation: Explicitly document assumptions derived from research gaps; flag in hand-off to implementation stage as areas requiring extra validation.
 
 ## References
 
-- **GitHub Issue**: [#1 - Finalize initial agent chatmodes](https://github.com/lossyrob/phased-agent-workflow/issues/1)
-- **Target Branch**: `feature/finalize-initial-chatmodes`
-- **PAW Specification**: `/home/rob/proj/paw/phased-agent-workflow/paw-specification.md`
-- **Spec Research**: `/home/rob/proj/paw/phased-agent-workflow/docs/agents/feature/finalize-initial-chatmodes/SpecResearch.md`
-- **External Research Sources**: 21 cited sources in SpecResearch.md covering prompt engineering best practices (PromptHub, God of Prompt, Forbes), system prompt design (PromptLayer, Microsoft), hallucination prevention (yW!an, OpenAI), multi-agent workflows (Strands Agents, Microsoft), documentation standards (Guidde, DataCalculus), and code review best practices (Graphite)
-- **Current Chatmode Files**:
-  - `.github/chatmodes/PAW-01A Spec Agent.chatmode.md` (first-pass, needs alignment with proven patterns)
-  - `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md` (first-pass, needs alignment with proven patterns)
-  - `.github/chatmodes/PAW-02A Code Researcher.chatmode.md` (HumanLayer-derived, proven)
-  - `.github/chatmodes/PAW-02B Impl Planner.chatmode.md` (first-pass, needs alignment with proven patterns)
-  - `.github/chatmodes/PAW-03A Implementer.chatmode.md` (HumanLayer-derived, proven, needs split alignment)
-  - `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` (empty, needs creation)
-  - `.github/chatmodes/PAW-04 Documenter.chatmode.md` (empty, needs creation)
-  - `.github/chatmodes/PAW-05 PR.chatmode.md` (empty, needs creation)
-  - `.github/chatmodes/PAW-X Status Update.chatmode.md` (first-pass, needs alignment with proven patterns)
+- **Issue**: https://github.com/lossyrob/phased-agent-workflow/issues/1
+- **Research**: docs/agents/feature/finalize-initial-chatmodes/SpecResearch.md
+- **Specification**: paw-specification.md (repository root)
+- **External**: None (optional external research questions remain unanswered per SpecResearch.md)
 
----
+## Glossary
 
-## Specification Readiness Checklist
-
-- [x] All requirements are observable and testable (no vague adjectives)
-- [x] Each acceptance criterion ties to at least one functional requirement
-- [x] No open questions, TBDs, or speculative language
-- [x] Scope boundaries clearly prevent creep
-- [x] External considerations explicitly referenced in References section
-- [x] Implementation details (specific file editing) excluded from requirements
-- [x] SpecResearch.md integrated (version: 2025-10-11)
-- [x] All research questions answered (internal + external)
-
----
-
-**Ready for Planning Stage**
-
-Artifacts:
-- [x] `Spec.md` (this document)
-- [x] `prompts/spec-research.prompt.md` (existing)
-- [x] `SpecResearch.md` (existing, integrated)
-
-**Next Steps**: Invoke Implementation Plan Agent (Stage 02) to create CodeResearch and ImplementationPlan. Optionally invoke Status Agent to update GitHub Issue #1.
+- **PAW**: Phased Agent Workflow - structured multi-stage development process with specialized AI agents
+- **Chatmode**: VS Code / GitHub Copilot agent instruction file defining role, behavior, and constraints
+- **Human Layer**: Prior agent framework from which several PAW chatmodes were adapted
+- **Canonical Name**: Standardized agent name used consistently across all documentation
+- **Guardrail**: Behavioral constraint directive preventing common failure modes
+- **Stage Hand-off**: Explicit transition between workflow stages with input/output specification
+- **Surgical Change Discipline**: Practice of committing only related changes, excluding unrelated modifications
+- **Anti-evaluation Guardrail**: Directive preventing agents from suggesting improvements or critiquing existing systems
+- **Blocking Question**: Clarification or research question that must be resolved before proceeding to next step
+- **Artifact Path**: Canonical file location for workflow documents under `/docs/agents/<target_branch>/`

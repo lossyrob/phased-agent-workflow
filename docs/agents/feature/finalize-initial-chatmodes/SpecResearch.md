@@ -2,1535 +2,1088 @@
 
 ## Summary
 
-This research documents the current state of the PAW chatmode files, identifying which agents exist, their maturity levels, structural differences, and areas requiring standardization. The research reveals that PAW includes 9 chatmode files representing stages 01 through 05 plus a status agent, with varying levels of completeness. Three chatmodes (PAW-01A Spec Agent, PAW-01B Spec Research Agent, PAW-02A Code Researcher, PAW-02B Impl Planner, PAW-03A Implementer) are mature with comprehensive structure, while others (PAW-03B Impl Reviewer, PAW-04 Documenter, PAW-05 PR) are empty first-pass placeholders. Several terminology inconsistencies exist (e.g., "Impl Planner" vs "Implementation Plan Agent"), and some artifact path references need alignment with the canonical paths defined in `paw-specification.md`.
+This research examined 9 chatmode files across the PAW workflow to identify gaps, inconsistencies, and maturity differences. Key findings: (1) three chatmodes (Impl Reviewer, Documenter, PR Agent) are empty first-pass files, (2) mature chatmodes (Spec Agent, Code Researcher, Implementer, Impl Planner) contain extensive guardrails and quality checklists absent from first-pass files, (3) naming inconsistencies exist (e.g., "Impl Planner" vs "Implementation Plan Agent"), (4) artifact paths align with canonical spec, (5) stage hand-offs have varying clarity with some missing explicit input/output statements, and (6) Status and PR agents have distinct non-overlapping responsibilities.
 
 ## Internal System Behavior
 
-### Question 1: Current Chatmode Inventory
+### Q1: Current Chatmode Inventory
 
-**Current chatmode files:**
+**Existing chatmode files by PAW code & title:**
 
-1. **PAW-01A Spec Agent.chatmode.md** - "Spec Agent"
-   - Stage: 01 - Specification
-   - Role: Converts rough Issue/brief into structured feature specification plus research prompt
-   - Status: Mature (comprehensive, well-structured)
+1. **PAW-01A** - Spec Agent (Stage 01: Specification)
+2. **PAW-01B** - Spec Research Agent (Stage 01: Specification)
+3. **PAW-02A** - Code Researcher (Stage 02: Implementation Plan)
+4. **PAW-02B** - Impl Planner (Stage 02: Implementation Plan)
+5. **PAW-03A** - Implementer (Stage 03: Phased Implementation)
+6. **PAW-03B** - Impl Reviewer (Stage 03: Phased Implementation)
+7. **PAW-04** - Documenter (Stage 04: Documentation)
+8. **PAW-05** - PR (Stage 05: Final PR)
+9. **PAW-X** - Status Update (Cross-stage utility)
 
-2. **PAW-01B Spec Research Agent.chatmode.md** - "Spec Research Agent"
-   - Stage: 01 - Specification
-   - Role: Answers internal system behavior questions from `spec-research.prompt.md` to produce factual documentation
-   - Status: Mature (concise, clear structure)
-
-3. **PAW-02A Code Researcher.chatmode.md** - "Codebase Researcher Agent"
-   - Stage: 02 - Implementation Plan
-   - Role: Conducts comprehensive codebase research to document what exists, where it exists, and how it works
-   - Status: Mature (highly detailed with comprehensive research methodology)
-
-4. **PAW-02B Impl Planner.chatmode.md** - "Implementation Planning Agent"
-   - Stage: 02 - Implementation Plan
-   - Role: Creates detailed implementation plans through interactive, iterative process
-   - Status: Mature (thorough, includes research methodology)
-
-5. **PAW-03A Implementer.chatmode.md** - "Implementation Agent"
-   - Stage: 03 - Phased Implementation
-   - Role: Implements approved technical implementation plan phases
-   - Status: Mature (comprehensive, clear workflow)
-
-6. **PAW-03B Impl Reviewer.chatmode.md** - "Implementation Review Agent" (filename) / not named in content
-   - Stage: 03 - Phased Implementation
-   - Role: Reviews code changes, suggests improvements, generates documentation
-   - Status: Empty placeholder (0 bytes)
-
-7. **PAW-04 Documenter.chatmode.md** - "Documentation Agent" (expected)
-   - Stage: 04 - Documentation
-   - Role: Produces `Docs.md` and updates project documentation
-   - Status: Empty placeholder (0 bytes)
-
-8. **PAW-05 PR.chatmode.md** - "PR Agent" (expected)
-   - Stage: 05 - Final PR to main
-   - Role: Opens final PR with comprehensive pre-flight checks
-   - Status: Empty placeholder (0 bytes)
-
-9. **PAW-X Status Update.chatmode.md** - "Status Updater Agent"
-   - Stage: Cross-cutting (used between stages)
-   - Role: Maintains Issues and PRs, keeping links and checklists current
-   - Status: Mature (concise, clear responsibilities)
-
-**Stage mapping:**
+**Workflow stage correspondence:**
 - Stage 01 (Specification): PAW-01A, PAW-01B
 - Stage 02 (Implementation Plan): PAW-02A, PAW-02B
 - Stage 03 (Phased Implementation): PAW-03A, PAW-03B
 - Stage 04 (Documentation): PAW-04
 - Stage 05 (Final PR): PAW-05
-- Cross-cutting: PAW-X
+- Cross-stage: PAW-X
 
-### Question 2: Role Split Rationale - Implementer vs Implementation Reviewer
+**Maturity status:**
+- **Mature (tested/detailed):** PAW-01A, PAW-01B, PAW-02A, PAW-02B, PAW-03A, PAW-X
+- **First-pass (empty or minimal):** PAW-03B (empty), PAW-04 (empty), PAW-05 (empty)
 
-**PAW-03A Implementer (Implementation Agent) - Present behaviors:**
-- Implements approved technical implementation plan phases
-- Creates implementation branches (`_phase[N]` or `_phase[M-N]`)
-- Follows plan's intent while adapting to reality
-- Runs success criteria checks and fixes issues
-- Updates plan progress and checkboxes
-- Commits changes with detailed messages
-- Creates/updates PRs using github mcp tools
+### Q2: Role Split Rationale - Implementer vs Implementation Reviewer
+
+**Current distinctions:**
+
+**Implementer (PAW-03A):**
+- Executes approved technical implementation plans
+- Implements phases with specific changes and success criteria
+- Creates/manages implementation branches (`_phase[N]` or `_phase[M-N]`)
 - Addresses PR review comments by creating TODOs for each comment
-- Makes commits per review comment, referencing comment in commit message
-- Pushes commits and comments on PR review comments when addressed
-- Pauses for human verification after automated checks complete
-- Emphasis: Forward momentum, implementation execution, verification, handling mismatches between plan and reality
+- Runs automated verification (tests, linting, type checking)
+- Updates checkboxes and progress in the implementation plan
+- Commits changes with detailed messages
+- Uses GitHub MCP tools to push/create PRs
+- **Pauses for human verification** after automated checks pass
+- Focuses on forward implementation momentum
 
-**PAW-03B Impl Reviewer (Implementation Review Agent) - Expected behaviors:**
-- File is currently empty (0 bytes)
-- Expected per `paw-specification.md`:
-  - Reviews code changes made by Implementation Agent
-  - Suggests improvements
-  - Generates docstrings and code comments for clarity, readability, maintainability
-  - Commits changes with clear, descriptive messages
-  - Pushes implementation branch and opens Phase PRs
-  - When responding to review comments: reviews each change to ensure it addresses comment, replies comment-by-comment on PR
-  - Makes overall review comment summarizing changes
-- Expected distinction: Reviewer focuses on code quality, documentation, and PR management; Implementer focuses on execution
+**Implementation Reviewer (PAW-03B):**
+- File is currently **empty** (no instructions exist)
 
-**Current state:** Only Implementer has content. Reviewer role is defined only in the specification, not in its chatmode file.
+**Expected distinction based on paw-specification.md Stage 03 workflow:**
+- Reviewer should: review code changes, suggest improvements, generate docstrings/comments, commit changes, push branches, open Phase PRs
+- Reviewer should: reply comment-by-comment on PR reviews, summarize changes
+- Distinction suggests Implementer focuses on "making changes work" while Reviewer focuses on "making changes maintainable and documented"
 
-### Question 3: Spec vs Spec Research Boundary
+### Q3: Spec vs Spec Research Boundary
 
-**PAW-01A Spec Agent current delineation:**
-- Converts rough Issue/brief into structured specification
-- Generates `prompts/spec-research.prompt.md` with factual questions about current system (internal) and optional external/context questions
-- Focuses on WHAT & WHY (functional/non-functional requirements, acceptance criteria)
-- Avoids implementation detail (no tech stack, file paths, library names)
-- Does NOT commit, push, open PRs, update Issues, or perform status synchronization
-- Produces draft content OR prompt file written to disk
-- Pauses for research; integrates `SpecResearch.md` findings
+**Spec Agent (PAW-01A) responsibilities:**
+- Converts Issue/brief into structured feature specification
+- Generates `spec-research.prompt.md` with internal (must answer) and optional external/context questions
+- Focuses on user value (WHAT & WHY), not implementation
+- Prioritizes testable user stories with acceptance criteria
+- Resolves clarification questions before drafting spec
+- Integrates `SpecResearch.md` findings
+- Does **NOT** commit/push/open PRs/update Issues (deferred to Planning stage)
+- Output: draft `Spec.md` content and research prompt file
 
-**PAW-01B Spec Research Agent current delineation:**
+**Spec Research Agent (PAW-01B) responsibilities:**
 - Answers internal system behavior questions from `spec-research.prompt.md`
-- Produces factual documentation limited to internal behavioral & structural facts (no code line granularity)
-- Does NOT perform external/web searches
-- Reproduces external/context questions verbatim in "User-Provided External Knowledge" section for manual completion
-- Documents how system behaves today at conceptual/behavioral level (no file paths)
+- Produces factual documentation limited to behavioral/structural facts (no code line granularity)
+- Does **NOT** perform external/web searches
+- Reproduces external/context questions verbatim in "User-Provided External Knowledge" section
 - No design, no improvements, no speculation
-- Does not commit changes or post comments to GitHub Issues or PRs
+- Output: `SpecResearch.md` saved to canonical path
 
-**Overlap/Ambiguity:**
-- Both agents state they do not commit/push/update GitHub
-- Both distinguish between internal questions (must answer) vs external/context questions (manual)
-- Clear separation: Spec Agent generates questions and creates requirements; Spec Research Agent answers those questions factually
-- Minor wording overlap: both mention "no implementation detail" but Spec Agent means "in requirements" while Spec Research Agent means "no file paths/code specifics"
+**Boundary clarity:**
+- Clear separation: Spec Agent produces requirements; Spec Research Agent documents current system behavior
+- Spec Agent generates questions; Spec Research Agent answers internal questions only
+- Both avoid implementation detail, but Research focuses on "how system behaves today" while Spec focuses on "what new system must do"
+- Minor ambiguity: Both documents are drafts not committed by their agents (Planning stage handles commits)
 
-### Question 4: Research Depth Burden - Code Research Agent
+**Overlap/ambiguity:**
+- Both emphasize behavioral over implementation detail, but at different abstraction levels
+- Research prompt generation by Spec Agent creates tight coupling (appropriate dependency)
+- No explicit wording in either chatmode about coordinating on external/context questions handling
 
-**Directives driving granular code line/filename gathering:**
+### Q4: Research Depth Burden - Code Research Agent
 
-From PAW-02A Code Researcher:
+**Directives driving granular code gathering:**
 
-1. "**Always include file:line references** for claims" (appears 2x in Code Analysis section)
-2. "Get specific file paths and line numbers for developer reference"
-3. "**File reading**: Always read mentioned files FULLY (no limit/offset) before performing any other research steps"
-4. "**Frontmatter (YAML)** ... `git_commit: [Current commit hash]`"
-5. "Download logs for a specific workflow job or efficiently get all failed job logs for a workflow run"
-6. "**Read files thoroughly** before making statements"
-7. "**Trace actual code paths** don't assume"
-8. "**Be precise** about function names and variables"
-9. Research document structure: "**Code References**: Bulleted list of key file paths with descriptions"
-10. "Include specific file paths and line numbers for reference"
-11. GitHub Permalinks section: "Format: `https://github.com/{owner}/{repo}/blob/{commit}/{file}#L{line}`"
+From PAW-02A Code Researcher chatmode:
 
-**Directives promoting higher-level behavioral mapping:**
+**Explicit granular directives:**
+- "Exact file paths and line numbers for relevant code"
+- "Include specific file paths and line numbers for reference"
+- "Always include file:line references for claims"
+- "Return specific file:line references"
+- "Provide full paths from repository root"
+- "Read files thoroughly before making statements"
+- "Note exact transformations with before/after"
+- "Include actual code snippets"
+- "Show multiple variations"
+- "Include file:line references"
 
-1. "**CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY**"
-2. "ONLY describe what exists, where it exists, how it works, and how components interact"
-3. "Initial Setup" response text focuses on "research question or area of interest"
-4. "Analyze and decompose the research question" - "Break down the user's query into composable research areas"
-5. "Highlight patterns, connections, and architectural decisions"
-6. Research document includes "## Architecture Documentation" section
-7. "THIS STEP'S PURPOSE IS TO DOCUMENT AND SHOW EXISTING PATTERNS AS THEY ARE"
+**Section: GitHub Permalinks**
+- "Format: `https://github.com/{owner}/{repo}/blob/{commit}/{file}#L{line}`"
+- "Ensures links remain valid even as code evolves"
 
-**Balance assessment:** The agent is instructed to provide both granular file:line references AND higher-level architectural/behavioral understanding. The granular directives are predominant in frequency and emphasis.
+**Higher-level behavioral mapping directives:**
+- "Describe what exists, where it exists, how it works, and how components interact"
+- "Creating a technical map/documentation of the existing system"
+- "Behavioral description" (in contrast to implementation details)
+- "Conceptual data flows (no code paths or schema dumps)"
+- "Summary: High-level documentation of what was found"
 
-### Question 5: Guidance Preservation Targets - Missing Guardrail Categories
+**Tension identified:**
+The chatmode contains contradictory guidance:
+- Core Principle says: "Conceptual data flows (no code paths)" and focuses on behavioral view
+- But COMPREHENSIVE RESEARCH section demands: "file:line references", "exact file paths and line numbers", "Include actual code snippets"
+- The distinction from CodeResearch.md is stated as: SpecResearch = behavioral, CodeResearch = implementation with file paths
+- However, the chatmode is titled "Code Research Agent" (PAW-02A) not "Spec Research Agent"
 
-**Critical negative/guardrail language in mature chatmodes:**
+**Conclusion:** The Code Research Agent (PAW-02A) directive language emphasizes **granular code line/filename gathering** through repeated file:line reference requirements, specific code snippets, and GitHub permalinks. This contrasts with higher-level behavioral mapping which appears more in summary/principle sections.
 
-**PAW-01A Spec Agent (mature):**
-- Multiple "NEVER" statements:
-  - "NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs"
-  - "NEVER: silently assume critical external standards"
-  - "NEVER: produce a spec-research prompt that reintroduces removed sections"
-  - "NEVER: proceed to final spec if unanswered critical internal clarification questions remain"
-- Multiple "ALWAYS" statements (5 instances)
-- "CRITICAL:" prefix used once
-- "IMPORTANT:" prefix mentioned in Communication Patterns
-- Explicit "Guardrails (Enforced)" section
+### Q5: Guidance Preservation Targets - Critical Guardrails
 
-**PAW-01B Spec Research Agent (mature):**
-- Guardrails section with 4 prohibitions:
-  - "No proposals, refactors, 'shoulds'"
-  - "No speculative claims"
-  - "Do not commit changes or post comments"
-- No "NEVER"/"ALWAYS" formatting but clear prohibitions
-
-**PAW-02A Code Researcher (mature):**
-- "CRITICAL:" used once at top
-- "IMPORTANT:" used 3 times
-- Multiple "DO NOT" statements (17 instances):
-  - "DO NOT suggest improvements"
-  - "DO NOT perform root cause analysis"
-  - "DO NOT propose future enhancements"
-  - "DO NOT critique the implementation"
-  - "DO NOT recommend refactoring"
-  - etc.
-- "NEVER" used twice:
-  - "NEVER write the research document with placeholder values"
-  - "NEVER read files partially"
-- Strong emphasis section headers:
-  - "## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT..."
-  - "**CRITICAL**: You are a documentarian, not evaluators"
-  - "**REMEMBER**: Document what IS, not what SHOULD BE"
-  - "**NO RECOMMENDATIONS**: Only describe the current state"
-
-**PAW-02B Impl Planner (mature):**
-- Multiple "DO NOT" statements (17 instances, many in Code Analysis/Pattern Finder)
-- "NEVER" used once: "NEVER write the plan with unresolved questions"
-- No "CRITICAL:" or "IMPORTANT:" prefixes
-- "No Open Questions in Final Plan" section with strong prohibition
-
-**PAW-03A Implementer (mature):**
-- "ONLY" used once: "ONLY commit changes you made to implement the plan"
-- "Do not include unrelated changes" (2 instances)
-- "Do not revert or overwrite unrelated changes"
-- Less emphasis on prohibitions, more on workflow guidance
-
-**PAW-X Status Update (mature):**
-- Guardrails section:
-  - "Never change content outside AUTOGEN blocks"
-  - "Never assign reviewers, change labels"
-  - "Never modify code"
-- 3 "Never" statements
-
-**Missing guardrail categories in empty/first-pass chatmodes (PAW-03B, PAW-04, PAW-05):**
-- Prohibition against scope creep or out-of-role actions
-- Prohibition against making recommendations vs executing tasks
-- Prohibition against modifying artifacts outside their responsibility
-- Git operation boundaries (what to commit/push, what not to)
-- GitHub interaction boundaries (when to comment, when not to)
-- File operation boundaries (what files to touch, what to leave alone)
-- Idempotency guidance
-- Error handling requirements
-- When to pause for human input vs proceed autonomously
-
-### Question 6: First-Pass Gaps - Missing Structural Sections
-
-**Identifying untested/first-pass chatmodes:**
-- **PAW-03B Impl Reviewer.chatmode.md** - Empty (0 bytes) - UNTESTED
-- **PAW-04 Documenter.chatmode.md** - Empty (0 bytes) - UNTESTED  
-- **PAW-05 PR.chatmode.md** - Empty (0 bytes) - UNTESTED
-
-**Mature chatmodes for comparison:**
-- PAW-01A Spec Agent
-- PAW-01B Spec Research Agent
-- PAW-02A Code Researcher
-- PAW-02B Impl Planner
-- PAW-03A Implementer
-- PAW-X Status Update
-
-**Major structural sections in mature chatmodes:**
-
-**Common sections across mature chatmodes:**
-1. **Start/Initial Response** - What to do when invoked without parameters
-2. **Core Principles/Philosophy** - Fundamental approach and values
-3. **Method/Process Steps/Workflow** - Detailed step-by-step execution
-4. **Output/Document Format** - Structure of artifacts produced
-5. **Guardrails** - Explicit prohibitions and boundaries
-6. **Quality Standards/Checklist** - Validation criteria
-7. **Communication Patterns** - How to interact with user
-8. **Error/Edge Handling** - What to do when things go wrong
-9. **Hand-off/Next Steps** - What comes after this agent
-
-**Specific sections by chatmode:**
-
-**PAW-01A Spec Agent has:**
-- Start / Initial Response
-- Core Specification Principles (10 enumerated)
-- High-Level Responsibilities
-- Explicit Non-Responsibilities
-- Working Modes (table)
-- Drafting Workflow (Detailed Steps)
-- Research Prompt Minimal Format
-- Inline Specification Template
-- Spec Quality Checklist
-- Quality Bar for "Final" Spec
-- Communication Patterns
-- Error / Edge Handling
-- Guardrails (Enforced)
-- Hand-off Checklist
-- GitHub Issues guidance
-
-**PAW-01B Spec Research Agent has:**
-- Start
-- Method
-- Document format
-- Output
-- Guardrails
-- Coordinator hooks
-
-**PAW-02A Code Researcher has:**
-- Initial Setup (start guidance)
-- Steps to follow (9 numbered steps)
-- Comprehensive Research section (detailed methodology)
-  - Code Location
-  - Code Analysis
-  - Code Pattern Finder
-- Web Search guidance
-- GitHub Issues guidance
-- Important notes (with CRITICAL/REMEMBER emphasis)
-
-**PAW-02B Impl Planner has:**
-- Initial Response
-- Process Steps (Step 1-4 with sub-steps)
-- Important Guidelines (5 principles)
-- Success Criteria Guidelines (with format example)
-- Common Patterns (3 scenarios)
-- Comprehensive Research section (same as Code Researcher)
-
-**PAW-03A Implementer has:**
-- Getting Started (with two scenarios)
-- Implementation Philosophy
-- Verification Approach
-- Committing
-- Commenting on PRs
-- If You Get Stuck
-- Resuming Work
-
-**PAW-X Status Update has:**
-- Inputs
-- What to keep updated (Issue, PRs with examples)
-- Triggers
-- Guardrails
-- Failure handling
-- Output
-
-**Missing from all empty chatmodes (PAW-03B, PAW-04, PAW-05):**
-- ALL major sections (Start, Method, Steps, Guardrails, Quality Checklist, Error Handling, Hand-off)
-- No content whatsoever to analyze
-
-**Missing structural patterns to backfill:**
-- Initial Response / Start section (what to ask when invoked)
-- Core responsibilities vs non-responsibilities delineation
-- Step-by-step process workflow
-- Output format / artifact structure
-- Success criteria or quality checklist
-- Guardrails section with explicit prohibitions
-- Communication patterns / tone guidance
-- Error and edge case handling
-- Hand-off to next stage
-- GitHub interaction guidance
-
-### Question 7: Consistency Issues - Terminology
-
-**Terminology inconsistencies across chatmodes:**
-
-1. **Implementation Plan Agent naming:**
-   - Filename: `PAW-02B Impl Planner.chatmode.md`
-   - Content header: `# Implementation Planning Agent`
-   - paw-specification.md: "Implementation Plan Agent"
-   - **Inconsistency:** "Impl Planner" (filename) vs "Implementation Planning Agent" (content) vs "Implementation Plan Agent" (spec)
-
-2. **Implementation Review Agent naming:**
-   - Filename: `PAW-03B Impl Reviewer.chatmode.md`
-   - Content: Empty (no name in content)
-   - paw-specification.md: "Implementation Review Agent"
-   - **Inconsistency:** "Impl Reviewer" (filename) vs "Implementation Review Agent" (spec), no content to confirm
-
-3. **Implementer vs Implementation Agent:**
-   - Filename: `PAW-03A Implementer.chatmode.md`
-   - Content header: `# Implementation Agent`
-   - paw-specification.md: "Implementation Agent"
-   - **Inconsistency:** "Implementer" (filename) vs "Implementation Agent" (content/spec)
-
-4. **Documenter vs Documentation Agent:**
-   - Filename: `PAW-04 Documenter.chatmode.md`
-   - Content: Empty
-   - paw-specification.md: "Documenter Agent"
-   - **Inconsistency:** "Documenter" (filename) vs "Documenter Agent" (spec, which itself is consistent) vs expected "Documentation Agent" from stage description
-
-5. **Status Update vs Status Agent:**
-   - Filename: `PAW-X Status Update.chatmode.md`
-   - Content header: `# Status Updater Agent`
-   - paw-specification.md: "Status Agent"
-   - **Inconsistency:** "Status Update" (filename) vs "Status Updater Agent" (content) vs "Status Agent" (spec)
-
-6. **Code Researcher vs Code Research Agent:**
-   - Filename: `PAW-02A Code Researcher.chatmode.md`
-   - Content header: `# Codebase Researcher Agent`
-   - paw-specification.md: "Code Research Agent"
-   - **Inconsistency:** "Code Researcher" (filename) vs "Codebase Researcher Agent" (content) vs "Code Research Agent" (spec)
-
-7. **Spec vs Specification:**
-   - "Spec Agent" used consistently
-   - "Spec Research Agent" used consistently
-   - But "Specification Stage" in workflow
-   - Minor: "Spec" abbreviation in agent names, "Specification" in stage names
-
-**Pattern:** Filenames use abbreviated forms (Impl, Reviewer, Implementer, Documenter), content headers often use fuller forms with "Agent" suffix, and paw-specification.md uses yet different variants. No single consistent naming convention applied across filename/content/spec.
-
-### Question 8: Artifact Path & Naming Alignment
-
-**Canonical paths defined in `paw-specification.md`:**
-
-```
-/docs/agents/
-  <target_branch>/
-    prompts/
-      spec-research.prompt.md
-      code-research.prompt.md
-    Spec.md    
-    SpecResearch.md
-    CodeResearch.md
-    ImplementationPlan.md
-    Docs.md
-```
-
-**Chatmode file instructions for artifact paths:**
+**Mature chatmodes with guardrail language:**
 
 **PAW-01A Spec Agent:**
-- Does not specify explicit save paths
-- States: "outputs are *draft content* provided to the human, AND/OR (optionally) a prompt file written to disk"
-- Research prompt format shows: "Perform research to answer the following questions" but no path
-- Hand-off Checklist mentions: "Spec.md drafted (not committed)"
-- ✅ No explicit path discrepancy (defers to Planning stage for commits)
+- "NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs"
+- "NEVER: silently assume critical external standards"
+- "NEVER: produce a spec-research prompt that reintroduces removed sections"
+- "NEVER: proceed to final spec if unanswered **critical** internal clarification questions remain"
+- "ALWAYS: differentiate *requirements* (what) from *acceptance criteria* (verification)"
+- "ALWAYS: pause after writing the research prompt"
+- "ALWAYS: surface if external research was skipped and note potential risk areas"
+- "ALWAYS: ensure minimal format header lines are present"
+- "IMPORTANT:" and "CRITICAL:" prefixes used throughout
+- Section: "Guardrails (Enforced)" with 8 explicit rules
 
 **PAW-01B Spec Research Agent:**
-- Output section: "Save at: `docs/agents/<target_branch>/SpecResearch.md` (canonical path)"
-- ✅ Matches specification
+- "No design, no improvements"
+- "No proposals, refactors, 'shoulds'"
+- "No speculative claims—state only what exists or mark as open unknown"
+- "Do not commit changes or post comments to GitHub Issues or PRs"
+- "Keep answers concise: Answer questions directly with essential facts only. Avoid exhaustive lists"
 
 **PAW-02A Code Researcher:**
-- Step 5: "Filename: `docs/agent/description/YYYY-MM-DD-ENG-XXXX-research.md`"
-- Format: `description/YYYY-MM-DD-ENG-XXXX-research.md`
-- ❌ **DISCREPANCY:** Uses `docs/agent/` (singular) instead of `docs/agents/` (plural)
-- ❌ **DISCREPANCY:** Uses `description/YYYY-MM-DD-ENG-XXXX-research.md` pattern instead of `<target_branch>/CodeResearch.md`
-- Research document has git commit, date in filename - more detailed than canonical
+- "CRITICAL: YOUR ONLY JOB IS TO DOCUMENT AND EXPLAIN THE CODEBASE AS IT EXISTS TODAY"
+- "DO NOT suggest improvements or changes unless the user explicitly asks"
+- "DO NOT perform root cause analysis unless the user explicitly asks"
+- "DO NOT propose future enhancements"
+- "DO NOT critique the implementation or identify problems"
+- "DO NOT recommend refactoring, optimization, or architectural changes"
+- "ONLY describe what exists, where it exists, how it works"
+- "IMPORTANT: Ensure there are no other research steps to complete before proceeding"
+- "IMPORTANT: Use the Read tool WITHOUT limit/offset parameters"
+- "CRITICAL: DO NOT proceed to research tasks before reading these files"
+- "NEVER read files partially"
+- Multiple sections with "What not to do" lists
 
 **PAW-02B Impl Planner:**
-- Step 4: "Write the plan to `docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-plan.md`"
-- Format: `{description}/YYYY-MM-DD-ENG-XXXX-plan.md`
-- ❌ **DISCREPANCY:** Uses `docs/agent/` (singular) instead of `docs/agents/` (plural)
-- ❌ **DISCREPANCY:** Uses `{description}/YYYY-MM-DD-ENG-XXXX-plan.md` pattern instead of `<target_branch>/ImplementationPlan.md`
+- "IMPORTANT: Use the Read tool WITHOUT limit/offset parameters to read entire files"
+- "CRITICAL: DO NOT proceed to research tasks before reading these files yourself"
+- "NEVER read files partially"
+- "DO NOT just accept the correction" (when user corrects misunderstanding)
+- "DO NOT write the plan with unresolved questions"
+- "No Open Questions in Final Plan" section
+- "What not to do" lists in research sections
 
 **PAW-03A Implementer:**
-- References "the plan" but doesn't specify path
-- "Read the plan completely" - assumes path provided by user
-- ✅ No explicit path discrepancy
-
-**PAW-03B, PAW-04, PAW-05:**
-- Empty - cannot assess
+- "ONLY commit changes you made to implement the plan. Do not include unrelated changes"
+- "Do not revert or overwrite unrelated changes"
+- Explicit pause instructions: "Pause for human verification"
 
 **PAW-X Status Update:**
-- References artifacts: "Paths to artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplPlan.md, Documentation.md"
-- Uses "ImplPlan.md" instead of "ImplementationPlan.md"
-- Uses "Documentation.md" instead of "Docs.md"
-- ❌ **DISCREPANCY:** Artifact name inconsistencies
-
-**Summary of discrepancies:**
-1. Code Researcher and Impl Planner use `docs/agent/` (singular) not `docs/agents/` (plural)
-2. Code Researcher uses timestamped research filenames, not `CodeResearch.md`
-3. Impl Planner uses timestamped plan filenames, not `ImplementationPlan.md`
-4. Status Update uses "ImplPlan.md" and "Documentation.md" instead of canonical names
-
-### Question 9: Stage Hand-off Clarity - Required Inputs and Outputs
-
-**Stage 01 (Specification) → Stage 02 (Implementation Plan):**
-
-**Outputs from Stage 01 (per chatmodes):**
-- PAW-01A Spec Agent Hand-off Checklist:
-  - "Spec.md drafted (not committed)"
-  - "spec-research.prompt.md generated"
-  - "SpecResearch.md integrated"
-  - "Next: Invoke Implementation Plan Agent (Stage 02)"
-- PAW-01B Spec Research Agent:
-  - Saves "`docs/agents/<target_branch>/SpecResearch.md`"
-  - States coordinator hook: "Comment on the Issue"
-
-**Inputs to Stage 02 (per chatmodes):**
-- PAW-02A Code Researcher Initial Setup: "Please provide your research question or area of interest" OR "If the user supplies a Spec.md, analyze the spec"
-- PAW-02B Impl Planner Initial Response: "Please provide: 1. The GitHub Issue... 2. Path to the research file... 3. Links to any other related materials"
-
-**Assessment:** 
-- ✅ Spec Agent explicitly states next step is Implementation Plan Agent
-- ⚠️ Impl Planner expects research file but doesn't explicitly state "SpecResearch.md" from Stage 01
-- ✅ Code Researcher accepts Spec.md
-- ❌ No explicit "outputs must match inputs" validation described
-
-**Stage 02 (Implementation Plan) → Stage 03 (Phased Implementation):**
-
-**Outputs from Stage 02 (per chatmodes):**
-- PAW-02B Impl Planner writes plan to disk, mentions "Continue refining until the user is satisfied"
-- No explicit hand-off statement to Implementation stage
-
-**Inputs to Stage 03 (per chatmodes):**
-- PAW-03A Implementer "Getting Started": "If no implementation plan path provided, ask for one. When given just a plan path: Read the plan completely"
-- References: "All files mentioned in the plan, include specs and GitHub Issues"
-
-**Assessment:**
-- ⚠️ Impl Planner doesn't explicitly state "Next: Invoke Implementation Agent"
-- ✅ Implementer clearly expects plan path as input
-- ❌ Missing explicit statement that planning PR must be merged before implementation
-
-**Stage 03 (Phased Implementation) → Stage 04 (Documentation):**
-
-**Outputs from Stage 03 (per chatmodes):**
-- PAW-03A Implementer: Updates plan phase status, commits, pushes, creates/updates PRs
-- Pauses for verification per phase
-- No explicit "all phases complete, ready for documentation" hand-off
-
-**Inputs to Stage 04 (per chatmodes):**
-- PAW-04 Documenter: Empty - cannot assess
-
-**Assessment:**
-- ❌ No explicit hand-off from Implementation to Documentation stage
-- ❌ Documenter agent has no input requirements defined
-
-**Stage 04 (Documentation) → Stage 05 (Final PR):**
-
-**Outputs from Stage 04 (per chatmodes):**
-- PAW-04 Documenter: Empty - cannot assess
-
-**Inputs to Stage 05 (per chatmodes):**
-- PAW-05 PR Agent: Empty - cannot assess
-
-**Assessment:**
-- ❌ No hand-off defined (both agents empty)
-
-**Summary of missing explicit hand-off statements:**
-- Stage 01→02: Partial (Spec Agent mentions next step, but Planner doesn't explicitly require Stage 01 outputs)
-- Stage 02→03: Missing (Planner doesn't state "invoke Implementer", Implementer doesn't verify plan is from merged planning PR)
-- Stage 03→04: Missing (Implementer doesn't state "ready for docs", no Documenter to check inputs)
-- Stage 04→05: Missing (both empty)
-- Status Agent triggers are defined in PAW-X and paw-specification.md but not cross-referenced in stage agents
-
-### Question 10: Status / PR Agent Overlap
-
-**PAW-X Status Update Agent (Status Agent) responsibilities:**
-
-**What it maintains:**
-1. **Issue top comment** - Dashboard with:
-   - Artifacts links (Spec, Research, Plan, Docs)
-   - PRs links and states (Planning, Phases, Docs, Final)
-   - Checklist (Spec approved, PRs merged, etc.)
-2. **PR body blocks** (all PRs: planning, phase, docs, final):
-   - Summary section with feature title, current phase, links to artifacts
-   - "What changed since last review" based on commits
-3. **Milestone comments** - Brief, link-rich updates
-
-**Explicit non-responsibilities:**
-- "Never assign reviewers"
-- "Never change labels (except status/*)"
-- "Never modify code"
 - "Never change content outside AUTOGEN blocks"
+- "Never assign reviewers, change labels, or modify code"
+- "Be idempotent: re-running should not produce diffs without state changes"
 
-**Triggers:**
-- "Spec approval; planning PR open/merge; phase PR open/update/merge; docs PR merge; final PR open/merge"
+**Missing from first-pass chatmodes (PAW-03B, PAW-04, PAW-05):**
 
-**PAW-05 PR Agent (PR Agent) responsibilities (per paw-specification.md):**
+Since these files are empty, ALL guardrail categories are absent:
+
+1. **Scope boundaries** ("DO NOT", "NEVER", "ONLY")
+2. **Fabrication prevention** (no making up data/answers)
+3. **Idempotency** (re-running safety)
+4. **Commit/push restrictions** (what not to modify)
+5. **Pause points** (when to wait for human)
+6. **File reading completeness** (no partial reads)
+7. **Question resolution** (no proceeding with unknowns)
+8. **External tool boundaries** (no unauthorized GitHub actions)
+9. **Format compliance** (required structures)
+10. **Error handling** (what to do when things fail)
+
+### Q6: First-Pass Gaps - Missing Structural Sections
+
+**Untested/First-pass chatmodes:**
+- **PAW-03B Impl Reviewer** - empty file
+- **PAW-04 Documenter** - empty file
+- **PAW-05 PR** - empty file
+
+**Structural sections present in mature chatmodes:**
+
+**Common mature structure:**
+1. Description header (YAML frontmatter)
+2. Title and role statement
+3. Start/Initial Response section
+4. Core principles or philosophy
+5. Inputs/Parameters section
+6. Process Steps or Workflow section
+7. Detailed instructions per step
+8. Output specifications
+9. Guardrails section
+10. Error/Edge Handling section
+11. Communication Patterns section (some)
+12. Quality standards or checklist section (some)
+13. Hand-off checklist or completion criteria (some)
+
+**Missing from PAW-03B Impl Reviewer (expected based on Stage 03 workflow description):**
+- ALL sections (file empty)
+- Expected: Review agent role statement
+- Expected: Instructions for reviewing code changes
+- Expected: Instructions for suggesting improvements
+- Expected: Instructions for generating docstrings/comments
+- Expected: Commit and push instructions
+- Expected: PR opening instructions
+- Expected: Comment-by-comment review reply instructions
+- Expected: Summary comment instructions
+- Expected: Guardrails on what not to change
+- Expected: Quality checklist for code review
+
+**Missing from PAW-04 Documenter (expected based on Stage 04 workflow description):**
+- ALL sections (file empty)
+- Expected: Documentation agent role statement
+- Expected: Inputs specification (ImplementationPlan.md, Phase PRs)
+- Expected: Output specification (Docs.md format/structure)
+- Expected: Instructions for project documentation updates
+- Expected: Boundary clarifications (what not to change)
+- Expected: PR creation instructions for docs branch
+- Expected: Review comment handling
+- Expected: Guardrails on scope
+- Expected: Quality checklist for documentation
+
+**Missing from PAW-05 PR (expected based on Stage 05 workflow description):**
+- ALL sections (file empty)
+- Expected: PR agent role statement
+- Expected: Pre-flight validation checks section
+- Expected: Prerequisite verification (all phases merged, docs merged, branch updated)
+- Expected: PR description crafting instructions
+- Expected: Comprehensive summary generation (links to artifacts, phase PRs, changes, impact, testing)
+- Expected: Merge/deployment guidance instructions
+- Expected: Blocking conditions when checks fail
+- Expected: Clear guidance on what must be completed first
+- Expected: Guardrails on when to proceed vs block
+- Expected: Quality checklist for final PR readiness
+
+### Q7: Consistency Issues - Terminology Inconsistencies
+
+**Agent naming variations:**
+
+1. **Implementation Plan Agent vs Impl Planner**
+   - paw-specification.md uses: "Implementation Plan Agent"
+   - Chatmode file name: "PAW-02B Impl Planner.chatmode.md"
+   - Chatmode title: "Implementation Planning Agent"
+   - Inconsistency: Three different names for same agent
+
+2. **Implementation Review Agent vs Impl Reviewer**
+   - paw-specification.md Stage 03 uses: "Implementation Review Agent"
+   - Chatmode file name: "PAW-03B Impl Reviewer.chatmode.md"
+   - Inconsistency: Abbreviated vs full name
+
+3. **Implementer vs Implementation Agent**
+   - paw-specification.md Stage 03 uses: "Implementation Agent"
+   - Chatmode file name: "PAW-03A Implementer.chatmode.md"
+   - Chatmode title: "Implementation Agent"
+   - Inconsistency: File name abbreviation
+
+4. **Code Research Agent vs Code Researcher**
+   - Chatmode file name: "PAW-02A Code Researcher.chatmode.md"
+   - Chatmode title: "Codebase Researcher Agent"
+   - Inconsistency: "Code" vs "Codebase", "Researcher" vs "Research Agent"
+
+5. **Documenter vs Documentation Agent**
+   - paw-specification.md uses: "Documenter Agent"
+   - Chatmode file name: "PAW-04 Documenter.chatmode.md"
+   - Consistent, but abbreviated from "Documentation Agent"
+
+6. **Status Update vs Status Agent**
+   - Chatmode file name: "PAW-X Status Update.chatmode.md"
+   - Chatmode title: "Status Updater Agent"
+   - paw-specification.md uses: "Status Agent"
+   - Inconsistency: "Update" vs "Updater" vs "Agent"
+
+**Artifact naming:**
+- paw-specification.md uses: "ImplementationPlan.md"
+- All chatmodes reference: "ImplementationPlan.md" or "ImplPlan.md"
+- Minor inconsistency: "ImplPlan.md" abbreviation used in Status Agent
+
+**Terminology concept inconsistencies:**
+- "Planning PR" vs "Plan PR" - consistently "Planning PR"
+- "Phase PR" vs "Implementation Phase PR" - mostly "Phase PR"
+- "Docs PR" vs "Documentation PR" - mostly "Docs PR"
+- "Final PR" - consistent
+
+### Q8: Artifact Path & Naming Alignment
+
+**Canonical paths from paw-specification.md:**
+```
+/docs/agents/<target_branch>/
+  prompts/
+    spec-research.prompt.md
+    code-research.prompt.md
+  Spec.md
+  SpecResearch.md
+  CodeResearch.md
+  ImplementationPlan.md
+  Docs.md
+```
+
+**Chatmode references:**
+
+**PAW-01A Spec Agent:**
+- Research prompt: `prompts/spec-research.prompt.md` ✓
+- Spec: `/docs/agents/<target_branch>/Spec.md` (in Hand-off Checklist context) ✓
+
+**PAW-01B Spec Research Agent:**
+- Output: `docs/agents/<target_branch>/SpecResearch.md` ✓
+
+**PAW-02A Code Researcher:**
+- Research doc: `docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-research.md` ✗
+  - **DISCREPANCY**: Uses different path structure with date and ticket number
+  - **DISCREPANCY**: Uses "agent" (singular) not "agents"
+  - **DISCREPANCY**: Uses "research.md" suffix not "CodeResearch.md"
+
+**PAW-02B Impl Planner:**
+- Plan: `docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-plan.md` ✗
+  - **DISCREPANCY**: Uses different path structure with date and ticket number
+  - **DISCREPANCY**: Uses "agent" (singular) not "agents"
+  - **DISCREPANCY**: Uses "plan.md" suffix not "ImplementationPlan.md"
+- Mentions: "Original ticket: `thoughts/allison/tickets/eng_XXXX.md`" ✗
+  - **DISCREPANCY**: References non-PAW path structure ("thoughts/allison/tickets")
+
+**PAW-03A Implementer:**
+- No specific artifact path references (reads plan path provided by user) ✓
+
+**PAW-X Status Update:**
+- Inputs listed: "Spec.md, SpecResearch.md, CodeResearch.md, ImplPlan.md, Documentation.md"
+  - **DISCREPANCY**: Uses "ImplPlan.md" not "ImplementationPlan.md"
+  - **DISCREPANCY**: Uses "Documentation.md" not "Docs.md"
+
+**Summary:**
+- Spec Agent and Spec Research Agent align with canonical paths
+- Code Researcher uses completely different path structure (dates, ticket numbers, singular "agent")
+- Impl Planner uses completely different path structure (dates, ticket numbers, singular "agent")
+- Status Agent uses abbreviated names ("ImplPlan.md", "Documentation.md")
+- Implementer does not hard-code paths (flexible)
+
+### Q9: Stage Hand-off Clarity - Input/Output Statements
+
+**Stage 01 → Stage 02 (Specification → Planning):**
+
+**PAW-01A Spec Agent hand-off:**
+- Explicit outputs: "Spec.md drafted (not committed)", "spec-research.prompt.md generated", "SpecResearch.md integrated"
+- Explicit next step: "Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent"
+- ✓ Clear outputs, clear next agent
+
+**PAW-01B Spec Research Agent hand-off:**
+- Explicit output: Save at `docs/agents/<target_branch>/SpecResearch.md`
+- Coordinator hook: Comment on Issue with link
+- ✗ Missing explicit "next: return to Spec Agent" statement
+
+**Stage 02 inputs (Planning):**
+
+**PAW-02A Code Researcher:**
+- No explicit input statement in Start section
+- Mentions reading "GitHub Issues, Research documents, Related implementation plans"
+- ✗ Missing explicit prerequisite: "Requires Spec.md and SpecResearch.md"
+
+**PAW-02B Impl Planner:**
+- Explicit inputs in Step 1: "GitHub Issues, Research documents, Related implementation plans, Any JSON/data files"
+- ✗ Missing explicit prerequisite: "Requires CodeResearch.md from PAW-02A"
+
+**Stage 02 → Stage 03 (Planning → Implementation):**
+
+**PAW-02B Impl Planner hand-off:**
+- Outputs: Plan file at specific path
+- ✗ Missing explicit next step statement (no "Invoke Implementation Agent" instruction)
+
+**Stage 03 inputs (Implementation):**
+
+**PAW-03A Implementer:**
+- Explicit: "When given just a plan path: Read the plan completely"
+- Explicit: "All files mentioned in the plan, include specs and GitHub Issues"
+- ✓ Clear input requirements
+
+**Stage 03 → Stage 04 (Implementation → Documentation):**
+
+**PAW-03A Implementer hand-off:**
+- After completing phases: pause for manual verification
+- ✗ Missing explicit "Invoke Documenter Agent when all phases complete"
+
+**Stage 04 inputs (Documentation):**
+- **Missing** (PAW-04 empty) - no input specification exists
+
+**Stage 04 → Stage 05 (Documentation → Final PR):**
+- **Missing** (both PAW-04 and PAW-05 empty)
+
+**Summary of missing hand-offs:**
+1. Spec Research → Spec Agent: missing "return to Spec Agent" statement
+2. Code Researcher: missing explicit Spec.md/SpecResearch.md prerequisite statement
+3. Impl Planner: missing explicit CodeResearch.md prerequisite statement
+4. Impl Planner → Implementer: missing "Invoke Implementation Agent" statement
+5. Implementer → Documenter: missing "Invoke Documenter Agent when all phases complete"
+6. All Stage 04 and Stage 05 hand-offs: completely missing (empty files)
+
+### Q10: Status / PR Agent Overlap
+
+**Status Agent (PAW-X) responsibilities:**
 
 **What it does:**
-1. Opens final PR from target branch to main
-2. **Pre-flight readiness checks:**
-   - All phase PRs merged to target branch
-   - Documentation PR merged to target branch
-   - All required artifacts exist and up to date
-   - Target branch up to date with base branch
-3. **Blocks PR creation if checks fail**
-4. **Crafts comprehensive PR description:**
-   - Summary of feature/task
-   - Links to specification, implementation plan, documentation
-   - Links to all merged phase PRs
-   - Summary of changes and impact
-   - Testing and validation evidence
-   - Deployment/rollout considerations
-5. **Creates the final PR**
-6. Provides guidance on merge and deployment
+- Maintains Issue top comment with agent-status dashboard
+- Updates PR body blocks with summary and changes
+- Tracks artifacts (Spec, SpecResearch, CodeResearch, ImplPlan, Documentation)
+- Tracks PR states (Planning PR, Phase PRs, Docs PR, Final PR)
+- Maintains checklist in Issue
+- Posts milestone comments with links
+- Updates "AGENT-STATUS" and "AGENT-SUMMARY" blocks
+
+**What it does NOT do:**
+- "You do **not** manage merges or reviewers"
+- "Never assign reviewers, change labels (except `status/*`), or modify code"
+- Does not craft PR descriptions (only updates summary blocks)
+- Does not perform validation checks
+- Does not create PRs
+
+**PR Agent (PAW-05) responsibilities:**
+
+From paw-specification.md (chatmode file is empty):
+- Opens the final PR from target branch to main
+- Performs comprehensive pre-flight readiness checks
+- Validates prerequisites: all phase PRs merged, docs PR merged, artifacts exist, branch updated
+- Blocks PR creation if checks fail
+- Provides guidance on what must be completed first
+- Crafts comprehensive PR description with: summary, links, changes, impact, testing, deployment considerations
+- Creates the final PR
+- Provides merge/deployment guidance
 
 **Overlap analysis:**
 
-**Distinct responsibilities:**
-- Status Agent: Maintains ALL PRs throughout workflow (planning, phases, docs, final)
-- PR Agent: Creates ONLY the final PR to main
-- Status Agent: Updates existing PR descriptions in AUTOGEN blocks
-- PR Agent: Writes initial comprehensive PR description for final PR
-- Status Agent: Updates Issue tracking
-- PR Agent: No issue updates mentioned
-- Status Agent: Reactive (triggered by milestones)
-- PR Agent: Proactive (performs pre-flight validation)
+**Non-overlapping (distinct):**
+- Status Agent: maintains existing Issues/PRs - PR Agent: creates new final PR
+- Status Agent: updates dashboard blocks - PR Agent: crafts full PR description
+- Status Agent: tracks status across workflow - PR Agent: validates readiness for final merge
+- Status Agent: runs at multiple milestones - PR Agent: runs once at Stage 05
+- Status Agent: no validation - PR Agent: blocks if prerequisites not met
 
-**Potential overlaps:**
-1. **Final PR description:** Both agents may write to final PR description
-   - Status Agent adds Summary block
-   - PR Agent crafts comprehensive description
-   - ⚠️ Could conflict if both try to write different content formats
-2. **Links to artifacts:** Both reference specs, plans, phase PRs
-   - Status Agent maintains links in Summary block
-   - PR Agent includes links in description
-   - ⚠️ Redundant but not necessarily conflicting
-3. **PR body modification:**
-   - Status Agent operates in AUTOGEN blocks
-   - PR Agent writes initial description
-   - ✅ Likely compatible if PR Agent creates and Status Agent updates blocks
+**No factual overlaps identified.** Status Agent maintains/updates existing surfaces; PR Agent creates and validates the final PR. Their triggers and scopes are distinct.
 
-**Assessment:**
-- Minor overlap in final PR description content
-- Status Agent's AUTOGEN block approach should prevent destructive conflicts
-- No explicit coordination protocol defined between them
-- Status Agent doesn't validate pre-flight checks (PR Agent's job)
-- PR Agent doesn't update Issue (Status Agent's job)
+### Q11: External Dependencies Mentions
 
-**Factual overlaps:**
-- Both agents interact with the final PR description
-- Both include links to artifacts and phase PRs
-- No clear protocol for which agent runs first or coordination mechanism
-
-### Question 11: External Dependencies Mentions
-
-**External tools, APIs, or web search behavior referenced in chatmodes:**
-
-**PAW-02A Code Researcher:**
-- **Web Search section:** "Use the **websearch** tool for external documentation and resources. IF you use websearch tool, please INCLUDE those links in your final report"
-- **GitHub Issues section:** "Use the **github mcp** tools to interact with GitHub issues and PRs"
-- **Scope:** Research agent can search web for external docs (in scope for code research)
+**Chatmodes referencing external tools/capabilities:**
 
 **PAW-01A Spec Agent:**
-- **GitHub Issues section:** "ALWAYS use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli."
-- **Scope:** Spec agent interacts with GitHub (reading issues, not modifying)
+- GitHub Issues/PRs: "ALWAYS use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli."
+- Scope: Viewing Issues (input), explicitly does NOT post comments/updates
 
 **PAW-01B Spec Research Agent:**
-- **Method:** "For internal questions: explore the repo, including code and documentation"
-- **Does NOT perform external/web searches:** Explicitly stated in guardrails
-- **Scope:** No external tools mentioned (internal-only research)
+- No external tool references
+- Explicitly does NOT perform external/web searches
+- Explicitly does NOT commit or post to GitHub
+
+**PAW-02A Code Researcher:**
+- Web search: "Use the **websearch** tool for external documentation and resources. IF you use websearch tool, please INCLUDE those links in your final report"
+- GitHub: "Use the **github mcp** tools to interact with GitHub issues and PRs"
+- Git commands: References `git branch --show-current`, `git status`, `gh repo view --json owner,name`
+- Scope: Reading/researching, not modifying
 
 **PAW-02B Impl Planner:**
-- No explicit external tool mentions
-- Inherits "Comprehensive Research" section from Code Researcher (includes web search)
-- **Scope:** Could potentially use websearch via inherited methodology
+- No explicit external tool references
+- References build/test commands generically: "Ensure you use the appropriate build and test commands/scripts for the repository"
+- Mentions migration commands: `make migrate`, `make test-component`, `npm run typecheck`, `make lint`
+- Scope: Example commands in plan template, not agent execution
 
 **PAW-03A Implementer:**
+- GitHub MCP tools: "Uses GitHub MCP tools to push/create PRs"
 - "Use github mcp tools to push the changes to the PR or create a new PR"
-- "Ensure all there are replies to all review comments on the PR"
-- **Scope:** GitHub interaction for PR management
+- Git branching: Creates implementation branches locally
+- Scope: Creating branches, pushing code, managing PRs
 
 **PAW-X Status Update:**
-- Operates on "Issue and PRs"
-- "Post milestone comments"
-- No explicit mention of tools but implies GitHub API/MCP usage
-- **Scope:** GitHub interaction for status updates
+- Implied GitHub API access for updating Issues and PRs
+- No explicit tool naming
+- Scope: Updating Issue comments and PR body blocks only
 
-**Summary of external dependencies:**
-1. **github mcp tools** - Used by: Spec Agent, Code Researcher, Implementer, Status Update (implied)
-2. **websearch tool** - Used by: Code Researcher (and potentially Impl Planner via inheritance)
-3. **gh cli** - Explicitly prohibited in Spec Agent ("Do not fetch pages directly or use the gh cli")
+**Summary of external references:**
+- **GitHub MCP tools**: PAW-01A (read), PAW-02A (read), PAW-03A (write - push/PR)
+- **Web search**: PAW-02A only
+- **Git CLI commands**: PAW-02A (for metadata gathering)
+- **Build/test commands**: PAW-02B (examples only), PAW-03A (executes)
 
-**References outside described scope:**
-- ✅ Code Researcher's web search is within scope (researching external docs)
-- ✅ GitHub MCP tools are appropriate for all agents that need to read/write issues/PRs
-- ❌ Spec Research Agent correctly does NOT reference external tools (internal-only mandate)
-- ⚠️ Impl Planner inherits web search capability from Code Researcher methodology section but doesn't explicitly state when to use it
+**Outside described scope:**
+- PAW-02A web search capability: documented in scope ("Use the **websearch** tool")
+- All GitHub tool usage: within scope (reading Issues for research, creating PRs for implementation)
+- No unauthorized external capabilities identified
 
-### Question 12: Assumed Human Actions
+### Q12: Assumed Human Actions
 
-**Explicit human-in-the-loop steps referenced in chatmodes:**
+**Explicit human-in-the-loop steps by chatmode:**
 
 **PAW-01A Spec Agent:**
-1. "The Implementation Plan Agent (Stage 02) handles committing/planning PR creation" - implies human runs next agent
-2. "Offer to write Spec.md (requires user confirmation)" - human must approve file write
-3. Clarification questions require human answers: "pauses until clarified"
-4. Research prompt: "pause for research" - human must run Spec Research Agent
-5. "Optional external/context questions - NOT answered automatically; surfaced so the user may fill them later if helpful"
-6. Quality Checklist: "user explicitly overrides (override logged...)"
-7. Hand-off Checklist: "Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent to update Issue."
-8. "continue iterating with the above steps until the spec is clear, complete, and testable" - human judges completion
+- "Pause & Instruct: Instruct user to run Spec Research Agent"
+- "Iterate with the developer to eliminate ambiguity"
+- "Offer to write `Spec.md` (requires user confirmation)"
+- User must: answer clarification questions, refine research prompt, run Spec Research Agent, approve final spec
 
 **PAW-01B Spec Research Agent:**
-1. Start: "Share the path to SpecResearch.prompt.md (or paste the questions). Also share the feature branch name"
-2. User-Provided External Knowledge section is manually filled
-3. Coordinator hooks: "Comment on the Issue" - implies human could trigger Status Agent
+- Manual fill: "User-Provided External Knowledge (Manual Fill)" section
+- Human must: provide external/context answers if desired, not required for completion
 
 **PAW-02A Code Researcher:**
-1. Initial Setup: "Then wait for the user's input" - human provides research query
-2. "If the user supplies a Spec.md, analyze the spec"
-3. Step 1: "Read any directly mentioned files first" - assumes human mentions files
-4. No automatic progression to next stage
+- "Wait for the user's research query"
+- "Ask if they have follow-up questions or need clarification"
+- Human must: provide research query, review findings, ask follow-ups
 
 **PAW-02B Impl Planner:**
-1. Initial Response: "Then wait for the user's input"
-2. Step 1: "If the user corrects any misunderstanding... perform COMPREHENSIVE RESEARCH"
-3. Step 2: "Present findings and design options... Which approach aligns best with your vision?"
-4. Step 3: "Get feedback on structure before writing details"
-5. Review section: "Please review it and let me know..."
-6. "Continue refining until the user is satisfied"
-7. No explicit statement about human merging planning PR or proceeding to implementation
+- "Then wait for the user's input" (after initial response)
+- "Get feedback on structure before writing details"
+- "Get buy-in at each major step"
+- "Allow course corrections"
+- "Continue refining until the user is satisfied"
+- "If you encounter open questions during planning, STOP... Research or ask for clarification immediately"
+- Human must: provide Issue/research files, answer clarifications, approve structure, approve final plan
 
 **PAW-03A Implementer:**
-1. "If no implementation plan path provided, ask for one"
-2. "Pause for human verification: After completing all automated verification for a phase, pause..."
-3. Manual verification steps: "do not check off items in the manual testing steps until confirmed by the user"
-4. "Let me know when manual testing is complete so I can proceed to Phase [N+1]"
-5. "If instructed to execute multiple phases consecutively..." - human decides single vs multi-phase execution
-6. "Please re-review the PR and let me know if further changes are needed"
-7. Committing section: "If you aren't sure if a change is related, pause and ask"
-8. "If You Get Stuck... Present the mismatch clearly and ask for guidance"
-9. "Resuming Work: If the plan has existing checkmarks: Trust that completed work is done"
+- "**Pause for human verification**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for manual testing"
+- "Let me know when manual testing is complete so I can proceed to Phase [N+1]"
+- "Pause and let the human know the PR is ready for re-review"
+- "do not check off items in the manual testing steps until confirmed by the user"
+- "If you aren't sure if a change is related, pause and ask"
+- Human must: perform manual verification, confirm manual test completion, approve PR, merge PRs, provide clarification on unclear changes
 
 **PAW-X Status Update:**
-1. Inputs: "Feature Issue ID or URL" - human must provide
-2. "Paths to artifacts" - human must provide paths
-3. Triggers section lists when to invoke (implies human or workflow trigger)
-4. Failure handling: "post a short Issue comment tagging the responsible agent" - human may need to interpret
+- No explicit human pause points (runs on-demand at milestones)
+- Implicitly: human triggers the agent at appropriate milestones
 
-**paw-specification.md Human Workflow sections:**
-- "Ensure a clean and up-to-date feature branch is checked out locally" (all stages)
-- "Ask the [Agent] to..." (all stages) - human invokes agents
-- "Review and refine..." (Stage 01)
-- "Run the Spec Research Agent..." (Stage 01)
-- "Continue iterating... until the spec is clear, complete, and testable" (Stage 01)
-- "Review CodeResearch.md for completeness and accuracy" (Stage 02)
-- "Collaborate with the Implementation Plan Agent..." (Stage 02)
-- "The developer will then review the PR..." (Stage 02, 03)
-- "Once the Planning PR is approved, the developer will merge it" (Stage 02)
-- "The developer will ask the Implementation Agent..." (Stage 03)
-- "Optional Secondary Review: The developer may request another developer to review..." (Stage 02, 03)
-- "If tracking with a GitHub Issue, use the Status Agent to update..." (Stage 02, 04)
+**Empty chatmodes (PAW-03B, PAW-04, PAW-05):**
+- No human-in-the-loop steps documented (files empty)
 
-**Summary of human actions required for process integrity:**
-1. **Agent invocation** - Humans must explicitly invoke each agent at appropriate stages
-2. **Clarification responses** - Answer agent questions before proceeding
-3. **Research execution** - Run Spec Research Agent after Spec Agent generates prompt
-4. **Approval gates** - Review and approve specs, plans, PRs before proceeding
-5. **Manual verification** - Perform manual testing steps that cannot be automated
-6. **Merge operations** - Merge planning PR, phase PRs, docs PR (not done by agents)
-7. **Iteration decisions** - Decide when quality is sufficient to proceed
-8. **Design decisions** - Choose between technical approaches presented by agents
-9. **Branch management** - Ensure proper branch checkout and updates
-10. **Status coordination** - Optionally invoke Status Agent at milestones
-11. **Scope guidance** - Provide constraints, hard requirements, out-of-scope boundaries
-12. **File path provision** - Supply paths to artifacts when agents need them
-13. **Optional external knowledge** - Fill in external/context questions in SpecResearch.md
+**Summary of critical preserved human steps:**
+1. Clarification question resolution (Spec Agent)
+2. Research prompt refinement (Spec Agent)
+3. Running dependent agents (human triggers Spec Research, Code Research)
+4. Approval gates (spec approval, plan approval, structure approval)
+5. Manual testing verification (Implementer critical pause)
+6. PR review and merge decisions (Implementer waits for approval)
+7. Change relatedness judgment (Implementer asks if uncertain)
 
-### Question 13: Risk Phrases Source - Strong Corrective Phrases
+### Q13: Risk Phrases Source
 
-**Where strong corrective phrases are currently used:**
+**Strong corrective phrases by chatmode and section:**
 
 **PAW-01A Spec Agent:**
-- **"CRITICAL:"** - Not present
-- **"IMPORTANT:"** - Communication Patterns section: "Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`" (instructs usage but doesn't use it)
-- **"NEVER:"** - Guardrails section (4 instances):
-  - "NEVER: fabricate answers..."
-  - "NEVER: silently assume critical external standards..."
-  - "NEVER: produce a spec-research prompt that reintroduces removed sections..."
-  - "NEVER: proceed to final spec if unanswered critical internal clarification questions remain..."
-- **"ALWAYS:"** - Guardrails section (5 instances):
-  - "ALWAYS: differentiate *requirements* (what) from *acceptance criteria*..."
-  - "ALWAYS: pause after writing the research prompt..."
-  - "ALWAYS: surface if external research was skipped..."
-  - "ALWAYS: ensure minimal format header lines are present..."
+
+Sections with emphasis:
+- "Core Specification Principles" - numbered principles (no special markers)
+- "Guardrails (Enforced)" section:
+  - 6 "NEVER:" statements
+  - 4 "ALWAYS:" statements
+- Throughout: "IMPORTANT:" prefix not found; "CRITICAL:" not used
+- Note: Uses bold/italics but fewer all-caps emphasis markers than other agents
 
 **PAW-01B Spec Research Agent:**
-- No "CRITICAL:" or "IMPORTANT:" markers
-- No "NEVER:" or "ALWAYS:" formatting
-- Guardrails section uses plain prohibitions: "No proposals", "No speculative claims", "Do not commit"
+
+No strong emphasis markers ("CRITICAL:", "IMPORTANT:", "NEVER:", "ALWAYS:")
+Uses bold for key points but minimal corrective emphasis
 
 **PAW-02A Code Researcher:**
-- **"CRITICAL:"** - Used 3 times:
-  - "## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT..." (section header)
-  - "**CRITICAL**: DO NOT proceed to research tasks before reading these files..."
-  - "**CRITICAL**: You are a documentarian, not evaluators"
-- **"IMPORTANT:"** - Used 3 times:
-  - "**IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters..."
-  - "**IMPORTANT**: Ensure there are no other researech steps to complete..."
-- **"NEVER:"** - Used 2 times:
-  - "**NEVER** read files partially..."
-  - "NEVER write the research document with placeholder values"
-- **"REMEMBER:"** - Used 1 time:
-  - "**REMEMBER**: Document what IS, not what SHOULD BE"
-- **"NO [X]:"** - Used 1 time:
-  - "**NO RECOMMENDATIONS**: Only describe the current state"
-- **"DO NOT:"** - Used 17 times throughout (primary corrective pattern)
+
+Heavy use of emphasis:
+- Title section: "CRITICAL: YOUR ONLY JOB IS TO DOCUMENT..."
+- 6 "DO NOT" bullet points in opening
+- Multiple "IMPORTANT:" statements:
+  - "IMPORTANT: Use the Read tool WITHOUT limit/offset parameters"
+  - "IMPORTANT: Ensure there are no other research steps to complete"
+- Multiple "CRITICAL:" statements:
+  - "CRITICAL: DO NOT proceed to research tasks before reading"
+  - "CRITICAL: You are a documentarian, not evaluators"
+- "NEVER read files partially"
+- "REMEMBER:" statement
+- "NO RECOMMENDATIONS:" statement
+- Multiple "What not to do" lists with "Don't" statements (15+ items)
+- Section: "Code Pattern Finder" has: "DO NOT suggest", "DO NOT critique", "ONLY show"
 
 **PAW-02B Impl Planner:**
-- No "CRITICAL:" markers
-- No "IMPORTANT:" markers
-- **"NEVER:"** - Used 1 time:
-  - "NEVER write the plan with unresolved questions" (in "No Open Questions" section)
-- **"DO NOT:"** - Used 17 times (inherited from Comprehensive Research section)
-- Section header: **"No Open Questions in Final Plan"** (emphasis via header)
+
+Multiple "IMPORTANT:" statements:
+- "IMPORTANT: Use the Read tool WITHOUT limit/offset parameters" (2 instances)
+- "IMPORTANT Guidelines" section
+Multiple "CRITICAL:" statements:
+- "CRITICAL: DO NOT just accept the correction"
+- "CRITICAL Requirement: The final plan must be complete..."
+"NEVER" statements:
+- "NEVER read files partially"
+Section headers:
+- "No Open Questions in Final Plan" (strong negative statement as header)
+- "Success Criteria Guidelines" with "Always separate"
+- "COMPREHENSIVE RESEARCH" section with "DO NOT" lists
 
 **PAW-03A Implementer:**
-- No "CRITICAL:" markers
-- No "IMPORTANT:" markers
-- No "NEVER:" markers
-- **"ONLY:"** - Used 1 time:
-  - "ONLY commit changes you made to implement the plan"
-- **"Do not:"** - Used 3 times (lowercase, less emphasis):
-  - "Do not include unrelated changes"
-  - "Do not revert or overwrite unrelated changes"
-  - "do not check off items in the manual testing steps..."
+
+Minimal emphasis markers:
+- "ONLY commit changes you made" 
+- No "CRITICAL:", no "IMPORTANT:", no "NEVER:"
+- Uses "do not" in lowercase/normal text
+- Least emphasis of mature chatmodes
 
 **PAW-X Status Update:**
-- No "CRITICAL:" or "IMPORTANT:" markers
-- **"Never:"** - Guardrails section (3 instances):
-  - "Never change content outside AUTOGEN blocks"
-  - "Never assign reviewers, change labels (except status/*)"
-  - (implied third: "or modify code")
 
-**First-pass chatmodes lacking emphasis markers:**
-- **PAW-03B Impl Reviewer** - Empty (no phrases)
-- **PAW-04 Documenter** - Empty (no phrases)
-- **PAW-05 PR** - Empty (no phrases)
+"Never" statements (3 instances, not all-caps):
+- "Never change content outside AUTOGEN blocks"
+- "Never assign reviewers, change labels, or modify code"
 
-**Distribution of strong emphasis by chatmode:**
-| Chatmode | CRITICAL | IMPORTANT | NEVER | ALWAYS | DO NOT | Other Strong |
-|----------|----------|-----------|-------|---------|---------|--------------|
-| PAW-01A Spec Agent | 0 (instructs) | 0 (instructs) | 4 | 5 | 0 | - |
-| PAW-01B Spec Research | 0 | 0 | 0 | 0 | 3 | "No [X]" |
-| PAW-02A Code Researcher | 3 | 3 | 2 | 0 | 17 | REMEMBER, NO [X] |
-| PAW-02B Impl Planner | 0 | 0 | 1 | 0 | 17 | Section headers |
-| PAW-03A Implementer | 0 | 0 | 0 | 0 | 3 | ONLY |
-| PAW-X Status Update | 0 | 0 | 3 | 0 | 0 | - |
-| PAW-03B (empty) | 0 | 0 | 0 | 0 | 0 | - |
-| PAW-04 (empty) | 0 | 0 | 0 | 0 | 0 | - |
-| PAW-05 (empty) | 0 | 0 | 0 | 0 | 0 | - |
+**First-pass chatmodes (PAW-03B, PAW-04, PAW-05):**
+- **Completely lack** any emphasis markers (files empty)
 
-**Patterns:**
-- Code Researcher has most emphasis markers (25 total strong phrases)
-- Spec Agent uses NEVER/ALWAYS pattern (9 total)
-- Impl Planner inherits DO NOT from research section
-- Implementer uses softer tone (lowercase "do not", single "ONLY")
-- Status Update uses "Never" consistently (3)
-- Empty chatmodes have zero emphasis markers
+**Summary table:**
 
-### Question 14: Branching Conventions
+| Chatmode | CRITICAL | IMPORTANT | NEVER/Never | ALWAYS | DO NOT | Emphasis Level |
+|----------|----------|-----------|-------------|--------|--------|----------------|
+| PAW-01A  | 0        | 0         | 6           | 4      | 0      | Medium         |
+| PAW-01B  | 0        | 0         | 0           | 0      | 0      | Low            |
+| PAW-02A  | 2        | 2         | 1           | 1      | 20+    | Very High      |
+| PAW-02B  | 2        | 3         | 1           | 1      | 10+    | High           |
+| PAW-03A  | 0        | 0         | 0           | 0      | 2      | Low            |
+| PAW-X    | 0        | 0         | 3           | 0      | 0      | Low            |
+| PAW-03B  | 0        | 0         | 0           | 0      | 0      | None (empty)   |
+| PAW-04   | 0        | 0         | 0           | 0      | 0      | None (empty)   |
+| PAW-05   | 0        | 0         | 0           | 0      | 0      | None (empty)   |
 
-**Branching conventions defined in paw-specification.md:**
+### Q14: Branching Conventions
 
-**From Branching Conventions section:**
-1. **Target Branch:** The branch that will hold all completed work. Format: `feature/<slug>` or `user/rde/<slug>`
-2. **Planning branch:** `<target_branch>_plan`
-3. **Implementation phase branches:** `<target_branch>_phase<N>` or `<target_branch>_phase<M-N>`
-   - Single phase: `feature/auth_phase1`
-   - Combined phases: `feature/auth_phase2-3`
-4. **Docs branch:** `<target_branch>_docs`
+**Canonical conventions from paw-specification.md:**
 
-**Chatmode references to branching:**
+- Target Branch: `feature/<slug>` or `user/rde/<slug>`
+- Planning branch: `<target_branch>_plan`
+- Implementation phase branches: `<target_branch>_phase<N>` or `<target_branch>_phase<M-N>`
+- Docs branch: `<target_branch>_docs`
+- Examples: `feature/auth_phase1`, `feature/auth_phase2-3`
+
+**Chatmode references:**
 
 **PAW-01A Spec Agent:**
-- "Target branch name (agent can also discover this from the current branch)"
-- "creates or checks out the planning branch (`<target_branch>_plan`)"
-- ✅ Correctly references `_plan` suffix
+- No branch naming instructions (operates before branch creation for planning)
+- Creates/checks out planning branch: `<target_branch>_plan` ✓
 
 **PAW-01B Spec Research Agent:**
-- Start: "Also share the feature branch name so I save outputs in the right folder"
-- ✅ No specific branch convention mentioned (appropriate for research agent)
+- No branch instructions (works on existing branch)
 
 **PAW-02A Code Researcher:**
-- No branching convention references
-- ✅ Appropriate (research doesn't create branches)
+- No branch instructions (research only)
 
 **PAW-02B Impl Planner:**
-- Initial Response: "Path to the research file compiled by the research agent"
-- No explicit branch convention references
-- ⚠️ Missing: Should mention planning branch or that plan will be committed to `_plan` branch
+- No branch instructions (planning only)
+- Mentions: "Planning PR opened/updated (`<target_branch>_plan` → `<target_branch>`)" in comments ✓
 
 **PAW-03A Implementer:**
-- "Before doing any work, ensure the proper branch setup:"
-- "If not already on an implementation branch (branch ending in `_phase[N]` or `_phase[M-N]`), create one from the current local branch"
-- "Implementation branches are name it by appending `_phase[N]` or `_phase[M-N]` to the feature branch name"
-- "If instructed to execute multiple phases consecutively, create a branch representing the phase range as `_phase[M-N]`, e.g. `feature-branch_phase1-3`"
-- ✅ Correctly describes phase branch conventions
-- ⚠️ Example uses `_phase1-3` (dash) instead of `_phase1-3` - consistent with spec
+- "Creates/manages implementation branches (`_phase[N]` or `_phase[M-N]`)" ✓
+- "Implementation branches are name it by appending `_phase[N]` or `_phase[M-N]` to the feature branch name" ✓
+- Example: `feature-branch_phase1-3` ✓
+- "If instructed to execute multiple phases consecutively, create a branch representing the phase range as `_phase[M-N]`" ✓
+- Checks: "If not already on an implementation branch (branch ending in `_phase[N]` or `_phase[M-N]`)" ✓
 
 **PAW-X Status Update:**
-- References "Planning PR: <link>" and "Phase 1: <link>" in Issue dashboard
-- "PRs (planning + each phase + docs + final)"
-- ✅ Implicit understanding of branch structure via PR references
+- Tracks: "Planning PR", "Phases: Phase 1: <link>", "Docs merged", "Final PR to main"
+- Implicit understanding of branch structure but no explicit naming ✓
 
-**PAW-04 Documenter:**
-- Empty
-- ⚠️ Missing: Should reference `<target_branch>_docs` branch
+**No deviations identified.** All chatmodes that reference branches use conventions consistent with paw-specification.md.
 
-**PAW-05 PR:**
-- Empty
-- ⚠️ Missing: Should reference final PR from `<target_branch>` to `main`
-
-**Deviations found:**
-1. ✅ No actual deviations in implemented chatmodes
-2. ⚠️ Impl Planner doesn't explicitly mention that planning PR uses `_plan` branch
-3. ⚠️ Empty chatmodes (Documenter, PR) lack branch convention references
-4. ✅ Implementer correctly describes phase branch naming with hyphen for ranges
-
-**Assessment:** Existing chatmodes accurately reflect branching conventions where mentioned. Empty chatmodes need convention guidance added.
-
-### Question 15: Quality / Checklist Coverage
+### Q15: Quality / Checklist Coverage
 
 **Chatmodes with explicit quality checklists:**
 
 **PAW-01A Spec Agent:**
-- **"Spec Quality Checklist"** section with categories:
+- **"Spec Quality Checklist"** section (explicit embedded checklist):
   - Content Quality (5 items)
   - Requirement Completeness (6 items)
   - Ambiguity Control (2 items)
   - Scope & Risk (2 items)
   - Research Integration (2 items)
-  - Total: 17 checklist items
-- **"Quality Bar for 'Final' Spec"** - 8 pass criteria
-- **"Hand-off Checklist"** - 7 items before proceeding to Stage 02
-- ✅ Comprehensive quality coverage
+- **"Quality Bar for 'Final' Spec"** section (pass criteria list, 10 items)
+- **"Hand-off Checklist"** section (7 items)
+- Coverage: Clarity ✓, Traceability ✓, Testability ✓, Guardrails ✗ (not in checklist)
 
 **PAW-02A Code Researcher:**
-- No explicit checklist section
-- **"Important notes"** section with quality guidance:
-  - "Focus on finding concrete file paths and line numbers"
-  - "Research documents should be self-contained"
-  - "Document cross-component connections"
-  - File reading requirements (FULLY, no placeholders)
-  - Frontmatter consistency requirements
-- Implicit quality expectations embedded in methodology
-- ⚠️ Quality expectations present but not formatted as checklist
+- **"Quality Standards"** section (implicit checklist):
+  - Is Factual
+  - Is Precise
+  - Is Comprehensive
+  - Is Organized
+  - Is Traceable
+  - Is Neutral
+- Coverage: Clarity ✓ (Precise), Traceability ✓, Testability ✗, Guardrails ✗
 
 **PAW-02B Impl Planner:**
-- No explicit checklist section
-- **"Important Guidelines"** section with 5 principles:
-  1. Be Skeptical
-  2. Be Interactive
-  3. Be Thorough
-  4. Be Practical
-  5. Track Progress
-  6. No Open Questions in Final Plan
-- **"Success Criteria Guidelines"** with format requirements
-- **"Quality Standards"** - 5 criteria in markdown:
+- **"Success Criteria Guidelines"** section (format guidance)
+- **"Quality Standards"** section (implicit, in narrative):
   - Is Specific
   - Is Testable
   - Is Incremental
   - Is Complete
   - Is Traceable
-- ⚠️ Quality standards listed but not as checklist format
+- **"Important Guidelines"** section (process quality, 5 numbered points)
+- Coverage: Clarity ✓ (Specific), Traceability ✓, Testability ✓, Guardrails ✗
 
 **PAW-03A Implementer:**
-- **"Verification Approach"** section describes process but not checklist
-- Success criteria in plan define quality per phase
-- "Pause for human verification" protocol
-- ⚠️ Relies on plan's success criteria, no inherent checklist
+- **"Verification Approach"** section (process steps, not explicit checklist)
+- **"Success Criteria"** mentioned (from plan, automated vs manual)
+- No embedded quality checklist for agent's own work
+- Coverage: Testability ✓ (via plan criteria), others implicit through process
 
 **PAW-01B Spec Research Agent:**
-- No explicit checklist
-- **"Guardrails"** section defines quality boundaries
-- ⚠️ Minimal quality guidance (correctness via guardrails only)
+- No explicit quality checklist
+- Coverage: implicit through method
 
 **PAW-X Status Update:**
-- No explicit checklist
-- **"Guardrails"** section: "Be idempotent: re-running should not produce diffs without state changes"
-- ⚠️ Quality implied via idempotency requirement
+- **"Guardrails"** section (3 items, more restrictions than quality dimensions)
+- No quality checklist
+- Coverage: minimal (idempotency mentioned)
 
 **Empty chatmodes (PAW-03B, PAW-04, PAW-05):**
-- ❌ No checklists (no content)
+- No checklists
 
-**Required workflow quality dimensions per prompt:**
+**Missing quality dimensions by chatmode:**
 
-From paw-specification.md and chatmode analysis:
+| Chatmode | Clarity | Traceability | Testability | Guardrails Coverage |
+|----------|---------|--------------|-------------|---------------------|
+| PAW-01A  | ✓       | ✓            | ✓           | Partial (not in checklist) |
+| PAW-01B  | Implicit| Implicit     | Implicit    | ✗                   |
+| PAW-02A  | ✓       | ✓            | ✗           | ✗                   |
+| PAW-02B  | ✓       | ✓            | ✓           | ✗                   |
+| PAW-03A  | Implicit| Implicit     | ✓           | ✗                   |
+| PAW-X    | ✗       | ✗            | ✗           | Partial (3 rules)   |
+| PAW-03B  | ✗       | ✗            | ✗           | ✗                   |
+| PAW-04   | ✗       | ✗            | ✗           | ✗                   |
+| PAW-05   | ✗       | ✗            | ✗           | ✗                   |
 
-1. **Clarity** - Requirements are unambiguous and understandable
-2. **Traceability** - Artifacts link back to requirements and forward to implementation
-3. **Testability** - Success criteria are measurable and verifiable
-4. **Guardrails** - Boundaries prevent scope creep and out-of-role actions
+**Absent dimensions:**
+- **Testability**: Missing from Code Researcher, Spec Research Agent, Status Agent
+- **Guardrails as quality dimension**: Not explicitly in checklists (though guardrail sections exist)
+- **All dimensions**: Missing from Impl Reviewer, Documenter, PR Agent (empty files)
+- **Explicit checklist format**: Missing from Spec Research, Status Agent, Implementer
 
-**Coverage by chatmode:**
+### Q16: Reviewer Responsibilities Granularity
 
-| Chatmode | Clarity | Traceability | Testability | Guardrails | Format |
-|----------|---------|--------------|-------------|------------|--------|
-| PAW-01A Spec Agent | ✅ | ✅ | ✅ | ✅ | Explicit checklist |
-| PAW-01B Spec Research | ⚠️ Implicit | ❌ | ❌ | ✅ | Guardrails only |
-| PAW-02A Code Researcher | ⚠️ Implicit | ⚠️ Permalinks | ⚠️ File refs | ✅ | Important notes |
-| PAW-02B Impl Planner | ✅ | ✅ | ✅ | ⚠️ Partial | Guidelines & standards |
-| PAW-03A Implementer | ⚠️ Via plan | ⚠️ Via plan | ✅ | ⚠️ Minimal | Process-based |
-| PAW-X Status Update | ✅ | ✅ | ❌ | ✅ | Guardrails only |
-| PAW-03B Impl Reviewer | ❌ | ❌ | ❌ | ❌ | Empty |
-| PAW-04 Documenter | ❌ | ❌ | ❌ | ❌ | Empty |
-| PAW-05 PR | ❌ | ❌ | ❌ | ❌ | Empty |
+**Expected reviewer behaviors from paw-specification.md Stage 03:**
 
-**Absent quality dimensions in non-empty chatmodes:**
-- **Spec Research Agent:** No traceability requirements (should reference source questions), no testability criteria (how to verify research completeness)
-- **Code Researcher:** Testability not explicitly defined (when is research "complete"?), clarity expectations embedded in methodology not checklisted
-- **Impl Planner:** Guardrails section missing (has DO NOTs but no dedicated Guardrails section like others)
-- **Implementer:** Minimal guardrails (only about commits), no clarity checklist (relies on plan quality)
-- **Status Update:** No testability criteria (how to verify status is correct and complete)
+From "Implementation Review Agent" description:
+- Reviews code changes made by Implementation Agent
+- Suggests improvements
+- Generates docstrings and code comments for clarity, readability, maintainability
+- Commits changes with clear, descriptive messages
+- Pushes the implementation branch and opens Phase PRs
+- If responding to review comments: reviews each change to ensure it addresses the comment
+- Replies comment-by-comment on the PR
+- Pushes changes and makes an overall review comment summarizing the changes
 
-**Absent in all empty chatmodes:** All four quality dimensions completely missing
+**Current PAW-03B Impl Reviewer chatmode:**
+- **File is empty** - zero instructions
 
-### Question 16: Reviewer Responsibilities Granularity
+**Missing concrete reviewer actions:**
 
-**Current PAW-03B Impl Reviewer chatmode content:**
-- File is empty (0 bytes)
-- No concrete reviewer actions specified
-
-**Expected reviewer behaviors from paw-specification.md (Stage 03):**
-
-**Implementation Review Agent responsibilities:**
-1. **Reviews code changes** made by Implementation Agent
-2. **Suggests improvements**
-3. **Generates docstrings and code comments** for clarity, readability, and maintainability
-4. **Commits changes** with clear, descriptive messages
-5. **Pushes implementation branch** and opens Phase PRs
-6. When responding to review comments:
-   - Reviews each change to ensure it addresses the comment
-   - Replies comment-by-comment on the PR
-   - Pushes changes
-   - Makes overall review comment summarizing the changes
-
-**Comparison with PAW-03A Implementer (to identify split):**
-
-**Implementer does:**
-- Implements plan phases
-- Runs automated verification
-- Commits implementation changes
-- Addresses PR review comments (creates TODOs, makes commits)
-- Pushes commits and comments on individual review comments
-
-**Reviewer should do (per spec):**
-- Reviews Implementer's changes
-- Suggests improvements (quality review)
-- Adds documentation (docstrings, comments)
-- Opens/updates Phase PRs
-- Reviews Implementer's review comment responses
-- Makes summary PR comments
-
-**Missing expected reviewer behaviors from chatmode:**
-
-Since the file is empty, ALL behaviors are missing:
-
-1. **Code review actions:**
-   - What to review (readability, maintainability, correctness)
-   - How to suggest improvements
-   - When to approve vs request changes
-
+1. **Code review instructions:**
+   - How to review code changes (what to look for)
+   - Quality criteria for code review (readability, maintainability, correctness)
+   - When to suggest improvements vs accept as-is
+   
 2. **Documentation improvements:**
-   - Docstring generation criteria
-   - Code comment standards
-   - What deserves comments vs what's self-documenting
-
+   - Specific instructions for generating docstrings (format, completeness)
+   - Instructions for code comments (when, what level of detail)
+   - Standards for documentation quality
+   
 3. **Commit structuring:**
-   - Commit message format
-   - What changes to group in single commits
-   - How to reference review feedback in commits
-
-4. **PR management:**
-   - When to open PR (after first review pass)
-   - How to structure PR description
-   - What to include in PR body
-
-5. **Review comment handling workflow:**
-   - How to verify Implementer addressed comments
-   - Format for comment-by-comment replies
-   - Structure of overall summary comment
+   - How to structure review-driven commits
+   - Commit message format/conventions
+   - What to include in each commit
+   
+4. **PR interaction:**
+   - How to reply to review comments (format, detail level)
+   - How to structure overall summary comment
+   - When to request re-review vs continue
+   
+5. **Process coordination:**
+   - How to coordinate with Implementer (what was already done)
+   - When to pause for human review vs proceed
+   - How to update implementation plan status
 
 6. **Quality gates:**
-   - When to push changes vs request more work from Implementer
-   - What level of documentation is sufficient
-   - How to handle disagreements with Implementer's approach
+   - What checks to run before pushing
+   - When to request changes vs approve
+   - How to verify improvements are sufficient
 
-7. **Coordination with Implementer:**
-   - When Reviewer takes over from Implementer
-   - How to hand back if more implementation needed
-   - Protocol for iterative review cycles
+**Missing expected behaviors relative to Issue goal "solidifying":**
+- All behaviors missing (file empty)
+- No distinction between review-for-improvement vs review-for-merge
+- No instructions on balancing thoroughness vs forward momentum
+- No guidance on agentic vs human review boundaries
+- No quality checklist for review completeness
+- No guardrails on scope of review changes
 
-**Expected reviewer behaviors missing relative to Issue goal:**
+### Q17: Documentation Agent Scope
 
-The Issue goal is to "solidify" chatmodes. Missing concrete actions that would solidify the Reviewer role:
+**Expected from paw-specification.md Stage 04 description:**
 
-1. **Initial review trigger:** When to start reviewing (after Implementer indicates "ready for review")
-2. **Review scope:** What to review comprehensively vs what to spot-check
-3. **Documentation standards:** Specific guidelines for docstring/comment quality
-4. **PR description requirements:** What must be in Phase PR description
-5. **Success criteria verification:** How to validate phase meets success criteria
-6. **Review iteration protocol:** How many review rounds before escalating to human
-7. **Pause points:** When to pause for human input vs proceed autonomously
-8. **Quality checklist:** Specific items to verify before opening PR
-9. **Guardrails:** What Reviewer must NOT do (e.g., don't rewrite implementation, don't change logic)
-10. **Tool usage:** How to use github mcp tools for PR operations
-
-### Question 17: Documentation Agent Scope
-
-**Current PAW-04 Documenter chatmode content:**
-- File is empty (0 bytes)
-- No scope boundaries or required inputs specified
-
-**Expected scope from paw-specification.md Stage 04:**
-
-**Inputs:**
-1. `ImplementationPlan.md` from Stage 02 (expected location: `/docs/agents/<target_branch>/`)
-2. All Phases must be complete and merged to target branch
-3. Status updated in the plan
-4. All PRs from implementation phases (agent can search or refer to GitHub Issue)
-5. Any specific documentation guidelines or templates from copilot-instructions.md or other project docs
+**Required inputs (consistent with Stage 04):**
+- `ImplementationPlan.md` from Stage 02 (all phases complete and merged)
+- All PRs from implementation phases
+- Target branch checked out and up to date
 
 **Outputs:**
-1. `/docs/agents/<target_branch>/Docs.md`
-2. Project-specific documentation
+- `Docs.md` artifact
+- Project-specific documentation updates
+- Docs PR (`<target_branch>_docs` → `<target_branch>`)
 
-**Agent responsibilities:**
-1. Produces `Docs.md`
-2. Updates project docs according to project guidance
-3. Opens a docs PR (`<target_branch>_docs` → `<target_branch>`)
-4. Addresses review comments with focused commits
+**Expected boundaries:**
+- Produces documentation based on completed implementation
+- Opens docs PR for review
+- Addresses review comments with focused commits
+- Does not modify code or implementation
+- Does not change requirements or specifications
 
-**What Documenter must NOT change (boundaries):**
+**Current PAW-04 Documenter chatmode:**
+- **File is empty** - zero instructions
 
-From specification and workflow logic:
+**Missing boundary clarifications:**
 
-1. **Must NOT modify implementation code** - Implementation phases are complete and merged
-2. **Must NOT change test files** - Tests are part of implementation phases
-3. **Must NOT modify Spec, SpecResearch, CodeResearch, or ImplementationPlan** - These are inputs, not outputs
-4. **Must NOT reopen or modify merged Phase PRs** - Only works on docs PR
-5. **Must NOT modify artifacts from other stages** - Only creates Docs.md and updates project docs
-6. **Must NOT change functionality** - Only documents what was implemented
+1. **Scope boundaries (what not to change):**
+   - Do not modify implementation code
+   - Do not change Spec.md or ImplementationPlan.md
+   - Do not update artifacts from earlier stages
+   - Do not create new features or fix bugs
+   
+2. **Required input validation:**
+   - Verify all phases are marked complete in ImplementationPlan.md
+   - Verify all Phase PRs are merged
+   - Verify target branch is current
+   - Verify artifacts exist at expected paths
+   
+3. **Documentation scope:**
+   - What types of documentation to create (user-facing, technical, API, etc.)
+   - What project documentation to update (README, CHANGELOG, guides)
+   - How to map implementation to documentation needs
+   - What to document vs what to reference
+   
+4. **Docs.md artifact format:**
+   - Structure and sections required
+   - How to link to updated documentation files
+   - How to reference acceptance criteria from Spec.md
+   - Quality standards for documentation
+   
+5. **PR creation instructions:**
+   - Branch naming (`<target_branch>_docs`)
+   - PR description format
+   - What to include in PR body
+   - When to pause for review
+   
+6. **Review comment handling:**
+   - How to address documentation review comments
+   - Commit message format
+   - When to ask for clarification
+   
+7. **Project-specific guidance:**
+   - How to discover project documentation standards
+   - Where to look for style guidelines
+   - How to follow existing patterns
 
-**Implicit boundaries:**
-- Operates on target branch (not phase branches)
-- Creates new branch `_docs` for documentation PR
-- Does not merge its own PR (human approval required)
+**All boundary clarifications are missing** (file empty).
 
-**Required inputs consistent with Stage 04:**
+### Q18: Status Agent Trigger Points
 
-Per specification:
-- ✅ ImplementationPlan.md location specified
-- ✅ All phases complete requirement
-- ✅ Phase PRs as reference
-- ✅ Project-specific guidelines
+**Triggers from paw-specification.md:**
 
-**Missing boundary clarifications in empty chatmode:**
+"The Status Agent should be invoked at key milestones:"
+1. After the Planning PR is opened, updated, or merged
+2. After each Phase PR is opened, updated, or merged
+3. After the Docs PR is opened, updated, or merged
+4. After the final PR is opened or merged
 
-ALL boundaries missing since file is empty. Needed clarifications:
-
-1. **File modification scope:**
-   - What files CAN be modified (project docs, README, CHANGELOG)
-   - What files CANNOT be modified (implementation, tests, prior stage artifacts)
-
-2. **Documentation depth:**
-   - How detailed should documentation be
-   - When to reference existing docs vs create new content
-   - What level of API documentation is required
-
-3. **Docs.md artifact purpose:**
-   - What goes in Docs.md vs project docs
-   - Is Docs.md a summary/index or detailed documentation
-   - How Docs.md relates to Acceptance Criteria from Spec
-
-4. **Branch and PR protocol:**
-   - Must create `_docs` branch
-   - Must open docs PR to target branch
-   - Must wait for approval before proceeding
-
-5. **Dependencies on other agents:**
-   - Status Agent updates Issue after docs PR (coordination)
-   - No interaction with Implementer or Reviewer (phases complete)
-
-6. **Guardrails:**
-   - Do not document unimplemented features
-   - Do not modify implementation decisions
-   - Do not change code to match documentation preferences
-
-7. **Quality requirements:**
-   - Documentation clarity standards
-   - Completeness criteria (all acceptance criteria documented)
-   - Consistency with existing project documentation style
-
-8. **Input validation:**
-   - What to do if ImplementationPlan shows incomplete phases
-   - How to handle missing project documentation guidelines
-   - When to pause if inputs are inconsistent
-
-### Question 18: Status Agent Trigger Points
-
-**Triggers documented in PAW-X Status Update chatmode:**
+**Triggers from PAW-X Status Update chatmode:**
 
 From "Triggers" section:
-> "Spec approval; planning PR open/merge; phase PR open/update/merge; docs PR merge; final PR open/merge"
-
-Breaking down into discrete trigger points from chatmode:
-1. Spec approval
-2. Planning PR open
-3. Planning PR merge
-4. Phase PR open
-5. Phase PR update
-6. Phase PR merge
-7. Docs PR merge
-8. Final PR open
-9. Final PR merge
-
-**Triggers enumerated in paw-specification.md:**
-
-From "Status Agent" section:
-> "The Status Agent should be invoked at key milestones:
-> - After the Planning PR is opened, updated, or merged
-> - After each Phase PR is opened, updated, or merged
-> - After the Docs PR is opened, updated, or merged
-> - After the final PR is opened or merged"
-
-Breaking down into discrete trigger points from spec:
-1. Planning PR opened
-2. Planning PR updated
-3. Planning PR merged
-4. Phase PR opened (each phase)
-5. Phase PR updated (each phase)
-6. Phase PR merged (each phase)
-7. Docs PR opened
-8. Docs PR updated
-9. Docs PR merged
-10. Final PR opened
-11. Final PR merged
-
-**Comparison - Omissions in chatmode:**
-
-**Missing from PAW-X chatmode:**
-1. ❌ "Docs PR open" - Chatmode says "docs PR merge" but not "open"
-2. ❌ "Docs PR updated" - Not mentioned in chatmode
-3. ❌ "Planning PR updated" - Chatmode says "planning PR open/merge" but not "updated"
-
-**Missing from paw-specification.md:**
-1. ❌ "Spec approval" - Chatmode mentions this but spec doesn't list it as a trigger
-
-**Additions in chatmode not in spec:**
-1. ➕ "Spec approval" - Chatmode includes this, spec doesn't
-
-**Interpretation differences:**
-
-Chatmode uses shorthand "planning PR open/merge" which could mean:
-- Open OR merge (2 events)
-- Or could be interpreted as "open through merge" (including updates)
-
-Spec explicitly lists "opened, updated, or merged" (3 events) making it clearer.
-
-**Summary:**
-- ⚠️ Chatmode missing "updated" triggers for Planning PR and Docs PR
-- ⚠️ Chatmode missing "open" trigger for Docs PR
-- ⚠️ Chatmode adds "Spec approval" not listed in spec
-- ⚠️ Ambiguous notation ("open/merge") vs explicit enumeration ("opened, updated, or merged")
-
-### Question 19: Guardrail Migration Candidates
-
-**Guardrail/negative instruction categories analysis:**
-
-**Categories present in mature chatmodes:**
-
-**1. Fabrication/Speculation Prohibitions:**
-- PAW-01A: "NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs"
-- PAW-01B: "No speculative claims—state only what exists or mark as open unknown"
-- PAW-02A: "CRITICAL: YOUR ONLY JOB IS TO DOCUMENT... ONLY describe what exists"
-- **Absent in:** PAW-02B (partial), PAW-03A, PAW-X
-
-**2. Scope Creep Prevention:**
-- PAW-01A: "NEVER: proceed to final spec if unanswered critical internal clarification questions remain"
-- PAW-02A: "DO NOT suggest improvements or changes unless the user explicitly asks"
-- PAW-02B: "What We're NOT Doing" section guidance
-- PAW-X: "Never change content outside AUTOGEN blocks"
-- **Absent in:** PAW-03A
-
-**3. File/Content Modification Boundaries:**
-- PAW-01A: Does NOT commit/push (Explicit Non-Responsibilities)
-- PAW-01B: "Do not commit changes or post comments to GitHub Issues or PRs"
-- PAW-02A: "NEVER write the research document with placeholder values"
-- PAW-03A: "ONLY commit changes you made to implement the plan. Do not include unrelated changes"
-- PAW-X: "Never modify code"
-- **Present in most, weak in:** PAW-02B (no explicit file modification guardrails)
-
-**4. Root Cause Analysis Prohibition:**
-- PAW-02A: "DO NOT perform root cause analysis unless the user explicitly asks"
-- PAW-02B: (inherited via Comprehensive Research section)
-- **Absent in:** PAW-01A, PAW-01B, PAW-03A, PAW-X
-
-**5. Implementation Detail Avoidance:**
-- PAW-01A: "Focus on user value (WHAT & WHY), not implementation (no tech stack, file paths, library names)"
-- PAW-01B: "no code line granularity... conceptual, no file refs"
-- **Absent in:** PAW-02A, PAW-02B, PAW-03A, PAW-X (appropriate - they need implementation details)
-
-**6. Quality Critique Prohibition:**
-- PAW-02A: "DO NOT critique the implementation or identify problems"
-- PAW-02A: "DO NOT recommend refactoring, optimization, or architectural changes"
-- PAW-02B: (inherited)
-- **Absent in:** PAW-01A, PAW-01B, PAW-03A, PAW-X
-
-**7. Assumption Documentation Requirement:**
-- PAW-01A: "ALWAYS: ensure minimal format header lines are present and correctly ordered"
-- PAW-01A: Assumptions section mandatory when skipping research
-- **Absent in:** All others
-
-**8. Idempotency Requirement:**
-- PAW-X: "Be idempotent: re-running should not produce diffs without state changes"
-- **Absent in:** All others
-
-**9. Complete Reading Before Action:**
-- PAW-02A: "NEVER read files partially - if a file is mentioned, read it completely"
-- PAW-02A: "Read all mentioned files FULLY"
-- PAW-02B: (inherited)
-- **Absent in:** PAW-01A, PAW-01B, PAW-03A, PAW-X
-
-**10. External Research Boundaries:**
-- PAW-01B: "Does NOT perform external/web searches"
-- PAW-01A: "NEVER: silently assume critical external standards; if needed list as optional external/context question + assumption"
-- **Absent in:** PAW-02A (can search), PAW-02B, PAW-03A, PAW-X
-
-**11. Git Operation Restrictions:**
-- PAW-01A: Explicit Non-Responsibilities: "Git add/commit/push operations. No Planning PR creation."
-- PAW-01B: "Do not commit changes"
-- **Absent in:** PAW-02A, PAW-02B (no git operations mentioned)
-- **Present but weak in:** PAW-03A (does commit, needs boundaries)
-
-**12. GitHub Interaction Boundaries:**
-- PAW-01A: "No posting comments / status to GitHub Issues or PRs (Status Agent does that)"
-- PAW-03A: "Commenting on PRs: prefix your comment with **Implementation Agent:**"
-- PAW-X: "Never assign reviewers, change labels (except status/*)"
-- **Absent in:** PAW-01B, PAW-02A, PAW-02B
-
-**Guardrail categories present in ONE mature chatmode but absent in all others:**
-
-**Category: Idempotency Requirement**
-- **Source:** PAW-X Status Update
-- **Wording:** "Be idempotent: re-running should not produce diffs without state changes"
-- **Absent in:** PAW-01A, PAW-01B, PAW-02A, PAW-02B, PAW-03A
-- **Relevance:** Potentially applicable to all agents that write files or update state
-
-**Category: Root Cause Analysis Prohibition**
-- **Source:** PAW-02A Code Researcher
-- **Wording:** "DO NOT perform root cause analysis unless the user explicitly asks for them"
-- **Absent in:** PAW-01A, PAW-01B, PAW-03A, PAW-X
-- **Relevance:** Could apply to Implementer (just implement, don't analyze why things were wrong)
-
-**Category: Complete File Reading Requirement**
-- **Source:** PAW-02A Code Researcher
-- **Wording:** "NEVER read files partially - if a file is mentioned, read it completely"
-- **Absent in:** PAW-01A, PAW-01B, PAW-03A, PAW-X
-- **Relevance:** Should apply to all agents reading files (Spec Agent reads Issue, Implementer reads plan)
-
-**Category: Placeholder Value Prohibition**
-- **Source:** PAW-02A Code Researcher
-- **Wording:** "NEVER write the research document with placeholder values"
-- **Absent in:** All others
-- **Relevance:** Could generalize to "Never write any artifact with placeholder values"
-
-**Category: Assumption Documentation When Skipping Steps**
-- **Source:** PAW-01A Spec Agent
-- **Wording:** "If research was skipped: include an Assumptions section and Risks section note"
-- **Absent in:** All others
-- **Relevance:** Could apply to any agent that can skip optional research/verification steps
-
-**Migration candidates list:**
-
-1. **Idempotency** (PAW-X) → All agents that write files
-2. **No root cause analysis** (PAW-02A) → Implementer, potentially others
-3. **Complete file reading** (PAW-02A) → All agents reading files
-4. **No placeholder values** (PAW-02A) → All agents creating artifacts
-5. **Document assumptions when skipping** (PAW-01A) → Agents with optional steps
-6. **No quality critique** (PAW-02A) → Documenters, potentially Implementer
-7. **External research boundaries** (PAW-01B) → Clarify for all agents which can/cannot
-
-### Question 20: Ambiguity Hotspots
-
-**Phrases across chatmodes that could be interpreted variably:**
-
-**1. "update" without scope qualifier:**
-
-**PAW-X Status Update:**
-- "What to keep updated" - could mean any change vs specific defined changes
-- Context: Section defines specific content to update (Issue dashboard, PR blocks)
-- **Ambiguity:** Mild - defined in context but word itself is broad
-
-**PAW-01A Spec Agent:**
-- "updating assumptions" - could mean revise existing vs add new
-- Context: "Integrate Research... updating assumptions"
-- **Ambiguity:** Moderate - unclear if append, replace, or refine
-
-**PAW-03A Implementer:**
-- "Update your progress in both the plan and your todos"
-- "Update checkboxes in the plan"
-- Context: Verification Approach section
-- **Ambiguity:** Low - context clarifies checkboxes and status notes
-
-**PAW-02B Impl Planner:**
-- "Update backend logic"
-- Context: Common Patterns for Database Changes
-- **Ambiguity:** High - no specificity on what kind of update
-
-**2. "refine" without scope:**
-
-**PAW-01A Spec Agent:**
-- "Review and refine `spec-research.prompt.md`"
-- "ask the developer directly and pauses until clarified. It does **not** block on optional external/context questions; the specification proceeds using explicit assumptions where needed"
-- "Continue iterating with the above steps until the spec is clear, complete, and testable"
-- Context: Human Workflow in paw-specification
-- **Ambiguity:** Moderate - could mean minor edits vs major restructuring
-
-**PAW-02B Impl Planner:**
-- "Continue refining until the user is satisfied"
-- Context: Review section
-- **Ambiguity:** High - no definition of what aspects to refine or exit criteria
-
-**3. "research" without depth qualifier:**
-
-**PAW-01A Spec Agent:**
-- "pause for research" vs "skip research"
-- Context: Working Modes
-- **Ambiguity:** Low in context but "research" could mean many things
-
-**PAW-02A Code Researcher:**
-- "Perform comprehensive research"
-- Context: Steps section
-- **Ambiguity:** Low - methodology section defines "comprehensive"
-
-**PAW-02B Impl Planner:**
-- "Research & Discovery" (step name)
-- "Perform comprehensive research"
-- Context: Process Steps
-- **Ambiguity:** Low - inherits Code Researcher's methodology
-
-**Multiple interpretations:**
-- Spec Agent: behavioral/conceptual research
-- Code Researcher: file/implementation research
-- Impl Planner: technical feasibility research
-- **Cross-chatmode ambiguity:** "research" means different depths in different contexts
-
-**4. "review" without criteria:**
-
-**PAW-03A Implementer:**
-- "Review comments" vs "ready for review" vs "review the PR"
-- Context: Throughout Getting Started
-- **Ambiguity:** High - sometimes means PR review comments, sometimes means review action, sometimes means state
-
-**PAW-02B Impl Planner:**
-- "Please review it and let me know"
-- Context: After writing plan
-- **Ambiguity:** Moderate - unclear what constitutes sufficient review
-
-**PAW-03B Expected (empty):**
-- File name "Impl Reviewer" implies "review" action
-- **Ambiguity:** Currently undefined - needs criteria for what review entails
-
-**5. "complete" without verification:**
-
-**PAW-02A Code Researcher:**
-- "Ensure all research is complete"
-- Context: Step 4
-- **Ambiguity:** Moderate - how to know research is complete vs could dig deeper
-
-**PAW-02B Impl Planner:**
-- "final plan must be complete"
-- Context: Quality Standards
-- **Ambiguity:** Low - defined as "No Open Questions"
-
-**PAW-03A Implementer:**
-- "Phase N Complete"
-- Context: Verification Approach
-- **Ambiguity:** Low - defined by success criteria
-
-**6. "relevant" without boundaries:**
-
-**PAW-02A Code Researcher:**
-- "Find WHERE files and components live: Locate relevant files"
-- Context: Code Location section
-- **Ambiguity:** High - what makes a file "relevant"? Direct references? Indirect? Similar patterns?
-
-**PAW-03A Implementer:**
-- "Read the plan completely and check for any existing checkmarks"
-- "All files mentioned in the plan"
-- Context: Getting Started
-- **Ambiguity:** Low - "mentioned" is specific
-
-**7. "appropriate" or "sufficient" without standards:**
-
-**PAW-01A Spec Agent:**
-- "appropriate for research agent" - in Spec Research boundary discussion
-- Context: Question 3 answer in this document
-- **Ambiguity:** Moderate - subjective judgment
-
-**PAW-02B Impl Planner:**
-- "Does this phasing make sense?" 
-- Context: Plan Structure Development
-- **Ambiguity:** High - no objective criteria for "makes sense"
-
-**8. "clear" without definition:**
-
-**PAW-01A Spec Agent:**
-- "until the spec is clear, complete, and testable"
-- Context: Human Workflow
-- **Ambiguity:** Moderate - "testable" is defined but "clear" is subjective
-
-**PAW-02B Impl Planner:**
-- "Add/remove/clarify" 
-- Context: Various
-- **Ambiguity:** Moderate - degree of clarification not specified
-
-**9. "necessary" or "needed" without criteria:**
-
-**PAW-02A Code Researcher:**
-- "Use tools and research steps as needed"
-- Context: Handle follow-up questions
-- **Ambiguity:** High - agent must decide what's "needed"
-
-**PAW-03A Implementer:**
-- "asking for clarification if needed"
-- Context: Addressing review comments
-- **Ambiguity:** Moderate - when is clarification "needed" vs proceeding with best guess
-
-**10. "properly" or "correctly" without specification:**
-
-**PAW-01A Spec Agent:**
-- "ALWAYS: ensure minimal format header lines are present and correctly ordered"
-- Context: Guardrails
-- **Ambiguity:** Low - "correct" order is defined in Research Prompt Minimal Format
-
-**PAW-03A Implementer:**
-- "ensure the proper branch setup"
-- Context: Getting Started
-- **Ambiguity:** Low - defined in same section
-
-**Phrases with file & line references (where feasible):**
-
-Due to chatmode format (not line-numbered in repository), providing section references:
-
-| Phrase | Chatmode | Section | Ambiguity Level | Reason |
-|--------|----------|---------|----------------|---------|
-| "update" | PAW-02B | Common Patterns | High | No specifics on what to update |
-| "refine" | PAW-02B | Review | High | No exit criteria |
-| "research" | Multiple | Various | Medium | Means different depths |
-| "review" | PAW-03A | Throughout | High | Multiple meanings |
-| "complete" | PAW-02A | Step 4 | Medium | No completeness test |
-| "relevant" | PAW-02A | Code Location | High | Boundary unclear |
-| "makes sense" | PAW-02B | Step 3 | High | Subjective |
-| "clear" | PAW-01A | Quality Bar | Medium | Defined elsewhere |
-| "needed" | Multiple | Various | High | Agent decides |
-| "sufficient" | PAW-02B | Review | High | No standard |
-
-**Highest ambiguity hotspots requiring clarification:**
-
-1. **"relevant" in Code Researcher** - needs heuristics for relevance (direct imports? same domain? similar names?)
-2. **"update" in Impl Planner Common Patterns** - needs specific change types
-3. **"refine" in Impl Planner** - needs definition of refinement scope and completion
-4. **"review" in Implementer** - conflates PR comments, review action, and readiness state
-5. **"makes sense" in Impl Planner** - needs objective criteria for phase structure
-6. **"complete" in Code Researcher** - needs test for research completeness
+- "Spec approval"
+- "planning PR open/merge"
+- "phase PR open/update/merge"
+- "docs PR merge"
+- "final PR open/merge"
+
+**Comparison:**
+
+| Trigger Type | paw-specification.md | PAW-X Status Update | Match |
+|--------------|---------------------|---------------------|-------|
+| Planning PR opened | ✓ | ✓ | ✓ |
+| Planning PR updated | ✓ | ✗ (implied by "open/merge") | Partial |
+| Planning PR merged | ✓ | ✓ | ✓ |
+| Phase PR opened | ✓ | ✓ | ✓ |
+| Phase PR updated | ✓ | ✓ | ✓ |
+| Phase PR merged | ✓ | ✓ | ✓ |
+| Docs PR opened | ✓ | ✗ (only "merge") | ✗ |
+| Docs PR updated | ✓ | ✗ | ✗ |
+| Docs PR merged | ✓ | ✓ | ✓ |
+| Final PR opened | ✓ | ✓ | ✓ |
+| Final PR merged | ✓ | ✓ | ✓ |
+| Spec approval | ✗ | ✓ | Addition |
+
+**Omissions in chatmode:**
+- "Planning PR updated" not explicitly listed (may be implied)
+- "Docs PR opened" missing
+- "Docs PR updated" missing
+
+**Additions in chatmode:**
+- "Spec approval" trigger (not in paw-specification.md trigger list)
+
+**Note:** The chatmode lists triggers more tersely ("open/merge", "open/update/merge") which creates ambiguity about whether all combinations are intended.
+
+### Q19: Guardrail Migration Candidates
+
+**Guardrail categories present in one mature chatmode but absent in all others:**
+
+**Unique to PAW-02A Code Researcher:**
+1. **Anti-evaluation guardrails** (absent in all others):
+   - "DO NOT suggest improvements or changes"
+   - "DO NOT perform root cause analysis"
+   - "DO NOT critique the implementation or identify problems"
+   - "DO NOT recommend refactoring, optimization, or architectural changes"
+   - "DO NOT identify bugs, issues, or potential problems"
+   - "DO NOT comment on performance or efficiency"
+   - "DO NOT evaluate security implications"
+   - Category: **Pure documentation role enforcement**
+
+2. **Documentation vs evaluation boundaries** (absent in all others):
+   - "ONLY describe what exists, where it exists, how it works"
+   - "You are creating a technical map/documentation of the existing system"
+   - "CRITICAL: You are a documentarian, not evaluators"
+   - Category: **Role boundary clarification for neutral research**
+
+**Unique to PAW-01A Spec Agent:**
+1. **Clarification resolution requirement** (absent in all others):
+   - "NEVER: proceed to final spec if unanswered **critical** internal clarification questions remain"
+   - "Clarification questions must be resolved before drafting specification sections"
+   - Category: **Blocking on unresolved questions**
+
+2. **Fabrication prevention** (absent in all others):
+   - "NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs"
+   - Category: **Evidence-based output requirement**
+
+3. **Format compliance enforcement** (absent in all others):
+   - "ALWAYS: ensure minimal format header lines are present and correctly ordered"
+   - Category: **Template adherence**
+
+**Unique to PAW-02B Impl Planner:**
+1. **Verification-before-acceptance** (absent in all others):
+   - "DO NOT just accept the correction" (when user corrects misunderstanding)
+   - "Perform COMPREHENSIVE RESEARCH steps to verify the correct information"
+   - Category: **Independent verification requirement**
+
+2. **No-open-questions finalization rule** (absent in all others):
+   - "The final plan must be complete and actionable with zero open questions"
+   - "DO NOT write the plan with unresolved questions"
+   - Category: **Completeness gate**
+
+**Unique to PAW-03A Implementer:**
+1. **Unrelated changes exclusion** (absent in all others):
+   - "ONLY commit changes you made to implement the plan. Do not include unrelated changes"
+   - "Do not revert or overwrite unrelated changes. Just avoid adding them to your commit"
+   - Category: **Surgical change discipline**
+
+2. **Pause-for-manual-verification** (absent in all others):
+   - "**Pause for human verification**: After completing all automated verification for a phase"
+   - "do not check off items in the manual testing steps until confirmed by the user"
+   - Category: **Human verification gates**
+
+**Unique to PAW-X Status Update:**
+1. **Idempotency requirement** (absent in all others):
+   - "Be idempotent: re-running should not produce diffs without state changes"
+   - Category: **Stateless execution safety**
+
+2. **Block-boundary enforcement** (absent in all others):
+   - "Never change content outside AUTOGEN blocks"
+   - Category: **Surgical text modification**
+
+**Categories absent in ALL mature chatmodes:**
+- Security validation guardrails (no chatmode validates security implications)
+- Performance impact guardrails (no chatmode checks performance implications)
+- Backward compatibility guardrails (no chatmode enforces compatibility checks)
+- Rollback instructions (no chatmode provides rollback guidance)
+
+**Migration candidate summary:**
+
+High-value categories to migrate:
+1. **Pure documentation role** (from Code Researcher) → migrate to Spec Research Agent
+2. **Blocking on unresolved questions** (from Spec Agent) → migrate to Impl Planner, potentially to Implementer
+3. **Independent verification** (from Impl Planner) → migrate to all research/planning agents
+4. **Surgical change discipline** (from Implementer) → migrate to Impl Reviewer, Documenter
+5. **Human verification gates** (from Implementer) → migrate to Impl Reviewer, potentially PR Agent
+6. **Idempotency** (from Status Agent) → migrate to all agents that modify artifacts
+7. **Block-boundary enforcement** (from Status Agent) → migrate to any agent that updates existing files
+
+### Q20: Ambiguity Hotspots
+
+**Phrases interpretable variably across chatmodes:**
+
+1. **"update" (used without scope qualifiers):**
+   - PAW-01A: "updating assumptions" (in spec)
+   - PAW-03A: "Update checkboxes in the plan", "update your progress", "Update your progress in both the plan and your todos"
+   - PAW-X: "What to keep updated" (Issue and PRs)
+   - **Ambiguity**: Does "update" mean append, replace, or modify in place? What happens to existing content?
+
+2. **"refine" (scope unclear):**
+   - PAW-01A: "Refine spec based on findings", "developer may refine it"
+   - PAW-02B: "Continue refining until the user is satisfied"
+   - **Ambiguity**: How extensive can refinement be? Is refine incremental or wholesale revision?
+
+3. **"research" (depth unclear):**
+   - PAW-01B: "Perform research to answer the following questions"
+   - PAW-02A: "Perform comprehensive research"
+   - PAW-02B: "Perform comprehensive research" (in caps)
+   - **Ambiguity**: What constitutes sufficient research? When to stop researching?
+
+4. **"review" (rigor/scope unclear):**
+   - PAW-03A: "ready for review", "Addressed Review Comments"
+   - paw-specification.md: "review changes", "review the PR"
+   - **Ambiguity**: What level of review? Code correctness only, or style, docs, tests? Who reviews?
+
+5. **"complete" / "completed" (definition unclear):**
+   - PAW-02B: "The final plan must be complete"
+   - PAW-03A: "After completing a phase", "until manual testing is complete"
+   - **Ambiguity**: What defines completeness? All checkboxes? Human approval? Automated tests passing?
+
+6. **"relevant" (subjectivity):**
+   - PAW-02A: "Exact file paths and line numbers for relevant code"
+   - PAW-03A: "All files mentioned in the plan, include specs and GitHub Issues"
+   - **Ambiguity**: Who determines relevance? How broad to search?
+
+7. **"comprehensive" (extent unclear):**
+   - PAW-02A: Multiple uses of "comprehensive research"
+   - PAW-02B: "COMPREHENSIVE RESEARCH" section
+   - **Ambiguity**: How comprehensive? What's the stopping condition?
+
+8. **"clarification" vs "question" vs "unknown":**
+   - PAW-01A: "clarification questions must be resolved", "Unknown Classification"
+   - PAW-01B: "Open Unknowns", "internal questions"
+   - **Ambiguity**: Are these synonyms or distinct categories? Different resolution paths?
+
+9. **"summarize" (detail level unclear):**
+   - PAW-01A: "Summarize: primary goal, actors, core value propositions"
+   - PAW-02B: Multiple summary instructions
+   - **Ambiguity**: How brief? What to include/exclude?
+
+10. **"validate" / "verify" (rigor unclear):**
+    - PAW-01A: "Validate against the Spec Quality Checklist"
+    - PAW-03A: "Verification Approach", "Automated verification", "Manual verification"
+    - **Ambiguity**: Is validation a check (boolean) or improvement process? Who/what validates?
+
+**File & line references (selected examples):**
+
+- PAW-03A Implementer, line context: "Verification Approach" section (no specific line numbers in markdown, appears ~mid-file after "Implementation Philosophy")
+- PAW-01A Spec Agent, line context: "Unknown Classification" in "Drafting Workflow" step 3
+- PAW-02A Code Researcher, throughout "COMPREHENSIVE RESEARCH" section
+- PAW-X Status Update: "What to keep updated" section
+
+**Pattern**: Most ambiguity stems from verbs of judgment or effort (update, refine, complete, comprehensive, relevant) without quantitative thresholds, examples, or decision trees.
 
 ## Open Unknowns
 
-*(None at this stage - all internal questions answered through document analysis)*
+None. All internal questions answered from existing chatmode files and paw-specification.md.
 
 ## User-Provided External Knowledge (Manual Fill)
 
-### Optional External / Context Questions
+### Optional External / Context Questions from Prompt
 
-1. **Industry Prompting Patterns:** Are there external established prompt structuring patterns (e.g., widely cited specification or research agent frameworks) that could inspire missing sections? (Manual)
+* [ ] **Industry Prompting Patterns**: Are there external established prompt structuring patterns (e.g., widely cited specification or research agent frameworks) that could inspire missing sections?
+* [ ] **Comparative Agent Benchmarks**: What benchmark criteria (latency, accuracy, reusability) might be used later to evaluate improved chatmodes?
+* [ ] **Legal / Compliance Considerations**: Any domain compliance constraints that would affect prompt guardrails?
+* [ ] **Accessibility / Inclusion Prompting Guidelines**: Are there standards to reflect in documentation or review prompts?
+* [ ] **External taxonomy alignment**: Should naming align with any recognized industry lifecycle terminology beyond PAW?
 
-2. **Comparative Agent Benchmarks:** What benchmark criteria (latency, accuracy, reusability) might be used later to evaluate improved chatmodes? (Manual)
-
-3. **Legal / Compliance Considerations:** Any domain compliance constraints that would affect prompt guardrails? (Manual)
-
-4. **Accessibility / Inclusion Prompting Guidelines:** Are there standards to reflect in documentation or review prompts? (Manual)
-
-5. **External taxonomy alignment:** Should naming align with any recognized industry lifecycle terminology beyond PAW? (Manual)
-
-*(User may add answers inline when available)*

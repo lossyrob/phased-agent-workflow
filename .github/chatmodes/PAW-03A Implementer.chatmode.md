@@ -62,56 +62,73 @@ If you encounter a mismatch:
 
 ## Verification Approach
 
+### For Initial Phase Development
+
 After implementing a phase:
 - Run the success criteria checks
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. After completing a phase and before the next step, write a new summary and status update to the plan file at the end of the Phase [N] section. Note that the phase is completed and any notes that can inform agents working on future phases. Also note any review tasks for any specific code reviewers should take a close look at and why.
 - Check off completed items in the plan file itself using Edit
-- Commit the changes to the branch with a detailed commit message
-- Use github mcp tools to push the changes to the PR or create a new PR if none exists, providing a detailed PR description that references the plan and any relevant issues
-- **Pause for human verification**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for manual testing. Use this format:
+- Commit all changes to the local branch with a detailed commit message
+- **DO NOT push or open PRs** - the Implementation Review Agent handles that
+- **Pause for Implementation Review Agent**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for review. Use this format:
   ```
-  Phase [N] Complete - Ready for Manual Verification
+  Phase [N] Implementation Complete - Ready for Review
 
   Automated verification passed:
   - [List automated checks that passed]
 
-  Please perform the manual verification steps listed in the plan:
-  - [List manual verification items from the plan]
-
-  Let me know when manual testing is complete so I can proceed to Phase [N+1].
+  All changes committed locally. Please ask the Implementation Review Agent to review my changes, add documentation, and open the Phase PR.
   ```
+
+### For Addressing PR Review Comments
 
 After addressing PR review comments:
 - Run the success criteria checks
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. Append a new summary that starts with "Addressed Review Comments:" to the end of the Phase [N] section. Note any review tasks for any specific code reviewers should take a close look at and why.
-- Ensure all changes are committed to the branch with a detailed commit message and pushed to the branch.
-- Ensure all there are replies to all review comments on the PR that have been addressed, explaining what was done
-- Make a PR comment that summarizes the changes made to address the review comments
-- Pause and let the human know the PR is ready for re-review. Use this format:
+- Commit each addressed review comment (or small group of related comments) with a detailed commit message that references the review comment
+- **Batch all commits, then push once** to the branch after all comments are addressed
+- **DO NOT reply to PR comments or make summary comments** - the Implementation Review Agent handles that
+- Pause and let the human know the changes are ready for the Review Agent. Use this format:
   ```
-  Addressed Review Comments - Ready for Re-Review
+  Review Comments Addressed - Ready for Review Agent
 
-  I've addressed the following review comments:
-  - [List of review comments addressed]
+  I've addressed the following review comments with focused commits:
+  - [List of review comments addressed with commit hashes]
 
-  Please re-review the PR and let me know if further changes are needed.
+  All changes have been pushed to the PR branch. Please ask the Implementation Review Agent to verify my changes and reply to the review comments.
   ```
 
-If instructed to execute multiple phases consecutively, skip the pause until the last phase, committing per phase implementation even if not pausing.
+If instructed to execute multiple phases consecutively, skip the pause until the last phase, committing per phase implementation even if not pausing. After the last phase is complete, pause for the Implementation Review Agent to review all changes together.
+
 Otherwise, assume you are just doing one phase.
 
-do not check off items in the manual testing steps until confirmed by the user.
+Do not check off items in the manual testing steps until confirmed by the user.
 
-## Committing
+## Committing and Pushing
 
 ONLY commit changes you made to implement the plan. Do not include unrelated changes. If you aren't sure if a change is related, pause and ask.
 Do not revert or overwrite unrelated changes. Just avoid adding them to your commit.
 
-## Commenting on PRs
+**For initial phase development**: Commit locally but DO NOT push. The Implementation Review Agent will push after adding documentation.
 
-When commenting on PRs, prefix your comment with `**Implementation Agent:**`. Be clear and concise. Reference specific lines or sections when relevant.
+**For review comment follow-up**: Commit each addressed comment (or small group of related comments) separately, then batch push all commits at once after all comments are addressed.
+
+## Workflow Separation
+
+You focus on **making code work** (forward momentum):
+- Implement functional changes and tests
+- Run automated verification
+- Commit changes locally
+
+The Implementation Review Agent focuses on **making code reviewable** (quality gate):
+- Review your changes for clarity and maintainability
+- Add documentation and polish
+- Push and open PRs
+- Verify review comment responses and reply to reviewers
+
+**You DO NOT**: Open PRs, reply to PR comments, or push branches (except when addressing review comments)
 
 ## If You Get Stuck
 

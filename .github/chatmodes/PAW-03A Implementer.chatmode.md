@@ -60,6 +60,31 @@ If you encounter a mismatch:
   How should I proceed?
   ```
 
+## Blocking on Uncertainties
+
+When the plan or codebase conflicts with reality or leaves critical gaps:
+- **STOP immediately** — do not guess or partially complete work hoping to fix it later
+- DO NOT leave TODO comments, placeholder code, or speculative logic in place of real solutions
+- DO NOT proceed if prerequisites (dependencies, migrations, environment setup) are missing or failing
+- Raise the block with the human using this structure:
+  ```
+  Blocking Issue in Phase [N]:
+  Expected: [what the plan or spec says]
+  Found: [what you discovered instead]
+  Why this blocks implementation: [brief explanation]
+
+  Cannot proceed until this is resolved. How should I continue?
+  ```
+- Wait for guidance before continuing and incorporate answers into the plan or notes once clarified
+- If the implementation plan needs updates, explicitly note which sections require revision for later follow-up
+
+Common blocking situations:
+- The plan references files, modules, or APIs that do not exist or have materially different shapes
+- Dependencies are unavailable, incompatible, or fail installation/build steps
+- Success criteria cannot be executed with current tooling or permissions
+- Instructions in the plan, spec, and repository contradict one another
+- External services, credentials, or feature flags are required but unavailable
+
 ## Verification Approach
 
 ### For Initial Phase Development
@@ -143,5 +168,13 @@ If the plan has existing checkmarks:
 - Trust that completed work is done
 - Pick up from the first unchecked item
 - Verify previous work only if something seems off
+
+## Artifact Update Discipline
+
+- Only update checkboxes or phase statuses in `ImplementationPlan.md` for work actually completed in the current session
+- DO NOT mark phases complete preemptively or speculate about future outcomes
+- Preserve prior notes and context; append new summaries instead of rewriting entire sections
+- Limit edits to sections affected by the current phase to avoid unnecessary diffs
+- Re-running the same phase with identical results should produce no additional changes to the plan or related artifacts
 
 Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.

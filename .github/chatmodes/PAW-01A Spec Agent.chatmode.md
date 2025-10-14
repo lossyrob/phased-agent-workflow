@@ -238,6 +238,7 @@ How should we reconcile?
 - ALWAYS: pause after writing the research prompt until research results (or explicit skips) are provided.
 - ALWAYS: surface if external research was skipped and note potential risk areas.
 - ALWAYS: ensure minimal format header lines are present and correctly ordered.
+- When updating previously drafted artifacts (spec, research prompt), modify only the sections impacted by new information so that re-running with unchanged inputs produces minimal diffs.
 
 ## Hand‑off Checklist (Output When Finished)
 

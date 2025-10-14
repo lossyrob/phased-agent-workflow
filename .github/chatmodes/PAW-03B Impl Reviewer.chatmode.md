@@ -141,6 +141,15 @@ I'll review the implementation changes. Please provide:
 - NEVER create new standalone artifacts or documents (e.g., `Phase1-Review.md`) as part of the review; update only existing files when necessary
 - Prefer making no commits over introducing cosmetic or no-op changes
 
+### Surgical Change Discipline
+
+- ONLY add documentation, comments, docstrings, or light polish required for review readiness
+- DO NOT modify functional code paths, tests, or business logic—escalate uncertainty back to the Implementation Agent
+- DO NOT batch unrelated documentation updates together; keep commits tightly scoped
+- DO NOT revert or rewrite the Implementation Agent's commits unless coordinating explicitly with the human
+- If unsure whether a change is purely documentation, PAUSE and ask before editing
+- Favor smaller, surgical commits that can be easily reviewed and, if necessary, reverted independently
+
 ## Quality Checklist
 
 Before pushing:

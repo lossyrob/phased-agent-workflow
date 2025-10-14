@@ -1033,7 +1033,23 @@ Common blocking situations:
 
 ### Status
 
-Unimplemented
+- [x] Completed (2025-10-13)
+
+### Completion Notes (2025-10-13)
+- Propagated anti-evaluation directives, file-reading guardrails, and idempotency guidance into `PAW-01B Spec Research Agent.chatmode.md`.
+- Added surgical change discipline sections to `PAW-03B Impl Reviewer.chatmode.md` and `PAW-04 Documenter.chatmode.md`.
+- Strengthened blocking language and idempotent planning instructions in `PAW-02B Impl Planner.chatmode.md`.
+- Introduced blocking-on-uncertainties and artifact update discipline guidance to `PAW-03A Implementer.chatmode.md`.
+- Added idempotent artifact update guardrail to `PAW-01A Spec Agent.chatmode.md`.
+- Automated verification:
+   - `grep -c "DO NOT suggest improvements" .github/chatmodes/PAW-01B*.md` → 1
+   - `grep -c "Surgical Change Discipline" .github/chatmodes/PAW-03B*.md` → 1
+   - `grep -c "Surgical Change Discipline" .github/chatmodes/PAW-04*.md` → 1
+   - `grep -c "BLOCKING REQUIREMENT" .github/chatmodes/PAW-02B*.md` → 1
+   - `grep -c "STOP immediately" .github/chatmodes/PAW-03A*.md` → 1
+   - `grep -c "limit/offset" .github/chatmodes/PAW-01B*.md` → 1
+   - `bash -lc 'sum=0; while IFS=: read -r file count; do sum=$((sum+count)); done < <(grep -c "limit/offset" .github/chatmodes/PAW-0{1,2}*.md); echo $sum'` → 4
+- Manual verification: confirmed guardrail tone matches production patterns, question-blocking language instructs explicit pauses, and idempotency guidance stays scope-specific.
 
 ---
 

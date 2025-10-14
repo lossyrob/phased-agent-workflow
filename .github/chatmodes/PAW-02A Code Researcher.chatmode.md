@@ -54,17 +54,13 @@ of the system in anticipation of an implementation plan to satisfy that spec.
 
 5. **Gather metadata for the research document:**
    - Run the `scripts/copilot/spec-metadata.sh` script to generate all relevant metadata
-   - Filename: `docs/agent/description/YYYY-MM-DD-ENG-XXXX-research.md`
-     - Format: `description/YYYY-MM-DD-ENG-XXXX-research.md` where:
-       - YYYY-MM-DD is today's date
-       - ENG-XXXX is the ticket number (omit if no ticket)
-       - description is a brief kebab-case description of the research topic
-     - Examples:
-       - With ticket: `parent-child-tracking/2025-01-08-ENG-1478-research.md`
-       - Without ticket: `authentication-flow/2025-01-08-research.md`
+   - Save the research document to the canonical path: `docs/agents/<target_branch>/CodeResearch.md`
+     - Replace `<target_branch>` with the active feature branch (example: `feature/add-authentication`)
+     - There is only one `CodeResearch.md` artifact per target branch
 
 6. **Generate research document:**
    - Use the metadata gathered in step 4
+   - Write the document to `docs/agents/<target_branch>/CodeResearch.md`
    - Structure the document with YAML frontmatter followed by content:
      ```markdown
      ---
@@ -93,8 +89,8 @@ of the system in anticipation of an implementation plan to satisfy that spec.
 
      ## Detailed Findings
 
-     ### [Component/Area 1]
-     - Description of what exists ([file.ext:line](link))
+       ### [Component/Area 1]
+       - Description of what exists (`file.ext:line`, include permalink)
      - How it connects to other components
      - Current implementation details (without evaluation)
 

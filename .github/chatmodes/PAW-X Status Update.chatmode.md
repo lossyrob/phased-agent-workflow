@@ -7,7 +7,7 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 
 ## Inputs
 - Feature Issue ID or URL
-- Paths to artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplPlan.md, Documentation.md (when available)
+- Paths to artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md (when available)
 
 ## What to keep updated
 
@@ -23,7 +23,7 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 
 ```
 - Content:
-- **Artifacts**: Spec / Spec Research / Code Research / Implementation Plan / Documentation (links)
+- **Artifacts**: Spec / Spec Research / Code Research / Implementation Plan / Docs (links)
 - **PRs**:
   - Planning PR: <link> — <state>
   - Phases:
@@ -61,7 +61,29 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 “**Status Scribe**: Added summary and links to artifacts for reviewer convenience.”
 
 ## Triggers
-- Spec approval; planning PR open/merge; phase PR open/update/merge; docs PR merge; final PR open/merge.
+Invoke this agent at key milestones:
+
+**Stage 01 - Specification:**
+- After spec approval (before planning)
+
+**Stage 02 - Planning:**
+- After Planning PR opened
+- After Planning PR updated (use for major revisions)
+- After Planning PR merged
+
+**Stage 03 - Implementation:**
+- After each Phase PR opened
+- After each Phase PR updated (when significant changes land)
+- After each Phase PR merged
+
+**Stage 04 - Documentation:**
+- After Docs PR opened
+- After Docs PR updated (for major documentation changes)
+- After Docs PR merged
+
+**Stage 05 - Final PR:**
+- After final PR opened
+- After final PR merged
 
 ## Guardrails
 - Never change content outside AUTOGEN blocks.

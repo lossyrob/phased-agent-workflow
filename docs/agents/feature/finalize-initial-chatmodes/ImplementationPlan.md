@@ -798,7 +798,20 @@ Verify these references:
 
 ### Status
 
-Unimplemented
+- [x] Completed (2025-10-13)
+
+### Completion Notes (2025-10-13)
+- Updated `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`, `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`, and `.github/chatmodes/PAW-X Status Update.chatmode.md` to reference the canonical `docs/agents/<target_branch>/` artifact structure, removing legacy Human Layer paths and date-based filenames.
+- Verified success criteria via:
+   - `grep -c "docs/agents/<target_branch>/CodeResearch.md" .github/chatmodes/PAW-02A Code Researcher.chatmode.md` → 2
+   - `grep -c "YYYY-MM-DD-ENG" .github/chatmodes/PAW-02A Code Researcher.chatmode.md` → 0
+   - `grep -c "ImplementationPlan.md" .github/chatmodes/PAW-02B Impl Planner.chatmode.md` → 4
+   - `grep -c "thoughts/allison" .github/chatmodes/PAW-02B Impl Planner.chatmode.md` → 0
+   - `grep -c "ImplPlan.md" .github/chatmodes/PAW-X Status Update.chatmode.md` → 0
+   - `grep -c "Documentation.md" .github/chatmodes/PAW-X Status Update.chatmode.md` → 0
+   - `grep -c "docs/agent/" .github/chatmodes/*.md` → 0 for all files
+- Manual review confirmed all examples now use `<target_branch>` placeholders and the Status Agent trigger list covers Docs PR opened/updated. No additional refactors observed.
+- Review focus: double-check Markdown formatting around the new Status Agent trigger list and the updated Code Researcher instructions to ensure readability and that lint tooling is satisfied.
 
 ---
 

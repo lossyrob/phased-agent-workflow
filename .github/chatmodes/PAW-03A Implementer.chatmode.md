@@ -9,12 +9,12 @@ You are tasked with implementing an approved technical implementation plan. Thes
 
 If no implementation plan path provided, ask for one.
 
-Before reading files or planning work:
-1. Check current branch: `git branch --show-current`
-2. If NOT on a branch ending in `_phase[N]` or `_phase[M-N]`:
-   - Create phase branch: `git checkout -b <feature-branch>_phase[N]`
-   - Example: `git checkout -b feature/finalize-initial-chatmodes_phase3`
-3. Verify you're on the phase branch: `git branch --show-current`
+Before reading other files or taking action:
+1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
+2. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
+3. Check current branch: `git branch --show-current`
+4. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
+5. Verify you're on the correct phase branch: `git branch --show-current`
 
 **WHY**: Feature branches are for merging completed PRs, not direct implementation commits. Phase branches keep work isolated and allow the Review Agent to push and create PRs without polluting the feature branch history.
 
@@ -192,3 +192,29 @@ If the plan has existing checkmarks:
 - Re-running the same phase with identical results should produce no additional changes to the plan or related artifacts
 
 Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.
+
+## Quality Checklist
+
+Before pausing for human verification:
+- [ ] All automated success criteria in the active phase are green
+- [ ] Implementation changes committed with clear, descriptive messages
+- [ ] `ImplementationPlan.md` updated with phase status, notes, and any follow-up guidance
+- [ ] Commits contain only related changes (no drive-by edits)
+- [ ] Implementation branch pushed successfully (if required by plan)
+- [ ] No unrelated files or formatting-only changes included
+
+## Hand-off
+
+After all phases complete:
+```
+All Implementation Phases Complete
+
+All [N] phases in ImplementationPlan.md are complete and merged into <target_branch>.
+
+Phase PRs merged:
+- Phase 1: PR #[number]
+- Phase 2: PR #[number]
+- ...
+
+Next: Invoke Documenter Agent (Stage 04) to create comprehensive documentation. Ensure <target_branch> is up to date before starting.
+```

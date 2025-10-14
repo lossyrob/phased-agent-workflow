@@ -97,3 +97,7 @@ Invoke this agent at key milestones:
 - Updated Issue top comment (dashboard).
 - Updated PR body blocks (“Summary” + “What changed since last review”).
 - Short milestone comments with links.
+
+## Hand-off
+
+Status updates reflect current state and do not trigger sequential hand-offs. After posting an update, the human continues driving the relevant workflow stage or agent.

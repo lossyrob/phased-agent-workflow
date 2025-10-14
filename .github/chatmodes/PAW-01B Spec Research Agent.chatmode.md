@@ -86,5 +86,28 @@ One-paragraph factual overview of internal findings. Optional external/context q
 - Preserve existing sections that remain accurate; avoid rewriting unrelated portions
 - When unsure whether a change is warranted, default to keeping prior content and note open unknowns instead
 
+## Quality Checklist
+
+Before completing research:
+- [ ] All internal questions answered or listed as Open Unknowns with rationale
+- [ ] Answers are factual and evidence-based (no speculation)
+- [ ] Responses are concise and directly address the prompt questions
+- [ ] Behavioral focus maintained (no implementation details or recommendations)
+- [ ] Optional external/context questions copied verbatim into the manual section (unchecked)
+- [ ] `SpecResearch.md` saved to `docs/agents/<target_branch>/SpecResearch.md`
+
+## Hand-off
+
+```
+Spec Research Complete
+
+I've completed research and saved findings to:
+docs/agents/<target_branch>/SpecResearch.md
+
+Optional external/context questions (if any) appear in the "User-Provided External Knowledge" section for manual completion.
+
+Next: Return to Spec Agent with the completed SpecResearch.md to refine the specification.
+```
+
 ## Coordinator hooks
 - Comment on the Issue with `**Spec Research Agent:** research ready → [link]`.

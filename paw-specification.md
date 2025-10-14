@@ -297,6 +297,38 @@ The implementation process follows a cycle for each phase: Implementation Agent 
 **Optional Secondary Review:**
 - The developer may request another developer to review the Phase PR before merging. That review will be handled the same way as above, with the developer asking the Implementation Agent to address any review comments, and then asking the Implementation Review Agent to review the changes.
 
+**Flow Diagrams**
+
+Initial Phase Development:
+┌─────────────────────────┐
+│ Implementation Agent    │ Makes changes, commits locally
+│ (Forward Momentum)      │ ↓ Signals ready
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Implementation Review   │ Reviews, adds docs, commits
+│ (Quality Gate)          │ ↓ Pushes both commits, opens PR
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Human Review            │
+└─────────────────────────┘
+
+Review Comment Follow-up:
+┌─────────────────────────┐
+│ Implementation Agent    │ Addresses comments, commits each
+│ (Forward Momentum)      │ ↓ Batch pushes all, signals ready
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Implementation Review   │ Verifies on PR, replies to comments
+│ (Quality Gate)          │ ↓ Pushes if docs needed
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Human Re-review         │
+└─────────────────────────┘
+
 ---
 
 ### Stage 04 — Documentation

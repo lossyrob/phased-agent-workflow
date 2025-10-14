@@ -798,7 +798,38 @@ Verify these references:
 
 ### Status
 
-Unimplemented
+- [x] Completed (2025-10-13)
+
+### Completion Notes (2025-10-13)
+
+**Files Modified:**
+- `.github/chatmodes/PAW-02A Code Researcher.chatmode.md` - Removed legacy date-based paths (`YYYY-MM-DD-ENG-XXXX-research.md`) and ticket references; replaced with canonical `docs/agents/<target_branch>/CodeResearch.md` throughout
+- `.github/chatmodes/PAW-02B Impl Planner.chatmode.md` - Updated artifact paths and references section to use canonical structure; removed legacy `thoughts/allison` paths
+- `.github/chatmodes/PAW-X Status Update.chatmode.md` - Fixed artifact naming inconsistencies (`ImplementationPlan.md` not `ImplPlan.md`, `Docs.md` not `Documentation.md`); **added comprehensive milestone-based trigger list** covering all workflow stages (Spec → Planning → Implementation → Docs → Final PR)
+
+**Automated Verification (All Success Criteria Met):**
+- `grep -c "docs/agents/<target_branch>/CodeResearch.md" .github/chatmodes/PAW-02A Code Researcher.chatmode.md` → 2 ✓
+- `grep -c "YYYY-MM-DD-ENG" .github/chatmodes/PAW-02A Code Researcher.chatmode.md` → 0 ✓
+- `grep -c "ImplementationPlan.md" .github/chatmodes/PAW-02B Impl Planner.chatmode.md` → 4 ✓
+- `grep -c "thoughts/allison" .github/chatmodes/PAW-02B Impl Planner.chatmode.md` → 0 ✓
+- `grep -c "ImplPlan.md" .github/chatmodes/PAW-X Status Update.chatmode.md` → 0 ✓
+- `grep -c "Documentation.md" .github/chatmodes/PAW-X Status Update.chatmode.md` → 0 ✓
+- `grep -c "docs/agent/" .github/chatmodes/*.md` → 0 ✓
+
+**Manual Verification:**
+- All artifact path references now use canonical `docs/agents/<target_branch>/` structure with consistent placeholder syntax
+- No legacy path patterns remain (verified no date stamps, ticket references, or old directory names)
+- Path references are consistent across all three modified chatmodes
+- Example paths are realistic and follow established conventions
+
+**Value-Add Changes:**
+- The Status Update agent trigger list (PAW-X Status Update.chatmode.md:64-86) provides comprehensive guidance on when to invoke status updates across the full workflow lifecycle. This goes beyond the minimum requirements and significantly improves the agent's usability by eliminating ambiguity about invocation timing.
+
+**Review Recommendations:**
+- Markdown formatting is clean and consistent throughout all changes
+- Indentation in Code Researcher agent (line 96) correctly adjusts nested list structure for better readability
+- Trigger list formatting in Status Update agent uses clear subsections with consistent structure
+- All changes ready for human review
 
 ---
 

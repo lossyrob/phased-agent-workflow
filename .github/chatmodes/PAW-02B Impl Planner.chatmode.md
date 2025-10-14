@@ -134,7 +134,7 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Incrementally write the plan** to `docs/agents/<target branch>/ImplementationPlan.md`
+1. **Incrementally write the plan** to `docs/agents/<target_branch>/ImplementationPlan.md`
    - Write the outline, and then one phase at a time
 2. **Use this template structure**:
 
@@ -228,8 +228,9 @@ After structure approval:
 
 ## References
 
-- Original ticket: `thoughts/allison/tickets/eng_XXXX.md`
-- Related research: `thoughts/shared/research/[relevant].md`
+- Original Issue: [link or 'none']
+- Spec: `docs/agents/<target_branch>/Spec.md`
+- Research: `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -263,7 +264,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
     - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
     - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
        - Summary of the spec, research, and planning deliverables
-       - Links to `docs/agents/<target_branch>/Spec.md`, `SpecResearch.md`, `CodeResearch.md`, and `ImplementationPlan.md`
+       - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
        - Outstanding questions or risks that require human attention
     - Pause for human review of the Planning PR before proceeding to downstream stages.
 

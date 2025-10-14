@@ -299,12 +299,20 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Update todos as you complete research
    - Mark planning tasks complete when done
 
-6. **No Open Questions in Final Plan**:
-   - If you encounter open questions during planning, STOP
-   - Research or ask for clarification immediately
-   - Do NOT write the plan with unresolved questions
-   - The implementation plan must be complete and actionable
-   - Every decision must be made before finalizing the plan
+6. **No Open Questions in Final Plan — BLOCKING REQUIREMENT**:
+   - If you encounter an unresolved question or missing decision at any point, **STOP IMMEDIATELY**
+   - DO NOT continue drafting or refining the plan until you have resolved the uncertainty
+   - Perform additional research yourself before asking for help; only escalate when research cannot answer the question
+   - If the answer requires human clarification, ask right away and WAIT for the response before proceeding
+   - DO NOT use placeholders (`TBD`, `???`, `needs clarification`) in the final plan
+   - The plan must ship with zero open questions and every technical decision explicitly made
+   - Any blockers should be communicated before moving past the relevant section or phase
+
+7. **Idempotent Plan Updates**:
+   - When editing `ImplementationPlan.md`, only modify sections directly related to the current refinement
+   - Preserve completed sections and existing checkboxes unless the work actually changes
+   - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
+   - Track revisions explicitly in phase notes rather than rewriting large portions of the document
 
 ## Success Criteria Guidelines
 

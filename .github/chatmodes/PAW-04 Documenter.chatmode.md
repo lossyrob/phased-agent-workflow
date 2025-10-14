@@ -108,6 +108,13 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
 - ALWAYS verify documentation accuracy against actual implementation
 - If project documentation standards are unclear, ask before proceeding
 
+### Surgical Change Discipline
+- ONLY modify documentation files required to describe the completed work
+- DO NOT format or rewrite implementation code sections; if documentation shares a file with code, restrict edits to documentation blocks
+- DO NOT introduce unrelated documentation updates or cleanups outside the feature scope
+- DO NOT remove historical context or prior documentation without explicit direction
+- When unsure if a change is purely documentation, pause and ask for confirmation before editing
+
 ## Docs.md Artifact Format
 
 ```

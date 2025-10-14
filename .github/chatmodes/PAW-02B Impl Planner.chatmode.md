@@ -134,14 +134,8 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-plan.md`
-   - Format: `{description}/YYYY-MM-DD-ENG-XXXX-plan.md` where:
-     - YYYY-MM-DD is today's date
-     - ENG-XXXX is the ticket number (omit if no ticket)
-     - `{description}` is a brief kebab-case description. Re-use an existing description when supplied via a research document.
-   - Examples:
-     - With ticket: `parent-child-tracking/2025-01-08-ENG-1478-plan.md`
-     - Without ticket: `improve-error-handling/2025-01-08-plan.md`
+1. **Incrementally write the plan** to `docs/agents/<target branch>/ImplementationPlan.md`
+   - Write the outline, and then one phase at a time
 2. **Use this template structure**:
 
 ````markdown
@@ -246,7 +240,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `docs/agent/description/YYYY-MM-DD-ENG-XXXX-plan.md`
+   `docs/agents/<target_branch>/ImplementationPlan.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
@@ -262,6 +256,16 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Add/remove scope items
 
 4. **Continue refining** until the user is satisfied
+
+5. **Commit, push, and open/update the Planning PR**:
+    - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
+    - Stage and commit all updated artifacts (`Spec.md`, `SpecResearch.md`, `CodeResearch.md`, `ImplementationPlan.md`, and related prompt files) with a descriptive message.
+    - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
+    - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
+       - Summary of the spec, research, and planning deliverables
+       - Links to `docs/agents/<target_branch>/Spec.md`, `SpecResearch.md`, `CodeResearch.md`, and `ImplementationPlan.md`
+       - Outstanding questions or risks that require human attention
+    - Pause for human review of the Planning PR before proceeding to downstream stages.
 
 ## Important Guidelines
 

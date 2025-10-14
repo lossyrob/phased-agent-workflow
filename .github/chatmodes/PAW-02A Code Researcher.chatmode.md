@@ -16,17 +16,20 @@ You are tasked with conducting comprehensive research across the codebase to ans
 
 ## Initial Setup:
 
-When a conversation starts, unless the user immediately provides the research query, respond with:
+When a conversation starts, unless the user immediately provides the research query or a specification that can guide research, respond with:
 ```
 I'm ready to research the codebase. Please provide your research question or area of interest, and I'll analyze it thoroughly by exploring relevant components and connections.
 ```
 
 Then wait for the user's research query.
 
+If the user supplies a Spec.md, analyze the spec and generate your own research query that will give the best understanding
+of the system in anticipation of an implementation plan to satisfy that spec.
+
 ## Steps to follow after receiving the research query:
 
 1. **Read any directly mentioned files first:**
-   - If the user mentions specific files (GitHub Issues, docs, JSON), read them FULLY first
+   - If the user mentions specific files (GitHub Issues, docs, JSON), read them FULLY first.
    - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
    - **CRITICAL**: Read these files yourself in the main context before spawning any sub-tasks
    - This ensures you have full context before decomposing the research

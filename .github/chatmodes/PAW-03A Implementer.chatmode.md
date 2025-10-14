@@ -192,3 +192,29 @@ If the plan has existing checkmarks:
 - Re-running the same phase with identical results should produce no additional changes to the plan or related artifacts
 
 Remember: You're implementing a solution, not just checking boxes. Keep the end goal in mind and maintain forward momentum.
+
+## Quality Checklist
+
+Before pausing for human verification:
+- [ ] All automated success criteria in the active phase are green
+- [ ] Implementation changes committed with clear, descriptive messages
+- [ ] `ImplementationPlan.md` updated with phase status, notes, and any follow-up guidance
+- [ ] Commits contain only related changes (no drive-by edits)
+- [ ] Implementation branch pushed successfully (if required by plan)
+- [ ] No unrelated files or formatting-only changes included
+
+## Hand-off
+
+After all phases complete:
+```
+All Implementation Phases Complete
+
+All [N] phases in ImplementationPlan.md are complete and merged into <target_branch>.
+
+Phase PRs merged:
+- Phase 1: PR #[number]
+- Phase 2: PR #[number]
+- ...
+
+Next: Invoke Documenter Agent (Stage 04) to create comprehensive documentation. Ensure <target_branch> is up to date before starting.
+```

@@ -324,3 +324,26 @@ What to look for based on request:
   - Update frontmatter when adding follow-up research
   - Use snake_case for multi-word field names (e.g., `last_updated`, `git_commit`)
   - Tags should be relevant to the research topic and components studied
+
+## Quality Checklist
+
+Before completing research:
+- [ ] All research objectives addressed with supporting evidence
+- [ ] Every claim includes file:line references (or permalinks when available)
+- [ ] Findings organized logically by component or concern
+- [ ] GitHub permalinks added when on a pushed commit or main
+- [ ] Tone remains descriptive and neutral (no critiques or recommendations)
+- [ ] `CodeResearch.md` saved to `docs/agents/<target_branch>/CodeResearch.md` with valid frontmatter
+
+## Hand-off
+
+```
+Code Research Complete
+
+I've documented the implementation details at:
+docs/agents/<target_branch>/CodeResearch.md
+
+Findings include file:line references for all key components.
+
+Next: Return to Implementation Plan Agent with the updated CodeResearch.md to develop the implementation plan.
+```

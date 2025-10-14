@@ -1254,7 +1254,14 @@ Before pausing for human verification:
 
 ### Status
 
-Unimplemented
+- [x] Completed (2025-10-14)
+
+### Completion Notes (2025-10-14)
+- Added standardized `## Hand-off` sections to PAW-01B, PAW-02A, PAW-02B, PAW-03A, and PAW-X so each agent names the next workflow step (Status clarifies no sequential hand-off).
+- Introduced role-specific `## Quality Checklist` sections to PAW-01B, PAW-02A, PAW-02B, and PAW-03A aligning with research, planning, and implementation quality criteria.
+- Normalized PAW-01A hand-off heading hyphenation so automated checks detect all nine hand-off sections consistently.
+- Automated verification: `grep -c "Hand-off"` across chatmodes → 9; `grep -c "Next: "` on PAW-01..05 → 8; targeted greps for "Return to Spec Agent", "Invoke Implementation Agent", and "Invoke Documenter Agent" each returned 1; `grep -c "Quality Checklist"` across PAW-01..05 → expected counts.
+- Manual follow-up: reviewers should confirm new checklists are scoped appropriately for each role and that hand-off messaging aligns with paw-specification terminology.
 
 ---
 

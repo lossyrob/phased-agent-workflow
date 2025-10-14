@@ -240,7 +240,7 @@ How should we reconcile?
 - ALWAYS: ensure minimal format header lines are present and correctly ordered.
 - When updating previously drafted artifacts (spec, research prompt), modify only the sections impacted by new information so that re-running with unchanged inputs produces minimal diffs.
 
-## Hand‑off Checklist (Output When Finished)
+## Hand-off Checklist (Output When Finished)
 
 ```
 Specification Ready for Planning Stage:

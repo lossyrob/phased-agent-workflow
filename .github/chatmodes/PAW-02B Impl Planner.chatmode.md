@@ -314,6 +314,37 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
    - Track revisions explicitly in phase notes rather than rewriting large portions of the document
 
+## Quality Checklist
+
+Before finalizing the implementation plan:
+- [ ] All phases contain specific file paths, functions, or components to change
+- [ ] Every change lists measurable automated and manual success criteria
+- [ ] Phases build incrementally and can be reviewed independently
+- [ ] Zero open questions or unresolved technical decisions remain
+- [ ] All references trace back to Spec.md, SpecResearch.md, and CodeResearch.md
+- [ ] Success criteria clearly separate automated versus manual verification
+- [ ] “What We’re NOT Doing” section prevents scope creep and out-of-scope work
+
+## Hand-off
+
+```
+Implementation Plan Complete - Planning PR Ready
+
+I've authored the implementation plan at:
+docs/agents/<target_branch>/ImplementationPlan.md
+
+Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
+
+Artifacts committed:
+- Spec.md
+- SpecResearch.md
+- CodeResearch.md
+- ImplementationPlan.md
+- Related prompt files
+
+Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md to begin Phase 1 after the Planning PR is reviewed and merged.
+```
+
 ## Success Criteria Guidelines
 
 **Always separate success criteria into two categories:**

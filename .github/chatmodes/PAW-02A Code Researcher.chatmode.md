@@ -89,8 +89,8 @@ of the system in anticipation of an implementation plan to satisfy that spec.
 
      ## Detailed Findings
 
-       ### [Component/Area 1]
-       - Description of what exists (`file.ext:line`, include permalink)
+     ### [Component/Area 1]
+     - Description of what exists (`file.ext:line`, include permalink)
      - How it connects to other components
      - Current implementation details (without evaluation)
 

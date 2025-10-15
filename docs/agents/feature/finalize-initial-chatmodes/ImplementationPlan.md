@@ -1464,7 +1464,14 @@ Invoke this agent at key milestones:
 
 ### Status
 
-Unimplemented
+- [x] Completed (2025-10-14)
+
+### Completion Notes (2025-10-14)
+- Clarified behavioral vs implementation scope by adding dedicated sections to `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md` and `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`.
+- Added role boundary sections for forward momentum vs maintainability in `.github/chatmodes/PAW-03A Implementer.chatmode.md` and `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`.
+- Defined "complete" expectations in `.github/chatmodes/PAW-02B Impl Planner.chatmode.md` and clarified "update" semantics in `.github/chatmodes/PAW-X Status Update.chatmode.md` to remove lingering ambiguity.
+- Automated verification: `grep -c "Behavioral Documentation" .github/chatmodes/PAW-01B\ Spec\ Research\ Agent.chatmode.md` → 1; `grep -c "Builds upon SpecResearch" .github/chatmodes/PAW-02A\ Code\ Researcher.chatmode.md` → 1; `grep -c "Forward Momentum" .github/chatmodes/PAW-03A\ Implementer.chatmode.md` → 1; `grep -c "Maintainability" .github/chatmodes/PAW-03B\ Impl\ Reviewer.chatmode.md` → 1; `grep -c "Docs PR opened" .github/chatmodes/PAW-X\ Status\ Update.chatmode.md` → 1; `grep -c "Docs PR updated" .github/chatmodes/PAW-X\ Status\ Update.chatmode.md` → 1.
+- Manual follow-up: reviewers should confirm the new scope sections clearly distinguish behavioral vs implementation documentation, ensure the Implementer/Reviewer responsibilities align with paw-specification role boundaries, and verify the clarified terminology resonates with stage workflows.
 
 ---
 

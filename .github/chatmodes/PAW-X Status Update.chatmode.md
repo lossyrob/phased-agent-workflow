@@ -75,6 +75,11 @@ Create the status dashboard using the actual phase count from Step 1
 - Preserve all content outside these marker blocks unchanged
 - Be idempotent: same state = same output
 
+**"Update" means:**
+- Replace content within AUTOGEN blocks with new content
+- Preserve all content outside blocks unchanged
+- Be idempotent: same state = same output
+
 ## Triggers
 Invoke this agent at key milestones:
 

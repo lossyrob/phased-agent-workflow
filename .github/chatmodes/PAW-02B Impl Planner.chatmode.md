@@ -314,6 +314,12 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
    - Track revisions explicitly in phase notes rather than rewriting large portions of the document
 
+## Complete means:
+- For files: Read entirely without limit/offset
+- For plan: Zero open questions, all decisions made
+- For phases: All success criteria met and verified
+- For checklist: All items checked off
+
 ## Quality Checklist
 
 Before finalizing the implementation plan:

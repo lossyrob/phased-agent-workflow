@@ -60,6 +60,11 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 - If opening text lacks clarity, add a one-paragraph synopsis under the block:
 “**Status Scribe**: Added summary and links to artifacts for reviewer convenience.”
 
+**"Update" means:**
+- Replace content within AUTOGEN blocks with new content
+- Preserve all content outside blocks unchanged
+- Be idempotent: same state = same output
+
 ## Triggers
 Invoke this agent at key milestones:
 

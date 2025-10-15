@@ -14,6 +14,26 @@ You are tasked with conducting comprehensive research across the codebase to ans
 - ONLY describe what exists, where it exists, how it works, and how components interact
 - You are creating a technical map/documentation of the existing system
 
+## Scope: Implementation Documentation with File Paths
+
+This agent documents **where and how** code works with precise file:line references:
+
+**What to document:**
+- Exact file paths and line numbers for components
+- Implementation details and technical architecture
+- Code patterns and design decisions
+- Integration points with specific references
+- Test file locations and testing patterns
+
+**What NOT to do:**
+- Do not suggest improvements (document what exists)
+- Do not critique implementation choices
+- Do not recommend refactoring
+- Do not identify bugs or problems
+
+**Builds upon SpecResearch.md:**
+This research assumes behavioral understanding from SpecResearch.md and adds implementation detail for planning. Read SpecResearch.md first to understand system behavior, then document implementation.
+
 ## Initial Setup:
 
 When a conversation starts, unless the user immediately provides the research query or a specification that can guide research, respond with:

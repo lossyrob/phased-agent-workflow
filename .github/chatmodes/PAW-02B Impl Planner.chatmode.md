@@ -134,14 +134,8 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `docs/agent/{description}/YYYY-MM-DD-ENG-XXXX-plan.md`
-   - Format: `{description}/YYYY-MM-DD-ENG-XXXX-plan.md` where:
-     - YYYY-MM-DD is today's date
-     - ENG-XXXX is the ticket number (omit if no ticket)
-     - `{description}` is a brief kebab-case description. Re-use an existing description when supplied via a research document.
-   - Examples:
-     - With ticket: `parent-child-tracking/2025-01-08-ENG-1478-plan.md`
-     - Without ticket: `improve-error-handling/2025-01-08-plan.md`
+1. **Incrementally write the plan** to `docs/agents/<target_branch>/ImplementationPlan.md`
+   - Write the outline, and then one phase at a time
 2. **Use this template structure**:
 
 ````markdown
@@ -234,8 +228,9 @@ After structure approval:
 
 ## References
 
-- Original ticket: `thoughts/allison/tickets/eng_XXXX.md`
-- Related research: `thoughts/shared/research/[relevant].md`
+- Original Issue: [link or 'none']
+- Spec: `docs/agents/<target_branch>/Spec.md`
+- Research: `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -246,7 +241,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `docs/agent/description/YYYY-MM-DD-ENG-XXXX-plan.md`
+   `docs/agents/<target_branch>/ImplementationPlan.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
@@ -262,6 +257,16 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Add/remove scope items
 
 4. **Continue refining** until the user is satisfied
+
+5. **Commit, push, and open/update the Planning PR**:
+    - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
+    - Stage and commit all updated artifacts (`Spec.md`, `SpecResearch.md`, `CodeResearch.md`, `ImplementationPlan.md`, and related prompt files) with a descriptive message.
+    - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
+    - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
+       - Summary of the spec, research, and planning deliverables
+       - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
+       - Outstanding questions or risks that require human attention
+    - Pause for human review of the Planning PR before proceeding to downstream stages.
 
 ## Important Guidelines
 
@@ -294,12 +299,57 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Update todos as you complete research
    - Mark planning tasks complete when done
 
-6. **No Open Questions in Final Plan**:
-   - If you encounter open questions during planning, STOP
-   - Research or ask for clarification immediately
-   - Do NOT write the plan with unresolved questions
-   - The implementation plan must be complete and actionable
-   - Every decision must be made before finalizing the plan
+6. **No Open Questions in Final Plan — BLOCKING REQUIREMENT**:
+   - If you encounter an unresolved question or missing decision at any point, **STOP IMMEDIATELY**
+   - DO NOT continue drafting or refining the plan until you have resolved the uncertainty
+   - Perform additional research yourself before asking for help; only escalate when research cannot answer the question
+   - If the answer requires human clarification, ask right away and WAIT for the response before proceeding
+   - DO NOT use placeholders (`TBD`, `???`, `needs clarification`) in the final plan
+   - The plan must ship with zero open questions and every technical decision explicitly made
+   - Any blockers should be communicated before moving past the relevant section or phase
+
+7. **Idempotent Plan Updates**:
+   - When editing `ImplementationPlan.md`, only modify sections directly related to the current refinement
+   - Preserve completed sections and existing checkboxes unless the work actually changes
+   - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
+   - Track revisions explicitly in phase notes rather than rewriting large portions of the document
+
+## Complete means:
+- For files: Read entirely without limit/offset
+- For plan: Zero open questions, all decisions made
+- For phases: All success criteria met and verified
+- For checklist: All items checked off
+
+## Quality Checklist
+
+Before finalizing the implementation plan:
+- [ ] All phases contain specific file paths, functions, or components to change
+- [ ] Every change lists measurable automated and manual success criteria
+- [ ] Phases build incrementally and can be reviewed independently
+- [ ] Zero open questions or unresolved technical decisions remain
+- [ ] All references trace back to Spec.md, SpecResearch.md, and CodeResearch.md
+- [ ] Success criteria clearly separate automated versus manual verification
+- [ ] “What We’re NOT Doing” section prevents scope creep and out-of-scope work
+
+## Hand-off
+
+```
+Implementation Plan Complete - Planning PR Ready
+
+I've authored the implementation plan at:
+docs/agents/<target_branch>/ImplementationPlan.md
+
+Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
+
+Artifacts committed:
+- Spec.md
+- SpecResearch.md
+- CodeResearch.md
+- ImplementationPlan.md
+- Related prompt files
+
+Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md to begin Phase 1 after the Planning PR is reviewed and merged.
+```
 
 ## Success Criteria Guidelines
 

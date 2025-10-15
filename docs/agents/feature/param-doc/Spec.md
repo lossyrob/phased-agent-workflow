@@ -22,7 +22,7 @@
 **Independent Test**: Given a blank feature branch folder, follow the schema definition to create `WorkflowContext.md`, then validate it contains all required fields in the expected format.
 
 **Acceptance Scenarios**:
-1. **Given** the developer starts a new feature, **When** they reference the schema, **Then** they can populate `WorkflowContext.md` with: target branch (string), remote (string, defaults to `origin`), GitHub issue (URL or `#number` format), and artifact paths (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs).
+1. **Given** the developer starts a new feature, **When** they reference the schema, **Then** they can populate `WorkflowContext.md` with: target branch (string), remote (string, defaults to `origin`), GitHub issue (URL format preferred, optional), and artifact paths (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs).
 2. **Given** the schema includes optional "Additional Inputs" field, **When** the developer needs to reference supporting documents, **Then** they can add a comma-separated list or state "none".
 3. **Given** the schema defines expected artifact path conventions, **When** artifact names follow PAW standards (`Spec.md`, `SpecResearch.md`, etc.), **Then** paths can be auto-derived from the target branch or explicitly listed.
 4. **Given** the schema defines remote as optional with default `origin`, **When** the developer omits the remote field, **Then** agents assume `origin` for all git and PR operations.
@@ -49,21 +49,21 @@
 
 ### Functional Requirements
 - **FR-001**: The system SHALL define a standard location for `WorkflowContext.md` as `docs/agents/<target_branch>/WorkflowContext.md`. *(Stories: P1)*
-- **FR-002**: `WorkflowContext.md` SHALL contain the following required parameters: Target Branch (string) and GitHub Issue (URL or `#number`). *(Stories: P1, P2)*
-- **FR-003**: `WorkflowContext.md` SHALL contain the following optional parameters: Remote (string, defaults to `origin`), Artifact Paths (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs as relative or absolute paths), and Additional Inputs (list of supplementary documents). *(Stories: P1, P2)*
+- **FR-002**: `WorkflowContext.md` SHALL contain the following required parameter: Target Branch (string). *(Stories: P1, P2)*
+- **FR-003**: `WorkflowContext.md` SHALL contain the following optional parameters: GitHub Issue (URL format preferred), Remote (string, defaults to `origin`), Artifact Paths (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs as relative or absolute paths), and Additional Inputs (list of supplementary documents). *(Stories: P1, P2)*
 - **FR-004**: If the Remote parameter is omitted from `WorkflowContext.md`, agents SHALL default to `origin` for all git and PR operations. *(Stories: P2; Edge case: omitted remote)*
 - **FR-005**: The file format SHALL be Markdown with a minimal frontmatter header specifying purpose or schema version (optional for initial version). *(Stories: P2)*
 - **FR-006**: Documentation SHALL describe the file location, required fields, optional fields, expected format, and usage examples for each PAW stage. *(Stories: P3)*
 - **FR-007**: Agents SHALL read `WorkflowContext.md` when supplied in chat context and extract parameters without additional user prompts. *(Stories: P1)*
 - **FR-008**: If `WorkflowContext.md` is absent, agents SHALL fall back to existing parameter discovery behavior (prompt user or inspect current branch). *(Edge case: missing file)*
-- **FR-009**: If required fields are missing from `WorkflowContext.md`, agents SHALL report which parameters are invalid or absent. *(Edge case: malformed structure)*
+- **FR-009**: If required fields (Target Branch) are missing from `WorkflowContext.md`, agents SHALL report which parameters are invalid or absent. *(Edge case: malformed structure)*
 - **FR-010**: When a developer specifies a remote other than `origin`, PR and branch operations SHALL target the specified remote repository. *(Stories: P1; Edge case: fork workflows)*
 
 ### Key Entities
 - **WorkflowContext.md**: Centralized parameter document residing in `docs/agents/<target_branch>/`.
   - **Target Branch**: String identifying the feature branch namespace (e.g., `feature/param-doc`). *Required.*
   - **Remote**: String identifying the git remote for branch and PR operations (e.g., `origin`, `fork`, `upstream`). *Optional; defaults to `origin`.*
-  - **GitHub Issue**: Reference to the driving issue, either full URL (`https://github.com/owner/repo/issues/N`) or short form (`#N`). *Required.*
+  - **GitHub Issue**: Reference to the driving issue, full URL format preferred (`https://github.com/owner/repo/issues/N`). *Optional.*
   - **Artifact Paths**: Map or list of canonical artifacts (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md) as relative paths under the branch folder or absolute workspace paths. *Optional; can be auto-derived from target branch.*
   - **Additional Inputs**: Optional comma-separated list of supporting documents (e.g., `paw-specification.md`).
   - **Mode/Schema Version** (optional): Frontmatter identifier for future extensibility.
@@ -77,7 +77,7 @@
 - **SC-001**: A developer can create `WorkflowContext.md` for a new feature branch and use it across at least three distinct PAW stages (e.g., Spec, Code Research, Implementation) without re-entering target branch, remote, or issue information. *(FR-001, FR-002, FR-003, FR-007)*
 - **SC-002**: Documentation exists that explains the file's purpose, location, required/optional fields, and usage examples for each stage. *(FR-006)*
 - **SC-003**: When `WorkflowContext.md` is missing, agents continue to request parameters interactively or inspect the current branch, maintaining existing workflow behavior. *(FR-008)*
-- **SC-004**: When required fields are omitted from `WorkflowContext.md`, agents produce a clear error message identifying the missing parameter(s). *(FR-009)*
+- **SC-004**: When required fields (Target Branch) are omitted from `WorkflowContext.md`, agents produce a clear error message identifying the missing parameter(s). *(FR-009)*
 - **SC-005**: The file schema supports optional "Additional Inputs" without breaking parameter extraction if the field is omitted. *(FR-003)*
 - **SC-006**: When the Remote field is omitted, agents default to `origin` for all git and PR operations without prompting the user. *(FR-004)*
 - **SC-007**: When a developer specifies a remote other than `origin` (e.g., working against a fork), PR creation and branch operations target the specified remote repository. *(FR-010)*

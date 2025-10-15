@@ -71,166 +71,40 @@ A developer can create `WorkflowContext.md` for a feature branch and use it acro
 
 ## Implementation Approach
 
-The implementation is broken into three distinct phases:
+The implementation is broken into two distinct phases:
 
-1. **Phase 1**: Create template, example, and documentation for WorkflowContext.md file structure
-2. **Phase 2**: Update all chatmode instruction files to recognize and extract parameters from WorkflowContext.md
-3. **Phase 3**: Update paw-specification.md to document WorkflowContext.md usage throughout the workflow
+1. **Phase 1**: Update all chatmode instruction files to recognize and extract parameters from WorkflowContext.md, with minimal inline template
+2. **Phase 2**: Update paw-specification.md to document WorkflowContext.md usage throughout the workflow
 
-This phasing allows each increment to be independently reviewed and merged, with Phase 1 establishing the foundation, Phase 2 enabling agent support, and Phase 3 completing user-facing documentation.
+This phasing allows each increment to be independently reviewed and merged, with Phase 1 enabling agent support through inline templates, and Phase 2 completing user-facing documentation.
 
 ---
 
-## Phase 1: Create WorkflowContext.md Template and Examples
+## Phase 1: Update Chatmode Instructions
 
 ### Overview
 
-Establish the WorkflowContext.md file structure, create a template for developers to use, provide a concrete example, and document the file format. This phase delivers the foundational artifact without requiring any agent behavior changes.
+Update all PAW chatmode instruction files to recognize WorkflowContext.md when present in chat context and extract parameters without additional user prompts. Include a minimal inline template in each chatmode for reference. Maintain backward compatibility by falling back to existing parameter discovery behavior when the file is absent.
+
+### Minimal WorkflowContext.md Format
+
+Each chatmode will reference this minimal format for WorkflowContext.md:
+
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+
+Agents understand parameter meanings from context. GitHub Issue and all other fields except Target Branch are optional.
 
 ### Changes Required
 
-#### 1. Create WorkflowContext.md Template
-
-**File**: `docs/templates/WorkflowContext.md`
-**Changes**: Create new template file with documented structure and inline comments
-
-```markdown
-# Workflow Context
-
-This file provides centralized parameters for the PAW (Phased Agent Workflow) stages.
-All PAW agents can extract parameters from this file when it's included in chat context.
-
-## Parameters
-
-### Target Branch
-**Required**
-
-The feature branch serving as the namespace for all workflow artifacts.
-
-**Value**: `<target_branch>`
-**Example**: `feature/param-doc`
-
-### Remote
-**Optional** (defaults to `origin`)
-
-The git remote name for branch and PR operations. Specify this when working against a fork or non-default remote.
-
-**Value**: `<remote_name>`
-**Example**: `origin` or `fork` or `upstream`
-
-### GitHub Issue
-**Required**
-
-Reference to the driving GitHub Issue for this workflow.
-
-**Value**: `<issue_reference>`
-**Formats**:
-- Full URL: `https://github.com/owner/repo/issues/N`
-- Short form: `#N`
-
-**Example**: `https://github.com/lossyrob/phased-agent-workflow/issues/12`
-
-### Artifact Paths
-**Optional** (can be auto-derived from target branch)
-
-Locations of canonical workflow artifacts. If omitted, agents will derive paths using the convention `docs/agents/<target_branch>/<Artifact>.md`.
-
-**Spec**: `<path_to_spec>`
-**Spec Research**: `<path_to_spec_research>`
-**Code Research**: `<path_to_code_research>`
-**Implementation Plan**: `<path_to_implementation_plan>`
-**Documentation**: `<path_to_docs>`
-
-### Additional Inputs
-**Optional**
-
-Comma-separated list of supplementary documents referenced during spec or research stages.
-
-**Value**: `<comma_separated_paths_or_none>`
-**Example**: `paw-specification.md, docs/architecture.md` or `none`
-
----
-
-## Usage
-
-Include this file in your Copilot Chat context when invoking any PAW stage agent. Agents will extract the parameters automatically without additional prompts.
-
-### Quick Start
-
-1. Copy this template to `docs/agents/<your_target_branch>/WorkflowContext.md`
-2. Replace all `<placeholder>` values with your actual parameters
-3. Commit the file to your feature branch
-4. Reference this file when invoking PAW agents
-
-### Stage Compatibility
-
-WorkflowContext.md is recognized by all PAW stage agents:
-- PAW-01A Spec Agent
-- PAW-01B Spec Research Agent
-- PAW-02A Code Researcher
-- PAW-02B Implementation Planner
-- PAW-03A Implementer
-- PAW-03B Implementation Reviewer
-- PAW-04 Documenter
-- PAW-05 PR Agent
-- PAW-X Status Update Agent
-```
-
-#### 2. Create Example WorkflowContext.md
-
-**File**: `docs/examples/WorkflowContext-example.md`
-**Changes**: Create concrete example showing populated template
-
-```markdown
-# Workflow Context
-
-This file provides centralized parameters for the PAW (Phased Agent Workflow) stages.
-All PAW agents can extract parameters from this file when it's included in chat context.
-
-## Parameters
-
-### Target Branch
-**Required**
-
-The feature branch serving as the namespace for all workflow artifacts.
-
-**Value**: `feature/add-authentication`
-
-### Remote
-**Optional** (defaults to `origin`)
-
-The git remote name for branch and PR operations.
-
-**Value**: `origin`
-
-### GitHub Issue
-**Required**
-
-Reference to the driving GitHub Issue for this workflow.
-
-**Value**: `https://github.com/lossyrob/phased-agent-workflow/issues/15`
-
-### Artifact Paths
-**Optional** (can be auto-derived from target branch)
-
-Using default paths derived from target branch:
-- **Spec**: `docs/agents/feature/add-authentication/Spec.md`
-- **Spec Research**: `docs/agents/feature/add-authentication/SpecResearch.md`
-- **Code Research**: `docs/agents/feature/add-authentication/CodeResearch.md`
-- **Implementation Plan**: `docs/agents/feature/add-authentication/ImplementationPlan.md`
-- **Documentation**: `docs/agents/feature/add-authentication/Docs.md`
-
-### Additional Inputs
-**Optional**
-
-**Value**: `paw-specification.md, docs/security-guidelines.md`
-
----
-
-## Usage
-
-Include this file in your Copilot Chat context when invoking any PAW stage agent. Agents will extract the parameters automatically without additional prompts.
-```
+#### 1. Update Spec Agent (PAW-01A)
 
 #### 3. Create README for Template Usage
 
@@ -316,283 +190,7 @@ Not started
 
 ---
 
-## Phase 2: Update Chatmode Instructions
-
-### Overview
-
-Update all PAW chatmode instruction files to recognize WorkflowContext.md when present in chat context and extract parameters without additional user prompts. Maintain backward compatibility by falling back to existing parameter discovery behavior when the file is absent.
-
-### Changes Required
-
-#### 1. Update Spec Agent (PAW-01A)
-
-**File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to the "Start / Initial Response" section (around line 24)
-
-```markdown
-## Start / Initial Response
-Before responding, inspect the invocation context (prompt files, prior user turns, current branch, **WorkflowContext.md if present**) to infer starting inputs:
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, GitHub issue reference, remote (defaults to 'origin' if omitted), and additional inputs from the file
-- Validate that required parameters (target branch, GitHub issue) are present
-- If required parameters are missing, report which parameters are absent and request them interactively
-- Use extracted parameters without additional user prompts
-
-**Otherwise, use existing parameter discovery:**
-- Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
-- Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
-- Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
-- Research preference: default to running research unless the user explicitly says to skip it.
-```
-
-**File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
-**Changes**: Update spec research prompt generation section (around line 73-89) to mention WorkflowContext.md
-
-```markdown
-Generate `prompts/spec-research.prompt.md` according to this structure (fill `<...>` with actual values from WorkflowContext.md if present, otherwise from discovered parameters):
-
----
-mode: 'PAW-01B Spec Research Agent'
----
-# Spec Research Prompt: <feature>
-
-**Note:** If WorkflowContext.md exists at `docs/agents/<target_branch>/WorkflowContext.md`, parameters below are also available there.
-
-Target Branch: <target_branch>
-GitHub Issue: <issue number or 'none'>
-Additional Inputs: <comma-separated list or 'none'>
-```
-
-#### 2. Update Spec Research Agent (PAW-01B)
-
-**File**: `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section
-
-```markdown
-## Start / Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, GitHub issue, and additional inputs from the file
-- Validate that required research context is present
-- Proceed directly to research tasks using extracted parameters
-
-**Otherwise:**
-Read the prompt file immediately if provided. If no prompt is supplied, ask the user to provide:
-- The spec research prompt file path (e.g., `docs/agents/<target_branch>/prompts/spec-research.prompt.md`), or
-- Direct research questions and context
-```
-
-#### 3. Update Code Researcher (PAW-02A)
-
-**File**: `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section (around line 36)
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch and artifact paths from the file
-- If Spec.md path is provided, read it immediately
-- Use extracted target branch for output path: `docs/agents/<target_branch>/CodeResearch.md`
-- Generate research query from Spec.md if available, or ask user for research focus
-
-**Otherwise:**
-- If a research query or Spec.md is provided as parameters, begin immediately
-- If Spec.md is supplied, read it fully and generate your own research query
-- If neither is provided, respond with ready message and wait for user's research query
-```
-
-#### 4. Update Implementation Planner (PAW-02B)
-
-**File**: `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section (around line 11)
-
-```markdown
-## Initial Response
-
-When this agent is invoked:
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, GitHub issue, remote, and artifact paths from the file
-- Read Spec.md and SpecResearch.md from extracted or derived paths
-- Validate that required artifacts exist
-- If required parameters or artifacts are missing, report what's missing and request them
-- Skip the default message and begin the research process immediately
-
-**Otherwise:**
-1. **Check if parameters were provided**:
-   - If a file path or GitHub Issue reference was provided as a parameter, skip the default message
-   - Immediately read any provided files FULLY
-   - Begin the research process
-
-2. **If no parameters provided**, respond with:
-```
-I'll help you create a detailed implementation plan. Let me start by understanding what we're building.
-
-Please provide:
-1. The GitHub Issue if available, or a detailed description of the feature/task
-2. Path to the research file compiled by the research agent.
-3. Links to any other related materials (e.g. design docs, related tickets)
-
-I'll analyze this information and work with you to create a comprehensive plan.
-```
-```
-
-**File**: `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
-**Changes**: Update hand-off section to mention WorkflowContext.md (around line 262)
-
-```markdown
-## Hand-off
-
-```
-Implementation Plan Complete - Planning PR Ready
-
-I've authored the implementation plan at:
-docs/agents/<target_branch>/ImplementationPlan.md
-
-Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
-
-Artifacts committed:
-- WorkflowContext.md (if created)
-- Spec.md
-- SpecResearch.md
-- CodeResearch.md
-- ImplementationPlan.md
-- Related prompt files
-
-Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md and WorkflowContext.md to begin Phase 1 after the Planning PR is reviewed and merged.
-```
-```
-
-#### 5. Update Implementation Agent (PAW-03A)
-
-**File**: `.github/chatmodes/PAW-03A Implementer.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section (around line 11)
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, remote (defaults to 'origin'), and ImplementationPlan.md path
-- Read ImplementationPlan.md from extracted or derived path
-- Identify active or next phase from the plan
-- Determine phase branch name and check current branch
-- Use extracted remote for git operations (checkout, push, PR creation)
-
-**Otherwise:**
-- Read ImplementationPlan.md first (request path if not provided)
-- Identify which phase to implement (active or next unimplemented phase)
-- Determine exact phase branch name (e.g., `feature/finalize-initial-chatmodes_phase3`)
-- Check current branch with `git branch --show-current`
-- Create phase branch if needed, defaulting to 'origin' remote
-```
-
-#### 6. Update Implementation Review Agent (PAW-03B)
-
-**File**: `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, remote (defaults to 'origin'), and ImplementationPlan.md path
-- Read ImplementationPlan.md to understand current phase context
-- Identify phase branch name from current git branch or ImplementationPlan.md
-- Use extracted remote for git operations (push, PR creation/updates)
-
-**Otherwise:**
-- Infer target branch from current git branch or request it from user
-- Read ImplementationPlan.md if path is provided
-- Default to 'origin' remote for git operations
-```
-
-#### 7. Update Documenter Agent (PAW-04)
-
-**File**: `.github/chatmodes/PAW-04 Documenter.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, remote (defaults to 'origin'), and ImplementationPlan.md path
-- Read ImplementationPlan.md and validate all phases are complete
-- Use extracted remote for docs branch operations
-- Derive Docs.md output path from target branch
-
-**Otherwise:**
-- Request ImplementationPlan.md path and target branch from user
-- Validate plan completion before proceeding
-- Default to 'origin' remote for git operations
-```
-
-#### 8. Update PR Agent (PAW-05)
-
-**File**: `.github/chatmodes/PAW-05 PR.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section (around line 16)
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, remote (defaults to 'origin'), base branch (usually 'main'), and ImplementationPlan.md path
-- Validate all required artifacts exist at `docs/agents/<target_branch>/`
-- Use extracted remote for final PR creation
-- Perform pre-flight readiness checks
-
-**Otherwise:**
-- Request required parameters:
-  - Target branch name
-  - Base branch (usually 'main')
-  - Path to ImplementationPlan.md
-- Default to 'origin' remote for git operations
-```
-
-#### 9. Update Status Agent (PAW-X)
-
-**File**: `.github/chatmodes/PAW-X Status Update.chatmode.md`
-**Changes**: Add WorkflowContext.md recognition to initial response section (around line 15)
-
-```markdown
-## Initial Response
-
-**If WorkflowContext.md is supplied in chat context:**
-- Extract target branch, GitHub issue (ID or URL), and artifact paths
-- Validate issue reference is present
-- Read ImplementationPlan.md to determine phase count
-- Proceed with status update using extracted parameters
-
-**Otherwise:**
-- Request required inputs:
-  - Feature Issue ID or URL
-  - Target branch name
-  - Paths to artifacts (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md)
-```
-
-### Success Criteria
-
-#### Automated Verification:
-- [ ] All 9 chatmode files updated with WorkflowContext.md recognition
-- [ ] No syntax errors in chatmode Markdown files: `markdownlint .github/chatmodes/`
-- [ ] Git diff shows expected changes in "Start / Initial Response" sections
-- [ ] Changes are committed to the feature branch
-
-#### Manual Verification:
-- [ ] Each chatmode's WorkflowContext.md extraction logic is clear and correct
-- [ ] Backward compatibility is maintained (existing workflows without WorkflowContext.md continue to function)
-- [ ] Parameter validation mentions specific missing fields
-- [ ] Remote parameter defaults to 'origin' when omitted
-- [ ] Instructions are internally consistent across all chatmode files
-
-### Status
-
-Not started
-
----
-
-## Phase 3: Update paw-specification.md Documentation
+## Phase 2: Update paw-specification.md Documentation
 
 ### Overview
 
@@ -808,7 +406,7 @@ WorkflowContext.md centralizes all recurring parameters used throughout the PAW 
 
 **What it DOES include:**
 - Target branch name (required)
-- GitHub issue reference in URL or #number format (required)
+- GitHub issue reference in URL format (optional, preferred when provided)
 - Git remote name for branch and PR operations (optional, defaults to 'origin')
 - Artifact paths for Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md (optional, auto-derived if omitted)
 - Additional inputs for research stages (optional)
@@ -853,12 +451,10 @@ Each parameter includes:
 - Useful for fork workflows where developer works against a non-default remote
 - When omitted, agents default to 'origin' for all git operations
 
-**GitHub Issue** (Required)
+**GitHub Issue** (Optional, URL format preferred)
 - Reference to the driving issue for this workflow
-- Formats accepted:
-  - Full URL: `https://github.com/owner/repo/issues/N`
-  - Short form: `#N`
-- Used by agents to link artifacts and updates back to the issue
+- Format: Full URL (`https://github.com/owner/repo/issues/N`) preferred for repo information
+- Used by agents to link artifacts and updates back to the issue when provided
 
 **Artifact Paths** (Optional, auto-derived if omitted)
 - Locations of canonical workflow artifacts
@@ -907,9 +503,9 @@ See `docs/examples/WorkflowContext-example.md` for a complete example with popul
 #### Quality Standards
 
 A well-formed WorkflowContext.md:
-- **Is Complete**: Contains all required parameters (target branch, GitHub issue)
+- **Is Complete**: Contains required parameter (target branch)
 - **Is Clear**: Uses exact values without ambiguity
-- **Is Consistent**: Values match actual branch names and issue references
+- **Is Consistent**: Values match actual branch names and issue references if provided
 - **Is Maintained**: Updated when workflow parameters change (e.g., issue reference updates)
 ```
 

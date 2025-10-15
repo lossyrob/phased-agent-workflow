@@ -25,6 +25,27 @@ Also share the feature branch name so I save outputs in the right folder.
    - Open Unknowns (internal only)
    - User-Provided External Knowledge (manual fill; list of external/context questions)
 
+## Scope: Behavioral Documentation Only
+
+This agent focuses on **how the system behaves today** at a conceptual level:
+
+**What to document:**
+- Behavioral descriptions (what system does from user/component perspective)
+- Conceptual data flows (entities and their purposes)
+- API behaviors (inputs/outputs, not implementation)
+- User-facing workflows and business rules
+- Configuration effects (what happens when changed)
+
+**What NOT to document:**
+- File paths or line numbers (Code Research Agent's role)
+- Implementation details or code structure (Code Research Agent's role)
+- Technical architecture or design patterns (Code Research Agent's role)
+- Code snippets or function signatures (Code Research Agent's role)
+
+**Key difference from CodeResearch.md:**
+- SpecResearch.md: "The authentication system requires email and password and returns a session token" (behavioral)
+- CodeResearch.md: "Authentication implemented in auth/handlers.go:45 using bcrypt" (implementation with file:line)
+
 ### Document format
 ```
 

@@ -1,4 +1,8 @@
-# PAW - A Coding Agent Development Workflow
+<div align="center">
+	<img src="./img/paw-logo.png" alt="PAW Logo" />
+    <h1>PAW: Phased Agent Workflow</h1>
+    <h3>A Coding Agent Development Workflow</h3>
+</div>
 
 **Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. Built on GitHub Copilot Agent Mode in VS Code, PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts. PAW empowers engineers to deliver fast, high-quality contributions by focusing human attention on high-leverage decision points—refining specifications, reviewing implementation plans, and guiding code at critical junctures—while AI agents handle the systematic execution.
 
@@ -40,21 +44,31 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 
 ### Stage 1: Creating the spec
 
+Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md`, and surface any remaining questions so downstream agents start with shared, testable requirements.
+
 ![stage 1](./img/workflow-stage-1.png)
 
 ### Stage 2: Creating the Implementation Plan
+
+Code Research and Implementation Plan agents map the current codebase, break the work into reviewable phases, and stage the planning branch/PR so every later change traces back to clear technical intentions.
 
 ![stage 2](./img/workflow-stage-2.png)
 
 ### Stage 3: Phased implementation
 
+Implementation and Implementation Review agents deliver each phase on its own branch, running checks, iterating on feedback, and keeping phase PRs small, auditable, and rewindable before they merge into the target branch.
+
 ![stage 3](./img/workflow-stage-3.png)
 
 ### Stage 4: Documentation
 
+The Documenter agent consolidates release notes and user-facing updates into `Docs.md`, refreshes any relevant guides, and opens a docs PR so documentation evolves in lockstep with the code.
+
 ![stage 4](./img/workflow-stage-4.png)
 
 ### Stage 5: Final PR
+
+The PR agent verifies all phase and docs work is merged, confirms artifacts are current, and crafts the final PR description with links, testing evidence, and rollout notes before handing off for human approval.
 
 ![stage 5](./img/workflow-stage-5.png)
 

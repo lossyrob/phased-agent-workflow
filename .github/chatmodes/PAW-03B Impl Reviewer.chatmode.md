@@ -21,6 +21,7 @@ If the user mentions a hint to the implementation changes, e.g. 'last commit', u
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
@@ -30,6 +31,13 @@ Additional Inputs: <comma-separated or none>
 - If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before starting review work.
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you discover new parameter values (e.g., PR number, artifact overrides, remote changes) so the workflow continues to share a single source of truth. Capture derived artifact paths if you rely on conventional locations.
+
+### Work Title for PR Naming
+
+All Phase PRs must be prefixed with the Work Title from WorkflowContext.md:
+- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Format: `[<Work Title>] Phase <N>: <description>`
+- Example: `[Auth System] Phase 1: Database schema and migrations`
 
 ## Role: Maintainability (Making Changes Clear and Reviewable)
 
@@ -119,6 +127,8 @@ You work in sequence: Implementer makes changes → You review and document → 
 6. **Push and open PR** (REQUIRED):
    - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
    - Open phase PR with description referencing plan
+   - **Title**: `[<Work Title>] Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
+   - Include phase objectives, changes made, and testing performed
    - Pause for human review
    - Post a PR timeline comment summarizing the review, starting with `**🤖 Implementation Reviewer:**` and covering whether additional commits were made, verification status, and any next steps
    - If no commits were necessary, explicitly state that the review resulted in no additional changes

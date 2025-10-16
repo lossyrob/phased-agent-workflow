@@ -40,6 +40,7 @@ Then wait for the user's input.
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
@@ -354,6 +355,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
     - Commit with a descriptive message
     - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
     - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
+       - **Title**: `[<Work Title>] Planning: <brief description>` where Work Title comes from WorkflowContext.md
        - Summary of the spec, research, and planning deliverables
        - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
        - Outstanding questions or risks that require human attention (should be zero)

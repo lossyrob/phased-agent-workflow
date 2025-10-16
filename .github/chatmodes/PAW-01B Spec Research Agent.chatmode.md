@@ -21,6 +21,7 @@ Also share the feature branch name so I save outputs in the right folder.
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

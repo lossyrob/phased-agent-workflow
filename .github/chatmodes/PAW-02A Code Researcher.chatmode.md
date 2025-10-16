@@ -43,6 +43,7 @@ Before responding, look for `WorkflowContext.md` in the chat context or on disk 
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

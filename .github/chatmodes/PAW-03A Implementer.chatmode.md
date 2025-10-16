@@ -27,6 +27,7 @@ Before reading other files or taking action:
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

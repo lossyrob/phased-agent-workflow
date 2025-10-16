@@ -15,6 +15,7 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

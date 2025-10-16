@@ -7,6 +7,8 @@ You open the final PR to main after all other stages are complete and validated.
 
 ## Start / Initial Response
 
+Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
+
 If no parameters provided:
 ```
 I'll create the final PR to main. Please provide:
@@ -16,6 +18,21 @@ I'll create the final PR to main. Please provide:
 
 I'll perform pre-flight checks before creating the PR.
 ```
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before running pre-flight checks.
+- When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
+- Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
 
 ## Core Responsibilities
 
@@ -75,7 +92,7 @@ After all checks pass, create the PR with this format:
 [1-2 paragraph overview from Spec.md]
 
 ## Related Issues
-- Closes #[issue number]
+- Closes issue (add actual number when known)
 
 ## Artifacts
 - Specification: [link to Spec.md]
@@ -86,12 +103,12 @@ After all checks pass, create the PR with this format:
 
 ## Implementation Phases
 [List each phase with link to merged Phase PR]
-- Phase 1: [name] - PR #[number]
-- Phase 2: [name] - PR #[number]
+- Phase 1: [name] - PR number TBD
+- Phase 2: [name] - PR number TBD
 - ...
 
 ## Documentation Updates
-- Docs PR #[number]
+- Docs PR number TBD
 - [Summary of documentation changes]
 
 ## Changes Summary
@@ -120,7 +137,7 @@ After all checks pass, create the PR with this format:
 [List any breaking changes, or "None"]
 
 ---
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+🤖 Generated with Claude Code (https://claude.com/claude-code)
 ```
 
 ## Process Steps
@@ -192,7 +209,7 @@ Do NOT create PR if:
 ## Hand-off
 
 ```
-Final PR Created: #[number]
+Final PR Created: add the actual number when known
 
 The PR is ready for review and includes:
 - Links to all PAW artifacts

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement a centralized `WorkflowContext.md` parameter file that eliminates repeated parameter declarations across PAW stage prompts by providing a single source of truth for target branch, GitHub issue reference, remote configuration, artifact paths, and optional inputs.
+Implement a centralized `WorkflowContext.md` parameter file that eliminates repeated parameter declarations across PAW stage prompts by providing a single source of truth for target branch, GitHub issue reference, remote configuration, artifact paths, and optional inputs. Agents will generate and update this file automatically once they have the required information, so developers no longer need to author it manually for the happy path.
 
 ## Current State Analysis
 
@@ -42,29 +42,26 @@ Branch derivatives (from `paw-specification.md:47-50`):
 ### Key Constraints
 
 - No programmatic validation exists; agents rely on LLM interpretation of Markdown
-- Backward compatibility required: existing workflows without WorkflowContext.md must continue functioning
 - GitHub MCP tools used exclusively for issue/PR interactions (not `gh` CLI)
-- Parameters are manually maintained; no automated sync mechanism
+- Parameters are manually maintained; no automated sync mechanism today (agents will generate and update Markdown directly)
 
 ## Desired End State
 
-A developer can create `WorkflowContext.md` for a feature branch and use it across all PAW stages without re-entering target branch, remote, or issue information. The file follows a documented structure, provides clear error messages when malformed, and supports both standard origin workflows and fork-based development.
+PAW agents automatically create and maintain `WorkflowContext.md` for a feature branch as soon as sufficient parameters are known (typically by the first agent invoked, e.g., the Spec Agent). Developers may still supply the file manually, but the baseline flow requires no manual authoring. The file follows a documented structure, provides clear error messages when malformed, and supports both standard origin workflows and fork-based development across all stages without repeated parameter entry.
 
 ### Verification Criteria
 
-1. **File Creation**: Developer creates `docs/agents/<target_branch>/WorkflowContext.md` with required parameters
-2. **Multi-Stage Usage**: File is successfully referenced in at least three distinct PAW stages (Spec, Code Research, Implementation) without parameter re-entry
-3. **Backward Compatibility**: Existing workflows without WorkflowContext.md continue to function with interactive prompts
-4. **Error Handling**: Missing required fields produce clear error messages identifying missing parameters
-5. **Fork Support**: Developer specifies non-default remote (e.g., `fork`, `upstream`) and PR operations target the specified remote
-6. **Default Remote**: Omitted remote field defaults to `origin` without user prompts
+1. **Agent-Driven Creation**: When `WorkflowContext.md` is absent, the active agent (starting with the Spec Agent) writes the file to `docs/agents/<target_branch>/WorkflowContext.md` using discovered parameters without human intervention.
+2. **Multi-Stage Usage**: File is successfully referenced in at least three distinct PAW stages (Spec, Code Research, Implementation) without parameter re-entry or manual edits.
+3. **Error Handling**: Missing required fields produce clear error messages identifying missing parameters and the responsible agent updates the file after gathering the data.
+4. **Fork Support**: Agents persist non-default remotes (e.g., `fork`, `upstream`) in the file and subsequent git operations use the specified remote.
+5. **Default Remote**: Omitted remote field defaults to `origin` without user prompts.
 
 ## What We're NOT Doing
 
-- Automated generation or update of `WorkflowContext.md` (manual creation only)
 - Programmatic validation or schema enforcement (agents rely on LLM interpretation)
 - Validation of git remote existence before operations (developer responsible for remote configuration)
-- Updating existing stage prompt files to reference `WorkflowContext.md` (prompts remain unchanged for backward compatibility)
+- Updating existing stage prompt files to reference `WorkflowContext.md` (legacy prompts continue to embed parameters inline when needed)
 - Defining precedence rules for conflicting parameters (agents ask for clarification)
 - Migrating historical feature branches to use `WorkflowContext.md` (applies to new workflows only)
 - Integration with external configuration systems or CI/CD pipelines
@@ -84,7 +81,7 @@ This phasing allows each increment to be independently reviewed and merged, with
 
 ### Overview
 
-Update all PAW chatmode instruction files to recognize WorkflowContext.md when present in chat context and extract parameters without additional user prompts. Include a minimal inline template in each chatmode for reference. Maintain backward compatibility by falling back to existing parameter discovery behavior when the file is absent.
+Update all PAW chatmode instruction files to recognize WorkflowContext.md when present in chat context, extract parameters without additional prompts, and automatically create the file (or update it) when it is missing or incomplete. Include a minimal inline template in each chatmode for reference so the agent can write a well-formed document without human input.
 
 ### Minimal WorkflowContext.md Format
 
@@ -104,89 +101,45 @@ Agents understand parameter meanings from context. GitHub Issue and all other fi
 
 ### Changes Required
 
-#### 1. Update Spec Agent (PAW-01A)
+Update all PAW chatmode files (`.github/chatmodes/PAW-*.chatmode.md`) to include the minimal WorkflowContext.md format in their instructions, add parameter extraction logic, and codify automatic creation/update responsibilities.
 
-#### 3. Create README for Template Usage
+For each chatmode file:
+1. Add the minimal WorkflowContext.md format (shown above) to the initial instructions.
+2. Add WorkflowContext.md recognition to the "Start / Initial Response" section.
+3. Include parameter extraction logic with validation for required fields.
+4. When the file is missing or missing required fields, instruct the agent to gather the data (from branch, prompts, or user-provided info) and write `docs/agents/<target_branch>/WorkflowContext.md` itself before proceeding.
+5. Whenever the agent discovers new parameter values (e.g., a GitHub issue or remote), update the existing WorkflowContext.md to keep it authoritative.
 
-**File**: `docs/templates/README.md`
-**Changes**: Create documentation explaining template usage
-
-```markdown
-# PAW Templates
-
-This directory contains templates for various PAW (Phased Agent Workflow) artifacts.
-
-## WorkflowContext.md
-
-**Purpose**: Centralized parameter document that eliminates repeated parameter declarations across PAW stage prompts.
-
-**Location in your workflow**: `docs/agents/<target_branch>/WorkflowContext.md`
-
-**When to create**: At the start of a new feature workflow, before invoking the first PAW stage agent.
-
-**How to use**:
-
-1. Copy `WorkflowContext.md` to your feature branch folder:
-   ```bash
-   mkdir -p docs/agents/<your_target_branch>
-   cp docs/templates/WorkflowContext.md docs/agents/<your_target_branch>/WorkflowContext.md
-   ```
-
-2. Edit the file to replace all `<placeholder>` values with your actual parameters
-
-3. Commit the file to your feature branch:
-   ```bash
-   git add docs/agents/<your_target_branch>/WorkflowContext.md
-   git commit -m "Add workflow context for <your_target_branch>"
-   ```
-
-4. Reference the file when invoking PAW agents by including it in your chat context
-
-**See also**: `docs/examples/WorkflowContext-example.md` for a concrete example with populated values.
-
-## Required Parameters
-
-- **Target Branch**: Your feature branch name (e.g., `feature/add-authentication`)
-- **GitHub Issue**: Issue URL or `#number` format
-
-## Optional Parameters
-
-- **Remote**: Git remote name (defaults to `origin` if omitted)
-- **Artifact Paths**: Paths to workflow artifacts (auto-derived if omitted)
-- **Additional Inputs**: Supporting documents for research stages
-
-## Parameter Extraction
-
-PAW agents use LLM interpretation to extract parameters from the Markdown structure. No programmatic parsing occurs.
-
-## Error Handling
-
-If required parameters are missing, agents will report which parameters are absent and request them interactively.
-
-## Backward Compatibility
-
-WorkflowContext.md is optional. Existing workflows without this file continue to function with interactive parameter prompts.
-```
+**Chatmode files to update:**
+- PAW-01A Spec Agent.chatmode.md
+- PAW-01B Spec Research Agent.chatmode.md
+- PAW-02A Code Researcher.chatmode.md
+- PAW-02B Impl Planner.chatmode.md
+- PAW-03A Implementer.chatmode.md
+- PAW-03B Impl Reviewer.chatmode.md
+- PAW-04 Documenter.chatmode.md
+- PAW-05 PR.chatmode.md
+- PAW-X Status Update.chatmode.md
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Template file exists at `docs/templates/WorkflowContext.md` with all required sections
-- [ ] Example file exists at `docs/examples/WorkflowContext-example.md` with populated values
-- [ ] README exists at `docs/templates/README.md` with usage instructions
-- [ ] All files are valid Markdown: `markdownlint docs/templates/ docs/examples/`
-- [ ] Files are committed to the feature branch
+- [x] All 9 chatmode files updated with inline WorkflowContext.md format and recognition logic
+- [ ] No syntax errors in chatmode Markdown files: `markdownlint .github/chatmodes/` (skipped per user request on 2025-10-15)
+- [x] Git diff shows expected changes in "Start / Initial Response" sections
+- [x] Changes are committed to the feature branch
 
 #### Manual Verification:
-- [ ] Template structure is clear and easy to understand
-- [ ] Example demonstrates realistic usage with appropriate values
-- [ ] README provides sufficient guidance for developers to create their own WorkflowContext.md
-- [ ] All required and optional parameters are documented
-- [ ] Inline comments in template are helpful and accurate
+- [x] Each chatmode's WorkflowContext.md extraction logic is clear and correct
+- [x] Minimal inline template format is consistent across all chatmode files
+- [x] Agents explicitly create or update WorkflowContext.md when it is missing or incomplete before continuing their primary workflow
+- [x] Parameter validation mentions specific missing fields and instructs the agent to fill them using discovered data
+- [x] Remote parameter defaults to 'origin' when omitted
+- [x] Instructions are internally consistent across all chatmode files
 
 ### Status
 
-Not started
+Completed (2025-10-15). Updated all nine PAW chatmode instruction files to load, create, and maintain `WorkflowContext.md`, including the shared minimal template, explicit missing-parameter handling, and remote default guidance. Markdownlint was skipped at the user's request; no additional automated checks were required. Ready for Implementation Review Agent once documentation polish is added.
 
 ---
 
@@ -229,13 +182,6 @@ Update the main PAW specification document to introduce WorkflowContext.md, expl
     CodeResearch.md
     ImplementationPlan.md
     Docs.md
-
-/docs/templates/                # Templates for PAW artifacts
-  WorkflowContext.md            # Template for centralized parameters
-  README.md                     # Template usage documentation
-
-/docs/examples/                 # Example artifacts
-  WorkflowContext-example.md    # Example WorkflowContext.md with populated values
 ```
 ```
 
@@ -256,14 +202,7 @@ Update the main PAW specification document to introduce WorkflowContext.md, expl
 
 * Create a GitHub Issue if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
 * Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
-* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages:
-  ```bash
-  mkdir -p docs/agents/<your_target_branch>
-  cp docs/templates/WorkflowContext.md docs/agents/<your_target_branch>/WorkflowContext.md
-  # Edit the file to populate parameters
-  git add docs/agents/<your_target_branch>/WorkflowContext.md
-  git commit -m "Add workflow context for <your_target_branch>"
-  ```
+* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each chatmode instruction for the structure.
 
 **Artifacts:** issue link (optional), branches created, WorkflowContext.md (optional).
 ```
@@ -474,31 +413,19 @@ Each parameter includes:
 #### Creation & Usage
 
 **When to Create:**
-- At the start of a new feature workflow, before invoking the first PAW stage agent
-- Optionally generated by Spec Agent or Implementation Planner when parameters are provided
+- Automatically at the start of a new feature workflow when the Spec Agent (or first invoked agent) has gathered the required parameters
+- Manually by a developer when they need to seed or override values before invoking agents
 
 **How to Create:**
-1. Copy template from `docs/templates/WorkflowContext.md` to `docs/agents/<target_branch>/WorkflowContext.md`
-2. Replace all `<placeholder>` values with actual parameters
-3. Commit to feature branch
-4. Include in chat context when invoking any PAW agent
+1. Allow the active agent to write `docs/agents/<target_branch>/WorkflowContext.md` using the minimal format and discovered parameters.
+2. When manual edits are necessary, update the generated file directly (maintaining the documented structure) and commit the changes.
+3. Include the file in chat context when invoking any PAW agent so subsequent stages reuse the recorded parameters.
 
 **Agent Recognition:**
 All PAW agents recognize WorkflowContext.md when included in chat context:
 - Agents extract parameters automatically without additional prompts
-- If required parameters are missing, agents report which parameters are absent
-- If the file is absent, agents fall back to existing parameter discovery behavior (interactive prompts or branch inspection)
-
-#### Backward Compatibility
-
-WorkflowContext.md is entirely optional:
-- Existing workflows without this file continue to function normally
-- Agents maintain existing parameter discovery mechanisms
-- No breaking changes to current workflows
-
-#### Example
-
-See `docs/examples/WorkflowContext-example.md` for a complete example with populated values.
+- If required parameters are missing, agents report which parameters are absent and update the file after acquiring the information
+- If the file is absent, the agent that detects the gap gathers the necessary parameters (branch discovery, user-provided details, or existing artifacts) and writes `WorkflowContext.md` before proceeding
 
 #### Quality Standards
 
@@ -520,10 +447,10 @@ A well-formed WorkflowContext.md:
 
 #### Manual Verification:
 - [ ] Repository layout diagram accurately reflects WorkflowContext.md location
-- [ ] Prerequisites section clearly explains when and how to create WorkflowContext.md
+- [ ] Prerequisites section clearly explains that agents will create WorkflowContext.md and how developers can supply it manually if desired
 - [ ] Each stage's inputs section mentions WorkflowContext.md appropriately
 - [ ] WorkflowContext.md artifact section is comprehensive and follows the same format as other artifact sections
-- [ ] Documentation emphasizes optional nature and backward compatibility
+- [ ] Documentation highlights agent-driven creation and update responsibilities
 - [ ] Examples and usage instructions are clear and actionable
 
 ### Status
@@ -537,44 +464,27 @@ Not started
 ### Phase 1 Testing
 
 **Unit-Level Verification:**
-- Validate template file structure matches documented schema
-- Verify example file contains realistic, consistent values
-- Check README provides complete usage instructions
-
-**Integration Testing:**
-- Create WorkflowContext.md from template for a test feature branch
-- Verify all required sections are present and properly formatted
-- Confirm documentation is understandable to developers unfamiliar with PAW
-
-**Manual Testing:**
-1. Follow README instructions to create WorkflowContext.md for a dummy feature
-2. Verify all placeholders are easily identifiable and replaceable
-3. Confirm example file demonstrates all parameter types (required, optional, defaults)
-
-### Phase 2 Testing
-
-**Unit-Level Verification:**
 - Each chatmode file contains WorkflowContext.md recognition logic
 - Parameter extraction logic handles missing required fields correctly
 - Remote parameter defaults to 'origin' when omitted
-- Backward compatibility is maintained (agents work without WorkflowContext.md)
+- Agents create or update WorkflowContext.md automatically when it is absent or incomplete
+- Minimal inline template format is consistent across all chatmode files
 
 **Integration Testing:**
 - Test each agent with WorkflowContext.md present in chat context
 - Verify parameters are extracted correctly without additional prompts
-- Test each agent without WorkflowContext.md to confirm fallback behavior
-- Test with malformed WorkflowContext.md (missing required fields) to verify error messages
+- Test each agent when WorkflowContext.md is missing to confirm the agent creates it before continuing
+- Test with malformed WorkflowContext.md (missing required fields) to verify the agent repairs the document or requests the missing details before proceeding
 
 **Manual Testing:**
-1. Create WorkflowContext.md for a test feature: `feature/test-workflow-context`
-2. Invoke Spec Agent with WorkflowContext.md in context, verify it uses extracted parameters
-3. Invoke Code Research Agent with WorkflowContext.md, verify automatic parameter extraction
-4. Invoke Implementation Planner with WorkflowContext.md, verify it reads correct artifact paths
-5. Test with WorkflowContext.md specifying `remote: fork`, verify agents reference the fork remote
-6. Test without WorkflowContext.md, verify agents prompt for parameters as before
-7. Test with incomplete WorkflowContext.md (missing GitHub issue), verify clear error message
+1. Invoke Spec Agent without an existing WorkflowContext.md, verify it gathers parameters and writes the file automatically.
+2. Invoke Spec Agent again with the generated WorkflowContext.md in context, verify it uses extracted parameters without re-asking for them.
+3. Invoke Code Research Agent with WorkflowContext.md, verify automatic parameter extraction.
+4. Invoke Implementation Planner with WorkflowContext.md, verify it reads correct artifact paths.
+5. Test with WorkflowContext.md specifying `remote: fork`, verify agents reference the fork remote and update the file if the remote changes.
+6. Provide an incomplete WorkflowContext.md (missing target branch), verify the agent fills the missing fields before continuing.
 
-### Phase 3 Testing
+### Phase 2 Testing
 
 **Documentation Verification:**
 - All stage sections reference WorkflowContext.md appropriately
@@ -584,41 +494,33 @@ Not started
 
 **Cross-Reference Validation:**
 - Verify all internal links to WorkflowContext.md are valid
-- Confirm documentation matches actual template structure
+- Confirm documentation matches inline template structure from Phase 1
 - Ensure examples align with documented parameter formats
 
 **Manual Testing:**
 1. Read through updated paw-specification.md as a new PAW user
-2. Follow documented workflow to create WorkflowContext.md
+2. Follow documented workflow where the Spec Agent creates WorkflowContext.md automatically; optionally verify manual creation guidance for developers who choose to author it themselves
 3. Verify instructions are clear, complete, and accurate
-4. Confirm artifact section matches template structure
+4. Confirm artifact section matches inline template structure
 
 ### End-to-End Testing
 
 **Complete Workflow Test:**
 1. Create a test feature branch: `feature/e2e-test-workflow-context`
-2. Create WorkflowContext.md using the template with all required parameters
-3. Run through Stages 01-05 using WorkflowContext.md in all agent invocations
+2. Invoke the Spec Agent without a pre-existing WorkflowContext.md and confirm it writes the file using discovered parameters
+3. Run through Stages 01-05 using the agent-generated WorkflowContext.md in all subsequent invocations
 4. Verify no parameter re-entry is required across stages
-5. Confirm all agents extract parameters correctly from WorkflowContext.md
+5. Confirm all agents extract parameters correctly from WorkflowContext.md and update it if new values emerge (e.g., remote changes)
 6. Validate that remote parameter is used correctly for git operations
 
 **Fork Workflow Test:**
-1. Create WorkflowContext.md specifying `remote: upstream` for a fork scenario
-2. Run through implementation stages, verify agents use `upstream` for branch/PR operations
-3. Confirm PR creation targets the correct remote repository
-
-**Backward Compatibility Test:**
-1. Create a test feature branch without WorkflowContext.md
-2. Run through Stages 01-05 using traditional parameter passing
-3. Verify all agents continue to function as before
-4. Confirm no regressions in existing workflows
+1. Start a workflow on a developer fork and allow the Spec Agent to create WorkflowContext.md.
+2. Ensure the agent records `remote: upstream` (or the appropriate non-`origin` remote) and that subsequent stages honor the recorded remote for branch/PR operations.
 
 ### Success Metrics
 
-- [ ] All 3 phases pass automated verification criteria
+- [ ] All 2 phases pass automated verification criteria
 - [ ] Manual testing confirms parameter extraction works correctly
-- [ ] Backward compatibility is maintained (existing workflows unaffected)
 - [ ] Fork workflow scenario functions correctly with non-default remote
 - [ ] Error messages for malformed WorkflowContext.md are clear and actionable
 - [ ] Documentation is complete, accurate, and understandable
@@ -644,33 +546,30 @@ WorkflowContext.md introduces no performance implications:
 
 ### Existing Workflows
 
-**No migration required** for existing feature branches:
-- WorkflowContext.md is entirely optional
-- Agents maintain existing parameter discovery mechanisms
-- Existing prompt files (.prompt.md) continue to work as before
-- No breaking changes to current workflows
+**Low-touch migration** for existing feature branches:
+- The next time a PAW agent runs (starting with the Spec Agent), it creates or updates WorkflowContext.md automatically using the branch's existing parameters.
+- Developers can optionally seed or edit the file manually, but no manual migration is required.
+- Legacy prompt files (`*.prompt.md`) continue to function; agents simply persist the parameters they derive into WorkflowContext.md for subsequent stages.
 
 ### New Workflows
 
 **Recommended approach** for new feature branches:
-1. Create WorkflowContext.md at workflow start (before Stage 01)
-2. Populate all known parameters (target branch, GitHub issue, remote if working against fork)
-3. Commit WorkflowContext.md to feature branch
-4. Reference WorkflowContext.md when invoking all PAW agents
-5. Update WorkflowContext.md if parameters change (e.g., issue reference updates)
+1. Start the workflow as usual; provide the Spec Agent with the target branch, GitHub issue, remote (if known), and any additional inputs.
+2. Allow the Spec Agent to create `docs/agents/<target_branch>/WorkflowContext.md` automatically once it has the parameters.
+3. Review or adjust the generated file if custom artifact paths or remotes are required.
+4. Ensure later stages load the agent-generated WorkflowContext.md (no copy/paste of parameters needed).
 
 ### Gradual Adoption
 
-Teams can adopt WorkflowContext.md gradually:
-- Start using it for new feature branches
-- Optionally backfill for in-progress features if beneficial
-- No pressure to migrate historical or completed features
-- Developers choose whether to use it per-workflow
+Teams can adopt WorkflowContext.md gradually without manual intervention:
+- Agents generate the file on-demand for in-progress features when they next run.
+- Developers can still backfill or customize the file manually if beneficial.
+- Historical or completed features do not require updates unless future work resumes on those branches.
 
-### Template Updates
+### Format Updates
 
-If template structure changes in the future:
-- Existing WorkflowContext.md files remain valid (backward compatible)
+If the inline format changes in the future:
+- Existing WorkflowContext.md files remain valid without requiring migration
 - New optional parameters can be added without breaking existing files
 - Agents will continue to support both old and new formats
 
@@ -693,10 +592,10 @@ If template structure changes in the future:
 ### Key Design Decisions
 
 1. **LLM-Based Extraction**: No programmatic parsing allows flexibility and maintains simplicity
-2. **Backward Compatibility**: Making WorkflowContext.md optional ensures zero breaking changes
+2. **Agent Ownership**: Agents are responsible for creating and updating WorkflowContext.md, removing boilerplate work for developers
 3. **Auto-Derived Paths**: Default artifact path derivation reduces file maintenance burden
 4. **Remote Default**: Defaulting to 'origin' supports the most common workflow scenario
-5. **Manual Creation**: Keeping file creation manual maintains human control and awareness
+5. **Manual Override Friendly**: Developers can still author or edit WorkflowContext.md manually when they need to override agent choices
 
 ### Potential Future Enhancements (Out of Scope)
 
@@ -709,9 +608,8 @@ If template structure changes in the future:
 ### Review Focus
 
 When reviewing this implementation:
-- **Phase 1**: Verify template clarity and completeness; ensure examples are realistic
-- **Phase 2**: Confirm backward compatibility is maintained; test parameter extraction logic
-- **Phase 3**: Validate documentation accuracy and completeness; check cross-references
+- **Phase 1**: Verify inline template format is consistent across all chatmodes; confirm parameter extraction logic is correct
+- **Phase 2**: Validate documentation accuracy and completeness; check cross-references
 - **Integration**: Test end-to-end workflow with WorkflowContext.md across all stages
-- **Edge Cases**: Test malformed files, missing parameters, fork workflows, backward compatibility
+- **Edge Cases**: Test malformed files, missing parameters, and fork workflows
 

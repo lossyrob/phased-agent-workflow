@@ -10,16 +10,38 @@ You are tasked with implementing an approved technical implementation plan. Thes
 If no implementation plan path provided, ask for one.
 
 Before reading other files or taking action:
+0. Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
 1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
-2. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
-3. Check current branch: `git branch --show-current`
-4. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
-5. Verify you're on the correct phase branch: `git branch --show-current`
+2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
+   - Where relevant components live in the codebase
+   - How existing patterns and conventions work
+   - Integration points and dependencies
+   - Code examples and existing implementations to reference
+3. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
+4. Check current branch: `git branch --show-current`
+5. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
+6. Verify you're on the correct phase branch: `git branch --show-current`
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with implementation.
+- When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
+- Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
 
 **WHY**: Feature branches are for merging completed PRs, not direct implementation commits. Phase branches keep work isolated and allow the Review Agent to push and create PRs without polluting the feature branch history.
 
 When given just a plan path:
 - Read the plan completely and check for any existing checkmarks (- [x]) and notes on completed phases.
+- Read the `CodeResearch.md` file to understand the existing codebase structure, patterns, and conventions.
 - All files mentioned in the plan, include specs and GitHub Issues using `github mcp` tools when relevant.
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
@@ -169,8 +191,11 @@ Do not check off items in the manual testing steps until confirmed by the user.
 - The branch name MUST end with `_phase[N]` or `_phase[M-N]`
 - If you're on the feature branch (no `_phase` suffix), STOP and create the phase branch immediately
 
-ONLY commit changes you made to implement the plan. Do not include unrelated changes. If you aren't sure if a change is related, pause and ask.
-Do not revert or overwrite unrelated changes. Just avoid adding them to your commit.
+**Selective Staging (CRITICAL)**:
+- Use `git add <file1> <file2>` to stage ONLY files you modified for this work
+- NEVER use `git add .` or `git add -A` (stages everything, including unrelated changes)
+- Before committing, verify staged changes: `git diff --cached`
+- If unrelated changes appear, unstage them: `git reset <file>`
 
 **For initial phase development**: Commit locally but DO NOT push. The Implementation Review Agent will push after adding documentation.
 
@@ -234,8 +259,8 @@ All Implementation Phases Complete
 All [N] phases in ImplementationPlan.md are complete and merged into <target_branch>.
 
 Phase PRs merged:
-- Phase 1: PR #[number]
-- Phase 2: PR #[number]
+- Phase 1: PR number TBD
+- Phase 2: PR number TBD
 - ...
 
 Next: Invoke Documenter Agent (Stage 04) to create comprehensive documentation. Ensure <target_branch> is up to date before starting.

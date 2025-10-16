@@ -91,13 +91,17 @@ of the system in anticipation of an implementation plan to satisfy that spec.
    - Answer the user's specific questions with concrete evidence
 
 5. **Gather metadata for the research document:**
-   - Run the `scripts/copilot/spec-metadata.sh` script to generate all relevant metadata
+   - Collect the following metadata using terminal commands:
+     - Current date/time with timezone: `date '+%Y-%m-%d %H:%M:%S %Z'`
+     - Git commit hash: `git rev-parse HEAD`
+     - Current branch name: `git branch --show-current`
+     - Repository name: `basename $(git rev-parse --show-toplevel)`
    - Save the research document to the canonical path: `docs/agents/<target_branch>/CodeResearch.md`
      - Replace `<target_branch>` with the active feature branch (example: `feature/add-authentication`)
      - There is only one `CodeResearch.md` artifact per target branch
 
 6. **Generate research document:**
-   - Use the metadata gathered in step 4
+   - Use the metadata gathered in step 5
    - Write the document to `docs/agents/<target_branch>/CodeResearch.md`
    - Structure the document with YAML frontmatter followed by content:
      ```markdown
@@ -114,9 +118,9 @@ of the system in anticipation of an implementation plan to satisfy that spec.
 
      # Research: [User's Question/Topic]
 
-     **Date**: [Current date and time with timezone from step 4]
-     **Git Commit**: [Current commit hash from step 4]
-     **Branch**: [Current branch name from step 4]
+     **Date**: [Current date and time with timezone from step 5]
+     **Git Commit**: [Current commit hash from step 5]
+     **Branch**: [Current branch name from step 5]
      **Repository**: [Repository name]
 
      ## Research Question
@@ -355,7 +359,7 @@ What to look for based on request:
 - **Critical ordering**: Follow the numbered steps exactly
   - ALWAYS read mentioned files first before performing research steps (step 1)
   - ALWAYS exhaustively research steps before synthesizing (step 4)
-  - ALWAYS gather metadata before writing the document (step 5 before step 6)
+  - ALWAYS gather metadata using terminal commands before writing the document (step 5 before step 6)
   - NEVER write the research document with placeholder values
 - **Frontmatter consistency**:
   - Always include frontmatter at the beginning of research documents

@@ -24,6 +24,7 @@ I'll perform pre-flight checks before creating the PR.
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
@@ -33,6 +34,13 @@ Additional Inputs: <comma-separated or none>
 - If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before running pre-flight checks.
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
+
+### Work Title for PR Naming
+
+The Final PR must be prefixed with the Work Title from WorkflowContext.md:
+- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Format: `[<Work Title>] <description>`
+- Example: `[Auth System] Add user authentication system`
 
 ## Core Responsibilities
 
@@ -159,6 +167,9 @@ After all checks pass, create the PR with this format:
 
 4. **Create final PR**:
    - Open PR from `<target_branch>` → `main` (or specified base)
+   - **Title**: `[<Work Title>] <description>` where Work Title comes from WorkflowContext.md
+   - Include comprehensive description with links to all artifacts
+   - Reference the GitHub Issue if available
    - Use crafted description
    - Confirm PR created successfully
 

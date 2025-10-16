@@ -23,6 +23,7 @@ I'll create comprehensive documentation for the completed feature. Please provid
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
@@ -32,6 +33,13 @@ Additional Inputs: <comma-separated or none>
 - If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before producing documentation.
 - When required parameters are absent, explicitly note the missing field, gather or confirm the value, and persist it so subsequent stages inherit the authoritative record. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., docs branch name, artifact overrides, additional inputs) so the workflow continues to rely on a single source of truth. Record derived artifact paths when using conventional locations.
+
+### Work Title for PR Naming
+
+The Documentation PR must be prefixed with the Work Title from WorkflowContext.md:
+- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Format: `[<Work Title>] Documentation`
+- Example: `[Auth System] Documentation`
 
 ## Core Responsibilities
 
@@ -83,6 +91,8 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Commit documentation changes
    - Push branch
    - Open docs PR with description
+   - **Title**: `[<Work Title>] Documentation` where Work Title comes from WorkflowContext.md
+   - Include summary of documentation added and reference to ImplementationPlan.md
 
 6. **Address review comments**:
    - Read review comments

@@ -23,11 +23,12 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, Work Title, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
+- **Work Title**: Generate a short, descriptive name (2-4 words) from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
-- Research preference: default to running research unless the user explicitly says to skip it.
+- Research preference: default to running research unless the user explicitly skips it.
 
 Explicitly confirm the inferred inputs and ask only for missing or ambiguous details before moving on to **Intake & Decomposition**.
 If the user explicitly says research is already done and provides a `SpecResearch.md` path, skip the research prompt generation step (after validating the file exists) and proceed to drafting/refining the spec.
@@ -37,12 +38,14 @@ If the user explicitly says research is already done and provides a `SpecResearc
 ```markdown
 # WorkflowContext
 
+Work Title: <work_title>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
+- **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
 - When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
@@ -86,6 +89,14 @@ Additional Inputs: <comma-separated or none>
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
 8. **Quality Checklist Pass**: Evaluate spec against the Spec Quality Checklist (below). Show pass/fail. Iterate until all pass (or user accepts explicit residual risks).
 9. **Finalize & Hand‑Off**: Present final readiness checklist confirming `Spec.md` has been written to disk. Do not commit/push.
+
+### Work Title Refinement
+
+As the spec evolves and becomes clearer, refine the Work Title if needed:
+- Keep it concise (2-4 words maximum)
+- Make it descriptive enough to identify the feature
+- Update WorkflowContext.md if the title changes
+- Inform the user when the Work Title is updated
 
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:

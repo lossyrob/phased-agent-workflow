@@ -136,17 +136,17 @@ It updates the GitHub Issue (if one exists) with current status, links to releva
 
 ### PR Agent
 
-Opens the **final PR** from the target branch to `main` and performs comprehensive pre-flight readiness checks before allowing the PR to be created.
+Opens the **final PR** from the target branch to `main` and performs comprehensive pre-flight readiness checks to assess completeness.
 
-The PR Agent validates that all prerequisites are complete:
+The PR Agent verifies and reports on prerequisites:
 - All implementation phase PRs have been merged to the target branch
 - The documentation PR has been merged to the target branch
 - All required artifacts exist and are up to date
 - The target branch is up to date with the base branch (`main`)
 
-If any pre-flight check fails, the agent blocks PR creation and provides clear guidance on what must be completed first.
+If any pre-flight check fails, the agent reports the status and recommendations. If the user explicitly chooses to proceed, the agent continues.
 
-Once all checks pass, the agent crafts a comprehensive PR description that includes:
+The agent crafts a comprehensive PR description that includes:
 - Summary of the feature or task
 - Links to the specification, implementation plan, and documentation
 - Links to all merged phase PRs

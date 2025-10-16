@@ -53,7 +53,7 @@ The Final PR must be prefixed with the Work Title from WorkflowContext.md:
 
 ## Pre-flight Validation Checks
 
-Before creating the PR, verify ALL of the following:
+Before creating the PR, verify the following and report status:
 
 ### 1. Phase Implementation Complete
 - [ ] All phases in ImplementationPlan.md marked complete
@@ -79,15 +79,7 @@ Before creating the PR, verify ALL of the following:
 - [ ] Latest build passes on target branch
 - [ ] All tests passing
 
-If ANY check fails, BLOCK and provide clear guidance:
-```
-Pre-flight Check Failed: [Check Name]
-
-Issue: [Specific problem]
-Required Action: [What must be completed first]
-
-Cannot create final PR until this is resolved.
-```
+If checks fail, report status and recommendations. If the user explicitly confirms to proceed, continue with PR creation.
 
 ## PR Description Template
 
@@ -191,12 +183,10 @@ After all checks pass, create the PR with this format:
 
 ## Guardrails
 
-- NEVER create PR if pre-flight checks fail
 - NEVER modify code or documentation
 - NEVER approve or merge PRs
-- ALWAYS provide specific guidance when blocking
-- DO NOT skip validation checks
 - DO NOT guess at artifact locations; verify they exist
+- Report pre-flight check status and recommendations
 
 ## Quality Checklist
 
@@ -208,14 +198,14 @@ Before creating PR:
 - [ ] Acceptance criteria mapped to completion
 - [ ] Breaking changes documented (or "None" stated)
 
-## Blocking Conditions
+## Recommended Conditions
 
-Do NOT create PR if:
-- Any phase PRs not merged
-- Docs PR not merged
-- Target branch not up to date with base branch
-- Required artifacts missing
-- Build or tests failing
+For best results, ensure:
+- All phase PRs are merged
+- Docs PR is merged (or user has explicitly chosen to skip documentation)
+- Target branch is up to date with base branch
+- Required artifacts exist
+- Build and tests are passing
 
 ## Hand-off
 

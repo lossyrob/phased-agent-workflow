@@ -104,85 +104,40 @@ Agents understand parameter meanings from context. GitHub Issue and all other fi
 
 ### Changes Required
 
-#### 1. Update Spec Agent (PAW-01A)
+Update all PAW chatmode files (`.github/chatmodes/PAW-*.chatmode.md`) to include the minimal WorkflowContext.md format in their instructions and add parameter extraction logic.
 
-#### 3. Create README for Template Usage
+For each chatmode file:
+1. Add the minimal WorkflowContext.md format (shown above) to the initial instructions
+2. Add WorkflowContext.md recognition to the "Start / Initial Response" section
+3. Include parameter extraction logic with validation for required fields
+4. Maintain backward compatibility by falling back to existing parameter discovery when WorkflowContext.md is absent
 
-**File**: `docs/templates/README.md`
-**Changes**: Create documentation explaining template usage
-
-```markdown
-# PAW Templates
-
-This directory contains templates for various PAW (Phased Agent Workflow) artifacts.
-
-## WorkflowContext.md
-
-**Purpose**: Centralized parameter document that eliminates repeated parameter declarations across PAW stage prompts.
-
-**Location in your workflow**: `docs/agents/<target_branch>/WorkflowContext.md`
-
-**When to create**: At the start of a new feature workflow, before invoking the first PAW stage agent.
-
-**How to use**:
-
-1. Copy `WorkflowContext.md` to your feature branch folder:
-   ```bash
-   mkdir -p docs/agents/<your_target_branch>
-   cp docs/templates/WorkflowContext.md docs/agents/<your_target_branch>/WorkflowContext.md
-   ```
-
-2. Edit the file to replace all `<placeholder>` values with your actual parameters
-
-3. Commit the file to your feature branch:
-   ```bash
-   git add docs/agents/<your_target_branch>/WorkflowContext.md
-   git commit -m "Add workflow context for <your_target_branch>"
-   ```
-
-4. Reference the file when invoking PAW agents by including it in your chat context
-
-**See also**: `docs/examples/WorkflowContext-example.md` for a concrete example with populated values.
-
-## Required Parameters
-
-- **Target Branch**: Your feature branch name (e.g., `feature/add-authentication`)
-- **GitHub Issue**: Issue URL or `#number` format
-
-## Optional Parameters
-
-- **Remote**: Git remote name (defaults to `origin` if omitted)
-- **Artifact Paths**: Paths to workflow artifacts (auto-derived if omitted)
-- **Additional Inputs**: Supporting documents for research stages
-
-## Parameter Extraction
-
-PAW agents use LLM interpretation to extract parameters from the Markdown structure. No programmatic parsing occurs.
-
-## Error Handling
-
-If required parameters are missing, agents will report which parameters are absent and request them interactively.
-
-## Backward Compatibility
-
-WorkflowContext.md is optional. Existing workflows without this file continue to function with interactive parameter prompts.
-```
+**Chatmode files to update:**
+- PAW-01A Spec Agent.chatmode.md
+- PAW-01B Spec Research Agent.chatmode.md
+- PAW-02A Code Researcher.chatmode.md
+- PAW-02B Impl Planner.chatmode.md
+- PAW-03A Implementer.chatmode.md
+- PAW-03B Impl Reviewer.chatmode.md
+- PAW-04 Documenter.chatmode.md
+- PAW-05 PR.chatmode.md
+- PAW-X Status Update.chatmode.md
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Template file exists at `docs/templates/WorkflowContext.md` with all required sections
-- [ ] Example file exists at `docs/examples/WorkflowContext-example.md` with populated values
-- [ ] README exists at `docs/templates/README.md` with usage instructions
-- [ ] All files are valid Markdown: `markdownlint docs/templates/ docs/examples/`
-- [ ] Files are committed to the feature branch
+- [ ] All 9 chatmode files updated with inline WorkflowContext.md format and recognition logic
+- [ ] No syntax errors in chatmode Markdown files: `markdownlint .github/chatmodes/`
+- [ ] Git diff shows expected changes in "Start / Initial Response" sections
+- [ ] Changes are committed to the feature branch
 
 #### Manual Verification:
-- [ ] Template structure is clear and easy to understand
-- [ ] Example demonstrates realistic usage with appropriate values
-- [ ] README provides sufficient guidance for developers to create their own WorkflowContext.md
-- [ ] All required and optional parameters are documented
-- [ ] Inline comments in template are helpful and accurate
+- [ ] Each chatmode's WorkflowContext.md extraction logic is clear and correct
+- [ ] Minimal inline template format is consistent across all chatmode files
+- [ ] Backward compatibility is maintained (existing workflows without WorkflowContext.md continue to function)
+- [ ] Parameter validation mentions specific missing fields
+- [ ] Remote parameter defaults to 'origin' when omitted
+- [ ] Instructions are internally consistent across all chatmode files
 
 ### Status
 
@@ -229,13 +184,6 @@ Update the main PAW specification document to introduce WorkflowContext.md, expl
     CodeResearch.md
     ImplementationPlan.md
     Docs.md
-
-/docs/templates/                # Templates for PAW artifacts
-  WorkflowContext.md            # Template for centralized parameters
-  README.md                     # Template usage documentation
-
-/docs/examples/                 # Example artifacts
-  WorkflowContext-example.md    # Example WorkflowContext.md with populated values
 ```
 ```
 
@@ -256,14 +204,7 @@ Update the main PAW specification document to introduce WorkflowContext.md, expl
 
 * Create a GitHub Issue if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
 * Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
-* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages:
-  ```bash
-  mkdir -p docs/agents/<your_target_branch>
-  cp docs/templates/WorkflowContext.md docs/agents/<your_target_branch>/WorkflowContext.md
-  # Edit the file to populate parameters
-  git add docs/agents/<your_target_branch>/WorkflowContext.md
-  git commit -m "Add workflow context for <your_target_branch>"
-  ```
+* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each chatmode instruction for the structure.
 
 **Artifacts:** issue link (optional), branches created, WorkflowContext.md (optional).
 ```
@@ -478,10 +419,11 @@ Each parameter includes:
 - Optionally generated by Spec Agent or Implementation Planner when parameters are provided
 
 **How to Create:**
-1. Copy template from `docs/templates/WorkflowContext.md` to `docs/agents/<target_branch>/WorkflowContext.md`
-2. Replace all `<placeholder>` values with actual parameters
-3. Commit to feature branch
-4. Include in chat context when invoking any PAW agent
+1. Create file at `docs/agents/<target_branch>/WorkflowContext.md`
+2. Use the minimal format provided inline in chatmode instructions (shown in Phase 1)
+3. Replace all `<placeholder>` values with actual parameters
+4. Commit to feature branch
+5. Include in chat context when invoking any PAW agent
 
 **Agent Recognition:**
 All PAW agents recognize WorkflowContext.md when included in chat context:
@@ -495,10 +437,6 @@ WorkflowContext.md is entirely optional:
 - Existing workflows without this file continue to function normally
 - Agents maintain existing parameter discovery mechanisms
 - No breaking changes to current workflows
-
-#### Example
-
-See `docs/examples/WorkflowContext-example.md` for a complete example with populated values.
 
 #### Quality Standards
 
@@ -537,27 +475,11 @@ Not started
 ### Phase 1 Testing
 
 **Unit-Level Verification:**
-- Validate template file structure matches documented schema
-- Verify example file contains realistic, consistent values
-- Check README provides complete usage instructions
-
-**Integration Testing:**
-- Create WorkflowContext.md from template for a test feature branch
-- Verify all required sections are present and properly formatted
-- Confirm documentation is understandable to developers unfamiliar with PAW
-
-**Manual Testing:**
-1. Follow README instructions to create WorkflowContext.md for a dummy feature
-2. Verify all placeholders are easily identifiable and replaceable
-3. Confirm example file demonstrates all parameter types (required, optional, defaults)
-
-### Phase 2 Testing
-
-**Unit-Level Verification:**
 - Each chatmode file contains WorkflowContext.md recognition logic
 - Parameter extraction logic handles missing required fields correctly
 - Remote parameter defaults to 'origin' when omitted
 - Backward compatibility is maintained (agents work without WorkflowContext.md)
+- Minimal inline template format is consistent across all chatmode files
 
 **Integration Testing:**
 - Test each agent with WorkflowContext.md present in chat context
@@ -566,15 +488,15 @@ Not started
 - Test with malformed WorkflowContext.md (missing required fields) to verify error messages
 
 **Manual Testing:**
-1. Create WorkflowContext.md for a test feature: `feature/test-workflow-context`
+1. Create WorkflowContext.md for a test feature using the inline format from chatmode instructions
 2. Invoke Spec Agent with WorkflowContext.md in context, verify it uses extracted parameters
 3. Invoke Code Research Agent with WorkflowContext.md, verify automatic parameter extraction
 4. Invoke Implementation Planner with WorkflowContext.md, verify it reads correct artifact paths
 5. Test with WorkflowContext.md specifying `remote: fork`, verify agents reference the fork remote
 6. Test without WorkflowContext.md, verify agents prompt for parameters as before
-7. Test with incomplete WorkflowContext.md (missing GitHub issue), verify clear error message
+7. Test with incomplete WorkflowContext.md (missing target branch), verify clear error message
 
-### Phase 3 Testing
+### Phase 2 Testing
 
 **Documentation Verification:**
 - All stage sections reference WorkflowContext.md appropriately
@@ -584,20 +506,20 @@ Not started
 
 **Cross-Reference Validation:**
 - Verify all internal links to WorkflowContext.md are valid
-- Confirm documentation matches actual template structure
+- Confirm documentation matches inline template structure from Phase 1
 - Ensure examples align with documented parameter formats
 
 **Manual Testing:**
 1. Read through updated paw-specification.md as a new PAW user
-2. Follow documented workflow to create WorkflowContext.md
+2. Follow documented workflow to create WorkflowContext.md using inline format
 3. Verify instructions are clear, complete, and accurate
-4. Confirm artifact section matches template structure
+4. Confirm artifact section matches inline template structure
 
 ### End-to-End Testing
 
 **Complete Workflow Test:**
 1. Create a test feature branch: `feature/e2e-test-workflow-context`
-2. Create WorkflowContext.md using the template with all required parameters
+2. Create WorkflowContext.md using the inline format with all required parameters
 3. Run through Stages 01-05 using WorkflowContext.md in all agent invocations
 4. Verify no parameter re-entry is required across stages
 5. Confirm all agents extract parameters correctly from WorkflowContext.md
@@ -616,7 +538,7 @@ Not started
 
 ### Success Metrics
 
-- [ ] All 3 phases pass automated verification criteria
+- [ ] All 2 phases pass automated verification criteria
 - [ ] Manual testing confirms parameter extraction works correctly
 - [ ] Backward compatibility is maintained (existing workflows unaffected)
 - [ ] Fork workflow scenario functions correctly with non-default remote
@@ -653,7 +575,7 @@ WorkflowContext.md introduces no performance implications:
 ### New Workflows
 
 **Recommended approach** for new feature branches:
-1. Create WorkflowContext.md at workflow start (before Stage 01)
+1. Create WorkflowContext.md at workflow start (before Stage 01) using the minimal inline format from chatmode instructions
 2. Populate all known parameters (target branch, GitHub issue, remote if working against fork)
 3. Commit WorkflowContext.md to feature branch
 4. Reference WorkflowContext.md when invoking all PAW agents
@@ -667,9 +589,9 @@ Teams can adopt WorkflowContext.md gradually:
 - No pressure to migrate historical or completed features
 - Developers choose whether to use it per-workflow
 
-### Template Updates
+### Format Updates
 
-If template structure changes in the future:
+If the inline format changes in the future:
 - Existing WorkflowContext.md files remain valid (backward compatible)
 - New optional parameters can be added without breaking existing files
 - Agents will continue to support both old and new formats
@@ -709,9 +631,8 @@ If template structure changes in the future:
 ### Review Focus
 
 When reviewing this implementation:
-- **Phase 1**: Verify template clarity and completeness; ensure examples are realistic
-- **Phase 2**: Confirm backward compatibility is maintained; test parameter extraction logic
-- **Phase 3**: Validate documentation accuracy and completeness; check cross-references
+- **Phase 1**: Verify inline template format is consistent across all chatmodes; confirm parameter extraction logic is correct
+- **Phase 2**: Validate documentation accuracy and completeness; check cross-references
 - **Integration**: Test end-to-end workflow with WorkflowContext.md across all stages
 - **Edge Cases**: Test malformed files, missing parameters, fork workflows, backward compatibility
 

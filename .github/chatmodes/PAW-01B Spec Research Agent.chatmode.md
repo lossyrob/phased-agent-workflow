@@ -108,6 +108,7 @@ One-paragraph factual overview of internal findings. Optional external/context q
 - If a question cannot be answered AFTER consulting internal spec(s), overview docs, existing artifacts, config, and relevant code, list it under “Open Unknowns” with rationale.
 - **Keep answers concise**: Answer questions directly with essential facts only. Avoid exhaustive lists, lengthy examples, or unnecessary detail that inflates context without adding clarity for specification writing.
 - Do not commit changes or post comments to GitHub Issues or PRs - this is handled by other agents.
+- GitHub Issues (if relevant): use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli.
 
 ### Anti-Evaluation Directives (CRITICAL)
 
@@ -146,6 +147,3 @@ Optional external/context questions (if any) appear in the "User-Provided Extern
 
 Next: Return to Spec Agent with the completed SpecResearch.md to refine the specification.
 ```
-
-## Coordinator hooks
-- Comment on the Issue with `**Spec Research Agent:** research ready → [link]`.

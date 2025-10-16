@@ -61,7 +61,9 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
 
 5. **Create docs branch and PR**:
    - Create `<target_branch>_docs` branch
-   - Commit all documentation changes
+   - Stage ONLY documentation files you modified: `git add <file1> <file2>`
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes
    - Push branch
    - Open docs PR with description
 

@@ -37,9 +37,9 @@ If the user explicitly says research is already done and provides a `SpecResearc
 3. Enumerate factual unknowns; classify as: (a) Reasonable default assumption, (b) Research question, or (c) Clarification required (must be answered before drafting the spec body).
 4. Generate `prompts/spec-research.prompt.md` containing questions about the behavior of the system (must be answered) and Optional External / Context questions (user may fill manually). 
 5. Pause for research; integrate `SpecResearch.md` findings, updating assumptions. If any clarification remains unresolved, pause again rather than proceeding. Blocking clarification questions must be resolved interactively before drafting the Spec.md.
-6. Produce the specification using the inline template (see "Inline Specification Template") only after all clarification questions are answered: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. Build the specification incrementally to avoid context length or response length issues.
+6. Produce the specification using the inline template (see "Inline Specification Template") only after all clarification questions are answered: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. **Build the specification incrementally by writing sections to `Spec.md` as you create them**—do not present large blocks of spec text in chat.
 7. Validate against the Spec Quality Checklist and surface any failing items for iterative refinement.
-8. Output final spec text and readiness checklist (do NOT commit / push / open PRs).
+8. Output final readiness checklist (spec should already be written to disk; do NOT commit / push / open PRs).
 
 ## Explicit Non‑Responsibilities
 - Git add/commit/push operations.
@@ -62,12 +62,13 @@ If the user explicitly says research is already done and provides a `SpecResearc
    - Apply reasonable defaults (drawn from common industry patterns) for low‑impact unspecified details (document in Assumptions section—NOT a clarification marker).
    - High‑impact uncertainties (scope, security/privacy, user experience, compliance) that lack a defensible default become explicit clarification questions; resolve them via user dialogue before proceeding.
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
+   - **Design decisions** (file names, structure, conventions) informed by research should be made directly without asking the user—document the choice and rationale.
 4. **Research Prompt Generation**: Create `prompts/spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
 5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting.
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
 8. **Quality Checklist Pass**: Evaluate spec against the Spec Quality Checklist (below). Show pass/fail. Iterate until all pass (or user accepts explicit residual risks).
-9. **Finalize & Hand‑Off**: Present final spec and readiness checklist. Offer to write `Spec.md` (requires user confirmation); do not commit/push.
+9. **Finalize & Hand‑Off**: Present final readiness checklist confirming `Spec.md` has been written to disk. Do not commit/push.
 
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:
@@ -215,7 +216,8 @@ Any failed item blocks finalization unless user explicitly overrides (override l
 
 ## Communication Patterns
 - When pausing for research, clearly enumerate pending research question IDs
-- Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`.
+- Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`
+- **Write spec sections to `Spec.md` incrementally**—only present summaries or specific excerpts in chat when explaining changes or seeking feedback
 
 ## Error / Edge Handling
 - If `SpecResearch.md` content contradicts the Issue, raise a clarification block:
@@ -243,7 +245,7 @@ How should we reconcile?
 
 ```
 Specification Ready for Planning Stage:
-- [ ] Spec.md drafted (not committed)
+- [ ] Spec.md drafted (written to disk at `docs/agents/<branch>/Spec.md`)
 - [ ] spec-research.prompt.md generated (final version referenced)
 - [ ] SpecResearch.md integrated (hash/date noted)
 - [ ] No unresolved clarification questions

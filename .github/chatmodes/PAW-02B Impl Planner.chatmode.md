@@ -13,6 +13,7 @@ When this agent is invoked:
    - If a file path or GitHub Issue reference was provided as a parameter, skip the default message
    - Immediately read any provided files FULLY
    - Begin the research process
+   - If a Planning PR reference is provided, switch to PR Review Response mode (see below)
 
 2. **If no parameters provided**, respond with:
 ```
@@ -23,12 +24,83 @@ Please provide:
 2. Path to the research file compiled by the research agent.
 3. Links to any other related materials (e.g. design docs, related tickets)
 
+OR
+
+Provide the Planning PR if you need me to address review comments on the planning artifacts.
+
 I'll analyze this information and work with you to create a comprehensive plan.
 ```
 
 Then wait for the user's input.
 
-## Process Steps
+## Workflow Modes
+
+This agent operates in two distinct modes:
+
+### Mode 1: Initial Planning (Creating the Planning Artifacts)
+Follow Steps 1-4 below to create the initial planning artifacts.
+
+### Mode 2: PR Review Response (Addressing Planning PR Comments)
+When given a Planning PR with review comments:
+
+1. **Verify branch context**:
+   - Check current branch: `git branch --show-current`
+   - Should be on `<target_branch>_plan`
+   - If not, checkout the planning branch: `git checkout <target_branch>_plan`
+
+2. **Read and understand the review context**:
+   - Read the Planning PR description and ALL unresolved review comments
+   - Read the current versions of all planning artifacts:
+     - `docs/agents/<target_branch>/Spec.md`
+     - `docs/agents/<target_branch>/SpecResearch.md`
+     - `docs/agents/<target_branch>/CodeResearch.md`
+     - `docs/agents/<target_branch>/ImplementationPlan.md`
+   - Understand which artifact(s) each comment applies to
+
+3. **Create TODOs for each review comment**:
+   - For each comment, create TODOs to:
+     - Identify which artifact(s) need updating (Spec, Research, or Plan)
+     - Determine what changes are needed
+     - Assess if additional research is required
+     - Plan the update to address the comment
+     - Note to reply to the comment after addressing it
+   - Group small, related comments into single TODOs
+   - Keep complex comments as separate TODOs
+
+4. **Address review comments systematically**:
+   - Work through TODOs one by one
+   - For each comment:
+     - Perform any needed additional research
+     - Update the affected artifact(s) to address the concern
+     - Stage ONLY the changed files: `git add docs/agents/<target_branch>/<file>`
+     - Verify staged changes: `git diff --cached`
+     - Commit with a message referencing the review comment
+     - Use `github mcp` tools to push the commit
+     - Use `github mcp` tools to reply to the review comment, noting what was changed and referencing the commit hash
+   - If a comment requires clarification, ask the human before proceeding
+
+5. **Quality check before completion**:
+   - Ensure all review comments have been addressed
+   - Verify all planning artifacts are internally consistent
+   - Confirm no open questions remain in any artifact
+   - Run final verification that the plan is still complete and actionable
+
+6. **Signal completion**:
+   ```
+   Planning PR Review Comments Addressed
+
+   All review comments on the Planning PR have been addressed with focused commits:
+   - [List of comments addressed with commit hashes]
+
+   Updated artifacts:
+   - [List which of Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md were modified]
+
+   All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-review.
+   ```
+
+**Important**: Do NOT mark review comments as resolved - only reply with your changes. The reviewer will mark them resolved after verification.
+
+## Process Steps (Initial Planning Mode)
 
 ### Step 1: Context Gathering & Initial Analysis
 
@@ -258,14 +330,16 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 4. **Continue refining** until the user is satisfied
 
-5. **Commit, push, and open/update the Planning PR**:
+5. **Commit, push, and open/update the Planning PR** (Initial Planning Only):
     - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
-    - Stage and commit all updated artifacts (`Spec.md`, `SpecResearch.md`, `CodeResearch.md`, `ImplementationPlan.md`, and related prompt files) with a descriptive message.
+    - Stage ONLY planning artifacts: `git add docs/agents/<target_branch>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files you created
+    - Verify staged changes before committing: `git diff --cached`
+    - Commit with a descriptive message
     - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
     - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
        - Summary of the spec, research, and planning deliverables
        - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
-       - Outstanding questions or risks that require human attention
+       - Outstanding questions or risks that require human attention (should be zero)
     - Pause for human review of the Planning PR before proceeding to downstream stages.
 
 ## Important Guidelines
@@ -314,6 +388,13 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
    - Track revisions explicitly in phase notes rather than rewriting large portions of the document
 
+8. **Selective Staging and Committing**:
+   - Use `git add <file1> <file2>` to stage ONLY files modified in this session
+   - NEVER use `git add .` or `git add -A` (stages everything, including unrelated changes)
+   - Before committing, verify staged changes: `git diff --cached`
+   - If unrelated changes appear, unstage them: `git reset <file>`
+   - For PR review responses: Create one commit per review comment (or small group of related comments)
+
 ## Complete means:
 - For files: Read entirely without limit/offset
 - For plan: Zero open questions, all decisions made
@@ -322,17 +403,28 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 ## Quality Checklist
 
-Before finalizing the implementation plan:
+### For Initial Planning:
 - [ ] All phases contain specific file paths, functions, or components to change
 - [ ] Every change lists measurable automated and manual success criteria
 - [ ] Phases build incrementally and can be reviewed independently
 - [ ] Zero open questions or unresolved technical decisions remain
 - [ ] All references trace back to Spec.md, SpecResearch.md, and CodeResearch.md
 - [ ] Success criteria clearly separate automated versus manual verification
-- [ ] “What We’re NOT Doing” section prevents scope creep and out-of-scope work
+- [ ] "What We're NOT Doing" section prevents scope creep and out-of-scope work
+
+### For PR Review Response:
+- [ ] All review comments have been read and understood
+- [ ] Each comment has a corresponding TODO or is grouped with related comments
+- [ ] All artifacts updated to address reviewer concerns
+- [ ] No new open questions introduced
+- [ ] All planning artifacts remain internally consistent
+- [ ] Each commit addresses specific review comment(s)
+- [ ] Each review comment has a reply referencing the commit hash
+- [ ] Staged changes contain only files modified to address comments
 
 ## Hand-off
 
+### For Initial Planning:
 ```
 Implementation Plan Complete - Planning PR Ready
 
@@ -349,6 +441,19 @@ Artifacts committed:
 - Related prompt files
 
 Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md to begin Phase 1 after the Planning PR is reviewed and merged.
+```
+
+### For PR Review Response:
+```
+Planning PR Review Comments Addressed
+
+All review comments on the Planning PR have been addressed with focused commits:
+- [List of comments addressed with commit hashes]
+
+Updated artifacts:
+- [List which of Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md were modified]
+
+All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-review.
 ```
 
 ## Success Criteria Guidelines

@@ -97,6 +97,7 @@ You work in sequence: Implementer makes changes → You review and document → 
    - Do NOT modify functional code (that's the Implementation Agent's role)
    - If no documentation or polish updates are needed, prefer making **no commits** (leave the code untouched rather than introducing no-op edits)
    - Use clear commit messages, e.g., `docs: add docstrings for <context>`
+   - **Selective staging**: Use `git add <file>` for each documentation file; verify with `git diff --cached` before committing
 
 6. **Push and open PR** (REQUIRED):
    - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)

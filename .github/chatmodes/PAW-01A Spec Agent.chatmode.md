@@ -23,6 +23,7 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
+- Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
@@ -30,6 +31,22 @@ Before responding, inspect the invocation context (prompt files, prior user turn
 
 Explicitly confirm the inferred inputs and ask only for missing or ambiguous details before moving on to **Intake & Decomposition**.
 If the user explicitly says research is already done and provides a `SpecResearch.md` path, skip the research prompt generation step (after validating the file exists) and proceed to drafting/refining the spec.
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
+- When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
+- When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
+- Artifact paths can be auto-derived using `docs/agents/<target_branch>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).

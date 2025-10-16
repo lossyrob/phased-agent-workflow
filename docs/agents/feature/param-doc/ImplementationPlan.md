@@ -124,22 +124,22 @@ For each chatmode file:
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All 9 chatmode files updated with inline WorkflowContext.md format and recognition logic
-- [ ] No syntax errors in chatmode Markdown files: `markdownlint .github/chatmodes/`
-- [ ] Git diff shows expected changes in "Start / Initial Response" sections
-- [ ] Changes are committed to the feature branch
+- [x] All 9 chatmode files updated with inline WorkflowContext.md format and recognition logic
+- [ ] No syntax errors in chatmode Markdown files: `markdownlint .github/chatmodes/` (skipped per user request on 2025-10-15)
+- [x] Git diff shows expected changes in "Start / Initial Response" sections
+- [x] Changes are committed to the feature branch
 
 #### Manual Verification:
-- [ ] Each chatmode's WorkflowContext.md extraction logic is clear and correct
-- [ ] Minimal inline template format is consistent across all chatmode files
-- [ ] Agents explicitly create or update WorkflowContext.md when it is missing or incomplete before continuing their primary workflow
-- [ ] Parameter validation mentions specific missing fields and instructs the agent to fill them using discovered data
-- [ ] Remote parameter defaults to 'origin' when omitted
-- [ ] Instructions are internally consistent across all chatmode files
+- [x] Each chatmode's WorkflowContext.md extraction logic is clear and correct
+- [x] Minimal inline template format is consistent across all chatmode files
+- [x] Agents explicitly create or update WorkflowContext.md when it is missing or incomplete before continuing their primary workflow
+- [x] Parameter validation mentions specific missing fields and instructs the agent to fill them using discovered data
+- [x] Remote parameter defaults to 'origin' when omitted
+- [x] Instructions are internally consistent across all chatmode files
 
 ### Status
 
-Not started
+Completed (2025-10-15). Updated all nine PAW chatmode instruction files to load, create, and maintain `WorkflowContext.md`, including the shared minimal template, explicit missing-parameter handling, and remote default guidance. Markdownlint was skipped at the user's request; no additional automated checks were required. Ready for Implementation Review Agent once documentation polish is added.
 
 ---
 

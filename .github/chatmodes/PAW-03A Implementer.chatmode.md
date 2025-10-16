@@ -10,6 +10,7 @@ You are tasked with implementing an approved technical implementation plan. Thes
 If no implementation plan path provided, ask for one.
 
 Before reading other files or taking action:
+0. Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
 1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
 2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
@@ -20,6 +21,21 @@ Before reading other files or taking action:
 4. Check current branch: `git branch --show-current`
 5. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
 6. Verify you're on the correct phase branch: `git branch --show-current`
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with implementation.
+- When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
+- Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
 
 **WHY**: Feature branches are for merging completed PRs, not direct implementation commits. Phase branches keep work isolated and allow the Review Agent to push and create PRs without polluting the feature branch history.
 
@@ -243,8 +259,8 @@ All Implementation Phases Complete
 All [N] phases in ImplementationPlan.md are complete and merged into <target_branch>.
 
 Phase PRs merged:
-- Phase 1: PR #[number]
-- Phase 2: PR #[number]
+- Phase 1: PR number TBD
+- Phase 2: PR number TBD
 - ...
 
 Next: Invoke Documenter Agent (Stage 04) to create comprehensive documentation. Ensure <target_branch> is up to date before starting.

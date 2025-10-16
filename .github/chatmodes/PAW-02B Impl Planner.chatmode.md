@@ -7,6 +7,8 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ## Initial Response
 
+First, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
+
 When this agent is invoked:
 
 1. **Check if parameters were provided**:
@@ -32,6 +34,21 @@ I'll analyze this information and work with you to create a comprehensive plan.
 ```
 
 Then wait for the user's input.
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the branch (use the current branch where appropriate), then write `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
+- When required parameters are absent, explicitly call out which field is missing, gather or confirm it, and persist the update. Treat missing `Remote` entries as `origin` without prompting.
+- Update the file whenever you discover a new parameter (e.g., Planning PR URL, artifact overrides, remote). Record derived artifact paths when relying on default conventions so downstream agents inherit an authoritative record.
 
 ## Workflow Modes
 

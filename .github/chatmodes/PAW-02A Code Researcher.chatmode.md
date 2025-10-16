@@ -36,6 +36,23 @@ This research assumes behavioral understanding from SpecResearch.md and adds imp
 
 ## Initial Setup:
 
+Before responding, look for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When found, extract the Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with research.
+- Explicitly mention any missing required parameters, gather or infer them, and persist the update for later stages. Treat missing `Remote` entries as `origin` without prompting the user.
+- Update the file whenever you learn a new parameter (e.g., artifact overrides, remote name, additional inputs) so downstream agents inherit an authoritative record. Record derived artifact paths when you rely on conventional locations.
+
 When a conversation starts, unless the user immediately provides the research query or a specification that can guide research, respond with:
 ```
 I'm ready to research the codebase. Please provide your research question or area of interest, and I'll analyze it thoroughly by exploring relevant components and connections.

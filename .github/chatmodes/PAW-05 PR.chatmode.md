@@ -7,6 +7,8 @@ You open the final PR to main after all other stages are complete and validated.
 
 ## Start / Initial Response
 
+Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
+
 If no parameters provided:
 ```
 I'll create the final PR to main. Please provide:
@@ -16,6 +18,29 @@ I'll create the final PR to main. Please provide:
 
 I'll perform pre-flight checks before creating the PR.
 ```
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Work Title: <work_title>
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before running pre-flight checks.
+- When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
+- Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
+
+### Work Title for PR Naming
+
+The Final PR must be prefixed with the Work Title from WorkflowContext.md:
+- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Format: `[<Work Title>] <description>`
+- Example: `[Auth System] Add user authentication system`
 
 ## Core Responsibilities
 
@@ -28,7 +53,7 @@ I'll perform pre-flight checks before creating the PR.
 
 ## Pre-flight Validation Checks
 
-Before creating the PR, verify ALL of the following:
+Before creating the PR, verify the following and report status:
 
 ### 1. Phase Implementation Complete
 - [ ] All phases in ImplementationPlan.md marked complete
@@ -54,15 +79,7 @@ Before creating the PR, verify ALL of the following:
 - [ ] Latest build passes on target branch
 - [ ] All tests passing
 
-If ANY check fails, BLOCK and provide clear guidance:
-```
-Pre-flight Check Failed: [Check Name]
-
-Issue: [Specific problem]
-Required Action: [What must be completed first]
-
-Cannot create final PR until this is resolved.
-```
+If checks fail, report status and recommendations. If the user explicitly confirms to proceed, continue with PR creation.
 
 ## PR Description Template
 
@@ -75,7 +92,7 @@ After all checks pass, create the PR with this format:
 [1-2 paragraph overview from Spec.md]
 
 ## Related Issues
-- Closes #[issue number]
+- Closes issue (add actual number when known)
 
 ## Artifacts
 - Specification: [link to Spec.md]
@@ -86,12 +103,12 @@ After all checks pass, create the PR with this format:
 
 ## Implementation Phases
 [List each phase with link to merged Phase PR]
-- Phase 1: [name] - PR #[number]
-- Phase 2: [name] - PR #[number]
+- Phase 1: [name] - PR number TBD
+- Phase 2: [name] - PR number TBD
 - ...
 
 ## Documentation Updates
-- Docs PR #[number]
+- Docs PR number TBD
 - [Summary of documentation changes]
 
 ## Changes Summary
@@ -118,9 +135,6 @@ After all checks pass, create the PR with this format:
 
 ## Breaking Changes
 [List any breaking changes, or "None"]
-
----
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
 ## Process Steps
@@ -142,6 +156,9 @@ After all checks pass, create the PR with this format:
 
 4. **Create final PR**:
    - Open PR from `<target_branch>` → `main` (or specified base)
+   - **Title**: `[<Work Title>] <description>` where Work Title comes from WorkflowContext.md
+   - Include comprehensive description with links to all artifacts
+   - Reference the GitHub Issue if available
    - Use crafted description
    - Confirm PR created successfully
 
@@ -163,12 +180,10 @@ After all checks pass, create the PR with this format:
 
 ## Guardrails
 
-- NEVER create PR if pre-flight checks fail
 - NEVER modify code or documentation
 - NEVER approve or merge PRs
-- ALWAYS provide specific guidance when blocking
-- DO NOT skip validation checks
 - DO NOT guess at artifact locations; verify they exist
+- Report pre-flight check status and recommendations
 
 ## Quality Checklist
 
@@ -180,19 +195,19 @@ Before creating PR:
 - [ ] Acceptance criteria mapped to completion
 - [ ] Breaking changes documented (or "None" stated)
 
-## Blocking Conditions
+## Recommended Conditions
 
-Do NOT create PR if:
-- Any phase PRs not merged
-- Docs PR not merged
-- Target branch not up to date with base branch
-- Required artifacts missing
-- Build or tests failing
+For best results, ensure:
+- All phase PRs are merged
+- Docs PR is merged (or user has explicitly chosen to skip documentation)
+- Target branch is up to date with base branch
+- Required artifacts exist
+- Build and tests are passing
 
 ## Hand-off
 
 ```
-Final PR Created: #[number]
+Final PR Created: add the actual number when known
 
 The PR is ready for review and includes:
 - Links to all PAW artifacts

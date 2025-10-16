@@ -7,6 +7,8 @@ You create comprehensive documentation after implementation work is complete.
 
 ## Start / Initial Response
 
+Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them so you inherit existing parameters.
+
 If no parameters provided:
 ```
 I'll create comprehensive documentation for the completed feature. Please provide:
@@ -15,6 +17,29 @@ I'll create comprehensive documentation for the completed feature. Please provid
 3. Links to merged Phase PRs
 4. Any project-specific documentation guidelines
 ```
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Work Title: <work_title>
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before producing documentation.
+- When required parameters are absent, explicitly note the missing field, gather or confirm the value, and persist it so subsequent stages inherit the authoritative record. Treat missing `Remote` entries as `origin` without additional prompts.
+- Update the file whenever you learn new parameter values (e.g., docs branch name, artifact overrides, additional inputs) so the workflow continues to rely on a single source of truth. Record derived artifact paths when using conventional locations.
+
+### Work Title for PR Naming
+
+The Documentation PR must be prefixed with the Work Title from WorkflowContext.md:
+- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Format: `[<Work Title>] Documentation`
+- Example: `[Auth System] Documentation`
 
 ## Core Responsibilities
 
@@ -61,9 +86,13 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
 
 5. **Create docs branch and PR**:
    - Create `<target_branch>_docs` branch
-   - Commit all documentation changes
+   - Stage ONLY documentation files you modified: `git add <file1> <file2>`
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes
    - Push branch
    - Open docs PR with description
+   - **Title**: `[<Work Title>] Documentation` where Work Title comes from WorkflowContext.md
+   - Include summary of documentation added and reference to ImplementationPlan.md
 
 6. **Address review comments**:
    - Read review comments
@@ -187,7 +216,7 @@ During review comment follow-up:
 ```
 Documentation Complete - Docs PR Opened
 
-I've created comprehensive documentation and opened Docs PR #[number] at:
+I've created comprehensive documentation and opened the Docs PR (add actual number when known) at:
 `<target_branch>_docs` → `<target_branch>`
 
 The PR includes:

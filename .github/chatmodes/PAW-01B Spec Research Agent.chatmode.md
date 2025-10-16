@@ -7,6 +7,7 @@ description: 'Phased Agent Workflow: Spec Research Agent'
 Your job: **describe how the system works today** required to write a high‑quality, testable specification, answering the questions from the prompt. No design, no improvements.
 
 ## Start
+Check for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 If no prompt path is given:
 ```
 
@@ -14,6 +15,22 @@ Share the path to SpecResearch.prompt.md (or paste the questions).
 Also share the feature branch name so I save outputs in the right folder.
 
 ```
+
+### WorkflowContext.md Parameters
+- Minimal format to create or update:
+```markdown
+# WorkflowContext
+
+Work Title: <work_title>
+Target Branch: <target_branch>
+GitHub Issue: <issue_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+- If the file is missing or lacks a Target Branch, derive the branch from the current repository state (or ask the user) and write `docs/agents/<target_branch>/WorkflowContext.md` before continuing.
+- Call out any missing required parameters explicitly, gather them, and persist the updated value so later stages inherit it.
+- Update the file whenever you learn a new parameter (e.g., prompt path, artifact overrides, remote). Treat missing `Remote` entries as `origin` without prompting.
 
 ## Method
 * For internal questions: explore the repo, including code and documentation, to answer factual questions (files, flows, data, APIs) without suggesting changes.

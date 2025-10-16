@@ -560,9 +560,6 @@ After all checks pass, create PR with this format:
 
 ## Breaking Changes
 [List any breaking changes, or "None"]
-
----
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
 ## Process Steps

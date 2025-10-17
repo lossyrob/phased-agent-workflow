@@ -1,6 +1,6 @@
 <div align="center">
 	<img src="./img/paw-logo.png" alt="PAW Logo" />
-    <h1>PAW: Phased Agent Workflow</h1>
+    <h1>Phased Agent Workflow (PAW)</h1>
     <h3>A Coding Agent Development Workflow</h3>
 </div>
 

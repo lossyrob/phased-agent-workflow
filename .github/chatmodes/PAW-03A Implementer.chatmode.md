@@ -243,26 +243,55 @@ Remember: You're implementing a solution, not just checking boxes. Keep the end 
 
 ## Quality Checklist
 
-Before pausing for human verification:
+### For Initial Phase Implementation
+
+Before completing implementation and handing off to Implementation Review Agent:
 - [ ] All automated success criteria in the active phase are green
-- [ ] Implementation changes committed with clear, descriptive messages
+- [ ] Implementation changes committed locally with clear, descriptive messages
 - [ ] `ImplementationPlan.md` updated with phase status, notes, and any follow-up guidance
+- [ ] Phase checkbox marked complete in `ImplementationPlan.md`
 - [ ] Commits contain only related changes (no drive-by edits)
-- [ ] Implementation branch pushed successfully (if required by plan)
 - [ ] No unrelated files or formatting-only changes included
+- [ ] Currently on the correct phase branch (verify with `git branch --show-current`)
+- [ ] **Branch NOT pushed** (Implementation Review Agent will push after review)
+
+### For Addressing PR Review Comments
+
+Before completing review comment responses and handing off to Implementation Review Agent:
+- [ ] All automated success criteria checks are green
+- [ ] Each review comment (or small group of related comments) addressed with a focused commit
+- [ ] Commit messages reference the specific review comments addressed
+- [ ] `ImplementationPlan.md` updated with "Addressed Review Comments:" section
+- [ ] Commits contain only changes related to review comments (no drive-by edits)
+- [ ] All commits pushed to the PR branch in a single batch
+- [ ] Currently on the correct phase branch (verify with `git branch --show-current`)
 
 ## Hand-off
 
-After all phases complete:
+### After Completing a Phase
+
+After completing a phase implementation (not all phases):
 ```
-All Implementation Phases Complete
+Phase [N] Implementation Complete - Ready for Review
 
-All [N] phases in ImplementationPlan.md are complete and merged into <target_branch>.
+Automated verification passed:
+- [List automated checks that passed]
 
-Phase PRs merged:
-- Phase 1: PR number TBD
-- Phase 2: PR number TBD
-- ...
+All changes committed locally to branch <phase_branch_name>. 
 
-Next: Invoke Documenter Agent (Stage 04) to create comprehensive documentation. Ensure <target_branch> is up to date before starting.
+Next: Invoke Implementation Review Agent (PAW-03B) to review my changes, add documentation, and open the Phase PR.
+```
+
+### After Addressing Review Comments
+
+After addressing all review comments for a phase:
+```
+Review Comments Addressed - Ready for Review Agent
+
+I've addressed the following review comments with focused commits:
+- [List of review comments addressed with commit hashes]
+
+All changes have been pushed to the PR branch <phase_branch_name>.
+
+Next: Invoke Implementation Review Agent (PAW-03B) to verify my changes and reply to the review comments.
 ```

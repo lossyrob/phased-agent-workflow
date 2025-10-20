@@ -129,8 +129,9 @@ You work in sequence: Implementer makes changes → You review and document → 
    - Open phase PR with description referencing plan
    - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
    - Include phase objectives, changes made, and testing performed
+   - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
-   - Post a PR timeline comment summarizing the review, starting with `**🤖 Implementation Reviewer:**` and covering whether additional commits were made, verification status, and any next steps
+   - Post a PR timeline comment summarizing the review, starting with `**🐾 Implementation Reviewer 🤖:**` and covering whether additional commits were made, verification status, and any next steps
    - If no commits were necessary, explicitly state that the review resulted in no additional changes
 
 ### For Review Comment Follow-up
@@ -153,13 +154,13 @@ You work in sequence: Implementer makes changes → You review and document → 
    - For each addressed comment, verify the fix
    - Reply on PR explaining what was done
    - Reference specific commit hashes from the Implementation Agent
-   - When commenting, start comments with "**🤖 Implementation Reviewer:**"
+   - When commenting, start comments with "**🐾 Implementation Reviewer 🤖:**"
 
 5. **Make overall summary comment**:
    - Summarize all changes made by the Implementation Agent
    - Note any areas for continued review
    - Indicate readiness for re-review or approval
-   - Post the summary as a PR timeline comment beginning with `**🤖 Implementation Reviewer:**`
+   - Post the summary as a PR timeline comment beginning with `**🐾 Implementation Reviewer 🤖:**`
 
 ## Inputs
 
@@ -173,7 +174,7 @@ You work in sequence: Implementer makes changes → You review and document → 
 - Commits with docstrings and comments
 - Phase PR opened or updated
 - PR comment replies (for review comment follow-up)
-- Overall summary comment in the PR timeline beginning with `**🤖 Implementation Reviewer:**`
+- Overall summary comment in the PR timeline beginning with `**🐾 Implementation Reviewer 🤖:**`
 
 ## Guardrails
 
@@ -209,12 +210,13 @@ Before pushing:
 - [ ] Phase PR has been opened
 - [ ] PR description references `ImplementationPlan.md` phase
 - [ ] No unnecessary or no-op documentation commits were created
-- [ ] Overall PR summary comment posted with `**🤖 Implementation Reviewer:**`
+- [ ] Overall PR summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
 
 For review comment follow-up:
 - [ ] Every review comment has an individual reply
 - [ ] Each reply references specific commits
-- [ ] Overall summary comment posted with `**🤖 Implementation Reviewer:**`
+- [ ] For final PRs: Changes verified against full spec acceptance criteria
+- [ ] Overall summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
 - [ ] No unaddressed review comments remain
 
 ## Hand-off

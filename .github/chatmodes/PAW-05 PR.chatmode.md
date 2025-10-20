@@ -160,6 +160,7 @@ After all checks pass, create the PR with this format:
    - Include comprehensive description with links to all artifacts
    - Reference the GitHub Issue if available
    - Use crafted description
+   - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Confirm PR created successfully
 
 5. **Provide merge guidance**:

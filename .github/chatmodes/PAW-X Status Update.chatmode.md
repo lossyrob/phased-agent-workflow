@@ -46,7 +46,7 @@ Create the status dashboard using the actual phase count from Step 1
 
 ### Issue (post status comments)
 **Post a new comment** to the Issue (do NOT edit the issue description):
-- Begin comment with: `**🤖 Status Update Agent:**`
+- Begin comment with: `**🐾 Status Update Agent 🤖:**`
 - Include the complete status dashboard with:
   - **Artifacts**: Spec / Spec Research / Code Research / Implementation Plan / Docs (links)
   - **PRs**:
@@ -84,7 +84,7 @@ Create the status dashboard using the actual phase count from Step 1
 
 ```
 - If opening text lacks clarity, add a one-paragraph synopsis under the block:
-"**🤖 Status Update Agent:** Added summary and links to artifacts for reviewer convenience."
+"**🐾 Status Update Agent 🤖:** Added summary and links to artifacts for reviewer convenience."
 
 **"Update" means:**
 - For Issue comments: Post a new comment with the robot emoji prefix
@@ -133,7 +133,7 @@ Invoke this agent at key milestones:
 - If an artifact or PR link can't be found, add a clear TODO line in the status comment and tag the responsible agent (Planner/Implementer/PR Agent)
 
 ## Output
-- New comment posted to Issue (prefixed with `**🤖 Status Update Agent:**`)
+- New comment posted to Issue (prefixed with `**🐾 Status Update Agent 🤖:**`)
 - Updated PR body blocks ("Summary" + "What changed since last review")
 - Short milestone comments with links
 

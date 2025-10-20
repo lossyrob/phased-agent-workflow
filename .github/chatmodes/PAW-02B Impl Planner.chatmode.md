@@ -359,6 +359,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
        - Summary of the spec, research, and planning deliverables
        - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
        - Outstanding questions or risks that require human attention (should be zero)
+       - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
     - Pause for human review of the Planning PR before proceeding to downstream stages.
 
 ## Important Guidelines

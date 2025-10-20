@@ -183,6 +183,7 @@ After all checks pass, create the PR with this format:
 
 - NEVER modify code or documentation
 - NEVER approve or merge PRs
+- NEVER address review comments (Implementation Agent and Implementation Review Agent handle this)
 - DO NOT guess at artifact locations; verify they exist
 - Report pre-flight check status and recommendations
 
@@ -229,5 +230,10 @@ Merge Guidance:
 - [Rollout recommendations]
 - [Post-merge verification steps]
 
-Next: Human reviews and merges final PR to main.
+Next: Human reviews final PR. 
+
+If review comments are received:
+- Invoke Implementation Agent (PAW-03A) to address review comments
+- Invoke Implementation Review Agent (PAW-03B) to verify changes and reply to reviewers
+- Repeat until approved, then merge to main
 ```

@@ -93,6 +93,15 @@ You work in sequence: Implementer makes changes → You review and document → 
 
 ## Process Steps
 
+### Detecting PR Type
+
+When reviewing implementation changes or addressing review comments, determine the PR type:
+- Check the PR's target branch
+- If PR targets the feature/target branch → **Phase PR** (implementation branch with `_phase` suffix)
+- If PR targets `main` or base branch → **Final PR** (target branch, load comprehensive context)
+
+For final PRs, load context from all phases in ImplementationPlan.md, Spec.md for acceptance criteria, Docs.md for documentation consistency, and CodeResearch.md for system understanding.
+
 ### For Initial Phase Review
 
 1. **Verify and checkout implementation branch**:
@@ -137,13 +146,14 @@ You work in sequence: Implementer makes changes → You review and document → 
 ### For Review Comment Follow-up
 
 1. **Verify branch is up to date**:
-   - Confirm you're on the implementation branch
-   - Pull latest changes: `git pull origin <target_branch>_phase<N>`
+   - Confirm you're on the correct branch (phase branch for phase PRs, target branch for final PRs)
+   - Pull latest changes from the appropriate branch
    - Verify Implementation Agent's commits are present
 
 2. **Read the review comments and Implementer's changes**:
    - Review each unresolved review comment on the PR
    - Read Implementer's commits addressing comments
+   - For final PRs: Verify changes against Spec.md acceptance criteria and cross-phase consistency
    - Verify each change addresses the concern effectively
 
 3. **Add any additional documentation if needed**:
@@ -238,9 +248,9 @@ After review comment follow-up:
 ```
 Review Comments Verified - Replies Posted
 
-I've verified the Implementation Agent's response to all review comments and posted individual replies on the PR (add actual number when known).
+I've verified the Implementation Agent's response to all review comments and posted individual replies on the PR.
 
 All changes made by the Implementation Agent successfully address the review comments. The PR is ready for re-review.
 ```
 
-Next: Human reviews Phase PR. If approved, merge and proceed to next phase or Stage 04 (Documenter Agent) when all phases complete.
+Next: Human reviews PR. If approved, merge and proceed to next phase or next stage when complete.

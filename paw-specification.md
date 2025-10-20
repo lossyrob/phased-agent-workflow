@@ -96,18 +96,17 @@ Writes `ImplementationPlan.md` that includes **Implementation Phases**, discrete
 
 ### Implementation Agents
 
-The Implementation Agents are split into two chat modes to allow for agentic review and documentation improvements.
-There are also two scenarios that they handle: implementing a phase with new development and responding to review comments made by humans on the Phase PRs.
+The Implementation Agents are split into two chat modes to allow for agentic review and documentation improvements. They handle three scenarios: implementing a phase with new development, responding to review comments on Phase PRs, and responding to review comments on the final PR.
 
-Each **Implementation Phase** is developed on a dedicated branch, runs automated checks, opens Phase PRs, and addresses review comments to completion.
+Each **Implementation Phase** is developed on a dedicated branch, runs automated checks, opens Phase PRs, and addresses review comments to completion. For final PR reviews, work occurs directly on the target branch.
 
 #### Implementation Agent
 
 Executes plan phases by making code changes and ensures quality by running automated checks.
 
-If responding to review comments, addresses each comment with focused commits.
+When addressing review comments (on phase PRs or final PR), addresses each comment with focused commits.
 
-Creates the implementation branch locally if it does not already exist.
+For phase work, creates the implementation branch locally if it does not already exist. For final PR reviews, works directly on the target branch.
 
 #### Implementation Review Agent
 
@@ -116,7 +115,7 @@ Creates the implementation branch locally if it does not already exist.
 - Commits changes with clear, descriptive messages.
 - Pushes the implementation branch and opens Phase PRs.
 
-If responding to review comments, reviews each change to ensure it addresses the comment, and replies comment-by-comment on the PR. Pushes changes and makes a overall review comment summarizing the changes.
+When reviewing addressed comments (on phase PRs or final PR), reviews each change to ensure it addresses the comment, and replies comment-by-comment on the PR. Pushes changes and makes an overall review comment summarizing the changes.
 
 ### Documenter Agent
 
@@ -374,9 +373,11 @@ Review Comment Follow-up:
 
 ### Stage 05 — Final PR to `main`
 
-**Agent:** 
+**Agents:** 
 
 * PR Agent
+* Implementation Agent
+* Implementation Review Agent
 
 **Inputs:**
 
@@ -392,6 +393,30 @@ Review Comment Follow-up:
 - Ensure the target branch is checked out locally and up to date.
 - Ask the PR Agent to open the final PR to `main`.
 - The PR Agent will craft the PR description, including links to all relevant artifacts and a summary of changes, and create the final PR.
+- The developer will review the final PR and provide feedback or request changes as needed.
+- If review comments exist:
+  - Ask the Implementation Agent to address review comments on the final PR.
+  - Ask the Implementation Review Agent to verify changes and reply to reviewers.
+  - Repeat until approved.
+- Merge the final PR once approved.
+- If tracking with a GitHub Issue, use the Status Agent to update the Issue. This can occur when the final PR is opened, updated, or merged.
+
+**Flow Diagram**
+
+Final PR Review Comment Follow-up:
+┌─────────────────────────┐
+│ Implementation Agent    │ Addresses comments on target branch
+│ (Forward Momentum)      │ ↓ Batch pushes all, signals ready
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Implementation Review   │ Verifies changes, replies to comments
+│ (Quality Gate)          │ ↓ Pushes if docs needed
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│ Human Re-review         │
+└─────────────────────────┘
 
 ---
 

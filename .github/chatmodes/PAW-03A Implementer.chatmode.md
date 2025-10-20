@@ -50,25 +50,34 @@ When given just a plan path:
 - Start implementing if you understand what needs to be done
 
 When also given a PR with review comments:
-- Verify you're on the correct phase branch for the PR (should match PR branch name)
+- **Determine PR type**: Check the PR's target branch to identify the scenario:
+  - If PR targets the feature/target branch → **Phase PR** (work on phase branch)
+  - If PR targets `main` or base branch → **Final PR** (work on target branch, load all phase contexts)
+- For Phase PRs:
+  - Verify you're on the correct phase branch for the PR (should match PR branch name)
+  - Identify which Phase(s) in the implementation plan the PR implements
+- For Final PRs:
+  - Verify you're on the target branch (feature branch, not a phase branch)
+  - Load context from all phases, Spec.md, and Docs.md
+  - Consider cross-phase integration impacts
 - Read the PR description and all unresolved review comments
-- Identify which Phase(s) in the implemenation plan the PR implements
-- Understand how the PR addresses the Phases of the implementation plan
-- For each comment, create TODOs to address each individually.
+- Understand how the PR addresses the implementation plan phases
+- For each comment, create TODOs to address each individually:
   - Identify if the spec and/or implementation plan need to be updated. If so, create TODOs to update them.
   - Identify if the code needs to be changed. If so, create TODOs to make the changes.
   - Identify if tests need to be added or modified. If so, create TODOs to add/modify tests.
   - Create a TODO to comment on the PR review comment once addressed, explaining what was done.
   - If changes are very small and/or related, you can group them into a single TODO and commit.
 - Some comments may require deeper work, conversation with the human, and modification of the implementation plan. Make sure to assess the complexity of the work to address each comment and plan accordingly.
-- If any review comments are unclear, create TODOs to ask for clarification from the
-- Address all review comments one by one, asking for clarificaiton if needed.
-- Make a commit for each addressed comment, referencing the comment in the commit message, and referencing the commit hash in the PR response to the review comment. Only add related changes to each commit and ignore unrelated changes.
-- Push the commit to the PR branch and comment on the PR review comment that it has been addressed after each commit is pushed.
+- If any review comments are unclear, create TODOs to ask for clarification
+- Address all review comments one by one, asking for clarification if needed.
+- Make a commit for each addressed comment, referencing the comment in the commit message. Only add related changes to each commit and ignore unrelated changes.
+- Push commits to the PR branch (phase PRs) or target branch (final PR) after all comments are addressed.
 
 **Phase Branch Naming Convention:**
 - Single phase: `<feature-branch>_phase[N]` (e.g., `feature/finalize-initial-chatmodes_phase3`)
 - Multiple consecutive phases: `<feature-branch>_phase[M-N]` (e.g., `feature/finalize-initial-chatmodes_phase1-3`)
+- Final PR reviews work directly on the target/feature branch (no `_phase` suffix)
 
 ## Role: Forward Momentum (Making Changes Work)
 
@@ -188,9 +197,10 @@ Do not check off items in the manual testing steps until confirmed by the user.
 ## Committing and Pushing
 
 **Pre-Commit Verification**:
-- Before EVERY commit, verify you're on a phase branch: `git branch --show-current`
-- The branch name MUST end with `_phase[N]` or `_phase[M-N]`
-- If you're on the feature branch (no `_phase` suffix), STOP and create the phase branch immediately
+- Before EVERY commit, verify you're on the correct branch: `git branch --show-current`
+- For phase work: Branch name MUST end with `_phase[N]` or `_phase[M-N]`
+- For final PR reviews: Branch should be the target/feature branch (no `_phase` suffix)
+- If you're on the wrong branch, STOP and switch immediately
 
 **Selective Staging (CRITICAL)**:
 - Use `git add <file1> <file2>` to stage ONLY files you modified for this work
@@ -200,7 +210,9 @@ Do not check off items in the manual testing steps until confirmed by the user.
 
 **For initial phase development**: Commit locally but DO NOT push. The Implementation Review Agent will push after adding documentation.
 
-**For review comment follow-up**: Commit each addressed comment (or small group of related comments) separately, then batch push all commits at once after all comments are addressed.
+**For phase PR review comment follow-up**: Commit each addressed comment (or small group of related comments) separately, then batch push all commits at once after all comments are addressed.
+
+**For final PR review comment follow-up**: Work directly on target branch. Commit each addressed comment separately, then batch push all commits at once after all comments are addressed.
 
 ## Workflow Separation
 
@@ -261,10 +273,11 @@ Before completing review comment responses and handing off to Implementation Rev
 - [ ] All automated success criteria checks are green
 - [ ] Each review comment (or small group of related comments) addressed with a focused commit
 - [ ] Commit messages reference the specific review comments addressed
-- [ ] `ImplementationPlan.md` updated with "Addressed Review Comments:" section
+- [ ] For phase PRs: `ImplementationPlan.md` updated with "Addressed Review Comments:" section
+- [ ] For final PRs: Changes verified against Spec.md acceptance criteria
 - [ ] Commits contain only changes related to review comments (no drive-by edits)
-- [ ] All commits pushed to the PR branch in a single batch
-- [ ] Currently on the correct phase branch (verify with `git branch --show-current`)
+- [ ] All commits pushed to the PR branch (phase PRs) or target branch (final PR) in a single batch
+- [ ] Currently on the correct branch: phase branch for phase PRs, target branch for final PR
 
 ## Hand-off
 
@@ -284,14 +297,14 @@ Next: Invoke Implementation Review Agent (PAW-03B) to review my changes, add doc
 
 ### After Addressing Review Comments
 
-After addressing all review comments for a phase:
+After addressing all review comments:
 ```
 Review Comments Addressed - Ready for Review Agent
 
 I've addressed the following review comments with focused commits:
 - [List of review comments addressed with commit hashes]
 
-All changes have been pushed to the PR branch <phase_branch_name>.
+All changes have been pushed to <branch_name>.
 
 Next: Invoke Implementation Review Agent (PAW-03B) to verify my changes and reply to the review comments.
 ```

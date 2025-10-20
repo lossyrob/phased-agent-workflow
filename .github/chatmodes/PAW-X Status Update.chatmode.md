@@ -120,6 +120,7 @@ Invoke this agent at key milestones:
 
 **Stage 05 - Final PR:**
 - After final PR opened
+- After final PR updated (when addressing review comments)
 - After final PR merged
 
 ## Guardrails

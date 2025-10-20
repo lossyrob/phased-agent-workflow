@@ -300,7 +300,7 @@ The implementation process follows a cycle for each phase: Implementation Agent 
 - Once the review is complete, the Implementation Review Agent will push the changes to the implementation branch and open or update the Phase PR.
 - The developer will review the Phase PR and provide feedback or request changes as needed.
 - The developer will ask the Implementation Agent to address any review comments.
-- The Implementation Agent will address each comment with focused commits.
+- The Implementation Agent will first update the local branch from the remote to pull any commits added by reviewers, then address each comment with focused commits.
 - The developer will then ask the Implementation Review Agent to review the changes made by the Implementation Agent.
 - The Implementation Review Agent will review each change to ensure it addresses the comment, and reply comment-by-comment on the PR.
 - Once the review is complete, the Implementation Review Agent will push the changes to the branch and make an overall review comment summarizing the changes.

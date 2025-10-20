@@ -53,6 +53,7 @@ When also given a PR with review comments:
 - **Determine PR type**: Check the PR's target branch to identify the scenario:
   - If PR targets the feature/target branch → **Phase PR** (work on phase branch)
   - If PR targets `main` or base branch → **Final PR** (work on target branch, load all phase contexts)
+- **Update local branch from remote**: Pull latest commits to ensure local branch includes any commits added by reviewers
 - For Phase PRs:
   - Verify you're on the correct phase branch for the PR (should match PR branch name)
   - Identify which Phase(s) in the implementation plan the PR implements

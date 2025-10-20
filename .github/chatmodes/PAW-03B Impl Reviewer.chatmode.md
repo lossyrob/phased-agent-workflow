@@ -127,7 +127,7 @@ You work in sequence: Implementer makes changes → You review and document → 
 6. **Push and open PR** (REQUIRED):
    - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
    - Open phase PR with description referencing plan
-   - **Title**: `[<Work Title>] Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
+   - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
    - Include phase objectives, changes made, and testing performed
    - Pause for human review
    - Post a PR timeline comment summarizing the review, starting with `**🤖 Implementation Reviewer:**` and covering whether additional commits were made, verification status, and any next steps

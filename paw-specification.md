@@ -120,7 +120,16 @@ If responding to review comments, reviews each change to ensure it addresses the
 
 ### Documenter Agent
 
-Produces `Docs.md` and updates project docs according to the project guidance. Opens a docs PR.
+Produces comprehensive documentation in `Docs.md` that serves as the authoritative technical reference for the implemented work (feature, enhancement, bug fix, refactor, etc.). Updates project docs according to project guidance. Opens a docs PR.
+
+The `Docs.md` artifact is detailed, standalone documentation that:
+- Explains what was built, how it works, and why design decisions were made
+- Documents architecture and design decisions at a high level
+- Provides practical guidance on how to use and test the work
+- Focuses on concepts and user-facing behavior, not code reproduction
+- Serves as the go-to reference for understanding the work
+- Can be used as the basis for project-specific documentation generation
+- Remains the authoritative reference even in projects without feature-level documentation
 
 ### Status Agent
 
@@ -516,7 +525,7 @@ A critical quality of the Specification is **testability**—every requirement m
 - **Spec.md → SpecResearch.md**: Drives factual research questions about current system
 - **Spec.md → ImplementationPlan.md**: Defines the "what" that the plan translates into "how"
 - **Spec.md → Phase PRs**: Every PR is validated against these acceptance criteria
-- **Spec.md → Docs.md**: Documentation maps each acceptance criterion to evidence of completion
+- **Spec.md → Docs.md**: Documentation explains what was implemented and how it addresses requirements
 
 #### Quality Standards
 
@@ -843,87 +852,105 @@ The status section follows this format:
 
 ### Docs.md
 
-The **Documentation** artifact captures all documentation updates made during the Documentation Stage. Created by the Documenter Agent, it serves as both a record of what was documented and a reference for reviewers validating documentation completeness.
+The **Documentation** artifact is comprehensive technical documentation of the implemented work (feature, enhancement, bug fix, refactor, etc.). Created by the Documenter Agent, it serves as the authoritative reference for understanding what was built, how it works, and how to use it.
 
-**Purpose:** Ensure comprehensive documentation of the feature or task, including user-facing documentation, technical documentation, and any updates to existing documentation required by the changes.
+**Purpose:** Provide detailed, standalone documentation that serves as the primary technical reference for engineers and as the source material for any project-specific documentation updates. This is the go-to documentation for anyone needing to understand the work, regardless of whether the project maintains feature-level documentation elsewhere.
 
 **Location:** `/docs/agents/<target_branch>/Docs.md`
 
 **Dependencies:** Built upon the completed implementation phases, `ImplementationPlan.md`, `Spec.md`, and all merged Phase PRs.
 
-#### Core Principle: Complete Documentation Coverage
+#### Core Principle: Comprehensive Technical Reference
 
-The Docs.md artifact ensures that all aspects of the feature are properly documented according to project standards and guidelines:
+The Docs.md artifact is detailed documentation of the work itself, not a list of documentation changes. It explains what was built, how it works, why design decisions were made, and how to use it—focusing on high-level concepts and user guidance rather than restating code:
 
 **What it DOES include:**
-- Summary of all documentation changes made
-- Links to updated documentation files in the repository
-- User-facing documentation updates (if applicable)
-- Technical documentation updates (API docs, architecture docs, etc.)
-- Updated examples, tutorials, or guides
-- Changes to README, CHANGELOG, or similar files
-- Migration guides or upgrade notes (if applicable)
-- References to relevant acceptance criteria from Spec.md
+- Comprehensive overview of what was implemented and why
+- Architecture and design decisions with rationale
+- User-facing functionality and usage patterns
+- High-level explanation of key reusable components or APIs (not exhaustive code documentation)
+- Configuration options and integration points
+- How to test/exercise the work as a human user
+- Edge cases, limitations, and error handling (user perspective)
+- Practical code examples only when essential to demonstrate usage
+- Migration paths and compatibility concerns
 
 **What it does NOT include:**
-- The actual documentation content (that lives in project docs)
-- Code comments or docstrings (those are in the codebase)
-- Implementation details (those are in the code and ImplementationPlan.md)
+- Implementation code itself (that's in the codebase)
+- Detailed API documentation restating what's in code comments/docstrings
+- Internal implementation details already documented in code
+- Exhaustive test coverage checklists (tests document themselves)
+- Acceptance criteria verification (tracked in implementation artifacts)
+- Project documentation updates list (belongs in docs PR description)
+- Line-by-line code commentary or unnecessary code reproduction
 
 #### Structure & Content
 
-The document follows a structured format to ensure comprehensive coverage:
+The document follows a comprehensive format designed to be the authoritative technical reference:
 
-**Header**
-- **Feature/Task Name**: Title matching the specification and implementation plan
-- **Documentation Overview**: Brief summary of what was documented and why
+**Overview**
+- Summary of what was implemented (feature, enhancement, bug fix, refactor, etc.)
+- Purpose and problem being solved
+- High-level context and background
 
-**Documentation Changes**
+**Architecture and Design**
+- Architectural overview of the implementation
+- Key design decisions and their rationale
+- Component interactions and integration points
+- Data flow and state management
 
-**User-Facing Documentation**
-- List of files updated or created
-- Summary of content changes
-- Links to the updated documentation files
+**User Guide** (when applicable)
+- Prerequisites for using the implementation
+- Basic usage patterns with examples
+- Advanced usage scenarios
+- Configuration options and their effects
 
-**Technical Documentation**
-- API documentation updates
-- Architecture or design documentation changes
-- Configuration or deployment documentation updates
-- Links to the updated documentation files
+**Technical Reference** (when applicable)
+- High-level overview of reusable components, utilities, or APIs that other parts of the codebase may use
+- Focus only on components with external usage—omit internal implementation details
+- Conceptual explanation of key behaviors and algorithms (not code-level detail)
+- User-facing error conditions, messages, and recovery strategies
 
-**Examples and Guides**
-- New or updated code examples
-- Tutorial or walkthrough updates
-- Quick-start guide changes
+**Usage Examples** (when applicable)
+- Practical examples showing real-world usage patterns
+- Code snippets only when essential to demonstrate user-facing behavior or usage
+- Focus on what users need to know, not implementation details
 
-**Project Metadata**
-- README updates
-- CHANGELOG entries
-- Migration guides
-- Upgrade notes
+**Testing Guide**
+- Step-by-step guide for humans to exercise the feature/fix/enhancement
+- For bugs: how to verify the issue is fixed
+- For features: how to try out the new functionality
+- For enhancements: what changed and how to see the improvements
 
-**Acceptance Criteria Mapping**
-- Reference to each acceptance criterion from Spec.md
-- Documentation that addresses or evidences each criterion
-- Verification that all specified requirements are documented
+**Edge Cases and Limitations**
+- Known limitations and constraints users should be aware of
+- Edge case handling from a user perspective
+- Performance considerations
 
-**Review Checklist**
-- Documentation follows project style guidelines
-- All new features are documented
-- All breaking changes are documented
-- Examples are tested and working
-- Links are valid and point to correct locations
-- Documentation is clear and complete
+**Migration and Compatibility** (when applicable)
+- Migration paths for existing users
+- Breaking changes and compatibility notes
+- How to handle transitions
+
+#### Relationship to Project Documentation
+
+`Docs.md` serves different purposes depending on project documentation practices:
+
+- **Projects with feature-level documentation**: Docs.md provides detailed source material that can be adapted and integrated into project docs. Project docs may be less detailed or formatted differently.
+- **Projects without feature-level documentation**: Docs.md becomes the primary reference documentation that engineers consult to understand the work.
+- **All projects**: Docs.md ensures there's always comprehensive documentation of the work, even if project-specific docs are minimal.
 
 #### Quality Standards
 
 A well-formed Docs.md artifact:
-- **Is Comprehensive**: Covers all user-facing and technical documentation needs
-- **Is Traceable**: Maps back to acceptance criteria in Spec.md
+- **Is Comprehensive about concepts**: Detailed coverage of design decisions, architecture, and user-facing behavior
 - **Is Accurate**: Documentation matches actual implementation
-- **Is Complete**: No gaps in documentation coverage
-- **Is Consistent**: Follows project documentation standards and style
-- **Is Verified**: All examples and code snippets are tested and working
+- **Is User-focused**: Written for humans who need to understand and use the work
+- **Is Practical**: Emphasizes usage and testing guidance over code details
+- **Is Clear**: Understandable without needing to read the implementation
+- **Is Concise where appropriate**: References code components rather than reproducing them
+- **Is Example-appropriate**: Code examples only when essential to demonstrate usage
+- **Is Standalone**: Can be read and understood as the primary technical reference
 
 ### WorkflowContext.md
 

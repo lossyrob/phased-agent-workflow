@@ -44,7 +44,7 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 
 ### Stage 1: Creating the spec
 
-Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md`, and surface any remaining questions so downstream agents start with shared, testable requirements.
+Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md` (with a section for optional user-provided external knowledge), and surface any remaining questions so downstream agents start with shared, testable requirements.
 
 ![stage 1](./img/workflow-stage-1.png)
 
@@ -58,6 +58,14 @@ Code Research and Implementation Plan agents map the current codebase, break the
 
 Implementation and Implementation Review agents deliver each phase on its own branch, running checks, iterating on feedback, and keeping phase PRs small, auditable, and rewindable before they merge into the target branch.
 
+The implementation process uses a two-agent workflow:
+
+**Implementation Agent** — Makes code changes, runs automated checks, and addresses review comments by grouping related feedback into logical units and committing locally with messages that link to the comments being addressed.
+
+**Implementation Review Agent** — Reviews the Implementation Agent's work, suggests improvements, generates docstrings and code comments, pushes changes to open Phase PRs, and posts comprehensive summary comments documenting which review comments were addressed with which commits (enabling humans to manually resolve comments in the GitHub UI).
+
+This two-agent cycle continues until each Phase PR is approved and merged to the target branch.
+
 ![stage 3](./img/workflow-stage-3.png)
 
 ### Stage 4: Documentation
@@ -68,7 +76,9 @@ The Documenter agent produces comprehensive technical documentation in `Docs.md`
 
 ### Stage 5: Final PR
 
-The PR agent verifies all phase and docs work is merged, confirms artifacts are current, and crafts the final PR description with links, testing evidence, and rollout notes before handing off for human approval.
+The PR agent performs comprehensive pre-flight readiness checks (verifying all phase and docs PRs are merged, artifacts are current, and the target branch is up to date), crafts the final PR description with links to all artifacts and merged PRs, testing evidence, and deployment considerations, then creates the final PR and provides guidance on the merge process.
+
+If review comments exist on the final PR, the same two-agent workflow from Stage 3 applies: the Implementation Agent addresses comments with local commits on the target branch, and the Implementation Review Agent verifies changes, adds improvements, pushes commits, and posts summary comments for human reviewers.
 
 ![stage 5](./img/workflow-stage-5.png)
 

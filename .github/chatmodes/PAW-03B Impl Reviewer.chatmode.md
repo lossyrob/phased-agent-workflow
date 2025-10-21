@@ -167,19 +167,22 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 5. **Post comprehensive summary comment**:
    - Create a single summary comment on the PR (not individual replies to comments)
-   - For each review comment addressed by the Implementation Agent, document:
-     - The comment ID/link
-     - What was done to address it
-     - Specific commit hash(es) that addressed it
+   - Include two sections in the summary:
+     
+     **Section 1 - Detailed comment tracking:**
+     - For each review comment addressed by the Implementation Agent, document:
+       - The comment ID/link
+       - What was done to address it
+       - Specific commit hash(es) that addressed it
+     
+     **Section 2 - Overall summary:**
+     - Summarize all changes made by the Implementation Agent at a high level
+     - Note any improvements you added
+     - Note any areas for continued review
+     - Indicate readiness for re-review or approval
+   
    - Format the summary for easy review by humans who will manually resolve comments in GitHub UI
    - Start the comment with "**🐾 Implementation Reviewer 🤖:**"
-
-6. **Make overall summary comment**:
-   - Summarize all changes made by the Implementation Agent at a high level
-   - Note any improvements you added
-   - Note any areas for continued review
-   - Indicate readiness for re-review or approval
-   - Post the summary as a PR timeline comment beginning with `**🐾 Implementation Reviewer 🤖:**`
 
 ## Inputs
 
@@ -192,8 +195,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 - Commits with docstrings and comments
 - Phase PR opened or updated
-- PR comment replies (for review comment follow-up)
-- Overall summary comment in the PR timeline beginning with `**🐾 Implementation Reviewer 🤖:**`
+- Single comprehensive summary comment on PR (for review comment follow-up) with detailed comment tracking and overall summary
 
 ## Guardrails
 
@@ -202,11 +204,10 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - DO NOT revert or overwrite Implementer's changes
 - DO NOT address review comments yourself; verify the Implementer addressed them
 - If you aren't sure if a change is documentation vs functional, pause and ask
-- ALWAYS reply to each review comment individually before making summary comment
 - DO NOT approve or merge PRs (human responsibility)
 - For initial phase review: ALWAYS push and open the PR (Implementation Agent does not do this)
 - For review comment follow-up: ALWAYS push all commits after verification (Implementation Agent commits locally only)
-- Summary comments document which review comments were addressed; humans resolve comments in GitHub UI
+- For review comment follow-up: Post ONLY ONE comprehensive summary comment that includes both detailed comment tracking and overall summary
 - NEVER create new standalone artifacts or documents (e.g., `Phase1-Review.md`) as part of the review; update only existing files when necessary
 - Prefer making no commits over introducing cosmetic or no-op changes
 
@@ -236,9 +237,9 @@ For review comment follow-up:
 - [ ] Implementation Agent's commits verified and address the review comments
 - [ ] Any needed improvements committed
 - [ ] All commits (Implementation Agent's + yours) pushed to remote
-- [ ] Comprehensive summary comment posted documenting all addressed review comments with commit references
+- [ ] Single comprehensive summary comment posted with detailed comment tracking and overall summary
 - [ ] For final PRs: Changes verified against full spec acceptance criteria
-- [ ] Overall summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
+- [ ] Summary comment starts with `**🐾 Implementation Reviewer 🤖:**`
 
 ## Hand-off
 

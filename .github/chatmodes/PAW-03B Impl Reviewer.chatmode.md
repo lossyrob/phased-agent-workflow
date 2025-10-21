@@ -88,8 +88,8 @@ You work in sequence: Implementer makes changes → You review and document → 
 2. You: Review, add docs, commit docs, **push everything**, open PR
 
 ### Review Comment Workflow:
-1. Implementation Agent: Addresses comments, commits, **pushes all commits at once**
-2. You: Verify changes on PR, reply to each comment, make summary comment
+1. Implementation Agent: Addresses comments in groups, commits each group locally with links to comments
+2. You: Verify changes, add improvements if needed, **push all commits**, reply to each comment, make summary comment
 
 ## Process Steps
 
@@ -145,29 +145,34 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 ### For Review Comment Follow-up
 
-1. **Verify branch is up to date**:
+1. **Verify you're on the correct branch**:
    - Confirm you're on the correct branch (phase branch for phase PRs, target branch for final PRs)
-   - Pull latest changes from the appropriate branch
-   - Verify Implementation Agent's commits are present
+   - Verify Implementation Agent's commits are present locally (they have NOT been pushed yet)
 
 2. **Read the review comments and Implementer's changes**:
    - Review each unresolved review comment on the PR
-   - Read Implementer's commits addressing comments
+   - Read Implementer's commits addressing comments (use `git log` or `git diff`)
    - For final PRs: Verify changes against Spec.md acceptance criteria and cross-phase consistency
    - Verify each change addresses the concern effectively
 
-3. **Add any additional documentation if needed**:
-   - If the Implementation Agent's changes need more documentation
-   - Commit and push documentation updates
+3. **Add any additional improvements if needed**:
+   - If the Implementation Agent's changes need more documentation, add docstrings/comments
+   - If the Implementation Agent's changes don't fully address a comment, make necessary improvements
+   - Commit any improvements with clear messages
 
-4. **Reply comment-by-comment on PR**:
+4. **Push all commits**:
+   - Push both Implementation Agent's commits and any improvement commits
+   - `git push <remote> <branch_name>`
+
+5. **Reply comment-by-comment on PR**:
    - For each addressed comment, verify the fix
    - Reply on PR explaining what was done
-   - Reference specific commit hashes from the Implementation Agent
+   - Reference specific commit hashes from the Implementation Agent (and your improvement commits if any)
    - When commenting, start comments with "**🐾 Implementation Reviewer 🤖:**"
 
-5. **Make overall summary comment**:
+6. **Make overall summary comment**:
    - Summarize all changes made by the Implementation Agent
+   - Note any improvements you added
    - Note any areas for continued review
    - Indicate readiness for re-review or approval
    - Post the summary as a PR timeline comment beginning with `**🐾 Implementation Reviewer 🤖:**`
@@ -196,7 +201,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - ALWAYS reply to each review comment individually before making summary comment
 - DO NOT approve or merge PRs (human responsibility)
 - For initial phase review: ALWAYS push and open the PR (Implementation Agent does not do this)
-- For review comment follow-up: Implementation Agent has already pushed; you only push if you add documentation
+- For review comment follow-up: ALWAYS push all commits after verification (Implementation Agent commits locally only)
 - NEVER create new standalone artifacts or documents (e.g., `Phase1-Review.md`) as part of the review; update only existing files when necessary
 - Prefer making no commits over introducing cosmetic or no-op changes
 
@@ -223,6 +228,9 @@ Before pushing:
 - [ ] Overall PR summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
 
 For review comment follow-up:
+- [ ] Implementation Agent's commits verified and address the review comments
+- [ ] Any needed improvements committed
+- [ ] All commits (Implementation Agent's + yours) pushed to remote
 - [ ] Every review comment has an individual reply
 - [ ] Each reply references specific commits
 - [ ] For final PRs: Changes verified against full spec acceptance criteria
@@ -246,11 +254,15 @@ The PR is ready for human review. When review comments are received, ask the Imp
 
 After review comment follow-up:
 ```
-Review Comments Verified - Replies Posted
+Review Comments Verified - Changes Pushed and Replies Posted
 
-I've verified the Implementation Agent's response to all review comments and posted individual replies on the PR.
+I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted individual replies on the PR.
 
-All changes made by the Implementation Agent successfully address the review comments. The PR is ready for re-review.
+Changes pushed:
+- Implementation Agent's commits addressing review comments
+- [My improvement commits if any]
+
+All changes successfully address the review comments. The PR is ready for re-review.
 ```
 
 Next: Human reviews PR. If approved, merge and proceed to next phase or next stage when complete.

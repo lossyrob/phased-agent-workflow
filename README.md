@@ -16,7 +16,7 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 3. **Code Research Agent** — maps relevant code areas and dependencies.
 4. **Implementation Plan Agent** — writes a detailed, multi-phase plan of work.
 5. **Implementation Agents** — executes plan phases, managing commits, PRs, and review loops. Split into two steps to allow agentic review and documentation improvements.
-6. **Documenter Agent** — creates technical and user documentation post-implementation.
+6. **Documenter Agent** — produces comprehensive technical documentation (`Docs.md`) that serves as the authoritative reference for understanding what was built, how it works, and how to use it. Updates project documentation according to project guidance.
 7. **PR/Status Agent** — maintains GitHub Issues and PR descriptions, ensuring everything stays in sync and clear.
 
 ### Characteristics
@@ -62,7 +62,7 @@ Implementation and Implementation Review agents deliver each phase on its own br
 
 ### Stage 4: Documentation
 
-The Documenter agent consolidates release notes and user-facing updates into `Docs.md`, refreshes any relevant guides, and opens a docs PR so documentation evolves in lockstep with the code.
+The Documenter agent produces comprehensive technical documentation in `Docs.md` that explains what was built, how it works, why design decisions were made, and how to use it. It also updates project-specific documentation according to project guidance and opens a docs PR so documentation evolves in lockstep with the code.
 
 ![stage 4](./img/workflow-stage-4.png)
 

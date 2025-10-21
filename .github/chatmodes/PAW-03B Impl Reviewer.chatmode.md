@@ -121,19 +121,25 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Error handling completeness
    - Test coverage adequacy
 
-4. **Generate documentation**:
+4. **Run tests to verify correctness** (REQUIRED):
+   - Run the project's test suite to verify all tests pass
+   - If tests fail, this is a BLOCKER - fix them!
+   - Verify that new functionality has corresponding tests
+   - Check that test coverage is adequate for the changes
+
+5. **Generate documentation**:
    - Add docstrings to new functions/classes
    - Add inline comments for complex logic
    - Ensure public APIs documented
 
-5. **Commit improvements**:
+6. **Commit improvements**:
    - ONLY commit documentation/polish changes
    - Do NOT modify functional code (that's the Implementation Agent's role)
    - If no documentation or polish updates are needed, prefer making **no commits** (leave the code untouched rather than introducing no-op edits)
    - Use clear commit messages, e.g., `docs: add docstrings for <context>`
    - **Selective staging**: Use `git add <file>` for each documentation file; verify with `git diff --cached` before committing
 
-6. **Push and open PR** (REQUIRED):
+7. **Push and open PR** (REQUIRED):
    - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
    - Open phase PR with description referencing plan
    - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
@@ -156,16 +162,26 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - For final PRs: Verify changes against Spec.md acceptance criteria and cross-phase consistency
    - Verify each change addresses the concern effectively
 
-3. **Add any additional improvements if needed**:
+3. **Run tests to verify correctness** (REQUIRED):
+   - Run the project's test suite to verify all tests pass
+   - If tests fail, identify which tests are broken and why, and fix it!
+   - Check if the Implementation Agent updated tests appropriately when changing functional code
+   - **CRITICAL**: If functional code changed but corresponding tests were not updated, this is a BLOCKER
+   - If tests fail or are missing updates:
+     - DO NOT push commits
+     - DO NOT post summary comment
+     - Fix them!
+
+4. **Add any additional improvements if needed**:
    - If the Implementation Agent's changes need more documentation, add docstrings/comments
    - If the Implementation Agent's changes don't fully address a comment, make necessary improvements
    - Commit any improvements with clear messages
 
-4. **Push all commits**:
+5. **Push all commits**:
    - Push both Implementation Agent's commits and any improvement commits
    - `git push <remote> <branch_name>`
 
-5. **Post comprehensive summary comment**:
+6. **Post comprehensive summary comment**:
    - Create a single summary comment on the PR (not individual replies to comments)
    - Include two sections in the summary:
      
@@ -223,6 +239,8 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 ## Quality Checklist
 
 Before pushing:
+- [ ] All tests pass (run test suite to verify)
+- [ ] New functionality has corresponding tests
 - [ ] All public functions/classes have docstrings
 - [ ] Complex logic has explanatory comments
 - [ ] Commit messages clearly describe documentation changes
@@ -234,6 +252,8 @@ Before pushing:
 - [ ] Overall PR summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
 
 For review comment follow-up:
+- [ ] All tests pass
+- [ ] If functional code changed, verify corresponding tests were updated
 - [ ] Implementation Agent's commits verified and address the review comments
 - [ ] Any needed improvements committed
 - [ ] All commits (Implementation Agent's + yours) pushed to remote

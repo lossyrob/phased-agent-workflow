@@ -150,7 +150,8 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Verify Implementation Agent's commits are present locally (they have NOT been pushed yet)
 
 2. **Read the review comments and Implementer's changes**:
-   - Review each unresolved review comment on the PR
+   - Review all review comments on the PR and their conversation threads
+   - Identify which comments the Implementation Agent addressed based on commit messages and code changes
    - Read Implementer's commits addressing comments (use `git log` or `git diff`)
    - For final PRs: Verify changes against Spec.md acceptance criteria and cross-phase consistency
    - Verify each change addresses the concern effectively
@@ -164,14 +165,17 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Push both Implementation Agent's commits and any improvement commits
    - `git push <remote> <branch_name>`
 
-5. **Reply comment-by-comment on PR**:
-   - For each addressed comment, verify the fix
-   - Reply on PR explaining what was done
-   - Reference specific commit hashes from the Implementation Agent (and your improvement commits if any)
-   - When commenting, start comments with "**🐾 Implementation Reviewer 🤖:**"
+5. **Post comprehensive summary comment**:
+   - Create a single summary comment on the PR (not individual replies to comments)
+   - For each review comment addressed by the Implementation Agent, document:
+     - The comment ID/link
+     - What was done to address it
+     - Specific commit hash(es) that addressed it
+   - Format the summary for easy review by humans who will manually resolve comments in GitHub UI
+   - Start the comment with "**🐾 Implementation Reviewer 🤖:**"
 
 6. **Make overall summary comment**:
-   - Summarize all changes made by the Implementation Agent
+   - Summarize all changes made by the Implementation Agent at a high level
    - Note any improvements you added
    - Note any areas for continued review
    - Indicate readiness for re-review or approval
@@ -202,6 +206,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - DO NOT approve or merge PRs (human responsibility)
 - For initial phase review: ALWAYS push and open the PR (Implementation Agent does not do this)
 - For review comment follow-up: ALWAYS push all commits after verification (Implementation Agent commits locally only)
+- Summary comments document which review comments were addressed; humans resolve comments in GitHub UI
 - NEVER create new standalone artifacts or documents (e.g., `Phase1-Review.md`) as part of the review; update only existing files when necessary
 - Prefer making no commits over introducing cosmetic or no-op changes
 
@@ -231,11 +236,9 @@ For review comment follow-up:
 - [ ] Implementation Agent's commits verified and address the review comments
 - [ ] Any needed improvements committed
 - [ ] All commits (Implementation Agent's + yours) pushed to remote
-- [ ] Every review comment has an individual reply
-- [ ] Each reply references specific commits
+- [ ] Comprehensive summary comment posted documenting all addressed review comments with commit references
 - [ ] For final PRs: Changes verified against full spec acceptance criteria
 - [ ] Overall summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
-- [ ] No unaddressed review comments remain
 
 ## Hand-off
 
@@ -254,15 +257,20 @@ The PR is ready for human review. When review comments are received, ask the Imp
 
 After review comment follow-up:
 ```
-Review Comments Verified - Changes Pushed and Replies Posted
+Review Comments Verified - Changes Pushed and Summary Posted
 
-I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted individual replies on the PR.
+I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted a comprehensive summary documenting which comments were addressed.
 
 Changes pushed:
 - Implementation Agent's commits addressing review comments
 - [My improvement commits if any]
 
-All changes successfully address the review comments. The PR is ready for re-review.
+Summary comment on PR details:
+- Which review comments were addressed
+- Commits that addressed each comment
+- Any improvements made
+
+The human reviewer can now review the changes and manually resolve comments in the GitHub UI. The PR is ready for re-review.
 ```
 
-Next: Human reviews PR. If approved, merge and proceed to next phase or next stage when complete.
+Next: Human reviews PR, resolves addressed comments in GitHub UI. If approved, merge and proceed to next phase or next stage when complete.

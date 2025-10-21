@@ -115,7 +115,7 @@ For phase work, creates the implementation branch locally if it does not already
 - Commits changes with clear, descriptive messages.
 - Pushes the implementation branch and opens Phase PRs.
 
-When reviewing addressed comments (on phase PRs or final PR), verifies the Implementation Agent's commits address each comment, adds any needed improvements, pushes all commits, and replies comment-by-comment on the PR. Makes an overall review comment summarizing the changes.
+When reviewing addressed comments (on phase PRs or final PR), verifies the Implementation Agent's commits address each comment, adds any needed improvements, pushes all commits, and posts a comprehensive summary comment documenting which review comments were addressed with which commits. Humans use this summary to manually resolve comments in the GitHub UI.
 
 ### Documenter Agent
 
@@ -300,10 +300,10 @@ The implementation process follows a cycle for each phase: Implementation Agent 
 - Once the review is complete, the Implementation Review Agent will push the changes to the implementation branch and open or update the Phase PR.
 - The developer will review the Phase PR and provide feedback or request changes as needed.
 - The developer will ask the Implementation Agent to address any review comments.
-- The Implementation Agent will first update the local branch from the remote to pull any commits added by reviewers, then group related review comments and address each group sequentially with focused commits that link to the comments. Commits are made locally only.
+- The Implementation Agent will first update the local branch from the remote to pull any commits added by reviewers, then read all review comments and determine which still need work (by checking commit history and conversation threads). It groups related comments that need addressing and addresses each group sequentially with focused commits that link to the comments. Commits are made locally only.
 - The developer will then ask the Implementation Review Agent to review the changes made by the Implementation Agent.
-- The Implementation Review Agent will review each change to ensure it addresses the comment, add any needed improvements, push all commits to the branch, and reply comment-by-comment on the PR.
-- Once the review is complete, the Implementation Review Agent will make an overall review comment summarizing the changes.
+- The Implementation Review Agent will review each change to ensure it addresses the comments, add any needed improvements, push all commits to the branch, and post a comprehensive summary comment documenting which review comments were addressed with which commits.
+- The developer will review the PR, use the summary to manually resolve addressed comments in the GitHub UI, and either approve or request further changes.
 - The developer will review the PR again and either approve it or request further changes.
 - This process will continue until the Phase PR is approved and ready to merge.
 - Once the Phase PR is approved, the developer will merge it and update the local target branch.
@@ -331,17 +331,17 @@ Initial Phase Development:
 
 Review Comment Follow-up:
 ┌─────────────────────────┐
-│ Implementation Agent    │ Groups comments, addresses each group
-│ (Forward Momentum)      │ ↓ Commits locally, signals ready
-└─────────────────────────┘
+│ Implementation Agent    │ Determines which comments need work
+│ (Forward Momentum)      │ Groups comments, addresses each group
+└─────────────────────────┘ ↓ Commits locally, signals ready
 
 ┌─────────────────────────┐
 │ Implementation Review   │ Verifies changes, adds improvements
-│ (Quality Gate)          │ ↓ Pushes all commits, replies to comments
-└─────────────────────────┘
+│ (Quality Gate)          │ Pushes all commits
+└─────────────────────────┘ ↓ Posts summary of addressed comments
 
 ┌─────────────────────────┐
-│ Human Re-review         │
+│ Human Re-review         │ Uses summary to resolve comments in UI
 └─────────────────────────┘
 
 ---
@@ -405,14 +405,14 @@ Review Comment Follow-up:
 
 Final PR Review Comment Follow-up:
 ┌─────────────────────────┐
-│ Implementation Agent    │ Groups comments, addresses on target branch
-│ (Forward Momentum)      │ ↓ Commits locally, signals ready
-└─────────────────────────┘
+│ Implementation Agent    │ Determines which comments need work
+│ (Forward Momentum)      │ Groups comments, addresses on target branch
+└─────────────────────────┘ ↓ Commits locally, signals ready
 
 ┌─────────────────────────┐
 │ Implementation Review   │ Verifies changes, adds improvements
-│ (Quality Gate)          │ ↓ Pushes all commits, replies to comments
-└─────────────────────────┘
+│ (Quality Gate)          │ Pushes all commits
+└─────────────────────────┘ ↓ Posts summary of addressed comments
 
 ┌─────────────────────────┐
 │ Human Re-review         │

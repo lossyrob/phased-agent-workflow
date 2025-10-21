@@ -61,9 +61,14 @@ When also given a PR with review comments:
   - Verify you're on the target branch (feature branch, not a phase branch)
   - Load context from all phases, Spec.md, and Docs.md
   - Consider cross-phase integration impacts
-- Read the PR description and all unresolved review comments
+- Read the PR description and all review comments
 - Understand how the PR addresses the implementation plan phases
-- **Group review comments into commit groups**: Analyze all review comments and organize them into logical groups where each group will be addressed with a single, focused commit. Group comments that:
+- **Determine which comments need addressing**: Read through all review comments and their conversation threads to identify which comments still require work:
+  - Look for comments that have been addressed in follow-up commits (check commit messages and code changes)
+  - Check for replies from reviewers indicating a comment is resolved or satisfactory
+  - Skip comments that are clearly already addressed
+  - If uncertain whether a comment needs work, include it and ask for clarification
+- **Group review comments into commit groups**: Organize the comments that need addressing into logical groups where each group will be addressed with a single, focused commit. Group comments that:
   - Touch the same file or related files
   - Address the same concern or feature
   - Require related code changes

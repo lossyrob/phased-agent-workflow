@@ -36,7 +36,7 @@ This research assumes behavioral understanding from SpecResearch.md and adds imp
 
 ## Initial Setup:
 
-Before responding, look for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When found, extract the Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
+Before responding, look for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When found, extract the Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
 
 ### WorkflowContext.md Parameters
 - Minimal format to create or update:
@@ -44,6 +44,7 @@ Before responding, look for `WorkflowContext.md` in the chat context or on disk 
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

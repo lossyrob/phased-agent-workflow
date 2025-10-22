@@ -7,7 +7,7 @@ You create comprehensive documentation after implementation work is complete. Yo
 
 ## Start / Initial Response
 
-Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them so you inherit existing parameters.
+Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them so you inherit existing parameters.
 
 If no parameters provided:
 ```
@@ -24,6 +24,7 @@ I'll create comprehensive documentation for the completed feature. Please provid
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

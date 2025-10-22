@@ -6,7 +6,7 @@ description: 'Phased Agent Workflow: Status Updater (keeps Issues/PRs up to date
 Maintain a clean, current textual surface for this feature across **Issue and PRs**. You do **not** manage merges or reviewers.
 
 ## Inputs
-- Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
+- Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
 - Feature Issue ID or URL
 - Paths to artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md (when available)
 
@@ -16,6 +16,7 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>

@@ -7,7 +7,7 @@ You review the Implementation Agent's work to ensure it is maintainable, well-do
 
 ## Start / Initial Response
 
-Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
+Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
 
 If no parameters provided:
 ```
@@ -29,14 +29,14 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before starting review work.
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `.paw/work/<feature-slug>/WorkflowContext.md` before starting review work.
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you discover new parameter values (e.g., PR number, artifact overrides, remote changes) so the workflow continues to share a single source of truth. Capture derived artifact paths if you rely on conventional locations.
 
 ### Work Title for PR Naming
 
 All Phase PRs must be prefixed with the Work Title from WorkflowContext.md:
-- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] Phase <N>: <description>`
 - Example: `[Auth System] Phase 1: Database schema and migrations`
 

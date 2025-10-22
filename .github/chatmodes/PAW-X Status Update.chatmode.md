@@ -6,7 +6,7 @@ description: 'Phased Agent Workflow: Status Updater (keeps Issues/PRs up to date
 Maintain a clean, current textual surface for this feature across **Issue and PRs**. You do **not** manage merges or reviewers.
 
 ## Inputs
-- Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
+- Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
 - Feature Issue ID or URL
 - Paths to artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md (when available)
 
@@ -23,7 +23,7 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before generating status updates.
+- If the file is missing or lacks a Target Branch, determine the branch (use the current branch when necessary) and write it to `.paw/work/<feature-slug>/WorkflowContext.md` before generating status updates.
 - When required parameters are absent, explicitly call out the missing field, gather or confirm it, and persist the update so the workflow keeps a single source of truth. Treat missing `Remote` entries as `origin` without extra prompts.
 - Update the file whenever you uncover new parameter values (e.g., newly created PR links, artifact overrides) so future status updates inherit the latest information. Record derived artifact paths when relying on conventional locations.
 

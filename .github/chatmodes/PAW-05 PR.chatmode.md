@@ -7,7 +7,7 @@ You open the final PR to main after all other stages are complete and validated.
 
 ## Start / Initial Response
 
-Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
+Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
 
 If no parameters provided:
 ```
@@ -32,14 +32,14 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before running pre-flight checks.
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `.paw/work/<feature-slug>/WorkflowContext.md` before running pre-flight checks.
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
 
 ### Work Title for PR Naming
 
 The Final PR must be prefixed with the Work Title from WorkflowContext.md:
-- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] <description>`
 - Example: `[Auth System] Add user authentication system`
 
@@ -62,7 +62,7 @@ Before creating the PR, verify the following and report status:
 - [ ] Target branch exists and has commits
 
 ### 2. Documentation Complete
-- [ ] Docs.md exists at `docs/agents/<target_branch>/Docs.md`
+- [ ] Docs.md exists at `.paw/work/<feature-slug>/Docs.md`
 - [ ] Docs PR merged to target branch
 - [ ] CHANGELOG updated (if applicable)
 

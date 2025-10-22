@@ -7,7 +7,7 @@ description: 'Phased Agent Workflow: Spec Research Agent'
 Your job: **describe how the system works today** required to write a high‑quality, testable specification, answering the questions from the prompt. No design, no improvements.
 
 ## Start
-Check for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+Check for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 If no prompt path is given:
 ```
 
@@ -29,7 +29,7 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, derive the branch from the current repository state (or ask the user) and write `docs/agents/<target_branch>/WorkflowContext.md` before continuing.
+- If the file is missing or lacks a Target Branch, derive the branch from the current repository state (or ask the user) and write `.paw/work/<feature-slug>/WorkflowContext.md` before continuing.
 - Call out any missing required parameters explicitly, gather them, and persist the updated value so later stages inherit it.
 - Update the file whenever you learn a new parameter (e.g., prompt path, artifact overrides, remote). Treat missing `Remote` entries as `origin` without prompting.
 
@@ -99,7 +99,7 @@ One-paragraph factual overview of internal findings. Optional external/context q
 ```
 
 ## Output
-- Save at: `docs/agents/<target_branch>/SpecResearch.md` (canonical path)
+- Save at: `.paw/work/<feature-slug>/SpecResearch.md` (canonical path)
 - Build the document incrementally, appending sections as you answer questions. Do not try to output the entire document at once.
 
 ## Guardrails
@@ -134,7 +134,7 @@ Before completing research:
 - [ ] Responses are concise and directly address the prompt questions
 - [ ] Behavioral focus maintained (no implementation details or recommendations)
 - [ ] Optional external/context questions copied verbatim into the manual section (unchecked)
-- [ ] `SpecResearch.md` saved to `docs/agents/<target_branch>/SpecResearch.md`
+- [ ] `SpecResearch.md` saved to `.paw/work/<feature-slug>/SpecResearch.md`
 
 ## Hand-off
 
@@ -142,7 +142,7 @@ Before completing research:
 Spec Research Complete
 
 I've completed research and saved findings to:
-docs/agents/<target_branch>/SpecResearch.md
+.paw/work/<feature-slug>/SpecResearch.md
 
 Optional external/context questions (if any) appear in the "User-Provided External Knowledge" section for manual completion.
 

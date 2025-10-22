@@ -1022,8 +1022,6 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 
 #### Usage
 
-#### Usage
-
 Agents automatically create WorkflowContext.md when first invoked with parameters, or read it from chat context to extract values. Include in context for subsequent stages to avoid re-entering parameters.
 
 ---

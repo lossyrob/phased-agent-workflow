@@ -10,7 +10,7 @@ You are tasked with implementing an approved technical implementation plan. Thes
 If no implementation plan path provided, ask for one.
 
 Before reading other files or taking action:
-0. Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
+0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
 1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
 2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
@@ -28,13 +28,22 @@ Before reading other files or taking action:
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with implementation.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding with implementation
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
 - Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
 

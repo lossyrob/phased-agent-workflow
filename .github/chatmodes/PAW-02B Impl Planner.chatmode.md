@@ -7,7 +7,7 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ## Initial Response
 
-First, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
+First, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
 
 When this agent is invoked:
 
@@ -41,13 +41,22 @@ Then wait for the user's input.
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the branch (use the current branch where appropriate), then write `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly call out which field is missing, gather or confirm it, and persist the update. Treat missing `Remote` entries as `origin` without prompting.
 - Update the file whenever you discover a new parameter (e.g., Planning PR URL, artifact overrides, remote). Record derived artifact paths when relying on default conventions so downstream agents inherit an authoritative record.
 
@@ -69,10 +78,10 @@ When given a Planning PR with review comments:
 2. **Read and understand the review context**:
    - Read the Planning PR description and ALL unresolved review comments
    - Read the current versions of all planning artifacts:
-     - `docs/agents/<target_branch>/Spec.md`
-     - `docs/agents/<target_branch>/SpecResearch.md`
-     - `docs/agents/<target_branch>/CodeResearch.md`
-     - `docs/agents/<target_branch>/ImplementationPlan.md`
+     - `.paw/work/<feature-slug>/Spec.md`
+     - `.paw/work/<feature-slug>/SpecResearch.md`
+     - `.paw/work/<feature-slug>/CodeResearch.md`
+     - `.paw/work/<feature-slug>/ImplementationPlan.md`
    - Understand which artifact(s) each comment applies to
 
 3. **Create TODOs for each review comment**:
@@ -90,7 +99,7 @@ When given a Planning PR with review comments:
    - For each comment:
      - Perform any needed additional research
      - Update the affected artifact(s) to address the concern
-     - Stage ONLY the changed files: `git add docs/agents/<target_branch>/<file>`
+     - Stage ONLY the changed files: `git add .paw/work/<feature-slug>/<file>`
      - Verify staged changes: `git diff --cached`
      - Commit with a message referencing the review comment
      - Use `github mcp` tools to push the commit
@@ -224,7 +233,7 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Incrementally write the plan** to `docs/agents/<target_branch>/ImplementationPlan.md`
+1. **Incrementally write the plan** to `.paw/work/<feature-slug>/ImplementationPlan.md`
    - Write the outline, and then one phase at a time
 2. **Use this template structure**:
 
@@ -319,8 +328,8 @@ After structure approval:
 ## References
 
 - Original Issue: [link or 'none']
-- Spec: `docs/agents/<target_branch>/Spec.md`
-- Research: `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`
+- Spec: `.paw/work/<feature-slug>/Spec.md`
+- Research: `.paw/work/<feature-slug>/SpecResearch.md`, `.paw/work/<feature-slug>/CodeResearch.md`
 - Similar implementation: `[file:line]`
 ````
 
@@ -331,7 +340,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 1. **Present the draft plan location**:
    ```
    I've created the initial implementation plan at:
-   `docs/agents/<target_branch>/ImplementationPlan.md`
+   `.paw/work/<feature-slug>/ImplementationPlan.md`
 
    Please review it and let me know:
    - Are the phases properly scoped?
@@ -350,14 +359,14 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 5. **Commit, push, and open/update the Planning PR** (Initial Planning Only):
     - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
-    - Stage ONLY planning artifacts: `git add docs/agents/<target_branch>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files you created
+    - Stage ONLY planning artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files you created
     - Verify staged changes before committing: `git diff --cached`
     - Commit with a descriptive message
     - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
     - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
        - **Title**: `[<Work Title>] Planning: <brief description>` where Work Title comes from WorkflowContext.md
        - Summary of the spec, research, and planning deliverables
-       - Links to `docs/agents/<target_branch>/Spec.md`, `docs/agents/<target_branch>/SpecResearch.md`, `docs/agents/<target_branch>/CodeResearch.md`, and `docs/agents/<target_branch>/ImplementationPlan.md`
+       - Links to `.paw/work/<feature-slug>/Spec.md`, `.paw/work/<feature-slug>/SpecResearch.md`, `.paw/work/<feature-slug>/CodeResearch.md`, and `.paw/work/<feature-slug>/ImplementationPlan.md`. Read Feature Slug from WorkflowContext.md to construct links.
        - Outstanding questions or risks that require human attention (should be zero)
        - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
     - Pause for human review of the Planning PR before proceeding to downstream stages.
@@ -449,7 +458,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 Implementation Plan Complete - Planning PR Ready
 
 I've authored the implementation plan at:
-docs/agents/<target_branch>/ImplementationPlan.md
+.paw/work/<feature-slug>/ImplementationPlan.md
 
 Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
 

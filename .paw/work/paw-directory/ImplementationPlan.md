@@ -788,11 +788,11 @@ Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> pla
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] PAW-02B Planning PR links use new pattern: `grep "\.paw/work/<feature-slug>" .github/chatmodes/PAW-02B*.chatmode.md | grep -c "Links to"` returns 1
-- [ ] PAW-04 Docs PR links use new pattern: `grep "\.paw/work/<feature-slug>" .github/chatmodes/PAW-04*.chatmode.md` returns matches
-- [ ] PAW-05 Final PR artifact links use new pattern: `grep -A5 "## Artifacts" .github/chatmodes/PAW-05*.chatmode.md | grep -c ".paw/work"` returns 5
-- [ ] No remaining old-pattern PR links: `grep "docs/agents/<target_branch>" .github/chatmodes/PAW-*.chatmode.md | grep -i "link\|PR"` returns 0 matches
-- [ ] All PR-generating agents read Feature Slug: `grep -E "(PAW-02B|PAW-03B|PAW-04|PAW-05)" .github/chatmodes/*.chatmode.md | grep -c "Read Feature Slug"` returns 4+
+- [x] PAW-02B Planning PR links use new pattern: `grep "\.paw/work/<feature-slug>" .github/chatmodes/PAW-02B*.chatmode.md | grep -c "Links to"` returns 1
+- [x] PAW-04 Docs PR links use new pattern: `grep "\.paw/work/<feature-slug>" .github/chatmodes/PAW-04*.chatmode.md` returns matches
+- [x] PAW-05 Final PR artifact links use new pattern: `grep -A5 "## Artifacts" .github/chatmodes/PAW-05*.chatmode.md | grep -c ".paw/work"` returns 5
+- [x] No remaining old-pattern PR links: `grep "docs/agents/<target_branch>" .github/chatmodes/PAW-*.chatmode.md | grep -i "link\|PR"` returns 0 matches
+- [x] All PR-generating agents read Feature Slug: `grep -E "(PAW-02B|PAW-03B|PAW-04|PAW-05)" .github/chatmodes/*.chatmode.md | grep -c "Read Feature Slug"` returns 4+
 
 #### Manual Verification:
 - [ ] Run Planning PR generation → verify artifact links point to .paw/work/<slug>/
@@ -801,6 +801,23 @@ Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> pla
 - [ ] Run Final PR generation → verify all 5 artifact links use .paw/work/<slug>/ pattern
 - [ ] Verify all PRs use Work Title in title (not Feature Slug)
 - [ ] Confirm links are clickable and resolve to correct files in PR preview
+
+**Phase 4 Complete**: All PR description artifact link updates completed successfully. Updated PR generation logic across all 4 PR-generating agents to use `.paw/work/<feature-slug>/` pattern instead of `docs/agents/<target_branch>/`. All automated verification checks pass:
+- PAW-02B Planning PR links already updated in Phase 2, verified with "Read Feature Slug" instruction (1 match)
+- PAW-03B Phase PR generation now includes explicit artifact link section with ImplementationPlan.md link
+- PAW-04 Documentation PR generation now includes artifact links for Docs.md and ImplementationPlan.md
+- PAW-05 Final PR Artifacts section template updated with all 5 artifact links using new path pattern
+- All 4 PR-generating agents include "Read Feature Slug from WorkflowContext.md" instruction (4 total matches)
+- No remaining old-pattern PR links found in any chatmode file
+
+All PR descriptions now construct artifact links by reading Feature Slug from WorkflowContext.md and substituting into `.paw/work/<feature-slug>/<Artifact>.md` pattern. PR titles continue to use Work Title (not Feature Slug) for consistency with user-facing naming.
+
+All changes committed to feature/move-to-paw-directory_phase4 branch.
+
+Manual verification deferred to human testing during PR review. Reviewers should verify:
+- PR artifact links are constructed correctly using Feature Slug
+- Links resolve to correct files in PR preview
+- PR titles use Work Title consistently across all PR types
 
 ---
 

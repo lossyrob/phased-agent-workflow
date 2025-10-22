@@ -36,7 +36,7 @@ This research assumes behavioral understanding from SpecResearch.md and adds imp
 
 ## Initial Setup:
 
-Before responding, look for `WorkflowContext.md` in the chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When found, extract the Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
+Before responding, look for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When found, extract the Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
 
 ### WorkflowContext.md Parameters
 - Minimal format to create or update:
@@ -51,7 +51,7 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with research.
+- If the file is missing or lacks a Target Branch, determine the branch (use the current branch when necessary) and write it to `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding with research.
 - Explicitly mention any missing required parameters, gather or infer them, and persist the update for later stages. Treat missing `Remote` entries as `origin` without prompting the user.
 - Update the file whenever you learn a new parameter (e.g., artifact overrides, remote name, additional inputs) so downstream agents inherit an authoritative record. Record derived artifact paths when you rely on conventional locations.
 
@@ -97,13 +97,13 @@ of the system in anticipation of an implementation plan to satisfy that spec.
      - Git commit hash: `git rev-parse HEAD`
      - Current branch name: `git branch --show-current`
      - Repository name: `basename $(git rev-parse --show-toplevel)`
-   - Save the research document to the canonical path: `docs/agents/<target_branch>/CodeResearch.md`
-     - Replace `<target_branch>` with the active feature branch (example: `feature/add-authentication`)
-     - There is only one `CodeResearch.md` artifact per target branch
+   - Save the research document to the canonical path: `.paw/work/<feature-slug>/CodeResearch.md`
+     - Replace `<feature-slug>` with the feature slug from WorkflowContext.md
+     - There is only one `CodeResearch.md` artifact per feature slug
 
 6. **Generate research document:**
    - Use the metadata gathered in step 5
-   - Write the document to `docs/agents/<target_branch>/CodeResearch.md`
+   - Write the document to `.paw/work/<feature-slug>/CodeResearch.md`
    - Structure the document with YAML frontmatter followed by content:
      ```markdown
      ---
@@ -376,7 +376,7 @@ Before completing research:
 - [ ] Findings organized logically by component or concern
 - [ ] GitHub permalinks added when on a pushed commit or main
 - [ ] Tone remains descriptive and neutral (no critiques or recommendations)
-- [ ] `CodeResearch.md` saved to `docs/agents/<target_branch>/CodeResearch.md` with valid frontmatter
+- [ ] `CodeResearch.md` saved to `.paw/work/<feature-slug>/CodeResearch.md` with valid frontmatter
 
 ## Hand-off
 
@@ -384,7 +384,7 @@ Before completing research:
 Code Research Complete
 
 I've documented the implementation details at:
-docs/agents/<target_branch>/CodeResearch.md
+.paw/work/<feature-slug>/CodeResearch.md
 
 Findings include file:line references for all key components.
 

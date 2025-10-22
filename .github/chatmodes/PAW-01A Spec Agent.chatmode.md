@@ -23,7 +23,7 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - **Work Title**: Generate a short, descriptive name (2-4 words) from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity.
@@ -48,10 +48,10 @@ Additional Inputs: <comma-separated or none>
 ```
 - **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
-- If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
+- If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding.
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
 - When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
-- Artifact paths can be auto-derived using `docs/agents/<target_branch>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
+- Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).
@@ -188,7 +188,7 @@ Out of Scope:
 
 ## References
 - Issue: <link or id>
-- Research: docs/agents/<branch>/SpecResearch.md
+- Research: .paw/work/<feature-slug>/SpecResearch.md
 - External: <standard/source citation or 'None'>
 
 ## Glossary (omit if not needed)
@@ -275,7 +275,7 @@ How should we reconcile?
 
 ```
 Specification Ready for Planning Stage:
-- [ ] Spec.md drafted (written to disk at `docs/agents/<branch>/Spec.md`)
+- [ ] Spec.md drafted (written to disk at `.paw/work/<feature-slug>/Spec.md`)
 - [ ] spec-research.prompt.md generated (final version referenced)
 - [ ] SpecResearch.md integrated (hash/date noted)
 - [ ] No unresolved clarification questions

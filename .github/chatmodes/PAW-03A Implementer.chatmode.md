@@ -10,7 +10,7 @@ You are tasked with implementing an approved technical implementation plan. Thes
 If no implementation plan path provided, ask for one.
 
 Before reading other files or taking action:
-0. Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
+0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
 1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
 2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
@@ -35,7 +35,7 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding with implementation.
+- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding with implementation.
 - When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
 - Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
 

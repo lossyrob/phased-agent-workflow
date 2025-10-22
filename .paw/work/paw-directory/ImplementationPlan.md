@@ -974,11 +974,11 @@ cat .paw/work/add-auth/Spec.md
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] paw-specification.md contains Feature Slug section: `grep -A10 "## Feature Slug" paw-specification.md` returns content
-- [ ] Repository layout updated: `grep ".paw/work/<feature-slug>" paw-specification.md | grep -c "├──"` returns 7+ (tree structure)
-- [ ] WorkflowContext.md params include Feature Slug: `grep -A3 "Feature Slug:" paw-specification.md | grep -c "Auto-generated"` returns 1
-- [ ] No remaining old path examples: `grep -c "docs/agents/<" paw-specification.md` returns 0
-- [ ] Feature Slug examples table exists: `grep -A4 "| Input | Normalized Slug |" paw-specification.md | wc -l` returns 5+
+- [x] paw-specification.md contains Feature Slug section: `grep -A10 "## Feature Slug" paw-specification.md` returns content
+- [x] Repository layout updated: `grep ".paw/work/<feature-slug>" paw-specification.md | grep -c "├──"` returns 7+ (tree structure)
+- [x] WorkflowContext.md params include Feature Slug: `grep -A3 "Feature Slug:" paw-specification.md | grep -c "Auto-generated"` returns 1
+- [x] No remaining old path examples: `grep -c "docs/agents/<" paw-specification.md` returns 0
+- [x] Feature Slug examples table exists: `grep -A4 "| Input | Normalized Slug |" paw-specification.md | wc -l` returns 5+
 
 #### Manual Verification:
 - [ ] Check that Feature Slug concept is explained before first usage
@@ -986,6 +986,24 @@ cat .paw/work/add-auth/Spec.md
 - [ ] Verify validation requirements are clearly documented
 - [ ] Verify conflict resolution behavior is explained
 - [ ] Check that all example paths throughout the document are consistent
+
+**Phase 5 Complete**: All documentation updates completed successfully. Updated paw-specification.md with comprehensive Feature Slug documentation and new `.paw/work/<feature-slug>/` directory structure. All automated verification checks pass:
+- Feature Slug concept section added with purpose, generation, normalization, validation, conflict resolution, and examples table
+- Repository layout section updated from `docs/agents/<target_branch>/` to `.paw/work/<feature-slug>/` with Feature Slug description
+- WorkflowContext.md Parameters section updated with Feature Slug field description (required, auto-generated, format requirements)
+- All 20 artifact location references throughout the document updated from old to new path pattern
+- Zero remaining references to old `docs/agents/<branch>/` pattern
+
+The paw-specification.md now provides complete documentation of the new directory structure. All path references are consistent using the `.paw/work/<feature-slug>/` pattern. Feature Slug concept is thoroughly explained with normalization rules, validation requirements, conflict resolution strategies, and concrete examples.
+
+All changes committed to feature/move-to-paw-directory_phase5 branch.
+
+Manual verification deferred to human review during PR review. Reviewers should verify:
+- Feature Slug concept explanation is clear and positioned appropriately in the document
+- Normalization rules match the implementation in PAW-01A (Phase 3)
+- Validation requirements are comprehensive and unambiguous
+- Conflict resolution behavior is clearly explained for both user-provided and auto-generated slugs
+- All example paths throughout the document are consistent and use the new pattern
 
 ---
 

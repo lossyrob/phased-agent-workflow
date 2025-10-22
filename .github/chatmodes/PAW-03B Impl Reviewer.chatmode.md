@@ -153,6 +153,9 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Open phase PR with description referencing plan
    - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
    - Include phase objectives, changes made, and testing performed
+   - **Artifact links:**
+     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - Read Feature Slug from WorkflowContext.md to construct link
    - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
    - Post a PR timeline comment summarizing the review, starting with `**🐾 Implementation Reviewer 🤖:**` and covering whether additional commits were made, verification status, and any next steps

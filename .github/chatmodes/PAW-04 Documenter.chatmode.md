@@ -127,6 +127,10 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Open docs PR with description
    - **Title**: `[<Work Title>] Documentation` where Work Title comes from WorkflowContext.md
    - Include summary of documentation added (highlight that Docs.md is the detailed feature reference) and reference to ImplementationPlan.md
+   - **Artifact links:**
+     - Documentation: `.paw/work/<feature-slug>/Docs.md`
+     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - Read Feature Slug from WorkflowContext.md to construct links
 
 6. **Address review comments**:
    - Read review comments

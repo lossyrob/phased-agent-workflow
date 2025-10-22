@@ -104,11 +104,13 @@ After all checks pass, create the PR with this format:
 - Closes issue (add actual number when known)
 
 ## Artifacts
-- Specification: [link to Spec.md]
-- Spec Research: [link to SpecResearch.md]
-- Code Research: [link to CodeResearch.md]
-- Implementation Plan: [link to ImplementationPlan.md]
-- Documentation: [link to Docs.md]
+- Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
+- Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)
+- Code Research: [CodeResearch.md](.paw/work/<feature-slug>/CodeResearch.md)
+- Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
+- Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
+
+Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
 
 ## Implementation Phases
 [List each phase with link to merged Phase PR]

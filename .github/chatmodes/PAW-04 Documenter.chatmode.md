@@ -7,7 +7,7 @@ You create comprehensive documentation after implementation work is complete. Yo
 
 ## Start / Initial Response
 
-Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them so you inherit existing parameters.
+Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them so you inherit existing parameters.
 
 If no parameters provided:
 ```
@@ -24,20 +24,29 @@ I'll create comprehensive documentation for the completed feature. Please provid
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before producing documentation.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before producing documentation
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly note the missing field, gather or confirm the value, and persist it so subsequent stages inherit the authoritative record. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., docs branch name, artifact overrides, additional inputs) so the workflow continues to rely on a single source of truth. Record derived artifact paths when using conventional locations.
 
 ### Work Title for PR Naming
 
 The Documentation PR must be prefixed with the Work Title from WorkflowContext.md:
-- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] Documentation`
 - Example: `[Auth System] Documentation`
 
@@ -118,6 +127,10 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Open docs PR with description
    - **Title**: `[<Work Title>] Documentation` where Work Title comes from WorkflowContext.md
    - Include summary of documentation added (highlight that Docs.md is the detailed feature reference) and reference to ImplementationPlan.md
+   - **Artifact links:**
+     - Documentation: `.paw/work/<feature-slug>/Docs.md`
+     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - Read Feature Slug from WorkflowContext.md to construct links
 
 6. **Address review comments**:
    - Read review comments
@@ -134,7 +147,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
 
 ## Outputs
 
-- `docs/agents/<target_branch>/Docs.md` - Comprehensive feature documentation serving as the authoritative technical reference
+- `.paw/work/<feature-slug>/Docs.md` - Comprehensive feature documentation serving as the authoritative technical reference
 - Updated project documentation files (derived from Docs.md as needed)
 - Docs PR (`<target_branch>_docs` → `<target_branch>`)
 
@@ -344,7 +357,7 @@ I've created comprehensive documentation and opened the Docs PR (add actual numb
 `<target_branch>_docs` → `<target_branch>`
 
 The PR includes:
-- **Docs.md** - Detailed documentation serving as the authoritative technical reference at docs/agents/<target_branch>/Docs.md
+- **Docs.md** - Detailed documentation serving as the authoritative technical reference at .paw/work/<feature-slug>/Docs.md
 - [List of updated project documentation files, which are based on/derived from Docs.md]
 
 Key documentation highlights:

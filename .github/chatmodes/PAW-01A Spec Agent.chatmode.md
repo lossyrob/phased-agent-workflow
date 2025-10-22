@@ -23,10 +23,36 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. If present, extract Target Branch, Work Title, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
-- **Work Title**: Generate a short, descriptive name (2-4 words) from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity.
+- **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
+  1. **Both missing (no Work Title or Feature Slug):**
+     - Generate Work Title from GitHub Issue title or feature brief (existing logic)
+     - Generate Feature Slug by normalizing the Work Title:
+       - Apply all normalization rules (lowercase, hyphens, etc.)
+       - Validate format
+       - Check uniqueness and resolve conflicts (auto-append -2, -3, etc.)
+       - Check similarity and auto-select distinct variant if needed
+     - Write both to WorkflowContext.md
+     - Inform user: "Auto-generated Work Title: '<title>' and Feature Slug: '<slug>'"
+  2. **Work Title exists, Feature Slug missing:**
+     - Generate Feature Slug from Work Title (normalize and validate)
+     - Check uniqueness and resolve conflicts automatically
+     - Write Feature Slug to WorkflowContext.md
+     - Inform user: "Auto-generated Feature Slug: '<slug>' from Work Title"
+  3. **User provides explicit Feature Slug:**
+     - Normalize the provided slug
+     - Validate format (reject if invalid)
+     - Check uniqueness (prompt user if conflict)
+     - Check similarity (warn user, wait for confirmation)
+     - Write to WorkflowContext.md
+     - Use provided slug regardless of Work Title
+  4. **Both provided by user:**
+     - Use provided values (validate Feature Slug as above)
+     - No auto-generation needed
+  
+  **Alignment Requirement:** When auto-generating both Work Title and Feature Slug, derive them from the same source (GitHub Issue title or brief) to ensure they align and represent the same concept.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
 - Research preference: default to running research unless the user explicitly skips it.
 
@@ -39,6 +65,7 @@ If the user explicitly says research is already done and provides a `SpecResearc
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
@@ -46,10 +73,22 @@ Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
 - **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
-- If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `docs/agents/<target_branch>/WorkflowContext.md` before proceeding.
+- **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
+- If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
+  1. Gather or derive Target Branch (from current branch if not main/default)
+  2. Generate or prompt for Work Title (if missing)
+  3. Generate or prompt for Feature Slug (if missing) - apply normalization and validation:
+     - Normalize the slug using the Feature Slug Normalization rules
+     - Validate format using the Feature Slug Validation rules
+     - Check uniqueness using the Feature Slug Uniqueness Check
+     - Check similarity using the Feature Slug Similarity Warning (for user-provided slugs)
+  4. Gather GitHub Issue, Remote (default to 'origin'), Additional Inputs
+  5. Write complete WorkflowContext.md to `.paw/work/<feature-slug>/WorkflowContext.md`
+  6. Persist derived artifact paths as "auto-derived" so downstream agents inherit authoritative record
+  7. Proceed with specification task
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
 - When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
-- Artifact paths can be auto-derived using `docs/agents/<target_branch>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
+- Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).
@@ -97,6 +136,20 @@ As the spec evolves and becomes clearer, refine the Work Title if needed:
 - Make it descriptive enough to identify the feature
 - Update WorkflowContext.md if the title changes
 - Inform the user when the Work Title is updated
+
+### Feature Slug Processing
+
+Feature Slugs are normalized identifiers for workflow artifacts stored in `.paw/work/<slug>/`. Process slugs in this order:
+
+**1. Normalize:** Lowercase, replace spaces/special chars with hyphens, remove invalid chars (keep only a-z, 0-9, -), collapse consecutive hyphens, trim leading/trailing hyphens, truncate to 100 chars. Examples: "User Authentication System" → "user-authentication-system", "API Refactor v2" → "api-refactor-v2"
+
+**2. Validate:** Must contain only lowercase letters, numbers, hyphens; 1-100 chars; no leading/trailing/consecutive hyphens; not reserved names (., .., node_modules, .git, .paw); no path separators. Reject invalid with clear error.
+
+**3. Check Uniqueness:** Verify `.paw/work/<slug>/` doesn't exist. If conflict:
+- User-provided: Prompt for alternative ("<slug>-2", "<slug>-new", or custom)
+- Auto-generated: Auto-append numeric suffix (-2, -3, etc.) and inform user
+
+**4. Similarity Check (Optional, user-provided only):** Compare with existing slugs (common prefixes, 1-3 char differences). If similar, warn user and wait for confirmation. For auto-generated, select distinct variant automatically.
 
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:
@@ -186,7 +239,7 @@ Out of Scope:
 
 ## References
 - Issue: <link or id>
-- Research: docs/agents/<branch>/SpecResearch.md
+- Research: .paw/work/<feature-slug>/SpecResearch.md
 - External: <standard/source citation or 'None'>
 
 ## Glossary (omit if not needed)
@@ -273,7 +326,7 @@ How should we reconcile?
 
 ```
 Specification Ready for Planning Stage:
-- [ ] Spec.md drafted (written to disk at `docs/agents/<branch>/Spec.md`)
+- [ ] Spec.md drafted (written to disk at `.paw/work/<feature-slug>/Spec.md`)
 - [ ] spec-research.prompt.md generated (final version referenced)
 - [ ] SpecResearch.md integrated (hash/date noted)
 - [ ] No unresolved clarification questions

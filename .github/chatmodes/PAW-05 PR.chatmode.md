@@ -7,7 +7,7 @@ You open the final PR to main after all other stages are complete and validated.
 
 ## Start / Initial Response
 
-Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
+Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
 
 If no parameters provided:
 ```
@@ -25,20 +25,29 @@ I'll perform pre-flight checks before creating the PR.
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before running pre-flight checks.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before running pre-flight checks
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
 
 ### Work Title for PR Naming
 
 The Final PR must be prefixed with the Work Title from WorkflowContext.md:
-- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] <description>`
 - Example: `[Auth System] Add user authentication system`
 
@@ -61,7 +70,7 @@ Before creating the PR, verify the following and report status:
 - [ ] Target branch exists and has commits
 
 ### 2. Documentation Complete
-- [ ] Docs.md exists at `docs/agents/<target_branch>/Docs.md`
+- [ ] Docs.md exists at `.paw/work/<feature-slug>/Docs.md`
 - [ ] Docs PR merged to target branch
 - [ ] CHANGELOG updated (if applicable)
 
@@ -95,11 +104,13 @@ After all checks pass, create the PR with this format:
 - Closes issue (add actual number when known)
 
 ## Artifacts
-- Specification: [link to Spec.md]
-- Spec Research: [link to SpecResearch.md]
-- Code Research: [link to CodeResearch.md]
-- Implementation Plan: [link to ImplementationPlan.md]
-- Documentation: [link to Docs.md]
+- Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
+- Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)
+- Code Research: [CodeResearch.md](.paw/work/<feature-slug>/CodeResearch.md)
+- Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
+- Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
+
+Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
 
 ## Implementation Phases
 [List each phase with link to merged Phase PR]

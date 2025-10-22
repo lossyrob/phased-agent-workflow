@@ -7,7 +7,7 @@ You review the Implementation Agent's work to ensure it is maintainable, well-do
 
 ## Start / Initial Response
 
-Look for `WorkflowContext.md` in chat context or on disk at `docs/agents/<target_branch>/WorkflowContext.md`. When present, extract Target Branch, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
+Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
 
 If no parameters provided:
 ```
@@ -22,20 +22,29 @@ If the user mentions a hint to the implementation changes, e.g. 'last commit', u
 # WorkflowContext
 
 Work Title: <work_title>
+Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 GitHub Issue: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, determine the correct branch (use the current branch when necessary) and write it to `docs/agents/<target_branch>/WorkflowContext.md` before starting review work.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before starting review work
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you discover new parameter values (e.g., PR number, artifact overrides, remote changes) so the workflow continues to share a single source of truth. Capture derived artifact paths if you rely on conventional locations.
 
 ### Work Title for PR Naming
 
 All Phase PRs must be prefixed with the Work Title from WorkflowContext.md:
-- Read `docs/agents/<target_branch>/WorkflowContext.md` to get the Work Title
+- Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] Phase <N>: <description>`
 - Example: `[Auth System] Phase 1: Database schema and migrations`
 
@@ -144,6 +153,9 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Open phase PR with description referencing plan
    - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
    - Include phase objectives, changes made, and testing performed
+   - **Artifact links:**
+     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - Read Feature Slug from WorkflowContext.md to construct link
    - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
    - Post a PR timeline comment summarizing the review, starting with `**🐾 Implementation Reviewer 🤖:**` and covering whether additional commits were made, verification status, and any next steps

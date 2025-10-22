@@ -26,7 +26,33 @@ Before responding, inspect the invocation context (prompt files, prior user turn
 - Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
-- **Work Title**: Generate a short, descriptive name (2-4 words) from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity.
+- **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
+  1. **Both missing (no Work Title or Feature Slug):**
+     - Generate Work Title from GitHub Issue title or feature brief (existing logic)
+     - Generate Feature Slug by normalizing the Work Title:
+       - Apply all normalization rules (lowercase, hyphens, etc.)
+       - Validate format
+       - Check uniqueness and resolve conflicts (auto-append -2, -3, etc.)
+       - Check similarity and auto-select distinct variant if needed
+     - Write both to WorkflowContext.md
+     - Inform user: "Auto-generated Work Title: '<title>' and Feature Slug: '<slug>'"
+  2. **Work Title exists, Feature Slug missing:**
+     - Generate Feature Slug from Work Title (normalize and validate)
+     - Check uniqueness and resolve conflicts automatically
+     - Write Feature Slug to WorkflowContext.md
+     - Inform user: "Auto-generated Feature Slug: '<slug>' from Work Title"
+  3. **User provides explicit Feature Slug:**
+     - Normalize the provided slug
+     - Validate format (reject if invalid)
+     - Check uniqueness (prompt user if conflict)
+     - Check similarity (warn user, wait for confirmation)
+     - Write to WorkflowContext.md
+     - Use provided slug regardless of Work Title
+  4. **Both provided by user:**
+     - Use provided values (validate Feature Slug as above)
+     - No auto-generation needed
+  
+  **Alignment Requirement:** When auto-generating both Work Title and Feature Slug, derive them from the same source (GitHub Issue title or brief) to ensure they align and represent the same concept.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
 - Research preference: default to running research unless the user explicitly skips it.
 
@@ -48,7 +74,18 @@ Additional Inputs: <comma-separated or none>
 ```
 - **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
-- If `WorkflowContext.md` is missing or lacks a Target Branch, gather the information (use the current branch when necessary), then write the file to `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding.
+- If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
+  1. Gather or derive Target Branch (from current branch if not main/default)
+  2. Generate or prompt for Work Title (if missing)
+  3. Generate or prompt for Feature Slug (if missing) - apply normalization and validation:
+     - Normalize the slug using the Feature Slug Normalization rules
+     - Validate format using the Feature Slug Validation rules
+     - Check uniqueness using the Feature Slug Uniqueness Check
+     - Check similarity using the Feature Slug Similarity Warning (for user-provided slugs)
+  4. Gather GitHub Issue, Remote (default to 'origin'), Additional Inputs
+  5. Write complete WorkflowContext.md to `.paw/work/<feature-slug>/WorkflowContext.md`
+  6. Persist derived artifact paths as "auto-derived" so downstream agents inherit authoritative record
+  7. Proceed with specification task
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
 - When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
 - Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
@@ -99,6 +136,120 @@ As the spec evolves and becomes clearer, refine the Work Title if needed:
 - Make it descriptive enough to identify the feature
 - Update WorkflowContext.md if the title changes
 - Inform the user when the Work Title is updated
+
+### Feature Slug Normalization
+
+When generating or accepting a Feature Slug, normalize it according to these rules:
+
+1. **Convert to lowercase:** "MyFeature" → "myfeature"
+
+2. **Replace spaces with hyphens:** "my feature" → "my-feature"
+
+3. **Replace special characters with hyphens:**
+   - Underscores: "my_feature" → "my-feature"
+   - Slashes: "api/refactor" → "api-refactor"
+   - Colons: "fix: bug" → "fix-bug"
+   - Parentheses, brackets: "feature (v2)" → "feature-v2"
+
+4. **Remove invalid characters:** Keep only lowercase letters (a-z), numbers (0-9), and hyphens (-)
+
+5. **Collapse consecutive hyphens:** "my--feature" → "my-feature"
+
+6. **Trim leading/trailing hyphens:** "-myfeature-" → "myfeature"
+
+7. **Enforce maximum length:** Truncate to 100 characters if longer
+
+**Examples:**
+- "User Authentication System" → "user-authentication-system"
+- "API Refactor v2" → "api-refactor-v2"
+- "Fix Bug: Rate Limit (Auth)" → "fix-bug-rate-limit-auth"
+- "my_FEATURE--name__test" → "my-feature-name-test"
+
+### Feature Slug Validation
+
+Before accepting a Feature Slug (user-provided or auto-generated), validate it:
+
+1. **Character validation:**
+   - MUST contain only: lowercase letters (a-z), numbers (0-9), hyphens (-)
+   - MUST NOT contain: uppercase, spaces, underscores, slashes, special characters
+   - If invalid characters found, reject with error: "Slug contains invalid characters: [list]. Only lowercase letters, numbers, and hyphens allowed."
+
+2. **Length validation:**
+   - MUST be between 1 and 100 characters
+   - MUST NOT be empty or whitespace-only
+   - If too long: reject and ask user for shorter slug
+   - If empty: reject and require non-empty value
+
+3. **Format validation:**
+   - MUST NOT start or end with hyphen
+   - MUST NOT contain consecutive hyphens
+   - MUST NOT be reserved names: ".", "..", "node_modules", ".git", ".paw"
+   - If format invalid, reject with clear error message
+
+4. **Path separator validation:**
+   - MUST NOT contain forward slashes (/) or backslashes (\)
+   - If found, reject with error: "Slug cannot contain path separators"
+
+**Validation Order:**
+1. Normalize slug first (if accepting user input)
+2. Then validate format
+3. Then check uniqueness (next section)
+4. Then check similarity (optional, only for user-provided)
+
+### Feature Slug Uniqueness Check
+
+After validating slug format, check for conflicts:
+
+1. **Check directory existence:**
+   - Use file system tools to check if `.paw/work/<slug>/` directory exists
+   - If exists → CONFLICT DETECTED
+
+2. **User-provided slug conflict:**
+   - Inform user: "Feature Slug '<slug>' conflicts with existing directory at .paw/work/<slug>/"
+   - Suggest alternatives: "<slug>-2", "<slug>-new", or prompt user for custom alternative
+   - WAIT for user to provide alternative slug before proceeding
+   - Validate and check uniqueness of new slug (repeat process)
+
+3. **Auto-generated slug conflict:**
+   - Automatically append numeric suffix: "<slug>-2", "<slug>-3", etc.
+   - Check uniqueness of generated variant
+   - Increment suffix until unique slug found
+   - DO NOT prompt user for auto-generated conflicts (automatic resolution)
+   - Inform user: "Auto-generated Feature Slug: '<final-slug>' (original '<slug>' already exists)"
+
+**Example conflict resolution:**
+- User provides "auth" → .paw/work/auth/ exists → Prompt: "Use 'auth-2' or provide alternative?"
+- Auto-gen creates "auth" → .paw/work/auth/ exists → Auto-resolve to "auth-2" → Inform user
+
+### Feature Slug Similarity Warning (Optional)
+
+After confirming uniqueness, check for similar existing slugs (only for user-provided slugs):
+
+1. **List existing slugs:**
+   - List all directories in `.paw/work/` to get existing feature slugs
+   - Compare new slug against each existing slug
+
+2. **Similarity detection:**
+   - Check for common prefixes (first 5+ characters match)
+   - Check for edit distance (differ by 1-3 characters)
+   - Examples of similar slugs:
+     - "user-profile" vs "user-profiles" (1 character difference)
+     - "auth-system" vs "auth-system-v2" (common prefix)
+     - "api-refactor" vs "api-refactoring" (3 character difference)
+
+3. **User warning (user-provided slug only):**
+   - If similar slug found, warn user: "Feature Slug '<slug>' is similar to existing '<existing-slug>'. This may cause confusion. Confirm or choose more distinct name?"
+   - WAIT for user confirmation or alternative
+   - If user confirms, proceed with slug
+   - If user provides alternative, validate and check again
+
+4. **Auto-generated slug handling:**
+   - If auto-generated slug is similar to existing, automatically select more distinct variant
+   - Append descriptive suffix: "<slug>-feature", "<slug>-work", "<slug>-new"
+   - Verify uniqueness of variant
+   - Inform user of final choice
+
+**Note:** Similarity detection is heuristic and may have false positives. Keep simple to avoid blocking workflows.
 
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:

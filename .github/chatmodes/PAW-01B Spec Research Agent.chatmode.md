@@ -29,7 +29,15 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch, derive the branch from the current repository state (or ask the user) and write `.paw/work/<feature-slug>/WorkflowContext.md` before continuing.
+- If the file is missing or lacks a Target Branch or Feature Slug:
+  1. Derive Target Branch from current branch if necessary
+  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
+     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
+     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
+  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before continuing
+  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - Call out any missing required parameters explicitly, gather them, and persist the updated value so later stages inherit it.
 - Update the file whenever you learn a new parameter (e.g., prompt path, artifact overrides, remote). Treat missing `Remote` entries as `origin` without prompting.
 

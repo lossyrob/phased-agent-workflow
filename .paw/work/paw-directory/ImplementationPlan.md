@@ -671,6 +671,18 @@ Manual verification deferred to human testing during PR review. Reviewers should
 - The conflict resolution behavior making sense for both user-provided and auto-generated slugs
 - The similarity detection being helpful without being overly restrictive
 
+**Addressed Review Comments**: After initial PR review, consolidated the four Feature Slug sections (Normalization, Validation, Uniqueness Check, and Similarity Warning) from 155+ lines into a single concise "Feature Slug Processing" section of ~15 lines to reduce context bloat. This change addresses review comment https://github.com/lossyrob/phased-agent-workflow/pull/23#discussion_r2453126563. The consolidation preserves all essential functionality while significantly reducing token usage:
+- Merged detailed normalization rules into a single dense paragraph with examples
+- Combined validation criteria into a concise list
+- Condensed uniqueness checking into user vs auto-generated handling
+- Kept similarity detection as optional fourth step
+- Net reduction: 100 lines removed while preserving all functional requirements
+
+Review focus areas for consolidated section:
+- Verify that the condensed instructions remain actionable for AI agents
+- Confirm that no critical normalization or validation rules were lost in consolidation
+- Check that the processing order (normalize → validate → uniqueness → similarity) is still clear
+
 ---
 
 ## Phase 4: PR Link Updates

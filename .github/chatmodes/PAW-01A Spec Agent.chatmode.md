@@ -137,119 +137,19 @@ As the spec evolves and becomes clearer, refine the Work Title if needed:
 - Update WorkflowContext.md if the title changes
 - Inform the user when the Work Title is updated
 
-### Feature Slug Normalization
+### Feature Slug Processing
 
-When generating or accepting a Feature Slug, normalize it according to these rules:
+Feature Slugs are normalized identifiers for workflow artifacts stored in `.paw/work/<slug>/`. Process slugs in this order:
 
-1. **Convert to lowercase:** "MyFeature" → "myfeature"
+**1. Normalize:** Lowercase, replace spaces/special chars with hyphens, remove invalid chars (keep only a-z, 0-9, -), collapse consecutive hyphens, trim leading/trailing hyphens, truncate to 100 chars. Examples: "User Authentication System" → "user-authentication-system", "API Refactor v2" → "api-refactor-v2"
 
-2. **Replace spaces with hyphens:** "my feature" → "my-feature"
+**2. Validate:** Must contain only lowercase letters, numbers, hyphens; 1-100 chars; no leading/trailing/consecutive hyphens; not reserved names (., .., node_modules, .git, .paw); no path separators. Reject invalid with clear error.
 
-3. **Replace special characters with hyphens:**
-   - Underscores: "my_feature" → "my-feature"
-   - Slashes: "api/refactor" → "api-refactor"
-   - Colons: "fix: bug" → "fix-bug"
-   - Parentheses, brackets: "feature (v2)" → "feature-v2"
+**3. Check Uniqueness:** Verify `.paw/work/<slug>/` doesn't exist. If conflict:
+- User-provided: Prompt for alternative ("<slug>-2", "<slug>-new", or custom)
+- Auto-generated: Auto-append numeric suffix (-2, -3, etc.) and inform user
 
-4. **Remove invalid characters:** Keep only lowercase letters (a-z), numbers (0-9), and hyphens (-)
-
-5. **Collapse consecutive hyphens:** "my--feature" → "my-feature"
-
-6. **Trim leading/trailing hyphens:** "-myfeature-" → "myfeature"
-
-7. **Enforce maximum length:** Truncate to 100 characters if longer
-
-**Examples:**
-- "User Authentication System" → "user-authentication-system"
-- "API Refactor v2" → "api-refactor-v2"
-- "Fix Bug: Rate Limit (Auth)" → "fix-bug-rate-limit-auth"
-- "my_FEATURE--name__test" → "my-feature-name-test"
-
-### Feature Slug Validation
-
-Before accepting a Feature Slug (user-provided or auto-generated), validate it:
-
-1. **Character validation:**
-   - MUST contain only: lowercase letters (a-z), numbers (0-9), hyphens (-)
-   - MUST NOT contain: uppercase, spaces, underscores, slashes, special characters
-   - If invalid characters found, reject with error: "Slug contains invalid characters: [list]. Only lowercase letters, numbers, and hyphens allowed."
-
-2. **Length validation:**
-   - MUST be between 1 and 100 characters
-   - MUST NOT be empty or whitespace-only
-   - If too long: reject and ask user for shorter slug
-   - If empty: reject and require non-empty value
-
-3. **Format validation:**
-   - MUST NOT start or end with hyphen
-   - MUST NOT contain consecutive hyphens
-   - MUST NOT be reserved names: ".", "..", "node_modules", ".git", ".paw"
-   - If format invalid, reject with clear error message
-
-4. **Path separator validation:**
-   - MUST NOT contain forward slashes (/) or backslashes (\)
-   - If found, reject with error: "Slug cannot contain path separators"
-
-**Validation Order:**
-1. Normalize slug first (if accepting user input)
-2. Then validate format
-3. Then check uniqueness (next section)
-4. Then check similarity (optional, only for user-provided)
-
-### Feature Slug Uniqueness Check
-
-After validating slug format, check for conflicts:
-
-1. **Check directory existence:**
-   - Use file system tools to check if `.paw/work/<slug>/` directory exists
-   - If exists → CONFLICT DETECTED
-
-2. **User-provided slug conflict:**
-   - Inform user: "Feature Slug '<slug>' conflicts with existing directory at .paw/work/<slug>/"
-   - Suggest alternatives: "<slug>-2", "<slug>-new", or prompt user for custom alternative
-   - WAIT for user to provide alternative slug before proceeding
-   - Validate and check uniqueness of new slug (repeat process)
-
-3. **Auto-generated slug conflict:**
-   - Automatically append numeric suffix: "<slug>-2", "<slug>-3", etc.
-   - Check uniqueness of generated variant
-   - Increment suffix until unique slug found
-   - DO NOT prompt user for auto-generated conflicts (automatic resolution)
-   - Inform user: "Auto-generated Feature Slug: '<final-slug>' (original '<slug>' already exists)"
-
-**Example conflict resolution:**
-- User provides "auth" → .paw/work/auth/ exists → Prompt: "Use 'auth-2' or provide alternative?"
-- Auto-gen creates "auth" → .paw/work/auth/ exists → Auto-resolve to "auth-2" → Inform user
-
-### Feature Slug Similarity Warning (Optional)
-
-After confirming uniqueness, check for similar existing slugs (only for user-provided slugs):
-
-1. **List existing slugs:**
-   - List all directories in `.paw/work/` to get existing feature slugs
-   - Compare new slug against each existing slug
-
-2. **Similarity detection:**
-   - Check for common prefixes (first 5+ characters match)
-   - Check for edit distance (differ by 1-3 characters)
-   - Examples of similar slugs:
-     - "user-profile" vs "user-profiles" (1 character difference)
-     - "auth-system" vs "auth-system-v2" (common prefix)
-     - "api-refactor" vs "api-refactoring" (3 character difference)
-
-3. **User warning (user-provided slug only):**
-   - If similar slug found, warn user: "Feature Slug '<slug>' is similar to existing '<existing-slug>'. This may cause confusion. Confirm or choose more distinct name?"
-   - WAIT for user confirmation or alternative
-   - If user confirms, proceed with slug
-   - If user provides alternative, validate and check again
-
-4. **Auto-generated slug handling:**
-   - If auto-generated slug is similar to existing, automatically select more distinct variant
-   - Append descriptive suffix: "<slug>-feature", "<slug>-work", "<slug>-new"
-   - Verify uniqueness of variant
-   - Inform user of final choice
-
-**Note:** Similarity detection is heuristic and may have false positives. Keep simple to avoid blocking workflows.
+**4. Similarity Check (Optional, user-provided only):** Compare with existing slugs (common prefixes, 1-3 char differences). If similar, warn user and wait for confirmation. For auto-generated, select distinct variant automatically.
 
 ### Research Prompt Minimal Format (unchanged)
 Required header & format:

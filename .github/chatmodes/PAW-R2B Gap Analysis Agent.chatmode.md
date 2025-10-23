@@ -297,8 +297,8 @@ Apply Must/Should/Could categorization:
 - Are there configuration options that aren't actually needed?
 - Is complexity added "just in case" vs for actual requirements?
 
-**Google's Principle:**
-"Encourage developers to solve the problem they know needs to be solved now, not the problem they speculate might need to be solved in the future."
+**Guiding Principle:**
+Solve the problem that needs to be solved now, not the problem that might need to be solved in the future.
 
 **Heuristics for Over-engineering:**
 - Flag generic interfaces with only one implementation

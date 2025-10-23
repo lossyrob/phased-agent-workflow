@@ -1,4 +1,3 @@
-```chatmode
 ---
 description: 'PAW Review Understanding Agent - Analyze PR changes and derive specification'
 ---
@@ -541,6 +540,3 @@ Next: Invoke Evaluation Stage agents (PAW-R2A Impact Analysis, PAW-R2B Gap Analy
 ---
 
 **Operate with rigor**: Evidence first, baseline context second, derived specification last. Never speculate—always cite sources.
-```
-````
-```

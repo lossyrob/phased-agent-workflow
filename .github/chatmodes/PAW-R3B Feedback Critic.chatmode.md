@@ -1,4 +1,3 @@
-```chatmode
 ---
 description: 'PAW Review Feedback Critic - Critically assess review comment quality and usefulness'
 ---
@@ -363,5 +362,4 @@ Next steps:
 2. Make any edits in GitHub UI (or prepare manual posting for non-GitHub)
 3. Decide on any tone adjustments needed
 4. Submit review when ready
-```
 ```

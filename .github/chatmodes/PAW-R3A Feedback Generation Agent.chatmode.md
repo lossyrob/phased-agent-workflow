@@ -1,4 +1,3 @@
-```chatmode
 ---
 description: 'PAW Review Feedback Generation Agent - Create review comments with comprehensive rationale'
 ---
@@ -393,5 +392,4 @@ Non-GitHub context: Manual posting instructions provided
 All comments have complete rationale sections. Ready for Feedback Critic to add assessment sections.
 
 Next: Invoke PAW-R3B Feedback Critic to critically assess comment quality and usefulness.
-```
 ```

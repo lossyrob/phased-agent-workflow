@@ -340,6 +340,15 @@ This ensures the derived specification is informed by actual pre-change system b
 - FR-028: System shall support non-GitHub PR contexts by accepting base branch name, using current checked-out branch as head branch, deriving branch slug for artifact naming, using git diff for changes, and providing manual posting instructions in ReviewComments.md (Stories: P1-Generate, Edge Cases)
 - FR-029: System shall capture CI/test status and avoid redundant comments on issues already caught by CI (Stories: Edge Cases)
 - FR-030: System shall raise discrepancy blocks when PR description contradicts code changes (Stories: Edge Cases)
+- FR-031: System shall evaluate architectural fit of changes (belongs in this codebase vs library, integrates well with system design, timing appropriateness) in Impact Analysis (Stories: P1-Identify)
+- FR-032: System shall assess user impact from both end-user and developer-user perspectives in Impact Analysis (Stories: P1-Identify)
+- FR-033: System shall include code health trend assessment (improving or degrading system health) in Impact Analysis risk evaluation (Stories: P1-Identify)
+- FR-034: System shall identify and commend good practices in Gap Analysis with positive observations section (Stories: P1-Identify)
+- FR-035: System shall assess comment quality (WHY vs WHAT, necessity, whether code should be simpler) in Gap Analysis maintainability section (Stories: P1-Identify)
+- FR-036: System shall detect over-engineering (solving future vs current problems, unnecessary abstractions) in Gap Analysis complexity analysis (Stories: P1-Identify)
+- FR-037: System shall check style guide adherence and label preferences as "Nit:" in Gap Analysis (Stories: P1-Identify)
+- FR-038: System shall verify user-facing documentation completeness and identify orphaned documentation in Gap Analysis (Stories: P1-Identify)
+- FR-039: System shall assess test effectiveness (will fail when broken, meaningful assertions) and maintainability in Gap Analysis (Stories: P2-TestCoverage)
 
 ### Key Entities
 
@@ -379,6 +388,14 @@ This ensures the derived specification is informed by actual pre-change system b
 - SC-013: Given a non-GitHub PR context (e.g., Azure DevOps, local branches), workflow functions using branch names and git diff, producing same artifacts with branch-based naming (FR-028)
 - SC-014: Given PR with failing CI checks, ReviewContext.md captures status and evaluation notes redundancy risk for CI-detected issues (FR-029)
 - SC-015: Given PR description contradicting code changes, derived specification raises discrepancy block requiring human resolution (FR-030)
+- SC-016: Given a PR with changes to existing code, Impact Analysis includes architectural fit evaluation (belongs in codebase vs library, design integration, timing) and user impact assessment (end-users and developer-users) (FR-031, FR-032)
+- SC-017: Given Impact Analysis complete, risk assessment includes code health trend (improving or degrading system health) (FR-033)
+- SC-018: Given Gap Analysis complete, positive observations section identifies and commends good practices (well-designed code, comprehensive tests, clear naming, proper error handling) (FR-034)
+- SC-019: Given a PR with comments, Gap Analysis maintainability section includes comment quality assessment (WHY vs WHAT, necessity, whether code should be simpler) (FR-035)
+- SC-020: Given a PR with complex or generic code, Gap Analysis complexity section detects over-engineering (solving future vs current problems, unnecessary abstractions) (FR-036)
+- SC-021: Given a PR with style variations, Gap Analysis includes style guide adherence check with "Nit:" labeling for preferences vs requirements (FR-037)
+- SC-022: Given a PR with documentation changes, Gap Analysis verifies user-facing documentation completeness and identifies orphaned documentation (FR-038)
+- SC-023: Given a PR with tests, Gap Analysis assesses test effectiveness (will fail when broken, meaningful assertions) and maintainability (FR-039)
 
 ## Assumptions
 

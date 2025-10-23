@@ -125,6 +125,28 @@ Assess test coverage and quality:
 - Do tests check side effects and state changes?
 - Are tests clear about what they're verifying?
 
+**Test Effectiveness:**
+- Will these tests actually fail when the code is broken?
+- Are assertions meaningful or trivially passing?
+- Is there risk of false positives (tests fail when code is correct)?
+- Do tests verify behavior or just exercise code?
+
+**Test Maintainability:**
+- Tests are code too - are they maintainable?
+- Are tests overly complex or fragile?
+- Do tests have good names explaining what they verify?
+
+**Test Design:**
+- Are tests separated appropriately between test methods?
+- Do tests make simple, clear assertions?
+- Are tests testing one thing or too many things?
+
+**Heuristics for Test Quality:**
+- Flag tests with no assertions (or only assert true)
+- Note overly complex test setup (may indicate design issue)
+- Check if test names clearly describe what's being tested
+- Identify tests that would pass even with bugs in code
+
 **Gap Detection:**
 
 Compare code changes to test changes:
@@ -177,8 +199,51 @@ Evaluate code quality and long-term maintenance:
 - Unclear function purposes
 - Missing usage examples for non-obvious code
 
+**User-Facing Documentation:**
+- Do README files need updates?
+- Are API docs updated for public interface changes?
+- Do new features have usage documentation?
+
+**Orphaned Documentation:**
+- When code is deleted, is related documentation also removed?
+- Are there docs referencing removed code/features?
+- Do code comments reference deleted functions?
+
+**Documentation vs Comments:**
+- Public APIs: Should have documentation (what it does, how to use)
+- Comments: Should explain why, not what (internal reasoning)
+
+**Heuristics for Documentation:**
+- Check if public API changes need README updates
+- Check if deleted code has corresponding docs to remove
+- Note missing API documentation for new public interfaces
+
+**Comment Quality Assessment:**
+- Do comments explain WHY not WHAT?
+- Are comments necessary or is code self-explanatory?
+- Should code be simplified instead of commented?
+- Are comments providing value beyond what code shows?
+
+**Comment Anti-Patterns:**
+- Comments explaining what code does (code should be clearer)
+- Commented-out code (should be removed, git history preserves it)
+- Redundant comments (restating obvious code)
+- Outdated comments (contradicting current code)
+
+**Comment Best Practices:**
+- Complex algorithms explained (regex, mathematical operations)
+- Reasoning behind non-obvious decisions
+- Gotchas or surprising behavior warnings
+- External context (why workaround needed, ticket references)
+
+**Heuristics for Comment Quality:**
+- Flag comments that just restate code: `// set x to 5` for `x = 5`
+- Flag long comment blocks on simple code (simplify code instead)
+- Note when complex code lacks explanatory comments
+- Check if comments explain WHY for non-obvious decisions
+
 **Output:**
-Maintainability findings with improvement suggestions
+Maintainability findings with improvement suggestions, including comment quality assessment
 
 ### 5. Performance Analysis
 
@@ -221,8 +286,29 @@ Apply Must/Should/Could categorization:
 - Breaking changes needing migration plan (from ImpactAnalysis.md)
 - Performance degradation in non-critical paths
 - Pattern violations reducing maintainability
+- Over-engineering (solving future vs current problems, unnecessary abstractions)
 
 **Rationale Required:** Why this improves robustness or quality
+
+**Over-engineering Detection:**
+- Is code more generic than current requirements need?
+- Are abstractions solving problems that don't exist yet?
+- Is developer building for speculative future use cases?
+- Are there configuration options that aren't actually needed?
+- Is complexity added "just in case" vs for actual requirements?
+
+**Google's Principle:**
+"Encourage developers to solve the problem they know needs to be solved now, not the problem they speculate might need to be solved in the future."
+
+**Heuristics for Over-engineering:**
+- Flag generic interfaces with only one implementation
+- Note parameterization beyond current use cases
+- Identify "pluggable" architectures without multiple plugins
+- Check for abstraction layers without clear current need
+
+**Categorization:**
+- Should: Over-engineering that adds maintenance burden
+- Could: Suggest simplifying to just what's needed now
 
 **Could - Optional Enhancements:**
 - Code duplication that could be extracted (but not causing bugs)
@@ -239,7 +325,61 @@ Apply Must/Should/Could categorization:
 - **Informed by baseline:** Compare to patterns in CodeResearch.md
 - **Severity != Category:** High-severity Should is not auto-promoted to Must
 
-### 7. Generate GapAnalysis.md
+### 7. Identify Positive Observations
+
+Recognize what the developer did well (mentoring value):
+
+**Good Practices to Commend:**
+- Well-designed code that's easy to understand
+- Comprehensive test coverage (especially edge cases)
+- Clear, meaningful naming
+- Proper error handling and validation
+- Good performance considerations
+- Following established patterns well
+- Clear documentation and comments
+- Thoughtful architectural decisions
+
+**Recognition Guidelines:**
+- Be specific about what was done well (not generic praise)
+- Highlight practices that should be emulated
+- Note when developer addressed difficult problems elegantly
+- Recognize attention to edge cases, testing, or maintainability
+- Acknowledge when feedback from previous reviews was incorporated
+
+**Output:**
+Positive observations to include in GapAnalysis.md before critical findings, to balance feedback
+
+### 8. Add Style & Conventions Analysis
+
+Evaluate adherence to style guidelines:
+
+**Style Guide Compliance:**
+- Is code following project style guide? (language-specific)
+- Are there style violations that should be fixed?
+- Are style preferences (vs requirements) marked as "Nit:"?
+
+**Mixed Changes Anti-pattern:**
+- Are style changes mixed with functional changes?
+- Should formatting/style be in separate commit/PR?
+- Note: "Makes it hard to see what is being changed"
+
+**Style vs Preference:**
+- Style guide requirements = Must/Should fix
+- Personal preferences = "Nit:" (don't block on these)
+- When no rule exists: maintain consistency with existing code
+
+**Heuristics:**
+- Check for common style violations (indentation, naming conventions)
+- Identify large formatting changes mixed with logic changes
+- Note when new code diverges from style guide
+- Suggest extracting pure refactoring to separate PR if large
+
+**Output:**
+Style findings categorized as:
+- Must/Should: Style guide violations
+- Nit: Stylistic preferences that would improve code but aren't mandatory
+
+### 9. Generate GapAnalysis.md
 
 Create comprehensive gap analysis document:
 
@@ -263,6 +403,18 @@ status: complete
 **Could Consider**: Z findings (optional improvements)
 
 <Brief overview of scope and key concerns>
+
+---
+
+## Positive Observations
+
+<List of things developer did well, with specific examples>
+
+- ✅ **Excellent test coverage**: Added comprehensive edge case tests for null, empty, and boundary conditions in `module.test.ts`
+- ✅ **Clear error handling**: Proper validation with helpful error messages in `validator.ts:45-60`
+- ✅ **Good performance consideration**: Used efficient algorithm avoiding nested loops in `processor.ts:123`
+- ✅ **Well-designed architecture**: Clean separation of concerns in new module structure
+- ✅ **Clear naming**: Functions and variables have descriptive, meaningful names
 
 ---
 
@@ -428,7 +580,14 @@ Before completing this stage:
 - [ ] Must findings have concrete impact statements (not speculation)
 - [ ] Should findings have clear rationale for why they matter
 - [ ] Could findings have stated benefits
+- [ ] Positive observations identified and documented
 - [ ] Test coverage assessed (quantitatively if reports available, qualitatively always)
+- [ ] Test effectiveness and maintainability evaluated
+- [ ] Comment quality assessed (WHY vs WHAT, necessity)
+- [ ] Over-engineering detection applied (solving future vs current problems)
+- [ ] Style guide adherence checked with "Nit:" labeling for preferences
+- [ ] User-facing documentation completeness verified
+- [ ] Orphaned documentation identified
 - [ ] Categorization not inflated (style issues not promoted to Must)
 - [ ] Baseline patterns from CodeResearch.md considered
 - [ ] Related findings identified for batching
@@ -439,10 +598,14 @@ Before completing this stage:
 Gap Analysis Complete
 
 `GapAnalysis.md` created with:
+- Positive observations (good practices identified)
 - X Must-address findings (correctness/safety/security)
-- Y Should-address findings (quality/completeness)
-- Z Could-consider findings (optional improvements)
-- Test coverage: [Quantitative metrics if available] + Qualitative assessment
+- Y Should-address findings (quality/completeness, over-engineering)
+- Z Could-consider findings (optional improvements, style "Nit:" items)
+- Test coverage: [Quantitative metrics if available] + Qualitative assessment (effectiveness, maintainability)
+- Comment quality assessment (WHY vs WHAT, necessity)
+- Style guide adherence (requirements vs preferences)
+- Documentation completeness (user-facing docs, orphaned docs)
 - Baseline comparison: [Patterns followed | Divergences noted]
 
 All findings have evidence and appropriate categorization.

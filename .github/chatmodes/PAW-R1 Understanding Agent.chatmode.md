@@ -20,13 +20,12 @@ You analyze pull request changes to create comprehensive understanding artifacts
 
 ## High-Level Responsibilities
 
-1. Gather PR metadata (GitHub API or git diff) and categorize changed files
-2. Identify mechanical vs semantic changes and flag large/mechanical-only PRs
-3. Generate research prompt for baseline codebase analysis
-4. Pause for Code Research Agent to analyze pre-change system state
-5. Derive specification from PR description, code analysis, and baseline understanding
-6. Create ReviewContext.md as authoritative parameter source for downstream stages
-7. Validate all artifacts meet quality standards before handoff
+1. Gather PR metadata (GitHub API or git diff) and document changed files
+2. Generate research prompt for baseline codebase analysis
+3. Pause for Review Baseline Researcher to analyze pre-change system state
+4. Derive specification from PR description, code analysis, and baseline understanding
+5. Create ReviewContext.md as authoritative parameter source for downstream stages
+6. Validate all artifacts meet quality standards before handoff
 
 ## Explicit Non-Responsibilities
 
@@ -85,39 +84,19 @@ Before responding, inspect the invocation context to infer starting inputs:
 
 2. **Analyze Changed Files**:
    - Get file paths, additions, deletions for each changed file
-   - Categorize files using File Categorization heuristics (below)
-   - Calculate total lines changed (excluding mechanical changes)
-   - Identify flags: Large PR (>1000 LOC), mechanical-only, CI failures
+   - Calculate total lines changed
+   - Identify flags: CI failures
 
 3. **Create ReviewContext.md immediately**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`
    - Use complete template structure (see "ReviewContext.md Template" below)
-   - Include all metadata, file categories table, and flags
+   - Include all metadata and flags
    - This becomes the authoritative parameter source for all review stages
 
-### Step 2: File Categorization & Change Analysis
-
-1. **Categorize Each Changed File**:
-   - Apply File Categorization heuristics (tests/docs/config/generated/implementation)
-   - Build category summary table with file counts and line changes per category
-   - Include in ReviewContext.md
-
-2. **Analyze Change Types**:
-   - Read diffs for each file to determine mechanical vs semantic changes
-   - Apply Mechanical vs Semantic heuristics
-   - Count semantic changes separately from mechanical
-   - Flag PRs with >1000 LOC of semantic changes
-
-3. **Identify Special Cases**:
-   - Mechanical-only PRs (formatting, renames, generated code only)
-   - CI failures present (note in flags to avoid redundant comments later)
-   - Missing tests for files with semantic implementation changes
-   - Breaking changes suspected (signature changes, removed exports, data model changes)
-
-### Step 3: Research Prompt Generation
+### Step 2: Research Prompt Generation
 
 1. **Identify Research Needs**:
-   - For each file with semantic changes, determine what baseline understanding is needed:
+   - For each changed file, determine what baseline understanding is needed:
      - How did the module function before changes?
      - What were the integration points and dependencies?
      - What patterns and conventions were used?
@@ -126,43 +105,43 @@ Before responding, inspect the invocation context to infer starting inputs:
 
 2. **Create code-research.prompt.md**:
    - Write to `.paw/reviews/<identifier>/prompts/code-research.prompt.md`
-   - Use template structure (see "Code Research Prompt Template" below)
+   - Provide guidance on what questions to ask about the baseline system behavior
+   - Let the agent determine the most important questions based on the specific changes
    - Include specific files to investigate at base commit
-   - List clear, answerable questions about pre-change behavior
    - Provide instructions for checking out base commit
 
 3. **Quality Check Research Prompt**:
    - Questions are specific and answerable through code analysis
-   - All semantically changed files have corresponding research questions
+   - All changed files have corresponding research questions
    - No speculation or subjective questions
-   - Clear instructions for Code Research Agent
+   - Clear instructions for Review Baseline Researcher
 
-### Step 4: Pause for Research
+### Step 3: Pause for Research
 
 1. **Signal Human for Research**:
    ```
    Research Prompt Ready
 
-   I've created prompts/code-research.prompt.md with X questions about pre-change behavior.
+   I've created prompts/code-research.prompt.md with questions about pre-change behavior.
 
    Files to investigate at base commit <sha>:
    - [list files]
 
-   Next: Please invoke Code Research Agent (PAW-02A) with this prompt.
+   Next: Please invoke PAW Review Baseline Researcher with this prompt.
    I'll wait for CodeResearch.md before continuing.
    ```
 
 2. **Wait for CodeResearch.md**:
    - Do NOT proceed until `CodeResearch.md` exists in the artifact directory
-   - This file will be created by PAW-02A Code Researcher
+   - This file will be created by PAW Review Baseline Researcher
    - Contains baseline understanding needed to derive specification
 
-### Step 5: Derive Specification
+### Step 4: Derive Specification
 
 1. **Read All Source Material**:
    - ReviewContext.md (PR description, changed files)
    - CodeResearch.md (pre-change system behavior)
-   - Git diffs for all semantic changes
+   - Git diffs for all changes
    - Linked issues or documentation (if available)
 
 2. **Identify Explicit Goals**:
@@ -208,13 +187,12 @@ After creating all artifacts, validate against these criteria:
 
 **ReviewContext.md Quality**:
 - [ ] All PR metadata fields populated
-- [ ] File categorization table complete with accurate counts
 - [ ] Flags section identifies all applicable conditions
 - [ ] Base and head commit SHAs recorded
 
 **code-research.prompt.md Quality**:
 - [ ] Questions are specific and answerable
-- [ ] All semantically changed files covered
+- [ ] All changed files covered
 - [ ] Clear instructions for checking out base commit
 - [ ] File:line references for investigation targets
 
@@ -238,62 +216,8 @@ After creating all artifacts, validate against these criteria:
 All artifacts stored in this directory:
 - `ReviewContext.md`
 - `prompts/code-research.prompt.md`
-- `CodeResearch.md` (created by PAW-02A)
+- `CodeResearch.md` (created by PAW Review Baseline Researcher)
 - `DerivedSpec.md`
-
-## File Categorization Heuristics
-
-Apply these rules in order; first match wins:
-
-**Tests**:
-- Path contains `/test/`, `/tests/`, `/__tests__/`, `/spec/`
-- Filename matches `*_test.*`, `*.spec.*`, `*.test.*`, `test_*.py`
-
-**Documentation**:
-- Extension: `.md`, `.rst`, `.txt`, `.adoc`
-- Path starts with `docs/`, `documentation/`, `doc/`
-
-**Configuration**:
-- Extension: `.json`, `.yml`, `.yaml`, `.toml`, `.ini`, `.config`, `.env`
-- Path matches `config/`, `configs/`, `.github/`, `.vscode/`
-- Filenames: `Dockerfile`, `Makefile`, `package.json`, `setup.py`, `requirements.txt`
-
-**Generated**:
-- File header contains `GENERATED`, `AUTO-GENERATED`, `DO NOT EDIT`
-- Path matches `dist/`, `build/`, `out/`, `target/`, `node_modules/`, `vendor/`, `.next/`
-- Lock files: `package-lock.json`, `yarn.lock`, `Gemfile.lock`, `poetry.lock`
-
-**Implementation** (default):
-- Everything else not matching above categories
-
-## Mechanical vs Semantic Heuristics
-
-**Mechanical Changes** (don't affect logic):
-- Whitespace-only: indentation, blank lines, trailing spaces
-- Rename-only: same identifiers with different names (variable renames, function renames) but no logic change
-- Formatting: line breaks, bracket placement, quote style
-- Import reordering: same imports, different order
-- Comment changes: added/removed/modified comments only
-
-**Semantic Changes** (affect behavior):
-- New functions, classes, methods, variables
-- Modified logic: conditionals, loops, calculations
-- Changed control flow: early returns, exception handling
-- Different algorithms or data structures
-- New imports (not just reordered)
-- Modified function signatures (parameters, return types)
-- Changed data models or schemas
-
-**Edge Cases**:
-- Renames that change behavior (e.g., typo fix that changes meaning): Semantic
-- Whitespace in string literals that affects output: Semantic
-- Mixed changes in same file: Categorize by most significant change
-
-## Large PR Threshold
-
-- **>1000 lines** of semantic changes (excluding mechanical)
-- Set flag in ReviewContext.md when threshold exceeded
-- Evaluation stage will recommend splitting if appropriate
 
 ## Communication Patterns
 
@@ -301,8 +225,7 @@ Apply these rules in order; first match wins:
   ```
   ReviewContext.md created with:
   - 45 files changed (+823 -456 lines)
-  - 5 categories identified
-  - Large PR flag set (1247 semantic LOC)
+  - CI status: passing
   ```
 
 - **Waiting for Input**: Be explicit when pausing:
@@ -319,13 +242,6 @@ Apply these rules in order; first match wins:
   ```
 
 ## Error / Edge Handling
-
-### Empty or Trivial PR
-
-If PR contains only mechanical changes:
-- Note in ReviewContext.md flags: "Mechanical-only changes"
-- DerivedSpec.md should note minimal semantic impact
-- Later stages will recommend brief acknowledgment
 
 ### PR with CI Failures
 
@@ -391,7 +307,6 @@ When reviewing non-GitHub PRs:
 
 - **Files**: Read entirely without limit/offset parameters
 - **Metadata**: All ReviewContext.md fields populated
-- **Analysis**: All changed files categorized and analyzed for mechanical vs semantic
 - **Research**: All research questions answered in CodeResearch.md
 - **Specification**: Zero open questions, all discrepancies resolved
 - **Evidence**: Every claim has file:line reference or concrete data
@@ -436,22 +351,9 @@ status: complete
 
 [Include full PR description or commit message summary]
 
-## File Categories
-
-| Category | Files | Lines Changed |
-|----------|-------|---------------|
-| Implementation | X | +A -B |
-| Tests | Y | +C -D |
-| Documentation | Z | +E -F |
-| Configuration | W | +G -H |
-| Generated | V | +I -J |
-
 ## Flags
 
-- [x/] Large PR (>1000 semantic LOC)
-- [x/] Mechanical-only changes
 - [x/] CI Failures present
-- [x/] Missing tests for semantic changes
 - [x/] Breaking changes suspected
 
 ## Metadata
@@ -462,87 +364,31 @@ status: complete
 **Analysis Tool**: PAW-R1 Understanding Agent
 ```
 
-### Code Research Prompt Template
+### Code Research Prompt Guidance
 
-```markdown
----
-mode: PAW-02A Code Researcher
----
+When creating `prompts/code-research.prompt.md`, provide context and guidance to help the PAW Review Baseline Researcher understand what questions are most important to answer about the baseline system. The prompt should:
 
-# Code Research for <PR Title or Branch>
+**Essential Elements**:
+- Target mode: "PAW Review Baseline Researcher"
+- PR/Branch title and context
+- Base branch and commit SHA
+- List of changed files with brief description of what changed
+- Instructions for checking out base commit and returning to review branch
 
-Analyze the codebase at **base commit <sha>** (before PR changes) to understand the pre-change state.
+**Question Areas to Consider** (adapt based on the specific changes):
+- **Baseline Behavior**: How did modified modules function before changes? What were entry points, data flows, contracts?
+- **Integration Points**: What components depend on changed modules? What external services are involved?
+- **Patterns & Conventions**: What error handling, naming, or testing patterns were established?
+- **Performance Context**: For performance-sensitive code, what were the characteristics and optimization patterns?
+- **Test Coverage**: What testing existed for the changed code? What patterns and utilities were used?
+- **Specific Ambiguities**: Any specific questions that arose during initial PR analysis
 
-**Base Branch**: <base-branch>
-**Base Commit**: <sha>
+Let the researcher determine which questions are most critical based on the nature and scope of the changes. Not every area needs deep investigation for every PR.
 
-## Instructions
-
-1. **Checkout base commit**: `git checkout <base-sha>`
-2. **Analyze codebase at that state** using Code Location, Analysis, and Pattern Finding modes
-3. **Document findings** in `CodeResearch.md` with file:line references to base commit
-4. **Return to review branch** when complete: `git checkout <head-branch>`
-
-## Research Questions
-
-### 1. Baseline Behavior for Modified Modules
-
-For files with semantic changes, understand pre-change functionality:
-
-**Files to investigate**:
-- `path/to/file1.ext` (lines <range>): <what changed here>
-- `path/to/file2.ext` (lines <range>): <what changed here>
-
-**Questions**:
-- How did these modules function before changes?
-- What were the entry points and data flows?
-- What invariants or contracts existed?
-- What error handling was present?
-
-### 2. Integration Points & Dependencies
-
-**Questions**:
-- What components import or depend on changed modules?
-- What external services or APIs are involved?
-- What downstream consumers might be affected?
-- How are these modules tested?
-
-### 3. Patterns & Conventions
-
-**Questions**:
-- What error handling patterns were used?
-- What naming conventions existed?
-- What testing approaches were standard?
-- What performance characteristics existed?
-
-### 4. Performance & Hot Paths
-
-For files in performance-sensitive areas:
-
-**Questions**:
-- What were the performance characteristics?
-- What optimization patterns were used?
-- What scale/load did the code handle?
-- Are there any known performance bottlenecks?
-
-### 5. Test Coverage Baseline
-
-**Questions**:
-- What test coverage existed for changed code?
-- What testing patterns were used (unit, integration, e2e)?
-- What edge cases were covered?
-- What test utilities or fixtures existed?
-
-### 6. Ambiguities Requiring Clarification
-
-<List specific questions that arose during initial analysis>
-- [Question about unclear behavior]
-- [Question about missing context]
-
-## Output
-
-Create `CodeResearch.md` with findings organized by these sections, including file:line references to the base commit for all claims.
-```
+**Output Specification**:
+- Create `CodeResearch.md` with findings organized by relevant areas
+- Include file:line references to base commit for all observations
+- Focus on behavioral understanding, not line-by-line code reproduction
 
 ### DerivedSpec.md Template
 
@@ -675,9 +521,9 @@ When all artifacts complete and validated:
 Understanding Stage Complete - Ready for Evaluation
 
 Artifacts created and validated:
-- [x] ReviewContext.md (PR metadata, file categories, flags)
-- [x] prompts/code-research.prompt.md (research questions)
-- [x] CodeResearch.md (baseline understanding from PAW-02A)
+- [x] ReviewContext.md (PR metadata, flags)
+- [x] prompts/code-research.prompt.md (research guidance)
+- [x] CodeResearch.md (baseline understanding from PAW Review Baseline Researcher)
 - [x] DerivedSpec.md (explicit/inferred goals, before/after behavior)
 
 Quality checks passed:
@@ -686,8 +532,6 @@ Quality checks passed:
 - [x] Baseline behavior documented from CodeResearch.md
 - [x] Zero open questions in DerivedSpec.md
 - [x] Discrepancies flagged (if any)
-- [x] All changed files categorized
-- [x] Mechanical vs semantic analysis complete
 
 Artifact location: .paw/reviews/<identifier>/
 
@@ -697,4 +541,6 @@ Next: Invoke Evaluation Stage agents (PAW-R2A Impact Analysis, PAW-R2B Gap Analy
 ---
 
 **Operate with rigor**: Evidence first, baseline context second, derived specification last. Never speculate—always cite sources.
+```
+````
 ```

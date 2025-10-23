@@ -363,7 +363,6 @@ All Phase 1 artifacts must exist:
    - Security Implications
    - Deployment Considerations
    - Risk Assessment
-   - Scope & Splitting Recommendation (if large)
 
 ## Heuristics
 
@@ -394,7 +393,6 @@ Security Flags:
 - **Evidence Required**: All claims must have file:line references
 - **Informed by Baseline**: Use CodeResearch.md to understand what changed
 - **No Speculation**: Flag potential issues with evidence, don't fabricate
-- **Scope Assessment**: If PR >1000 LOC or high complexity, recommend splitting (polite, constructive)
 
 ## Hand-off
 
@@ -447,7 +445,7 @@ Phase 1 artifacts + ImpactAnalysis.md
    
 3. **Testing Analysis**
    - Parse coverage report if available (`coverage/summary.json`, `lcov.info`)
-   - Compare semantic changes to test changes
+   - Compare code changes to test changes
    - Identify branches/conditions lacking tests
    - Assess test depth (edge cases, error paths) and breadth (integration, user scenarios)
    - Flag trivial tests (assertions that always pass)
@@ -489,7 +487,7 @@ Qualitative:
 
 Gap Detection:
 ```
-semantic_files - test_diff_files → potential gap
+changed_files - test_diff_files → potential gap
 count new conditionals/branches → estimate missing branch coverage
 ```
 
@@ -599,10 +597,6 @@ status: complete
 **Overall Risk**: Low | Medium | High
 
 <Rationale>
-
-## Scope & Splitting Recommendation
-
-<If PR >1000 LOC or high complexity: polite suggestion to split>
 ```
 
 #### 4. GapAnalysis.md Template
@@ -677,10 +671,6 @@ status: complete
 ### Specific Gaps
 
 <List uncovered code paths with file:line references>
-
-## Scope Assessment
-
-<If large/complex: note review difficulty and suggest approach>
 ```
 
 ### Success Criteria
@@ -695,13 +685,11 @@ status: complete
 - [ ] All findings have file:line references (FR-014)
 - [ ] Test coverage section includes quantitative if available (FR-016, FR-017)
 - [ ] Qualitative coverage analysis present (FR-016, FR-018)
-- [ ] Large PR flagged if >1000 LOC (FR-015)
 
 #### Manual Verification:
 - [ ] Categorization feels appropriate (not inflated) (FR-014)
 - [ ] Coverage assessment helps judge depth/breadth balance (FR-016)
 - [ ] Baseline patterns from CodeResearch inform recommendations (FR-010)
-- [ ] Scope assessment actionable for large PRs (FR-015)
 
 ### Status
 
@@ -1090,8 +1078,6 @@ Unimplemented
 ### Unit Tests
 
 - **WorkflowContext extraction**: Mock missing ReviewContext.md, verify parameter derivation
-- **File categorization**: Test against fixture diffs with known file types
-- **Mechanical vs semantic detection**: Synthetic diffs (whitespace-only, logic changes)
 - **Integration graph builder**: Mock import trees, verify one-hop traversal
 - **Breaking change detector**: Function signature changes, config schema diffs
 - **Finding batching**: Multiple findings with same root cause → single comment
@@ -1109,13 +1095,11 @@ Unimplemented
 
 ### Manual Verification Steps
 
-1. **Large PR flag**: Test with >1000 LOC PR, verify scope assessment recommendation
-2. **Mechanical-only PR**: Test with formatting-only PR, verify brief acknowledgment
-3. **Tone regeneration**: Request tone change, verify pending review recreated with new tone
-4. **Pending review deletion**: Delete pending review, regenerate from ReviewComments.md
-5. **Coverage absence**: Test without coverage report, verify qualitative analysis only
-6. **Q&A accuracy**: Ask questions about pre-change behavior, verify answers reference CodeResearch.md
-7. **Assessment quality**: Verify assessments identify alternative perspectives appropriately
+1. **Tone regeneration**: Request tone change, verify pending review recreated with new tone
+2. **Pending review deletion**: Delete pending review, regenerate from ReviewComments.md
+3. **Coverage absence**: Test without coverage report, verify qualitative analysis only
+4. **Q&A accuracy**: Ask questions about pre-change behavior, verify answers reference CodeResearch.md
+5. **Assessment quality**: Verify assessments identify alternative perspectives appropriately
 
 ### Edge Case Tests
 
@@ -1127,7 +1111,7 @@ Unimplemented
 ### Test Data Fixtures
 
 Provide:
-- Synthetic PR diffs (small, medium, large, mechanical-only, semantic-heavy)
+- Synthetic PR diffs (small, medium, large)
 - Sample coverage reports (JSON, lcov formats)
 - Import/dependency graphs
 - Baseline CodeResearch excerpts
@@ -1163,8 +1147,6 @@ All automated and manual criteria must pass before enabling agents for productio
 
 - **Limit parsing scope**: Only analyze changed files, not entire codebase
 - **One-hop integration expansion**: Don't traverse entire dependency tree
-- **Cache tokenization**: Reuse parsed tokens for mechanical vs semantic detection
-- **Large diff downgrade**: For >1000 LOC, use line-level heuristics instead of deep AST
 - **Batch GitHub API calls**: Minimize round-trips
 - **Stream coverage parsing**: Don't load entire coverage report into memory
 - **O(n) grouping complexity**: Finding batching scales linearly with finding count

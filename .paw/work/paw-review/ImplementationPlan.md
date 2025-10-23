@@ -44,7 +44,7 @@ From paw-review-specification.md and Spec.md:
 - **Must/Should/Could categorization**: Evidence-based, not inflated
 - **One Issue, One Comment**: Batch related findings
 - **Rationale sections**: Cite best practices from review-research-notes.md
-- **Assessment sections**: Critical evaluation by Review Comment Reviewer agent
+- **Assessment sections**: Critical evaluation by Feedback Critic agent
 
 ## What We're NOT Doing
 
@@ -735,7 +735,7 @@ Unimplemented
 
 ### Overview
 
-Create Feedback Generation Agent and Review Comment Reviewer Agent that transform findings into comprehensive review comments with rationale and assessment sections, create GitHub pending reviews (GitHub context) or documented ReviewComments.md (non-GitHub context), support tone adjustment and Q&A.
+Create Feedback Generation Agent and Feedback Critic that transform findings into comprehensive review comments with rationale and assessment sections, create GitHub pending reviews (GitHub context) or documented ReviewComments.md (non-GitHub context), support tone adjustment and Q&A.
 
 ### Changes Required
 
@@ -880,23 +880,23 @@ ReviewComments.md created with:
 GitHub context: Pending review created (ID: <id>)
 Non-GitHub context: Manual posting instructions provided
 
-Ready for Review Comment Reviewer Agent to add assessments.
+Ready for Feedback Critic to add assessments.
 ```
 ````
 
-#### 2. Review Comment Reviewer Agent Chatmode
+#### 2. Feedback Critic Chatmode
 
-**File**: `.github/chatmodes/PAW-R3B Review Comment Reviewer Agent.chatmode.md`
+**File**: `.github/chatmodes/PAW-R3B Feedback Critic.chatmode.md`
 
 **Changes**: Create agent that critically assesses each comment's usefulness and accuracy
 
 ```markdown
 ````chatmode
 ---
-description: 'PAW Review Comment Reviewer Agent - Critically assess review comments'
+description: 'PAW Review Feedback Critic - Critically assess review comments'
 ---
 
-# Review Comment Reviewer Agent
+# Feedback Critic
 
 You provide critical assessment of generated review comments to help reviewers make informed decisions.
 
@@ -1088,7 +1088,7 @@ Full review artifacts: `.paw/reviews/<identifier>/`
 - [ ] GitHub pending review created without submission (FR-022, FR-025)
 - [ ] Rationale present for every comment (FR-027)
 - [ ] Code examples included for non-trivial suggestions (FR-024)
-- [ ] Review Comment Reviewer Agent chatmode exists
+- [ ] Feedback Critic chatmode exists
 - [ ] Assessment sections added to ReviewComments.md (FR-029)
 - [ ] Assessments NOT posted to GitHub or external (FR-030)
 - [ ] Q&A capability references all artifacts (FR-028)

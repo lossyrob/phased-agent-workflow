@@ -109,10 +109,10 @@ Acceptance Scenarios:
 
 Narrative: As a reviewer wanting high-quality feedback, I need a critical second look at generated review comments to identify potential inaccuracies, missing logic, or low-value suggestions before I finalize what to post. This assessment helps me make better decisions about which comments to include.
 
-Independent Test: Given initial review comments generated, when the Review Comment Reviewer evaluates them, then each comment receives an assessment section analyzing usefulness, accuracy, and potential alternative perspectives.
+Independent Test: Given initial review comments generated, when the Feedback Critic evaluates them, then each comment receives an assessment section analyzing usefulness, accuracy, and potential alternative perspectives.
 
 Acceptance Scenarios:
-1. Given generated review comments, When Review Comment Reviewer runs, Then each comment in ReviewComments.md gets an Assessment section added below it
+1. Given generated review comments, When Feedback Critic runs, Then each comment in ReviewComments.md gets an Assessment section added below it
 2. Given a comment recommendation, When assessment analyzes it, Then the assessment considers accuracy, usefulness, and alternative viewpoints the initial reviewer might have missed
 3. Given an assessment identifying potential issues, When I review comments, Then I have additional context to decide whether to include, modify, or skip the comment
 4. Given GitHub context, When assessments are added, Then they remain in the local ReviewComments.md file only and do not appear in the pending GitHub review
@@ -283,12 +283,12 @@ Implementation may use either approach or a hybrid:
 - Understanding Agent produces all R1 artifacts (ReviewContext, code-research prompt, DerivedSpec after research)
 - Evaluation Agent produces all R2 artifacts (ImpactAnalysis, GapAnalysis)
 - Feedback Agent produces ReviewComments.md
-- Review Comment Reviewer adds assessments to ReviewComments.md
+- Feedback Critic adds assessments to ReviewComments.md
 
 **Option B: Specialized Agents Per Artifact**
 - Stage R1: PR Context Agent → Code Research Prompt Generator → Code Research Agent → Derived Spec Agent
 - Stage R2: Impact Analysis Agent → Gap Analysis Agent
-- Stage R3: Feedback Generation Agent → Review Comment Reviewer Agent
+- Stage R3: Feedback Generation Agent → Feedback Critic
 
 **Human Interaction Model:**
 Regardless of agent structure, human reviewers invoke stages as logical units:
@@ -381,7 +381,7 @@ This ensures the derived specification is informed by actual pre-change system b
 - SC-009: Given request for tone adjustment, agent regenerates pending review with modified tone (FR-025)
 - SC-010: Given generated review comments, every recommendation includes Rationale section citing relevant best practices or evidence (FR-026)
 - SC-011: Given artifacts from all stages, reviewer can ask agent questions and receive answers based on documented codebase understanding (FR-027)
-- SC-012: Given initial review comments, Review Comment Reviewer adds assessment sections to ReviewComments.md evaluating usefulness and accuracy without posting to GitHub (FR-028, FR-029)
+- SC-012: Given initial review comments, Feedback Critic adds assessment sections to ReviewComments.md evaluating usefulness and accuracy without posting to GitHub (FR-028, FR-029)
 - SC-013: Given a non-GitHub PR context (e.g., Azure DevOps, local branches), workflow functions using branch names and git diff, producing same artifacts with branch-based naming (FR-030)
 - SC-014: Given PR with failing CI checks, ReviewContext.md captures status and evaluation notes redundancy risk for CI-detected issues (FR-031)
 - SC-015: Given PR containing only mechanical changes (formatting, generated code), understanding artifacts note minimal semantic changes and recommend brief acknowledgment (FR-032)
@@ -398,7 +398,7 @@ This ensures the derived specification is informed by actual pre-change system b
 - Artifacts are stored in `.paw/reviews/` directory structure with write permissions
 - Human reviewer has GitHub access to view and edit pending reviews in GitHub contexts
 - Reviewers understand the Must/Should/Could categorization scheme for prioritizing findings
-- Review Comment Reviewer agent runs after initial comment generation but before human final review
+- Feedback Critic agent runs after initial comment generation but before human final review
 - Tone adjustment requests can specify desired tone characteristics (e.g., "more encouraging", "more direct")
 - Baseline code research analyzes behavior and patterns, not line-by-line implementation details
 
@@ -414,7 +414,7 @@ In Scope:
 - Test coverage analysis with quantitative and qualitative assessment
 - Comprehensive review comment generation with rationale sections
 - GitHub pending review creation and management
-- Critical assessment of generated comments (Review Comment Reviewer)
+- Critical assessment of generated comments (Feedback Critic)
 - Support for non-GitHub PR contexts (Azure DevOps, local branches)
 - Human-controlled filtering and editing of all feedback before submission
 - Interactive question-answering about changes based on codebase understanding
@@ -449,11 +449,11 @@ Out of Scope:
 
 - **Risk**: Reverse-engineered specifications may misinterpret author intent, leading to irrelevant feedback. **Mitigation**: Clearly distinguish stated vs inferred goals; flag uncertainties as open questions; allow human reviewer to correct understanding artifacts before evaluation; encourage reviewer to validate DerivedSpec.md accuracy.
 
-- **Risk**: Gap analysis may generate excessive low-value findings, overwhelming the reviewer. **Mitigation**: Strict Must/Should/Could categorization with evidence requirements; One Issue, One Comment batching; Review Comment Reviewer provides critical assessment to help filter; human maintains full control over what gets posted.
+- **Risk**: Gap analysis may generate excessive low-value findings, overwhelming the reviewer. **Mitigation**: Strict Must/Should/Could categorization with evidence requirements; One Issue, One Comment batching; Feedback Critic provides critical assessment to help filter; human maintains full control over what gets posted.
 
 - **Risk**: Code research of pre-change state may analyze wrong commit or miss relevant context. **Mitigation**: Explicitly check out base commit before research; document commit SHA in CodeResearch.md; focus on behavioral patterns rather than line-level details; allow human to validate baseline understanding.
 
-- **Risk**: Generated comments may have inaccurate code suggestions that don't fit codebase context. **Mitigation**: Code research documents existing patterns to inform suggestions; rationale sections explain reasoning; Review Comment Reviewer assesses accuracy; human edits comments before posting; recommendations focus on approaches rather than exact code when context is uncertain.
+- **Risk**: Generated comments may have inaccurate code suggestions that don't fit codebase context. **Mitigation**: Code research documents existing patterns to inform suggestions; rationale sections explain reasoning; Feedback Critic assesses accuracy; human edits comments before posting; recommendations focus on approaches rather than exact code when context is uncertain.
 
 - **Risk**: Non-GitHub contexts may lack sufficient metadata for complete analysis. **Mitigation**: Use git diff and branch names as fallback; document limitations in ReviewContext.md; focus on code-level analysis rather than platform features; allow manual metadata input when available.
 
@@ -461,7 +461,7 @@ Out of Scope:
 
 - **Risk**: Test coverage analysis may misinterpret metrics or miss project-specific testing conventions. **Mitigation**: Report quantitative metrics without interpretation when available; qualitative assessment flags gaps but notes human judgment needed; allow reviewer to override categorization based on project standards.
 
-- **Risk**: Review Comment Reviewer may introduce bias or incorrectly assess comment quality. **Mitigation**: Assessments are advisory only, not filtering decisions; human reviewer retains final control; assessment prompts critical thinking rather than automatic dismissal; focus on alternative perspectives rather than binary accept/reject.
+- **Risk**: Feedback Critic may introduce bias or incorrectly assess comment quality. **Mitigation**: Assessments are advisory only, not filtering decisions; human reviewer retains final control; assessment prompts critical thinking rather than automatic dismissal; focus on alternative perspectives rather than binary accept/reject.
 
 - **Risk**: Tone adjustment may fail to capture reviewer's desired communication style. **Mitigation**: Support iterative refinement; allow manual editing of individual comments; provide tone adjustment as option, not requirement; reviewer can edit directly in GitHub UI as alternative.
 
@@ -484,5 +484,5 @@ Out of Scope:
 - **Pending Review**: GitHub draft review with comments posted but not yet submitted to author
 - **Thread Comment**: Review comment at file or PR level rather than specific line
 - **Inline Comment**: Review comment tied to specific file path and line number(s)
-- **Review Comment Reviewer**: Agent that critically assesses generated comments for usefulness and accuracy
+- **Feedback Critic**: Agent that critically assesses generated comments for usefulness and accuracy
 - **Code Research**: Analysis of codebase to understand patterns, behavior, and context

@@ -1,0 +1,16 @@
+{
+  "name": "phased-agent-workflow",
+  "version": "0.1.0",
+  "description": "Phased Agent Workflow - A structured approach to AI-assisted software development",
+  "private": true,
+  "scripts": {
+    "lint:chatmode": "./scripts/lint-chatmode.sh",
+    "lint:chatmode:all": "./scripts/lint-chatmode.sh"
+  },
+  "devDependencies": {
+    "@dqbd/tiktoken": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

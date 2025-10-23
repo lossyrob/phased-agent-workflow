@@ -81,10 +81,9 @@ Create the Understanding stage agent that produces all R1 artifacts in dependenc
 
 **File**: `.github/chatmodes/PAW-R1 Understanding Agent.chatmode.md`
 
-**Changes**: Create new chatmode file with YAML frontmatter and structured instructions
+**Changes**: Create new chatmode file with YAML frontmatter and structured instructions (Note: chatmode files use YAML frontmatter directly, NOT wrapped in ````chatmode fences)
 
 ```markdown
-````chatmode
 ---
 description: 'PAW Review Understanding Agent - Analyze PR changes and derive specification'
 ---
@@ -176,7 +175,8 @@ Artifacts created:
 
 Zero open questions remaining. Ready for Evaluation Stage (R2).
 ```
-````
+
+**Note**: The example above shows only the opening section. The actual chatmode file contains all process steps, heuristics, and guardrails as documented in the Overview section. See existing chatmode files like `PAW-01A Spec Agent.chatmode.md` for the complete structure pattern.
 
 #### 2. ReviewContext.md Template
 
@@ -364,10 +364,9 @@ Create Impact Analysis and Gap Analysis agents that produce `ImpactAnalysis.md` 
 
 **File**: `.github/chatmodes/PAW-R2A Impact Analysis Agent.chatmode.md`
 
-**Changes**: Create agent that builds integration graph, detects breaking changes, assesses performance/security
+**Changes**: Create agent that builds integration graph, detects breaking changes, assesses performance/security (Note: chatmode files use YAML frontmatter directly, NOT wrapped in fences)
 
 ```markdown
-````chatmode
 ---
 description: 'PAW Review Impact Analysis Agent - Identify system-wide effects'
 ---
@@ -462,16 +461,16 @@ ImpactAnalysis.md created with:
 
 Ready for Gap Analysis Agent.
 ```
-````
+
+**Note**: The example above shows only the opening section. See existing PAW chatmode files for the complete structure pattern.
 
 #### 2. Gap Analysis Agent Chatmode
 
 **File**: `.github/chatmodes/PAW-R2B Gap Analysis Agent.chatmode.md`
 
-**Changes**: Create agent that identifies correctness, safety, testing, maintainability gaps with Must/Should/Could categorization
+**Changes**: Create agent that identifies correctness, safety, testing, maintainability gaps with Must/Should/Could categorization (Note: chatmode files use YAML frontmatter directly, NOT wrapped in fences)
 
 ```markdown
-````chatmode
 ---
 description: 'PAW Review Gap Analysis Agent - Identify issues and gaps'
 ---
@@ -589,7 +588,8 @@ GapAnalysis.md created with:
 
 All findings have evidence. Ready for Feedback Generation (R3).
 ```
-````
+
+**Note**: The example above shows only the opening section. See existing PAW chatmode files for the complete structure pattern.
 
 #### 3. ImpactAnalysis.md Template
 
@@ -774,10 +774,9 @@ Create Feedback Generation Agent and Feedback Critic that transform findings int
 
 **File**: `.github/chatmodes/PAW-R3A Feedback Generation Agent.chatmode.md`
 
-**Changes**: Create agent that generates comments, posts to pending review, adds rationale, supports Q&A
+**Changes**: Create agent that generates comments, posts to pending review, adds rationale, supports Q&A (Note: chatmode files use YAML frontmatter directly, NOT wrapped in fences)
 
 ```markdown
-````chatmode
 ---
 description: 'PAW Review Feedback Generation Agent - Create review comments with rationale'
 ---
@@ -913,16 +912,16 @@ Non-GitHub context: Manual posting instructions provided
 
 Ready for Feedback Critic to add assessments.
 ```
-````
+
+**Note**: The example above shows only the opening section. See existing PAW chatmode files for the complete structure pattern.
 
 #### 2. Feedback Critic Chatmode
 
 **File**: `.github/chatmodes/PAW-R3B Feedback Critic.chatmode.md`
 
-**Changes**: Create agent that critically assesses each comment's usefulness and accuracy
+**Changes**: Create agent that critically assesses each comment's usefulness and accuracy (Note: chatmode files use YAML frontmatter directly, NOT wrapped in fences)
 
 ```markdown
-````chatmode
 ---
 description: 'PAW Review Feedback Critic - Critically assess review comments'
 ---
@@ -1015,7 +1014,8 @@ Human reviewer can now:
 - Ask agent for modifications based on assessments
 - Submit review when satisfied
 ```
-````
+
+**Note**: The example above shows only the opening section. See existing PAW chatmode files for the complete structure pattern.
 
 #### 3. ReviewComments.md Template
 

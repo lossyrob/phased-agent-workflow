@@ -350,6 +350,27 @@ The Understanding Agent chatmode file has been successfully created at `.github/
 - The Research Pause pattern (step 4) mirrors the Spec Research pattern from the existing PAW workflow, ensuring consistency
 - Phase 3 will need to reference the GitHub MCP tools for pending review creation - ensure those are available and tested
 
+**Addressed Review Comments:**
+
+Addressed PR review comment: https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453972316
+
+The Understanding Agent chatmode was significantly expanded to match the specification level of PAW-01A Spec Agent and PAW-02B Impl Planner. Added sections:
+
+1. **Core Review Principles** - 6 principles guiding the understanding process
+2. **High-Level Responsibilities** - Clear list of what the agent does
+3. **Explicit Non-Responsibilities** - What the agent should NOT do
+4. **Expanded Start/Initial Response** - Comprehensive context checking with ReviewContext.md
+5. **Detailed Process Steps** - Each of the 5 steps now has multiple substeps with specific actions
+6. **Complete Artifact Templates** - Inline templates for ReviewContext.md, code-research.prompt.md, and DerivedSpec.md
+7. **Enhanced Heuristics** - More detailed file categorization and mechanical vs semantic rules
+8. **Communication Patterns** - How to communicate progress and blocks
+9. **Error/Edge Handling** - Specific scenarios with example responses
+10. **Guardrails (Enforced)** - NEVER/ALWAYS rules to guide behavior
+11. **Complete Means** - Definition of what "complete" looks like
+12. **Hand-off Checklist** - Comprehensive checklist for stage completion
+
+The expanded chatmode now provides explicit guidance on HOW to generate each artifact, WHAT to avoid, and clear templates/examples. This ensures the agent has detailed instructions matching the quality and comprehensiveness of other PAW agents.
+
 ---
 
 ## Phase 2: Evaluation Stage Agents & Analysis Artifacts

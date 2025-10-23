@@ -16,7 +16,7 @@ The existing PAW workflow provides strong architectural patterns to build upon:
 
 **What exists**: Spec.md defining all functional requirements (FR-001 through FR-034), CodeResearch.md documenting PAW patterns, WorkflowContext.md with parameters, and extensive research notes on code review best practices.
 
-**What's missing**: Agent chatmode files, artifact generation logic for review-specific documents (PRContext, DerivedSpec, ChangeAnalysis, ImpactAnalysis, GapAnalysis, ReviewComments), baseline codebase research integration, pending review creation, rationale/assessment sections, tone adjustment, and Q&A capabilities.
+**What's missing**: Agent chatmode files, artifact generation logic for review-specific documents (ReviewContext, DerivedSpec, ImpactAnalysis, GapAnalysis, ReviewComments), baseline codebase research integration, pending review creation, rationale/assessment sections, tone adjustment, and Q&A capabilities.
 
 ## Desired End State
 
@@ -73,7 +73,7 @@ Build incrementally using the proven PAW patterns:
 
 ### Overview
 
-Create the Understanding stage agent that produces all R1 artifacts in dependency order: `ReviewContext.md` (parameter source) → `prompts/code-research.prompt.md` → (pause for Code Research Agent) → `CodeResearch.md` → `DerivedSpec.md` → `ChangeAnalysis.md`.
+Create the Understanding stage agent that produces all R1 artifacts in dependency order: `ReviewContext.md` (parameter source) → `prompts/code-research.prompt.md` → (pause for Code Research Agent) → `CodeResearch.md` → `DerivedSpec.md`.
 
 ### Changes Required
 
@@ -135,14 +135,6 @@ Then begin analysis process.
      - Observable before/after behavior
    - Flag discrepancies and ambiguities
    - **BLOCK if open questions remain**
-   
-6. **Change Analysis**
-   - Create `ChangeAnalysis.md` with:
-     - Summary statistics
-     - File categories breakdown
-     - Mechanical vs semantic classification
-     - Component touch map
-     - Complexity hot spots
 
 ## Artifact Directory Structure
 
@@ -181,7 +173,6 @@ Artifacts created:
 - prompts/code-research.prompt.md  
 - CodeResearch.md (from Code Research Agent)
 - DerivedSpec.md
-- ChangeAnalysis.md
 
 Zero open questions remaining. Ready for Evaluation Stage (R2).
 ```
@@ -315,7 +306,6 @@ For files in hot paths or performance-sensitive areas:
 - [ ] Agent blocks until CodeResearch.md exists (FR-009 dependency)
 - [ ] DerivedSpec.md distinguishes explicit vs inferred goals (FR-004, FR-005)
 - [ ] DerivedSpec.md has zero open questions (FR-006 enforcement)
-- [ ] ChangeAnalysis.md categorizes mechanical vs semantic (FR-003)
 - [ ] Large PR flag set when >1000 LOC changed (FR-015 detection)
 - [ ] CI failure flag set when checks failing (FR-032)
 
@@ -361,7 +351,6 @@ All Phase 1 artifacts must exist:
 - ReviewContext.md
 - CodeResearch.md  
 - DerivedSpec.md
-- ChangeAnalysis.md
 
 ## Process Steps
 
@@ -381,7 +370,7 @@ All Phase 1 artifacts must exist:
    - Identify added loops, recursion, or complexity
    - Check for new database queries or external calls
    - Compare algorithmic complexity (heuristic: nested loops, large allocations)
-   - Note hot path modifications from ChangeAnalysis
+   - Note hot path modifications from DerivedSpec
    
 4. **Security & Authorization Review**
    - Check for auth middleware changes

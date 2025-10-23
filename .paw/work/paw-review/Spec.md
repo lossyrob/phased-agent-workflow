@@ -9,17 +9,16 @@
 
 Narrative: As a reviewer examining a PR, I need to comprehensively understand what changed and why before I can provide meaningful feedback. The system should help me reverse-engineer the author's intent, categorize changes, and identify the scope of modifications without making assumptions or jumping to critique. This understanding must be informed by research into how the system worked before the changes.
 
-Independent Test: Given a PR URL, when I invoke the Understanding stage and complete the code research process, then I receive structured artifacts documenting PR metadata, pre-change system behavior, derived specification, and categorized changes that I can verify match my own reading of the PR.
+Independent Test: Given a PR URL, when I invoke the Understanding stage and complete the code research process, then I receive structured artifacts documenting PR metadata, pre-change system behavior, and derived specification that I can verify match my own reading of the PR.
 
 Acceptance Scenarios:
-1. Given a GitHub PR URL, When I start the review workflow, Then PRContext.md captures all PR metadata (number, title, author, description, labels, CI status, changed files with statistics)
+1. Given a GitHub PR URL, When I start the review workflow, Then ReviewContext.md captures PR metadata (number, title, author, description, labels, base/head commits) and serves as the authoritative parameter source for downstream review stages
 2. Given PR metadata analyzed, When the system identifies areas needing baseline research, Then code-research.prompt.md is generated with questions about pre-change system behavior, patterns, and integration points
 3. Given code-research.prompt.md created, When I run the Code Research Agent, Then CodeResearch.md documents how the system worked before the changes at a behavioral level by analyzing the codebase at base commit
 4. Given CodeResearch.md available, When deriving intent, Then DerivedSpec.md uses baseline understanding to reverse-engineer specification with observable before/after behavior
-5. Given PR changes spanning multiple file types, When change analysis completes, Then ChangeAnalysis.md separates mechanical changes (formatting, renames) from semantic changes (logic, new behavior) and categorizes by type (feature, test, docs, config)
-6. Given a PR with stated goals in the description, When deriving intent, Then DerivedSpec.md distinguishes between explicit goals (from PR description/issues) and inferred goals (from code analysis) and flags any ambiguities as open questions
-7. Given a PR without clear documentation, When I review the derived spec, Then I can validate whether the reverse-engineered intent accurately represents what the code does
-8. Given understanding artifacts, When I identify misinterpretations, Then I can correct them in the artifacts before proceeding to evaluation
+5. Given a PR with stated goals in the description, When deriving intent, Then DerivedSpec.md distinguishes between explicit goals (from PR description/issues) and inferred goals (from code analysis) and flags any ambiguities as open questions
+6. Given a PR without clear documentation, When I review the derived spec, Then I can validate whether the reverse-engineered intent accurately represents what the code does
+7. Given understanding artifacts, When I identify misinterpretations, Then I can correct them in the artifacts before proceeding to evaluation
 
 ### User Story P1 – Systematically Identify Gaps and Issues
 
@@ -40,13 +39,13 @@ Acceptance Scenarios:
 
 Narrative: As a reviewer ready to provide feedback, I need the system to generate comprehensive review comments that I can filter and adjust based on my relationship with the author and project context. Nothing should be posted automatically—I maintain full control over what feedback is shared and how it's worded.
 
-Independent Test: Given Evaluation stage artifacts with categorized findings, when I invoke the Feedback Generation stage, then the system creates a pending GitHub review (or markdown document for non-GitHub) with all findings as structured comments that I can edit, delete, or approve before submission.
+Independent Test: Given Evaluation stage artifacts with categorized findings, when I invoke the Feedback Generation stage, then the system creates a markdown document (and a pending GitHub review if applicable) with all findings as structured comments that I can edit, delete, or approve before submission.
 
 Acceptance Scenarios:
-1. Given Must/Should/Could findings from gap analysis, When feedback generation runs, Then all findings are transformed into review comments with specific file:line references and actionable suggestions
-2. Given line-specific issues, When creating comments, Then inline comments are posted to the GitHub pending review (or documented for manual posting in non-GitHub contexts)
+1. Given Must/Should/Could findings from gap analysis, When feedback generation runs, Then all findings are transformed into review comments with specific file:line references and actionable suggestions in the review comments document.
+2. Given line-specific issues, When creating comments, Then inline comments are posted to the GitHub pending review if applicable. In non-GitHub contexts, inline comments will need to be manually posted from the review comments document.
 3. Given broader architectural concerns, When generating feedback, Then thread-level comments are documented in ReviewComments.md for manual addition
-4. Given related issues appearing in multiple locations, When batching feedback (One Issue, One Comment policy), Then either one comment mentions all locations or references are made between comments to avoid scatter
+4. Given related issues appearing in multiple locations, When batching feedback (One Issue, One Comment policy), Then either one comment mentions all locations or references are made between comments to avoid scatter.
 5. Given pending review created on GitHub, When I open the PR, Then I can edit comment text, delete unwanted comments, or add new comments before submitting the review
 6. Given feedback requiring tone adjustment, When I request changes, Then the agent can regenerate comments with adjusted tone (or I can edit directly in GitHub UI)
 7. Given non-trivial suggestions, When comments are generated, Then code examples are provided to illustrate the recommended approach
@@ -122,7 +121,8 @@ Acceptance Scenarios:
 ### Edge Cases
 
 - **Empty or trivial PR**: When a PR contains only mechanical changes (formatting, generated code), then DerivedSpec.md and GapAnalysis.md note minimal semantic changes and recommend brief acknowledgment rather than deep review
-- **PR with CI failures**: When CI checks are failing, then PRContext.md captures this status and Evaluation stage notes redundancy risk—avoid commenting on issues already caught by CI
+### Edge Cases
+- **PR with CI failures**: When CI checks are failing, then ReviewContext.md captures this status and Evaluation stage notes redundancy risk—avoid commenting on issues already caught by CI
 - **Non-GitHub PR context**: When reviewing a PR in Azure DevOps, GitLab, Bitbucket, or locally, then reviewer checks out the head branch, provides base branch name at invocation, system uses git diff for change analysis, artifacts are stored in `.paw/reviews/<branch-slug>/` where branch-slug is derived from normalized head branch name, and all review comments are saved to ReviewComments.md with manual posting instructions instead of creating a pending review
 - **No PR description or documentation**: When a PR lacks description or linked issues, then DerivedSpec.md relies entirely on inferred goals from code analysis and flags high uncertainty as open questions
 - **Very large PR (1000+ lines)**: When a PR exceeds reviewability thresholds, then scope assessment in ImpactAnalysis.md flags this and suggests splitting strategy as a polite, constructive recommendation
@@ -144,21 +144,26 @@ Acceptance Scenarios:
 - PR identified by number from URL or explicit parameter
 - Artifacts stored in `.paw/reviews/PR-<number>/` (e.g., `.paw/reviews/PR-123/`)
 
-**PRContext.md Content:**
+**ReviewContext.md Content:**
 - **PR Metadata**: Number, title, author, state (open/closed/draft)
 - **Description**: Full PR description text from GitHub
 - **Branches**: Base branch name (e.g., `main`) and head branch name (e.g., `feature/new-auth`)
+- **Commits**: Base commit SHA and head commit SHA
+- **Repository**: Owner and repository name
 - **Labels**: All GitHub labels applied to the PR
 - **Reviewers**: Requested reviewers and their status
 - **CI Status**: Status of GitHub Actions, checks, and other CI integrations with pass/fail results
 - **Linked Issues**: Issues referenced in PR description or linked via GitHub UI
 - **Comments**: Count of existing review comments and discussions
 - **Changed Files**: File paths with additions/deletions statistics from GitHub API
+- **Artifact Paths**: Auto-derived paths to all review artifacts (`.paw/reviews/PR-<number>/`)
+
+This serves as the authoritative parameter source for all review stages, similar to WorkflowContext.md in the PAW development workflow.
 
 **Feedback Posting:**
 - System creates `ReviewComments.md` containing ALL review feedback with complete rationale sections and critical assessments for each comment
-- System creates GitHub pending review using `mcp_github_pull_request_review_write` (method: create)
-- Inline comments posted to pending review using `mcp_github_add_comment_to_pending_review` with file path, line number/range, and comment text
+- System creates GitHub pending review using github MCP tools
+- Inline comments posted to pending review using github MCP tools
 - **Pending review comments contain ONLY**: comment text and code suggestions (no rationale or assessment sections)
 - **ReviewComments.md contains**: comment text, code suggestions, rationale sections, and critical assessment sections
 - Pending review visible in GitHub UI under "Files Changed" tab but not visible to PR author until submitted
@@ -183,7 +188,7 @@ Acceptance Scenarios:
 - Branch slug derived from head branch name by normalizing: lowercase, replace `/` and special chars with `-`, remove invalid chars
 - Artifacts stored in `.paw/reviews/<branch-slug>/` (e.g., `.paw/reviews/feature-new-auth/` for branch `feature/new-auth`)
 
-**PRContext.md Content:**
+**ReviewContext.md Content:**
 - **Branch Information**: Base branch name, head branch name, current commit SHAs
 - **Author**: Derived from git commit author of recent commits on the branch
 - **Commit Messages**: Recent commit messages from the branch (used to infer intent)
@@ -191,6 +196,9 @@ Acceptance Scenarios:
 - **CI Status**: Noted as "Not available (non-GitHub context)" unless reviewer manually provides information
 - **Description**: Marked as "Not available - inferred from commits" unless reviewer manually provides PR description text
 - **Labels/Reviewers**: Noted as "Not applicable (non-GitHub context)"
+- **Artifact Paths**: Auto-derived paths to all review artifacts (`.paw/reviews/<branch-slug>/`)
+
+This serves as the authoritative parameter source for all review stages, similar to WorkflowContext.md in the PAW development workflow.
 
 **Feedback Posting:**
 - System creates `ReviewComments.md` containing ALL review feedback with complete rationale sections and critical assessments for each comment
@@ -255,11 +263,10 @@ The PAW Review workflow is organized into three logical stages, each producing m
 ### Stage Organization
 
 **Stage R1 — Understanding** produces:
-- `PRContext.md` - PR metadata and changed files
+- `ReviewContext.md` - PR metadata, branch information, changed files, and artifact paths (authoritative parameter source)
 - `prompts/code-research.prompt.md` - Generated research prompt for baseline codebase analysis
 - `CodeResearch.md` - Pre-change codebase understanding (created after research)
 - `DerivedSpec.md` - Reverse-engineered specification
-- `ChangeAnalysis.md` - Categorized changes
 
 **Stage R2 — Evaluation** produces:
 - `ImpactAnalysis.md` - System-wide effects and integration points
@@ -273,13 +280,13 @@ The PAW Review workflow is organized into three logical stages, each producing m
 Implementation may use either approach or a hybrid:
 
 **Option A: One Agent Per Stage**
-- Understanding Agent produces all R1 artifacts (PRContext, code-research prompt, DerivedSpec after research, ChangeAnalysis)
+- Understanding Agent produces all R1 artifacts (ReviewContext, code-research prompt, DerivedSpec after research)
 - Evaluation Agent produces all R2 artifacts (ImpactAnalysis, GapAnalysis)
 - Feedback Agent produces ReviewComments.md
 - Review Comment Reviewer adds assessments to ReviewComments.md
 
 **Option B: Specialized Agents Per Artifact**
-- Stage R1: PR Context Agent → Code Research Prompt Generator → Code Research Agent → Derived Spec Agent → Change Analysis Agent
+- Stage R1: PR Context Agent → Code Research Prompt Generator → Code Research Agent → Derived Spec Agent
 - Stage R2: Impact Analysis Agent → Gap Analysis Agent
 - Stage R3: Feedback Generation Agent → Review Comment Reviewer Agent
 
@@ -298,7 +305,7 @@ The Understanding stage follows a research-driven workflow similar to the Spec R
 1. **Initial Understanding**: Analyze PR metadata and changes to identify areas requiring baseline codebase research
 2. **Generate Research Prompt**: Create `prompts/code-research.prompt.md` with questions about pre-change system behavior, patterns, and integration points
 3. **Pause for Research**: Human reviewer runs Code Research Agent (or separate research process) to answer questions by analyzing codebase at base commit
-4. **Complete Understanding**: With CodeResearch.md available, complete DerivedSpec.md and ChangeAnalysis.md with informed understanding of baseline state
+4. **Complete Understanding**: With CodeResearch.md available, complete DerivedSpec.md with informed understanding of baseline state
 
 This ensures the derived specification is informed by actual pre-change system behavior rather than speculation.
 
@@ -306,48 +313,46 @@ This ensures the derived specification is informed by actual pre-change system b
 
 ### Functional Requirements
 
-- FR-001: System shall extract PR metadata including number, title, author, description, labels, CI status, reviewers, and changed files with statistics (Stories: P1-Understand)
-- FR-002: System shall categorize changed files by type (implementation, tests, documentation, configuration, generated code) (Stories: P1-Understand)
-- FR-003: System shall distinguish mechanical changes (formatting, renames, bulk updates) from semantic changes (logic, new behavior) (Stories: P1-Understand)
-- FR-004: System shall reverse-engineer author intent from code analysis and produce a derived specification with observable before/after behavior (Stories: P1-Understand)
-- FR-005: System shall distinguish between explicitly stated goals (from PR description/issues) and inferred goals (from code analysis) in derived specification (Stories: P1-Understand)
-- FR-006: System shall flag ambiguities and uncertainties as open questions without fabricating assumptions about unstated intent (Stories: P1-Understand)
-- FR-007: System shall allow human reviewer to correct misinterpretations in understanding artifacts before proceeding to evaluation (Stories: P1-Understand)
-- FR-008: System shall generate code-research.prompt.md with questions about pre-change system behavior, patterns, and integration points for areas affected by PR changes (Stories: P1-Understand, P2-PreChange)
-- FR-009: System shall analyze codebase at base commit (pre-change state) to document existing patterns, conventions, and behavior in CodeResearch.md during Understanding stage (Stories: P1-Understand, P2-PreChange)
-- FR-010: System shall use CodeResearch.md to inform DerivedSpec.md with accurate before/after behavior characterization (Stories: P1-Understand, P2-PreChange)
-- FR-011: System shall identify all integration points, downstream effects, and breaking changes in impact analysis (Stories: P1-Identify)
-- FR-012: System shall assess performance implications including hot paths, new queries, and resource usage (Stories: P1-Identify)
-- FR-013: System shall evaluate security and authorization changes (Stories: P1-Identify)
-- FR-014: System shall provide file:line references for all findings (Stories: P1-Identify)
-- FR-015: System shall flag PRs that are too large to review effectively and suggest splitting approach (Stories: P1-Identify)
-- FR-016: System shall report test coverage quantitatively (if metrics available) and qualitatively (depth and breadth analysis) (Stories: P2-TestCoverage)
-- FR-017: System shall identify specific test coverage gaps with file:line references (Stories: P2-TestCoverage)
-- FR-018: System shall assess whether tests verify intended behavior vs passing trivially (Stories: P2-TestCoverage)
-- FR-019: System shall transform all gap analysis findings into review comments with actionable suggestions (Stories: P1-Generate)
-- FR-020: System shall batch related issues into cohesive comments per One Issue, One Comment policy (Stories: P1-Generate)
-- FR-021: System shall distinguish inline comments (line-specific) from thread comments (file/concept-level) (Stories: P1-Generate)
-- FR-022: System shall create GitHub pending review with inline comments posted but not submitted (Stories: P1-Generate)
-- FR-023: System shall save comprehensive ReviewComments.md as reference copy of all feedback including thread comments, rationale sections for every recommendation, and critical assessment sections for every comment—created for both GitHub and non-GitHub contexts (Stories: P1-Generate, P2-Rationale, P3-Assessment)
-- FR-024: System shall include code examples for non-trivial suggestions (Stories: P1-Generate)
-- FR-025: System shall never automatically submit reviews—all posting requires human approval (Stories: P1-Generate)
-- FR-026: System shall support regenerating pending review with adjusted tone when requested (Stories: P1-Generate)
-- FR-027: System shall include Rationale section for every recommendation citing relevant best practices (Stories: P2-Rationale)
-- FR-028: System shall answer reviewer questions based on understanding of pre-change and post-change codebase state (Stories: P3-Questions)
-- FR-029: System shall generate critical assessment of each review comment evaluating usefulness, accuracy, and alternative perspectives (Stories: P3-Assessment)
-- FR-030: System shall add assessment sections to ReviewComments.md without posting them to GitHub pending review or external platforms (Stories: P3-Assessment)
-- FR-031: System shall support non-GitHub PR contexts by accepting base branch name, using current checked-out branch as head branch, deriving branch slug for artifact naming, using git diff for changes, and providing manual posting instructions in ReviewComments.md (Stories: P1-Generate, Edge Cases)
-- FR-032: System shall capture CI/test status and avoid redundant comments on issues already caught by CI (Stories: Edge Cases)
-- FR-033: System shall identify and recommend brief acknowledgment for PRs containing only mechanical changes (Stories: Edge Cases)
-- FR-034: System shall raise discrepancy blocks when PR description contradicts code changes (Stories: Edge Cases)
+- FR-001: System shall extract PR metadata including number, title, author, description, and labels (Stories: P1-Understand)
+- FR-002: System shall distinguish mechanical changes (formatting, renames, bulk updates) from semantic changes (logic, new behavior) (Stories: P1-Understand)
+- FR-003: System shall reverse-engineer author intent from code analysis and produce a derived specification with observable before/after behavior (Stories: P1-Understand)
+- FR-004: System shall distinguish between explicitly stated goals (from PR description/issues) and inferred goals (from code analysis) in derived specification (Stories: P1-Understand)
+- FR-005: System shall flag ambiguities and uncertainties as open questions without fabricating assumptions about unstated intent (Stories: P1-Understand)
+- FR-006: System shall allow human reviewer to correct misinterpretations in understanding artifacts before proceeding to evaluation (Stories: P1-Understand)
+- FR-007: System shall generate code-research.prompt.md with questions about pre-change system behavior, patterns, and integration points for areas affected by PR changes (Stories: P1-Understand, P2-PreChange)
+- FR-008: System shall analyze codebase at base commit (pre-change state) to document existing patterns, conventions, and behavior in CodeResearch.md during Understanding stage (Stories: P1-Understand, P2-PreChange)
+- FR-009: System shall use CodeResearch.md to inform DerivedSpec.md with accurate before/after behavior characterization (Stories: P1-Understand, P2-PreChange)
+- FR-010: System shall identify all integration points, downstream effects, and breaking changes in impact analysis (Stories: P1-Identify)
+- FR-011: System shall assess performance implications including hot paths, new queries, and resource usage (Stories: P1-Identify)
+- FR-012: System shall evaluate security and authorization changes (Stories: P1-Identify)
+- FR-013: System shall provide file:line references for all findings (Stories: P1-Identify)
+- FR-014: System shall flag PRs that are too large to review effectively and suggest splitting approach (Stories: P1-Identify)
+- FR-015: System shall report test coverage quantitatively (if metrics available) and qualitatively (depth and breadth analysis) (Stories: P2-TestCoverage)
+- FR-016: System shall identify specific test coverage gaps with file:line references (Stories: P2-TestCoverage)
+- FR-017: System shall assess whether tests verify intended behavior vs passing trivially (Stories: P2-TestCoverage)
+- FR-018: System shall transform all gap analysis findings into review comments with actionable suggestions (Stories: P1-Generate)
+- FR-019: System shall batch related issues into cohesive comments per One Issue, One Comment policy (Stories: P1-Generate)
+- FR-020: System shall distinguish inline comments (line-specific) from thread comments (file/concept-level) (Stories: P1-Generate)
+- FR-021: System shall create GitHub pending review with inline comments posted but not submitted (Stories: P1-Generate)
+- FR-022: System shall save comprehensive ReviewComments.md as reference copy of all feedback including thread comments, rationale sections for every recommendation, and critical assessment sections for every comment—created for both GitHub and non-GitHub contexts (Stories: P1-Generate, P2-Rationale, P3-Assessment)
+- FR-023: System shall include code examples for non-trivial suggestions (Stories: P1-Generate)
+- FR-024: System shall never automatically submit reviews—all posting requires human approval (Stories: P1-Generate)
+- FR-025: System shall support regenerating pending review with adjusted tone when requested (Stories: P1-Generate)
+- FR-026: System shall include Rationale section for every recommendation citing relevant best practices (Stories: P2-Rationale)
+- FR-027: System shall answer reviewer questions based on understanding of pre-change and post-change codebase state (Stories: P3-Questions)
+- FR-028: System shall generate critical assessment of each review comment evaluating usefulness, accuracy, and alternative perspectives (Stories: P3-Assessment)
+- FR-029: System shall add assessment sections to ReviewComments.md without posting them to GitHub pending review or external platforms (Stories: P3-Assessment)
+- FR-030: System shall support non-GitHub PR contexts by accepting base branch name, using current checked-out branch as head branch, deriving branch slug for artifact naming, using git diff for changes, and providing manual posting instructions in ReviewComments.md (Stories: P1-Generate, Edge Cases)
+- FR-031: System shall capture CI/test status and avoid redundant comments on issues already caught by CI (Stories: Edge Cases)
+- FR-032: System shall identify and recommend brief acknowledgment for PRs containing only mechanical changes (Stories: Edge Cases)
+- FR-033: System shall raise discrepancy blocks when PR description contradicts code changes (Stories: Edge Cases)
 
 ### Key Entities
 
-- **PR Context**: Metadata about the pull request including number/identifier, title, author, description, base and head branches, labels, reviewers, CI status, changed files with statistics, file categorizations
+- **PR Context**: Metadata about the pull request including number/identifier, title, author, description, base and head branches, labels, reviewers, CI status, changed files with statistics
 - **Code Research Prompt**: Generated questions about pre-change system behavior, patterns, integration points, and conventions for areas affected by PR changes—used to guide baseline codebase analysis
 - **Code Research**: Pre-change baseline documentation (created during Understanding stage) including how system worked before changes, existing patterns and conventions, integration points and dependencies, relevant test coverage and documentation context
 - **Derived Specification**: Reverse-engineered intent (informed by CodeResearch.md) including intent summary, scope boundaries, assumptions, measurable outcomes, changed interfaces, risks/invariants, user-visible changes, migration notes, open questions
-- **Change Analysis**: Categorization of changes including summary statistics, change categories (feature/bugfix/refactor/test/docs/config/generated/infrastructure), mechanical vs semantic distinction, component mapping, complexity hot spots
 - **Impact Analysis**: System-wide effects including baseline state, integration points, public API changes, data changes, breaking changes, performance implications, security implications, deployment considerations, dependencies, historical context
 - **Gap Analysis**: Categorized findings (Must/Should/Could) each with file:line reference, category (Correctness/Safety/Security/Compatibility/Testing/Reliability/Maintainability/Performance), issue description, evidence, impact/rationale, suggestion
 - **Review Comments**: Generated feedback including summary comment, inline comments (file path, line range, type, category, comment text, suggestion, rationale, posted status), thread comments (scope, type, category, discussion text), questions for author
@@ -365,22 +370,22 @@ This ensures the derived specification is informed by actual pre-change system b
 
 ## Success Criteria
 
-- SC-001: Given a GitHub PR URL, understanding stage produces PRContext.md and code-research.prompt.md within 5-10 minutes with accurate PR metadata and research questions about affected system areas (FR-001, FR-002, FR-003, FR-008)
-- SC-002: Given code-research.prompt.md, Code Research Agent produces CodeResearch.md documenting pre-change system behavior by analyzing codebase at base commit (FR-009)
-- SC-003: Given CodeResearch.md available, understanding stage completes with DerivedSpec.md and ChangeAnalysis.md within 10-15 minutes that accurately reflect PR intent informed by baseline understanding (FR-004, FR-005, FR-006, FR-010)
-- SC-004: Given understanding artifacts, human reviewer can validate accuracy and correct any misinterpretations before proceeding to evaluation (FR-007)
-- SC-005: Given understanding artifacts including CodeResearch.md, evaluation stage produces ImpactAnalysis.md and GapAnalysis.md identifying integration points, breaking changes, and categorized findings with evidence within 15-25 minutes (FR-011, FR-012, FR-013, FR-014, FR-015)
-- SC-006: Given a PR with test changes, gap analysis includes test coverage section with quantitative metrics (if available) and qualitative depth/breadth assessment (FR-016, FR-017, FR-018)
-- SC-007: Given evaluation artifacts, feedback generation creates ReviewComments.md with all feedback including rationale and assessment sections for both GitHub and non-GitHub contexts; for GitHub additionally creates pending review with inline comments (text/suggestions only) posted within 10-20 minutes (FR-019, FR-020, FR-021, FR-022, FR-023, FR-024)
-- SC-008: Given pending review created, human reviewer can edit, delete, or add comments in GitHub UI before manually submitting—nothing posts automatically (FR-025)
-- SC-009: Given request for tone adjustment, agent regenerates pending review with modified tone (FR-026)
-- SC-010: Given generated review comments, every recommendation includes Rationale section citing relevant best practices or evidence (FR-027)
-- SC-011: Given artifacts from all stages, reviewer can ask agent questions and receive answers based on documented codebase understanding (FR-028)
-- SC-012: Given initial review comments, Review Comment Reviewer adds assessment sections to ReviewComments.md evaluating usefulness and accuracy without posting to GitHub (FR-029, FR-030)
-- SC-013: Given a non-GitHub PR context (e.g., Azure DevOps, local branches), workflow functions using branch names and git diff, producing same artifacts with branch-based naming (FR-031)
-- SC-014: Given PR with failing CI checks, PRContext.md captures status and evaluation notes redundancy risk for CI-detected issues (FR-032)
-- SC-015: Given PR containing only mechanical changes (formatting, generated code), understanding artifacts note minimal semantic changes and recommend brief acknowledgment (FR-033)
-- SC-016: Given PR description contradicting code changes, derived specification raises discrepancy block requiring human resolution (FR-034)
+- SC-001: Given a GitHub PR URL, understanding stage produces ReviewContext.md and code-research.prompt.md within 5-10 minutes with accurate PR metadata and research questions about affected system areas (FR-001, FR-002, FR-007)
+- SC-002: Given code-research.prompt.md, Code Research Agent produces CodeResearch.md documenting pre-change system behavior by analyzing codebase at base commit (FR-008)
+- SC-003: Given CodeResearch.md available, understanding stage completes with DerivedSpec.md within 10-15 minutes that accurately reflects PR intent informed by baseline understanding (FR-003, FR-004, FR-005, FR-009)
+- SC-004: Given understanding artifacts, human reviewer can validate accuracy and correct any misinterpretations before proceeding to evaluation (FR-006)
+- SC-005: Given understanding artifacts including CodeResearch.md, evaluation stage produces ImpactAnalysis.md and GapAnalysis.md identifying integration points, breaking changes, and categorized findings with evidence within 15-25 minutes (FR-010, FR-011, FR-012, FR-013, FR-014)
+- SC-006: Given a PR with test changes, gap analysis includes test coverage section with quantitative metrics (if available) and qualitative depth/breadth assessment (FR-015, FR-016, FR-017)
+- SC-007: Given evaluation artifacts, feedback generation creates ReviewComments.md with all feedback including rationale and assessment sections for both GitHub and non-GitHub contexts; for GitHub additionally creates pending review with inline comments (text/suggestions only) posted within 10-20 minutes (FR-018, FR-019, FR-020, FR-021, FR-022, FR-023)
+- SC-008: Given pending review created, human reviewer can edit, delete, or add comments in GitHub UI before manually submitting—nothing posts automatically (FR-024)
+- SC-009: Given request for tone adjustment, agent regenerates pending review with modified tone (FR-025)
+- SC-010: Given generated review comments, every recommendation includes Rationale section citing relevant best practices or evidence (FR-026)
+- SC-011: Given artifacts from all stages, reviewer can ask agent questions and receive answers based on documented codebase understanding (FR-027)
+- SC-012: Given initial review comments, Review Comment Reviewer adds assessment sections to ReviewComments.md evaluating usefulness and accuracy without posting to GitHub (FR-028, FR-029)
+- SC-013: Given a non-GitHub PR context (e.g., Azure DevOps, local branches), workflow functions using branch names and git diff, producing same artifacts with branch-based naming (FR-030)
+- SC-014: Given PR with failing CI checks, ReviewContext.md captures status and evaluation notes redundancy risk for CI-detected issues (FR-031)
+- SC-015: Given PR containing only mechanical changes (formatting, generated code), understanding artifacts note minimal semantic changes and recommend brief acknowledgment (FR-032)
+- SC-016: Given PR description contradicting code changes, derived specification raises discrepancy block requiring human resolution (FR-033)
 
 ## Assumptions
 
@@ -450,7 +455,7 @@ Out of Scope:
 
 - **Risk**: Generated comments may have inaccurate code suggestions that don't fit codebase context. **Mitigation**: Code research documents existing patterns to inform suggestions; rationale sections explain reasoning; Review Comment Reviewer assesses accuracy; human edits comments before posting; recommendations focus on approaches rather than exact code when context is uncertain.
 
-- **Risk**: Non-GitHub contexts may lack sufficient metadata for complete analysis. **Mitigation**: Use git diff and branch names as fallback; document limitations in PRContext.md; focus on code-level analysis rather than platform features; allow manual metadata input when available.
+- **Risk**: Non-GitHub contexts may lack sufficient metadata for complete analysis. **Mitigation**: Use git diff and branch names as fallback; document limitations in ReviewContext.md; focus on code-level analysis rather than platform features; allow manual metadata input when available.
 
 - **Risk**: Pending review may be accidentally deleted before submission. **Mitigation**: Save comprehensive ReviewComments.md as reference copy; support regeneration of pending review from artifacts; document posted comment IDs for tracking.
 

@@ -62,7 +62,7 @@ Build incrementally using the proven PAW patterns:
 1. Create agent chatmode files following existing template structure
 2. Implement artifact generation with consistent frontmatter metadata
 3. Integrate GitHub MCP tools for PR metadata and pending review management
-4. Develop heuristics for file categorization, mechanical vs semantic detection, integration graph building
+4. Develop heuristics for integration graph building
 5. Add rationale and assessment logic referencing review-research-notes.md
 6. Support both GitHub (PR number) and non-GitHub (branch slug) contexts
 7. Ensure each stage blocks until prerequisites met and zero open questions remain
@@ -109,24 +109,19 @@ Then begin analysis process.
    - Non-GitHub: Use `git diff <base>...<head>` for changes
    - Create ReviewContext.md with all metadata
    
-2. **File Categorization & Change Analysis**
-   - Categorize files (implementation/tests/docs/config/generated)
-   - Identify mechanical vs semantic changes
-   - Flag large PRs, mechanical-only PRs, CI failures
-   
-3. **Research Prompt Generation**
-   - Create `prompts/code-research.prompt.md` with questions about:
+2. **Research Prompt Generation**
+   - Create `prompts/code-research.prompt.md` with guidance on questions about:
      - Pre-change behavior of modified modules
      - Integration points and dependencies
      - Patterns and conventions
      - Performance and hot paths
      - Test coverage baseline
    
-4. **Pause for Research**
-   - Signal human to run Code Research Agent
+3. **Pause for Research**
+   - Signal human to run PAW Review Baseline Researcher
    - Wait until `CodeResearch.md` exists
    
-5. **Derive Specification**
+4. **Derive Specification**
    - Create `DerivedSpec.md` using:
      - Explicit goals (PR description/issues)
      - Inferred goals (code analysis)
@@ -147,21 +142,6 @@ Non-GitHub: `.paw/reviews/<branch-slug>/` (normalize: lowercase, `/` → `-`, re
 - **Zero Open Questions**: Block Stage R2 if DerivedSpec.md contains unresolved questions
 - **Baseline First**: Always analyze pre-change state via CodeResearch before deriving spec
 - **Evidence Required**: Include file:line references for all observations
-
-## Heuristics
-
-File Categorization:
-- tests: path contains `/test/` or filename matches `*_test.*|*.spec.*|*.test.*`
-- docs: extension `.md|.rst|.txt` or path starts `docs/|documentation/`
-- config: extensions `.json|.yml|.yaml|.toml|.ini|.config` or path `config/|.github/`
-- generated: header contains `GENERATED|AUTO-GENERATED` or path `dist/|build/|node_modules/|vendor/`
-- implementation: everything else
-
-Mechanical vs Semantic:
-- Mechanical: whitespace-only changes, rename-only (same identifiers, different names), formatting (indentation, line breaks)
-- Semantic: new functions/classes/imports, modified logic, changed control flow, different algorithms
-
-Large PR threshold: > 1000 lines changed (excluding mechanical)
 
 ## Hand-off
 
@@ -207,22 +187,9 @@ Zero open questions remaining. Ready for Evaluation Stage (R2).
 
 <PR description text (GitHub) OR "Derived from commit messages" (non-GitHub)>
 
-## File Categories
-
-| Category | Files | Lines Changed |
-|----------|-------|---------------|
-| Implementation | X | +A -B |
-| Tests | Y | +C -D |
-| Documentation | Z | +E -F |
-| Configuration | W | +G -H |
-| Generated | V | +I -J |
-
 ## Flags
 
-- [ ] Large PR (>1000 LOC)
-- [ ] Mechanical-only changes
 - [ ] CI Failures present
-- [ ] Missing tests for semantic changes
 - [ ] Breaking changes suspected
 
 ## Metadata
@@ -232,86 +199,42 @@ Zero open questions remaining. Ready for Evaluation Stage (R2).
 **Reviewer**: <current git user>
 ```
 
-#### 3. Code Research Prompt Template
+#### 3. Code Research Prompt Guidance
 
 **Location**: Generated at `.paw/reviews/<identifier>/prompts/code-research.prompt.md`
 
-**Structure**:
-```markdown
----
-mode: PAW-02A Code Researcher
----
+Provide guidance to help PAW Review Baseline Researcher understand what questions are most important. The prompt should include:
 
-# Code Research for <PR Title or Branch>
+**Essential Elements**:
+- Target mode: "PAW Review Baseline Researcher"
+- PR/Branch title and context
+- Base branch and commit SHA
+- List of changed files
+- Instructions for checking out base commit
 
-Analyze the codebase at **base commit <sha>** (before PR changes) to understand the pre-change state.
+**Question Areas** (adapt based on changes):
+- Baseline Behavior: How modules functioned before changes
+- Integration Points: Component dependencies  
+- Patterns & Conventions: Established patterns
+- Performance Context: For sensitive code
+- Test Coverage: Existing tests and patterns
+- Specific Ambiguities: Questions from initial analysis
 
-## Research Questions
-
-### 1. Baseline Behavior for Modified Modules
-
-For each file with semantic changes:
-- How did the module function before changes?
-- What were the entry points and data flows?
-- What invariants or contracts existed?
-
-Files to investigate:
-<list semantic change files>
-
-### 2. Integration Points & Dependencies
-
-- What components import/use the changed modules?
-- What external services or APIs are involved?
-- What downstream consumers might be affected?
-
-### 3. Patterns & Conventions
-
-- What error handling patterns were used?
-- What naming conventions existed?
-- What testing approaches were standard?
-- What performance characteristics existed?
-
-### 4. Ambiguities Requiring Clarification
-
-<list specific questions that arose during initial analysis>
-
-### 5. Performance & Hot Paths
-
-For files in hot paths or performance-sensitive areas:
-- What were the performance characteristics?
-- What optimization patterns were used?
-- What scale/load did the code handle?
-
-### 6. Test Coverage Baseline
-
-- What test coverage existed for changed code?
-- What testing patterns were used?
-- What edge cases were covered?
-
-## Instructions
-
-1. **Checkout base commit**: `git checkout <base-sha>`
-2. **Analyze codebase at that state** using Code Location, Analysis, and Pattern Finding modes
-3. **Document findings** in `CodeResearch.md` with file:line references to base commit
-4. **Return to review branch** when complete
-```
+Let the researcher determine critical questions. Output: `CodeResearch.md` with file:line references.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [x] Understanding Agent chatmode file exists and follows template structure
 - [x] ReviewContext.md generated with all metadata sections (FR-001, FR-031)
-- [x] File categorization produces correct counts (FR-002)
-- [x] code-research.prompt.md generated with 6 sections (FR-008)
+- [x] code-research.prompt.md generated (FR-008)
 - [x] Agent blocks until CodeResearch.md exists (FR-009 dependency)
 - [x] DerivedSpec.md distinguishes explicit vs inferred goals (FR-004, FR-005)
 - [x] DerivedSpec.md has zero open questions (FR-006 enforcement)
-- [x] Large PR flag set when >1000 LOC changed (FR-015 detection)
 - [x] CI failure flag set when checks failing (FR-032)
 
 #### Manual Verification:
 - [ ] Reviewer can validate DerivedSpec accuracy (FR-007)
-- [ ] Mechanical-only PR generates brief acknowledgment recommendation (FR-033)
 - [ ] Discrepancy block raised when PR description contradicts code (FR-034)
 - [ ] ReviewContext.md serves as parameter source for downstream stages (SC-001)
 
@@ -323,18 +246,14 @@ The Understanding Agent chatmode file has been successfully created at `.github/
 
 **Created:**
 - Understanding Agent chatmode with proper YAML frontmatter (`description` field)
-- Complete process flow: Context Gathering → File Categorization → Research Prompt Generation → Pause for Research → Derive Specification
+- Complete process flow: Context Gathering → Research Prompt Generation → Pause for Research → Derive Specification
 - All required guardrails including ReviewContext.md as authoritative source, zero open questions blocking, and baseline-first analysis
-- Comprehensive heuristics for file categorization (tests, docs, config, generated, implementation)
-- Mechanical vs semantic change detection heuristics
-- Large PR threshold (>1000 LOC)
 - Artifact directory structure for both GitHub (`PR-<number>`) and non-GitHub (`<branch-slug>`) contexts
 - Hand-off message template
 
 **Verification Notes:**
 - The chatmode file structure matches the existing PAW agent pattern (single backtick fence with `chatmode` marker)
-- All 5 process steps are clearly defined with specific actions
-- Heuristics are concrete and testable (path patterns, file extensions, regex matches)
+- All process steps are clearly defined with specific actions
 - The agent properly distinguishes between GitHub and non-GitHub contexts
 - Blocking conditions are explicit (zero open questions, wait for CodeResearch.md)
 
@@ -346,30 +265,37 @@ The Understanding Agent chatmode file has been successfully created at `.github/
 
 **Notes for Future Phases:**
 - Phase 2 agents (Impact Analysis, Gap Analysis) will need to reference the Understanding artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
-- The artifact templates for ReviewContext.md, code-research.prompt.md, and DerivedSpec.md are defined in the implementation plan but not yet created as files - these will be generated by the Understanding Agent when it runs
-- The Research Pause pattern (step 4) mirrors the Spec Research pattern from the existing PAW workflow, ensuring consistency
+- The Research Pause pattern mirrors the Spec Research pattern from the existing PAW workflow, ensuring consistency
 - Phase 3 will need to reference the GitHub MCP tools for pending review creation - ensure those are available and tested
 
 **Addressed Review Comments:**
 
-Addressed PR review comment: https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453972316
+Addressed PR review comments from https://github.com/lossyrob/phased-agent-workflow/pull/28:
+- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453972316 - Significantly expanded chatmode with detailed guidance
+- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453994256 - Removed file categorization and mechanical vs semantic analysis
+- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453997020 - Renamed to "PAW Review Baseline Researcher"
+- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453998906 - Replaced detailed template with flexible guidance
+- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2454001864 - Removed large PR threshold completely
 
-The Understanding Agent chatmode was significantly expanded to match the specification level of PAW-01A Spec Agent and PAW-02B Impl Planner. Added sections:
+Changes made:
+1. Removed file categorization heuristics and file categories table from ReviewContext.md
+2. Removed mechanical vs semantic change detection heuristics
+3. Removed large PR threshold (>1000 LOC) concept
+4. Renamed "PAW-02A Code Researcher" to "PAW Review Baseline Researcher" throughout
+5. Replaced detailed code research prompt template with flexible guidance approach
+6. Updated process flow to focus on core research and derived specification
+7. Removed related flags: "Large PR", "Mechanical-only changes", "Missing tests for semantic changes"
+8. Simplified success criteria to remove file categorization and large PR requirements
+9. Updated implementation notes to reflect new streamlined approach
 
-1. **Core Review Principles** - 6 principles guiding the understanding process
-2. **High-Level Responsibilities** - Clear list of what the agent does
-3. **Explicit Non-Responsibilities** - What the agent should NOT do
-4. **Expanded Start/Initial Response** - Comprehensive context checking with ReviewContext.md
-5. **Detailed Process Steps** - Each of the 5 steps now has multiple substeps with specific actions
-6. **Complete Artifact Templates** - Inline templates for ReviewContext.md, code-research.prompt.md, and DerivedSpec.md
-7. **Enhanced Heuristics** - More detailed file categorization and mechanical vs semantic rules
-8. **Communication Patterns** - How to communicate progress and blocks
-9. **Error/Edge Handling** - Specific scenarios with example responses
-10. **Guardrails (Enforced)** - NEVER/ALWAYS rules to guide behavior
-11. **Complete Means** - Definition of what "complete" looks like
-12. **Hand-off Checklist** - Comprehensive checklist for stage completion
+The Understanding Agent now focuses on:
+- Gathering PR metadata and changed files list
+- Generating flexible research guidance (not rigid templates)
+- Pausing for PAW Review Baseline Researcher to analyze pre-change state
+- Deriving specification informed by baseline understanding
+- Blocking on open questions before proceeding to evaluation
 
-The expanded chatmode now provides explicit guidance on HOW to generate each artifact, WHAT to avoid, and clear templates/examples. This ensures the agent has detailed instructions matching the quality and comprehensiveness of other PAW agents.
+This streamlined approach reduces over-specification and lets the AI agents apply judgment about what analysis is most important for each specific PR.
 
 ---
 

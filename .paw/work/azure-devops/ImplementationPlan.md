@@ -72,11 +72,12 @@ The implementation follows PAW's document-driven architecture:
 Create a separate `chatmodes/` folder at the project root and copy all `.github/chatmodes/` files to it. All Azure DevOps implementation work will modify only the files in `chatmodes/`, leaving `.github/chatmodes/` untouched for this GitHub-based project.
 
 ### Rationale
-The current repository uses GitHub and modifying `.github/chatmodes/` would change agent behavior for this project without the ability to test Azure DevOps functionality locally. By working in a separate folder, we:
+The current repository uses GitHub and modifying `.github/chatmodes/` would change agent behavior for this project without the ability to test Azure DevOps functionality locally. By working in a separate temporary folder, we:
 1. Preserve working GitHub-based agent files in `.github/chatmodes/`
-2. Create modified versions in `chatmodes/` for Azure DevOps support
+2. Create modified versions in `chatmodes/` for Azure DevOps support testing
 3. Enable human testers to copy `chatmodes/` files to Azure DevOps projects for validation
 4. Reduce risk of breaking the current GitHub workflow
+5. Discard the temporary folder after changes are validated and merged into `.github/chatmodes/`
 
 ### Changes Required:
 
@@ -106,102 +107,34 @@ Expected files in `chatmodes/`:
 - `PAW-05 PR.chatmode.md`
 - `PAW-X Status Update.chatmode.md`
 
-#### 2. Add README to chatmodes/ Folder
-**File**: `chatmodes/README.md` (new file)
-
-**Content**:
-```markdown
-# Azure DevOps Support - Test Chatmodes
-
-This folder contains modified versions of PAW agent chatmode files that add Azure DevOps platform support.
-
-## Purpose
-
-These files are maintained separately from `.github/chatmodes/` because:
-1. The main repository uses GitHub and cannot test Azure DevOps functionality locally
-2. Modifying `.github/chatmodes/` would affect the current GitHub-based workflow
-3. Human testers need to copy these files to Azure DevOps projects for validation
-
-## Usage for Testing
-
-To test Azure DevOps support:
-
-1. **Set up an Azure DevOps test project**:
-   - Create or use an existing Azure DevOps repository
-   - Install and configure the Azure DevOps MCP server
-   - Create a test work item
-
-2. **Copy chatmode files to test project**:
-   ```bash
-   # In your Azure DevOps test project:
-   mkdir -p .github/chatmodes
-   cp /path/to/phased-agent-workflow/chatmodes/*.chatmode.md .github/chatmodes/
-   ```
-
-3. **Run PAW workflow**:
-   - Initialize workflow with Azure DevOps work item URL
-   - Progress through phases as documented in ImplementationPlan.md
-   - Verify all platform detection and Azure DevOps operations work correctly
-
-4. **Report results**:
-   - Document what worked and what didn't
-   - Note any error messages or unexpected behavior
-   - Provide feedback on GitHub Planning PR
-
-## Implementation Phases
-
-All implementation phases modify files in THIS folder, not `.github/chatmodes/`:
-
-- **Phase 0**: Setup (this folder creation) ✅
-- **Phase 1**: WorkflowContext.md field updates and platform detection
-- **Phase 2**: Status Agent platform-specific operations
-- **Phase 3**: Implementation Review Agent platform-specific PR operations
-- **Phase 4**: PR Agent platform-specific final PR operations
-- **Phase 5**: Documentation and end-to-end testing
-
-After each phase, human testing in an Azure DevOps project is required before proceeding to the next phase.
-
-## Future Integration
-
-Once Azure DevOps support is fully tested and validated:
-1. Merge changes from `chatmodes/` into `.github/chatmodes/`
-2. Deploy to production (users can choose GitHub or Azure DevOps)
-3. Archive or remove this test folder
-
-## See Also
-
-- Implementation Plan: `.paw/work/azure-devops/ImplementationPlan.md`
-- Azure DevOps Setup: `docs/azure-devops-setup.md` (to be created in Phase 5)
-- Planning PR: [Link to Planning PR]
-```
-
-#### 3. Update .gitignore (Optional)
-**File**: `.gitignore`
-
-**Consider adding** (optional - discuss with team):
-```
-# Azure DevOps test chatmodes (if you want to exclude from version control)
-# chatmodes/
-```
-
-**Note**: We likely want to keep `chatmodes/` in version control for review and testing purposes. This .gitignore entry is optional and only relevant if the team prefers to exclude test artifacts.
+**Note**: This `chatmodes/` folder is temporary and used only for Azure DevOps development and testing. After all phases are validated and merged to `.github/chatmodes/`, this folder will be deleted.
 
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] `chatmodes/` folder exists: `test -d chatmodes && echo "EXISTS"`
 - [ ] All 9 chatmode files copied: `test $(ls -1 chatmodes/*.chatmode.md | wc -l) -eq 9 && echo "ALL FILES PRESENT"`
-- [ ] README.md exists in chatmodes/: `test -f chatmodes/README.md && echo "README EXISTS"`
 - [ ] File content matches source: `diff .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md chatmodes/PAW-01A\ Spec\ Agent.chatmode.md` (should show no differences)
 
 #### Manual Verification:
 - [ ] Verify all chatmode filenames match exactly between `.github/chatmodes/` and `chatmodes/`
-- [ ] Verify README.md explains testing strategy clearly
-- [ ] Confirm with human reviewer that this approach addresses testing concerns
+- [ ] Confirm with human reviewer that temporary folder approach addresses testing concerns
 - [ ] Verify `chatmodes/` folder committed to Planning PR branch
 
+### Testing Instructions for Each Phase:
+
+After each phase (1-5):
+1. **Copy modified files to Azure DevOps test project**:
+   ```bash
+   # In your Azure DevOps test project:
+   cp /path/to/phased-agent-workflow/chatmodes/*.chatmode.md .github/chatmodes/
+   ```
+2. **Test the phase's functionality** in the Azure DevOps project
+3. **Report results** (what worked, what didn't, error messages)
+4. **Get approval** before proceeding to next phase
+
 ### Hand-off:
-Phase 0 complete. All chatmode files copied to `chatmodes/` folder. Proceeding to Phase 1: All subsequent phases will modify files in `chatmodes/` only, preserving `.github/chatmodes/` for the current GitHub workflow.
+Phase 0 complete. All chatmode files copied to temporary `chatmodes/` folder. Proceeding to Phase 1: All subsequent phases will modify files in `chatmodes/` only, preserving `.github/chatmodes/` for the current GitHub workflow. After all phases are validated, changes will be merged from `chatmodes/` to `.github/chatmodes/` and the temporary folder will be deleted.
 
 ---
 
@@ -992,6 +925,36 @@ For backward compatibility, agents also read from the legacy `GitHub Issue` fiel
 - [ ] Complete error handling test suite successfully
 - [ ] Documentation is clear and actionable for new Azure DevOps users
 - [ ] All error messages are helpful and guide users to solutions
+
+#### Final Integration:
+After all testing is complete and validated:
+1. **Merge modified chatmodes to production**:
+   ```bash
+   # Copy validated changes from chatmodes/ to .github/chatmodes/
+   cp chatmodes/*.chatmode.md .github/chatmodes/
+   
+   # Verify changes
+   git diff .github/chatmodes/
+   
+   # Commit the production changes
+   git add .github/chatmodes/
+   git commit -m "Integrate Azure DevOps support into production chatmodes"
+   ```
+
+2. **Delete temporary folder**:
+   ```bash
+   # Remove temporary development folder
+   rm -rf chatmodes/
+   
+   # Commit the cleanup
+   git add chatmodes/
+   git commit -m "Remove temporary chatmodes folder after successful integration"
+   ```
+
+3. **Verify production deployment**:
+   - Test workflow with GitHub repository (should work unchanged)
+   - Test workflow with Azure DevOps repository (should detect and use Azure DevOps)
+   - Confirm no temporary artifacts remain
 
 ---
 

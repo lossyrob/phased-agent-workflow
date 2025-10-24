@@ -40,7 +40,7 @@ The workflow addresses a common problem in code reviews: jumping to critique wit
 1. Gather PR metadata (GitHub API or git diff)
 2. Document all changed files and categorize them
 3. Generate research prompt about pre-change system behavior
-4. Pause for baseline research (PAW Review Baseline Researcher)
+4. Pause for baseline research (PAW-R1B Baseline Researcher Agent)
 5. Derive specification from code + baseline understanding
 6. Block if any open questions remain
 
@@ -112,7 +112,7 @@ The Understanding stage follows a research-driven workflow similar to PAW's Spec
 
 1. **Initial Analysis**: Identify areas affected by changes
 2. **Generate Research Prompt**: Create questions about pre-change system behavior
-3. **Pause for Research**: Human runs PAW Review Baseline Researcher to analyze codebase at base commit
+3. **Pause for Research**: Human runs PAW-R1B Baseline Researcher Agent to analyze codebase at base commit
 4. **Complete Understanding**: With baseline knowledge, derive accurate specification
 
 This ensures the derived specification is informed by actual pre-change behavior, not speculation.
@@ -223,7 +223,7 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
    After `code-research.prompt.md` is generated, create another promptfile:
    ```markdown
    ---
-   mode: PAW Review Baseline Researcher
+   mode: PAW-R1B Baseline Researcher Agent
    ---
    
    Follow the research prompt at .paw/reviews/PR-123/prompts/code-research.prompt.md

@@ -69,17 +69,22 @@ Build incrementally using the proven PAW patterns:
 
 ---
 
-## Phase 1: Understanding Stage Agent & Core Artifacts
+## Phase 1: Understanding Stage Agents & Core Artifacts
 
 ### Overview
 
-Create the Understanding stage agent that produces all R1 artifacts in dependency order: `ReviewContext.md` (parameter source) → `prompts/code-research.prompt.md` → (pause for Code Research Agent) → `CodeResearch.md` → `DerivedSpec.md`.
+Create the Understanding stage with two agents working in sequence: 
+1. **PAW-R1A Understanding Agent** produces `ReviewContext.md` and `prompts/code-research.prompt.md`, then pauses for baseline research
+2. **PAW-R1B Baseline Researcher Agent** checks out base commit, analyzes pre-change codebase, produces `CodeResearch.md`
+3. **PAW-R1A Understanding Agent** resumes to produce `DerivedSpec.md` using baseline understanding
+
+Dependency order: `ReviewContext.md` → `prompts/code-research.prompt.md` → (PAW-R1B analyzes base commit) → `CodeResearch.md` → `DerivedSpec.md`
 
 ### Changes Required
 
-#### 1. Understanding Agent Chatmode
+#### 1. Understanding Agent Chatmode (PAW-R1A)
 
-**File**: `.github/chatmodes/PAW-R1 Understanding Agent.chatmode.md`
+**File**: `.github/chatmodes/PAW-R1A Understanding Agent.chatmode.md`
 
 **Changes**: Create new chatmode file with YAML frontmatter and structured instructions (Note: chatmode files use YAML frontmatter directly, NOT wrapped in ````chatmode fences)
 
@@ -220,15 +225,83 @@ Provide guidance to help PAW Review Baseline Researcher understand what question
 - Test Coverage: Existing tests and patterns
 - Specific Ambiguities: Questions from initial analysis
 
-Let the researcher determine critical questions. Output: `CodeResearch.md` with file:line references.
+Let the researcher determine critical questions based on the nature and scope of changes. The PAW Review Baseline Researcher chatmode defines its own output format, so the prompt does not include output format instructions.
+
+#### 4. Baseline Researcher Agent Chatmode (PAW-R1B)
+
+**File**: `.github/chatmodes/PAW-R1B Baseline Researcher Agent.chatmode.md`
+
+**Changes**: Create new chatmode file for analyzing pre-change codebase at base commit
+
+```markdown
+---
+description: 'PAW Review Baseline Researcher - Analyze pre-change codebase'
+---
+
+# Baseline Researcher Agent
+
+You analyze the codebase **at the base commit** (before PR changes) to document how the system worked, what patterns existed, and what context is relevant for understanding the changes.
+
+## Core Responsibilities
+
+1. **Checkout base commit**: Extract base commit SHA from ReviewContext.md and checkout that commit
+2. **Read research prompt**: Understand focus areas from `prompts/code-research.prompt.md`
+3. **Analyze pre-change system**: Document behavior, patterns, conventions, integration points
+4. **Generate CodeResearch.md**: Create baseline understanding document
+5. **Restore original state**: Return to original branch after analysis
+
+## Key Constraints
+
+- **Base commit only**: All analysis at base commit SHA, not current HEAD
+- **Behavioral focus**: Document how things worked, not implementation minutiae
+- **No comparison**: Don't analyze changes or compare before/after
+- **No critique**: Don't suggest improvements or identify issues
+- **Pattern documentation**: Identify conventions to inform evaluation later
+
+## Process Steps
+
+1. Verify base commit and checkout
+2. Read research prompt and changed files list
+3. Perform comprehensive research at base commit
+4. Synthesize findings answering research questions
+5. Gather metadata (date, base commit, base branch, repository)
+6. Generate CodeResearch.md with YAML frontmatter
+7. Restore original branch/state
+8. Present findings summary
+
+## Hand-off
+
+```
+Baseline Research Complete
+
+I've documented the pre-change system state at:
+.paw/reviews/<identifier>/CodeResearch.md
+
+Analysis performed at base commit: <base-commit-sha>
+
+Baseline findings include:
+- How affected modules worked before changes
+- Established patterns and conventions
+- Integration points and dependencies
+- Test coverage baseline
+
+Original branch restored: <original-branch>
+
+Next: Understanding Agent can now use this baseline understanding to complete DerivedSpec.md.
+```
+```
+
+**Note**: The example above shows only the opening section. The actual chatmode file contains comprehensive research methodology (Code Location, Code Analysis, Code Pattern Finder) adapted for baseline analysis, git checkout instructions, and quality checklist. See the full chatmode file for complete structure.
 
 ### Success Criteria
 
 #### Automated Verification:
-- [x] Understanding Agent chatmode file exists and follows template structure
+- [x] PAW-R1A Understanding Agent chatmode file exists and follows template structure
+- [x] PAW-R1B Baseline Researcher Agent chatmode file exists and follows template structure
 - [x] ReviewContext.md generated with all metadata sections (FR-001, FR-031)
-- [x] code-research.prompt.md generated (FR-008)
-- [x] Agent blocks until CodeResearch.md exists (FR-009 dependency)
+- [x] code-research.prompt.md generated with guidance for baseline research (FR-008)
+- [x] Baseline Researcher checks out base commit before analysis
+- [x] Understanding Agent blocks until CodeResearch.md exists (FR-009 dependency)
 - [x] DerivedSpec.md distinguishes explicit vs inferred goals (FR-004, FR-005)
 - [x] DerivedSpec.md has zero open questions (FR-006 enforcement)
 - [x] CI failure flag set when checks failing (FR-032)
@@ -240,62 +313,47 @@ Let the researcher determine critical questions. Output: `CodeResearch.md` with 
 
 ### Status
 
-**Phase 1 Implementation Complete** - 2025-10-23
+**Phase 1 Implementation Complete** - 2025-10-24
 
-The Understanding Agent chatmode file has been successfully created at `.github/chatmodes/PAW-R1 Understanding Agent.chatmode.md`. The implementation follows all specifications from the implementation plan:
+Both Understanding Stage agents have been successfully created following the implementation plan specifications.
 
 **Created:**
-- Understanding Agent chatmode with proper YAML frontmatter (`description` field)
-- Complete process flow: Context Gathering → Research Prompt Generation → Pause for Research → Derive Specification
-- All required guardrails including ReviewContext.md as authoritative source, zero open questions blocking, and baseline-first analysis
-- Artifact directory structure for both GitHub (`PR-<number>`) and non-GitHub (`<branch-slug>`) contexts
-- Hand-off message template
+
+1. **PAW-R1A Understanding Agent** (`.github/chatmodes/PAW-R1A Understanding Agent.chatmode.md`)
+   - YAML frontmatter with description field
+   - Complete process flow: Context Gathering → Research Prompt Generation → Pause for Research → Derive Specification
+   - All required guardrails including ReviewContext.md as authoritative source, zero open questions blocking, and baseline-first analysis
+   - Artifact directory structure for both GitHub (`PR-<number>`) and non-GitHub (`<branch-slug>`) contexts
+   - Hand-off message template
+
+2. **PAW-R1B Baseline Researcher Agent** (`.github/chatmodes/PAW-R1B Baseline Researcher Agent.chatmode.md`)
+   - YAML frontmatter with description field
+   - Git checkout workflow: checkout base commit → analyze → restore original state
+   - Comprehensive research methodology adapted for pre-change analysis
+   - CodeResearch.md template with baseline-focused structure
+   - Clear separation: analyze base commit only, no comparison or critique
+   - Quality checklist ensuring base commit analysis and state restoration
 
 **Verification Notes:**
-- The chatmode file structure matches the existing PAW agent pattern (single backtick fence with `chatmode` marker)
+- Both chatmode files follow the established PAW agent pattern
+- PAW-R1A creates ReviewContext.md and code-research.prompt.md, pauses for PAW-R1B
+- PAW-R1B checks out base commit, analyzes pre-change state, produces CodeResearch.md
+- PAW-R1A resumes after CodeResearch.md exists to complete DerivedSpec.md
 - All process steps are clearly defined with specific actions
-- The agent properly distinguishes between GitHub and non-GitHub contexts
 - Blocking conditions are explicit (zero open questions, wait for CodeResearch.md)
+- Git operations ensure safe checkout and restoration
 
 **Review Notes for Implementation Review Agent:**
-- Verify the chatmode file formatting is consistent with other PAW agents
-- Confirm the YAML frontmatter description is appropriate
-- Check that the process steps are clear and actionable for an agent implementing this role
-- Validate that all guardrails are practical and enforceable
+- Verify both chatmode files formatting is consistent with other PAW agents
+- Confirm YAML frontmatter descriptions are appropriate
+- Check that the two-agent handoff workflow is clear
+- Validate that git checkout/restore workflow in PAW-R1B is safe and practical
+- Ensure baseline research focus (no comparison, no critique) is maintained
 
 **Notes for Future Phases:**
 - Phase 2 agents (Impact Analysis, Gap Analysis) will need to reference the Understanding artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
-- The Research Pause pattern mirrors the Spec Research pattern from the existing PAW workflow, ensuring consistency
+- The two-agent pattern (PAW-R1A → PAW-R1B → PAW-R1A) provides clear separation: Understanding Agent orchestrates, Baseline Researcher focuses on pre-change analysis
 - Phase 3 will need to reference the GitHub MCP tools for pending review creation - ensure those are available and tested
-
-**Addressed Review Comments:**
-
-Addressed PR review comments from https://github.com/lossyrob/phased-agent-workflow/pull/28:
-- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453972316 - Significantly expanded chatmode with detailed guidance
-- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453994256 - Removed file categorization and mechanical vs semantic analysis
-- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453997020 - Renamed to "PAW Review Baseline Researcher"
-- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2453998906 - Replaced detailed template with flexible guidance
-- https://github.com/lossyrob/phased-agent-workflow/pull/28#discussion_r2454001864 - Removed large PR threshold completely
-
-Changes made:
-1. Removed file categorization heuristics and file categories table from ReviewContext.md
-2. Removed mechanical vs semantic change detection heuristics
-3. Removed large PR threshold (>1000 LOC) concept
-4. Renamed "PAW-02A Code Researcher" to "PAW Review Baseline Researcher" throughout
-5. Replaced detailed code research prompt template with flexible guidance approach
-6. Updated process flow to focus on core research and derived specification
-7. Removed related flags: "Large PR", "Mechanical-only changes", "Missing tests for semantic changes"
-8. Simplified success criteria to remove file categorization and large PR requirements
-9. Updated implementation notes to reflect new streamlined approach
-
-The Understanding Agent now focuses on:
-- Gathering PR metadata and changed files list
-- Generating flexible research guidance (not rigid templates)
-- Pausing for PAW Review Baseline Researcher to analyze pre-change state
-- Deriving specification informed by baseline understanding
-- Blocking on open questions before proceeding to evaluation
-
-This streamlined approach reduces over-specification and lets the AI agents apply judgment about what analysis is most important for each specific PR.
 
 ---
 

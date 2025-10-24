@@ -384,11 +384,6 @@ When creating `prompts/code-research.prompt.md`, provide context and guidance to
 
 Let the researcher determine which questions are most critical based on the nature and scope of the changes. Not every area needs deep investigation for every PR.
 
-**Output Specification**:
-- Create `CodeResearch.md` with findings organized by relevant areas
-- Include file:line references to base commit for all observations
-- Focus on behavioral understanding, not line-by-line code reproduction
-
 ### DerivedSpec.md Template
 
 ```markdown

@@ -14,7 +14,7 @@ Independent Test: Given a PR URL, when I invoke the Understanding stage and comp
 Acceptance Scenarios:
 1. Given a GitHub PR URL, When I start the review workflow, Then ReviewContext.md captures PR metadata (number, title, author, description, labels, base/head commits) and serves as the authoritative parameter source for downstream review stages
 2. Given PR metadata analyzed, When the system identifies areas needing baseline research, Then code-research.prompt.md is generated with questions about pre-change system behavior, patterns, and integration points
-3. Given code-research.prompt.md created, When I run the Code Research Agent, Then CodeResearch.md documents how the system worked before the changes at a behavioral level by analyzing the codebase at base commit
+3. Given code-research.prompt.md created, When I run the PAW Review Baseline Researcher, Then CodeResearch.md documents how the system worked before the changes at a behavioral level by analyzing the codebase at base commit
 4. Given CodeResearch.md available, When deriving intent, Then DerivedSpec.md uses baseline understanding to reverse-engineer specification with observable before/after behavior
 5. Given a PR with stated goals in the description, When deriving intent, Then DerivedSpec.md distinguishes between explicit goals (from PR description/issues) and inferred goals (from code analysis) and flags any ambiguities as open questions
 6. Given a PR without clear documentation, When I review the derived spec, Then I can validate whether the reverse-engineered intent accurately represents what the code does
@@ -60,7 +60,7 @@ Independent Test: Given a PR with changes to existing code, when code research e
 
 Acceptance Scenarios:
 1. Given a PR modifying existing modules, When initial PR analysis identifies affected areas, Then code-research.prompt.md includes questions about how those modules worked before the changes
-2. Given code-research.prompt.md created, When Code Research Agent runs, Then it checks out the base commit (before PR changes) to analyze the original codebase state
+2. Given code-research.prompt.md created, When PAW Review Baseline Researcher runs, Then it checks out the base commit (before PR changes) to analyze the original codebase state
 3. Given pre-change analysis complete, When CodeResearch.md is generated, Then it documents existing patterns, conventions, and how the system worked before modifications
 4. Given CodeResearch.md available in Understanding stage, When DerivedSpec.md is created, Then the derived specification uses baseline understanding to accurately characterize before/after behavior
 5. Given documented baseline state from R1, When gap analysis in R2 evaluates changes, Then recommendations are informed by established codebase patterns and don't conflict with existing conventions without strong rationale
@@ -277,13 +277,15 @@ The PAW Review workflow is organized into three logical stages, each producing m
 Implementation may use either approach or a hybrid:
 
 **Option A: One Agent Per Stage**
-- Understanding Agent produces all R1 artifacts (ReviewContext, code-research prompt, DerivedSpec after research)
+- PAW-R1A Understanding Agent produces ReviewContext, code-research prompt; pauses for baseline research
+- PAW-R1B Baseline Researcher Agent analyzes pre-change codebase at base commit, produces CodeResearch.md
+- PAW-R1A Understanding Agent resumes to produce DerivedSpec after research
 - Evaluation Agent produces all R2 artifacts (ImpactAnalysis, GapAnalysis)
 - Feedback Agent produces ReviewComments.md
 - Feedback Critic adds assessments to ReviewComments.md
 
 **Option B: Specialized Agents Per Artifact**
-- Stage R1: PR Context Agent → Code Research Prompt Generator → Code Research Agent → Derived Spec Agent
+- Stage R1: PAW-R1A Understanding Agent → Code Research Prompt Generator → PAW-R1B Baseline Researcher Agent → Derived Spec Agent
 - Stage R2: Impact Analysis Agent → Gap Analysis Agent
 - Stage R3: Feedback Generation Agent → Feedback Critic
 
@@ -301,7 +303,7 @@ The Understanding stage follows a research-driven workflow similar to the Spec R
 
 1. **Initial Understanding**: Analyze PR metadata and changes to identify areas requiring baseline codebase research
 2. **Generate Research Prompt**: Create `prompts/code-research.prompt.md` with questions about pre-change system behavior, patterns, and integration points
-3. **Pause for Research**: Human reviewer runs Code Research Agent (or separate research process) to answer questions by analyzing codebase at base commit
+3. **Pause for Research**: Human reviewer runs PAW Review Baseline Researcher (or separate research process) to answer questions by analyzing codebase at base commit
 4. **Complete Understanding**: With CodeResearch.md available, complete DerivedSpec.md with informed understanding of baseline state
 
 This ensures the derived specification is informed by actual pre-change system behavior rather than speculation.

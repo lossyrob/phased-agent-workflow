@@ -39,8 +39,8 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 **Goal:** Comprehensively understand what changed and why
 
 **Agents:** 
-* PAW-R1 Understanding Agent
-* PAW Review Baseline Researcher (invoked during R1 research pause)
+* PAW-R1A Understanding Agent
+* PAW-R1B Baseline Researcher Agent (invoked during R1 research pause)
 
 **Inputs:**
 * PR URL or number (GitHub context)
@@ -70,10 +70,10 @@ PAW Review applies the same principles as the implementation workflow: **traceab
      - Patterns and conventions
      - Performance context for sensitive code
      - Test coverage baseline
-   - Guidance for PAW Review Baseline Researcher, not rigid template
+   - Guidance for PAW-R1B Baseline Researcher Agent, not rigid template
 
 3. **Pause for baseline research**
-   - Signal human to run PAW Review Baseline Researcher
+   - Signal human to run PAW-R1B Baseline Researcher Agent
    - Wait until `CodeResearch.md` exists
    - Researcher analyzes codebase at base commit (pre-change state)
 
@@ -87,9 +87,9 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R1 Understanding Agent with PR number or base branch
+* Invoke PAW-R1A Understanding Agent with PR number or base branch
 * Agent creates ReviewContext.md and code-research.prompt.md
-* Run PAW Review Baseline Researcher to analyze pre-change system
+* Run PAW-R1B Baseline Researcher Agent to analyze pre-change system
 * Agent completes DerivedSpec.md using baseline understanding
 * Review artifacts to ensure understanding is accurate
 * Correct any misinterpretations in `DerivedSpec.md`
@@ -260,10 +260,10 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 ### prompts/code-research.prompt.md
 
-Generated guidance for PAW Review Baseline Researcher to analyze pre-change system state.
+Generated guidance for PAW-R1B Baseline Researcher Agent to analyze pre-change system state.
 
 **Contents:**
-- Target mode: "PAW Review Baseline Researcher"
+- Target mode: "PAW-R1B Baseline Researcher Agent"
 - PR/Branch title and context
 - Base branch and commit SHA
 - List of changed files
@@ -276,13 +276,13 @@ Generated guidance for PAW Review Baseline Researcher to analyze pre-change syst
   - Test Coverage: Existing tests and patterns
   - Specific Ambiguities: Questions from initial analysis
 
-**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system.
+**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system. The PAW-R1B Baseline Researcher Agent chatmode defines its own output format, so the prompt does not include output format instructions.
 
 ---
 
 ### CodeResearch.md
 
-Pre-change baseline understanding created by PAW Review Baseline Researcher analyzing codebase at base commit.
+Pre-change baseline understanding created by PAW-R1B Baseline Researcher Agent analyzing codebase at base commit.
 
 **Contents:**
 - How system worked before changes (behavioral view)

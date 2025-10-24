@@ -102,18 +102,14 @@ Before responding, inspect the invocation context to infer starting inputs:
      - What performance characteristics existed?
      - What test coverage was present?
 
-2. **Create code-research.prompt.md**:
-   - Write to `.paw/reviews/<identifier>/prompts/code-research.prompt.md`
-   - Provide guidance on what questions to ask about the baseline system behavior
-   - Let the agent determine the most important questions based on the specific changes
-   - Include specific files to investigate at base commit
-   - Provide instructions for checking out base commit
+2. **Create 01B-code-research.prompt.md**:
+   - Write to `.paw/reviews/<identifier>/prompts/01B-code-research.prompt.md`
+   - See "Code Research Prompt Guidance" below for structure and content guidance
 
 3. **Quality Check Research Prompt**:
    - Questions are specific and answerable through code analysis
    - All changed files have corresponding research questions
    - No speculation or subjective questions
-   - Clear instructions for Review Baseline Researcher
 
 ### Step 3: Pause for Research
 
@@ -121,7 +117,7 @@ Before responding, inspect the invocation context to infer starting inputs:
    ```
    Research Prompt Ready
 
-   I've created prompts/code-research.prompt.md with questions about pre-change behavior.
+   I've created prompts/01B-code-research.prompt.md with questions about pre-change behavior.
 
    Files to investigate at base commit <sha>:
    - [list files]
@@ -189,7 +185,7 @@ After creating all artifacts, validate against these criteria:
 - [ ] Flags section identifies all applicable conditions
 - [ ] Base and head commit SHAs recorded
 
-**code-research.prompt.md Quality**:
+**01B-code-research.prompt.md Quality**:
 - [ ] Questions are specific and answerable
 - [ ] All changed files covered
 - [ ] Clear instructions for checking out base commit
@@ -214,7 +210,7 @@ After creating all artifacts, validate against these criteria:
 
 All artifacts stored in this directory:
 - `ReviewContext.md`
-- `prompts/code-research.prompt.md`
+- `prompts/01B-code-research.prompt.md`
 - `CodeResearch.md` (created by PAW Review Baseline Researcher)
 - `DerivedSpec.md`
 
@@ -365,14 +361,12 @@ status: complete
 
 ### Code Research Prompt Guidance
 
-When creating `prompts/code-research.prompt.md`, provide context and guidance to help the PAW Review Baseline Researcher understand what questions are most important to answer about the baseline system. The prompt should:
+When creating `prompts/01B-code-research.prompt.md`, provide context and guidance to help the PAW Review Baseline Researcher understand what questions are most important to answer about the baseline system. The prompt should:
 
 **Essential Elements**:
-- Target mode: "PAW Review Baseline Researcher"
-- PR/Branch title and context
-- Base branch and commit SHA
-- List of changed files with brief description of what changed
-- Instructions for checking out base commit and returning to review branch
+- Yaml frontmatter with `mode: PAW-R1B Baseline Researcher Agent`
+- Relative path to ReviewContext.md
+- List of questions about the system behavior before changes that will guide deep understanding of the affected areas
 
 **Question Areas to Consider** (adapt based on the specific changes):
 - **Baseline Behavior**: How did modified modules function before changes? What were entry points, data flows, contracts?
@@ -381,8 +375,6 @@ When creating `prompts/code-research.prompt.md`, provide context and guidance to
 - **Performance Context**: For performance-sensitive code, what were the characteristics and optimization patterns?
 - **Test Coverage**: What testing existed for the changed code? What patterns and utilities were used?
 - **Specific Ambiguities**: Any specific questions that arose during initial PR analysis
-
-Let the researcher determine which questions are most critical based on the nature and scope of the changes. Not every area needs deep investigation for every PR.
 
 ### DerivedSpec.md Template
 
@@ -516,7 +508,7 @@ Understanding Stage Complete - Ready for Evaluation
 
 Artifacts created and validated:
 - [x] ReviewContext.md (PR metadata, flags)
-- [x] prompts/code-research.prompt.md (research guidance)
+- [x] prompts/01B-code-research.prompt.md (research guidance)
 - [x] CodeResearch.md (baseline understanding from PAW Review Baseline Researcher)
 - [x] DerivedSpec.md (explicit/inferred goals, before/after behavior)
 

@@ -46,7 +46,7 @@ The workflow addresses a common problem in code reviews: jumping to critique wit
 
 **Testing as a Human User**:
 - Provide a PR URL or checkout a branch
-- Invoke "PAW-R1 Understanding Agent" chatmode
+- Invoke "PAW-R1A Understanding Agent" chatmode
 - Review `ReviewContext.md` - verify metadata is accurate
 - Review `DerivedSpec.md` - does it match your understanding?
 - Check that `CodeResearch.md` documents how things worked before changes
@@ -212,7 +212,7 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
    Create a promptfile (e.g., `start-review.prompt.md`):
    ```markdown
    ---
-   mode: PAW-R1 Understanding Agent
+   mode: PAW-R1A Understanding Agent
    ---
    
    Please analyze https://github.com/lossyrob/phased-agent-workflow/pull/123
@@ -292,7 +292,7 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
    Create a promptfile:
    ```markdown
    ---
-   mode: PAW-R1 Understanding Agent
+   mode: PAW-R1A Understanding Agent
    ---
    
    Please analyze the current branch against main

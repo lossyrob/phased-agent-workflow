@@ -341,7 +341,7 @@ PAW uses a **staged agent workflow** pattern where:
 - Spec Research Agent: Answer behavioral questions
 
 **Stage 02 - Implementation Planning**:
-- Code Research Agent: Map implementation details
+- Code Research Agent: Map implementation details (for implementation workflow)
 - Impl Planner: Create phased implementation plan
 
 **Stage 03 - Phased Implementation**:

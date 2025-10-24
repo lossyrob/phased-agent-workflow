@@ -155,7 +155,7 @@ Understanding Stage Complete
 Artifacts created:
 - ReviewContext.md
 - prompts/code-research.prompt.md  
-- CodeResearch.md (from Code Research Agent)
+- CodeResearch.md (from PAW-R1B Baseline Researcher Agent)
 - DerivedSpec.md
 
 Zero open questions remaining. Ready for Evaluation Stage (R2).

@@ -208,16 +208,23 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
 ### Basic Usage: GitHub PR Review
 
 1. **Start Understanding Stage**:
-   ```
-   @workspace /mode PAW-R1 Understanding Agent
    
-   Please analyze PR #123
+   Create a promptfile (e.g., `start-review.prompt.md`):
+   ```markdown
+   ---
+   mode: PAW-R1 Understanding Agent
+   ---
+   
+   Please analyze https://github.com/lossyrob/phased-agent-workflow/pull/123
    ```
 
 2. **Run Baseline Research**:
-   ```
-   # After code-research.prompt.md is generated
-   @workspace /mode PAW Review Baseline Researcher
+   
+   After `code-research.prompt.md` is generated, create another promptfile:
+   ```markdown
+   ---
+   mode: PAW Review Baseline Researcher
+   ---
    
    Follow the research prompt at .paw/reviews/PR-123/prompts/code-research.prompt.md
    ```
@@ -228,21 +235,43 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
    - Correct any misinterpretations
 
 4. **Run Evaluation**:
-   ```
-   @workspace /mode PAW-R2A Impact Analysis Agent
-   # Review ImpactAnalysis.md
    
-   @workspace /mode PAW-R2B Gap Analysis Agent
-   # Review GapAnalysis.md
+   Create promptfile for Impact Analysis:
+   ```markdown
+   ---
+   mode: PAW-R2A Impact Analysis Agent
+   ---
+   
+   Continue with impact analysis
+   ```
+   
+   Then create promptfile for Gap Analysis:
+   ```markdown
+   ---
+   mode: PAW-R2B Gap Analysis Agent
+   ---
+   
+   Continue with gap analysis
    ```
 
 5. **Generate Feedback**:
-   ```
-   @workspace /mode PAW-R3A Feedback Generation Agent
-   # Creates ReviewComments.md and GitHub pending review
    
-   @workspace /mode PAW-R3B Feedback Critic
-   # Adds assessments to ReviewComments.md
+   Create promptfile for Feedback Generation:
+   ```markdown
+   ---
+   mode: PAW-R3A Feedback Generation Agent
+   ---
+   
+   Generate review comments
+   ```
+   
+   Then create promptfile for Feedback Critic:
+   ```markdown
+   ---
+   mode: PAW-R3B Feedback Critic
+   ---
+   
+   Add assessments to review comments
    ```
 
 6. **Edit and Submit**:
@@ -259,8 +288,12 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
    ```
 
 2. **Start Understanding**:
-   ```
-   @workspace /mode PAW-R1 Understanding Agent
+   
+   Create a promptfile:
+   ```markdown
+   ---
+   mode: PAW-R1 Understanding Agent
+   ---
    
    Please analyze the current branch against main
    ```
@@ -273,9 +306,11 @@ The workflow supports both GitHub PRs and non-GitHub contexts (Azure DevOps, Git
 
 ### Tone Adjustment
 
-If feedback tone needs adjustment:
-```
-@workspace /mode PAW-R3A Feedback Generation Agent
+If feedback tone needs adjustment, create a promptfile:
+```markdown
+---
+mode: PAW-R3A Feedback Generation Agent
+---
 
 Please regenerate the pending review with a more encouraging tone
 ```
@@ -284,9 +319,11 @@ The agent will delete the existing pending review and recreate with adjusted ton
 
 ### Asking Questions
 
-The Feedback Generation Agent can answer questions based on all artifacts:
-```
-@workspace /mode PAW-R3A Feedback Generation Agent
+The Feedback Generation Agent can answer questions based on all artifacts. Create a promptfile:
+```markdown
+---
+mode: PAW-R3A Feedback Generation Agent
+---
 
 Why did you recommend adding that null check in auth/validator.ts?
 ```

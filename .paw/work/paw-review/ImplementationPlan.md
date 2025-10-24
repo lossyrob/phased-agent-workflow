@@ -123,7 +123,7 @@ Then begin analysis process.
      - Test coverage baseline
    
 3. **Pause for Research**
-   - Signal human to run PAW Review Baseline Researcher
+   - Signal human to run PAW-R1B Baseline Researcher Agent
    - Wait until `CodeResearch.md` exists
    
 4. **Derive Specification**
@@ -208,10 +208,10 @@ Zero open questions remaining. Ready for Evaluation Stage (R2).
 
 **Location**: Generated at `.paw/reviews/<identifier>/prompts/code-research.prompt.md`
 
-Provide guidance to help PAW Review Baseline Researcher understand what questions are most important. The prompt should include:
+Provide guidance to help PAW-R1B Baseline Researcher Agent understand what questions are most important. The prompt should include:
 
 **Essential Elements**:
-- Target mode: "PAW Review Baseline Researcher"
+- Target mode: "PAW-R1B Baseline Researcher Agent"
 - PR/Branch title and context
 - Base branch and commit SHA
 - List of changed files
@@ -225,7 +225,7 @@ Provide guidance to help PAW Review Baseline Researcher understand what question
 - Test Coverage: Existing tests and patterns
 - Specific Ambiguities: Questions from initial analysis
 
-Let the researcher determine critical questions based on the nature and scope of changes. The PAW Review Baseline Researcher chatmode defines its own output format, so the prompt does not include output format instructions.
+Let the researcher determine critical questions based on the nature and scope of changes. The PAW-R1B Baseline Researcher Agent chatmode defines its own output format, so the prompt does not include output format instructions.
 
 #### 4. Baseline Researcher Agent Chatmode (PAW-R1B)
 

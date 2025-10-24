@@ -102,6 +102,7 @@
 - **Error Handling**: All platform detection and routing failures must produce clear, actionable error messages
 - **Configuration Simplicity**: Platform detection should be automatic in 90% of cases; explicit configuration only for edge cases
 - **Documentation Clarity**: Users must be able to set up Azure DevOps support by following clear setup instructions in PAW documentation
+- **Testing Strategy**: All chatmode modifications shall be developed in a separate `chatmodes/` folder at the project root to avoid impacting the current GitHub-based workflow; each implementation phase shall require human testing in an actual Azure DevOps project before proceeding to the next phase
 
 ## Success Criteria
 

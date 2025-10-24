@@ -62,6 +62,147 @@ The implementation follows PAW's document-driven architecture:
 
 **Phasing Strategy**: Update agents in order of dependency and risk, starting with WorkflowContext.md creators (Spec Agent) and readers (all agents), then moving to platform-specific operations (Status, PR, Implementation Review agents).
 
+**Testing Strategy**: Since this repository uses GitHub and the Azure DevOps changes cannot be tested locally, all chatmode modifications will be made in a separate `chatmodes/` folder at the project root. A human tester must copy these files to an Azure DevOps project for validation after each phase before proceeding.
+
+---
+
+## Phase 0: Create Test Chatmodes Folder
+
+### Overview
+Create a separate `chatmodes/` folder at the project root and copy all `.github/chatmodes/` files to it. All Azure DevOps implementation work will modify only the files in `chatmodes/`, leaving `.github/chatmodes/` untouched for this GitHub-based project.
+
+### Rationale
+The current repository uses GitHub and modifying `.github/chatmodes/` would change agent behavior for this project without the ability to test Azure DevOps functionality locally. By working in a separate folder, we:
+1. Preserve working GitHub-based agent files in `.github/chatmodes/`
+2. Create modified versions in `chatmodes/` for Azure DevOps support
+3. Enable human testers to copy `chatmodes/` files to Azure DevOps projects for validation
+4. Reduce risk of breaking the current GitHub workflow
+
+### Changes Required:
+
+#### 1. Create chatmodes/ Directory and Copy Files
+**Location**: Project root
+
+**Commands**:
+```bash
+# Create chatmodes folder at project root
+mkdir -p chatmodes
+
+# Copy all chatmode files from .github/chatmodes/
+cp .github/chatmodes/*.chatmode.md chatmodes/
+
+# Verify copy successful
+ls -la chatmodes/
+```
+
+Expected files in `chatmodes/`:
+- `PAW-01A Spec Agent.chatmode.md`
+- `PAW-01B Spec Research Agent.chatmode.md`
+- `PAW-02A Code Researcher.chatmode.md`
+- `PAW-02B Impl Planner.chatmode.md`
+- `PAW-03A Implementer.chatmode.md`
+- `PAW-03B Impl Reviewer.chatmode.md`
+- `PAW-04 Documenter.chatmode.md`
+- `PAW-05 PR.chatmode.md`
+- `PAW-X Status Update.chatmode.md`
+
+#### 2. Add README to chatmodes/ Folder
+**File**: `chatmodes/README.md` (new file)
+
+**Content**:
+```markdown
+# Azure DevOps Support - Test Chatmodes
+
+This folder contains modified versions of PAW agent chatmode files that add Azure DevOps platform support.
+
+## Purpose
+
+These files are maintained separately from `.github/chatmodes/` because:
+1. The main repository uses GitHub and cannot test Azure DevOps functionality locally
+2. Modifying `.github/chatmodes/` would affect the current GitHub-based workflow
+3. Human testers need to copy these files to Azure DevOps projects for validation
+
+## Usage for Testing
+
+To test Azure DevOps support:
+
+1. **Set up an Azure DevOps test project**:
+   - Create or use an existing Azure DevOps repository
+   - Install and configure the Azure DevOps MCP server
+   - Create a test work item
+
+2. **Copy chatmode files to test project**:
+   ```bash
+   # In your Azure DevOps test project:
+   mkdir -p .github/chatmodes
+   cp /path/to/phased-agent-workflow/chatmodes/*.chatmode.md .github/chatmodes/
+   ```
+
+3. **Run PAW workflow**:
+   - Initialize workflow with Azure DevOps work item URL
+   - Progress through phases as documented in ImplementationPlan.md
+   - Verify all platform detection and Azure DevOps operations work correctly
+
+4. **Report results**:
+   - Document what worked and what didn't
+   - Note any error messages or unexpected behavior
+   - Provide feedback on GitHub Planning PR
+
+## Implementation Phases
+
+All implementation phases modify files in THIS folder, not `.github/chatmodes/`:
+
+- **Phase 0**: Setup (this folder creation) ✅
+- **Phase 1**: WorkflowContext.md field updates and platform detection
+- **Phase 2**: Status Agent platform-specific operations
+- **Phase 3**: Implementation Review Agent platform-specific PR operations
+- **Phase 4**: PR Agent platform-specific final PR operations
+- **Phase 5**: Documentation and end-to-end testing
+
+After each phase, human testing in an Azure DevOps project is required before proceeding to the next phase.
+
+## Future Integration
+
+Once Azure DevOps support is fully tested and validated:
+1. Merge changes from `chatmodes/` into `.github/chatmodes/`
+2. Deploy to production (users can choose GitHub or Azure DevOps)
+3. Archive or remove this test folder
+
+## See Also
+
+- Implementation Plan: `.paw/work/azure-devops/ImplementationPlan.md`
+- Azure DevOps Setup: `docs/azure-devops-setup.md` (to be created in Phase 5)
+- Planning PR: [Link to Planning PR]
+```
+
+#### 3. Update .gitignore (Optional)
+**File**: `.gitignore`
+
+**Consider adding** (optional - discuss with team):
+```
+# Azure DevOps test chatmodes (if you want to exclude from version control)
+# chatmodes/
+```
+
+**Note**: We likely want to keep `chatmodes/` in version control for review and testing purposes. This .gitignore entry is optional and only relevant if the team prefers to exclude test artifacts.
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `chatmodes/` folder exists: `test -d chatmodes && echo "EXISTS"`
+- [ ] All 9 chatmode files copied: `test $(ls -1 chatmodes/*.chatmode.md | wc -l) -eq 9 && echo "ALL FILES PRESENT"`
+- [ ] README.md exists in chatmodes/: `test -f chatmodes/README.md && echo "README EXISTS"`
+- [ ] File content matches source: `diff .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md chatmodes/PAW-01A\ Spec\ Agent.chatmode.md` (should show no differences)
+
+#### Manual Verification:
+- [ ] Verify all chatmode filenames match exactly between `.github/chatmodes/` and `chatmodes/`
+- [ ] Verify README.md explains testing strategy clearly
+- [ ] Confirm with human reviewer that this approach addresses testing concerns
+- [ ] Verify `chatmodes/` folder committed to Planning PR branch
+
+### Hand-off:
+Phase 0 complete. All chatmode files copied to `chatmodes/` folder. Proceeding to Phase 1: All subsequent phases will modify files in `chatmodes/` only, preserving `.github/chatmodes/` for the current GitHub workflow.
+
 ---
 
 ## Phase 1: WorkflowContext.md Field Updates and Platform Detection
@@ -72,7 +213,7 @@ Update WorkflowContext.md schema and reading logic across all agents to support 
 ### Changes Required:
 
 #### 1. Spec Agent (PAW-01A) - WorkflowContext.md Creator
-**File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
+**File**: `chatmodes/PAW-01A Spec Agent.chatmode.md`
 
 **Changes**:
 
@@ -111,14 +252,14 @@ Additional Inputs: <comma-separated or none>
 Update all remaining agent chatmode files to read from both "Issue URL" (new) and "GitHub Issue" (legacy):
 
 **Files**:
-- `.github/chatmodes/PAW-X Status Update.chatmode.md`
-- `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
-- `.github/chatmodes/PAW-05 PR.chatmode.md`
-- `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md`
-- `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`
-- `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
-- `.github/chatmodes/PAW-03A Implementer.chatmode.md`
-- `.github/chatmodes/PAW-04 Documenter.chatmode.md`
+- `chatmodes/PAW-X Status Update.chatmode.md`
+- `chatmodes/PAW-03B Impl Reviewer.chatmode.md`
+- `chatmodes/PAW-05 PR.chatmode.md`
+- `chatmodes/PAW-01B Spec Research Agent.chatmode.md`
+- `chatmodes/PAW-02A Code Researcher.chatmode.md`
+- `chatmodes/PAW-02B Impl Planner.chatmode.md`
+- `chatmodes/PAW-03A Implementer.chatmode.md`
+- `chatmodes/PAW-04 Documenter.chatmode.md`
 
 **Changes** (identical for all files):
 
@@ -148,7 +289,7 @@ Additional Inputs: <comma-separated or none>
 
 #### 3. Add Platform Detection Logic Documentation
 
-**File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
+**File**: `chatmodes/PAW-01A Spec Agent.chatmode.md`
 **Location**: After "WorkflowContext.md Parameters" section (~line 150)
 
 **Add new section**:
@@ -178,10 +319,10 @@ PAW agents detect the source control platform by examining the Remote field in W
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All agent chatmode files parse and load without errors: `ls .github/chatmodes/*.chatmode.md` lists all files
-- [ ] WorkflowContext.md format template updated in all 9 agent files (verify with `grep -l "Issue URL" .github/chatmodes/*.chatmode.md`)
-- [ ] Backward compatibility notes added to all 8 non-creator agent files (verify with `grep -l "Backward Compatibility" .github/chatmodes/*.chatmode.md`)
-- [ ] Platform detection documentation added to PAW-01A (verify with `grep -l "Platform Detection" .github/chatmodes/PAW-01A*`)
+- [ ] All agent chatmode files parse and load without errors: `ls chatmodes/*.chatmode.md` lists all files
+- [ ] WorkflowContext.md format template updated in all 9 agent files (verify with `grep -l "Issue URL" chatmodes/*.chatmode.md`)
+- [ ] Backward compatibility notes added to all 8 non-creator agent files (verify with `grep -l "Backward Compatibility" chatmodes/*.chatmode.md`)
+- [ ] Platform detection documentation added to PAW-01A (verify with `grep -l "Platform Detection" chatmodes/PAW-01A*`)
 
 #### Manual Verification:
 - [ ] Create new WorkflowContext.md with GitHub Issue URL using Spec Agent - verify "Issue URL" field is used
@@ -199,7 +340,7 @@ Update Status Agent to detect platform and route status update operations to app
 ### Changes Required:
 
 #### 1. Status Agent Platform Detection and Routing
-**File**: `.github/chatmodes/PAW-X Status Update.chatmode.md`
+**File**: `chatmodes/PAW-X Status Update.chatmode.md`
 
 **Changes**:
 
@@ -332,9 +473,9 @@ When searching for PRs related to this feature, format the links according to th
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Status Agent chatmode file parses without errors: `ls .github/chatmodes/PAW-X*.chatmode.md`
-- [ ] Platform detection logic added to Status Agent (verify with `grep -l "Platform Detection" .github/chatmodes/PAW-X*`)
-- [ ] Both GitHub and Azure DevOps MCP tool references present (verify with `grep "mcp_github_github_add_issue_comment\|mcp_azuredevops_wit_add_work_item_comment" .github/chatmodes/PAW-X*`)
+- [ ] Status Agent chatmode file parses without errors: `ls chatmodes/PAW-X*.chatmode.md`
+- [ ] Platform detection logic added to Status Agent (verify with `grep -l "Platform Detection" chatmodes/PAW-X*`)
+- [ ] Both GitHub and Azure DevOps MCP tool references present (verify with `grep "mcp_github_github_add_issue_comment\|mcp_azuredevops_wit_add_work_item_comment" chatmodes/PAW-X*`)
 
 #### Manual Verification:
 - [ ] Initialize PAW workflow with GitHub Issue, invoke Status Agent, verify status comment posted to GitHub Issue
@@ -353,7 +494,7 @@ Update Implementation Review Agent to detect platform and route PR operations (c
 ### Changes Required:
 
 #### 1. Implementation Review Agent Platform Detection and PR Routing
-**File**: `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
+**File**: `chatmodes/PAW-03B Impl Reviewer.chatmode.md`
 
 **Changes**:
 
@@ -476,10 +617,10 @@ Update Implementation Review Agent to detect platform and route PR operations (c
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Implementation Review Agent chatmode file parses without errors: `ls .github/chatmodes/PAW-03B*.chatmode.md`
-- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for PR Operations" .github/chatmodes/PAW-03B*`)
-- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" .github/chatmodes/PAW-03B*`)
-- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" .github/chatmodes/PAW-03B*`)
+- [ ] Implementation Review Agent chatmode file parses without errors: `ls chatmodes/PAW-03B*.chatmode.md`
+- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for PR Operations" chatmodes/PAW-03B*`)
+- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" chatmodes/PAW-03B*`)
+- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" chatmodes/PAW-03B*`)
 
 #### Manual Verification:
 - [ ] Implementation Review Agent creates Phase PR in GitHub repository with correct format and issue reference
@@ -498,7 +639,7 @@ Update PR Agent to detect platform and route final PR creation to appropriate MC
 ### Changes Required:
 
 #### 1. PR Agent Platform Detection and Final PR Routing
-**File**: `.github/chatmodes/PAW-05 PR.chatmode.md`
+**File**: `chatmodes/PAW-05 PR.chatmode.md`
 
 **Changes**:
 
@@ -599,10 +740,10 @@ Update PR Agent to detect platform and route final PR creation to appropriate MC
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] PR Agent chatmode file parses without errors: `ls .github/chatmodes/PAW-05*.chatmode.md`
-- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for Final PR" .github/chatmodes/PAW-05*`)
-- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" .github/chatmodes/PAW-05*`)
-- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" .github/chatmodes/PAW-05*`)
+- [ ] PR Agent chatmode file parses without errors: `ls chatmodes/PAW-05*.chatmode.md`
+- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for Final PR" chatmodes/PAW-05*`)
+- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" chatmodes/PAW-05*`)
+- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" chatmodes/PAW-05*`)
 
 #### Manual Verification:
 - [ ] PR Agent creates final PR in GitHub repository with correct format and "Closes #N" reference

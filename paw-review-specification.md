@@ -19,13 +19,15 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 ```
 .paw/
   reviews/
-    PR-<number>/              # e.g., PR-123/
-      PRContext.md
-      DerivedSpec.md
-      ChangeAnalysis.md
-      ImpactAnalysis.md
-      GapAnalysis.md
-      ReviewComments.md
+    PR-<number>/              # e.g., PR-123/ (or <branch-slug>/ for non-GitHub)
+      ReviewContext.md        # Authoritative parameter source
+      prompts/
+        code-research.prompt.md  # Generated research questions
+      CodeResearch.md         # Pre-change baseline understanding
+      DerivedSpec.md         # Reverse-engineered specification
+      ImpactAnalysis.md      # System-wide effects
+      GapAnalysis.md         # Categorized findings
+      ReviewComments.md      # Complete feedback with rationale/assessment
 ```
 
 ---
@@ -36,45 +38,62 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Comprehensively understand what changed and why
 
-**Agent:** Review Understanding Agent
+**Agents:** 
+* PAW-R1 Understanding Agent
+* PAW Review Baseline Researcher (invoked during R1 research pause)
 
 **Inputs:**
-* PR URL or number
+* PR URL or number (GitHub context)
+* Base branch name (non-GitHub context, with current branch as head)
 * Repository context
 
 **Outputs:**
-* `.paw/reviews/PR-<number>/PRContext.md` – PR metadata, author, description, CI status, changed files summary
-* `.paw/reviews/PR-<number>/DerivedSpec.md` – Reverse-engineered intent and acceptance criteria
-* `.paw/reviews/PR-<number>/ChangeAnalysis.md` – Categorized changes (feature code, tests, docs, mechanical vs semantic)
+* `.paw/reviews/<identifier>/ReviewContext.md` – PR metadata, changed files, flags (authoritative parameter source)
+* `.paw/reviews/<identifier>/prompts/code-research.prompt.md` – Generated research questions about pre-change system
+* `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding (created after research)
+* `.paw/reviews/<identifier>/DerivedSpec.md` – Reverse-engineered intent and acceptance criteria
 
 **Process:**
 
-1. **Fetch PR metadata and diff**
-   - Read PR description, linked issues, commit messages
-   - Get file changes with additions/deletions statistics
-   - Check CI/test status, code quality results
-   - Note labels, reviewers, current state
+1. **Fetch PR metadata and create ReviewContext.md**
+   - **GitHub**: Use GitHub MCP tools for PR metadata, files, status
+   - **Non-GitHub**: Use git diff for changes, derive from commits
+   - Document all changed files with additions/deletions
+   - Set flags: CI failures, breaking changes suspected
+   - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
 
-2. **Analyze changes**
-   - Categorize files by type (implementation, tests, docs, config, generated)
-   - Identify mechanical changes (formatting, renames, bulk updates) vs semantic changes
-   - Map affected components and subsystems
-   - Detect patterns: new features, refactoring, bug fixes, migrations
+2. **Generate code research prompt**
+   - Identify areas needing baseline understanding based on changed files
+   - Create `prompts/code-research.prompt.md` with questions about:
+     - Pre-change behavior of modified modules
+     - Integration points and dependencies
+     - Patterns and conventions
+     - Performance context for sensitive code
+     - Test coverage baseline
+   - Guidance for PAW Review Baseline Researcher, not rigid template
 
-3. **Derive intent**
-   - Reverse-engineer what the author was trying to accomplish
-   - Extract acceptance criteria from the implementation
+3. **Pause for baseline research**
+   - Signal human to run PAW Review Baseline Researcher
+   - Wait until `CodeResearch.md` exists
+   - Researcher analyzes codebase at base commit (pre-change state)
+
+4. **Derive specification**
+   - Use CodeResearch.md to understand how system worked before changes
+   - Reverse-engineer author intent from code analysis and PR description
+   - Extract acceptance criteria from implementation
    - Document observable before/after behavior
-   - Identify stated goals (from PR description) vs inferred goals (from code)
-   - List assumptions and open questions
+   - Distinguish stated goals (PR description) vs inferred goals (code analysis)
+   - **Block if open questions remain** - no placeholders, no "TBD"
 
 **Human Workflow:**
 
-* Invoke the Review Understanding Agent with PR number
-* Review the generated artifacts to ensure understanding is accurate
+* Invoke PAW-R1 Understanding Agent with PR number or base branch
+* Agent creates ReviewContext.md and code-research.prompt.md
+* Run PAW Review Baseline Researcher to analyze pre-change system
+* Agent completes DerivedSpec.md using baseline understanding
+* Review artifacts to ensure understanding is accurate
 * Correct any misinterpretations in `DerivedSpec.md`
-* Add context the agent couldn't infer from the PR itself
-* Proceed to Stage R2 once understanding feels complete
+* Proceed to Stage R2 once understanding complete and zero open questions
 
 ---
 
@@ -82,127 +101,198 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Agent:** Review Evaluation Agent
+**Agents:** 
+* PAW-R2A Impact Analysis Agent
+* PAW-R2B Gap Analysis Agent
 
 **Inputs:**
-* All Stage R1 artifacts
+* All Stage R1 artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
 * Repository codebase at base and head commits
 
 **Outputs:**
-* `.paw/reviews/PR-<number>/ImpactAnalysis.md` – System-wide effects, integration points, breaking changes
-* `.paw/reviews/PR-<number>/GapAnalysis.md` – Findings organized by Must/Should/Could with evidence
+* `.paw/reviews/<identifier>/ImpactAnalysis.md` – System-wide effects, integration points, breaking changes, design/architecture assessment
+* `.paw/reviews/<identifier>/GapAnalysis.md` – Findings organized by Must/Should/Could with evidence, including positive observations
 
 **Process:**
 
-1. **Research baseline state**
-   - Investigate how the system worked before these changes
-   - Document existing patterns, conventions, and constraints
-   - Identify integration points and dependent components
-   - Review relevant test coverage and documentation
+1. **Analyze impact** (PAW-R2A Impact Analysis Agent)
+   - Build integration graph: parse imports/exports, identify public API surfaces, map downstream consumers
+   - Detect breaking changes: function signature diffs, config schema changes, data model modifications
+   - Assess performance: new loops/recursion, database queries, algorithmic complexity
+   - Review security: auth middleware changes, permission checks, input validation
+   - **Assess design & architecture**: Does this belong in codebase vs library? Integrates well with system? Timing appropriate?
+   - **Evaluate user impact**: End-users (UX, performance) and developer-users (API clarity, ease of use)
+   - **Code health trend**: Improving or degrading system health? Technical debt impact?
+   - Document deployment considerations and risk assessment
 
-2. **Analyze impact**
-   - Map downstream effects of the changes
-   - Identify public API changes, schema migrations, wire format changes
-   - Check for potential breaking changes or compatibility issues
-   - Assess performance implications (hot paths, new queries, data volume)
-   - Note security and authorization changes
-
-3. **Identify gaps**
+2. **Identify gaps** (PAW-R2B Gap Analysis Agent)
    - **Correctness:** Logic errors, edge cases, error handling, invariants
-   - **Safety:** Input validation, authorization checks, concurrency issues, data integrity
-   - **Compatibility:** Breaking changes, migration paths, backward compatibility
-   - **Testing:** Missing test coverage, untested edge cases, test quality
-   - **Reliability:** Retry logic, idempotency, failure modes, observability
-   - **Maintainability:** Code clarity, documentation, naming, duplication
+   - **Safety & Security:** Input validation, authorization checks, concurrency, data integrity
+   - **Testing:** Coverage quantitative (if available) and qualitative (depth/breadth), test effectiveness (will fail when broken)
+   - **Maintainability:** Code clarity, documentation completeness (user-facing), orphaned docs, **comment quality** (WHY vs WHAT)
    - **Performance:** N+1 queries, unbounded operations, resource usage
+   - **Complexity:** **Over-engineering** (solving future vs current problems, unnecessary abstractions)
+   - **Style & Conventions:** Style guide adherence with "Nit:" labeling for preferences
+   - **Positive Observations:** Identify and commend good practices for mentoring value
 
-4. **Categorize findings**
-   - **Must** – Correctness, safety, security, data integrity issues that must be addressed
-   - **Should** – Missing tests, unclear behavior, maintainability concerns, compatibility issues that should be addressed
-   - **Could** – Style improvements, documentation enhancements, minor refactors that could optionally be addressed
-
-5. **Assess review scope**
-   - Flag if PR is too large to review effectively
-   - Note if changes are high-risk due to size × complexity × criticality
-   - Suggest splitting approach if needed (politely)
+3. **Categorize findings**
+   - **Must** – Correctness, safety, security, data integrity issues with concrete impact evidence
+   - **Should** – Quality, completeness, testing gaps that increase robustness
+   - **Could** – Optional enhancements with clear benefit
+   - **Evidence required**: All findings have file:line references
+   - **Not inflated**: Style preferences not elevated to Must without clear impact
 
 **Human Workflow:**
 
-* Review `ImpactAnalysis.md` to understand system-wide effects
-* Read through `GapAnalysis.md` findings in each category
-* Validate that categorization (Must/Should/Could) feels appropriate
-* Add domain-specific concerns the agent might have missed
-* Decide which findings warrant feedback based on relationship context
-* Proceed to Stage R3 to generate comments
+* Invoke PAW-R2A Impact Analysis Agent
+* Review `ImpactAnalysis.md` to understand system-wide effects, design fit, user impact
+* Invoke PAW-R2B Gap Analysis Agent
+* Review `GapAnalysis.md` findings in each category
+* Review positive observations section
+* Validate categorization feels appropriate (not inflated)
+* Add domain-specific concerns the agents might have missed
+* Proceed to Stage R3 to generate feedback
 
 ---
 
 ### Stage R3 — Feedback Generation
 
-**Goal:** Generate comprehensive, well-structured review comments
+**Goal:** Generate comprehensive, well-structured review comments with rationale and critical assessment
 
-**Agent:** Review Feedback Agent
+**Agents:**
+* PAW-R3A Feedback Generation Agent
+* PAW-R3B Feedback Critic
 
 **Inputs:**
-* All prior artifacts
+* All prior artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md)
 
 **Outputs:**
-* `.paw/reviews/PR-<number>/ReviewComments.md` – Comprehensive review feedback organized by priority (for reference)
-* **GitHub pending review** – Draft review with all comments posted but not yet visible to author
+* `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with rationale and assessment sections (for reference)
+* **GitHub pending review** (GitHub context only) – Draft review with inline comments posted but not submitted
 
 **Process:**
 
-1. **Generate comprehensive feedback**
-   - Transform all findings from `GapAnalysis.md` into review comments
+1. **Generate comprehensive feedback** (PAW-R3A Feedback Generation Agent)
+   - Batch related findings (One Issue, One Comment policy)
+   - Transform all findings from GapAnalysis.md into review comments
    - Include Must, Should, and Could items
-   - Provide specific, actionable suggestions with code examples where helpful
-   - Link to review artifacts for detailed reasoning
-   - Batch related issues into cohesive comments
+   - Provide specific, actionable suggestions with code examples
+   - **Add Rationale sections** to each comment in ReviewComments.md:
+     - Evidence: file:line references
+     - Baseline Pattern: from CodeResearch.md
+     - Impact: what could go wrong
+     - Best Practice: citation from established guidelines
+   - Distinguish inline comments (line-specific) from thread comments (file/concept-level)
 
-2. **Structure feedback**
-   - **Summary comment** – Brief, positive opening with overview of feedback
-   - **Inline comments** – Line-specific comments for code issues tied to specific locations
-   - **Thread comments** – File or concept-level comments for broader issues
-   - **Must-address items** – Critical issues with clear rationale and suggestions
-   - **Should-address items** – Important improvements with reasoning
-   - **Could-consider items** – Optional enhancements offered constructively
-   - **Questions** – Clarifying questions about intent or approach
+2. **Create ReviewComments.md and pending review**
+   - Save comprehensive ReviewComments.md with all feedback, rationale sections
+   - **GitHub context**: Create pending review using GitHub MCP tools
+     - Post inline comments with text and code suggestions only (no rationale)
+     - Rationale sections remain in ReviewComments.md
+   - **Non-GitHub context**: All feedback in ReviewComments.md with manual posting instructions
 
-3. **Create pending review on GitHub**
-   - Use `mcp_github_pull_request_review_write` (method: create) to start a pending review
-   - Add inline comments using `mcp_github_add_comment_to_pending_review` for each line-specific issue
-   - Save comprehensive version to `ReviewComments.md` for reference
+3. **Critical assessment** (PAW-R3B Feedback Critic)
+   - Add **Assessment sections** to each comment in ReviewComments.md (local only, never posted):
+     - Usefulness: Does this truly improve code quality?
+     - Accuracy: Are evidence references correct?
+     - Alternative Perspectives: What might the reviewer have missed?
+     - Trade-offs: Valid reasons for current approach?
+     - Recommendation: Include/modify/skip?
+   - Assessments help reviewer make informed decisions
+   - **Never post assessments to GitHub or external platforms**
+
+4. **Support Q&A and tone adjustment**
+   - Answer reviewer questions based on all artifacts
+   - Regenerate pending review with adjusted tone if requested
+   - Preserve IDs, evidence, rationale when adjusting tone
 
 **Human Workflow:**
 
-* Invoke Review Feedback Agent to generate and post pending review
-* **Open the PR in GitHub** to view the pending review
-* **Review all comments** in GitHub's pending review interface
-* **Delete unwanted comments** that don't fit the context or relationship
-* **Edit comment text** to adjust tone, wording, or emphasis
-* **Add new comments** inline if additional issues found
-* **Option: Ask agent to adjust tone** - Agent can update pending comments if tone needs broad changes
-* **Submit the review** when satisfied (Approve/Comment/Request Changes)
+* Invoke PAW-R3A Feedback Generation Agent
+  - Creates ReviewComments.md with rationale sections
+  - GitHub: Creates pending review with inline comments (text/suggestions only)
+  - Non-GitHub: Provides manual posting instructions
+* Invoke PAW-R3B Feedback Critic
+  - Adds assessment sections to ReviewComments.md
+* **GitHub context**: 
+  - Open PR in GitHub Files Changed tab
+  - View all pending review comments
+  - Edit comment text to adjust tone/wording
+  - Delete unwanted comments that don't fit context
+  - Add new comments if needed
+  - Submit review when satisfied (Approve/Comment/Request Changes)
+* **Non-GitHub context**:
+  - Use ReviewComments.md to manually post to review platform
+  - Post only comment text and suggestions (keep rationale/assessment for reference)
+* **Optional**: Ask agent to adjust tone - regenerates pending review with new tone
+* **Optional**: Ask agent questions about findings - answers based on artifacts
 
 ---
 
 ## Artifacts
 
-### PRContext.md
+### ReviewContext.md
 
-Captures the initial state and metadata of the pull request.
+**Authoritative parameter source** for the review workflow, analogous to WorkflowContext.md in PAW's implementation workflow.
 
 **Contents:**
-- PR number, title, author
-- Repository and branches (base → head)
-- PR description (author's stated intent)
-- Linked issues and references
-- Labels and current reviewers
-- CI/test status summary
-- Changed files with statistics (additions/deletions)
-- File categorization (implementation, tests, docs, config)
+- **PR Number** (GitHub) OR **Branch** (non-GitHub)
+- Base Branch, Head Branch
+- Base Commit SHA, Head Commit SHA
+- Repository (owner/repo or local)
+- Author (username or git author)
+- Title (PR title or derived from commits)
+- State (open/closed/draft for GitHub, active for non-GitHub)
+- Created date (GitHub only)
+- CI Status (passing/failing/pending for GitHub, "Not available" for non-GitHub)
+- Labels (GitHub only)
+- Reviewers (GitHub only)
+- Linked Issues (GitHub URLs or "Inferred from commits" for non-GitHub)
+- Changed Files summary (count, additions, deletions)
+- **Artifact Paths**: auto-derived
+- Description (PR description or "Derived from commit messages")
+- Flags (CI failures present, breaking changes suspected)
+- Metadata (created timestamp, git commit SHA, reviewer)
 
-**Purpose:** Quick reference for PR basics; establishes shared context for all subsequent stages.
+**Purpose:** Single source of truth for all review parameters; read first by all downstream agents; updated when new information discovered.
+
+---
+
+### prompts/code-research.prompt.md
+
+Generated guidance for PAW Review Baseline Researcher to analyze pre-change system state.
+
+**Contents:**
+- Target mode: "PAW Review Baseline Researcher"
+- PR/Branch title and context
+- Base branch and commit SHA
+- List of changed files
+- Instructions for checking out base commit
+- Question areas (adapted based on changes):
+  - Baseline Behavior: How modules functioned before changes
+  - Integration Points: Component dependencies
+  - Patterns & Conventions: Established patterns
+  - Performance Context: For sensitive code
+  - Test Coverage: Existing tests and patterns
+  - Specific Ambiguities: Questions from initial analysis
+
+**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system.
+
+---
+
+### CodeResearch.md
+
+Pre-change baseline understanding created by PAW Review Baseline Researcher analyzing codebase at base commit.
+
+**Contents:**
+- How system worked before changes (behavioral view)
+- Existing patterns and conventions
+- Integration points and dependencies
+- Test coverage baseline
+- Relevant documentation context
+- File:line references for all observations
+
+**Purpose:** Informs DerivedSpec.md with accurate before/after behavior; guides Gap Analysis recommendations to align with established patterns.
 
 ---
 
@@ -221,63 +311,45 @@ A reverse-engineered specification inferred from the implementation.
 - **Migration Notes** – Data migrations, upgrade paths, compatibility
 - **Open Questions** – Ambiguities or uncertainties about intent
 
-**Purpose:** Creates a testable specification even when the author didn't provide one; serves as the baseline for gap analysis.
-
----
-
-### ChangeAnalysis.md
-
-Structured categorization of what changed.
-
-**Contents:**
-- **Summary Statistics** – Total files, lines added/removed, languages
-- **Change Categories:**
-  - Feature code (new functionality)
-  - Bug fixes (corrections)
-  - Refactoring (structural improvements)
-  - Tests (new or modified tests)
-  - Documentation (README, API docs, comments)
-  - Configuration (settings, dependencies, build)
-  - Generated code (auto-generated, vendored)
-  - Infrastructure (CI, deployment, tooling)
-- **Mechanical vs Semantic:**
-  - Mechanical: formatting, renames, bulk updates, generated changes
-  - Semantic: logic changes, new behavior, algorithm modifications
-- **Component Mapping** – Which subsystems/modules are affected
-- **Hot Spots** – Files with highest churn or complexity
-
-**Purpose:** Helps prioritize review focus; identifies what deserves deep attention vs quick acknowledgment.
+**Purpose:** Creates a testable specification even when the author didn't provide one; informed by baseline understanding from CodeResearch.md; serves as input for gap analysis.
 
 ---
 
 ### ImpactAnalysis.md
 
-System-wide effects and integration analysis.
+System-wide effects, integration analysis, and design assessment.
 
 **Contents:**
-- **Baseline State** – How the system worked before these changes (behavioral view)
-- **Integration Points** – Where these changes connect to other components
-- **Public API Changes** – Routes, RPC methods, exported functions, CLI commands
-- **Data Changes** – Schema migrations, data format changes, new tables/fields
-- **Breaking Changes** – Backward compatibility implications
-- **Performance Implications** – Hot paths touched, new queries, resource usage
-- **Security Implications** – Authentication, authorization, input validation changes
-- **Deployment Considerations** – Migration requirements, feature flags, rollout strategy
-- **Dependencies** – New libraries, version changes, external service interactions
-- **Historical Context** – Prior issues or PRs in these areas, related TODOs
+- **Baseline State** – How the system worked before changes (from CodeResearch.md)
+- **Integration Points** – Component dependencies and downstream consumers
+- **Breaking Changes** – Public API changes, removed features, incompatibilities
+- **Performance Implications** – Hot paths, algorithmic changes, resource usage
+- **Security & Authorization Changes** – Auth modifications, validation changes
+- **Design & Architecture Assessment** – Does this belong in codebase vs library? Integrates well? Timing appropriate?
+- **User Impact Evaluation** – End-user impact (UX, performance) and developer-user impact (API clarity, ease of use)
+- **Deployment Considerations** – Migration steps, feature flags, rollout strategy
+- **Dependencies & Versioning** – New libraries, version changes, external services
+- **Risk Assessment** – Overall risk level with rationale, including code health trend
 
-**Purpose:** Ensures reviewer understands ripple effects; surfaces non-obvious impacts.
+**Purpose:** Ensures reviewer understands ripple effects and system-wide context; evaluates design fit and user impact.
 
 ---
 
 ### GapAnalysis.md
 
-Findings organized by severity and category.
+Findings organized by severity and category, with positive observations.
 
 **Structure:**
 
 ```markdown
-## Must Address (Correctness/Safety)
+## Positive Observations (Mentoring Value)
+
+### [Good Practice Title]
+**File:** `path/to/file.ts:123`
+**Observation:** [What was done well]
+**Impact:** [Why this is valuable]
+
+## Must Address (Correctness/Safety/Security)
 
 ### [Finding Title]
 **File:** `path/to/file.ts:123`
@@ -309,15 +381,110 @@ Findings organized by severity and category.
 
 **Categories:**
 - **Correctness:** Logic errors, edge cases, error handling, invariants
-- **Safety:** Input validation, authorization, concurrency, data integrity
-- **Security:** Authentication, injection vulnerabilities, sensitive data handling
-- **Compatibility:** Breaking changes, migration paths, version compatibility
-- **Testing:** Coverage gaps, missing edge cases, test quality
-- **Reliability:** Retry logic, idempotency, failure modes, observability
-- **Maintainability:** Code clarity, documentation, naming, duplication
+- **Safety & Security:** Input validation, authorization, concurrency, data integrity
+- **Testing:** Coverage gaps, test quality, test effectiveness
+- **Maintainability:** Code clarity, documentation, comment quality (WHY vs WHAT), naming
 - **Performance:** N+1 patterns, unbounded operations, resource efficiency
+- **Complexity:** Over-engineering, unnecessary abstractions
+- **Style & Conventions:** Style guide adherence (with "Nit:" labeling for preferences)
 
-**Purpose:** Provides structured, evidence-based findings; human reviewer selects which to include in final comments.
+**Purpose:** Provides structured, evidence-based findings with positive observations; human reviewer selects which to include in final comments.
+
+---
+
+### ReviewComments.md
+
+Complete review feedback with rationale and assessment sections (for reviewer reference).
+
+**Structure:**
+
+```markdown
+# Review Comments for <PR Number or Branch Slug>
+
+**Context**: GitHub PR #X OR Non-GitHub branch `feature/...`
+**Base Branch**: <base>
+**Head Branch**: <head>
+**Review Date**: <date>
+**Reviewer**: <name>
+**Pending Review ID**: <id> (GitHub) OR "Manual posting required" (non-GitHub)
+
+## Summary Comment
+
+<Brief, positive opening acknowledging the work>
+<Overview of feedback scope>
+
+**Findings**: X Must-address items, Y Should-address items, Z optional suggestions
+
+Full review artifacts: `.paw/reviews/<identifier>/`
+
+---
+
+## Inline Comments
+
+### File: `path/to/file.ts` | Lines: 45-50
+
+**Type:** Must
+**Category:** Safety
+
+<Comment text explaining the issue>
+
+**Suggestion:**
+```typescript
+// Proposed fix or approach
+```
+
+**Rationale:**
+- **Evidence**: `file.ts:45` shows unchecked null access
+- **Baseline Pattern**: CodeResearch.md (`file.ts:100`) shows standard null checks used elsewhere
+- **Impact**: Potential null pointer exception causing crash in production
+- **Best Practice**: review-research-notes.md § Safety - "Always validate inputs"
+
+**Assessment:**
+- **Usefulness**: High - Prevents null pointer exception
+- **Accuracy**: Evidence references confirmed
+- **Alternative Perspective**: None identified
+- **Trade-offs**: No valid reason to skip null check
+- **Recommendation**: Include as-is
+
+**Posted**: ✓ Pending review comment ID: <id> (GitHub) OR ⚠ Post to `path/to/file.ts:45-50` (non-GitHub)
+
+---
+
+## Thread Comments
+
+### File: `path/to/file.ts` (Overall Architecture)
+
+**Type:** Should
+**Category:** Maintainability
+
+<Discussion about broader pattern>
+
+**Rationale:**
+...
+
+**Assessment:**
+...
+
+**Posted**: ⚠ Add manually as file-level comment
+
+---
+
+## Questions for Author
+
+1. <Question about intent or design decision>
+2. <Clarification needed on edge case>
+```
+
+**Key Sections:**
+- **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice citation
+- **Assessment** (local only, not posted): Usefulness, Accuracy, Alternative Perspectives, Trade-offs, Recommendation
+- **Posted Status**: Tracks what's in pending review vs needs manual posting
+
+**Purpose:** 
+- Comprehensive reference with full context for decision-making
+- Rationale/assessment help reviewer decide what to include
+- For GitHub: supplements pending review with reasoning
+- For non-GitHub: source for manual posting with instructions
 
 ---
 

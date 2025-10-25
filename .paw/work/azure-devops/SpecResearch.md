@@ -4,6 +4,8 @@
 
 This research documents how PAW currently integrates with GitHub through the GitHub MCP server and defines the functional requirements for Azure DevOps support via the Azure DevOps MCP server. The findings reveal that GitHub operations are centralized through MCP tools exposed to all agents, with no direct API calls or credential management within agent prompts. Azure DevOps support will follow the same architectural pattern, leveraging the Azure DevOps MCP server as the abstraction layer.
 
+**Critical Finding**: Empirical testing with Copilot in Azure DevOps repositories confirms that Copilot autonomously resolves git remotes, detects repository platform from workspace context, and routes to appropriate MCP tools without requiring explicit URL resolution or platform detection logic in agent instructions. Agents can use natural language commands (e.g., "open a PR") and Copilot handles all platform-specific routing automatically.
+
 ## Internal System Behavior
 
 ### Question 1: GitHub API Operations Used by PAW Agents
@@ -244,4 +246,69 @@ https://github.com/<owner>/<repository>
 
 ---
 
+## Appendix: Copilot MCP Routing Experiments
+
+### Experiment 1: Platform Detection and Tool Selection
+
+**Date**: 2025-10-25  
+**Context**: Azure DevOps repository (msdata.visualstudio.com/Database Systems/orcasql-pg_diskann)  
+**Branch**: `feature/add-a-comment`
+
+**User Request**: "Tell me exactly what command you would run, using tools at your disposal to open a PR against this codebase. Don't actually open the PR."
+
+**Copilot Behavior**:
+1. Ran `git remote -v` to discover repository URL
+2. Ran `git branch --show-current` to identify current branch
+3. Detected platform as Azure DevOps from URL domain (`msdata.visualstudio.com`)
+4. Selected `mcp_ado_repo_create_pull_request` tool (Azure DevOps MCP namespace)
+5. Identified required parameters (repositoryId, sourceRefName, targetRefName, title, description)
+
+**Key Finding**: Copilot autonomously:
+- Resolved workspace context (remotes, branches) using git commands
+- Detected platform from URL without explicit instruction
+- Selected correct MCP tool namespace (`mcp_ado_*`) without being told
+
+### Experiment 2: End-to-End Workflow with Minimal Instruction
+
+**Date**: 2025-10-25  
+**Context**: Same Azure DevOps repository  
+**Branch**: `feature/add-a-comment` (with 1-line change to src/am.rs)
+
+**User Request**: "I've made a 1-line change on my branch. Commit it, push it to remote, then open a PR."
+
+**Copilot Behavior**:
+1. Ran `git status` to see changes
+2. Ran `git diff src/am.rs` to view modification
+3. Ran `git add src/am.rs` to stage change
+4. Ran `git commit -m "Add test comment to am.rs"` to commit
+5. Ran `git push -u origin feature/add-a-comment` to push
+6. Ran `git remote get-url origin` to get repository URL
+7. Ran `git rev-parse --abbrev-ref HEAD` to confirm branch
+8. Invoked `repo_get_repo_by_name_or_id` to get repository details
+9. Invoked `repo_create_pull_request` to create PR
+10. Successfully created PR #1847727
+
+**Key Finding**: With natural language instruction "open a PR" (no explicit platform, remote resolution, or URL provision):
+- Copilot resolved all necessary context from workspace
+- Detected Azure DevOps platform automatically
+- Routed to correct MCP tools (`repo_*` from Azure DevOps MCP server)
+- Completed full workflow successfully
+
+### Implications for PAW Agent Design
+
+**What Agents DON'T Need to Do**:
+- ❌ Explicitly resolve Remote names to URLs (Copilot runs `git remote get-url` itself)
+- ❌ Parse URLs to detect platform (GitHub vs Azure DevOps)
+- ❌ Explicitly choose MCP tool namespaces (`mcp_github_*` vs `mcp_ado_*`)
+- ❌ Extract repository identifiers (org, project, repo) from URLs
+
+**What Agents SHOULD Do**:
+- ✅ Use natural, platform-neutral language ("open a PR", "post a comment")
+- ✅ Provide relevant context (branch names, Issue/Work Item URLs)
+- ✅ Follow existing conventions in chatmode files for mentioning remotes
+- ✅ Trust Copilot to resolve workspace context and route appropriately
+
+**Design Principle**: Agents describe **what** to do (the operation) and **where** (branch names, Issue URLs), and Copilot determines **how** (which MCP tools) based on workspace context.
+
+---
 **Research Complete**: All internal questions answered. External knowledge section available for manual completion if desired.

@@ -11,12 +11,12 @@
 **Independent Test**: Initialize a PAW workflow on an Azure DevOps repository, have an agent create a branch and open a PR, and verify the PR appears in Azure DevOps with correct links and metadata.
 
 **Acceptance Scenarios**:
-1. Given a repository with an Azure DevOps remote URL in the Remote field, When a PAW agent performs repository operations, Then it automatically detects Azure DevOps and uses Azure DevOps MCP tools
-2. Given a PAW agent needs to create a branch, When the agent executes branch creation, Then the branch is created in the Azure DevOps repository using the correct naming convention
-3. Given a phase is complete, When the Implementation Review Agent runs, Then it opens a PR in Azure DevOps with the correct source and target branches
-4. Given a PR is opened in Azure DevOps, When I view the PR, Then the description contains proper artifact links and PAW formatting
-5. Given the Azure DevOps MCP server is not configured, When an agent detects an Azure DevOps repository, Then it provides a clear error message with setup instructions
-6. Given a GitHub repository, When a PAW agent runs, Then it continues to use GitHub MCP tools without regression
+1. Given a repository with an Azure DevOps remote configured, When a PAW agent performs repository operations using natural language ("open a PR from branch X to branch Y"), Then Copilot resolves the remote context and operations succeed in the Azure DevOps repository
+2. Given a PAW agent needs to create a branch, When the agent executes branch creation, Then the branch is created in the repository using the correct naming convention
+3. Given a phase is complete, When the Implementation Review Agent runs, Then it opens a PR with the correct source and target branches
+4. Given a PR is opened, When I view the PR, Then the description contains proper artifact links and PAW formatting
+5. Given the MCP server is not configured, When an agent attempts repository operations, Then it provides a clear error message with setup instructions
+6. Given a GitHub repository, When a PAW agent runs, Then it continues to work without regression
 
 ### User Story P2 – Work Item Integration
 **Narrative**: As a project manager using Azure DevOps, I want PAW to track work using Azure DevOps work items instead of GitHub Issues so I can maintain my existing project management workflow and keep all project artifacts in one platform.
@@ -26,75 +26,38 @@
 **Acceptance Scenarios**:
 1. Given an Azure DevOps work item URL, When I initialize a PAW workflow, Then WorkflowContext.md captures the work item URL in the "Issue URL" field (platform-agnostic)
 2. Given an existing WorkflowContext.md with "GitHub Issue" field, When a PAW agent reads the context, Then it successfully extracts the issue/work item URL from the legacy field name
-3. Given an Azure DevOps work item URL, When a PAW agent detects the platform, Then it automatically extracts organization, project, and work item ID for work item MCP operations (status updates, comments, PR linking)
-4. Given workflow progress through stages, When the Status Agent runs, Then it posts status update comments to the Azure DevOps work item
-5. Given a phase PR is merged, When the Status Agent updates status, Then the work item reflects the completed phase with a link to the merged PR
-6. Given a work item comment is created, When I view it in Azure DevOps, Then it contains the status dashboard with artifact links and phase checklist
+3. Given workflow progress through stages, When the Status Agent runs with the Issue URL, Then Copilot routes to the correct platform and posts status update comments to the work item
+4. Given a phase PR is merged, When the Status Agent updates status, Then the work item reflects the completed phase with a link to the merged PR
+5. Given a work item comment is created, When I view it in the work tracking system, Then it contains the status dashboard with artifact links and phase checklist
 
 ### Edge Cases
 
-- **Missing MCP Server**: Azure DevOps MCP server not configured when Azure DevOps repository detected - agents should provide clear error message with setup instructions
-- **Platform Migration**: Repository migrated from GitHub to Azure DevOps mid-workflow - agents should detect platform change and adapt or prompt for explicit confirmation
-- **Work Item Type Variations**: Azure DevOps work item types (Bug, Task, User Story, etc.) have different field requirements - agents should handle common types or default to generic "Task" type
-- **Organization Access**: User lacks permission to access Azure DevOps organization specified in WorkflowContext.md - MCP server authentication flow should handle this gracefully
-- **Repository Not Found**: Azure DevOps project or repository specified in Remote field does not exist or user lacks access - agents should provide clear error messages indicating which resource is inaccessible
-- **PR Link Formatting**: Azure DevOps PR links have different URL structure than GitHub - Status Agent must format links correctly for each platform
-- **Multiple Remotes**: Repository has multiple git remotes configured - agents use the Remote field value from WorkflowContext.md to determine which remote to use
-- **Remote Resolution**: Remote field contains a remote name (e.g., "origin") rather than a URL - agents must resolve the remote name to its URL for platform detection
-- **Invalid Remote**: Remote field references a remote that doesn't exist or URL cannot be parsed - agents should provide clear error message prompting user to verify remote configuration
+- **Missing MCP Server**: MCP server not configured for the repository platform - agents should provide clear error message with setup instructions
+- **Platform Migration**: Repository migrated from one platform to another mid-workflow - Copilot adapts automatically based on current workspace remote URLs
+- **Organization Access**: User lacks permission to access organization/project - MCP server authentication flow should handle this gracefully
+- **Repository Not Found**: Repository specified in Remote field does not exist or user lacks access - agents should provide clear error messages
+- **Multiple Remotes**: Repository has multiple git remotes configured - agents use the Remote field value from WorkflowContext.md; Copilot resolves the specified remote
+- **Invalid Remote**: Remote field references a remote that doesn't exist - Copilot's git commands will fail with clear error messages prompting user to verify remote configuration
 - **Legacy Field Names**: WorkflowContext.md uses "GitHub Issue" instead of "Issue URL" - agents should read from either field name and continue to function correctly
 
 ## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: PAW agents shall detect the platform (GitHub or Azure DevOps) by examining the git remote URL specified in the Remote field of WorkflowContext.md (Stories: P1)
+- **FR-001**: Agents shall read from both "Issue URL" (preferred) and "GitHub Issue" (legacy) field names in WorkflowContext.md for backward compatibility (Stories: P2)
 
-- **FR-002**: PAW agents shall support Azure DevOps repository operations (branch creation, PR creation, PR updates) through Azure DevOps MCP tools when platform is Azure DevOps (Stories: P1)
+- **FR-002**: When creating new WorkflowContext.md files, agents shall use "Issue URL" as the field name (Stories: P2)
 
-- **FR-003**: PAW agents shall support Azure DevOps work item operations (read, comment, link to PRs) through Azure DevOps MCP tools when platform is Azure DevOps (Stories: P2)
+- **FR-003**: Agents shall use platform-neutral language in all instructions (e.g., "issue/work item" not "GitHub Issue"; "open a PR" not "use github mcp tools") (Stories: P1, P2)
 
-- **FR-004**: Agents shall accept both "Issue URL" (preferred) and "GitHub Issue" (legacy) field names when reading WorkflowContext.md to maintain backward compatibility with existing workflows (Stories: P2)
+- **FR-004**: Agents shall respect existing conventions for remote references in chatmode files (e.g., if current instructions mention "origin" or "remote", maintain that pattern; if they don't, no change needed) (Stories: P1)
 
-- **FR-004A**: When creating new WorkflowContext.md files, agents shall use "Issue URL" as the field name to accommodate both GitHub Issues and Azure DevOps Work Items (Stories: P2)
-
-- **FR-005**: Agents shall extract repository identifiers (organization/project/repository for Azure DevOps; owner/repository for GitHub) from the Remote field URL in WorkflowContext.md (Stories: P1)
-
-- **FR-006**: When the Remote field contains a remote name (e.g., "origin"), agents shall resolve it to its URL using git configuration before performing platform detection (Stories: P1)
-
-- **FR-007**: Agents shall extract platform-specific work item identifiers (organization, project, work item ID for Azure DevOps; owner, repo, issue number for GitHub) at runtime from the Issue URL rather than storing them separately in WorkflowContext.md (Stories: P2)
-
-- **FR-008**: Status Agent shall post status update comments to Azure DevOps work items with the same structure as GitHub issue comments (Stories: P2)
-
-- **FR-009**: Status Agent shall format PR links correctly for Azure DevOps (`https://dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<id>`) (Stories: P2)
-
-- **FR-010**: Implementation Review Agent shall open PRs in Azure DevOps with PR titles prefixed by Work Title (Stories: P1)
-
-- **FR-011**: Implementation Review Agent shall link Azure DevOps PRs to work items using `wit_link_work_item_to_pull_request` (Stories: P2)
-
-- **FR-012**: PR Agent shall craft final PR descriptions with Azure DevOps-compatible artifact links and format (Stories: P1)
-
-- **FR-013**: All agents shall continue to support GitHub operations without regression when platform is GitHub (Stories: P1)
-
-- **FR-014**: Agents shall provide clear error messages when Azure DevOps MCP server is not configured but Azure DevOps operations are required (Stories: P1)
-
-- **FR-015**: Platform detection shall parse Azure DevOps remote URLs (both `dev.azure.com` and legacy `visualstudio.com` formats) (Stories: P1)
-
-- **FR-016**: When work item URL is provided, agents shall extract organization, project, and work item ID for MCP tool calls (Stories: P2)
-
-- **FR-017**: Agents shall handle authentication failures from Azure DevOps MCP server by providing actionable error messages (Stories: P1)
-
-- **FR-018**: Agents shall validate that the remote specified in the Remote field exists and is accessible before proceeding with workflow operations (Stories: P1)
-
-- **FR-019**: When platform detection fails due to invalid or missing Remote field, agents shall provide clear error messages prompting user to verify remote configuration (Stories: P1)
+- **FR-005**: When performing repository operations, agents shall provide necessary context (branch names, Issue URLs, remote names per convention) and rely on Copilot's automatic workspace context resolution and MCP tool routing (Stories: P1, P2)
 
 ### Key Entities
 
-- **Platform**: Enumeration indicating source control platform (GitHub or Azure DevOps)
-- **Work Item Context**: Container for platform-specific work tracking identifiers (GitHub Issue URL or Azure DevOps Work Item URL with organization/project)
-- **Repository Context**: Container for platform-specific repository identifiers (GitHub owner/repo or Azure DevOps organization/project/repo) derived from the Remote field in WorkflowContext.md
-- **MCP Tool Router**: Conceptual routing mechanism that directs operations to appropriate MCP server based on platform detection
-- **Remote URL**: The git remote URL stored in the Remote field of WorkflowContext.md, used as the authoritative source for platform and repository detection
+- **Issue URL**: URL pointing to a GitHub Issue or Azure DevOps Work Item, stored in WorkflowContext.md
+- **Remote**: Git remote name (e.g., "origin") stored in WorkflowContext.md, used by Copilot to resolve repository context
 
 ### Cross-Cutting / Non-Functional
 
@@ -106,78 +69,56 @@
 
 ## Success Criteria
 
-- **SC-001**: A PAW workflow initialized with an Azure DevOps work item URL successfully creates WorkflowContext.md with the URL in the "Issue URL" field, and agents correctly detect the platform and extract organization/project/work-item-id at runtime (FR-001, FR-004A, FR-007)
+- **SC-001**: Agents successfully read issue/work item URLs from both "Issue URL" (new) and "GitHub Issue" (legacy) field names in WorkflowContext.md (FR-001)
 
-- **SC-002**: A PAW workflow detects the repository platform and identifiers by parsing the Remote field URL in WorkflowContext.md (FR-001, FR-005)
+- **SC-002**: New WorkflowContext.md files created by agents use "Issue URL" as the field name (FR-002)
 
-- **SC-003**: When the Remote field contains a remote name (e.g., "origin"), agents successfully resolve it to its URL and perform platform detection (FR-006)
+- **SC-003**: All agent chatmode files use platform-neutral language without referencing specific platforms or MCP tool prefixes (FR-003)
 
-- **SC-004**: Implementation Review Agent successfully opens a phase PR in Azure DevOps with correct source/target branches and Work Title prefix (FR-002, FR-010)
+- **SC-004**: Agents follow existing conventions for remote references (maintain current patterns where present) (FR-004)
 
-- **SC-005**: Status Agent successfully posts status update comments to an Azure DevOps work item with formatted artifact links and phase checklist (FR-003, FR-008, FR-009)
+- **SC-005**: When agents perform operations like "open a PR from branch X to branch Y" with workspace context, Copilot successfully routes to the correct MCP tools for both GitHub and Azure DevOps repositories (FR-005)
 
-- **SC-006**: PR Agent successfully creates a final PR in Azure DevOps with Azure DevOps-compatible artifact links (FR-002, FR-012)
-
-- **SC-007**: All existing PAW GitHub workflows continue to function without modification after Azure DevOps support is added (FR-013)
-
-- **SC-008**: When an Azure DevOps repository is detected but the MCP server is not configured, agents display an error message with setup instructions (FR-014)
-
-- **SC-009**: Agents successfully read issue/work item URLs from both "Issue URL" (new) and "GitHub Issue" (legacy) field names in WorkflowContext.md (FR-004)
-
-- **SC-010**: Azure DevOps PRs are automatically linked to their corresponding work items (FR-011, FR-016)
-
-- **SC-011**: Platform detection correctly identifies Azure DevOps repositories from both `dev.azure.com` and legacy `visualstudio.com` remote URLs (FR-015)
-
-- **SC-012**: Authentication errors from Azure DevOps MCP server result in clear error messages guiding users to authentication setup (FR-017)
-
-- **SC-013**: When the Remote field references an invalid or inaccessible remote, agents provide clear error messages before attempting operations (FR-018, FR-019)
+- **SC-006**: All existing PAW GitHub workflows continue to function without modification (implicit requirement)
 
 ## Assumptions
 
-- **Azure DevOps MCP Server Availability**: The Azure DevOps MCP server (https://github.com/microsoft/azure-devops-mcp) is installed and configured in the user's VS Code environment before attempting Azure DevOps operations
+- **Azure DevOps MCP Server Availability**: The Azure DevOps MCP server is installed and configured in the user's VS Code environment before attempting Azure DevOps operations
 
-- **MCP Tool Naming Convention**: Azure DevOps MCP tools follow the naming pattern `mcp_azuredevops_*` or similar distinctive prefix that allows routing logic to distinguish them from GitHub tools
+- **Copilot Workspace Context Resolution**: Copilot has access to workspace git context (remotes, branches, repository URL) and can autonomously resolve remote names to URLs using git commands (empirically validated through testing)
 
-- **Authentication Handled by MCP Server**: Authentication with Azure DevOps (via PAT or OAuth) is managed entirely by the Azure DevOps MCP server; PAW agents do not handle credentials directly
+- **Copilot MCP Routing**: Copilot's MCP integration examines workspace context (git remotes, Issue URLs) and automatically routes operations to the appropriate MCP server (GitHub or Azure DevOps) without requiring explicit platform detection or URL parsing in agent instructions (empirically validated through testing)
 
-- **Work Item Default Type**: When creating work items (if needed), PAW will default to "Task" or "User Story" work item type unless specified otherwise
-
-- **Single Platform Per Workflow**: Each PAW workflow operates within a single platform context (either GitHub or Azure DevOps) determined by the Remote field in WorkflowContext.md
+- **Authentication Handled by MCP Server**: Authentication with GitHub or Azure DevOps is managed entirely by the respective MCP servers; PAW agents do not handle credentials directly
 
 - **Remote Field Exists**: WorkflowContext.md always contains a valid Remote field pointing to a git remote (defaulting to "origin" if not explicitly specified)
 
-- **Remote Name Resolution**: When the Remote field contains a remote name rather than a URL, the git repository has that remote configured and it can be resolved via git configuration
-
-- **Repository Access**: Users have appropriate permissions in Azure DevOps to create branches, open PRs, and comment on work items (same permission model as GitHub assumption)
+- **Repository Access**: Users have appropriate permissions to create branches, open PRs, and comment on issues/work items in their platform of choice
 
 - **Git Operations Unchanged**: Local git operations (commit, branch, checkout) remain platform-agnostic and work identically for both GitHub and Azure DevOps
-
-- **WorkflowContext.md Schema Evolution**: The WorkflowContext.md schema can be extended with new fields without breaking existing workflows (backward compatible field additions)
 
 ## Scope
 
 ### In Scope:
-- Platform detection logic based on Remote field URL in WorkflowContext.md
-- Remote name resolution (e.g., "origin" → URL) for platform detection
-- WorkflowContext.md schema updates to support Azure DevOps (use "Issue URL" for new files; support both "Issue URL" and "GitHub Issue" when reading)
-- Azure DevOps repository operations (branches, PRs, PR comments)
-- Azure DevOps work item operations (read, comment, link to PRs)
-- Status Agent updates for Azure DevOps work item status tracking
-- Implementation Review Agent updates for Azure DevOps PR creation
-- PR Agent updates for Azure DevOps final PR creation
-- Error handling for missing Azure DevOps MCP server
-- Error handling for invalid or inaccessible Remote field references
+- WorkflowContext.md field name updates (use "Issue URL" for new files; support both "Issue URL" and "GitHub Issue" when reading)
+- Platform-neutral language in all agent instructions (e.g., "issue/work item" instead of "GitHub Issue")
+- Platform-neutral language in all agent instructions (e.g., "issue/work item" instead of "GitHub Issue")
+- Removing explicit MCP tool namespace references from agent instructions (e.g., "use github mcp tools" → "open a PR")
+- Respecting existing conventions for remote references in chatmode files
+- Error handling for missing MCP servers with clear setup instructions
 - Documentation of Azure DevOps setup process
 
 ### Out of Scope:
 - Installation or configuration of the Azure DevOps MCP server itself (external dependency)
+- Explicit platform detection logic in agent instructions (Copilot handles this automatically via workspace context)
+- Explicit remote name resolution in agent instructions (Copilot handles this automatically)
+- Storing platform-specific identifiers (organization, project, etc.) in WorkflowContext.md (extracted from URLs at runtime by MCP layer)
+- URL format parsing or validation in agent instructions (Copilot and MCP servers handle this)
 - Cross-repository workflows where work item and code repository are in different locations
 - Azure DevOps pipeline/build integration (beyond what's provided by MCP server)
-- Azure DevOps wiki integration
-- Azure DevOps test plan integration
+- Azure DevOps wiki, test plan, or advanced feature integration
 - Migration tools to convert GitHub workflows to Azure DevOps
 - Support for platforms other than GitHub and Azure DevOps (GitLab, Bitbucket, etc.)
-- Advanced Azure DevOps features (work item queries, dashboards, reports)
 - Multi-repository workflows (changes spanning multiple repositories in a single workflow)
 
 ## Dependencies
@@ -189,38 +130,26 @@
 
 ## Risks & Mitigations
 
-- **Risk**: Azure DevOps MCP server API changes could break PAW integration
-  - **Impact**: Medium - Would affect all Azure DevOps users
-  - **Mitigation**: Pin to stable Azure DevOps MCP server versions; test against documented API surface; monitor MCP server releases
-
-- **Risk**: Platform detection may incorrectly identify platform in edge cases
-  - **Impact**: Medium - Could route operations to wrong platform
-  - **Mitigation**: Provide explicit platform override in WorkflowContext.md; comprehensive detection testing; clear error messages
-
-- **Risk**: Azure DevOps work item types have varying field requirements
-  - **Impact**: Low - Some work item operations might fail due to missing required fields
-  - **Mitigation**: Use common work item types (Task, User Story); document known limitations; handle errors gracefully with field-specific guidance
-
-- **Risk**: Users may not have Azure DevOps MCP server configured when needed
+- **Risk**: MCP server not configured when user attempts Azure DevOps operations
   - **Impact**: High - Workflow cannot proceed without MCP server
-  - **Mitigation**: Early detection with clear setup instructions; documentation with step-by-step MCP server installation; fallback to clear error messages
+  - **Mitigation**: Clear error messages with setup instructions; documentation with step-by-step MCP server installation guide
 
 - **Risk**: Backward compatibility issues with existing GitHub workflows
   - **Impact**: High - Would break existing users
-  - **Mitigation**: Comprehensive regression testing; careful field naming to avoid conflicts; maintain GitHub as default when platform is ambiguous
+  - **Mitigation**: Support both "Issue URL" and "GitHub Issue" field names; comprehensive regression testing; default to current behavior when ambiguous
 
-- **Risk**: Azure DevOps URL formats may vary or change
-  - **Impact**: Low - Platform detection or link formatting could break
-  - **Mitigation**: Support both modern and legacy URL formats; use URL parsing rather than string matching; test against known URL variations
+- **Risk**: Copilot's MCP routing may not correctly identify platform from URLs in some edge cases
+  - **Impact**: Medium - Operations routed to wrong platform
+  - **Mitigation**: Rely on VS Code's MCP routing behavior (external dependency); document known limitations; provide troubleshooting guidance
 
-- **Risk**: Repository inference may fail when the Remote field is invalid or the remote doesn't exist
+- **Risk**: Remote field may contain invalid or non-existent remote name
   - **Impact**: Medium - User cannot proceed until Remote field is corrected
-  - **Mitigation**: Provide clear error messages with guidance on verifying git remote configuration; suggest using `git remote -v` to check available remotes; validate Remote field early in workflow initialization
+  - **Mitigation**: Validate Remote field early; provide clear error messages with guidance on checking `git remote -v`; suggest common remote names
 
 ## References
 
 - **Issue**: https://github.com/lossyrob/phased-agent-workflow/issues/31
-- **Research**: .paw/work/azure-devops/SpecResearch.md
+- **Research**: .paw/work/azure-devops/SpecResearch.md (see Appendix for empirical Copilot MCP routing experiments)
 - **External**: 
   - Azure DevOps MCP Server: https://github.com/microsoft/azure-devops-mcp
   - Azure DevOps REST API Documentation: https://learn.microsoft.com/en-us/rest/api/azure/devops/
@@ -228,13 +157,9 @@
 
 ## Glossary
 
-- **Platform**: The source control and work tracking platform (GitHub or Azure DevOps)
-- **Work Item**: Azure DevOps term for trackable work units (equivalent to GitHub Issues)
-- **Organization**: Azure DevOps top-level container (equivalent to GitHub Owner/Organization)
-- **Project**: Azure DevOps container for repositories and work items (no direct GitHub equivalent)
-- **MCP Server**: Model Context Protocol server providing tools for platform-specific operations
-- **Platform Detection**: Logic to identify which platform (GitHub or Azure DevOps) the current repository uses by parsing the Remote field URL
-- **Repository Context**: The organization/project/repository identifiers needed for platform-specific operations, derived from the Remote field
-- **Remote Field**: The WorkflowContext.md field containing the git remote name (e.g., "origin") or URL used for platform and repository detection
 - **Issue URL**: Platform-agnostic field name in WorkflowContext.md that contains either a GitHub Issue URL or Azure DevOps Work Item URL (replaces legacy "GitHub Issue" field name)
-- **Legacy Field Support**: Backward compatibility mechanism where agents read from either "Issue URL" (preferred) or "GitHub Issue" (legacy) field names
+- **Remote**: Git remote name (e.g., "origin") stored in WorkflowContext.md; Copilot resolves to URL automatically when needed
+- **Work Item**: Azure DevOps term for trackable work units (equivalent to GitHub Issues)
+- **MCP Server**: Model Context Protocol server providing tools for platform-specific operations
+- **Platform-Neutral Language**: Agent instructions that describe operations generically (e.g., "open a PR from branch X to branch Y") without referencing specific platforms or MCP tool names, allowing Copilot to autonomously resolve workspace context and route to appropriate MCP tools
+- **Copilot MCP Routing**: Automatic mechanism by which Copilot examines workspace context (git remotes, Issue URLs) and selects appropriate MCP server tools without explicit instruction from agents

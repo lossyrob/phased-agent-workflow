@@ -1,45 +1,41 @@
 ---
-date: 2025-10-24 15:05:46 CDT
-git_commit: f2a1747df27400dad28c39e85efbd9c0a08bf93a
-branch: feature/azure-devops
+date: 2025-10-25 08:44:12 CDT
+git_commit: 3ac55fe12b75aae7ed8bedcb88398869b4503a96
+branch: feature/azure-devops_plan
 repository: phased-agent-workflow
 topic: "Azure DevOps Support - Implementation Requirements"
-tags: [research, codebase, azure-devops, platform-detection, workflow-context, github-mcp, status-agent, pr-agent, implementation-review]
+tags: [research, codebase, azure-devops, workflow-context, platform-neutral, copilot-routing]
 status: complete
-last_updated: 2025-10-24
+last_updated: 2025-10-25
+last_updated_note: "Confirmed via experiments: Copilot handles remote resolution automatically"
 ---
 
 # Research: Azure DevOps Support - Implementation Requirements
 
-**Date**: 2025-10-24 15:05:46 CDT
-**Git Commit**: f2a1747df27400dad28c39e85efbd9c0a08bf93a
-**Branch**: feature/azure-devops
+**Date**: 2025-10-25 08:44:12 CDT
+**Git Commit**: 3ac55fe12b75aae7ed8bedcb88398869b4503a96
+**Branch**: feature/azure-devops_plan
 **Repository**: phased-agent-workflow
 
 ## Research Question
 
-How does PAW currently integrate with GitHub, and what implementation changes are needed to support Azure DevOps as an alternative platform? Specifically:
+How does PAW currently integrate with GitHub, and what implementation changes are needed to support Azure DevOps through Copilot's automatic workspace context resolution? Specifically:
 
 1. How do agents read and write WorkflowContext.md?
-2. Where do agents invoke GitHub MCP tools?
-3. How can agents detect the platform (GitHub vs Azure DevOps)?
-4. What agent instructions need updating for platform-agnostic operations?
+2. How do agents reference issues and perform repository operations?
+3. What changes enable platform-agnostic operations that work with both GitHub and Azure DevOps?
 
 ## Summary
 
-PAW agents currently integrate with GitHub through three key mechanisms:
+PAW agents currently integrate with GitHub through WorkflowContext.md parameters and natural language operations that Copilot routes to GitHub MCP tools. **Empirical testing confirms** that Copilot automatically resolves workspace git context (remotes, branches, repository URLs) without requiring explicit resolution in agent instructions.
 
-1. **WorkflowContext.md**: A centralized parameter file at `.paw/work/<feature-slug>/WorkflowContext.md` that stores workflow parameters including "GitHub Issue" (currently) and "Remote" fields
-2. **GitHub MCP Tools**: Agents invoke `mcp_github_*` prefixed tools for issue/PR operations without handling authentication
-3. **Agent Instructions**: Chat mode files in `.github/chatmodes/` contain instructions for reading WorkflowContext.md and performing platform-specific operations
+To support Azure DevOps, agents need only **two simple changes**:
 
-To support Azure DevOps, agents will need to:
-- Read "Issue URL" (new) or "GitHub Issue" (legacy) fields from WorkflowContext.md
-- Resolve the Remote field to a URL and detect platform from URL patterns
-- Route to Azure DevOps MCP tools (`mcp_azuredevops_*`) when platform is Azure DevOps
-- Extract platform-specific identifiers (org/project/repo for Azure DevOps; owner/repo for GitHub) from remote URLs at runtime
+1. **Field Name Update**: Use "Issue URL" (new) instead of "GitHub Issue" (legacy) in WorkflowContext.md, while maintaining backward compatibility by reading from both field names
 
-No implementation code exists yet—all work is contained in agent instruction files (`.chatmode.md` files).
+2. **Platform-Neutral Language**: Use generic operation descriptions (e.g., "post a comment to the issue", "open a PR from branch X to branch Y") without explicit MCP tool references—Copilot automatically resolves workspace context and routes to the correct MCP server based on git remotes and Issue URLs
+
+All agent logic exists in chatmode instruction files (`.github/chatmodes/*.chatmode.md`). No platform detection, URL parsing, or explicit remote resolution is needed—Copilot's workspace context awareness handles all of this automatically.
 
 ## Detailed Findings
 
@@ -64,7 +60,8 @@ Additional Inputs: <comma-separated or none>
 - **Work Title**: 2-4 word descriptive name prefixing all PR titles (e.g., "Auth System")
 - **Feature Slug**: Normalized identifier for artifact directory (e.g., "auth-system")
 - **Target Branch**: Git branch for completed work (e.g., "feature/add-authentication")
-- **GitHub Issue**: Currently stores GitHub issue URL (format: `https://github.com/<owner>/<repo>/issues/<number>`)
+- **GitHub Issue** (legacy): Currently stores GitHub issue URL (format: `https://github.com/<owner>/<repo>/issues/<number>`)
+- **Issue URL** (new): Platform-agnostic field for GitHub Issue URL or Azure DevOps Work Item URL
 - **Remote**: Git remote name, defaults to "origin" if omitted
 - **Artifact Paths**: Paths to spec/plan/docs, auto-derived or explicit
 - **Additional Inputs**: Supplementary documents for research
@@ -76,8 +73,8 @@ All PAW agents follow the same pattern documented in their chatmode instructions
 ```markdown
 Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at 
 `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, 
-Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and 
-Additional Inputs so you reuse recorded values.
+Feature Slug, Issue URL (or GitHub Issue for backward compatibility), Remote (default to `origin` 
+when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
 ```
 
 Agents check for WorkflowContext.md in two locations:
@@ -88,7 +85,7 @@ Agents check for WorkflowContext.md in two locations:
 
 Status Agent (`PAW-X Status Update.chatmode.md`):
 - Reads WorkflowContext.md before asking for parameters
-- Extracts: Target Branch, Work Title, Feature Slug, GitHub Issue, Remote, Artifact Paths, Additional Inputs
+- Extracts: Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue), Remote, Artifact Paths, Additional Inputs
 - Defaults Remote to "origin" if omitted
 
 PR Agent (`PAW-05 PR.chatmode.md`):
@@ -103,9 +100,10 @@ Implementation Review Agent (`PAW-03B Impl Reviewer.chatmode.md`):
 
 Spec Agent (`PAW-01A Spec Agent.chatmode.md`) is primary creator:
 - Creates WorkflowContext.md if missing
-- Generates Work Title from GitHub Issue title or brief
+- Generates Work Title from issue title or brief
 - Generates Feature Slug by normalizing Work Title
 - Writes complete file to `.paw/work/<feature-slug>/WorkflowContext.md`
+- Uses "Issue URL" field name for new files
 
 All agents update WorkflowContext.md when learning new parameters:
 ```markdown
@@ -115,97 +113,77 @@ so downstream stages inherit the latest information.
 
 **Required Changes for Azure DevOps**:
 
-1. **Field Name Change**: Rename "GitHub Issue" → "Issue URL" (with backward compatibility)
-2. **Reading Logic**: Support both "Issue URL" (new) and "GitHub Issue" (legacy) field names
-3. **Writing Logic**: Use "Issue URL" when creating new WorkflowContext.md files
-4. **No New Fields**: Organization/project identifiers extracted at runtime from Remote URL, not stored
+1. **Field Name Change**: Use "Issue URL" instead of "GitHub Issue" when creating new WorkflowContext.md files
+2. **Reading Logic**: Support both "Issue URL" (new) and "GitHub Issue" (legacy) field names for backward compatibility
+3. **No Additional Fields**: Organization/project/repo identifiers are not stored—Copilot extracts these automatically from workspace git context
+4. **Remote Field Usage**: Continue using Remote field as-is (remote name like "origin")—Copilot resolves it automatically when needed for repository operations
 
-### Component 2: Platform Detection Requirements
+### Component 2: Platform-Neutral Operation Language
 
-**Current State**: No platform detection logic exists. Agents assume GitHub.
+**Current Approach**: Agents describe operations in natural language, and Copilot's MCP integration routes to available tools.
 
-**Detection Approach**: Parse the git remote URL from the Remote field in WorkflowContext.md
+**Key Principle**: Agent instructions should describe WHAT to do, not WHICH tools to use. **Empirical testing confirms** that when agents provide workspace context (branch names, remote names like "origin", Issue URLs), Copilot automatically:
+1. Resolves remote names to URLs using git workspace context
+2. Identifies the platform from resolved remote URLs and Issue URLs
+3. Routes operations to the correct MCP server
 
-**Remote Field Resolution**:
+**Copilot's Automatic Context Resolution Examples**:
 
-The Remote field can contain either:
-1. **Remote name** (e.g., "origin"): Resolve to URL via `git config --get remote.origin.url`
-2. **Direct URL**: Use as-is for detection
+**Issue/Work Item Operations**:
+```markdown
+Current (GitHub-specific):
+"Post a comment to the GitHub Issue"
 
-**Platform Detection Patterns**:
-
-**GitHub URLs**:
-- HTTPS: `https://github.com/<owner>/<repo>.git` or `https://github.com/<owner>/<repo>`
-- SSH: `git@github.com:<owner>/<repo>.git`
-
-**Azure DevOps URLs**:
-- Modern: `https://dev.azure.com/<org>/<project>/_git/<repo>`
-- Legacy: `https://<org>.visualstudio.com/<project>/_git/<repo>`
-- SSH: `git@ssh.dev.azure.com:v3/<org>/<project>/<repo>`
-
-**Detection Algorithm**:
-
+Platform-Neutral (works for both):
+"Post a comment to the issue at <Issue URL>"
 ```
-1. Read Remote field from WorkflowContext.md
-2. If Remote is a name (not URL), resolve: `git config --get remote.<name>.url`
-3. Parse URL to extract domain:
-   - If domain contains "github.com" → GitHub
-   - If domain contains "dev.azure.com" or "visualstudio.com" → Azure DevOps
-   - Otherwise → Error: Unknown platform
-4. Extract platform-specific identifiers from URL
+When Issue URL is `https://github.com/owner/repo/issues/123`, Copilot routes to GitHub MCP tools.
+When Issue URL is `https://dev.azure.com/org/project/_workitems/edit/456`, Copilot routes to Azure DevOps MCP tools.
+
+**PR/Repository Operations**:
+```markdown
+Current (GitHub-specific):
+"Create a PR using the GitHub MCP tools"
+
+Platform-Neutral (works for both):
+"Open a PR from branch X to branch Y"
 ```
+Copilot examines the workspace's git remotes (e.g., "origin"), resolves them to URLs automatically, and routes to the appropriate MCP server based on the domain.
 
-**Repository Identifier Extraction**:
+**Remote Name Usage**:
+```markdown
+Agents can reference remotes by name:
+"Push changes to the remote 'origin'"
+"Open a PR in the repository (remote: origin)"
+```
+Copilot automatically resolves "origin" (or any remote name) to its URL using the workspace's git configuration, then routes MCP operations accordingly.
 
-**GitHub**:
-- Pattern: `github.com/<owner>/<repo>`
-- Extract: owner, repo
-- Example: `https://github.com/lossyrob/phased-agent-workflow` → owner="lossyrob", repo="phased-agent-workflow"
+**Required Changes in Agent Instructions**:
 
-**Azure DevOps**:
-- Pattern: `dev.azure.com/<org>/<project>/_git/<repo>`
-- Extract: organization, project, repository
-- Example: `https://dev.azure.com/contoso/MyProject/_git/MyRepo` → org="contoso", project="MyProject", repo="MyRepo"
+1. **Remove Platform-Specific References**:
+   - Replace "GitHub Issue" with "issue" or "issue/work item"
+   - Replace "GitHub PR" with "PR" or "pull request"
+   - Remove references to specific MCP tool prefixes (`mcp_github_`, `mcp_azuredevops_`)
 
-**Implementation Location**: Platform detection logic belongs in agent instructions, not separate code files
+2. **Use Generic Operation Language**:
+   - "Post a comment to the issue at <Issue URL>" (not "add issue comment via GitHub MCP")
+   - "Open a PR from branch X to branch Y" (not "create pull request using github_create_pull_request")
+   - "Push to remote 'origin'" (not "push to https://github.com/...")
 
-### Component 3: GitHub MCP Tool Usage Patterns
+3. **Maintain Existing Remote Conventions**:
+   - If current chatmodes reference remotes by name (e.g., "origin"), keep that pattern
+   - If current chatmodes don't explicitly mention remotes, no change needed
+   - Copilot handles resolution automatically
 
-**Current GitHub MCP Tool References**:
+**Copilot's Workspace Context Awareness**: Copilot has access to the workspace's git configuration and automatically resolves remote names to URLs when executing MCP operations. Agents simply describe operations naturally, and Copilot handles all platform detection and routing based on the workspace context.
 
-Status Agent (`PAW-X Status Update.chatmode.md`):
-- Reads issues: `mcp_github_github_get_issue` (referenced in SpecResearch.md, not directly in agent instructions)
-- Comments on issues: `mcp_github_github_add_issue_comment` (referenced in SpecResearch.md)
-- Searches for PRs: Uses search tools to find related PRs
-- Agent instructions describe operations conceptually, don't hardcode tool names
-
-Implementation Review Agent (`PAW-03B Impl Reviewer.chatmode.md`):
-- Opens PRs: Creates PR with GitHub-specific format
-- Updates PRs: Edits PR description within `<!-- BEGIN:AGENT-SUMMARY -->` blocks
-- Posts PR comments: Adds review summary comments
-- Tool invocations happen through natural language, Copilot routes to available MCP tools
-
-PR Agent (`PAW-05 PR.chatmode.md`):
-- Creates final PR from target branch to main
-- Formats PR description with artifact links
-- Tool routing implicit through Copilot's MCP integration
-
-**Key Pattern**: Agents describe operations in natural language (e.g., "post a comment to the Issue", "create a PR"), and Copilot's MCP integration routes to available tools based on prefixes:
-- `mcp_github_*` tools for GitHub operations
-- `mcp_azuredevops_*` tools for Azure DevOps operations (when available)
-
-**Required Changes**:
-- Agent instructions should remain platform-agnostic
-- Platform detection logic determines which MCP tool namespace to use
-- No hardcoded tool names in agent instructions
-
-### Component 4: Status Agent Issue/Work Item Updates
+### Component 3: Status Agent Issue/Work Item Updates
 
 **File**: `.github/chatmodes/PAW-X Status Update.chatmode.md` (152 lines)
 
 **Current Behavior**:
 
-The Status Agent posts status update comments to GitHub Issues. Key operations:
+The Status Agent posts status update comments to issues. Key operations:
 
 1. **Determine Phase Count** (Lines ~40-45):
    - Searches ImplementationPlan.md for `^## Phase \d+:` patterns
@@ -218,39 +196,32 @@ The Status Agent posts status update comments to GitHub Issues. Key operations:
    - Collects states: open, merged, closed
 
 3. **Generate Status Dashboard** (Lines ~52+):
-   - Posts new comment to Issue (does NOT edit issue description)
+   - Posts new comment to issue (does NOT edit issue description)
    - Comment prefix: `**🐾 Status Update Agent 🤖:**`
    - Dashboard includes:
      - Artifacts: Links to Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs
      - PRs: Links and states for Planning, Phase 1..N, Docs, Final
      - Checklist: Spec approved, Planning merged, Phase 1..N merged, Docs merged, Final PR
 
-**Platform-Specific Operations**:
+**Required Changes for Platform-Neutral Operations**:
 
-GitHub:
-- Read issue: Get issue details for context
-- Post comment: Add new comment to issue with status dashboard
+1. **Field Name Support**: Read from "Issue URL" (preferred) or "GitHub Issue" (legacy)
+2. **Platform-Neutral Language**: 
+   - Change instruction from "Post comment to the GitHub Issue" to "Post a comment to the issue at <Issue URL>"
+   - No need to explicitly resolve Remote—Copilot handles workspace context automatically
+3. **Status Dashboard Format**: Remains unchanged (platform-agnostic markdown)
 
-Azure DevOps Equivalent:
-- Read work item: `wit_get_work_item` (organization, project, work item ID)
-- Post comment: `wit_add_work_item_comment` (organization, project, work item ID, comment text)
+**Example Updated Instructions**:
 
-**Required Changes**:
+```markdown
+1. Read WorkflowContext.md and extract Issue URL (or GitHub Issue), Remote, Feature Slug
+2. Generate status dashboard with artifact links and PR status
+3. Post the status dashboard as a comment to the issue at <Issue URL>
+```
 
-1. **Platform Detection**: Detect platform from Remote field URL
-2. **Issue/Work Item URL Parsing**:
-   - GitHub: `https://github.com/<owner>/<repo>/issues/<number>` → owner, repo, number
-   - Azure DevOps: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>` → org, project, id
-3. **Tool Routing**:
-   - GitHub: Use `mcp_github_github_get_issue`, `mcp_github_github_add_issue_comment`
-   - Azure DevOps: Use `mcp_azuredevops_wit_get_work_item`, `mcp_azuredevops_wit_add_work_item_comment`
-4. **PR Link Formatting**:
-   - GitHub: `https://github.com/<owner>/<repo>/pull/<number>`
-   - Azure DevOps: `https://dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<id>`
+Copilot will automatically route the "post comment" operation to GitHub or Azure DevOps MCP tools based on the Issue URL domain.
 
-**Status Dashboard Format**: Same structure for both platforms (platform-agnostic markdown)
-
-### Component 5: Implementation Review Agent PR Operations
+### Component 4: Implementation Review Agent PR Operations
 
 **File**: `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md` (310 lines)
 
@@ -275,35 +246,30 @@ The Implementation Review Agent opens and updates Phase PRs. Key operations:
      - Section 2: Overall summary (high-level changes, readiness)
    - Starts with: `**🐾 Implementation Reviewer 🤖:**`
 
-**Platform-Specific Operations**:
+**Required Changes for Platform-Neutral Operations**:
 
-Phase PR Operations:
-- Create PR: Opens PR from `<target_branch>_phase<N>` → `<target_branch>`
-- Update PR: Modifies PR description within `<!-- BEGIN:AGENT-SUMMARY -->` blocks
-- Post PR comment: Adds review summary comments
-- Link work item: Links PR to issue/work item
+1. **Field Name Support**: Read from "Issue URL" (preferred) or "GitHub Issue" (legacy)
+2. **Platform-Neutral Language**:
+   - Change from "Open a PR using GitHub MCP tools" to "Open a PR from <phase_branch> to <target_branch>"
+   - Change from "Link to the GitHub Issue" to "Link the PR to the issue at <Issue URL>"
+   - No need to explicitly resolve Remote—Copilot handles workspace context automatically
+3. **PR Description Format**: Remains unchanged (platform-agnostic markdown with artifact links)
 
-**GitHub PR Creation**:
-- Tool: `github_create_pull_request`
-- Parameters: owner, repo, head, base, title, body
+**Example Updated Instructions**:
 
-**Azure DevOps PR Creation**:
-- Tool: `repo_create_pull_request`
-- Parameters: organization, project, repository, source_ref_name, target_ref_name, title, description
-- Additional: `wit_link_work_item_to_pull_request` to link to work item
+```markdown
+1. Read WorkflowContext.md and extract Issue URL, Remote, Target Branch, Work Title
+2. Review implementation changes and generate documentation
+3. Push phase branch
+4. Open a PR from <phase_branch> to <Target Branch>
+   - Title: [<Work Title>] Phase <N>: <description>
+   - Link the PR to the issue at <Issue URL>
+5. Post timeline comment to the PR
+```
 
-**Required Changes**:
+Copilot will automatically resolve the workspace's git remotes and route PR operations to GitHub or Azure DevOps MCP tools based on the remote URLs.
 
-1. **Platform Detection**: Detect from Remote field URL
-2. **Repository Context**:
-   - GitHub: owner, repo from remote URL
-   - Azure DevOps: organization, project, repo from remote URL
-3. **Work Item Linking**:
-   - GitHub: Reference in PR description (e.g., "Closes #123")
-   - Azure DevOps: Explicit `wit_link_work_item_to_pull_request` call
-4. **PR Link Formatting**: Format links correctly for status updates
-
-### Component 6: PR Agent Final PR Creation
+### Component 5: PR Agent Final PR Creation
 
 **File**: `.github/chatmodes/PAW-05 PR.chatmode.md` (251 lines)
 
@@ -334,30 +300,32 @@ The PR Agent opens the final PR to main. Key operations:
    - Opens PR from `<target_branch>` → `main`
    - Title: `[<Work Title>] <description>`
    - Includes all artifact links
-   - References GitHub Issue
+   - References issue
    - Adds PAW footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
 
-**Platform-Specific Operations**:
+**Required Changes for Platform-Neutral Operations**:
 
-**GitHub Final PR**:
-- Tool: `github_create_pull_request`
-- Parameters: owner, repo, head=target_branch, base=main, title, body
+1. **Field Name Support**: Read from "Issue URL" (preferred) or "GitHub Issue" (legacy)
+2. **Platform-Neutral Language**:
+   - Change from "Create final PR using GitHub MCP" to "Open a PR from <Target Branch> to main"
+   - Change from "Reference the GitHub Issue" to "Link the PR to the issue at <Issue URL>"
+   - No need to explicitly resolve Remote—Copilot handles workspace context automatically
+3. **PR Description Format**: Remains unchanged (platform-agnostic markdown)
 
-**Azure DevOps Final PR**:
-- Tool: `repo_create_pull_request`
-- Parameters: organization, project, repository, source_ref_name=target_branch, target_ref_name=main, title, description
-- Additional: `wit_link_work_item_to_pull_request` to link to work item
+**Example Updated Instructions**:
 
-**Required Changes**:
+```markdown
+1. Read WorkflowContext.md and extract Issue URL, Remote, Target Branch, Work Title
+2. Perform pre-flight checks (phases complete, tests passing)
+3. Generate comprehensive PR description with artifact links
+4. Open a PR from <Target Branch> to main
+   - Title: [<Work Title>] <description>
+   - Link the PR to the issue at <Issue URL>
+```
 
-1. **Platform Detection**: Detect from Remote field URL
-2. **Repository Context Extraction**: owner/repo (GitHub) or org/project/repo (Azure DevOps)
-3. **Work Item Linking**: Explicit linking for Azure DevOps
-4. **Issue Reference Format**:
-   - GitHub: "Closes #123" or "Resolves #123"
-   - Azure DevOps: Link via MCP tool, optionally reference in description
+Copilot will automatically resolve the workspace's git remotes and route PR creation to GitHub or Azure DevOps MCP tools based on the remote URLs.
 
-### Component 7: Spec Agent WorkflowContext.md Creation
+### Component 6: Spec Agent WorkflowContext.md Creation
 
 **File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md` (347 lines)
 
@@ -366,7 +334,7 @@ The PR Agent opens the final PR to main. Key operations:
 The Spec Agent is the primary creator of WorkflowContext.md. Key logic (Lines ~80-150):
 
 1. **Work Title Generation**:
-   - Generated from GitHub Issue title or feature brief
+   - Generated from issue title or feature brief
    - 2-4 words maximum
    - Examples: "Auth System", "API Refactor"
 
@@ -392,12 +360,25 @@ The Spec Agent is the primary creator of WorkflowContext.md. Key logic (Lines ~8
 
 1. **Field Name**: Use "Issue URL" instead of "GitHub Issue" when creating new files
 2. **Platform Support**: Accept both GitHub Issue URLs and Azure DevOps Work Item URLs
-3. **URL Format Validation**:
-   - GitHub: `https://github.com/<owner>/<repo>/issues/<number>`
-   - Azure DevOps: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
+3. **Format Example Update**: Update WorkflowContext.md format example in instructions to show "Issue URL" field
 4. **No Breaking Changes**: Maintain all existing slug generation and validation logic
+5. **Backward Compatibility**: When reading existing WorkflowContext.md files, support "GitHub Issue" field name
 
-### Component 8: Agent Instruction Pattern Analysis
+**Example Updated Format**:
+
+```markdown
+# WorkflowContext
+
+Work Title: <work_title>
+Feature Slug: <feature-slug>
+Target Branch: <target_branch>
+Issue URL: <issue_or_work_item_url>
+Remote: <remote_name>
+Artifact Paths: <auto-derived or explicit>
+Additional Inputs: <comma-separated or none>
+```
+
+### Component 7: Agent Instruction Pattern Analysis
 
 **Common Pattern Across All Agents**:
 
@@ -407,8 +388,9 @@ All PAW agents follow this consistent structure in their chatmode instructions:
 ```markdown
 Before asking for parameters, look for `WorkflowContext.md` in chat context or 
 on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract 
-Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` 
-when omitted), Artifact Paths, and Additional Inputs...
+Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for backward 
+compatibility), Remote (default to `origin` when omitted), Artifact Paths, and 
+Additional Inputs...
 ```
 
 2. **WorkflowContext.md Format** (in each agent):
@@ -418,7 +400,7 @@ when omitted), Artifact Paths, and Additional Inputs...
 Work Title: <work_title>
 Feature Slug: <feature-slug>
 Target Branch: <target_branch>
-GitHub Issue: <issue_url>
+Issue URL: <issue_or_work_item_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
@@ -432,43 +414,32 @@ artifact overrides) so downstream stages inherit the latest information.
 
 **Agent Files Requiring Updates**:
 
-1. **PAW-01A Spec Agent.chatmode.md** (347 lines):
-   - Update WorkflowContext.md creation logic
-   - Change "GitHub Issue" → "Issue URL" in format examples
-   - Support both GitHub Issue and Azure DevOps Work Item URLs
+All 9 agent chatmode files need updates to support the two key changes:
 
-2. **PAW-X Status Update.chatmode.md** (152 lines):
-   - Add platform detection logic
-   - Support reading "Issue URL" or "GitHub Issue" (legacy)
-   - Route to GitHub or Azure DevOps MCP tools based on platform
-   - Format PR links correctly for each platform
+1. **Field Name Updates** (all agents):
+   - Read from "Issue URL" (preferred) or "GitHub Issue" (legacy)
+   - Use "Issue URL" when creating new WorkflowContext.md files
+   - Update format examples in instructions
 
-3. **PAW-03B Impl Reviewer.chatmode.md** (310 lines):
-   - Add platform detection for PR operations
-   - Extract repository context from Remote field URL
-   - Support both GitHub and Azure DevOps PR creation
-   - Link work items correctly for Azure DevOps
+2. **Platform-Neutral Language** (all agents, especially those with operations):
+   - Remove "GitHub Issue" → use "issue" or "issue/work item"
+   - Remove "GitHub PR" → use "PR" or "pull request"
+   - Remove MCP tool references → use operation descriptions
+   - Change "Post to GitHub Issue" → "Post comment to issue at <Issue URL>"
+   - Change "Create PR via GitHub MCP" → "Open PR from branch X to branch Y"
+   - Maintain existing conventions for remote references (if present)
 
-4. **PAW-05 PR.chatmode.md** (251 lines):
-   - Add platform detection for final PR
-   - Extract repository context from Remote field URL
-   - Support both GitHub and Azure DevOps PR creation
-   - Link work items correctly for Azure DevOps
+**Agent List** (by workflow stage):
 
-5. **PAW-01B Spec Research Agent.chatmode.md** (estimated ~150 lines):
-   - Update WorkflowContext.md reading to support "Issue URL" or "GitHub Issue"
-
-6. **PAW-02A Code Researcher.chatmode.md** (estimated ~200 lines):
-   - Update WorkflowContext.md reading to support "Issue URL" or "GitHub Issue"
-
-7. **PAW-02B Impl Planner.chatmode.md** (estimated ~300 lines):
-   - Update WorkflowContext.md reading to support "Issue URL" or "GitHub Issue"
-
-8. **PAW-03A Implementer.chatmode.md** (estimated ~250 lines):
-   - Update WorkflowContext.md reading to support "Issue URL" or "GitHub Issue"
-
-9. **PAW-04 Documenter.chatmode.md** (estimated ~200 lines):
-   - Update WorkflowContext.md reading to support "Issue URL" or "GitHub Issue"
+1. **PAW-01A Spec Agent.chatmode.md** - Creates WorkflowContext.md with "Issue URL" field
+2. **PAW-01B Spec Research Agent.chatmode.md** - Reads WorkflowContext.md
+3. **PAW-02A Code Researcher.chatmode.md** - Reads WorkflowContext.md
+4. **PAW-02B Impl Planner.chatmode.md** - Reads WorkflowContext.md
+5. **PAW-03A Implementer.chatmode.md** - Reads WorkflowContext.md
+6. **PAW-03B Impl Reviewer.chatmode.md** - Opens PRs (Copilot resolves workspace context)
+7. **PAW-04 Documenter.chatmode.md** - Reads WorkflowContext.md
+8. **PAW-05 PR.chatmode.md** - Opens final PR (Copilot resolves workspace context)
+9. **PAW-X Status Update.chatmode.md** - Posts to issues (Copilot resolves workspace context)
 
 ## Code References
 
@@ -493,7 +464,7 @@ PAW uses a document-driven workflow where agents interact through:
 1. **Artifacts**: Markdown files in `.paw/work/<feature-slug>/` storing specs, plans, research, docs
 2. **WorkflowContext.md**: Centralized parameter file eliminating repetition
 3. **Agent Chatmodes**: Instructions in `.github/chatmodes/PAW-XX *.chatmode.md` files
-4. **MCP Integration**: Agents invoke MCP tools through natural language, Copilot routes to available tools
+4. **MCP Integration**: Agents describe operations in natural language, Copilot routes to available MCP tools based on workspace context
 
 **Key Design Decisions**:
 
@@ -501,24 +472,34 @@ PAW uses a document-driven workflow where agents interact through:
 2. **MCP Abstraction**: Agents don't handle authentication or make direct API calls
 3. **Parameter Centralization**: WorkflowContext.md serves as single source of truth
 4. **Platform-Agnostic Artifacts**: Spec.md, ImplementationPlan.md, etc. contain no platform-specific details
+5. **Workspace Context Reliance**: Copilot automatically resolves git remotes and repository context from the workspace
 
 **Azure DevOps Integration Approach**:
 
-1. **Platform Detection**: Runtime detection from Remote field URL in WorkflowContext.md
-2. **Tool Routing**: Conditional logic routes to `mcp_github_*` or `mcp_azuredevops_*` based on platform
-3. **Field Compatibility**: "Issue URL" supports both platforms; "GitHub Issue" backward compatible
-4. **No Schema Changes**: Organization/project extracted at runtime, not stored in WorkflowContext.md
+The approach relies entirely on Copilot's workspace context awareness and MCP routing:
+
+1. **Field Name Update**: "Issue URL" replaces "GitHub Issue" (with backward compatibility)
+2. **Platform-Neutral Operations**: Agent instructions describe operations generically (e.g., "open a PR from branch X to branch Y")
+3. **Automatic Context Resolution**: Copilot has access to workspace git configuration and automatically:
+   - Resolves remote names (e.g., "origin") to URLs using git workspace context
+   - Identifies platforms from remote URLs and Issue URLs
+   - Routes operations to appropriate MCP server:
+     - `github.com` URLs → GitHub MCP tools (`mcp_github_*`)
+     - `dev.azure.com` URLs → Azure DevOps MCP tools (`mcp_azuredevops_*`)
 
 **Implementation Pattern**:
 
-Each agent that needs platform awareness will:
-1. Read Remote field from WorkflowContext.md
-2. Resolve remote name to URL if needed: `git config --get remote.<name>.url`
-3. Parse URL to determine platform (github.com vs dev.azure.com)
-4. Extract platform-specific identifiers from URL
-5. Route to appropriate MCP tool namespace
-6. Format platform-specific links correctly
+Each agent simply:
+1. Reads "Issue URL" (preferred) or "GitHub Issue" (legacy) from WorkflowContext.md
+2. Reads Remote field from WorkflowContext.md (typically "origin" or another remote name)
+3. Describes operations naturally: "post comment to issue at <Issue URL>", "open PR from branch X to branch Y"
+4. Relies on Copilot to:
+   - Resolve remote names to URLs using workspace git context
+   - Route to appropriate MCP tools based on resolved URLs
+   - Execute operations through correct platform
+
+**No Manual Resolution Required**: Agents don't need to run `git config` commands or parse URLs—Copilot handles all workspace context resolution transparently as confirmed through empirical testing.
 
 ## Open Questions
 
-None - all implementation details are clear from the specification and existing agent patterns.
+None - empirical testing confirms Copilot automatically handles remote resolution and platform routing based on workspace context.

@@ -254,16 +254,46 @@ extract Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All 8 agent chatmode files parse without errors: `ls .github/chatmodes/PAW-*.chatmode.md | wc -l` returns at least 9
-- [ ] "Issue URL" field in all format templates: `grep -L "Issue URL:" .github/chatmodes/PAW-*.chatmode.md` returns empty
-- [ ] Backward compatibility notes in all 8 files: `grep -l "backward compatibility" .github/chatmodes/PAW-*.chatmode.md | wc -l` returns at least 8
-- [ ] No "GitHub Issue" in format templates (except in backward compat notes): Verify manually
+- [x] All 8 agent chatmode files parse without errors: `ls .github/chatmodes/PAW-*.chatmode.md | wc -l` returns at least 9
+- [x] "Issue URL" field in all format templates: `grep -L "Issue URL:" .github/chatmodes/PAW-*.chatmode.md` returns empty
+- [x] Backward compatibility notes in all 8 files: `grep -l "backward compatibility" .github/chatmodes/PAW-*.chatmode.md | wc -l` returns at least 8
+- [x] No "GitHub Issue" in format templates (except in backward compat notes): Verify manually
 
 #### Manual Verification:
 - [ ] Create a new WorkflowContext.md with Spec Agent - verify it uses "Issue URL"
 - [ ] Test any agent reading an existing WorkflowContext.md with "GitHub Issue" field - verify it works
 - [ ] Test any agent reading a new WorkflowContext.md with "Issue URL" field - verify it works
 - [ ] No regression in GitHub workflow functionality
+
+**Phase 2 Completed - 2025-10-26**
+
+All automated verification checks passed. Changes made:
+1. Updated all 8 remaining agent chatmode files to use "Issue URL" instead of "GitHub Issue" in WorkflowContext.md format templates
+2. Updated field extraction instructions in all 8 files to read "Issue URL (or GitHub Issue for backward compatibility)"
+3. Added backward compatibility notes after format templates in all 8 files explaining that agents should check for "Issue URL" first, then fall back to "GitHub Issue"
+4. Verified no "GitHub Issue:" references remain in format templates (except in backward compatibility contexts)
+
+Files updated:
+- `.github/chatmodes/PAW-X Status Update.chatmode.md`
+- `.github/chatmodes/PAW-05 PR.chatmode.md`
+- `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
+- `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md`
+- `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`
+- `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
+- `.github/chatmodes/PAW-03A Implementer.chatmode.md`
+- `.github/chatmodes/PAW-04 Documenter.chatmode.md`
+
+Key implementation notes:
+- All changes follow the exact same pattern as Phase 1 (Spec Agent)
+- Backward compatibility maintained throughout - agents check for "Issue URL" first, then fall back to "GitHub Issue"
+- All format templates now consistently use platform-neutral "Issue URL" field name
+- No changes to logic flow or behavior - only field naming and documentation updates
+- Phase 2 lays the foundation for platform-neutral operations in subsequent phases
+
+Review notes for Implementation Review Agent:
+- Verify consistency of backward compatibility language across all 8 files
+- Confirm format templates are identical in structure (only differ in agent-specific context)
+- Ensure no unintended changes to existing agent functionality
 
 ---
 

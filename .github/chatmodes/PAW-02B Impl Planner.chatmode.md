@@ -7,7 +7,7 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ## Initial Response
 
-First, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
+First, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for backward compatibility), Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
 
 When this agent is invoked:
 
@@ -43,11 +43,12 @@ Then wait for the user's input.
 Work Title: <work_title>
 Feature Slug: <feature-slug>
 Target Branch: <target_branch>
-GitHub Issue: <issue_url>
+Issue URL: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
+- **Backward Compatibility**: When reading WorkflowContext.md, check for "Issue URL" field first; if not present, read from "GitHub Issue" field (legacy name). Both GitHub Issue URLs and Azure DevOps Work Item URLs are supported.
 - If the file is missing or lacks a Target Branch or Feature Slug:
   1. Derive Target Branch from current branch if necessary
   2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):

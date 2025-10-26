@@ -582,399 +582,12 @@ Review notes for Implementation Review Agent:
 - Ensure no unintended changes to existing GitHub final PR functionality
 - Verify the "if available" clause maintains flexibility for issue-less workflows
 
----4. **Read Issue URL** from WorkflowContext.md (check "Issue URL" first, fall back to "GitHub Issue")
-5. **Parse Issue URL** to extract platform-specific identifiers:
-   - **GitHub**: `https://github.com/<owner>/<repo>/issues/<number>`
-     - Extract: owner, repo, issue number
-   - **Azure DevOps**: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
-     - Extract: organization, project, work item ID
-
-6. **Verify platform consistency**: Confirm Issue URL platform matches Remote URL platform
-   - If mismatch → **Warning**: "Issue URL points to [platform A] but Remote URL points to [platform B]. Please verify WorkflowContext.md configuration."
-
-**Error Handling**:
-- If Remote field is missing → Error: "Remote field not found in WorkflowContext.md. Please add Remote field or it will default to 'origin'."
-- If remote name cannot be resolved → Error: "Remote '<name>' not found in git configuration. Run `git remote -v` to see available remotes."
-- If Issue URL is missing → Error: "Issue URL field not found in WorkflowContext.md. Please add Issue URL pointing to GitHub Issue or Azure DevOps Work Item."
-- If URL parsing fails → Error with specific URL format expected for each platform
-- If Azure DevOps MCP server not available when needed → Error: "Azure DevOps MCP server not configured. Please install and configure the Azure DevOps MCP server (https://github.com/microsoft/azure-devops-mcp) in VS Code."
-```
-
-2. Update "Step 3: Generate Status Dashboard" section (~line 60):
-
-```markdown
-### Step 3: Generate Status Dashboard
-
-Create the status dashboard using the actual phase count from Step 1.
-
-**Post status comment** using platform-specific operations:
-
-#### For GitHub:
-- Use `mcp_github_github_add_issue_comment` with:
-  - owner: extracted from Remote URL
-  - repo: extracted from Remote URL
-  - issue_number: extracted from Issue URL
-  - body: status dashboard content (see format below)
-
-#### For Azure DevOps:
-- Use `mcp_azuredevops_wit_add_work_item_comment` with:
-  - organization: extracted from Remote URL
-  - project: extracted from Remote URL
-  - work_item_id: extracted from Issue URL
-  - comment: status dashboard content (see format below)
-
-**Status Dashboard Format** (platform-agnostic, same for both):
-```markdown
-**🐾 Status Update Agent 🤖:**
-
-## Artifacts
-- Spec: [Link to .paw/work/<feature-slug>/Spec.md]
-- Spec Research: [Link to .paw/work/<feature-slug>/SpecResearch.md]
-- Code Research: [Link to .paw/work/<feature-slug>/CodeResearch.md]
-- Implementation Plan: [Link to .paw/work/<feature-slug>/ImplementationPlan.md]
-- Docs: [Link to .paw/work/<feature-slug>/Docs.md]
-
-## PRs
-- Planning PR: [Link] — [state]
-- Phase 1: [Link] — [state]
-- Phase 2: [Link] — [state]
-- ... (continue for all phases)
-- Docs PR: [Link] — [state]
-- Final PR: [Link] — [state]
-
-## Checklist
-- [ ] Spec approved
-- [ ] Planning PR merged
-- [ ] Phase 1 merged
-- [ ] Phase 2 merged
-- ... (continue for all phases)
-- [ ] Docs merged
-- [ ] Final PR to main
-```
-```
-
-3. Add PR link formatting logic after status dashboard format (~line 100):
-
-```markdown
-**PR Link Formatting** (platform-specific):
-
-#### For GitHub PR Links:
-- Format: `https://github.com/<owner>/<repo>/pull/<number>`
-- Example: `https://github.com/lossyrob/phased-agent-workflow/pull/42`
-
-#### For Azure DevOps PR Links:
-- Format: `https://dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<id>`
-- Example: `https://dev.azure.com/contoso/MyProject/_git/MyRepo/pullrequest/123`
-
-When searching for PRs related to this feature, format the links according to the detected platform before including them in the status dashboard.
-```
-
-4. Update "Guardrails" section (~line 120):
-```markdown
-## Guardrails
-- **ALWAYS perform platform detection** (Step 0) before any status operations
-- **ALWAYS verify phase count** by searching for `^## Phase \d+:` patterns in ImplementationPlan.md (do NOT assume phase counts)
-- **Never edit the Issue description or Work Item description** (post comments instead)
-- Never change content outside `<!-- BEGIN:AGENT-SUMMARY -->` / `<!-- END:AGENT-SUMMARY -->` blocks in PRs
-- Never assign reviewers, change labels (except `status/*` if configured), or modify code
-- Be idempotent: re-running should not produce diffs without state changes
-- Handle Azure DevOps MCP server unavailability gracefully with clear error messages
-```
-
-**Locations to update**:
-- Line ~50: Add Step 0 (Platform Detection) before existing steps
-- Line ~60: Update Step 3 with platform-specific routing logic
-- Line ~100: Add PR link formatting documentation
-- Line ~120: Update Guardrails with platform detection requirement
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] Status Agent chatmode file parses without errors: `ls chatmodes/PAW-X*.chatmode.md`
-- [ ] Platform detection logic added to Status Agent (verify with `grep -l "Platform Detection" chatmodes/PAW-X*`)
-- [ ] Both GitHub and Azure DevOps MCP tool references present (verify with `grep "mcp_github_github_add_issue_comment\|mcp_azuredevops_wit_add_work_item_comment" chatmodes/PAW-X*`)
-
-#### Manual Verification:
-- [ ] Initialize PAW workflow with GitHub Issue, invoke Status Agent, verify status comment posted to GitHub Issue
-- [ ] Initialize PAW workflow with Azure DevOps Work Item, invoke Status Agent, verify status comment posted to Azure DevOps Work Item
-- [ ] Status Agent detects Azure DevOps platform but MCP server not configured, verify clear error message displayed
-- [ ] Status dashboard format is identical for both GitHub and Azure DevOps (only links differ)
-- [ ] PR links formatted correctly for each platform in status dashboard
-
 ---
 
-## Phase 6: Implementation Review Agent Platform-Specific PR Operations
+## Phase 6: Documentation and Testing
 
 ### Overview
-Update Implementation Review Agent to detect platform and route PR operations (create PR, update PR, post PR comments) to appropriate MCP tools.
-
-### Changes Required:
-
-#### 1. Implementation Review Agent Platform Detection and PR Routing
-**File**: `chatmodes/PAW-03B Impl Reviewer.chatmode.md`
-
-**Changes**:
-
-1. Add platform detection section after "Process Steps" (~line 80):
-
-```markdown
-### Platform Detection for PR Operations
-
-**Before opening or updating PRs**, detect the platform and extract repository context:
-
-1. **Read Remote field** from WorkflowContext.md (defaults to "origin")
-2. **Resolve remote to URL** if Remote field contains a name:
-   ```bash
-   git config --get remote.<name>.url
-   ```
-3. **Parse URL to detect platform and extract identifiers**:
-   - **GitHub**: Domain contains "github.com"
-     - Extract: owner, repo from pattern `github.com/<owner>/<repo>`
-   - **Azure DevOps**: Domain contains "dev.azure.com" or "visualstudio.com"
-     - Modern: `https://dev.azure.com/<org>/<project>/_git/<repo>`
-     - Legacy: `https://<org>.visualstudio.com/<project>/_git/<repo>`
-     - Extract: organization, project, repository
-   - Otherwise → **Error**: "Unknown platform. Please verify Remote field in WorkflowContext.md."
-
-4. **Read Issue URL** from WorkflowContext.md (check "Issue URL" first, fall back to "GitHub Issue")
-5. **Extract work item identifiers** from Issue URL (for linking PRs):
-   - **GitHub**: Extract issue number from `https://github.com/<owner>/<repo>/issues/<number>`
-   - **Azure DevOps**: Extract work item ID from `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
-
-**Error Handling**:
-- If Remote resolution fails → Error: "Cannot resolve remote '<name>'. Run `git remote -v` to see available remotes."
-- If platform cannot be determined → Error: "Unknown platform. Verify Remote field points to GitHub or Azure DevOps repository."
-- If Azure DevOps MCP server not available → Error: "Azure DevOps MCP server not configured. Install from https://github.com/microsoft/azure-devops-mcp."
-```
-
-2. Update "For Initial Phase Review" section, step 7 "Push and open PR" (~line 120):
-
-```markdown
-7. **Push and open PR** (REQUIRED):
-   - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
-   - Open phase PR with description referencing plan
-
-   **Platform-Specific PR Creation**:
-
-   #### For GitHub:
-   - Use `mcp_github_github_create_pull_request` with:
-     - owner: extracted from Remote URL
-     - repo: extracted from Remote URL
-     - head: `<target_branch>_phase<N>`
-     - base: `<target_branch>`
-     - title: `[<Work Title>] Phase <N>: <description>`
-     - body: PR description (see format below)
-
-   #### For Azure DevOps:
-   - Use `mcp_azuredevops_repo_create_pull_request` with:
-     - organization: extracted from Remote URL
-     - project: extracted from Remote URL
-     - repository: extracted from Remote URL
-     - source_ref_name: `refs/heads/<target_branch>_phase<N>`
-     - target_ref_name: `refs/heads/<target_branch>`
-     - title: `[<Work Title>] Phase <N>: <description>`
-     - description: PR description (see format below)
-   - **Link to Work Item**: Use `mcp_azuredevops_wit_link_work_item_to_pull_request` with:
-     - organization: extracted from Remote URL
-     - project: extracted from Remote URL
-     - work_item_id: extracted from Issue URL
-     - pull_request_id: ID returned from PR creation
-
-   **PR Description Format** (platform-agnostic, same for both):
-   ```markdown
-   # Phase [N]: [Phase Name from ImplementationPlan.md]
-
-   ## Phase Objectives
-   [Objectives from ImplementationPlan.md Phase N]
-
-   ## Changes Made
-   [Summary of changes from Implementation Agent commits]
-
-   ## Testing Performed
-   [Reference success criteria from ImplementationPlan.md Phase N]
-
-   ## Artifacts
-   - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
-   - Spec: `.paw/work/<feature-slug>/Spec.md`
-
-   🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
-   ```
-
-   - **Title**: `[<Work Title>] Phase <N>: <description>` where Work Title comes from WorkflowContext.md
-   - Pause for human review
-   - Post a PR timeline comment summarizing the review, starting with `**🐾 Implementation Reviewer 🤖:**` and covering whether additional commits were made, verification status, and any next steps
-   - If no commits were necessary, explicitly state that the review resulted in no additional changes
-```
-
-3. Update "Guardrails" section (~line 290):
-```markdown
-## Guardrails
-- **ALWAYS perform platform detection** before PR operations (opening, updating, commenting)
-- **For Azure DevOps**: ALWAYS link PRs to work items using `wit_link_work_item_to_pull_request`
-- **For GitHub**: Reference issue in PR description (e.g., "Related to #123")
-- NEVER modify functional code or tests (Implementation Agent's responsibility)
-- ONLY commit documentation, comments, docstrings, and polish
-- DO NOT revert or overwrite Implementer's changes
-- DO NOT address review comments yourself; verify the Implementer addressed them
-- If you aren't sure if a change is documentation vs functional, pause and ask
-- DO NOT approve or merge PRs (human responsibility)
-- For initial phase review: ALWAYS push and open the PR (Implementation Agent does not do this)
-- For review comment follow-up: ALWAYS push all commits after verification (Implementation Agent commits locally only)
-- For review comment follow-up: Post ONLY ONE comprehensive summary comment that includes both detailed comment tracking and overall summary
-- NEVER create new standalone artifacts or documents (e.g., `Phase1-Review.md`) as part of the review; update only existing files when necessary
-- Prefer making no commits over introducing cosmetic or no-op changes
-- Handle Azure DevOps MCP server unavailability with clear error messages
-```
-
-**Locations to update**:
-- Line ~80: Add Platform Detection section before existing Process Steps
-- Line ~120: Update step 7 with platform-specific PR creation logic
-- Line ~290: Update Guardrails with platform detection and work item linking requirements
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] Implementation Review Agent chatmode file parses without errors: `ls chatmodes/PAW-03B*.chatmode.md`
-- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for PR Operations" chatmodes/PAW-03B*`)
-- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" chatmodes/PAW-03B*`)
-- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" chatmodes/PAW-03B*`)
-
-#### Manual Verification:
-- [ ] Implementation Review Agent creates Phase PR in GitHub repository with correct format and issue reference
-- [ ] Implementation Review Agent creates Phase PR in Azure DevOps repository with correct format
-- [ ] Azure DevOps Phase PR is automatically linked to work item (verify in Azure DevOps UI)
-- [ ] PR description format is identical for both platforms
-- [ ] Implementation Review Agent detects Azure DevOps but MCP server not configured, verify clear error message
-
----
-
-## Phase 7: PR Agent Platform-Specific Final PR Operations
-
-### Overview
-Update PR Agent to detect platform and route final PR creation to appropriate MCP tools, maintaining comprehensive PR descriptions for both platforms.
-
-### Changes Required:
-
-#### 1. PR Agent Platform Detection and Final PR Routing
-**File**: `chatmodes/PAW-05 PR.chatmode.md`
-
-**Changes**:
-
-1. Add platform detection section after "Core Responsibilities" (~line 30):
-
-```markdown
-### Platform Detection for Final PR
-
-**Before creating the final PR**, detect the platform and extract repository context:
-
-1. **Read Remote field** from WorkflowContext.md (defaults to "origin")
-2. **Resolve remote to URL** if Remote field contains a name:
-   ```bash
-   git config --get remote.<name>.url
-   ```
-3. **Parse URL to detect platform and extract identifiers**:
-   - **GitHub**: Domain contains "github.com"
-     - Extract: owner, repo from pattern `github.com/<owner>/<repo>`
-   - **Azure DevOps**: Domain contains "dev.azure.com" or "visualstudio.com"
-     - Modern: `https://dev.azure.com/<org>/<project>/_git/<repo>`
-     - Legacy: `https://<org>.visualstudio.com/<project>/_git/<repo>`
-     - Extract: organization, project, repository
-   - Otherwise → **Error**: "Unknown platform. Please verify Remote field in WorkflowContext.md."
-
-4. **Read Issue URL** from WorkflowContext.md (check "Issue URL" first, fall back to "GitHub Issue")
-5. **Extract work item identifiers** from Issue URL:
-   - **GitHub**: Extract issue number from `https://github.com/<owner>/<repo>/issues/<number>`
-   - **Azure DevOps**: Extract work item ID from `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
-
-**Error Handling**:
-- If Remote resolution fails → Error: "Cannot resolve remote '<name>'. Run `git remote -v` to see available remotes."
-- If platform cannot be determined → Error: "Unknown platform. Verify Remote field points to GitHub or Azure DevOps repository."
-- If Azure DevOps MCP server not available → Error: "Azure DevOps MCP server not configured. Install from https://github.com/microsoft/azure-devops-mcp."
-```
-
-2. Update "Process Steps" section, step 4 "Create final PR" (~line 170):
-
-```markdown
-4. **Create final PR**:
-
-   **Platform-Specific PR Creation**:
-
-   #### For GitHub:
-   - Use `mcp_github_github_create_pull_request` with:
-     - owner: extracted from Remote URL
-     - repo: extracted from Remote URL
-     - head: `<target_branch>`
-     - base: `main` (or specified base branch)
-     - title: `[<Work Title>] <description>`
-     - body: PR description (see template above)
-   - Reference issue in PR description: "Closes #<issue_number>" or "Resolves #<issue_number>"
-
-   #### For Azure DevOps:
-   - Use `mcp_azuredevops_repo_create_pull_request` with:
-     - organization: extracted from Remote URL
-     - project: extracted from Remote URL
-     - repository: extracted from Remote URL
-     - source_ref_name: `refs/heads/<target_branch>`
-     - target_ref_name: `refs/heads/main` (or specified base branch)
-     - title: `[<Work Title>] <description>`
-     - description: PR description (see template above)
-   - **Link to Work Item**: Use `mcp_azuredevops_wit_link_work_item_to_pull_request` with:
-     - organization: extracted from Remote URL
-     - project: extracted from Remote URL
-     - work_item_id: extracted from Issue URL
-     - pull_request_id: ID returned from PR creation
-   - Optionally reference work item in description: "Related to Work Item <work_item_id>"
-
-   **PR Title Format**:
-   - `[<Work Title>] <description>` where Work Title comes from WorkflowContext.md
-   - Example: `[Auth System] Add user authentication system`
-
-   **PR Description**: Use the template from "PR Description Template" section above (platform-agnostic format, same for both GitHub and Azure DevOps)
-
-   - Confirm PR created successfully
-   - Note the final PR number/ID for reference
-```
-
-3. Update "Guardrails" section (~line 220):
-```markdown
-## Guardrails
-- **ALWAYS perform platform detection** before creating the final PR
-- **For Azure DevOps**: ALWAYS link PRs to work items using `wit_link_work_item_to_pull_request`
-- **For GitHub**: Reference issue in PR description using "Closes" or "Resolves" keywords
-- NEVER modify code or documentation
-- NEVER approve or merge PRs
-- NEVER address review comments (Implementation Agent and Implementation Review Agent handle this)
-- DO NOT guess at artifact locations; verify they exist
-- Report pre-flight check status and recommendations
-- Handle Azure DevOps MCP server unavailability with clear error messages
-```
-
-**Locations to update**:
-- Line ~30: Add Platform Detection section after Core Responsibilities
-- Line ~170: Update step 4 with platform-specific final PR creation logic
-- Line ~220: Update Guardrails with platform detection and work item linking requirements
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] PR Agent chatmode file parses without errors: `ls chatmodes/PAW-05*.chatmode.md`
-- [ ] Platform detection logic added (verify with `grep -l "Platform Detection for Final PR" chatmodes/PAW-05*`)
-- [ ] Both GitHub and Azure DevOps PR creation references present (verify with `grep "mcp_github_github_create_pull_request\|mcp_azuredevops_repo_create_pull_request" chatmodes/PAW-05*`)
-- [ ] Azure DevOps work item linking reference present (verify with `grep "wit_link_work_item_to_pull_request" chatmodes/PAW-05*`)
-
-#### Manual Verification:
-- [ ] PR Agent creates final PR in GitHub repository with correct format and "Closes #N" reference
-- [ ] PR Agent creates final PR in Azure DevOps repository with correct format
-- [ ] Azure DevOps final PR is automatically linked to work item (verify in Azure DevOps UI)
-- [ ] PR description format is identical for both platforms
-- [ ] PR Agent detects Azure DevOps but MCP server not configured, verify clear error message
-
----
-
-## Phase 8: Documentation and Testing
-
-### Overview
-Add comprehensive documentation for Azure DevOps setup and usage, update PAW specification to reflect platform support, and perform end-to-end testing of both GitHub and Azure DevOps workflows.
+Add documentation for Azure DevOps compatibility and update PAW specification to reflect platform-agnostic approach.
 
 ### Changes Required:
 
@@ -985,30 +598,19 @@ Add comprehensive documentation for Azure DevOps setup and usage, update PAW spe
 ```markdown
 # Azure DevOps Support Setup
 
-PAW supports Azure DevOps repositories, pull requests, and work items through the Azure DevOps MCP server.
+PAW supports Azure DevOps repositories, pull requests, and work items through Copilot's automatic platform detection and MCP routing.
 
 ## Prerequisites
 
-- VS Code with MCP support
+- VS Code with GitHub Copilot
 - Azure DevOps account with appropriate permissions
 - Git repository hosted in Azure DevOps
+- Azure DevOps MCP server installed and configured
 
 ## Installation
 
-1. **Install Azure DevOps MCP Server**:
-   ```bash
-   npm install -g @azure-devops/mcp
-   ```
-
-2. **Configure MCP Server in VS Code**:
-   - Open VS Code settings
-   - Add Azure DevOps MCP server configuration
-   - Provide organization URL and authentication
-
-3. **Authenticate with Azure DevOps**:
-   - The MCP server will prompt for authentication on first use
-   - Follow browser-based OAuth flow
-   - Grant necessary permissions (Code: Read/Write, Work Items: Read/Write)
+Install the Azure DevOps MCP server following the instructions at:
+https://github.com/microsoft/azure-devops-mcp
 
 ## Repository Setup
 
@@ -1034,7 +636,7 @@ PAW supports Azure DevOps repositories, pull requests, and work items through th
 
 ### Workflow Context
 
-PAW automatically detects Azure DevOps from your repository's remote URL. The WorkflowContext.md will store:
+PAW stores platform-agnostic context in WorkflowContext.md:
 ```markdown
 # WorkflowContext
 
@@ -1047,173 +649,105 @@ Artifact Paths: auto-derived
 Additional Inputs: none
 ```
 
-### Agent Behavior
+### How It Works
 
-- **Platform Detection**: Agents parse the Remote URL to detect Azure DevOps
-- **Work Item Operations**: Status updates posted as work item comments
-- **PR Operations**: PRs created in Azure DevOps repository
-- **Work Item Linking**: PRs automatically linked to work items
+- Agents describe operations naturally (e.g., "post comment to issue at <URL>")
+- Agents provide workspace context (branch names, Issue URLs, remote names)
+- Copilot automatically detects Azure DevOps from git configuration
+- Copilot routes operations to Azure DevOps MCP tools
+- No platform-specific logic required in agent instructions
 
 ## Troubleshooting
 
-### Error: "Azure DevOps MCP server not configured"
+### Issue URL field not found
 
-**Solution**: Install and configure the Azure DevOps MCP server (see Installation above)
+**Solution**: Create WorkflowContext.md with "Issue URL" field, or ensure "GitHub Issue" field (legacy) is present for backward compatibility.
 
-### Error: "Cannot resolve remote 'origin'"
+### Operations fail silently
 
-**Solution**: Verify your git repository has the remote configured:
-```bash
-git remote -v
-```
-
-If missing, add it:
-```bash
-git remote add origin https://dev.azure.com/<org>/<project>/_git/<repo>
-```
-
-### Error: "Unknown platform"
-
-**Solution**: Verify your Remote URL points to Azure DevOps (should contain "dev.azure.com" or "visualstudio.com")
+**Solution**: Verify Azure DevOps MCP server is installed and configured. Check VS Code MCP server logs for connection issues.
 
 ### Work Item Not Linked to PR
 
-**Solution**: Verify the work item ID in WorkflowContext.md matches your work item URL. The link is created automatically when PRs are opened.
+**Solution**: Ensure Issue URL in WorkflowContext.md is correct. Copilot handles linking automatically when PRs are created.
 
 ## Permissions Required
 
 Ensure your Azure DevOps account has:
 - **Code**: Read, Write (for branch and PR operations)
-- **Work Items**: Read, Write (for commenting and linking)
-- **Pull Requests**: Create, Comment (for PR operations)
-
-## Differences from GitHub
-
-- **Three-level hierarchy**: Organization → Project → Repository (vs GitHub's Owner → Repository)
-- **Work Item linking**: Explicit MCP call vs GitHub's "Closes #N" syntax
-- **URL format**: Different URL structure for PRs and work items
+- **Work Items**: Read, Write (for commenting)
+- **Pull Requests**: Create, Comment
 
 ## See Also
 
 - [PAW Specification](../paw-specification.md)
 - [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
-- [Azure DevOps REST API Documentation](https://learn.microsoft.com/en-us/rest/api/azure/devops/)
 ```
 
 #### 2. Update PAW Specification
 **File**: `paw-specification.md`
 
 **Changes**:
+
 1. Add new section "Platform Support" after "Architecture" section (~line 100):
+
 ```markdown
 ## Platform Support
 
-PAW supports both GitHub and Azure DevOps platforms for source control and work tracking.
+PAW supports both GitHub and Azure DevOps platforms through Copilot's automatic workspace context resolution and MCP routing.
 
-### Platform Detection
+### How Platform Support Works
 
-Agents automatically detect the platform by examining the `Remote` field in WorkflowContext.md:
-- Remote URL contains "github.com" → GitHub platform
-- Remote URL contains "dev.azure.com" or "visualstudio.com" → Azure DevOps platform
+PAW agents use platform-neutral language to describe operations:
+- "Post a comment to the issue at <Issue URL>"
+- "Open a PR from <branch> to <branch>"
+- "Link the PR to the issue at <Issue URL>"
 
-Platform-specific identifiers (owner/repo for GitHub, organization/project/repository for Azure DevOps) are extracted from the Remote URL at runtime.
+Copilot automatically:
+- Detects the platform from workspace git configuration
+- Resolves remote names to URLs
+- Routes operations to appropriate MCP tools (GitHub or Azure DevOps)
 
-### GitHub Support
+**No explicit platform detection logic exists in PAW agent instructions.**
 
+### Supported Platforms
+
+#### GitHub
 - **Repository Operations**: Branches, commits, pull requests
 - **Work Tracking**: GitHub Issues
-- **Authentication**: GitHub MCP server with PAT or OAuth
+- **Authentication**: GitHub MCP server (built into VS Code)
 
-### Azure DevOps Support
-
+#### Azure DevOps
 - **Repository Operations**: Branches, commits, pull requests
 - **Work Tracking**: Azure DevOps Work Items
-- **Authentication**: Azure DevOps MCP server with PAT or OAuth
+- **Authentication**: Azure DevOps MCP server (must be installed separately)
 - **Setup**: See [Azure DevOps Setup Guide](docs/azure-devops-setup.md)
 
 ### WorkflowContext.md Schema
 
 The `Issue URL` field in WorkflowContext.md is platform-agnostic:
-- GitHub: `https://github.com/<owner>/<repo>/issues/<number>`
-- Azure DevOps: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
+- **GitHub**: `https://github.com/<owner>/<repo>/issues/<number>`
+- **Azure DevOps**: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
 
 For backward compatibility, agents also read from the legacy `GitHub Issue` field if `Issue URL` is not present.
 ```
 
 2. Update "WorkflowContext.md" section (~line 200):
 - Change example format to use "Issue URL" instead of "GitHub Issue"
-- Add note about backward compatibility with "GitHub Issue" field
-
-#### 3. End-to-End Testing
-
-**Test Suite 1: Azure DevOps Workflow**
-1. **Setup**:
-   - Clone Azure DevOps repository
-   - Create work item in Azure DevOps
-   - Verify Azure DevOps MCP server configured
-
-2. **Spec Stage**:
-   - Invoke Spec Agent with Azure DevOps work item URL
-   - Verify WorkflowContext.md created with "Issue URL" field
-   - Verify Platform Detection identifies Azure DevOps
-   - Verify Spec.md created successfully
-
-3. **Planning Stage**:
-   - Invoke Planning Agent
-   - Verify CodeResearch.md and ImplementationPlan.md created
-   - Verify Planning PR created in Azure DevOps
-   - Verify work item linked to Planning PR
-
-4. **Implementation Stage**:
-   - Invoke Implementation Agent for Phase 1
-   - Invoke Implementation Review Agent
-   - Verify Phase PR created in Azure DevOps
-   - Verify work item linked to Phase PR
-   - Verify PR description format correct
-
-5. **Status Updates**:
-   - Invoke Status Agent at each milestone
-   - Verify status comments posted to Azure DevOps work item
-   - Verify PR links formatted correctly for Azure DevOps
-
-6. **Final PR**:
-   - Complete all phases
-   - Invoke PR Agent
-   - Verify final PR created in Azure DevOps
-   - Verify work item linked to final PR
-   - Verify PR description comprehensive and correct
-
-**Test Suite 2: GitHub Workflow (Regression Testing)**
-1. Repeat all steps above using GitHub repository and GitHub Issue
-2. Verify no regressions in GitHub functionality
-3. Verify platform detection identifies GitHub
-4. Verify WorkflowContext.md backward compatibility (read from "GitHub Issue" field)
-
-**Test Suite 3: Error Handling**
-1. Azure DevOps repository with no MCP server configured
-2. Invalid Remote field in WorkflowContext.md
-3. Mismatched platforms (GitHub Issue with Azure DevOps repository)
-4. Invalid work item URL format
-5. Non-existent remote name in Remote field
+- Add note: "For backward compatibility, agents read from both 'Issue URL' (new) and 'GitHub Issue' (legacy) field names."
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Azure DevOps setup documentation exists: `ls docs/azure-devops-setup.md`
-- [ ] PAW specification updated with platform support section (verify with `grep -l "Platform Support" paw-specification.md`)
-- [ ] All test suite scripts documented in test plan
+- [ ] Azure DevOps setup documentation created: `test -f docs/azure-devops-setup.md`
+- [ ] PAW specification contains platform support section: `grep -q "Platform Support" paw-specification.md`
+- [ ] No references to platform detection logic in specification: `! grep -q "platform detection logic" paw-specification.md` should pass
 
 #### Manual Verification:
-- [ ] Complete Azure DevOps workflow test suite successfully
-- [ ] Complete GitHub regression test suite successfully (no regressions)
-- [ ] Complete error handling test suite successfully
-- [ ] Documentation is clear and actionable for new Azure DevOps users
-- [ ] All error messages are helpful and guide users to solutions
-
-#### Final Integration:
-After all testing is complete and validated:
-1. **Merge modified chatmodes to production**:
-   ```bash
+- [ ] Azure DevOps documentation is clear and actionable
+- [ ] PAW specification accurately describes the platform-neutral approach
+- [ ] No mention of explicit platform detection in agent instructions
+- [ ] Backward compatibility clearly documented
    # Copy validated changes from chatmodes/ to .github/chatmodes/
    cp chatmodes/*.chatmode.md .github/chatmodes/
    
@@ -1261,7 +795,60 @@ After each phase, verify in this GitHub repository:
 - **Phase 5**: PR Agent opens final PR to main with platform-neutral language
 
 Confirm:
+- [ ] Backward compatibility clearly documented
+
+---
+
+## Testing Strategy
+
+### Approach
+
+Since all PAW logic exists in agent instruction files (.chatmode.md), testing focuses on:
+1. **GitHub Regression Testing**: Verify no breaking changes to existing GitHub workflows
+2. **Azure DevOps Validation**: Human tester validates Azure DevOps functionality in a real project
+3. **Incremental Validation**: Test after each phase
+
+### Per-Phase GitHub Regression Testing
+
+After each phase, verify in this GitHub repository:
+- **Phase 1**: Spec Agent creates WorkflowContext.md with "Issue URL" field; reads existing files with "GitHub Issue" field
+- **Phase 2**: All agents read from both "Issue URL" and "GitHub Issue" fields correctly
+- **Phase 3**: Status Agent posts comments using platform-neutral language
+- **Phase 4**: Implementation Review Agent opens Phase PRs with platform-neutral language
+- **Phase 5**: PR Agent opens final PR with platform-neutral language
+- **Phase 6**: Documentation complete and accurate
+
+Confirm for all phases:
 - [ ] No "GitHub Issue" or "GitHub PR" references in operational instructions (only in backward compat notes)
+- [ ] No explicit MCP tool namespace references in operational instructions
+- [ ] Agents describe operations naturally
+- [ ] All existing GitHub workflows function without modification
+
+### Azure DevOps Validation (After Completion)
+
+Human tester performs full workflow in Azure DevOps repository:
+1. **Setup**: Verify Azure DevOps MCP server installed and configured
+2. **Initialize**: Create PAW workflow with Azure DevOps work item URL
+3. **Progress**: Go through all workflow stages (Spec → Planning → Implementation → Docs → Final PR)
+4. **Verify**: All operations work correctly via Copilot's automatic routing
+5. **Report**: Document any issues or unexpected behavior
+
+**Expected Results**:
+- WorkflowContext.md created with "Issue URL" field containing Azure DevOps work item URL
+- Status updates posted to Azure DevOps work item as comments
+- PRs created in Azure DevOps repository
+- PRs linked to work items (visible in Azure DevOps UI)
+- All artifacts created successfully
+- No explicit platform detection code triggered
+
+### Error Handling Testing
+
+Verify appropriate behavior for:
+- [ ] Issue URL field missing from WorkflowContext.md (agent prompts or provides clear error)
+- [ ] Remote field references non-existent git remote (git command fails with helpful message)
+- [ ] Workspace not in a git repository (operations fail early with clear context)
+
+## Performance Considerations
 - [ ] No explicit `mcp_github_*` tool references in instructions
 - [ ] Agents describe operations naturally (e.g., "post comment to issue at <URL>")
 - [ ] All existing GitHub workflows function without modification

@@ -355,16 +355,40 @@ Add a note explaining how the agent should provide context:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Status Agent chatmode file parses without errors
-- [ ] No references to "GitHub Issue" outside of backward compatibility notes: `grep "GitHub Issue" .github/chatmodes/PAW-X*.chatmode.md` (should only find backward compat note)
-- [ ] No explicit `mcp_github_` namespace references: `grep "mcp_github" .github/chatmodes/PAW-X*.chatmode.md` (should be empty)
-- [ ] Platform-neutral terms present: `grep -E "issue|work item" .github/chatmodes/PAW-X*.chatmode.md`
+- [x] Status Agent chatmode file parses without errors
+- [x] No references to "GitHub Issue" outside of backward compatibility notes: `grep "GitHub Issue" .github/chatmodes/PAW-X*.chatmode.md` (should only find backward compat note)
+- [x] No explicit `mcp_github_` namespace references: `grep "mcp_github" .github/chatmodes/PAW-X*.chatmode.md` (should be empty)
+- [x] Platform-neutral terms present: `grep -E "issue|work item" .github/chatmodes/PAW-X*.chatmode.md`
 
 #### Manual Verification:
 - [ ] Use Status Agent in GitHub repository - verify it still posts status comments correctly
 - [ ] Verify status dashboard format remains unchanged (platform-agnostic markdown)
 - [ ] Status Agent describes operation as "post comment to issue at <URL>" not "use GitHub MCP tools"
 - [ ] No regression in GitHub workflow functionality
+
+**Phase 3 Completed - 2025-10-26**
+
+All automated verification checks passed. Changes made:
+1. Updated "Issue (post status comments)" section header to "Issue/Work Item (post status comments)" for platform neutrality
+2. Changed operation description from "Post a new comment to the Issue" to "post to the issue at <Issue URL>"
+3. Added "Providing Context for Operations" note explaining how Copilot automatically resolves workspace context and routes operations
+4. Updated PR summary format from "Issue reference" to "link to issue/work item"
+5. Updated "Update means" section to use "issue/work item comments" instead of "Issue comments"
+6. Removed duplicate "Update means" section that referenced AUTOGEN blocks
+7. Updated Guardrails to reference "issue/work item description" instead of "Issue description"
+8. Updated Output section to reference "issue/work item" instead of "Issue"
+
+Key implementation notes:
+- All changes focused on removing platform-specific language (e.g., "GitHub Issue")
+- No explicit MCP tool namespace references remain
+- Agent now describes operations in natural language (e.g., "post to issue at <Issue URL>") and relies on Copilot to route to appropriate platform tools
+- Status dashboard format remains unchanged and platform-agnostic
+- No changes to logic flow or behavior - only language and terminology updates
+
+Review notes for Implementation Review Agent:
+- Verify platform-neutral language is consistent throughout the file
+- Confirm the "Providing Context for Operations" note clearly explains Copilot's routing behavior
+- Ensure no unintended changes to existing GitHub functionality
 
 ---
 

@@ -166,10 +166,11 @@ When creating new WorkflowContext.md files, use "Issue URL" as the field name (n
 - [x] No syntax errors in chatmode file
 
 #### Manual Verification:
-- [ ] Use Spec Agent in this GitHub repo to create a new WorkflowContext.md - verify it uses "Issue URL" field name
-- [ ] Spec Agent reads existing WorkflowContext.md with "GitHub Issue" field - verify backward compatibility works
-- [ ] Verify format template examples are consistent throughout the file
-- [ ] No regression in GitHub workflow functionality
+- [x] Use Spec Agent in this GitHub repo to create a new WorkflowContext.md - verify it uses "Issue URL" field name
+- [x] Spec Agent reads existing WorkflowContext.md with "GitHub Issue" field - verify backward compatibility works
+- [x] Verify format template examples are consistent throughout the file
+- [x] No regression in GitHub workflow functionality
+- [x] **Azure DevOps Testing**: Tested Spec Agent with Azure DevOps project and work item URL - verified compatibility
 
 **Phase 1 Completed - 2025-10-25**
 

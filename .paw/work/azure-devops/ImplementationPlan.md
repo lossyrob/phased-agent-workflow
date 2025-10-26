@@ -452,10 +452,10 @@ Add explanation of how Copilot routes operations:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Implementation Review Agent chatmode file parses without errors
-- [ ] No "GitHub PR" outside of backward compat notes: `grep "GitHub PR" .github/chatmodes/PAW-03B*.chatmode.md` (should be minimal/none)
-- [ ] No explicit `mcp_github_` references: `grep "mcp_github" .github/chatmodes/PAW-03B*.chatmode.md` (should be empty)
-- [ ] Platform-neutral terms present: `grep -E "PR|pull request" .github/chatmodes/PAW-03B*.chatmode.md`
+- [x] Implementation Review Agent chatmode file parses without errors
+- [x] No "GitHub PR" outside of backward compat notes: `grep "GitHub PR" .github/chatmodes/PAW-03B*.chatmode.md` (should be minimal/none)
+- [x] No explicit `mcp_github_` references: `grep "mcp_github" .github/chatmodes/PAW-03B*.chatmode.md` (should be empty)
+- [x] Platform-neutral terms present: `grep -E "PR|pull request" .github/chatmodes/PAW-03B*.chatmode.md`
 
 #### Manual Verification:
 - [ ] Implementation Review Agent opens Phase PR in GitHub repository correctly
@@ -463,6 +463,28 @@ Add explanation of how Copilot routes operations:
 - [ ] PR linked to issue correctly in GitHub
 - [ ] Agent describes operation as "open a PR from branch X to branch Y" not "use GitHub MCP tools"
 - [ ] No regression in GitHub workflow functionality
+
+**Phase 4 Completed - 2025-10-26**
+
+All automated verification checks passed. Changes made:
+1. Added "PR Operations Context" note in step 7 explaining how Copilot automatically resolves workspace context and routes PR operations
+2. Changed "Open phase PR with description referencing plan" to "Open a PR from <phase_branch> to <Target Branch>" (natural operation description)
+3. Changed implicit "Reference the GitHub Issue" to explicit "Link to issue: Include Issue URL from WorkflowContext.md in the PR description"
+4. Updated push instruction to "Use `git push <remote> <branch_name>` (remote from WorkflowContext.md, branch from current working branch)" for clarity
+5. All terminology now platform-neutral (PR, pull request, issue, work item)
+6. No explicit mcp_github tool namespace references remain
+
+Key implementation notes:
+- All changes focused on removing platform-specific language
+- Agent now describes PR operations in natural language and relies on Copilot to route to appropriate platform tools
+- PR description format remains unchanged and platform-agnostic
+- No changes to logic flow or behavior - only language and terminology updates
+- Changes apply to both initial phase review (opening PRs) and review comment follow-up (pushing commits)
+
+Review notes for Implementation Review Agent:
+- Verify platform-neutral language is consistent throughout the file
+- Confirm the "PR Operations Context" note clearly explains Copilot's routing behavior
+- Ensure no unintended changes to existing GitHub PR functionality
 
 ---
 

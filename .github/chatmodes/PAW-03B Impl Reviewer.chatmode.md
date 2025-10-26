@@ -150,10 +150,12 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **Selective staging**: Use `git add <file>` for each documentation file; verify with `git diff --cached` before committing
 
 7. **Push and open PR** (REQUIRED):
+   - **PR Operations Context**: When opening PRs, provide branch names (source: phase branch, target: Target Branch from WorkflowContext.md), Work Title, and Issue URL. Describe operations naturally (e.g., "open a PR from <phase_branch> to <Target Branch>"). Copilot will automatically resolve workspace git remotes and route to the appropriate platform tools.
    - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
    - Open phase PR with description referencing plan
    - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
    - Include phase objectives, changes made, and testing performed
+   - **Link to issue**: Include Issue URL from WorkflowContext.md in the PR description
    - **Artifact links:**
      - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
      - Read Feature Slug from WorkflowContext.md to construct link
@@ -192,7 +194,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 5. **Push all commits**:
    - Push both Implementation Agent's commits and any improvement commits
-   - `git push <remote> <branch_name>`
+   - Use `git push <remote> <branch_name>` (remote from WorkflowContext.md, branch from current working branch)
 
 6. **Post comprehensive summary comment**:
    - Create a single summary comment on the PR (not individual replies to comments)

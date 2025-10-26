@@ -11,13 +11,13 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 
 ### Agents
 
-1. **Spec Agent** — turns a rough GitHub Issue into a refined feature specification and prompts for system research.
+1. **Spec Agent** — turns a rough issue or work item into a refined feature specification and prompts for system research.
 2. **Spec Research Agent** — documents how the current system behaves (facts only, no design).
 3. **Code Research Agent** — maps relevant code areas and dependencies.
 4. **Implementation Plan Agent** — writes a detailed, multi-phase plan of work.
 5. **Implementation Agents** — executes plan phases, managing commits, PRs, and review loops. Split into two steps to allow agentic review and documentation improvements.
 6. **Documenter Agent** — produces comprehensive technical documentation (`Docs.md`) that serves as the authoritative reference for understanding what was built, how it works, and how to use it. Updates project documentation according to project guidance.
-7. **PR/Status Agent** — maintains GitHub Issues and PR descriptions, ensuring everything stays in sync and clear.
+7. **PR/Status Agent** — maintains issue/work item and PR descriptions, ensuring everything stays in sync and clear.
 
 ### Characteristics
 
@@ -25,13 +25,14 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 * **Rewindable** — any phase can restart cleanly if an upstream document is wrong or incomplete.
 * **Transparent** — every output is text-based and version-controlled in Git.
 * **Collaborative** — humans guide, agents execute and record progress.
-* **Toolchain** — GitHub, VS Code, GitHub Copilot Agent Mode, markdown artifacts.
+* **Toolchain** — Git (GitHub or Azure DevOps), VS Code, GitHub Copilot Agent Mode, markdown artifacts.
 
 ## Requirements
 
-- GitHub
 - VS Code with GitHub Copilot
-- GitHub MCP Tools
+- One of the following platform integrations (authenticated and configured):
+  - **GitHub** with GitHub MCP Tools
+  - **Azure DevOps** with Azure DevOps MCP Tools
 
 ## Getting Started
 

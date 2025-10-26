@@ -53,7 +53,7 @@ Additional Inputs: <comma-separated or none>
 When given just a plan path:
 - Read the plan completely and check for any existing checkmarks (- [x]) and notes on completed phases.
 - Read the `CodeResearch.md` file to understand the existing codebase structure, patterns, and conventions.
-- All files mentioned in the plan, include specs and GitHub Issues using `github mcp` tools when relevant.
+- All files mentioned in the plan, including specs and issues (use Issue URL when relevant).
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
 - Create a todo list to track your progress

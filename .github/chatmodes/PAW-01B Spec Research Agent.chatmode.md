@@ -117,8 +117,8 @@ One-paragraph factual overview of internal findings. Optional external/context q
 - Distinguish answered internal behavior from manual external/context list.
 - If a question cannot be answered AFTER consulting internal spec(s), overview docs, existing artifacts, config, and relevant code, list it under “Open Unknowns” with rationale.
 - **Keep answers concise**: Answer questions directly with essential facts only. Avoid exhaustive lists, lengthy examples, or unnecessary detail that inflates context without adding clarity for specification writing.
-- Do not commit changes or post comments to GitHub Issues or PRs - this is handled by other agents.
-- GitHub Issues (if relevant): use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli.
+- Do not commit changes or post comments to issues or PRs - this is handled by other agents.
+- Issues/Work Items (if relevant): When reading issue content, provide the Issue URL and describe what information you need. Copilot will route to the appropriate platform tools based on workspace context. Do not fetch pages directly or use the gh cli.
 
 ### Anti-Evaluation Directives (CRITICAL)
 

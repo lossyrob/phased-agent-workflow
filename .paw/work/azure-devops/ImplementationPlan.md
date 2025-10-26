@@ -546,10 +546,10 @@ Link the PR to the issue at <Issue URL> (include in PR description)
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] PR Agent chatmode file parses without errors
-- [ ] No "GitHub PR" or "GitHub Issue" outside backward compat notes: `grep -E "GitHub (PR|Issue)" .github/chatmodes/PAW-05*.chatmode.md` (minimal/none)
-- [ ] No explicit `mcp_github_` references: `grep "mcp_github" .github/chatmodes/PAW-05*.chatmode.md` (should be empty)
-- [ ] Platform-neutral terms present: `grep -E "PR|pull request|issue" .github/chatmodes/PAW-05*.chatmode.md`
+- [x] PR Agent chatmode file parses without errors
+- [x] No "GitHub PR" or "GitHub Issue" outside backward compat notes: `grep -E "GitHub (PR|Issue)" .github/chatmodes/PAW-05*.chatmode.md` (minimal/none)
+- [x] No explicit `mcp_github_` references: `grep "mcp_github" .github/chatmodes/PAW-05*.chatmode.md` (should be empty)
+- [x] Platform-neutral terms present: `grep -E "PR|pull request|issue" .github/chatmodes/PAW-05*.chatmode.md`
 
 #### Manual Verification:
 - [ ] PR Agent creates final PR to main in GitHub repository correctly
@@ -557,6 +557,30 @@ Link the PR to the issue at <Issue URL> (include in PR description)
 - [ ] PR linked to issue correctly
 - [ ] Agent describes operation as "open a PR from <Target Branch> to main" not "use GitHub MCP tools"
 - [ ] No regression in GitHub workflow functionality
+
+**Phase 5 Completed - 2025-10-26**
+
+All automated verification checks passed. Changes made:
+1. Added "Final PR Context" note in step 3 explaining how Copilot automatically resolves workspace context and routes final PR operations
+2. Changed "Open PR from `<target_branch>` → `main`" to "Open a PR from `<target_branch>` to `main`" for natural language consistency
+3. Updated issue linking from "Reference the GitHub Issue if available" to "Link the PR to the issue at <Issue URL> (include in PR description) if available"
+4. Updated PR description template from "Closes issue (add actual number when known)" to "Closes issue at <Issue URL>"
+5. All terminology now platform-neutral (PR, pull request, issue, work item)
+6. No explicit mcp_github tool namespace references remain
+7. Maintains flexibility for workflows without issue/work item URLs (keeps "if available")
+
+Key implementation notes:
+- All changes focused on removing platform-specific language
+- Agent now describes final PR creation in natural language and relies on Copilot to route to appropriate platform tools
+- PR description format remains unchanged and platform-agnostic
+- No changes to logic flow or behavior - only language and terminology updates
+- "if available" clause preserved to support PAW workflows without linked issues/work items
+
+Review notes for Implementation Review Agent:
+- Verify platform-neutral language is consistent throughout the file
+- Confirm the "Final PR Context" note clearly explains Copilot's routing behavior
+- Ensure no unintended changes to existing GitHub final PR functionality
+- Verify the "if available" clause maintains flexibility for issue-less workflows
 
 ---4. **Read Issue URL** from WorkflowContext.md (check "Issue URL" first, fall back to "GitHub Issue")
 5. **Parse Issue URL** to extract platform-specific identifiers:

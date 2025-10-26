@@ -52,10 +52,12 @@ Additional Inputs: <comma-separated or none>
 ### Step 3: Generate Status Dashboard
 Create the status dashboard using the actual phase count from Step 1
 
+**Providing Context for Operations**: When performing operations like posting comments, provide the necessary context (Issue URL from WorkflowContext.md, PR links, artifact links) and describe the operation in natural language. Copilot will automatically resolve workspace context (git remotes, repository) and route to the appropriate platform tools (GitHub or Azure DevOps).
+
 ## What to keep updated
 
-### Issue (post status comments)
-**Post a new comment** to the Issue (do NOT edit the issue description):
+### Issue/Work Item (post status comments)
+**Post a new comment** to the issue at <Issue URL> (do NOT edit the issue description):
 - Begin comment with: `**🐾 Status Update Agent 🤖:**`
 - Include the complete status dashboard with:
   - **Artifacts**: Spec / Spec Research / Code Research / Implementation Plan / Docs (links)
@@ -82,7 +84,7 @@ Create the status dashboard using the actual phase count from Step 1
 
 ## Summary
 
-* Feature: <title> (Issue reference)
+* Feature: <title> (link to issue/work item)
 * Current phase: <N>
 * Links: [Spec] [Spec Research] [Code Research] [Plan] [Issue]
 
@@ -97,14 +99,9 @@ Create the status dashboard using the actual phase count from Step 1
 "**🐾 Status Update Agent 🤖:** Added summary and links to artifacts for reviewer convenience."
 
 **"Update" means:**
-- For Issue comments: Post a new comment with the robot emoji prefix
+- For issue/work item comments: Post a new comment with the robot emoji prefix
 - For PR body blocks: Replace content within `<!-- BEGIN:AGENT-SUMMARY -->` / `<!-- END:AGENT-SUMMARY -->` blocks with new content
 - Preserve all content outside these marker blocks unchanged
-- Be idempotent: same state = same output
-
-**"Update" means:**
-- Replace content within AUTOGEN blocks with new content
-- Preserve all content outside blocks unchanged
 - Be idempotent: same state = same output
 
 ## Triggers
@@ -135,7 +132,7 @@ Invoke this agent at key milestones:
 
 ## Guardrails
 - **ALWAYS verify phase count** by searching for `^## Phase \d+:` patterns in ImplementationPlan.md (do NOT assume phase counts)
-- **Never edit the Issue description** (post comments instead)
+- **Never edit the issue/work item description** (post comments instead)
 - Never change content outside `<!-- BEGIN:AGENT-SUMMARY -->` / `<!-- END:AGENT-SUMMARY -->` blocks in PRs
 - Never assign reviewers, change labels (except `status/*` if configured), or modify code
 - Be idempotent: re-running should not produce diffs without state changes
@@ -144,7 +141,7 @@ Invoke this agent at key milestones:
 - If an artifact or PR link can't be found, add a clear TODO line in the status comment and tag the responsible agent (Planner/Implementer/PR Agent)
 
 ## Output
-- New comment posted to Issue (prefixed with `**🐾 Status Update Agent 🤖:**`)
+- New comment posted to issue/work item (prefixed with `**🐾 Status Update Agent 🤖:**`)
 - Updated PR body blocks ("Summary" + "What changed since last review")
 - Short milestone comments with links
 

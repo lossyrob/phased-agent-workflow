@@ -584,292 +584,171 @@ Review notes for Implementation Review Agent:
 
 ---
 
-## Phase 6: Documentation and Testing
+## Phase 6: Platform-Neutral Language - Remaining Files
 
 ### Overview
-Add documentation for Azure DevOps compatibility and update PAW specification to reflect platform-agnostic approach.
+Update the remaining chatmode files, paw-specification.md, and README.md to use platform-neutral language. Remove references to "GitHub Issue" and "GitHub PR" (except in backward compatibility notes), and update explicit MCP tool references to use natural language operation descriptions.
 
 ### Changes Required:
 
-#### 1. Azure DevOps Setup Documentation
-**File**: `docs/azure-devops-setup.md` (new file)
-
-**Content**:
-```markdown
-# Azure DevOps Support Setup
-
-PAW supports Azure DevOps repositories, pull requests, and work items through Copilot's automatic platform detection and MCP routing.
-
-## Prerequisites
-
-- VS Code with GitHub Copilot
-- Azure DevOps account with appropriate permissions
-- Git repository hosted in Azure DevOps
-- Azure DevOps MCP server installed and configured
-
-## Installation
-
-Install the Azure DevOps MCP server following the instructions at:
-https://github.com/microsoft/azure-devops-mcp
-
-## Repository Setup
-
-1. **Clone Azure DevOps Repository**:
-   ```bash
-   git clone https://dev.azure.com/<org>/<project>/_git/<repo>
-   cd <repo>
-   ```
-
-2. **Verify Remote Configuration**:
-   ```bash
-   git remote -v
-   # Should show Azure DevOps URL
-   ```
-
-## Using PAW with Azure DevOps
-
-### Initialize Workflow
-
-1. **Create Work Item** in Azure DevOps (or use existing one)
-2. **Copy Work Item URL**: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
-3. **Invoke Spec Agent** (PAW-01A) with work item URL
-
-### Workflow Context
-
-PAW stores platform-agnostic context in WorkflowContext.md:
-```markdown
-# WorkflowContext
-
-Work Title: <your_title>
-Feature Slug: <your-slug>
-Target Branch: <your_branch>
-Issue URL: https://dev.azure.com/<org>/<project>/_workitems/edit/<id>
-Remote: origin
-Artifact Paths: auto-derived
-Additional Inputs: none
-```
-
-### How It Works
-
-- Agents describe operations naturally (e.g., "post comment to issue at <URL>")
-- Agents provide workspace context (branch names, Issue URLs, remote names)
-- Copilot automatically detects Azure DevOps from git configuration
-- Copilot routes operations to Azure DevOps MCP tools
-- No platform-specific logic required in agent instructions
-
-## Troubleshooting
-
-### Issue URL field not found
-
-**Solution**: Create WorkflowContext.md with "Issue URL" field, or ensure "GitHub Issue" field (legacy) is present for backward compatibility.
-
-### Operations fail silently
-
-**Solution**: Verify Azure DevOps MCP server is installed and configured. Check VS Code MCP server logs for connection issues.
-
-### Work Item Not Linked to PR
-
-**Solution**: Ensure Issue URL in WorkflowContext.md is correct. Copilot handles linking automatically when PRs are created.
-
-## Permissions Required
-
-Ensure your Azure DevOps account has:
-- **Code**: Read, Write (for branch and PR operations)
-- **Work Items**: Read, Write (for commenting)
-- **Pull Requests**: Create, Comment
-
-## See Also
-
-- [PAW Specification](../paw-specification.md)
-- [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
-```
-
-#### 2. Update PAW Specification
-**File**: `paw-specification.md`
+#### 1. Update Spec Research Agent
+**File**: `.github/chatmodes/PAW-01B Spec Research Agent.chatmode.md`
 
 **Changes**:
 
-1. Add new section "Platform Support" after "Architecture" section (~line 100):
+1. Update guardrails section (~line 120):
 
+Change:
 ```markdown
-## Platform Support
-
-PAW supports both GitHub and Azure DevOps platforms through Copilot's automatic workspace context resolution and MCP routing.
-
-### How Platform Support Works
-
-PAW agents use platform-neutral language to describe operations:
-- "Post a comment to the issue at <Issue URL>"
-- "Open a PR from <branch> to <branch>"
-- "Link the PR to the issue at <Issue URL>"
-
-Copilot automatically:
-- Detects the platform from workspace git configuration
-- Resolves remote names to URLs
-- Routes operations to appropriate MCP tools (GitHub or Azure DevOps)
-
-**No explicit platform detection logic exists in PAW agent instructions.**
-
-### Supported Platforms
-
-#### GitHub
-- **Repository Operations**: Branches, commits, pull requests
-- **Work Tracking**: GitHub Issues
-- **Authentication**: GitHub MCP server (built into VS Code)
-
-#### Azure DevOps
-- **Repository Operations**: Branches, commits, pull requests
-- **Work Tracking**: Azure DevOps Work Items
-- **Authentication**: Azure DevOps MCP server (must be installed separately)
-- **Setup**: See [Azure DevOps Setup Guide](docs/azure-devops-setup.md)
-
-### WorkflowContext.md Schema
-
-The `Issue URL` field in WorkflowContext.md is platform-agnostic:
-- **GitHub**: `https://github.com/<owner>/<repo>/issues/<number>`
-- **Azure DevOps**: `https://dev.azure.com/<org>/<project>/_workitems/edit/<id>`
-
-For backward compatibility, agents also read from the legacy `GitHub Issue` field if `Issue URL` is not present.
+- Do not commit changes or post comments to GitHub Issues or PRs - this is handled by other agents.
+- GitHub Issues (if relevant): use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli.
 ```
 
-2. Update "WorkflowContext.md" section (~line 200):
-- Change example format to use "Issue URL" instead of "GitHub Issue"
-- Add note: "For backward compatibility, agents read from both 'Issue URL' (new) and 'GitHub Issue' (legacy) field names."
+To:
+```markdown
+- Do not commit changes or post comments to issues or PRs - this is handled by other agents.
+- Issues/Work Items (if relevant): When reading issue content, provide the Issue URL and describe what information you need. Copilot will route to the appropriate platform tools based on workspace context. Do not fetch pages directly or use the gh cli.
+```
+
+**Location**: Guardrails section (~line 120-121)
+
+#### 2. Update Implementer Agent
+**File**: `.github/chatmodes/PAW-03A Implementer.chatmode.md`
+
+**Changes**:
+
+1. Update context gathering instruction (~line 56):
+
+Change:
+```markdown
+- All files mentioned in the plan, include specs and GitHub Issues using `github mcp` tools when relevant.
+```
+
+To:
+```markdown
+- All files mentioned in the plan, including specs and issues (use Issue URL when relevant).
+```
+
+**Location**: Initial context gathering section (~line 56)
+
+#### 3. Update paw-specification.md
+**File**: `paw-specification.md`
+
+**Changes** (all occurrences):
+
+1. Feature Slug description (~line 46):
+
+Change:
+```markdown
+Auto-generated from Work Title or GitHub Issue title when not explicitly provided.
+```
+
+To:
+```markdown
+Auto-generated from Work Title or issue title when not explicitly provided.
+```
+
+2. Status Agent description (~line 146):
+
+Change:
+```markdown
+It updates the GitHub Issue (if one exists) with current status
+```
+
+To:
+```markdown
+It updates the issue or work item (if one exists) with current status
+```
+
+3. All occurrences of "GitHub Issue" → "issue" or "issue/work item" (context-dependent):
+   - Line 180: "GitHub Issue if available" → "Issue URL if available"
+   - Line 185: "Create a GitHub Issue" → "Create an issue"
+   - Line 202: "GitHub issue" → "issue URL"
+   - Line 203: "GitHub Issue link/ID" → "Issue URL"
+   - Line 237: "GitHub issue" → "issue URL"
+   - Line 262: "tracking with a GitHub Issue" → "tracking with an issue"
+   - Line 360: "refer to GitHub Issue" → "refer to issue"
+   - Line 373: "tracking with a GitHub Issue" → "tracking with an issue"
+   - Line 405: "tracking with a GitHub Issue" → "tracking with an issue"
+   - Line 436: "from a GitHub Issue" → "from an issue or work item"
+   - Line 528: "Reads the GitHub Issue/brief" → "Reads the issue/brief"
+   - Line 985: "GitHub issue" → "issue URL"
+   - Line 1014: "**GitHub Issue**" header → "**Issue URL**"
+   - Line 1043: "From GitHub Issue" → "From Issue"
+
+**Locations**: Throughout the file (16 occurrences)
+
+#### 4. Update README.md
+**File**: `README.md`
+
+**Changes**:
+
+1. Spec Agent description (~line 14):
+
+Change:
+```markdown
+1. **Spec Agent** — turns a rough GitHub Issue into a refined feature specification
+```
+
+To:
+```markdown
+1. **Spec Agent** — turns a rough issue or work item into a refined feature specification
+```
+
+2. PR/Status Agent description (~line 20):
+
+Change:
+```markdown
+7. **PR/Status Agent** — maintains GitHub Issues and PR descriptions
+```
+
+To:
+```markdown
+7. **PR/Status Agent** — maintains issue/work item comments and PR descriptions
+```
+
+3. Requirements section (~line 28):
+
+Change:
+```markdown
+## Requirements
+
+- GitHub
+- VS Code with GitHub Copilot
+- GitHub MCP Tools
+```
+
+To:
+```markdown
+## Requirements
+
+- VS Code with GitHub Copilot
+- One of the following platform integrations (authenticated and configured):
+  - **GitHub** with GitHub MCP Tools
+  - **Azure DevOps** with Azure DevOps MCP Tools
+```
+
+**Locations**: Agent descriptions (~lines 14, 20), Requirements section (~line 28)
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Azure DevOps setup documentation created: `test -f docs/azure-devops-setup.md`
-- [ ] PAW specification contains platform support section: `grep -q "Platform Support" paw-specification.md`
-- [ ] No references to platform detection logic in specification: `! grep -q "platform detection logic" paw-specification.md` should pass
+- [ ] All chatmode files parse without errors
+- [ ] No "GitHub Issue" outside backward compat notes in chatmodes: `grep "GitHub Issue" .github/chatmodes/*.chatmode.md | grep -v "backward compatibility"` (should be minimal/none)
+- [ ] No "GitHub PR" references in chatmodes except contextual: `grep "GitHub PR" .github/chatmodes/*.chatmode.md` (should be minimal/none)
+- [ ] No explicit `github mcp` tool references in operational instructions: `grep "github mcp" .github/chatmodes/*.chatmode.md | grep -v "Note:"` (should be empty)
+- [ ] Platform-neutral terms in paw-specification.md: `grep -E "issue|work item" paw-specification.md`
+- [ ] Platform-neutral terms in README.md: `grep -E "issue|work item" README.md`
 
 #### Manual Verification:
-- [ ] Azure DevOps documentation is clear and actionable
-- [ ] PAW specification accurately describes the platform-neutral approach
-- [ ] No mention of explicit platform detection in agent instructions
-- [ ] Backward compatibility clearly documented
-   # Copy validated changes from chatmodes/ to .github/chatmodes/
-   cp chatmodes/*.chatmode.md .github/chatmodes/
-   
-   # Verify changes
-   git diff .github/chatmodes/
-   
-   # Commit the production changes
-   git add .github/chatmodes/
-   git commit -m "Integrate Azure DevOps support into production chatmodes"
-   ```
-
-2. **Delete temporary folder**:
-   ```bash
-   # Remove temporary development folder
-   rm -rf chatmodes/
-   
-   # Commit the cleanup
-   git add chatmodes/
-   git commit -m "Remove temporary chatmodes folder after successful integration"
-   ```
-
-3. **Verify production deployment**:
-   - Test workflow with GitHub repository (should work unchanged)
-   - Test workflow with Azure DevOps repository (should detect and use Azure DevOps)
-   - Confirm no temporary artifacts remain
+- [ ] Read through paw-specification.md - verify all language is platform-neutral
+- [ ] Read through README.md - verify agent descriptions are platform-neutral
+- [ ] Verify README.md Requirements section lists both platform options clearly
+- [ ] Spec Research Agent reads issue content using natural language (provides URL, describes need)
+- [ ] Implementer Agent references issues without explicit MCP tool calls
+- [ ] No regression in GitHub workflow functionality across all agents
 
 ---
-
-## Testing Strategy
-
-### Approach
-
-Since all PAW logic exists in agent instruction files (.chatmode.md), testing focuses on:
-1. **GitHub Regression Testing**: Verify each phase doesn't break existing GitHub workflow functionality
-2. **Azure DevOps Validation**: Human tester validates Azure DevOps functionality after all phases complete
-3. **Incremental Validation**: Test each phase before proceeding to the next
-
-### Per-Phase GitHub Regression Testing
-
-After each phase, verify in this GitHub repository:
-- **Phase 1**: Spec Agent creates WorkflowContext.md with "Issue URL" field; reads existing files with "GitHub Issue" field
-- **Phase 2**: All agents read from both "Issue URL" and "GitHub Issue" fields correctly
-- **Phase 3**: Status Agent posts comments to GitHub Issues using platform-neutral language
-- **Phase 4**: Implementation Review Agent opens Phase PRs with platform-neutral language
-- **Phase 5**: PR Agent opens final PR to main with platform-neutral language
-
-Confirm:
-- [ ] Backward compatibility clearly documented
-
----
-
-## Testing Strategy
-
-### Approach
-
-Since all PAW logic exists in agent instruction files (.chatmode.md), testing focuses on:
-1. **GitHub Regression Testing**: Verify no breaking changes to existing GitHub workflows
-2. **Azure DevOps Validation**: Human tester validates Azure DevOps functionality in a real project
-3. **Incremental Validation**: Test after each phase
-
-### Per-Phase GitHub Regression Testing
-
-After each phase, verify in this GitHub repository:
-- **Phase 1**: Spec Agent creates WorkflowContext.md with "Issue URL" field; reads existing files with "GitHub Issue" field
-- **Phase 2**: All agents read from both "Issue URL" and "GitHub Issue" fields correctly
-- **Phase 3**: Status Agent posts comments using platform-neutral language
-- **Phase 4**: Implementation Review Agent opens Phase PRs with platform-neutral language
-- **Phase 5**: PR Agent opens final PR with platform-neutral language
-- **Phase 6**: Documentation complete and accurate
-
-Confirm for all phases:
-- [ ] No "GitHub Issue" or "GitHub PR" references in operational instructions (only in backward compat notes)
-- [ ] No explicit MCP tool namespace references in operational instructions
-- [ ] Agents describe operations naturally
-- [ ] All existing GitHub workflows function without modification
-
-### Azure DevOps Validation (After Completion)
-
-Human tester performs full workflow in Azure DevOps repository:
-1. **Setup**: Verify Azure DevOps MCP server installed and configured
-2. **Initialize**: Create PAW workflow with Azure DevOps work item URL
-3. **Progress**: Go through all workflow stages (Spec → Planning → Implementation → Docs → Final PR)
-4. **Verify**: All operations work correctly via Copilot's automatic routing
-5. **Report**: Document any issues or unexpected behavior
-
-**Expected Results**:
-- WorkflowContext.md created with "Issue URL" field containing Azure DevOps work item URL
-- Status updates posted to Azure DevOps work item as comments
-- PRs created in Azure DevOps repository
-- PRs linked to work items (visible in Azure DevOps UI)
-- All artifacts created successfully
-- No explicit platform detection code triggered
-
-### Error Handling Testing
-
-Verify appropriate behavior for:
-- [ ] Issue URL field missing from WorkflowContext.md (agent prompts or provides clear error)
-- [ ] Remote field references non-existent git remote (git command fails with helpful message)
-- [ ] Workspace not in a git repository (operations fail early with clear context)
-
-## Performance Considerations
-- [ ] No explicit `mcp_github_*` tool references in instructions
-- [ ] Agents describe operations naturally (e.g., "post comment to issue at <URL>")
-- [ ] All existing GitHub workflows function without modification
-
-### Azure DevOps Validation (After Completion)
-
-Human tester performs full workflow in Azure DevOps repository:
-1. **Setup**: Verify Azure DevOps MCP server installed and configured
-2. **Initialize**: Create PAW workflow with Azure DevOps work item URL
-3. **Progress**: Go through Spec → Planning → Implementation → Docs → Final PR stages
-4. **Verify**: Copilot routes operations to Azure DevOps MCP tools based on workspace context
-5. **Check**: Status updates posted to work item, PRs created and linked to work item
-6. **Report**: Document any issues or unexpected behavior
-
-### Error Handling Testing
-
-Verify appropriate behavior for:
-- [ ] Azure DevOps MCP server not configured (clear error message with setup instructions)
-- [ ] Issue URL field missing from WorkflowContext.md
-- [ ] Remote field references non-existent git remote
-- [ ] Workspace not in a git repository
 
 ## Performance Considerations
 
@@ -902,5 +781,4 @@ No performance impact expected:
 - Spec: `.paw/work/azure-devops/Spec.md`
 - Spec Research: `.paw/work/azure-devops/SpecResearch.md`
 - Code Research: `.paw/work/azure-devops/CodeResearch.md`
-- Azure DevOps MCP Server: https://github.com/microsoft/azure-devops-mcp
 - PAW Specification: `paw-specification.md`

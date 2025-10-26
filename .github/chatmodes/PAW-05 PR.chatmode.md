@@ -102,7 +102,7 @@ After all checks pass, create the PR with this format:
 [1-2 paragraph overview from Spec.md]
 
 ## Related Issues
-- Closes issue (add actual number when known)
+- Closes issue at <Issue URL>
 
 ## Artifacts
 - Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
@@ -166,11 +166,13 @@ Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> pla
    - Include all links and references
    - Summarize changes clearly
 
+**Final PR Context**: When creating the final PR, provide Target Branch (source), "main" (target), Work Title, and Issue URL from WorkflowContext.md. Describe the operation naturally and Copilot will route to the appropriate platform tools based on workspace context.
+
 4. **Create final PR**:
-   - Open PR from `<target_branch>` → `main` (or specified base)
+   - Open a PR from `<target_branch>` to `main` (or specified base branch)
    - **Title**: `[<Work Title>] <description>` where Work Title comes from WorkflowContext.md
    - Include comprehensive description with links to all artifacts
-   - Reference the GitHub Issue if available
+   - Link the PR to the issue at <Issue URL> (include in PR description) if available
    - Use crafted description
    - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Confirm PR created successfully

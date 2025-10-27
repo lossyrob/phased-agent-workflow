@@ -9,7 +9,7 @@
 PAW is a system of *collaborating AI chat modes* that emulate the human software development lifecycle — each agent produces durable artifacts (specs, research docs, plans, PRs, and documentation).
 The process emphasizes **clarity, traceability, and recoverability**, letting developers iterate intelligently and “rewind” if context or quality drift occurs.
 
-### Agents
+### Implementation Workflow Agents
 
 1. **Spec Agent** — turns a rough GitHub Issue into a refined feature specification and prompts for system research.
 2. **Spec Research Agent** — documents how the current system behaves (facts only, no design).
@@ -19,6 +19,15 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 6. **Documenter Agent** — produces comprehensive technical documentation (`Docs.md`) that serves as the authoritative reference for understanding what was built, how it works, and how to use it. Updates project documentation according to project guidance.
 7. **PR/Status Agent** — maintains GitHub Issues and PR descriptions, ensuring everything stays in sync and clear.
 
+### Review Workflow Agents
+
+1. **Understanding Agent (R1)** — analyzes PR changes, generates baseline research prompts, and derives specification from implementation
+2. **Review Baseline Researcher** — documents how the system worked before changes by analyzing codebase at base commit
+3. **Impact Analysis Agent (R2A)** — identifies integration points, breaking changes, and system-wide effects
+4. **Gap Analysis Agent (R2B)** — systematically identifies issues across correctness, safety, testing, and quality with Must/Should/Could categorization
+5. **Feedback Generation Agent (R3A)** — transforms findings into structured review comments with rationale, creates GitHub pending reviews
+6. **Feedback Critic (R3B)** — critically assesses generated comments for usefulness and accuracy
+
 ### Characteristics
 
 * **Layered, iterative flow** — each artifact feeds the next.
@@ -26,6 +35,35 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 * **Transparent** — every output is text-based and version-controlled in Git.
 * **Collaborative** — humans guide, agents execute and record progress.
 * **Toolchain** — GitHub, VS Code, GitHub Copilot Agent Mode, markdown artifacts.
+
+## Two Workflows: Implementation and Review
+
+PAW provides two complementary workflows:
+
+### PAW Implementation Workflow
+
+The core workflow for building features: turns GitHub Issues into production-ready code through structured phases (Specification → Research → Planning → Implementation → Documentation → Final PR). Each phase produces durable artifacts that feed the next, with human oversight at critical decision points.
+
+**Use for**: Building new features, enhancements, refactors, and bug fixes.
+
+### PAW Review Workflow
+
+A structured three-stage process for thorough code review: systematically understands PR changes, evaluates impacts and gaps, and generates comprehensive evidence-based feedback with full human control over what gets posted.
+
+**Use for**: Reviewing any pull request—especially valuable for large or poorly-documented PRs.
+
+**Three stages**:
+1. **Understanding (R1)** - Analyzes PR metadata, generates baseline research prompts, and derives specification from implementation
+2. **Evaluation (R2)** - Identifies system-wide impacts, breaking changes, and gaps across correctness/safety/testing/quality with Must/Should/Could categorization
+3. **Feedback Generation (R3)** - Transforms findings into structured review comments with rationale, creates GitHub pending reviews (or manual posting instructions for non-GitHub contexts)
+
+**Key benefits**:
+- Understand before critiquing - research pre-change system behavior first
+- Comprehensive findings - generate all issues, human filters based on context
+- Evidence-based feedback - every finding includes file:line references and rationale
+- Full human control - nothing posted automatically, edit/delete comments before submitting
+
+See [PAW Review Workflow Documentation](.paw/work/paw-review/Docs.md) for detailed usage guide.
 
 ## Requirements
 

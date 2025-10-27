@@ -78,6 +78,8 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
 
 ## Process Steps
 
+### For Initial Documentation
+
 1. **Validate prerequisites**:
    - Read `ImplementationPlan.md`
    - Verify all phases marked complete
@@ -132,11 +134,66 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
      - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
      - Read Feature Slug from WorkflowContext.md to construct links
 
-6. **Address review comments**:
-   - Read review comments
-   - Make focused documentation updates
-   - Commit with clear messages
-   - Push and reply to comments
+### For Review Comment Follow-up
+
+When the user provides a docs PR with review comments:
+
+1. **Update local branch from remote**:
+   - Pull latest commits to ensure local branch includes any commits added by reviewers
+   - Verify you're on the correct docs branch (`<target_branch>_docs`)
+
+2. **Read and analyze review comments**:
+   - Read the PR description to understand the overall documentation goals
+   - Read all review comments and their conversation threads
+   - Understand what documentation improvements are being requested
+
+3. **Determine which comments need addressing**:
+   - Look for unresolved comments or comments requesting changes
+   - Skip comments marked as resolved or that have been addressed in subsequent commits
+   - If uncertain whether a comment needs work, include it and ask for clarification
+
+4. **Group review comments into commit groups**:
+   - Organize comments that need addressing into logical groups where each group will be addressed with a single, focused commit
+   - Group comments that:
+     - Affect the same documentation file or section
+     - Request related documentation improvements
+     - Can be addressed together without creating an overly large commit
+   - Each group should represent a coherent unit of documentation work
+
+5. **Create a structured TODO list**:
+   - For each group, create TODOs that specify:
+     - Which review comments are being addressed
+     - What documentation changes are needed
+     - Which files will be modified
+   - If any group requires clarification, mark it as blocked and ask before proceeding
+
+6. **Address groups sequentially**:
+   - Work through the groups one at a time:
+     1. Make the documentation changes for the group
+     2. Verify the changes address the review comments
+     3. Stage only the files modified for this group
+     4. Commit with a message linking to the review comment(s) addressed
+     5. Move to the next group
+   - **CRITICAL**: Do NOT make changes for multiple groups at once. Complete each group fully (changes + commit) before starting the next group.
+
+7. **Push all commits**:
+   - After addressing all review comment groups, push all commits to the remote branch
+   - Verify commits appear in the PR
+
+8. **Post summary comment**:
+   - Create a single comprehensive summary comment on the PR
+   - Format: Start with `**🐾 Documenter 🤖:**`
+   - Include:
+     - List of review comments addressed with links and explanations
+     - Commits that addressed each comment
+     - Overall summary of documentation improvements made
+   - Use clear formatting with headers and bullet points
+
+**Review Comment Workflow Summary:**
+- Make changes in logical groups with focused commits
+- Address comments sequentially, one group at a time
+- Post ONE comprehensive summary comment explaining all changes
+- No individual comment replies (GitHub MCP tool limitations)
 
 ## Inputs
 
@@ -322,6 +379,8 @@ Project documentation updates must be:
 
 ## Quality Checklist
 
+### For Initial Documentation
+
 Before pushing:
 - [ ] Docs.md focuses on design decisions, architecture, and user-facing behavior (not code reproduction)
 - [ ] Testing section guides humans on how to exercise the work
@@ -342,13 +401,21 @@ Before pushing:
 - [ ] Commit messages describe documentation changes
 - [ ] Docs PR description highlights Docs.md as the detailed feature reference
 
-During review comment follow-up:
-- [ ] Each review comment addressed with focused commit
-- [ ] Replies posted for each review comment
-- [ ] Docs.md updated with additional detail if requested
-- [ ] Links and examples validated after changes
+### For Review Comment Follow-up
+
+Before pushing:
+- [ ] All review comments requiring changes have been addressed
+- [ ] Changes grouped into logical, focused commits
+- [ ] Each commit message includes links to review comment(s) addressed
+- [ ] All commits pushed to remote branch
+- [ ] Comprehensive summary comment posted starting with `**🐾 Documenter 🤖:**`
+- [ ] Summary comment includes detailed comment tracking with explanations and overall summary
+- [ ] Documentation changes verified for accuracy and completeness
+- [ ] No unrelated documentation changes introduced
 
 ## Hand-off
+
+### After Initial Documentation
 
 ```
 Documentation Complete - Docs PR Opened
@@ -370,3 +437,23 @@ Please review Docs.md for completeness and technical accuracy. It's designed to 
 
 Next: After Docs PR is merged, invoke PR Agent (Stage 05) to create the final PR to main.
 ```
+
+### After Addressing Review Comments
+
+```
+Review Comments Addressed - Changes Pushed and Summary Posted
+
+I've addressed all review comments on the Docs PR with focused documentation improvements.
+
+Changes made:
+- [List of commits with brief descriptions]
+
+Review comments addressed:
+- [Review comment link]: [How addressed and why]
+- [Review comment link]: [How addressed and why]
+
+All commits have been pushed to the PR branch. A comprehensive summary comment has been posted to the PR explaining all changes.
+
+The documentation updates are ready for re-review.
+```
+

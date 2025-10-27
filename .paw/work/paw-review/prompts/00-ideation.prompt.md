@@ -1,0 +1,8 @@
+---
+mode: 'agent'
+model: Claude Sonnet 4.5 (copilot)
+---
+
+I'd like to develop a workflow in PAW that I can use for code review. If you look at the paw-specification.md in the workspace, the workflow is currently targeted at implementing features, enhancements, bug fixes, and other code changes. I find myself in a position where I'm doing a lot of review for other people's PRs, that weren't developed with PAW or even other agentic workflows. Some of the PRs are very large and it's hard to get all the context and understanding from just the code changes, if the person hasn't documented well or if I'm not super familiar with the changes. So I'd like a PAW workflow that helps me review changes. I want to be considerate of the review process, and asking for changes - usually code reviews are a judgement of how much do I want to ask this person to do - or how much am I able to ask for, if for example it's their project and they don't report to me. So I don't want a process to blanket put a bunch of comments. I want a phased workflow that has a similar feel to the implementation workflow - how do I derive a Spec for the changes of the PR, even when there was none to begin with? How do research the code to understand the state of hte system before and after the change? How does that research help me find anything they might have missed? How do I find and tease out potential gaps in the implementation?
+
+Please review this workspace for context on the current PAW process and then help me brainstorm ideas on how to approach adding a review workflow to PAW.

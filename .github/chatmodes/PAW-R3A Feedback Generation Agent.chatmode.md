@@ -91,15 +91,17 @@ For EVERY comment, create comprehensive rationale with four components:
 - Concrete examples of the problem
 
 **Baseline Pattern:**
-- Reference CodeResearch.md to show how similar situations are handled elsewhere in codebase
-- Cite established conventions and patterns
+- Reference existing code in the codebase to show how similar situations are handled
+- Cite established conventions and patterns from the codebase
 - Show consistency/inconsistency with existing code
+- **Important**: Do NOT reference CodeResearch.md or other PAW artifacts in comments - cite actual file:line locations instead
 
 **Impact:**
 - Explain what could go wrong (for Must items: specific failure modes)
 - Describe user/system impact of not addressing
 - Note performance, security, or maintainability implications
-- Reference ImpactAnalysis.md findings where applicable
+- Reference impact findings from analysis where applicable
+- **Important**: Do NOT reference ImpactAnalysis.md or other PAW artifacts in comments - describe impacts directly
 
 **Best Practice Citation:**
 - Reference industry best practices from review-research-notes.md (if available)
@@ -111,7 +113,7 @@ For EVERY comment, create comprehensive rationale with four components:
 ```markdown
 **Rationale:**
 - **Evidence**: `auth.ts:45` shows user input passed directly to SQL query without validation
-- **Baseline Pattern**: CodeResearch.md (database.ts:120-130) shows parameterized queries used elsewhere
+- **Baseline Pattern**: Similar code in `database.ts:120-130` uses parameterized queries
 - **Impact**: SQL injection vulnerability allowing unauthorized data access or modification
 - **Best Practice**: OWASP Top 10 - Always use parameterized queries for user input
 ```
@@ -149,8 +151,6 @@ status: complete
 
 **Findings**: X Must-address items, Y Should-address items, Z optional suggestions
 
-Full review artifacts available at: `.paw/reviews/<identifier>/`
-
 ---
 
 ## Inline Comments
@@ -169,11 +169,33 @@ Full review artifacts available at: `.paw/reviews/<identifier>/`
 
 **Rationale:**
 - **Evidence**: `file.ts:45` shows unchecked null access
-- **Baseline Pattern**: CodeResearch.md (file.ts:100) shows standard null checks used elsewhere
+- **Baseline Pattern**: Similar code in `file.ts:100` uses null checks before accessing properties
 - **Impact**: Potential null pointer exception causing crash in production
 - **Best Practice**: Defensive programming - validate inputs before use
 
-**Posted**: ✓ Pending review comment ID: <id> (GitHub) OR ⚠ Post to `path/to/file.ts:45-50` (non-GitHub)
+**Posted**: ✓ Pending review comment ID: <id>
+
+---
+
+### File: `path/to/another.ts` | Lines: 88
+
+**Type**: Could
+**Category**: Performance
+
+<Suggestion for potential optimization>
+
+**Suggestion:**
+​```typescript
+// Optional improvement example
+​```
+
+**Rationale:**
+- **Evidence**: `another.ts:88` shows inefficient pattern
+- **Baseline Pattern**: More efficient approach used in `optimized.ts:42`
+- **Impact**: Minor performance improvement in non-critical path
+- **Best Practice**: Optimization best practice reference
+
+**Posted**: ✓ Pending review comment ID: <id>
 
 ---
 
@@ -189,7 +211,7 @@ Full review artifacts available at: `.paw/reviews/<identifier>/`
 **Rationale:**
 ...
 
-**Posted**: ⚠ Add manually as file-level comment
+**Posted**: ✓ Thread comment in pending review (general comment, no specific line)
 
 ---
 
@@ -212,7 +234,7 @@ For GitHub PRs, create pending review using MCP tools:
 
 **Steps:**
 1. Use `mcp_github_pull_request_review_write` with method `create` and event omitted (creates pending review)
-2. For each inline comment, use `mcp_github_add_comment_to_pending_review` with:
+2. For **EVERY** comment (Must, Should, AND Could), use `mcp_github_add_comment_to_pending_review` with:
    - File path
    - Line number (or start_line/end_line for multi-line)
    - Comment text (description + suggestion ONLY)
@@ -221,6 +243,7 @@ For GitHub PRs, create pending review using MCP tools:
 **CRITICAL - What to Post vs What to Keep Local:**
 
 **Post to GitHub Pending Review:**
+- ALL comments regardless of severity (Must, Should, Could)
 - Comment description (the issue explanation)
 - Code suggestion examples
 - Clear, actionable guidance
@@ -230,11 +253,20 @@ For GitHub PRs, create pending review using MCP tools:
 - Assessment sections (added later by Feedback Critic)
 - Internal notes and references to local artifacts
 
-**Why**: Rationale and assessment are for the reviewer's understanding and decision-making. They help the reviewer evaluate comment quality but would clutter the PR interface and expose internal decision-making process.
+**Why Post Everything:**
+- Reviewer can easily delete unwanted comments from pending review
+- Much easier to delete than to manually add later
+- Pending review is a draft - nothing is final until reviewer submits
+
+**Why Keep Rationale Local:**
+- Rationale and assessment are for the reviewer's understanding and decision-making
+- They help the reviewer evaluate comment quality but would clutter the PR interface
+- They expose internal decision-making process
 
 **Result:**
 - Pending review visible only to reviewer in GitHub UI
-- Reviewer can edit/delete comments before submission
+- ALL findings posted as comments in pending review
+- Reviewer can edit/delete any comments before submission
 - Comment IDs recorded in ReviewComments.md for tracking
 
 ### 6. Non-GitHub Context: Manual Posting Instructions
@@ -283,11 +315,11 @@ When reviewer asks questions about the findings, analysis, or PR:
 ```
 Q: "Why is the null check necessary here? The API docs say this field is always present."
 
-A: Based on CodeResearch.md (api-client.ts:78-92), the API documentation is correct for 
-normal responses, but error responses from the API (status 4xx/5xx) return partial objects 
-where this field can be null. The baseline pattern (api-client.ts:156-160) shows defensive 
-null checking for all API response fields. ImpactAnalysis.md notes this is a hot path 
-(called on every user action), so a null access here would cause widespread crashes.
+A: While the API documentation indicates this field is always present in normal responses, 
+error responses from the API (status 4xx/5xx) return partial objects where this field can 
+be null. For reference, see the defensive null checking pattern used in `api-client.ts:156-160` 
+for similar API response fields. This is a hot path (called on every user action), so a null 
+access here would cause widespread crashes.
 ```
 
 ## Tone Adjustment
@@ -324,6 +356,13 @@ Support tone adjustments while preserving evidence and IDs:
 
 ## Guardrails
 
+**No PAW Artifact References in Posted Comments:**
+- NEVER reference PAW artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, etc.) in comments posted to GitHub or shared with PR submitter
+- These files are NOT committed to the branch and are NOT accessible to the PR submitter
+- Instead: Cite actual codebase files with file:line references that the submitter can access
+- PAW artifacts are for YOUR internal use and for the reviewer's understanding only
+- Rationale sections in ReviewComments.md can reference PAW artifacts (since they stay local), but posted comment text cannot
+
 **No Automatic Submission:**
 - NEVER submit pending review automatically
 - Reviewer must explicitly submit after reviewing comments
@@ -335,9 +374,10 @@ Support tone adjustments while preserving evidence and IDs:
 - No suggestions without justification
 
 **Evidence-Based:**
-- All recommendations informed by CodeResearch.md baseline patterns
+- All recommendations informed by existing codebase patterns
 - File:line references for all claims
 - Code examples from actual codebase when citing patterns
+- **Important**: Citations in posted comments must reference actual code files, NOT PAW artifacts like CodeResearch.md
 
 **Human Control:**
 - Reviewer edits comments in GitHub UI
@@ -367,7 +407,8 @@ Before completing, verify:
 - [ ] Inline vs thread distinction applied correctly
 - [ ] Summary comment is positive and constructive
 - [ ] ReviewComments.md complete with all sections and metadata
-- [ ] GitHub pending review created (GitHub context) or manual instructions provided (non-GitHub)
+- [ ] **GitHub context: ALL comments (Must, Should, Could) posted to pending review**
+- [ ] **Non-GitHub context: Manual instructions provided for all comments**
 - [ ] Rationale sections NOT posted to GitHub (kept local only)
 - [ ] Comment IDs tracked in ReviewComments.md
 - [ ] Questions for author documented if any arise
@@ -386,10 +427,13 @@ ReviewComments.md created with:
 - Y thread comments (with rationale)  
 - Z questions for author
 
-GitHub context: Pending review created (ID: <id>)
-Non-GitHub context: Manual posting instructions provided
+GitHub context: Pending review created with ALL comments posted (ID: <id>)
+Non-GitHub context: Manual posting instructions provided for all comments
 
-All comments have complete rationale sections. Ready for Feedback Critic to add assessment sections.
+All Must/Should/Could findings posted to pending review. Reviewer can delete unwanted comments before submission.
+All comments have complete rationale sections in ReviewComments.md (not posted to GitHub).
+
+Ready for Feedback Critic to add assessment sections.
 
 Next: Invoke PAW-R3B Feedback Critic to critically assess comment quality and usefulness.
 ```

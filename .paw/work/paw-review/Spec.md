@@ -128,6 +128,7 @@ Acceptance Scenarios:
 - **Missing test coverage with project-specific exemptions**: When certain code types have project-standard exemptions from test requirements, then gap analysis notes the gap but categorizes appropriately based on project context (requires human knowledge)
 - **Pending review gets deleted**: When a human accidentally deletes the GitHub pending review, then ReviewComments.md serves as reference to regenerate comments
 - **Multi-file architectural issue**: When a concern spans multiple files, then a single thread comment in ReviewComments.md captures the issue comprehensively rather than scattering inline comments
+- **Local branch behind upstream**: When base branch exists locally but is behind upstream (e.g., local `main` 50 commits behind `origin/main`), Understanding Agent prefers remote reference (`origin/main`) to ensure baseline analysis uses latest upstream state. Baseline Researcher fetches remote before checkout. If remote unavailable (offline), warns user and uses local state.
 
 ## Platform-Specific Workflows
 
@@ -351,6 +352,8 @@ This ensures the derived specification is informed by actual pre-change system b
 - FR-037: System shall check style guide adherence and label preferences as "Nit:" in Gap Analysis (Stories: P1-Identify)
 - FR-038: System shall verify user-facing documentation completeness and identify orphaned documentation in Gap Analysis (Stories: P1-Identify)
 - FR-039: System shall assess test effectiveness (will fail when broken, meaningful assertions) and maintainability in Gap Analysis (Stories: P2-TestCoverage)
+- FR-040: System shall prefer remote branch references (e.g., `origin/<base-branch>`) over local branches when determining base commit for baseline analysis to ensure comparison against latest upstream state (Stories: Edge Cases)
+- FR-041: System shall fetch remote state before checking out base commit to ensure commit is available and up-to-date (Stories: Edge Cases)
 
 ### Key Entities
 
@@ -398,6 +401,8 @@ This ensures the derived specification is informed by actual pre-change system b
 - SC-021: Given a PR with style variations, Gap Analysis includes style guide adherence check with "Nit:" labeling for preferences vs requirements (FR-037)
 - SC-022: Given a PR with documentation changes, Gap Analysis verifies user-facing documentation completeness and identifies orphaned documentation (FR-038)
 - SC-023: Given a PR with tests, Gap Analysis assesses test effectiveness (will fail when broken, meaningful assertions) and maintainability (FR-039)
+- SC-024: Given a base branch that exists on remote, Understanding Agent resolves base commit SHA from remote reference (e.g., `origin/main`) rather than local branch (FR-040)
+- SC-025: Given base commit SHA from remote reference, Baseline Researcher successfully fetches remote and checks out commit even if local branch is behind (FR-041)
 
 ## Assumptions
 

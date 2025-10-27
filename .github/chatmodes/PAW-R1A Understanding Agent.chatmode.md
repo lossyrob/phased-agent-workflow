@@ -117,23 +117,40 @@ Before responding, inspect the invocation context to infer starting inputs and d
 
 ### Step 1: Context Gathering & ReviewContext.md Creation
 
-1. **Fetch PR Metadata**:
+1. **Determine Remote Name**:
+   - Check ReviewContext.md for `Remote` field (if resuming from existing context)
+   - Default to `origin` if not specified
+   - Allow user override via parameter if explicitly provided
+   - Verify remote exists: `git remote -v`
+   - If remote doesn't exist, note "No remote configured" and proceed with local-only mode
+
+2. **Fetch PR Metadata**:
    - **GitHub**: Use `mcp_github_pull_request_read` (method: get) for metadata
      - Extract: number, title, author, state, created date, description, labels, reviewers
      - Get CI status from `mcp_github_pull_request_read` (method: get_status)
      - Get changed files from `mcp_github_pull_request_read` (method: get_files)
+     - Get base and head commit SHAs directly from GitHub API
    - **Non-GitHub**: Use git commands
      - Current branch as head, provided branch as base
      - `git log <base>..<head>` for commits and author
      - `git diff <base>...<head> --stat` for changed files
      - CI status: "Not available (non-GitHub context)"
 
-2. **Analyze Changed Files**:
+3. **Resolve Base Commit from Remote** (Non-GitHub context only):
+   - **Prefer remote reference**: `git rev-parse <remote>/<base-branch>` 
+   - If remote branch exists, use its HEAD commit SHA as base commit
+   - If remote branch doesn't exist, fall back to local branch: `git rev-parse <base-branch>`
+   - **Warning**: If using local fallback, note "⚠️ Local branch used - may be behind upstream"
+   - Record in ReviewContext.md: 
+     - `Base Commit: <sha>` 
+     - `Base Commit Source: remote|local|github-api`
+
+4. **Analyze Changed Files**:
    - Get file paths, additions, deletions for each changed file
    - Calculate total lines changed
    - Identify flags: CI failures
 
-3. **Create ReviewContext.md immediately**:
+5. **Create ReviewContext.md immediately**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`
    - Use complete template structure (see "ReviewContext.md Template" below)
    - Include all metadata and flags
@@ -314,9 +331,13 @@ When reviewing non-GitHub PRs:
 - Make subjective quality judgments (save for Evaluation stage)
 - Suggest improvements or identify issues (save for Evaluation/Feedback stages)
 - Assume intent without evidence—flag as "inferred" if derived from code analysis
+- Use local branch for base commit when remote reference available
 
 **ALWAYS**:
 - Check for ReviewContext.md first; treat as authoritative if present
+- Prefer remote branch references (e.g., `origin/<base-branch>`) over local branches when determining base commit to ensure comparison against latest upstream state
+- Document base commit source (remote|local|github-api) in ReviewContext.md
+- Warn user when forced to use local branch that may be behind upstream
 - Include file:line references for all observations and claims
 - Distinguish explicit (stated) vs inferred (observed) goals
 - Document baseline behavior from CodeResearch.md before characterizing changes
@@ -350,9 +371,11 @@ status: complete
 # ReviewContext
 
 **PR Number**: <number> (GitHub) OR **Branch**: <branch-slug> (non-GitHub)
+**Remote**: <remote-name> (default: origin, or "No remote configured")
 **Base Branch**: <base-branch>
 **Head Branch**: <head-branch>
 **Base Commit**: <sha>
+**Base Commit Source**: remote|local|github-api
 **Head Commit**: <sha>
 **Repository**: <owner>/<repo> OR "Local repository"
 **Author**: <username or git author>

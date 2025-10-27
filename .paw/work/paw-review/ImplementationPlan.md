@@ -305,11 +305,18 @@ Next: Understanding Agent can now use this baseline understanding to complete De
 - [x] DerivedSpec.md distinguishes explicit vs inferred goals (FR-004, FR-005)
 - [x] DerivedSpec.md has zero open questions (FR-006 enforcement)
 - [x] CI failure flag set when checks failing (FR-032)
+- [x] Understanding Agent prefers remote references when resolving base commit (FR-040)
+- [x] Baseline Researcher fetches remote before checkout (FR-041)
+- [x] ReviewContext.md includes `Remote` and `Base Commit Source` fields
+- [x] Base commit source documented (remote|local|github-api)
 
 #### Manual Verification:
 - [ ] Reviewer can validate DerivedSpec accuracy (FR-007)
 - [ ] Discrepancy block raised when PR description contradicts code (FR-034)
 - [ ] ReviewContext.md serves as parameter source for downstream stages (SC-001)
+- [ ] With local `main` behind `origin/main`, base commit resolves to `origin/main` HEAD (SC-024)
+- [ ] Baseline analysis happens at latest upstream commit, not outdated local (SC-025)
+- [ ] Warning displayed if forced to use local branch due to missing remote
 
 ### Status
 

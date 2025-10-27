@@ -195,7 +195,7 @@ status: complete
 - **Impact**: Minor performance improvement in non-critical path
 - **Best Practice**: Optimization best practice reference
 
-**Posted**: ✓ Pending review comment ID: <id>
+**Posted**: ✓ Pending review comment ID: <id> OR ⚠ Manual posting (non-GitHub)
 
 ---
 
@@ -211,7 +211,7 @@ status: complete
 **Rationale:**
 ...
 
-**Posted**: ✓ Thread comment in pending review (general comment, no specific line)
+**Posted**: ✓ Thread comment in pending review (general comment, no specific line) OR ⚠ Manual posting (non-GitHub)
 
 ---
 
@@ -269,25 +269,13 @@ For GitHub PRs, create pending review using MCP tools:
 - Reviewer can edit/delete any comments before submission
 - Comment IDs recorded in ReviewComments.md for tracking
 
-### 6. Non-GitHub Context: Manual Posting Instructions
+### 6. Non-GitHub Context: No Automated Posting
 
 For non-GitHub workflows (using git diff and branch names):
 
-**Provide Clear Instructions:**
-- List each comment with exact file path and line range
-- Format for easy manual transfer to review platform (GitLab, Bitbucket, email, etc.)
-- Note that rationale and assessment sections remain in ReviewComments.md for reviewer reference
-
-**Example:**
-```markdown
-**Posted**: ⚠ Manual posting required
-
-To post this comment:
-1. Open `src/auth.ts` in your review platform
-2. Navigate to lines 45-50
-3. Add comment with the description and suggestion above
-4. Rationale remains in this document for your reference
-```
+- All comments are documented in ReviewComments.md with file paths and line ranges
+- Reviewer manually posts comments to their review platform as needed
+- Rationale and assessment sections remain in ReviewComments.md for reviewer reference
 
 ## Q&A Support
 
@@ -428,9 +416,10 @@ ReviewComments.md created with:
 - Z questions for author
 
 GitHub context: Pending review created with ALL comments posted (ID: <id>)
-Non-GitHub context: Manual posting instructions provided for all comments
+Non-GitHub context: All comments documented in ReviewComments.md for manual posting
 
-All Must/Should/Could findings posted to pending review. Reviewer can delete unwanted comments before submission.
+All Must/Should/Could findings posted to pending review (GitHub) or documented for manual posting (non-GitHub).
+Reviewer can delete unwanted comments before submission.
 All comments have complete rationale sections in ReviewComments.md (not posted to GitHub).
 
 Ready for Feedback Critic to add assessment sections.

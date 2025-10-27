@@ -72,19 +72,33 @@ Then wait for the research prompt or questions.
 
 ## Steps to Follow
 
-1. **Verify base commit and checkout:**
+1. **Sync Remote State (Pre-flight)**
+   - Extract remote name from ReviewContext.md (default: `origin` if not specified)
+   - Extract base branch name from ReviewContext.md
    - Extract base commit SHA from ReviewContext.md
+   - **Fetch latest remote state**: `git fetch <remote> <base-branch>`
+   - If fetch fails (offline, no remote, network issue):
+     - Log warning: "⚠️ Could not fetch remote - proceeding with local state"
+     - Continue if base commit exists locally
+   - **Verify base commit is reachable**: `git cat-file -e <base-commit-sha>`
+   - If commit unreachable after fetch attempt:
+     - BLOCK with error: "❌ Base commit <sha> not found. Please sync repository with upstream."
+     - Request user to run: `git fetch <remote>` or check ReviewContext.md
+
+2. **Verify base commit and checkout:**
+   - Extract base commit SHA from ReviewContext.md (already verified in step 1)
    - Verify current state: `git status`
+   - **Save current branch/state** for restoration: `git rev-parse --abbrev-ref HEAD`
    - Checkout base commit: `git checkout <base-commit-sha>`
    - Confirm checkout: `git log -1 --oneline`
    - **CRITICAL**: All subsequent research must analyze code at this commit
 
-2. **Read research prompt and changed files:**
+3. **Read research prompt and changed files:**
    - Read `prompts/01B-code-research.prompt.md` to understand focus areas
    - Note list of changed files from ReviewContext.md
    - Identify which modules/areas need baseline documentation
 
-3. **Analyze pre-change codebase:**
+4. **Analyze pre-change codebase:**
    - Follow the instructions in the `COMPREHENSIVE RESEARCH` section below
    - Focus on areas identified in research prompt
    - Document how things worked before changes
@@ -92,12 +106,44 @@ Then wait for the research prompt or questions.
    - Map integration points and dependencies
    - Note test coverage and documentation state
 
-4. **Synthesize findings:**
+4. **Analyze pre-change codebase:**
+   - Follow the instructions in the `COMPREHENSIVE RESEARCH` section below
+   - Focus on areas identified in research prompt
+   - Document how things worked before changes
+   - Identify patterns and conventions
+   - Map integration points and dependencies
+   - Note test coverage and documentation state
+
+5. **Synthesize findings:**
    - Compile all research results
    - Answer specific questions from research prompt
    - Document behavioral understanding (not implementation details)
    - Include specific file:line references
    - Highlight patterns that inform understanding of changes
+
+6. **Gather metadata:**
+   - Current date/time with timezone: `date '+%Y-%m-%d %H:%M:%S %Z'`
+   - Base commit hash (already known from ReviewContext.md)
+   - Base branch name: from ReviewContext.md
+   - Repository name: `basename $(git rev-parse --show-toplevel)`
+
+7. **Generate baseline research document:**
+   - Write to `.paw/reviews/<identifier>/CodeResearch.md`
+   - Include YAML frontmatter with metadata
+   - Structure document to answer research questions
+   - Use the template structure below
+
+8. **Update ReviewContext.md with artifact reference:**
+   - Read existing ReviewContext.md
+   - Add or update the Artifacts section with CodeResearch.md entry
+   - Update status/timestamp if needed
+   - This signals to Understanding Agent that research is complete
+
+9. **Restore original state:**
+   - Return to original branch: `git checkout <original-branch>`
+   - Verify restoration: `git status`
+
+10. **Present findings:**
 
 5. **Gather metadata:**
    - Current date/time with timezone: `date '+%Y-%m-%d %H:%M:%S %Z'`
@@ -247,16 +293,21 @@ Find patterns that existed before changes:
 
 ## Important Notes
 
-- **Base commit only**: All research happens at base commit SHA
+- **Fetch remote first**: Always `git fetch <remote>` before checkout to ensure base commit is available and represents latest upstream state
+- **Base commit only**: All research happens at base commit SHA (which Understanding Agent resolved from remote reference when possible)
 - **Behavioral focus**: Document how things worked, not implementation minutiae
 - **No comparison**: Don't analyze changes or compare before/after
 - **Pattern documentation**: Identify conventions to inform evaluation later
 - **File references**: Use file:line references as they exist at base commit
 - **One-shot analysis**: Complete baseline research in single session (no follow-up iterations)
+- **Block on missing commit**: If base commit unreachable after fetch, stop and request user to sync repository
+- **Graceful offline**: If fetch fails but commit exists locally, warn and continue
 
 ## Quality Checklist
 
 Before completing baseline research:
+- [ ] Remote fetched successfully (or graceful offline handling if commit exists locally)
+- [ ] Base commit SHA verified reachable before checkout
 - [ ] Checked out base commit successfully
 - [ ] All research conducted at base commit (not current HEAD)
 - [ ] Research questions from prompt answered

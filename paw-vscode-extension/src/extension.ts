@@ -11,6 +11,9 @@
  * - Optional GitHub issue integration for Work Title generation
  */
 import * as vscode from 'vscode';
+import { collectWorkItemInputs } from './ui/userInput';
+import { getGitRemotes } from './git/gitOperations';
+import { initializeOutputChannel, logInfo, logError } from './utils/logger';
 
 /**
  * Extension activation function called when VS Code loads the extension.
@@ -24,19 +27,53 @@ import * as vscode from 'vscode';
  *                  subscriptions and extension state
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('PAW Workflow extension is now active');
+  // Initialize output channel for logging
+  const outputChannel = initializeOutputChannel();
+  context.subscriptions.push(outputChannel);
+  
+  logInfo('PAW Workflow extension activated');
 
   // Register the initialize work item command
-  // This command will be expanded in Phase 2 to include user input collection,
-  // and in subsequent phases to include git operations, file creation, and GitHub integration
   const initializeCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',
     async () => {
-      // Command implementation will be added in Phase 2
-      // For now, this serves as a placeholder to verify extension activation
-      vscode.window.showInformationMessage(
-        'PAW: Initialize Work Item command registered'
-      );
+      try {
+        logInfo('Starting work item initialization');
+        
+        // Verify workspace is available
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!workspaceFolder) {
+          const errorMsg = 'No workspace folder open. Please open a folder containing a git repository.';
+          logError(errorMsg);
+          vscode.window.showErrorMessage(`PAW: ${errorMsg}`);
+          return;
+        }
+        
+        logInfo(`Workspace: ${workspaceFolder.uri.fsPath}`);
+        
+        // Get git remotes (stub implementation in Phase 2, full implementation in Phase 4)
+        const remotes = await getGitRemotes(workspaceFolder.uri.fsPath);
+        logInfo(`Found ${remotes.length} git remote(s): ${remotes.join(', ')}`);
+        
+        // Collect user inputs
+        const inputs = await collectWorkItemInputs(remotes);
+        if (!inputs) {
+          logInfo('User cancelled input collection');
+          return;
+        }
+        
+        logInfo(`Collected inputs: branch=${inputs.targetBranch}, issue=${inputs.githubIssueUrl || 'none'}, remote=${inputs.remote}`);
+        
+        // Show collected inputs (temporary - full implementation in later phases)
+        vscode.window.showInformationMessage(
+          `Branch: ${inputs.targetBranch}, Issue: ${inputs.githubIssueUrl || 'none'}, Remote: ${inputs.remote}`
+        );
+        
+      } catch (error) {
+        const errorMsg = `Initialization failed: ${error instanceof Error ? error.message : String(error)}`;
+        logError(errorMsg, error instanceof Error ? error : undefined);
+        vscode.window.showErrorMessage(`PAW: ${errorMsg}`);
+      }
     }
   );
 
@@ -53,6 +90,5 @@ export function activate(context: vscode.ExtensionContext) {
  * function can be used for any additional cleanup if needed in future phases.
  */
 export function deactivate() {
-  // Cleanup if needed
-  // Currently no additional cleanup required - VS Code handles subscription disposal
+  logInfo('PAW Workflow extension deactivated');
 }

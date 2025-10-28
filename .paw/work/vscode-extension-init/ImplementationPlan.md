@@ -413,11 +413,77 @@ node_modules/
 ## Phase 2: Command Registration and User Input Collection
 
 ### Overview
-Implement user interface for collecting work item initialization inputs using VS Code's input box and quick pick APIs. This phase creates the interactive experience for gathering target branch name, GitHub issue URL, and git remote selection.
+Implement user interface for collecting work item initialization inputs using VS Code's input box and quick pick APIs. This phase creates the interactive experience for gathering target branch name, GitHub issue URL, and git remote selection. Also establishes a dedicated output channel for extension logging.
 
 ### Changes Required:
 
-#### 1. User Input Module
+#### 1. Logging Module
+
+**File**: `paw-vscode-extension/src/utils/logger.ts`
+**Changes**: Create output channel wrapper for centralized logging
+
+```typescript
+import * as vscode from 'vscode';
+
+let outputChannel: vscode.OutputChannel | undefined;
+
+/**
+ * Initializes the output channel for the extension
+ */
+export function initializeOutputChannel(): vscode.OutputChannel {
+  if (!outputChannel) {
+    outputChannel = vscode.window.createOutputChannel('PAW Workflow');
+  }
+  return outputChannel;
+}
+
+/**
+ * Gets the output channel instance
+ */
+export function getOutputChannel(): vscode.OutputChannel {
+  if (!outputChannel) {
+    throw new Error('Output channel not initialized. Call initializeOutputChannel first.');
+  }
+  return outputChannel;
+}
+
+/**
+ * Logs an info message to the output channel
+ */
+export function logInfo(message: string): void {
+  const channel = getOutputChannel();
+  channel.appendLine(`[INFO] ${new Date().toISOString()}: ${message}`);
+}
+
+/**
+ * Logs an error message to the output channel
+ */
+export function logError(message: string, error?: Error): void {
+  const channel = getOutputChannel();
+  channel.appendLine(`[ERROR] ${new Date().toISOString()}: ${message}`);
+  if (error) {
+    channel.appendLine(`  ${error.stack || error.message}`);
+  }
+}
+
+/**
+ * Logs a debug message to the output channel
+ */
+export function logDebug(message: string): void {
+  const channel = getOutputChannel();
+  channel.appendLine(`[DEBUG] ${new Date().toISOString()}: ${message}`);
+}
+
+/**
+ * Shows the output channel panel
+ */
+export function showOutputChannel(): void {
+  const channel = getOutputChannel();
+  channel.show();
+}
+```
+
+#### 2. User Input Module
 
 **File**: `paw-vscode-extension/src/ui/userInput.ts`
 **Changes**: Create module for collecting user inputs with validation
@@ -547,38 +613,50 @@ export async function collectWorkItemInputs(remotes: string[]): Promise<WorkItem
 #### 2. Update Extension Command Handler
 
 **File**: `paw-vscode-extension/src/extension.ts`
-**Changes**: Update command implementation to collect user inputs
+**Changes**: Update command implementation to use output channel and collect user inputs
 
 ```typescript
 import * as vscode from 'vscode';
 import { collectWorkItemInputs } from './ui/userInput';
 import { getGitRemotes } from './git/gitOperations'; // Will be added in Phase 4
+import { initializeOutputChannel, logInfo, logError } from './utils/logger';
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('PAW Workflow extension is now active');
+  // Initialize output channel for logging
+  const outputChannel = initializeOutputChannel();
+  context.subscriptions.push(outputChannel);
+  
+  logInfo('PAW Workflow extension activated');
 
   const initializeCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',
     async () => {
       try {
+        logInfo('Starting work item initialization');
+        
         // Verify workspace is available
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
-          vscode.window.showErrorMessage(
-            'PAW: No workspace folder open. Please open a folder containing a git repository.'
-          );
+          const errorMsg = 'No workspace folder open. Please open a folder containing a git repository.';
+          logError(errorMsg);
+          vscode.window.showErrorMessage(`PAW: ${errorMsg}`);
           return;
         }
         
+        logInfo(`Workspace: ${workspaceFolder.uri.fsPath}`);
+        
         // Get git remotes (implementation in Phase 4)
         const remotes = await getGitRemotes(workspaceFolder.uri.fsPath);
+        logInfo(`Found ${remotes.length} git remote(s): ${remotes.join(', ')}`);
         
         // Collect user inputs
         const inputs = await collectWorkItemInputs(remotes);
         if (!inputs) {
-          // User cancelled input collection
+          logInfo('User cancelled input collection');
           return;
         }
+        
+        logInfo(`Collected inputs: branch=${inputs.targetBranch}, issue=${inputs.githubIssueUrl || 'none'}, remote=${inputs.remote}`);
         
         // Show collected inputs (temporary - full implementation in later phases)
         vscode.window.showInformationMessage(
@@ -586,9 +664,9 @@ export function activate(context: vscode.ExtensionContext) {
         );
         
       } catch (error) {
-        vscode.window.showErrorMessage(
-          `PAW: Initialization failed: ${error instanceof Error ? error.message : String(error)}`
-        );
+        const errorMsg = `Initialization failed: ${error instanceof Error ? error.message : String(error)}`;
+        logError(errorMsg, error instanceof Error ? error : undefined);
+        vscode.window.showErrorMessage(`PAW: ${errorMsg}`);
       }
     }
   );
@@ -596,7 +674,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(initializeCommand);
 }
 
-export function deactivate() {}
+export function deactivate() {
+  logInfo('PAW Workflow extension deactivated');
+}
 ```
 
 ### Success Criteria:
@@ -604,10 +684,13 @@ export function deactivate() {}
 #### Automated Verification:
 - [ ] TypeScript compilation succeeds: `npm run compile`
 - [ ] No linting errors: `npm run lint`
-- [ ] Type checking passes for new ui/userInput.ts module
+- [ ] Type checking passes for new ui/userInput.ts and utils/logger.ts modules
 
 #### Manual Verification:
+- [ ] Extension activation logs appear in "PAW Workflow" output channel
+- [ ] Output channel shows timestamped log entries with INFO/ERROR/DEBUG prefixes
 - [ ] Running command prompts for branch name with placeholder "feature/my-feature"
+- [ ] User input collection is logged to output channel
 - [ ] Entering invalid branch name (e.g., "branch..name") shows validation error
 - [ ] Entering valid branch name proceeds to GitHub issue URL prompt
 - [ ] GitHub issue URL prompt allows pressing Enter to skip
@@ -615,8 +698,10 @@ export function deactivate() {}
 - [ ] Valid GitHub URL (e.g., "https://github.com/owner/repo/issues/1") is accepted
 - [ ] If multiple git remotes exist, quick pick shows remote selection with "origin" marked as default
 - [ ] If only one git remote exists, no selection prompt appears
-- [ ] Pressing Escape at any input cancels the command without error
+- [ ] Pressing Escape at any input cancels the command without error (logged to output channel)
 - [ ] After completion, info message shows all collected inputs correctly
+- [ ] All operations are logged to the output channel with appropriate detail
+- [ ] Errors show full stack traces in output channel for debugging
 
 ---
 

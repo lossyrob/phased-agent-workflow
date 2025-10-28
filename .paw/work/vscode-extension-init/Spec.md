@@ -87,13 +87,21 @@
 
 - **FR-016**: System shall generate `WorkflowContext.md` with all required parameters: Work Title, Feature Slug, Target Branch, GitHub Issue (if provided), Remote (default: origin), Artifact Paths (auto-derived), Additional Inputs (default: none) (Stories: P1)
 
-- **FR-017**: System shall generate all 9 prompt template files in `prompts/` subdirectory with correct frontmatter and PAW-compliant structure (Stories: P1)
+- **FR-017**: System shall invoke language model tool `paw_create_prompt_templates` to generate all 9 prompt template files in `prompts/` subdirectory after WorkflowContext.md creation (Stories: P1)
 
 - **FR-018**: System shall create target branch if it doesn't exist (Stories: P1)
 
 - **FR-019**: System shall checkout target branch after creation or verification (Stories: P1)
 
 - **FR-020**: System shall open `WorkflowContext.md` in the editor after successful initialization (Stories: P1)
+
+**Language Model Tool Responsibilities:**
+
+- **FR-021**: System shall provide language model tool `paw_create_prompt_templates` that accepts feature slug and workspace path as parameters (Stories: P1)
+
+- **FR-022**: Tool shall create all 9 prompt template files with correct frontmatter and PAW-compliant structure referencing the provided feature slug (Stories: P1)
+
+- **FR-023**: Tool shall return success status, list of created files, and any errors encountered during file creation (Stories: P1)
 
 ### Key Entities
 
@@ -104,11 +112,12 @@
 
 ### Cross-Cutting / Non-Functional
 
-- **Agent-Driven Architecture**: Extension acts as orchestrator, gathering inputs and delegating complex logic (validation, normalization, conflict resolution, file generation, git operations) to GitHub Copilot agent mode via well-crafted prompts (FR-005, FR-006)
+- **Agent-Driven Architecture**: Extension acts as orchestrator, gathering inputs and delegating complex logic (validation, normalization, conflict resolution, WorkflowContext.md generation, git operations) to GitHub Copilot agent mode via well-crafted prompts (FR-005, FR-006). Agent calls language model tools for procedural PAW operations (FR-017, FR-021).
+- **Tool-Based File Generation**: Straightforward file generation (prompt templates) is implemented as procedural code in language model tools, called by agent at appropriate times (FR-021, FR-022, FR-023)
 - **Transparency**: All operations logged to output channel for user visibility and debugging (FR-007, FR-008)
 - **Input Validation**: User inputs validated for basic format before agent invocation (FR-002, FR-003)
 - **Error Handling**: Clear, actionable error messages for all failure conditions (FR-008)
-- **Minimal Extension Code**: Extension code remains simple by delegating complex behavior to agent (FR-005, FR-006)
+- **Minimal Extension Code**: Extension code remains focused with clear separation: UI/orchestration in extension, workflow logic in agent, procedural operations in tools (FR-005, FR-006, FR-021)
 
 ## Success Criteria
 
@@ -151,12 +160,13 @@
 - Parameter collection via VS Code input boxes (target branch, GitHub issue URL)
 - Optional GitHub issue title fetching for Work Title generation
 - Prompt construction and Copilot agent mode invocation
-- Agent-delegated directory structure creation, file scaffolding, git operations, slug normalization/validation
+- Agent-delegated directory structure creation, WorkflowContext.md generation, git operations, slug normalization/validation
+- Language model tool `paw_create_prompt_templates` for procedural prompt template file generation
 - Output channel logging for transparency
 - Error handling and user feedback
 
 **Out of Scope**:
-- Language model tool (`paw_get_workflow_context`) - deferred to future subtask per issue comment
+- Language model tool (`paw_get_workflow_context`) for reading workflow context - deferred to future subtask per issue comment
 - Chatmode management/installation features
 - Chatmode upgrade functionality  
 - UI components (sidebar, tree view)
@@ -170,6 +180,7 @@
 ## Dependencies
 
 - VS Code Extension API (commands, input boxes, output channels, editor operations)
+- VS Code Language Model API for registering and implementing language model tools
 - GitHub Copilot extension with agent mode support (`vscode.commands.executeCommand("workbench.action.chat.open")`)
 - Git CLI available in system PATH for agent to execute git commands
 - Optional: GitHub API access for issue title fetching (graceful degradation if unavailable)

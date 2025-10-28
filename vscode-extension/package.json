@@ -30,6 +30,32 @@
         "title": "Initialize Work Item",
         "category": "PAW"
       }
+    ],
+    "languageModelTools": [
+      {
+        "name": "paw_create_prompt_templates",
+        "displayName": "Create PAW Prompt Templates",
+        "modelDescription": "Generate all 9 PAW prompt template files for a work item",
+        "toolReferenceName": "pawPromptTemplates",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "feature_slug": {
+              "type": "string",
+              "description": "The normalized feature slug (e.g., 'auth-system')"
+            },
+            "workspace_path": {
+              "type": "string",
+              "description": "Absolute path to the workspace root"
+            }
+          },
+          "required": [
+            "feature_slug",
+            "workspace_path"
+          ]
+        }
+      }
     ]
   },
   "scripts": {

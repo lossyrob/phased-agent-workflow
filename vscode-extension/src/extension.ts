@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { initializeWorkItemCommand } from './commands/initializeWorkItem';
+import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
 
 /**
  * Extension activation function called when extension is first needed.
@@ -22,10 +24,17 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(outputChannel);
   
   outputChannel.appendLine('[INFO] PAW Workflow extension activated');
-  
-  // Register commands (Phase 2)
-  // Command registration will be added in next phase
-  
+
+  registerPromptTemplatesTool(context);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_create_prompt_templates');
+
+  const initCommand = vscode.commands.registerCommand(
+    'paw.initializeWorkItem',
+    () => initializeWorkItemCommand(outputChannel)
+  );
+  context.subscriptions.push(initCommand);
+  outputChannel.appendLine('[INFO] Registered command: paw.initializeWorkItem');
+
   outputChannel.appendLine('[INFO] PAW Workflow extension ready');
 }
 

@@ -1203,6 +1203,33 @@ Automated verification executed:
 
 **Notes for Review Agent:** Manual checks for prompt rendering in VS Code remain outstanding. Confirm the prompt formatting inside the chat experience and ensure specification truncation messaging is clear.
 
+### Addressed Review Comments (2025-10-28)
+
+PR #46 review feedback addressed in response to comments from lossyrob:
+
+1. **Remove PAW Specification Loading** (https://github.com/lossyrob/phased-agent-workflow/pull/46#discussion_r2471258725)
+   - Removed `loadPawSpecificationSnippet()` function and `SPEC_SNIPPET_LIMIT` constant
+   - Extension no longer attempts to load or bundle `paw-specification.md`
+   - All required PAW specification rules (slug normalization, validation, WorkflowContext.md format) are now fully inlined in the prompt template
+   - Added normalization examples table directly in template for clarity
+   - Added WorkflowContext.md field definitions with descriptions
+   - This change reflects the decision that the extension will NOT ship with the PAW specification; all necessary rules must be explicitly stated in prompts
+
+2. **Implement File-Based Prompt Templating** (https://github.com/lossyrob/phased-agent-workflow/pull/46#discussion_r2471266243)
+   - Created `vscode-extension/src/prompts/workItemInitPrompt.template.md` containing the full prompt as a template file
+   - Implemented simple variable substitution using `{{VAR_NAME}}` placeholders (no external dependencies)
+   - Replaced line-by-line string concatenation with template loading and substitution
+   - Template variables: `TARGET_BRANCH`, `GITHUB_ISSUE_URL`, `GITHUB_ISSUE_FIELD`, `WORKSPACE_PATH`, `WORK_TITLE_STRATEGY`, `WORK_TITLE_FALLBACK_INDICATOR`
+   - This makes prompts easy to edit directly in markdown without modifying TypeScript code
+   - Lightweight implementation uses only Node.js built-in string operations
+   - Reusable pattern for future prompt templates in the extension
+
+All automated verification checks pass after addressing review comments:
+- ✅ TypeScript compilation: `npm run compile`
+- ✅ Linting: `npm run lint` (TypeScript version warning persists, non-blocking)
+
+**Implementation Plan Updates Needed:** The spec and plan should be updated to reflect that the extension does NOT ship with `paw-specification.md`. All PAW rules required for work item initialization are explicitly documented in the prompt template file.
+
 ## Phase 4: Testing and Packaging
 
 ### Overview

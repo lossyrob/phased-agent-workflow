@@ -50,13 +50,15 @@ A working VS Code extension that:
 2. Prompts user for target branch name and optional GitHub issue URL
 3. Logs all operations to "PAW Workflow" output channel
 4. Invokes GitHub Copilot agent mode with comprehensive prompt
-5. Agent creates complete `.paw/work/<slug>/` structure with WorkflowContext.md and 9 prompt templates
-6. Agent creates/checks out git branch and opens WorkflowContext.md
-7. Can be packaged and installed as a `.vsix` file
+5. Agent creates complete `.paw/work/<slug>/` structure with WorkflowContext.md
+6. Agent calls language model tool `paw_create_prompt_templates` to generate 9 prompt templates
+7. Agent creates/checks out git branch and opens WorkflowContext.md
+8. Can be packaged and installed as a `.vsix` file
 
 **Verification:**
 - Extension loads without errors in VS Code
 - Command appears in Command Palette
+- Language model tool `paw_create_prompt_templates` is registered and callable
 - Complete work item structure created in under 60 seconds
 - All 9 prompt files present with valid frontmatter
 - Git branch created and checked out
@@ -65,7 +67,7 @@ A working VS Code extension that:
 
 ## What We're NOT Doing
 
-- Language model tool `paw_get_workflow_context` (deferred to future subtask per Issue #35 comment)
+- Language model tool `paw_get_workflow_context` for reading workflow context (deferred to future subtask per Issue #35 comment)
 - Chatmode management/installation features
 - Chatmode upgrade functionality
 - UI components (sidebar, tree view, status bar)
@@ -74,19 +76,17 @@ A working VS Code extension that:
 - Complex error recovery strategies beyond basic validation
 - Multi-workspace support (single workspace only)
 - Custom git remote configuration UI (defaults to "origin")
-- Direct file creation via VS Code FS API (delegated to agent)
+- Direct file creation via VS Code FS API (delegated to agent and tools)
 
 ## Implementation Approach
 
-**Agent-Driven Architecture:**
-The extension acts as an **orchestrator** that gathers inputs and delegates complex logic to GitHub Copilot agent mode. This keeps extension code minimal and leverages agent capabilities for:
-- Feature slug normalization and validation
-- Directory structure creation
-- WorkflowContext.md generation
-- Prompt template file generation
-- Git branch creation and checkout
-- Conflict detection and resolution
-- Opening files in editor
+**Hybrid Architecture: Agent + Tools Pattern:**
+The extension establishes a clean separation of responsibilities:
+- **Extension (Orchestrator)**: Collects inputs, constructs prompts, invokes agent mode
+- **Agent (Workflow Logic)**: Makes decisions about slugs, branches, conflict resolution, WorkflowContext.md generation, git operations
+- **Language Model Tools (Procedural Operations)**: Provide straightforward, repeatable PAW operations like generating prompt template files
+
+This pattern keeps extension code minimal while leveraging agent capabilities for complex decision-making AND providing agents with reliable tools for procedural tasks.
 
 **Extension Responsibilities (Minimal Code):**
 - Register command in package.json and activate function
@@ -96,16 +96,23 @@ The extension acts as an **orchestrator** that gathers inputs and delegates comp
 - Construct comprehensive prompt with PAW specification rules
 - Invoke agent mode with `workbench.action.chat.open`
 - Log operations to output channel
+- Implement and register language model tool `paw_create_prompt_templates`
 
 **Agent Responsibilities (via Prompt):**
 - Normalize branch name to feature slug per PAW rules
 - Validate slug uniqueness and format
 - Create `.paw/work/<slug>/` and `prompts/` directories
 - Generate WorkflowContext.md with parameters
-- Generate all 9 prompt template files with correct frontmatter
+- **Call language model tool `paw_create_prompt_templates`** to generate all 9 prompt template files
 - Create and checkout git branch
 - Handle edge cases (existing directories, branch conflicts)
 - Open WorkflowContext.md in editor
+
+**Tool Responsibilities (`paw_create_prompt_templates`):**
+- Accept feature slug and workspace path as parameters
+- Create all 9 prompt template files with correct frontmatter
+- Reference feature slug in each template body
+- Return success status and list of created files
 
 ## Phase 1: Extension Scaffold and TypeScript Setup
 
@@ -617,12 +624,249 @@ export function deactivate() {
 }
 ```
 
+#### 5. Language Model Tool Implementation
+**File**: `vscode-extension/src/tools/createPromptTemplates.ts`
+**Changes**: Create language model tool for generating PAW prompt template files
+
+```typescript
+import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Tool parameters for creating prompt templates
+ */
+interface CreatePromptTemplatesParams {
+  feature_slug: string;
+  workspace_path: string;
+}
+
+/**
+ * Tool result
+ */
+interface CreatePromptTemplatesResult {
+  success: boolean;
+  files_created: string[];
+  errors: string[];
+}
+
+/**
+ * Template definitions for all 9 PAW prompt files
+ */
+const PROMPT_TEMPLATES = [
+  {
+    filename: '01A-spec.prompt.md',
+    mode: 'PAW-01A Spec Agent',
+    instruction: 'Create spec from'
+  },
+  {
+    filename: '01B-spec-research.prompt.md',
+    mode: 'PAW-01B Spec Research Agent',
+    instruction: 'Answer research questions from'
+  },
+  {
+    filename: '02A-code-research.prompt.md',
+    mode: 'PAW-02A Code Researcher',
+    instruction: 'Run code research from'
+  },
+  {
+    filename: '02B-impl-plan.prompt.md',
+    mode: 'PAW-02B Impl Planner',
+    instruction: 'Create implementation plan from'
+  },
+  {
+    filename: '03A-implement.prompt.md',
+    mode: 'PAW-03A Implementer',
+    instruction: 'Implement phase from'
+  },
+  {
+    filename: '03B-review.prompt.md',
+    mode: 'PAW-03B Impl Reviewer',
+    instruction: 'Review implementation from'
+  },
+  {
+    filename: '04-docs.prompt.md',
+    mode: 'PAW-04 Documenter Agent',
+    instruction: 'Generate documentation from'
+  },
+  {
+    filename: '05-pr.prompt.md',
+    mode: 'PAW-05 PR Agent',
+    instruction: 'Create final PR from'
+  },
+  {
+    filename: '0X-status.prompt.md',
+    mode: 'PAW-0X Status Agent',
+    instruction: 'Update status from'
+  }
+];
+
+/**
+ * Generate content for a single prompt template file
+ */
+function generatePromptTemplate(
+  mode: string,
+  instruction: string,
+  featureSlug: string
+): string {
+  return `---
+mode: ${mode}
+---
+
+${instruction} .paw/work/${featureSlug}/WorkflowContext.md
+`;
+}
+
+/**
+ * Language model tool: Create all 9 PAW prompt template files
+ */
+export async function createPromptTemplates(
+  params: CreatePromptTemplatesParams
+): Promise<CreatePromptTemplatesResult> {
+  const { feature_slug, workspace_path } = params;
+  const filesCreated: string[] = [];
+  const errors: string[] = [];
+
+  try {
+    // Construct prompts directory path
+    const promptsDir = path.join(
+      workspace_path,
+      '.paw',
+      'work',
+      feature_slug,
+      'prompts'
+    );
+
+    // Create prompts directory if it doesn't exist
+    if (!fs.existsSync(promptsDir)) {
+      fs.mkdirSync(promptsDir, { recursive: true });
+    }
+
+    // Generate each template file
+    for (const template of PROMPT_TEMPLATES) {
+      const filePath = path.join(promptsDir, template.filename);
+      const content = generatePromptTemplate(
+        template.mode,
+        template.instruction,
+        feature_slug
+      );
+
+      try {
+        fs.writeFileSync(filePath, content, 'utf-8');
+        filesCreated.push(filePath);
+      } catch (fileError) {
+        const errorMsg = `Failed to create ${template.filename}: ${fileError}`;
+        errors.push(errorMsg);
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      files_created: filesCreated,
+      errors
+    };
+  } catch (error) {
+    return {
+      success: false,
+      files_created: filesCreated,
+      errors: [`Failed to create prompt templates: ${error}`]
+    };
+  }
+}
+
+/**
+ * Register the language model tool with VS Code
+ */
+export function registerPromptTemplatesTool(
+  context: vscode.ExtensionContext
+): void {
+  // Register tool using VS Code Language Model API
+  // Note: API details depend on VS Code version and may evolve
+  const tool = vscode.lm.registerTool('paw_create_prompt_templates', {
+    description: 'Create all 9 PAW prompt template files for a work item',
+    parametersSchema: {
+      type: 'object',
+      properties: {
+        feature_slug: {
+          type: 'string',
+          description: 'The normalized feature slug (e.g., "auth-system")'
+        },
+        workspace_path: {
+          type: 'string',
+          description: 'Absolute path to the workspace root'
+        }
+      },
+      required: ['feature_slug', 'workspace_path']
+    },
+    invoke: async (parameters: CreatePromptTemplatesParams) => {
+      const result = await createPromptTemplates(parameters);
+      
+      // Format result for language model
+      if (result.success) {
+        return {
+          content: `Successfully created ${result.files_created.length} prompt template files:\n${result.files_created.map(f => `- ${f}`).join('\n')}`
+        };
+      } else {
+        return {
+          content: `Failed to create prompt templates. Errors:\n${result.errors.join('\n')}`
+        };
+      }
+    }
+  });
+
+  context.subscriptions.push(tool);
+}
+```
+
+#### 6. Register Tool in Extension Entry Point
+**File**: `vscode-extension/src/extension.ts`
+**Changes**: Import and register the language model tool
+
+```typescript
+import * as vscode from 'vscode';
+import { initializeWorkItemCommand } from './commands/initializeWorkItem';
+import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
+
+/**
+ * Extension activation function called when extension is first needed
+ */
+export function activate(context: vscode.ExtensionContext) {
+  // Create output channel for logging
+  const outputChannel = vscode.window.createOutputChannel('PAW Workflow');
+  context.subscriptions.push(outputChannel);
+  
+  outputChannel.appendLine('[INFO] PAW Workflow extension activated');
+  
+  // Register language model tools
+  registerPromptTemplatesTool(context);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_create_prompt_templates');
+  
+  // Register initialize work item command
+  const initCommand = vscode.commands.registerCommand(
+    'paw.initializeWorkItem',
+    () => initializeWorkItemCommand(outputChannel)
+  );
+  context.subscriptions.push(initCommand);
+  
+  outputChannel.appendLine('[INFO] Registered command: paw.initializeWorkItem');
+  outputChannel.appendLine('[INFO] PAW Workflow extension ready');
+}
+
+/**
+ * Extension deactivation function called when extension is deactivated
+ */
+export function deactivate() {
+  // Cleanup handled automatically via context.subscriptions
+}
+```
+
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] TypeScript compilation succeeds with new modules: `npm run compile`
 - [ ] No linting errors: `npm run lint`
 - [ ] Command `paw.initializeWorkItem` is registered (check via developer tools)
+- [ ] Language model tool `paw_create_prompt_templates` is registered
 
 #### Manual Verification:
 - [ ] Command "PAW: Initialize Work Item" appears in Command Palette
@@ -633,6 +877,7 @@ export function deactivate() {
 - [ ] Error shown when invoked in non-git repository
 - [ ] Output channel logs all operations with timestamps
 - [ ] Cancelling at any input step aborts gracefully
+- [ ] Tool registration logged to output channel on activation
 
 ---
 
@@ -757,92 +1002,34 @@ Artifact Paths: auto-derived
 Additional Inputs: none
 \`\`\`
 
-### 5. Generate Prompt Template Files
+### 5. Call Language Model Tool to Generate Prompt Templates
 
-Create all 9 prompt template files in \`.paw/work/<feature-slug>/prompts/\` with the following structure:
+After WorkflowContext.md is created, call the language model tool to generate all prompt template files:
 
-**01A-spec.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-01A Spec Agent
----
-
-Create spec from .paw/work/<feature-slug>/WorkflowContext.md
+**Tool Call:**
+\`\`\`
+paw_create_prompt_templates(
+  feature_slug: "<generated_feature_slug>",
+  workspace_path: "${workspacePath}"
+)
 \`\`\`
 
-**01B-spec-research.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-01B Spec Research Agent
----
+The tool will:
+- Create \`.paw/work/<feature-slug>/prompts/\` directory if needed
+- Generate all 9 prompt template files with correct frontmatter
+- Each template will reference the feature slug in its body
+- Return success status and list of created files
 
-Answer research questions from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**02A-code-research.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-02A Code Researcher
----
-
-Run code research from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**02B-impl-plan.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-02B Impl Planner
----
-
-Create implementation plan from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**03A-implement.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-03A Implementer
----
-
-Implement phase from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**03B-review.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-03B Impl Reviewer
----
-
-Review implementation from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**04-docs.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-04 Documenter Agent
----
-
-Generate documentation from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**05-pr.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-05 PR Agent
----
-
-Create final PR from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**0X-status.prompt.md:**
-\`\`\`markdown
----
-mode: PAW-0X Status Agent
----
-
-Update status from .paw/work/<feature-slug>/WorkflowContext.md
-\`\`\`
-
-**IMPORTANT**: Replace \`<feature-slug>\` in all prompt files with the actual generated slug.
+**Expected Files Created:**
+- 01A-spec.prompt.md
+- 01B-spec-research.prompt.md
+- 02A-code-research.prompt.md
+- 02B-impl-plan.prompt.md
+- 03A-implement.prompt.md
+- 03B-review.prompt.md
+- 04-docs.prompt.md
+- 05-pr.prompt.md
+- 0X-status.prompt.md
 
 ### 6. Git Branch Operations
 
@@ -872,12 +1059,14 @@ After all files are created and branch is checked out:
 - **Uncommitted changes**: Warn and require confirmation before branch operations
 - **Git errors**: Display clear error messages with recovery guidance
 - **Network failures** (GitHub API): Fall back to branch-based Work Title generation
+- **Tool errors**: If `paw_create_prompt_templates` fails, display error details and abort initialization
 
 ## Success Output
 
 When complete, confirm:
 ✅ Created directory: \`.paw/work/<feature-slug>/\`
 ✅ Created WorkflowContext.md with all parameters
+✅ Called tool paw_create_prompt_templates successfully
 ✅ Created 9 prompt template files in prompts/ subdirectory
 ✅ Created and checked out branch: ${targetBranch}
 ✅ Opened WorkflowContext.md in editor

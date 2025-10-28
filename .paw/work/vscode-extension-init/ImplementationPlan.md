@@ -404,6 +404,25 @@ All automated verification steps passed successfully:
 - Output channel logging implemented for transparency
 - Ready for Phase 2: Command registration and user input collection
 
+**Addressed Review Comments:**
+
+Review feedback addressed on 2025-10-28 for PR #44:
+
+1. **Removed ARCHITECTURE.md** (https://github.com/lossyrob/phased-agent-workflow/pull/44#discussion_r2469734565)
+   - Deleted `vscode-extension/ARCHITECTURE.md` file completely
+   - Documentation will be handled by the Documenter agent (PAW-04) in a later phase
+   - This maintains proper separation of concerns: Implementation Agent focuses on functional code, Documenter Agent creates comprehensive documentation
+
+2. **Added README Update Task to Phase 4** (https://github.com/lossyrob/phased-agent-workflow/pull/44#discussion_r2469775380)
+   - Added new item "#### 7. Extension README Update" to Phase 4 Changes Required section
+   - Added verification checklist item for README update in Phase 4 Manual Verification
+   - This ensures the README content will be revised after implementation to accurately reflect the final state of the extension
+
+All automated verification checks still pass after these changes:
+- ✅ TypeScript compilation: `npm run compile`
+- ✅ Linting: `npm run lint` (same TypeScript version warning, non-blocking)
+- ✅ Type checking: `tsc --noEmit`
+
 ---
 
 ## Phase 2: Command Registration and User Input Collection
@@ -1413,6 +1432,20 @@ code --uninstall-extension paw-workflow.paw-workflow
 Or via VS Code Extensions view: Find extension → Uninstall
 ```
 
+#### 7. Extension README Update
+**File**: `vscode-extension/README.md`
+**Changes**: Revamp README after implementation is complete to ensure content aligns with the end state of work
+
+The README created in Phase 1 contains placeholder information about features not yet implemented. After completing Phases 2-4, update the README to accurately reflect:
+- Actual features implemented in the extension
+- Accurate usage instructions based on final implementation
+- Real examples and screenshots if applicable
+- Correct requirements and dependencies
+- Updated Known Issues section if any issues were discovered during implementation
+- Final release notes reflecting what was actually delivered
+
+This task should be completed after all implementation phases are done and before creating the final pull request.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -1429,6 +1462,7 @@ Or via VS Code Extensions view: Find extension → Uninstall
 - [ ] Extension can be uninstalled cleanly
 - [ ] Tests run successfully in VS Code Test Explorer
 - [ ] Watch mode works for development (auto-recompile on changes)
+- [ ] README.md updated to reflect final implementation state
 
 ---
 

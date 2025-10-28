@@ -1,0 +1,47 @@
+{
+  "name": "paw-workflow",
+  "displayName": "PAW Workflow",
+  "description": "Phased Agent Workflow automation for VS Code",
+  "version": "0.1.0",
+  "publisher": "paw",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lossyrob/phased-agent-workflow"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["paw", "workflow", "agent", "automation"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "paw.initializeWorkItem",
+        "title": "Initialize Work Item",
+        "category": "PAW"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "@vscode/test-electron": "^2.3.4",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.50.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {}
+}

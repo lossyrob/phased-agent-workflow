@@ -1,0 +1,26 @@
+{
+  "root": true,  // This is the root ESLint config (don't search parent directories)
+  "parser": "@typescript-eslint/parser",  // Use TypeScript parser for ESLint
+  "parserOptions": {
+    "ecmaVersion": 6,      // ECMAScript 6 syntax support
+    "sourceType": "module"  // Code uses ES modules
+  },
+  "plugins": ["@typescript-eslint"],  // Enable TypeScript-specific linting rules
+  "extends": [
+    "eslint:recommended",                        // ESLint's recommended base rules
+    "plugin:@typescript-eslint/recommended"     // TypeScript-specific recommended rules
+  ],
+  "rules": {
+    // TypeScript-specific rules
+    "@typescript-eslint/naming-convention": "warn",  // Enforce naming conventions (warn only)
+    "@typescript-eslint/semi": "warn",               // Require semicolons (warn only)
+    
+    // General code quality rules
+    "curly": "warn",           // Require curly braces for all control statements
+    "eqeqeq": "warn",          // Require === and !== instead of == and !=
+    "no-throw-literal": "warn", // Disallow throwing non-Error values
+    
+    // Disable conflicting rules
+    "semi": "off"  // Disabled in favor of @typescript-eslint/semi
+  }
+}

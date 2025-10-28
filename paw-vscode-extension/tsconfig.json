@@ -1,19 +1,26 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2020",
-    "outDir": "out",
-    "lib": ["ES2020"],
-    "sourceMap": true,
-    "rootDir": "src",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    // Module system configuration
+    "module": "commonjs",           // VS Code extensions must use CommonJS modules
+    "target": "ES2020",              // Target modern JavaScript for Node.js 18+
+    "lib": ["ES2020"],               // Include ES2020 standard library definitions
+    
+    // Output configuration
+    "outDir": "out",                 // Compiled JavaScript output directory
+    "sourceMap": true,               // Generate source maps for debugging
+    "rootDir": "src",                // Root directory of source files
+    
+    // Type checking - strict mode enabled for safety
+    "strict": true,                  // Enable all strict type checking options
+    "noUnusedLocals": true,          // Error on unused local variables
+    "noUnusedParameters": true,      // Error on unused function parameters
+    "noImplicitReturns": true,       // Error when not all code paths return a value
+    
+    // Module resolution
+    "esModuleInterop": true,         // Enable interop between CommonJS and ES Modules
+    "skipLibCheck": true,            // Skip type checking of declaration files for faster builds
+    "forceConsistentCasingInFileNames": true  // Ensure imports match file casing
   },
-  "include": ["src"],
-  "exclude": ["node_modules", ".vscode-test"]
+  "include": ["src"],                // Include all files in src directory
+  "exclude": ["node_modules", ".vscode-test"]  // Exclude dependencies and test artifacts
 }

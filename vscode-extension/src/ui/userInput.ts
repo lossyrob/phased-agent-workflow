@@ -2,14 +2,31 @@ import * as vscode from 'vscode';
 
 /**
  * User inputs collected for work item initialization.
+ * 
+ * This interface represents the minimal set of parameters required to initialize
+ * a PAW work item. Additional parameters (feature slug, work title, etc.) are
+ * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
+  /** Git branch name for the work item (e.g., "feature/my-feature") */
   targetBranch: string;
+  
+  /** Optional GitHub issue URL to associate with the work item */
   githubIssueUrl?: string;
 }
 
 /**
  * Collect user inputs for work item initialization.
+ * 
+ * Presents two sequential input prompts to the user:
+ * 1. Target branch name (required) - basic validation ensures valid git branch characters
+ * 2. GitHub issue URL (optional) - validates GitHub issue URL format if provided
+ * 
+ * The agent will perform additional validation and normalization of these inputs
+ * (e.g., converting branch name to feature slug, fetching issue title).
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to collected inputs, or undefined if user cancelled
  */
 export async function collectUserInputs(
   outputChannel: vscode.OutputChannel

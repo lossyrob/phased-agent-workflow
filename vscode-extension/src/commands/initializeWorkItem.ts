@@ -5,6 +5,21 @@ import { constructAgentPrompt } from '../prompts/agentPrompt';
 
 /**
  * Main command handler for initializing a PAW work item.
+ * 
+ * This is the entry point for the "PAW: Initialize Work Item" command. It orchestrates
+ * the entire initialization workflow:
+ * 1. Validates that a workspace folder is open
+ * 2. Checks that the workspace is a Git repository
+ * 3. Collects user inputs (target branch, optional GitHub issue URL)
+ * 4. Constructs a comprehensive prompt for the GitHub Copilot agent
+ * 5. Invokes the agent to create the PAW work item structure
+ * 
+ * The function delegates complex tasks (file creation, git operations, slug normalization)
+ * to the GitHub Copilot agent via a carefully crafted prompt, keeping the extension code
+ * minimal and maintainable.
+ * 
+ * @param outputChannel - VS Code output channel for logging operations and debugging
+ * @returns Promise that resolves when the command completes or is cancelled
  */
 export async function initializeWorkItemCommand(
   outputChannel: vscode.OutputChannel

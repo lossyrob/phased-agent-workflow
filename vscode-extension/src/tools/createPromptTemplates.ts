@@ -3,22 +3,38 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Parameters required to generate the PAW prompt template set.
+ * Parameters for the paw_create_prompt_templates language model tool.
  */
 interface CreatePromptTemplatesParams {
+  /** The normalized feature slug (e.g., "auth-system") */
   feature_slug: string;
+  
+  /** Absolute path to the workspace root directory */
   workspace_path: string;
 }
 
 /**
- * Standardized result returned to the calling language model tool.
+ * Result returned by the createPromptTemplates function.
  */
 interface CreatePromptTemplatesResult {
+  /** Whether all template files were created successfully */
   success: boolean;
+  
+  /** List of absolute paths to successfully created files */
   files_created: string[];
+  
+  /** List of error messages encountered during creation */
   errors: string[];
 }
 
+/**
+ * Template definitions for all 9 PAW prompt files.
+ * 
+ * Each template includes:
+ * - filename: The exact filename to use
+ * - mode: The chatmode to invoke (corresponds to .github/chatmodes/*.chatmode.md)
+ * - instruction: The action the agent should perform
+ */
 const PROMPT_TEMPLATES = [
   {
     filename: '01A-spec.prompt.md',
@@ -68,7 +84,15 @@ const PROMPT_TEMPLATES = [
 ];
 
 /**
- * Render an individual prompt template file using the shared PAW structure.
+ * Generate content for a single prompt template file.
+ * 
+ * Creates a markdown file with frontmatter specifying the chatmode and a body
+ * that references the WorkflowContext.md file for the feature.
+ * 
+ * @param mode - The chatmode to invoke (e.g., "PAW-01A Spec Agent")
+ * @param instruction - The instruction for the agent (e.g., "Create spec from")
+ * @param featureSlug - The feature slug to reference in the template body
+ * @returns The complete file content with frontmatter and body
  */
 function generatePromptTemplate(
   mode: string,
@@ -79,7 +103,17 @@ function generatePromptTemplate(
 }
 
 /**
- * Create every required PAW prompt template file for a work item.
+ * Create all 9 PAW prompt template files for a work item.
+ * 
+ * This function is the core implementation of the paw_create_prompt_templates
+ * language model tool. It creates the .paw/work/<feature_slug>/prompts/ directory
+ * and generates all required prompt template files with correct frontmatter.
+ * 
+ * The function is designed to be idempotent - it will create the directory if it
+ * doesn't exist and overwrite existing files.
+ * 
+ * @param params - Parameters specifying feature slug and workspace path
+ * @returns Result object with success status, created files, and any errors
  */
 export async function createPromptTemplates(
   params: CreatePromptTemplatesParams
@@ -134,7 +168,21 @@ export async function createPromptTemplates(
 }
 
 /**
- * Register the prompt template generator as a Copilot language model tool.
+ * Register the paw_create_prompt_templates language model tool with VS Code.
+ * 
+ * This tool is made available to GitHub Copilot agents via the Language Model API.
+ * When an agent calls this tool, it receives parameters (feature_slug and workspace_path)
+ * and returns a result indicating success or failure along with details of created files.
+ * 
+ * The tool is declared in package.json under contributes.languageModelTools and
+ * registered here at extension activation time.
+ * 
+ * Tool Design Pattern:
+ * - Extension provides procedural tools for reliable operations (file creation)
+ * - Agent provides decision-making logic (slug validation, error handling)
+ * - This separation keeps extension code minimal while leveraging agent intelligence
+ * 
+ * @param context - Extension context for registering disposable resources
  */
 export function registerPromptTemplatesTool(
   context: vscode.ExtensionContext

@@ -41,19 +41,9 @@ export async function initializeWorkItemCommand(
 
     const isGitRepo = await validateGitRepository(workspaceFolder.uri.fsPath);
     if (!isGitRepo) {
-      const action = await vscode.window.showErrorMessage(
-        'PAW requires a Git repository. Would you like to initialize Git?',
-        'Initialize Git',
-        'Cancel'
+      vscode.window.showErrorMessage(
+        'PAW requires a Git repository. Please initialize Git with: git init'
       );
-
-      if (action === 'Initialize Git') {
-        outputChannel.appendLine('[INFO] Initializing git repository...');
-        vscode.window.showInformationMessage(
-          'Please initialize Git manually with: git init'
-        );
-      }
-
       outputChannel.appendLine('[ERROR] Not a git repository');
       return;
     }
@@ -82,6 +72,8 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');
     outputChannel.show(true);
 
+    // Opens chat in a new thread (workbench.action.chat.open creates a new thread when
+    // invoked programmatically rather than appending to an existing conversation)
     await vscode.commands.executeCommand('workbench.action.chat.open', {
       query: prompt,
       mode: 'agent'

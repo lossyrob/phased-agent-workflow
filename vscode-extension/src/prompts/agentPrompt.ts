@@ -1,6 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * Maximum number of characters to include from paw-specification.md in the agent prompt.
+ * 
+ * This limit prevents the prompt from becoming too large while still providing enough
+ * specification context for the agent. The full specification remains available in the
+ * workspace for the agent to reference if needed.
+ */
 const SPEC_SNIPPET_LIMIT = 10000;
 
 /** Loads a truncated snippet of the PAW specification when present. */

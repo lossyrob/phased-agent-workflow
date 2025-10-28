@@ -190,6 +190,29 @@ export function registerPromptTemplatesTool(
   const tool = vscode.lm.registerTool<CreatePromptTemplatesParams>(
     'paw_create_prompt_templates',
     {
+      async prepareInvocation(options, _token) {
+        const { feature_slug } = options.input;
+        return {
+          invocationMessage: `Creating 9 PAW prompt template files for feature: ${feature_slug}`,
+          confirmationMessages: {
+            title: 'Create PAW Prompt Templates',
+            message: new vscode.MarkdownString(
+              `This will create 9 prompt template files in:\n\n` +
+              `\`.paw/work/${feature_slug}/prompts/\`\n\n` +
+              `The following files will be created:\n` +
+              `- 01A-spec.prompt.md\n` +
+              `- 01B-spec-research.prompt.md\n` +
+              `- 02A-code-research.prompt.md\n` +
+              `- 02B-impl-plan.prompt.md\n` +
+              `- 03A-implement.prompt.md\n` +
+              `- 03B-review.prompt.md\n` +
+              `- 04-docs.prompt.md\n` +
+              `- 05-pr.prompt.md\n` +
+              `- 0X-status.prompt.md`
+            )
+          }
+        };
+      },
       async invoke(options) {
         const result = await createPromptTemplates(options.input);
 

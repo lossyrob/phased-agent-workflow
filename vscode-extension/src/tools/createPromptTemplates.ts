@@ -2,11 +2,17 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/**
+ * Parameters required to generate the PAW prompt template set.
+ */
 interface CreatePromptTemplatesParams {
   feature_slug: string;
   workspace_path: string;
 }
 
+/**
+ * Standardized result returned to the calling language model tool.
+ */
 interface CreatePromptTemplatesResult {
   success: boolean;
   files_created: string[];
@@ -61,6 +67,9 @@ const PROMPT_TEMPLATES = [
   }
 ];
 
+/**
+ * Render an individual prompt template file using the shared PAW structure.
+ */
 function generatePromptTemplate(
   mode: string,
   instruction: string,
@@ -69,6 +78,9 @@ function generatePromptTemplate(
   return `---\nmode: ${mode}\n---\n\n${instruction} .paw/work/${featureSlug}/WorkflowContext.md\n`;
 }
 
+/**
+ * Create every required PAW prompt template file for a work item.
+ */
 export async function createPromptTemplates(
   params: CreatePromptTemplatesParams
 ): Promise<CreatePromptTemplatesResult> {
@@ -121,6 +133,9 @@ export async function createPromptTemplates(
   }
 }
 
+/**
+ * Register the prompt template generator as a Copilot language model tool.
+ */
 export function registerPromptTemplatesTool(
   context: vscode.ExtensionContext
 ): void {

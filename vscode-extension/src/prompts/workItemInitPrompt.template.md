@@ -8,6 +8,8 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) work item di
 - **GitHub Issue URL**: {{GITHUB_ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
+{{CUSTOM_INSTRUCTIONS}}
+
 ## Your Tasks
 
 ### 1. Generate Feature Slug

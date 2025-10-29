@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { collectUserInputs } from '../ui/userInput';
 import { validateGitRepository } from '../git/validation';
 import { constructAgentPrompt } from '../prompts/agentPrompt';
+import { loadCustomInstructions } from '../prompts/customInstructions';
 
 /**
  * Main command handler for initializing a PAW work item.
@@ -49,6 +50,16 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Git repository validated');
+
+    const customInstructions = loadCustomInstructions(workspaceFolder.uri.fsPath);
+    if (customInstructions.exists && customInstructions.content.length > 0) {
+      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
+    } else if (customInstructions.exists && customInstructions.error) {
+      outputChannel.appendLine(`[WARN] Custom instructions could not be used: ${customInstructions.error}`);
+    } else {
+      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
+    }
+
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
     const inputs = await collectUserInputs(outputChannel);

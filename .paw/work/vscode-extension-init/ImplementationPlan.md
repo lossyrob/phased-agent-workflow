@@ -1875,13 +1875,13 @@ This ensures consistent naming and metadata across all work items in your projec
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compilation succeeds: `npm run compile`
-- [ ] No linting errors: `npm run lint`
-- [ ] Custom instructions loader handles missing file gracefully
-- [ ] Custom instructions loader handles empty file gracefully
-- [ ] Custom instructions loader handles read errors gracefully
-- [ ] Template substitution includes custom instructions when present
-- [ ] Template substitution works when custom instructions absent
+- [x] TypeScript compilation succeeds: `npm run compile`
+- [x] No linting errors: `npm run lint`
+- [x] Custom instructions loader handles missing file gracefully
+- [x] Custom instructions loader handles empty file gracefully
+- [x] Custom instructions loader handles read errors gracefully
+- [x] Template substitution includes custom instructions when present
+- [x] Template substitution works when custom instructions absent
 
 #### Manual Verification:
 - [ ] Create `.paw/instructions/init-instructions.md` with test content
@@ -1895,6 +1895,20 @@ This ensures consistent naming and metadata across all work items in your projec
 - [ ] Test with empty custom instructions file
 - [ ] Verify initialization completes successfully (graceful degradation)
 - [ ] Example file demonstrates common customization patterns
+
+### Phase 5 Implementation Complete
+
+- Added `loadCustomInstructions` and `formatCustomInstructions` helpers to manage optional workspace guidance with clear error handling.
+- Injected formatted instructions into the agent prompt template and surfaced status logs in `initializeWorkItemCommand`, including warnings for unreadable files.
+- Expanded prompt template loading to locate the source file when running from compiled output and updated `.vscodeignore` to ship the markdown with packaged builds.
+- Delivered example instructions at `vscode-extension/examples/init-instructions.example.md` plus README guidance so teams can adopt the customization workflow quickly.
+- Introduced targeted unit tests covering loader scenarios and prompt injection to satisfy success criteria.
+- Automated verification executed:
+  - ✅ `npm run compile`
+  - ✅ `npm run lint`
+  - ✅ `npm test`
+
+**Notes for Review Agent:** Manual walkthroughs of the new customization flow remain outstanding. Please run the Command Palette scenarios with and without `.paw/instructions/init-instructions.md` to validate the end-to-end behavior in the Extension Development Host.
 
 ---
 

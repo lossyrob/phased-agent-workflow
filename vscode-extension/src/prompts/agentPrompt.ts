@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
 
 /**
  * Template variable substitutions for the work item initialization prompt.
@@ -11,14 +12,24 @@ interface PromptVariables {
   WORKSPACE_PATH: string;
   WORK_TITLE_STRATEGY: string;
   WORK_TITLE_FALLBACK_INDICATOR: string;
+  CUSTOM_INSTRUCTIONS: string;
 }
 
 /**
  * Load the prompt template file.
  */
 function loadPromptTemplate(): string {
-  const templatePath = path.join(__dirname, 'workItemInitPrompt.template.md');
-  return fs.readFileSync(templatePath, 'utf-8');
+  const compiledPath = path.join(__dirname, 'workItemInitPrompt.template.md');
+  if (fs.existsSync(compiledPath)) {
+    return fs.readFileSync(compiledPath, 'utf-8');
+  }
+
+  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', 'workItemInitPrompt.template.md');
+  if (fs.existsSync(sourcePath)) {
+    return fs.readFileSync(sourcePath, 'utf-8');
+  }
+
+  throw new Error('workItemInitPrompt.template.md not found in compiled or source locations');
 }
 
 /**
@@ -44,6 +55,9 @@ export function constructAgentPrompt(
   githubIssueUrl: string | undefined,
   workspacePath: string
 ): string {
+  const customInstructions = loadCustomInstructions(workspacePath);
+  const customInstructionsSection = formatCustomInstructions(customInstructions);
+
   // Build Work Title strategy section based on whether GitHub issue URL is provided
   const workTitleStrategy = githubIssueUrl
     ? `**Preferred - Fetch From GitHub Issue:**
@@ -63,7 +77,8 @@ export function constructAgentPrompt(
     GITHUB_ISSUE_FIELD: githubIssueUrl || 'none',
     WORKSPACE_PATH: workspacePath,
     WORK_TITLE_STRATEGY: workTitleStrategy,
-    WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator
+    WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator,
+    CUSTOM_INSTRUCTIONS: customInstructionsSection
   };
   
   // Load template and substitute variables

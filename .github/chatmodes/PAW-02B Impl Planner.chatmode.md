@@ -12,7 +12,7 @@ First, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<f
 When this agent is invoked:
 
 1. **Check if parameters were provided**:
-   - If a file path or GitHub Issue reference was provided as a parameter, skip the default message
+   - If a file path or issue/work item reference was provided as a parameter, skip the default message
    - Immediately read any provided files FULLY
    - Begin the research process
    - If a Planning PR reference is provided, switch to PR Review Response mode (see below)
@@ -22,7 +22,7 @@ When this agent is invoked:
 I'll help you create a detailed implementation plan. Let me start by understanding what we're building.
 
 Please provide:
-1. The GitHub Issue if available, or a detailed description of the feature/task
+1. The issue or work item URL if available, or a detailed description of the feature/task
 2. Path to the research file compiled by the research agent.
 3. Links to any other related materials (e.g. design docs, related tickets)
 
@@ -132,7 +132,7 @@ When given a Planning PR with review comments:
 ### Step 1: Context Gathering & Initial Analysis
 
 1. **Read all mentioned files immediately and FULLY**:
-   - GitHub Issues
+   - Issues or work items
    - Research documents
    - Related implementation plans
    - Any JSON/data files mentioned
@@ -146,7 +146,7 @@ When given a Planning PR with review comments:
    - This ensures you have complete understanding before proceeding
 
 3. **Analyze and verify understanding**:
-   - Cross-reference the GitHub Issue requirements with actual code, if relevant
+   - Cross-reference the issue or work item requirements with actual code, if relevant
    - Identify any discrepancies or misunderstandings
    - Note assumptions that need verification
    - Determine true scope based on codebase reality

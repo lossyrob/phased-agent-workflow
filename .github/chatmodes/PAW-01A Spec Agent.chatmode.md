@@ -72,7 +72,7 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
+- **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the issue or work item title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
 - **Issue URL**: Full URL to the issue or work item. Accepts both GitHub Issue URLs (https://github.com/<owner>/<repo>/issues/<number>) and Azure DevOps Work Item URLs (https://dev.azure.com/<org>/<project>/_workitems/edit/<id>).
 - If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
@@ -104,7 +104,7 @@ Additional Inputs: <comma-separated or none>
 ## Explicit Non‑Responsibilities
 - Git add/commit/push operations.
 - No Planning PR creation.
-- No posting comments / status to GitHub Issues or PRs (Status Agent does that).
+- No posting comments / status to issues, work items, or PRs (Status Agent does that).
 - No editing of other artifacts besides writing the *prompt file* (and only with user confirmation).
 - No implementation detail exploration beyond what’s required to phrase **behavioral requirements**.
 
@@ -340,9 +340,10 @@ Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent t
 
 If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
 
-### GitHub Issues (if relevant)
+### Working with Issues and PRs
 
-- ALWAYS use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli.
+- For GitHub: ALWAYS use the **github mcp** tools to interact with issues and PRs. Do not fetch pages directly or use the gh cli.
+- For Azure DevOps: Use the **azuredevops mcp** tools when available.
 
 ---
 Operate with rigor: **Behavioral clarity first, research second, specification last.**

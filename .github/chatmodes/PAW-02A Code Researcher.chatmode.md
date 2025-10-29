@@ -76,7 +76,7 @@ of the system in anticipation of an implementation plan to satisfy that spec.
 ## Steps to follow after receiving the research query:
 
 1. **Read any directly mentioned files first:**
-   - If the user mentions specific files (GitHub Issues, docs, JSON), read them FULLY first.
+   - If the user mentions specific files (issues, work items, docs, JSON), read them FULLY first.
    - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
    - **CRITICAL**: Read these files yourself in the main context before spawning any sub-tasks
    - This ensures you have full context before decomposing the research
@@ -349,9 +349,10 @@ What to look for based on request:
 - Use the **websearch** tool for external documentation and resources
 - IF you use websearch tool, please INCLUDE those links in your final report
 
-### GitHub Issues (if relevant)
+### Working with Issues and PRs
 
-- Use the **github mcp** tools to interact with GitHub issues and PRs
+- For GitHub: Use the **github mcp** tools to interact with issues and PRs
+- For Azure DevOps: Use the **azuredevops mcp** tools when available
 
 
 ## Important notes:

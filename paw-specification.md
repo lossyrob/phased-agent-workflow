@@ -43,7 +43,7 @@ The **Phased Agent Workflow (PAW)** streamlines development of GitHub Copilot ch
 ```
 
 **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). 
-Auto-generated from Work Title or GitHub Issue title when not explicitly provided. Remains consistent across branch renames.
+Auto-generated from Work Title or issue title when not explicitly provided. Remains consistent across branch renames.
 
 **Branching Conventions**
 
@@ -143,7 +143,7 @@ The Status Agent should be invoked at key milestones:
 - After the Docs PR is opened, updated, or merged
 - After the final PR is opened or merged
 
-It updates the GitHub Issue (if one exists) with current status, links to relevant PRs, and maintains checklists to track progress through the workflow stages and implementation phases.
+It updates the issue or work item (if one exists) with current status, links to relevant PRs, and maintains checklists to track progress through the workflow stages and implementation phases.
 
 ### PR Agent
 
@@ -177,12 +177,12 @@ Below describes each **Stage** of the PAW process, including agents involved, in
 
 **Inputs:** 
 
-* GitHub Issue if available, otherwise rough brief about the goals of the work.
+* Issue or work item if available, otherwise rough brief about the goals of the work.
 * A clean branch to track work (e.g., `feature/paw-prompts` or `user/rde/bugfix-123`).
 
 **Human Prerequisite Actions:**
 
-* Create a GitHub Issue if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
+* Create an issue or work item if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
 * Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
 * **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each chatmode instruction for the structure.
 
@@ -199,8 +199,8 @@ Below describes each **Stage** of the PAW process, including agents involved, in
 
 **Inputs**:
 
-* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, GitHub issue, remote, and additional inputs automatically. Otherwise:
-  * GitHub Issue link/ID (or brief describing the work)
+* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, Issue URL, remote, and additional inputs automatically. Otherwise:
+  * Issue URL (or brief describing the work)
   * Target branch name (agent can also discover this from the current branch)
   * Any design documents or traditional feature specs that provide additional context for this or a broader set of related work.
 
@@ -234,7 +234,7 @@ Note the spec will be committed and pushed to the planning branch (`<target_bran
 
 **Inputs:**
 
-* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, GitHub issue, remote, and artifact paths automatically. Otherwise:
+* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, Issue URL, remote, and artifact paths automatically. Otherwise:
   * Target branch name (agent can also discover this from the current branch)
   * `Spec.md` and `SpecResearch.md` from Stage 01 must be available in the expected location (`/.paw/work/<feature-slug>/`), or have their paths provided.
 
@@ -259,7 +259,7 @@ Note the spec will be committed and pushed to the planning branch (`<target_bran
 - The Implementation Plan Agent will address each comment with focused commits.
 - The developer will then review the PR again to ensure all comments have been addressed satisfactorily.
 - Once the Planning PR is approved, the developer will merge it and update the local target branch.
-- If tracking with a GitHub Issue, use the Status Agent to update the Issue with status and links. This can occur when the Planning PR is opened, updated, or merged.
+- If tracking with an issue or work item, use the Status Agent to update the issue with status and links. This can occur when the Planning PR is opened, updated, or merged.
 
 **Optional Secondary Review:**
 
@@ -357,7 +357,7 @@ Review Comment Follow-up:
 
 * **WorkflowContext.md** (optional): If present, provides target branch, remote, and ImplementationPlan.md path automatically. Otherwise:
   * `ImplementationPlan.md` from Stage 02 must be available in the expected location (`/.paw/work/<feature-slug>/`), or have its path provided. All Phases must be complete and merged to the target branch, with status updated in the plan.
-  * All PRs from the implementation phases (agent can search for these or refer to GitHub Issue).
+  * All PRs from the implementation phases (agent can search for these or refer to the issue/work item).
 
 **Outputs:** * `/.paw/work/<feature-slug>/Docs.md` + project specific documentation
 
@@ -370,7 +370,7 @@ Review Comment Follow-up:
 - The Documenter Agent will address each comment with focused commits.
 - The developer will then review the PR again to ensure all comments have been addressed satisfactorily.
 - Once the docs PR is approved, the developer will merge it and update the local target branch.
-- If tracking with a GitHub Issue, use the Status Agent to update the Issue with status and links. This can occur when the docs PR is opened, updated, or merged.
+- If tracking with an issue or work item, use the Status Agent to update the issue with status and links. This can occur when the docs PR is opened, updated, or merged.
 
 ---
 
@@ -402,7 +402,7 @@ Review Comment Follow-up:
   - Ask the Implementation Review Agent to verify changes and reply to reviewers.
   - Repeat until approved.
 - Merge the final PR once approved.
-- If tracking with a GitHub Issue, use the Status Agent to update the Issue. This can occur when the final PR is opened, updated, or merged.
+- If tracking with an issue or work item, use the Status Agent to update the issue. This can occur when the final PR is opened, updated, or merged.
 
 **Flow Diagram**
 
@@ -433,7 +433,7 @@ The **Specification** is a testable requirements document that defines **what** 
 
 **Location:** `/.paw/work/<feature-slug>/Spec.md`
 
-**Dependencies:** Built from a GitHub Issue or project brief, refined through `SpecResearch.md` findings about the current system.
+**Dependencies:** Built from an issue/work item or project brief, refined through `SpecResearch.md` findings about the current system.
 
 #### Core Principle: What, Not How
 
@@ -525,7 +525,7 @@ The Specification follows a structured format designed for clarity and testabili
 
 The Spec Agent creates this document through collaborative iteration:
 
-1. **Initial Draft**: Reads the GitHub Issue/brief and creates first-pass requirements
+1. **Initial Draft**: Reads the issue/work item/brief and creates first-pass requirements
 2. **Clarification**: Questions the developer about ambiguities, gaps, or unclear intent
 3. **Research Prompting**: Generates `spec-research.prompt.md` with factual questions about the current system
 4. **Research Integration**: Incorporates findings from `SpecResearch.md` to refine requirements
@@ -982,7 +982,7 @@ A well-formed Docs.md artifact:
 
 ### WorkflowContext.md
 
-The **Workflow Context** document centralizes workflow parameters (target branch, GitHub issue, remote, artifact paths, Work Title) eliminating repetition across PAW stage invocations.
+The **Workflow Context** document centralizes workflow parameters (target branch, Issue URL, remote, artifact paths, Work Title) eliminating repetition across PAW stage invocations.
 
 **Purpose:** Single source of truth for workflow parameters.
 
@@ -1011,8 +1011,8 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 **Remote** (Optional, defaults to `origin`)
 - Git remote for branch/PR operations (e.g., `fork`, `upstream`)
 
-**GitHub Issue** (Optional)
-- Issue URL for tracking (e.g., `https://github.com/owner/repo/issues/N`)
+**Issue URL** (Optional)
+- Issue or work item URL for tracking (e.g., `https://github.com/owner/repo/issues/N` or `https://dev.azure.com/org/project/_workitems/edit/ID`)
 
 **Artifact Paths** (Optional, auto-derived)
 - Explicit paths for non-standard layouts; defaults to `.paw/work/<feature-slug>/<Artifact>.md`
@@ -1040,7 +1040,7 @@ A **Feature Slug** is a normalized, filesystem-safe identifier that serves as th
 Feature Slugs are automatically generated when not explicitly provided:
 
 1. **From Work Title**: If Work Title exists, normalize it to create slug
-2. **From GitHub Issue**: If both missing, generate Work Title from Issue title, then generate slug from Work Title
+2. **From Issue**: If both missing, generate Work Title from issue title, then generate slug from Work Title
 3. **Alignment**: When auto-generating both Work Title and Feature Slug, they derive from same source for consistency
 
 ### Normalization Rules

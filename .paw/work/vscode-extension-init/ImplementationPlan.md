@@ -1553,6 +1553,23 @@ This task should be completed after all implementation phases are done and befor
 - Automated verification succeeded (`npm run compile`, `npm run lint`, `npm test`, `npm run package`), producing `paw-workflow-0.0.1.vsix` (~19 KB, small due to lean codebase).
 - Manual verification tasks remain outstanding (VSIX installation smoke test, watch-mode check, README refresh). Review Agent should prioritize these items and confirm the lighter VSIX size is acceptable.
 
+**Addressed Review Comments (2025-10-29):**
+
+PR #47 review feedback addressed:
+
+1. **Move INSTALL.md to DEVELOPING.md** (https://github.com/lossyrob/phased-agent-workflow/pull/47#discussion_r2475043489)
+   - Moved content from `vscode-extension/INSTALL.md` to top-level `DEVELOPING.md`
+   - Created new "VS Code Extension Development" section in `DEVELOPING.md` with all development and installation instructions
+   - Deleted `vscode-extension/INSTALL.md` file
+   - This makes `DEVELOPING.md` a comprehensive guide for developers working on PAW, covering both chatmode development and VS Code extension development
+   - Updated `DEVELOPING.md` project structure section to include `vscode-extension/` directory
+
+All automated verification checks still pass after addressing review comments:
+- ✅ TypeScript compilation: `npm run compile`
+- ✅ Linting: `npm run lint`
+- ✅ Tests: `npm test` (7/7 passing)
+- ✅ Packaging: `npm run package` (18.86 KB .vsix created)
+
 ---
 
 ## Phase 5: Custom Instructions Support

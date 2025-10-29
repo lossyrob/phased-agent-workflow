@@ -16,6 +16,20 @@ export interface WorkItemInputs {
 }
 
 /**
+ * Determine whether the provided branch name uses only valid characters.
+ */
+export function isValidBranchName(value: string): boolean {
+  return /^[a-zA-Z0-9/_-]+$/.test(value);
+}
+
+/**
+ * Determine whether the provided value matches the expected GitHub issue URL format.
+ */
+export function isValidGitHubIssueUrl(value: string): boolean {
+  return /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/.test(value);
+}
+
+/**
  * Collect user inputs for work item initialization.
  * 
  * Presents two sequential input prompts to the user:
@@ -39,7 +53,7 @@ export async function collectUserInputs(
         return 'Branch name is required';
       }
 
-      if (!/^[a-zA-Z0-9/_-]+$/.test(value)) {
+      if (!isValidBranchName(value)) {
         return 'Branch name contains invalid characters';
       }
 
@@ -60,7 +74,7 @@ export async function collectUserInputs(
         return undefined;
       }
 
-      if (!/^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/.test(value)) {
+      if (!isValidGitHubIssueUrl(value)) {
         return 'Invalid GitHub issue URL format. Expected: https://github.com/owner/repo/issues/123';
       }
 

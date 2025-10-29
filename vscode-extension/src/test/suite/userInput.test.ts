@@ -1,6 +1,17 @@
 import * as assert from 'assert';
 import { isValidBranchName, isValidGitHubIssueUrl } from '../../ui/userInput';
 
+/**
+ * User input validation tests.
+ * 
+ * These unit tests verify the input validation logic used in the work item initialization flow.
+ * Tests cover:
+ * - Git branch name validation (alphanumeric, hyphens, underscores, slashes only)
+ * - GitHub issue URL format validation (must match exact pattern)
+ * 
+ * The validation functions are called by VS Code input boxes to provide real-time
+ * feedback to users during the initialization process.
+ */
 suite('User Input Validation', () => {
   test('Valid branch names pass validation', () => {
     const validNames = [

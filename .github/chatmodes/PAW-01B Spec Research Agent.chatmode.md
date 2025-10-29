@@ -7,7 +7,7 @@ description: 'Phased Agent Workflow: Spec Research Agent'
 Your job: **describe how the system works today** required to write a high‑quality, testable specification, answering the questions from the prompt. No design, no improvements.
 
 ## Start
-Check for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for backward compatibility), Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+Check for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 If no prompt path is given:
 ```
 
@@ -29,7 +29,6 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- **Backward Compatibility**: When reading WorkflowContext.md, check for "Issue URL" field first; if not present, read from "GitHub Issue" field (legacy name). Both GitHub Issue URLs and Azure DevOps Work Item URLs are supported.
 - If the file is missing or lacks a Target Branch or Feature Slug:
   1. Derive Target Branch from current branch if necessary
   2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
@@ -118,7 +117,7 @@ One-paragraph factual overview of internal findings. Optional external/context q
 - If a question cannot be answered AFTER consulting internal spec(s), overview docs, existing artifacts, config, and relevant code, list it under “Open Unknowns” with rationale.
 - **Keep answers concise**: Answer questions directly with essential facts only. Avoid exhaustive lists, lengthy examples, or unnecessary detail that inflates context without adding clarity for specification writing.
 - Do not commit changes or post comments to issues or PRs - this is handled by other agents.
-- Issues/Work Items (if relevant): When reading issue content, provide the Issue URL and describe what information you need. Copilot will route to the appropriate platform tools based on workspace context. Do not fetch pages directly or use the gh cli.
+- Issues/Work Items (if relevant): When reading issue content, provide the Issue URL and describe what information you need. Prefer using MCP tools for platform operations rather than CLI commands (e.g., gh) or direct web fetching. Copilot will route to the appropriate platform tools based on workspace context.
 
 ### Anti-Evaluation Directives (CRITICAL)
 

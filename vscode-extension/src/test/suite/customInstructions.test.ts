@@ -5,10 +5,20 @@ import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from '../../prompts/customInstructions';
 import { constructAgentPrompt } from '../../prompts/agentPrompt';
 
+/**
+ * Create a temporary workspace directory for testing.
+ * @returns Absolute path to the temporary workspace root
+ */
 function createWorkspaceRoot(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'paw-custom-instructions-'));
 }
 
+/**
+ * Write custom instructions file in a test workspace.
+ * Creates the .paw/instructions directory structure if needed.
+ * @param workspacePath Absolute path to workspace root
+ * @param content Content to write to init-instructions.md
+ */
 function writeCustomInstructions(workspacePath: string, content: string): void {
   const instructionsDir = path.join(workspacePath, '.paw', 'instructions');
   fs.mkdirSync(instructionsDir, { recursive: true });

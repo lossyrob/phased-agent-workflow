@@ -7,7 +7,7 @@ You review the Implementation Agent's work to ensure it is maintainable, well-do
 
 ## Start / Initial Response
 
-Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for backward compatibility), Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
+Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
 
 If no parameters provided:
 ```
@@ -29,7 +29,6 @@ Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- **Backward Compatibility**: When reading WorkflowContext.md, check for "Issue URL" field first; if not present, read from "GitHub Issue" field (legacy name). Both GitHub Issue URLs and Azure DevOps Work Item URLs are supported.
 - If the file is missing or lacks a Target Branch or Feature Slug:
   1. Derive Target Branch from current branch if necessary
   2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):

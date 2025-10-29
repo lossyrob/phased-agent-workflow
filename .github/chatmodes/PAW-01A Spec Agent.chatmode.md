@@ -23,12 +23,12 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL (or GitHub Issue for backward compatibility), Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
   1. **Both missing (no Work Title or Feature Slug):**
-     - Generate Work Title from issue title or feature brief (existing logic)
+     - Generate Work Title from issue title or feature brief
      - Generate Feature Slug by normalizing the Work Title:
        - Apply all normalization rules (lowercase, hyphens, etc.)
        - Validate format
@@ -74,8 +74,7 @@ Additional Inputs: <comma-separated or none>
 ```
 - **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
-- **Issue URL**: Full URL to the issue or work item (GitHub Issue URL or Azure DevOps Work Item URL). For backward compatibility, agents also read from the legacy "GitHub Issue" field name.
-- When creating new WorkflowContext.md files, use "Issue URL" as the field name (not "GitHub Issue"). Accept both GitHub Issue URLs (https://github.com/<owner>/<repo>/issues/<number>) and Azure DevOps Work Item URLs (https://dev.azure.com/<org>/<project>/_workitems/edit/<id>).
+- **Issue URL**: Full URL to the issue or work item. Accepts both GitHub Issue URLs (https://github.com/<owner>/<repo>/issues/<number>) and Azure DevOps Work Item URLs (https://dev.azure.com/<org>/<project>/_workitems/edit/<id>).
 - If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
   1. Gather or derive Target Branch (from current branch if not main/default)
   2. Generate or prompt for Work Title (if missing)

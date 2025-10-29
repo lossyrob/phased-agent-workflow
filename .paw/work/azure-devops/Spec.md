@@ -25,10 +25,9 @@
 
 **Acceptance Scenarios**:
 1. Given an Azure DevOps work item URL, When I initialize a PAW workflow, Then WorkflowContext.md captures the work item URL in the "Issue URL" field (platform-agnostic)
-2. Given an existing WorkflowContext.md with "GitHub Issue" field, When a PAW agent reads the context, Then it successfully extracts the issue/work item URL from the legacy field name
-3. Given workflow progress through stages, When the Status Agent runs with the Issue URL, Then Copilot routes to the correct platform and posts status update comments to the work item
-4. Given a phase PR is merged, When the Status Agent updates status, Then the work item reflects the completed phase with a link to the merged PR
-5. Given a work item comment is created, When I view it in the work tracking system, Then it contains the status dashboard with artifact links and phase checklist
+2. Given workflow progress through stages, When the Status Agent runs with the Issue URL, Then Copilot routes to the correct platform and posts status update comments to the work item
+3. Given a phase PR is merged, When the Status Agent updates status, Then the work item reflects the completed phase with a link to the merged PR
+4. Given a work item comment is created, When I view it in the work tracking system, Then it contains the status dashboard with artifact links and phase checklist
 
 ### Edge Cases
 
@@ -38,21 +37,18 @@
 - **Repository Not Found**: Repository specified in Remote field does not exist or user lacks access - agents should provide clear error messages
 - **Multiple Remotes**: Repository has multiple git remotes configured - agents use the Remote field value from WorkflowContext.md; Copilot resolves the specified remote
 - **Invalid Remote**: Remote field references a remote that doesn't exist - Copilot's git commands will fail with clear error messages prompting user to verify remote configuration
-- **Legacy Field Names**: WorkflowContext.md uses "GitHub Issue" instead of "Issue URL" - agents should read from either field name and continue to function correctly
 
 ## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: Agents shall read from both "Issue URL" (preferred) and "GitHub Issue" (legacy) field names in WorkflowContext.md for backward compatibility (Stories: P2)
+- **FR-001**: When creating new WorkflowContext.md files, agents shall use "Issue URL" as the field name (Stories: P2)
 
-- **FR-002**: When creating new WorkflowContext.md files, agents shall use "Issue URL" as the field name (Stories: P2)
+- **FR-002**: Agents shall use platform-neutral language in all instructions (e.g., "issue/work item" not "GitHub Issue"; "open a PR" not "use github mcp tools") (Stories: P1, P2)
 
-- **FR-003**: Agents shall use platform-neutral language in all instructions (e.g., "issue/work item" not "GitHub Issue"; "open a PR" not "use github mcp tools") (Stories: P1, P2)
+- **FR-003**: Agents shall respect existing conventions for remote references in chatmode files (e.g., if current instructions mention "origin" or "remote", maintain that pattern; if they don't, no change needed) (Stories: P1)
 
-- **FR-004**: Agents shall respect existing conventions for remote references in chatmode files (e.g., if current instructions mention "origin" or "remote", maintain that pattern; if they don't, no change needed) (Stories: P1)
-
-- **FR-005**: When performing repository operations, agents shall provide necessary context (branch names, Issue URLs, remote names per convention) and rely on Copilot's automatic workspace context resolution and MCP tool routing (Stories: P1, P2)
+- **FR-004**: When performing repository operations, agents shall provide necessary context (branch names, Issue URLs, remote names per convention) and rely on Copilot's automatic workspace context resolution and MCP tool routing (Stories: P1, P2)
 
 ### Key Entities
 
@@ -69,15 +65,13 @@
 
 ## Success Criteria
 
-- **SC-001**: Agents successfully read issue/work item URLs from both "Issue URL" (new) and "GitHub Issue" (legacy) field names in WorkflowContext.md (FR-001)
+- **SC-001**: New WorkflowContext.md files created by agents use "Issue URL" as the field name (FR-001)
 
-- **SC-002**: New WorkflowContext.md files created by agents use "Issue URL" as the field name (FR-002)
+- **SC-002**: All agent chatmode files use platform-neutral language without referencing specific platforms or MCP tool prefixes (FR-002)
 
-- **SC-003**: All agent chatmode files use platform-neutral language without referencing specific platforms or MCP tool prefixes (FR-003)
+- **SC-003**: Agents follow existing conventions for remote references (maintain current patterns where present) (FR-003)
 
-- **SC-004**: Agents follow existing conventions for remote references (maintain current patterns where present) (FR-004)
-
-- **SC-005**: When agents perform operations like "open a PR from branch X to branch Y" with workspace context, Copilot successfully routes to the correct MCP tools for both GitHub and Azure DevOps repositories (FR-005)
+- **SC-004**: When agents perform operations like "open a PR from branch X to branch Y" with workspace context, Copilot successfully routes to the correct MCP tools for both GitHub and Azure DevOps repositories (FR-004)
 
 - **SC-006**: All existing PAW GitHub workflows continue to function without modification (implicit requirement)
 

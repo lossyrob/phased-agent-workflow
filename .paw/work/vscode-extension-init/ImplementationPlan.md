@@ -1545,6 +1545,332 @@ This task should be completed after all implementation phases are done and befor
 
 ---
 
+## Phase 5: Custom Instructions Support
+
+### Overview
+Add support for loading optional custom instructions from `.paw/instructions/init-instructions.md` and injecting them into the agent prompt. This establishes a clean, repeatable pattern for customizing PAW workflow prompts that can be applied to other agents in the future.
+
+### Changes Required:
+
+#### 1. Custom Instructions Loader Module
+**File**: `vscode-extension/src/prompts/customInstructions.ts`
+**Changes**: Create module for loading and parsing custom instructions
+
+```typescript
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Result of loading custom instructions
+ */
+export interface CustomInstructions {
+  exists: boolean;
+  content: string;
+  error?: string;
+}
+
+/**
+ * Load custom instructions from .paw/instructions/init-instructions.md
+ * 
+ * @param workspacePath Absolute path to workspace root
+ * @returns CustomInstructions object with exists flag, content, and optional error
+ */
+export function loadCustomInstructions(workspacePath: string): CustomInstructions {
+  const customInstructionsPath = path.join(
+    workspacePath,
+    '.paw',
+    'instructions',
+    'init-instructions.md'
+  );
+
+  try {
+    // Check if file exists
+    if (!fs.existsSync(customInstructionsPath)) {
+      return {
+        exists: false,
+        content: ''
+      };
+    }
+
+    // Read file content
+    const content = fs.readFileSync(customInstructionsPath, 'utf-8');
+
+    // Basic validation - must have some non-whitespace content
+    if (content.trim().length === 0) {
+      return {
+        exists: true,
+        content: '',
+        error: 'Custom instructions file exists but is empty'
+      };
+    }
+
+    return {
+      exists: true,
+      content: content.trim()
+    };
+
+  } catch (error) {
+    // Graceful degradation on read errors
+    return {
+      exists: true,
+      content: '',
+      error: `Failed to read custom instructions: ${error}`
+    };
+  }
+}
+
+/**
+ * Format custom instructions for inclusion in agent prompt
+ * 
+ * @param instructions CustomInstructions object
+ * @returns Formatted markdown section, or empty string if no valid instructions
+ */
+export function formatCustomInstructions(instructions: CustomInstructions): string {
+  if (!instructions.exists || !instructions.content) {
+    return '';
+  }
+
+  return `
+## Custom Instructions
+
+The following custom instructions have been provided for this workspace's work item initialization:
+
+---
+
+${instructions.content}
+
+---
+
+**Note**: Follow the custom instructions above in addition to the standard PAW workflow rules. If there are any conflicts, the custom instructions take precedence for this workspace.
+`;
+}
+```
+
+#### 2. Update Agent Prompt Template
+**File**: `vscode-extension/src/prompts/workItemInitPrompt.template.md`
+**Changes**: Add placeholder for custom instructions section
+
+Add the following section after the "## Parameters Provided" section and before "## Your Tasks":
+
+```markdown
+{{CUSTOM_INSTRUCTIONS}}
+```
+
+This placeholder will be replaced with either:
+- An empty string (if no custom instructions exist)
+- The formatted custom instructions section (if they exist)
+
+#### 3. Update Agent Prompt Builder
+**File**: `vscode-extension/src/prompts/agentPrompt.ts`
+**Changes**: Integrate custom instructions loading and template substitution
+
+```typescript
+import * as fs from 'fs';
+import * as path from 'path';
+import { loadCustomInstructions, formatCustomInstructions } from './customInstructions';
+
+/**
+ * Construct comprehensive prompt for GitHub Copilot agent to create PAW work item
+ */
+export function constructAgentPrompt(
+  targetBranch: string,
+  githubIssueUrl: string | undefined,
+  workspacePath: string
+): string {
+  // Load prompt template
+  const templatePath = path.join(__dirname, 'workItemInitPrompt.template.md');
+  let template = fs.readFileSync(templatePath, 'utf-8');
+
+  // Load custom instructions
+  const customInstructions = loadCustomInstructions(workspacePath);
+  const customInstructionsSection = formatCustomInstructions(customInstructions);
+
+  // Prepare substitution variables
+  const substitutions: Record<string, string> = {
+    TARGET_BRANCH: targetBranch,
+    WORKSPACE_PATH: workspacePath,
+    GITHUB_ISSUE_URL: githubIssueUrl || 'Not provided',
+    GITHUB_ISSUE_FIELD: githubIssueUrl 
+      ? `GitHub Issue: ${githubIssueUrl}` 
+      : 'GitHub Issue: none',
+    WORK_TITLE_STRATEGY: githubIssueUrl
+      ? '**From GitHub Issue** (Preferred):\n- Fetch issue title from: ' + githubIssueUrl + '\n- Use issue title as Work Title (may shorten for PR prefix later)\n- If fetch fails, fall back to branch-based generation\n\n'
+      : '',
+    WORK_TITLE_FALLBACK_INDICATOR: githubIssueUrl ? ' (Fallback' : ' (Primary',
+    CUSTOM_INSTRUCTIONS: customInstructionsSection
+  };
+
+  // Perform substitutions
+  let prompt = template;
+  for (const [key, value] of Object.entries(substitutions)) {
+    prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+
+  return prompt;
+}
+```
+
+#### 4. Update Command Handler Logging
+**File**: `vscode-extension/src/commands/initializeWorkItem.ts`
+**Changes**: Add logging for custom instructions status
+
+Add after git validation and before user input collection:
+
+```typescript
+    // Check for custom instructions
+    outputChannel.appendLine('[INFO] Checking for custom instructions...');
+    const customInstructionsPath = path.join(
+      workspaceFolder.uri.fsPath,
+      '.paw',
+      'instructions',
+      'init-instructions.md'
+    );
+    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
+    
+    if (hasCustomInstructions) {
+      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
+    } else {
+      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
+    }
+```
+
+Don't forget to import `fs` and `path` at the top of the file:
+```typescript
+import * as fs from 'fs';
+import * as path from 'path';
+```
+
+#### 5. Example Custom Instructions File
+**File**: `vscode-extension/examples/init-instructions.example.md`
+**Changes**: Create example showing custom instructions format
+
+```markdown
+---
+# Custom Instructions for Work Item Initialization
+# Place this file at .paw/instructions/init-instructions.md in your workspace
+---
+
+# Project-Specific Initialization Rules
+
+## Naming Conventions
+
+For this project, all feature slugs should:
+- Include the component prefix (e.g., "api-", "ui-", "db-")
+- Use project-standard abbreviations (e.g., "auth" not "authentication")
+
+## Required Metadata
+
+Always include the following in WorkflowContext.md Additional Inputs field:
+- Component: [api|ui|db|infra]
+- Priority: [P0|P1|P2|P3]
+
+## Branch Naming
+
+Target branches must follow the pattern:
+- feature/<component>-<slug>
+- bugfix/<component>-<slug>
+- hotfix/<component>-<slug>
+
+## Custom Prompt Templates
+
+This project uses additional prompt templates beyond the standard 9:
+- 0Y-security-review.prompt.md - Security review checklist
+- 0Z-performance-test.prompt.md - Performance testing plan
+
+Please create these additional templates when initializing work items.
+
+## GitHub Integration
+
+Always require a GitHub issue URL for this project. The Work Title must exactly match the issue title (do not abbreviate or modify).
+```
+
+#### 6. Documentation Update
+**File**: `vscode-extension/README.md`
+**Changes**: Add section documenting custom instructions feature
+
+Add a new section after "Usage":
+
+```markdown
+## Custom Instructions
+
+You can customize the work item initialization behavior for your project by creating a custom instructions file.
+
+### Setup
+
+1. Create the directory:
+   ```bash
+   mkdir -p .paw/instructions
+   ```
+
+2. Create the file:
+   ```bash
+   touch .paw/instructions/init-instructions.md
+   ```
+
+3. Add your custom instructions using markdown format. See `examples/init-instructions.example.md` for a template.
+
+### What Can You Customize?
+
+Custom instructions allow you to:
+- Enforce project-specific naming conventions for feature slugs
+- Require additional metadata in WorkflowContext.md
+- Specify custom branch naming patterns
+- Add project-specific prompt templates beyond the standard 9
+- Customize GitHub integration behavior
+- Add workspace-specific validation rules
+
+### How It Works
+
+When you run "PAW: Initialize Work Item", the extension:
+1. Checks for `.paw/instructions/init-instructions.md`
+2. If found, loads the content
+3. Injects it into the agent prompt with context
+4. The agent follows both standard PAW rules AND your custom instructions
+5. If conflicts exist, custom instructions take precedence
+
+### Example
+
+```markdown
+# Project XYZ Custom Rules
+
+## Feature Slug Format
+All slugs must start with component prefix: api-, ui-, or db-
+
+## Required Fields
+Include in WorkflowContext.md Additional Inputs:
+- Component: [api|ui|db]
+- Jira Ticket: XYZ-####
+```
+
+This ensures consistent naming and metadata across all work items in your project.
+```
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] TypeScript compilation succeeds: `npm run compile`
+- [ ] No linting errors: `npm run lint`
+- [ ] Custom instructions loader handles missing file gracefully
+- [ ] Custom instructions loader handles empty file gracefully
+- [ ] Custom instructions loader handles read errors gracefully
+- [ ] Template substitution includes custom instructions when present
+- [ ] Template substitution works when custom instructions absent
+
+#### Manual Verification:
+- [ ] Create `.paw/instructions/init-instructions.md` with test content
+- [ ] Run "PAW: Initialize Work Item" command
+- [ ] Verify output channel logs "Custom instructions found"
+- [ ] Verify agent prompt includes custom instructions section
+- [ ] Delete custom instructions file
+- [ ] Run command again
+- [ ] Verify output channel logs "No custom instructions found"
+- [ ] Verify agent prompt works without custom instructions
+- [ ] Test with empty custom instructions file
+- [ ] Verify initialization completes successfully (graceful degradation)
+- [ ] Example file demonstrates common customization patterns
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -1568,6 +1894,11 @@ This task should be completed after all implementation phases are done and befor
 - ✅ Empty/undefined input handling
 - ✅ Prompt includes all required sections
 - ✅ Git repository detection works
+- ✅ Custom instructions loader returns exists=false for missing file
+- ✅ Custom instructions loader returns valid content for existing file
+- ✅ Custom instructions loader handles empty files gracefully
+- ✅ Custom instructions formatter produces correct markdown section
+- ✅ Template substitution works with and without custom instructions
 
 ### Integration Tests
 
@@ -1661,6 +1992,38 @@ This task should be completed after all implementation phases are done and befor
    - User prompted: checkout existing or choose different name
    - Choice handled correctly
 
+**Test Scenario 8: With Custom Instructions**
+1. Create `.paw/instructions/init-instructions.md` with content:
+   ```markdown
+   # Test Custom Rules
+   - All slugs must start with "test-"
+   - Include Priority field in WorkflowContext.md
+   ```
+2. Run "PAW: Initialize Work Item"
+3. Enter target branch: `feature/example-feature`
+4. Verify:
+   - Output channel logs "Custom instructions found"
+   - Agent prompt contains "Custom Instructions" section
+   - Custom rules are visible to agent
+   - Agent follows custom rules (slug starts with "test-")
+
+**Test Scenario 9: Without Custom Instructions**
+1. Ensure `.paw/instructions/init-instructions.md` does NOT exist
+2. Run "PAW: Initialize Work Item"
+3. Enter target branch: `feature/normal-feature`
+4. Verify:
+   - Output channel logs "No custom instructions found (optional)"
+   - Initialization proceeds normally
+   - Standard PAW rules applied without custom modifications
+
+**Test Scenario 10: Empty Custom Instructions File**
+1. Create empty `.paw/instructions/init-instructions.md`
+2. Run command
+3. Verify:
+   - Initialization completes successfully
+   - No errors thrown
+   - Graceful degradation (treats as if file doesn't exist)
+
 ### Performance Considerations
 
 **Expected Timing:**
@@ -1677,6 +2040,8 @@ This task should be completed after all implementation phases are done and befor
 - Extension uses lazy activation (only loads when command invoked)
 - Minimal dependencies (VS Code API, Node.js built-ins only)
 - No heavy computation in extension code (delegated to agent)
+- Custom instructions file read once per command invocation (not watched/cached)
+- Custom instructions limited to reasonable size (< 100KB) for prompt injection
 
 ## Migration Notes
 

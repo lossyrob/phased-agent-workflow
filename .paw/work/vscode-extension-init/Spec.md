@@ -103,17 +103,29 @@
 
 - **FR-023**: Tool shall return success status, list of created files, and any errors encountered during file creation (Stories: P1)
 
+**Custom Instructions Responsibilities:**
+
+- **FR-024**: System shall check for existence of `.paw/instructions/init-instructions.md` file in workspace before constructing agent prompt (Stories: P1)
+
+- **FR-025**: System shall load and parse `.paw/instructions/init-instructions.md` if present, extracting custom instructions content (Stories: P1)
+
+- **FR-026**: System shall inject custom instructions into agent prompt template in a dedicated section when file exists (Stories: P1)
+
+- **FR-027**: System shall gracefully handle missing or malformed custom instructions file without failing initialization (Stories: P1)
+
 ### Key Entities
 
 - **Work Item**: A discrete unit of PAW work (feature, bugfix, enhancement) tracked through workflow stages
 - **Feature Slug**: Normalized filesystem-safe identifier for work item (e.g., "auth-system", "api-refactor-v2")
 - **Work Title**: Human-readable 2-4 word name for work item used in PR titles (e.g., "Auth System", "API Refactor")
 - **Prompt Template**: Pre-structured markdown file with frontmatter for PAW agent invocation
+- **Custom Instructions**: Optional user-provided guidance in `.paw/instructions/init-instructions.md` that customizes the work item initialization prompt behavior
 
 ### Cross-Cutting / Non-Functional
 
 - **Agent-Driven Architecture**: Extension acts as orchestrator, gathering inputs and delegating complex logic (validation, normalization, conflict resolution, WorkflowContext.md generation, git operations) to GitHub Copilot agent mode via well-crafted prompts (FR-005, FR-006). Agent calls language model tools for procedural PAW operations (FR-017, FR-021).
 - **Tool-Based File Generation**: Straightforward file generation (prompt templates) is implemented as procedural code in language model tools, called by agent at appropriate times (FR-021, FR-022, FR-023)
+- **Customizable Prompts**: Optional custom instructions loaded from `.paw/instructions/init-instructions.md` allow users to tailor initialization behavior per project or workflow (FR-024, FR-025, FR-026)
 - **Transparency**: All operations logged to output channel for user visibility and debugging (FR-007, FR-008)
 - **Input Validation**: User inputs validated for basic format before agent invocation (FR-002, FR-003)
 - **Error Handling**: Clear, actionable error messages for all failure conditions (FR-008)
@@ -141,6 +153,8 @@
 
 - **SC-010**: Directory conflicts at `.paw/work/<slug>/` are detected and user is prompted with resolution options before any files are created (FR-011)
 
+- **SC-011**: When `.paw/instructions/init-instructions.md` exists, its content is included in the agent prompt; when absent, initialization proceeds normally without custom instructions (FR-024, FR-025, FR-026, FR-027)
+
 ## Assumptions
 
 - Users have VS Code installed with GitHub Copilot extension active and agent mode available
@@ -151,6 +165,8 @@
 - Feature slug conflicts are rare in single-user workflows; multi-user workflows may see conflicts requiring resolution
 - Users have network access for optional GitHub API calls; failures are handled gracefully
 - Agent mode has access to necessary tools for file operations, git commands, and user prompts
+- Custom instructions file (`.paw/instructions/init-instructions.md`) uses standard markdown format with optional frontmatter for context
+- Custom instructions are project-specific and not committed to PAW specification repository (user-managed)
 
 ## Scope
 
@@ -164,6 +180,7 @@
 - Language model tool `paw_create_prompt_templates` for procedural prompt template file generation
 - Output channel logging for transparency
 - Error handling and user feedback
+- Custom instructions loading from `.paw/instructions/init-instructions.md` and injection into agent prompt
 
 **Out of Scope**:
 - Language model tool (`paw_get_workflow_context`) for reading workflow context - deferred to future subtask per issue comment
@@ -176,6 +193,8 @@
 - Multi-workspace support (assumes single workspace)
 - Custom git remote configuration UI (defaults to "origin")
 - Advanced conflict resolution strategies beyond prompting user for alternative slug
+- UI for creating or editing `.paw/instructions/init-instructions.md` (users edit manually)
+- Validation or schema enforcement for custom instructions content
 
 ## Dependencies
 
@@ -214,3 +233,6 @@
 - **Prompt Template**: Pre-structured markdown file with frontmatter used to invoke PAW agents with specific instructions
 - **WorkflowContext.md**: Centralized parameter file containing target branch, GitHub issue, remote, artifact paths, and additional inputs for PAW workflow stages
 - **Output Channel**: VS Code logging mechanism that displays messages in the Output panel for user visibility
+- **Custom Instructions**: Optional markdown file at `.paw/instructions/init-instructions.md` containing project-specific guidance to customize work item initialization prompt behavior
+
+```

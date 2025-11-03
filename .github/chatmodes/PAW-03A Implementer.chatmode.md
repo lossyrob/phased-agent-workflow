@@ -10,7 +10,7 @@ You are tasked with implementing an approved technical implementation plan. Thes
 If no implementation plan path provided, ask for one.
 
 Before reading other files or taking action:
-0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
+0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
 1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
 2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
@@ -30,7 +30,7 @@ Before reading other files or taking action:
 Work Title: <work_title>
 Feature Slug: <feature-slug>
 Target Branch: <target_branch>
-GitHub Issue: <issue_url>
+Issue URL: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
@@ -52,7 +52,7 @@ Additional Inputs: <comma-separated or none>
 When given just a plan path:
 - Read the plan completely and check for any existing checkmarks (- [x]) and notes on completed phases.
 - Read the `CodeResearch.md` file to understand the existing codebase structure, patterns, and conventions.
-- All files mentioned in the plan, include specs and GitHub Issues using `github mcp` tools when relevant.
+- All files mentioned in the plan, including specs and issues (use Issue URL when relevant).
 - **Read files fully** - never use limit/offset parameters, you need complete context
 - Think deeply about how the pieces fit together
 - Create a todo list to track your progress

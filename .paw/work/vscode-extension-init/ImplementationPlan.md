@@ -139,7 +139,7 @@ Configure the VS Code development environment to support debugging the extension
       "outFiles": [
         "${workspaceFolder}/vscode-extension/out/**/*.js"
       ],
-      "preLaunchTask": "${defaultBuildTask}",
+      "preLaunchTask": "npm: compile - vscode-extension",
       "sourceMaps": true
     },
     {
@@ -153,14 +153,51 @@ Configure the VS Code development environment to support debugging the extension
       "outFiles": [
         "${workspaceFolder}/vscode-extension/out/test/**/*.js"
       ],
-      "preLaunchTask": "${defaultBuildTask}",
+      "preLaunchTask": "npm: compile - vscode-extension",
       "sourceMaps": true
     }
   ]
 }
 ```
 
-#### 2. Update Package Exclusions
+#### 2. VS Code Build Tasks
+**File**: `.vscode/tasks.json` (repository root)
+**Changes**: Create build tasks for compiling the extension
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "compile",
+      "path": "vscode-extension/",
+      "group": "build",
+      "problemMatcher": "$tsc",
+      "label": "npm: compile - vscode-extension",
+      "detail": "tsc -p ./",
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "type": "npm",
+      "script": "watch",
+      "path": "vscode-extension/",
+      "group": "build",
+      "problemMatcher": "$tsc-watch",
+      "label": "npm: watch - vscode-extension",
+      "detail": "tsc -watch -p ./",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "silent"
+      }
+    }
+  ]
+}
+```
+
+#### 3. Package Exclusions
 **File**: `vscode-extension/.vscodeignore`
 **Changes**: No changes needed - `.vscode` directory at repository root is not part of the extension package
 
@@ -170,7 +207,10 @@ The `.vscode/` directory is located at the repository root (not in `vscode-exten
 
 #### Automated Verification:
 - [x] `.vscode/launch.json` file exists at repository root
+- [x] `.vscode/tasks.json` file exists at repository root
 - [x] Launch configuration specifies correct `extensionDevelopmentPath` pointing to `vscode-extension/` subdirectory
+- [x] Launch configuration references build task `npm: compile - vscode-extension`
+- [x] Build task executes `npm run compile` in `vscode-extension/` directory
 - [x] Source maps enabled for debugging TypeScript
 - [x] `.vscode/` directory at root won't be packaged with extension
 
@@ -188,13 +228,18 @@ The `.vscode/` directory is located at the repository root (not in `vscode-exten
 **Completed**: 2025-11-03
 
 - Created `.vscode/launch.json` at repository root with two debug configurations: "Run Extension" for normal debugging and "Extension Tests" for debugging tests
+- Created `.vscode/tasks.json` at repository root with build tasks for compiling and watching the extension
+- Both launch configurations reference the `npm: compile - vscode-extension` task to auto-compile before debugging
 - Both configurations point to `vscode-extension/` subdirectory as the extension development path
-- Both configurations use `preLaunchTask: ${defaultBuildTask}` to ensure TypeScript compilation before debugging
+- Build task executes `npm run compile` in the `vscode-extension/` directory with TypeScript problem matcher
+- Watch task available for continuous compilation during development
 - Source maps enabled for seamless TypeScript debugging experience
 - `.vscode/` at repository root is automatically detected by VS Code when workspace is opened at root level
 
 All automated verification checks passed:
 - ✅ `.vscode/launch.json` exists at repository root with correct paths to `vscode-extension/` subdirectory
+- ✅ `.vscode/tasks.json` exists with compile and watch tasks
+- ✅ Launch configurations reference the correct build task
 - ✅ Source maps enabled (`sourceMaps: true`)
 - ✅ `.vscode/` directory at root won't be packaged in extension `.vsix`
 

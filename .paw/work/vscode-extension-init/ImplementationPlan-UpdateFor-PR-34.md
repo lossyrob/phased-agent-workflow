@@ -265,7 +265,7 @@ Update test files to validate both GitHub and Azure DevOps URL formats.
 
 **Status:** Completed 2025-11-03
 
-**Notes:** Expanded the issue URL validation tests to cover both GitHub and Azure DevOps patterns and refreshed suite descriptions to use platform-neutral wording. Reviewers should confirm no lingering GitHub-specific references remain in other test helpers.
+**Notes:** Expanded the issue URL validation tests to cover both GitHub and Azure DevOps patterns and refreshed suite descriptions to use platform-neutral wording. Reworked the assertions to use explicit `assert.strictEqual` checks for each scenario so failures clearly identify the offending URL. Reviewers should confirm no lingering GitHub-specific references remain in other test helpers.
 
 **Verification:** `npm run compile`, `npm test`
 

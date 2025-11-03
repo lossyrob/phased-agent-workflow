@@ -2,6 +2,8 @@
   "version": "2.0.0",
   "tasks": [
     {
+      // Compile the TypeScript extension once. This task is referenced by the
+      // launch configurations to ensure the extension is built before debugging.
       "type": "npm",
       "script": "compile",
       "path": "vscode-extension/",
@@ -14,6 +16,9 @@
       }
     },
     {
+      // Watch mode: continuously recompile TypeScript on file changes.
+      // Useful for iterative development. Start this task manually with
+      // Terminal > Run Task > "npm: watch - vscode-extension"
       "type": "npm",
       "script": "watch",
       "path": "vscode-extension/",

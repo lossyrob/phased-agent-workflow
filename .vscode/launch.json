@@ -2,6 +2,9 @@
   "version": "0.2.0",
   "configurations": [
     {
+      // Launch the extension in a new VS Code Extension Development Host window.
+      // Press F5 to start debugging the extension. The preLaunchTask will compile
+      // TypeScript before launching. Set breakpoints in src/ files to debug.
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
@@ -15,6 +18,9 @@
       "sourceMaps": true
     },
     {
+      // Launch the extension tests in a VS Code Extension Development Host window.
+      // Use this configuration to debug test failures. Set breakpoints in test files
+      // or source files to step through test execution.
       "name": "Extension Tests",
       "type": "extensionHost",
       "request": "launch",

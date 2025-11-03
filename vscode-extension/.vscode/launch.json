@@ -2,6 +2,9 @@
   "version": "0.2.0",
   "configurations": [
     {
+      // Launch configuration when working directly in the vscode-extension/ subdirectory.
+      // This configuration works when the vscode-extension folder is opened as the workspace root.
+      // For repository-level debugging, use the .vscode/launch.json at the repository root instead.
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
@@ -15,6 +18,8 @@
       "sourceMaps": true
     },
     {
+      // Test configuration when working directly in the vscode-extension/ subdirectory.
+      // Use this to debug tests when the vscode-extension folder is the workspace root.
       "name": "Extension Tests",
       "type": "extensionHost",
       "request": "launch",

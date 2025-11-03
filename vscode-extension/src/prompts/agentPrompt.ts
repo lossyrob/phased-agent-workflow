@@ -4,14 +4,24 @@ import { formatCustomInstructions, loadCustomInstructions } from './customInstru
 
 /**
  * Template variable substitutions for the work item initialization prompt.
+ * 
+ * These variables are replaced in the prompt template to customize instructions
+ * for the specific work item being initialized.
  */
 interface PromptVariables {
+  /** Git branch name for the work item */
   TARGET_BRANCH: string;
+  /** Issue or work item URL (GitHub or Azure DevOps), or "Not provided" */
   ISSUE_URL: string;
+  /** Issue URL field value for WorkflowContext.md, or "none" */
   ISSUE_URL_FIELD: string;
+  /** Absolute path to the workspace root directory */
   WORKSPACE_PATH: string;
+  /** Optional work title strategy section when issue URL is provided */
   WORK_TITLE_STRATEGY: string;
+  /** Fallback indicator text for branch-based work title generation */
   WORK_TITLE_FALLBACK_INDICATOR: string;
+  /** Formatted custom instructions section from .github/copilot-instructions.md */
   CUSTOM_INSTRUCTIONS: string;
 }
 
@@ -49,6 +59,11 @@ function substituteVariables(template: string, variables: PromptVariables): stri
 
 /**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the work item.
+ * 
+ * @param targetBranch - The git branch name where work will be committed
+ * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
+ * @param workspacePath - Absolute path to the workspace root directory
+ * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
   targetBranch: string,

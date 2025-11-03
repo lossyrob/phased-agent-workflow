@@ -114,6 +114,96 @@ This pattern keeps extension code minimal while leveraging agent capabilities fo
 - Reference feature slug in each template body
 - Return success status and list of created files
 
+## Phase 0: Development Environment Setup
+
+### Overview
+Configure the VS Code development environment to support debugging the extension with F5. This enables a smooth development workflow where developers can set breakpoints, inspect variables, and step through code during extension development.
+
+### Changes Required:
+
+#### 1. VS Code Launch Configuration
+**File**: `vscode-extension/.vscode/launch.json`
+**Changes**: Create launch configuration for Extension Development Host debugging
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}",
+      "sourceMaps": true
+    },
+    {
+      "name": "Extension Tests",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/out/test/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}",
+      "sourceMaps": true
+    }
+  ]
+}
+```
+
+#### 2. Update Package Exclusions
+**File**: `vscode-extension/.vscodeignore`
+**Changes**: Ensure `.vscode` directory is excluded from packaged extension (already present, verify)
+
+The `.vscode/` pattern should be present in `.vscodeignore` to prevent development-only configuration from being included in the packaged `.vsix` file.
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `.vscode/launch.json` file exists in `vscode-extension/` directory
+- [x] Launch configuration specifies correct `extensionDevelopmentPath`
+- [x] Source maps enabled for debugging TypeScript
+- [x] `.vscodeignore` excludes `.vscode/**` directory
+
+#### Manual Verification:
+- [ ] Open `vscode-extension/` folder in VS Code
+- [ ] Press F5 to launch Extension Development Host
+- [ ] Extension Development Host window opens with extension loaded
+- [ ] Set breakpoint in `src/extension.ts` activate function
+- [ ] Breakpoint is hit when command is invoked
+- [ ] Variables can be inspected in Debug view
+- [ ] Step through code works correctly
+
+### Phase 0 Implementation Complete
+
+**Completed**: 2025-11-03
+
+- Created `.vscode/launch.json` with two debug configurations: "Run Extension" for normal debugging and "Extension Tests" for debugging tests
+- Verified `.vscodeignore` already excludes `.vscode/**` pattern to prevent development files from being packaged
+- Both configurations use `preLaunchTask: ${defaultBuildTask}` to ensure TypeScript compilation before debugging
+- Source maps enabled for seamless TypeScript debugging experience
+
+All automated verification checks passed:
+- ✅ `.vscode/launch.json` exists with correct paths
+- ✅ Source maps enabled (`sourceMaps: true`)
+- ✅ `.vscodeignore` excludes `.vscode/**`
+
+**Notes for Review:**
+- Manual verification pending: F5 debugging workflow should be tested to ensure breakpoints work correctly
+- The "Run Extension" configuration is the primary workflow for development
+- The "Extension Tests" configuration allows debugging test failures
+
+---
+
 ## Phase 1: Extension Scaffold and TypeScript Setup
 
 ### Overview

@@ -130,6 +130,7 @@
 - **Input Validation**: User inputs validated for basic format before agent invocation (FR-002, FR-003)
 - **Error Handling**: Clear, actionable error messages for all failure conditions (FR-008)
 - **Minimal Extension Code**: Extension code remains focused with clear separation: UI/orchestration in extension, workflow logic in agent, procedural operations in tools (FR-005, FR-006, FR-021)
+- **Development Experience**: VS Code debugging support via F5 launch configuration enables setting breakpoints, inspecting variables, and stepping through extension code during development
 
 ## Success Criteria
 

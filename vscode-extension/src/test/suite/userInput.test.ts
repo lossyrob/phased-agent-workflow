@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { isValidBranchName, isValidGitHubIssueUrl } from '../../ui/userInput';
+import { isValidBranchName, isValidIssueUrl } from '../../ui/userInput';
 
 /**
  * User input validation tests.
@@ -48,7 +48,7 @@ suite('User Input Validation', () => {
     ];
 
     validUrls.forEach(url => {
-      assert.ok(isValidGitHubIssueUrl(url), `${url} should be valid`);
+      assert.ok(isValidIssueUrl(url), `${url} should be valid`);
     });
   });
 
@@ -61,7 +61,7 @@ suite('User Input Validation', () => {
     ];
 
     invalidUrls.forEach(url => {
-      assert.ok(!isValidGitHubIssueUrl(url), `${url} should be invalid`);
+      assert.ok(!isValidIssueUrl(url), `${url} should be invalid`);
     });
   });
 });

@@ -11,8 +11,18 @@ export interface WorkItemInputs {
   /** Git branch name for the work item (e.g., "feature/my-feature") */
   targetBranch: string;
   
-  /** Optional GitHub issue URL to associate with the work item */
-  githubIssueUrl?: string;
+  /**
+   * Optional issue or work item URL to associate with the work item.
+   * 
+   * Supports both GitHub Issues and Azure DevOps Work Items. When provided,
+   * the agent will attempt to fetch the issue/work item title and use it as
+   * the Work Title. If omitted, the Work Title will be derived from the branch name.
+   * 
+   * Supported formats:
+   * - GitHub: `https://github.com/{owner}/{repo}/issues/{number}`
+   * - Azure DevOps: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
+   */
+  issueUrl?: string;
 }
 
 /**
@@ -23,10 +33,27 @@ export function isValidBranchName(value: string): boolean {
 }
 
 /**
- * Determine whether the provided value matches the expected GitHub issue URL format.
+ * Determine whether the provided value matches expected issue URL formats.
+ * 
+ * This validator supports multiple platform-specific URL patterns to enable
+ * PAW to work with both GitHub Issues and Azure DevOps Work Items.
+ * 
+ * Supported formats:
+ * - GitHub Issues: `https://github.com/{owner}/{repo}/issues/{number}`
+ * - Azure DevOps Work Items: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
+ * 
+ * @param value - The URL string to validate
+ * @returns true if the value matches a supported issue URL format, false otherwise
+ * 
+ * @example
+ * isValidIssueUrl('https://github.com/owner/repo/issues/123') // true
+ * isValidIssueUrl('https://dev.azure.com/org/project/_workitems/edit/456') // true
+ * isValidIssueUrl('https://example.com') // false
  */
-export function isValidGitHubIssueUrl(value: string): boolean {
-  return /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/.test(value);
+export function isValidIssueUrl(value: string): boolean {
+  const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;
+  const azureDevOpsPattern = /^https:\/\/dev\.azure\.com\/[^/]+\/[^/]+\/_workitems\/edit\/\d+$/;
+  return githubPattern.test(value) || azureDevOpsPattern.test(value);
 }
 
 /**
@@ -34,7 +61,7 @@ export function isValidGitHubIssueUrl(value: string): boolean {
  * 
  * Presents two sequential input prompts to the user:
  * 1. Target branch name (required) - basic validation ensures valid git branch characters
- * 2. GitHub issue URL (optional) - validates GitHub issue URL format if provided
+ * 2. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to feature slug, fetching issue title).
@@ -66,29 +93,29 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  const githubIssueUrl = await vscode.window.showInputBox({
-    prompt: 'Enter GitHub issue URL (optional, press Enter to skip)',
-    placeHolder: 'https://github.com/owner/repo/issues/123',
+  const issueUrl = await vscode.window.showInputBox({
+    prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
+    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
     validateInput: (value: string) => {
       if (!value || value.trim().length === 0) {
         return undefined;
       }
 
-      if (!isValidGitHubIssueUrl(value)) {
-        return 'Invalid GitHub issue URL format. Expected: https://github.com/owner/repo/issues/123';
+      if (!isValidIssueUrl(value)) {
+        return 'Invalid issue URL format. Expected GitHub issue or Azure DevOps work item URL.';
       }
 
       return undefined;
     }
   });
 
-  if (githubIssueUrl === undefined) {
-    outputChannel.appendLine('[INFO] GitHub issue URL input cancelled');
+  if (issueUrl === undefined) {
+    outputChannel.appendLine('[INFO] Issue URL input cancelled');
     return undefined;
   }
 
   return {
     targetBranch: targetBranch.trim(),
-    githubIssueUrl: githubIssueUrl.trim() === '' ? undefined : githubIssueUrl.trim()
+    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };
 }

@@ -5,7 +5,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) work item di
 ## Parameters Provided
 
 - **Target Branch**: {{TARGET_BRANCH}}
-- **GitHub Issue URL**: {{GITHUB_ISSUE_URL}}
+- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
 {{CUSTOM_INSTRUCTIONS}}
@@ -84,7 +84,7 @@ Create `.paw/work/<feature-slug>/WorkflowContext.md` using the exact format belo
 Work Title: <generated_work_title>
 Feature Slug: <generated_feature_slug>
 Target Branch: {{TARGET_BRANCH}}
-GitHub Issue: {{GITHUB_ISSUE_FIELD}}
+Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
 Additional Inputs: none
@@ -95,7 +95,7 @@ Additional Inputs: none
 - **Work Title** (Required): 2-4 word human-readable name used in PR titles. Examples: "User Auth", "API Refactor", "Rate Limit Fix"
 - **Feature Slug** (Required): Normalized identifier for artifact directory (e.g., "auth-system", "api-refactor-v2")
 - **Target Branch** (Required): Git branch that will hold completed work (e.g., "feature/auth-system")
-- **GitHub Issue** (Optional): URL to associated GitHub issue, or "none" if not provided
+- **Issue URL** (Optional): URL to associated issue or work item (GitHub Issue or Azure DevOps Work Item), or "none" if not provided
 - **Remote** (Required): Git remote name (default: "origin")
 - **Artifact Paths** (Required): Location hint for workflow artifacts (default: "auto-derived" uses `.paw/work/<slug>/`)
 - **Additional Inputs** (Optional): Comma-separated list of extra input files/URLs, or "none"
@@ -154,7 +154,7 @@ When all steps succeed, open `.paw/work/<feature-slug>/WorkflowContext.md` in th
 - **Existing branches**: Allow users to reuse the branch or choose a new name
 - **Uncommitted changes**: Warn users before continuing and respect their decision
 - **Git errors**: Provide clear error messages and suggested fixes (for example, commit changes or resolve conflicts)
-- **Network failures**: If the GitHub issue cannot be fetched, fall back to branch-derived titles and inform the user
+- **Network failures**: If the issue or work item cannot be fetched, fall back to branch-derived titles and inform the user
 - **Tool failures**: If `paw_create_prompt_templates` fails, show exact errors and do not continue to git operations
 
 ## Success Confirmation

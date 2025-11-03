@@ -4,14 +4,24 @@ import { formatCustomInstructions, loadCustomInstructions } from './customInstru
 
 /**
  * Template variable substitutions for the work item initialization prompt.
+ * 
+ * These variables are replaced in the prompt template to customize instructions
+ * for the specific work item being initialized.
  */
 interface PromptVariables {
+  /** Git branch name for the work item */
   TARGET_BRANCH: string;
-  GITHUB_ISSUE_URL: string;
-  GITHUB_ISSUE_FIELD: string;
+  /** Issue or work item URL (GitHub or Azure DevOps), or "Not provided" */
+  ISSUE_URL: string;
+  /** Issue URL field value for WorkflowContext.md, or "none" */
+  ISSUE_URL_FIELD: string;
+  /** Absolute path to the workspace root directory */
   WORKSPACE_PATH: string;
+  /** Optional work title strategy section when issue URL is provided */
   WORK_TITLE_STRATEGY: string;
+  /** Fallback indicator text for branch-based work title generation */
   WORK_TITLE_FALLBACK_INDICATOR: string;
+  /** Formatted custom instructions section from .github/copilot-instructions.md */
   CUSTOM_INSTRUCTIONS: string;
 }
 
@@ -49,32 +59,37 @@ function substituteVariables(template: string, variables: PromptVariables): stri
 
 /**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the work item.
+ * 
+ * @param targetBranch - The git branch name where work will be committed
+ * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
+ * @param workspacePath - Absolute path to the workspace root directory
+ * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
   targetBranch: string,
-  githubIssueUrl: string | undefined,
+  issueUrl: string | undefined,
   workspacePath: string
 ): string {
   const customInstructions = loadCustomInstructions(workspacePath);
   const customInstructionsSection = formatCustomInstructions(customInstructions);
 
-  // Build Work Title strategy section based on whether GitHub issue URL is provided
-  const workTitleStrategy = githubIssueUrl
-    ? `**Preferred - Fetch From GitHub Issue:**
-- Retrieve the issue title from ${githubIssueUrl}
-- Use the issue title as the Work Title (shorten for clarity if necessary)
+  // Build Work Title strategy section based on whether an issue or work item URL is provided
+  const workTitleStrategy = issueUrl
+    ? `**Preferred - Fetch From Issue:**
+- Retrieve the issue or work item title from ${issueUrl}
+- Use the title as the Work Title (shorten for clarity if necessary)
 - If the fetch fails, fall back to the branch-based generation rules below
 
 `
     : '';
   
-  const workTitleFallbackIndicator = githubIssueUrl ? ' (Fallback)' : '';
+  const workTitleFallbackIndicator = issueUrl ? ' (Fallback)' : '';
   
   // Prepare template variables
   const variables: PromptVariables = {
     TARGET_BRANCH: targetBranch,
-    GITHUB_ISSUE_URL: githubIssueUrl || 'Not provided',
-    GITHUB_ISSUE_FIELD: githubIssueUrl || 'none',
+    ISSUE_URL: issueUrl || 'Not provided',
+    ISSUE_URL_FIELD: issueUrl || 'none',
     WORKSPACE_PATH: workspacePath,
     WORK_TITLE_STRATEGY: workTitleStrategy,
     WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator,

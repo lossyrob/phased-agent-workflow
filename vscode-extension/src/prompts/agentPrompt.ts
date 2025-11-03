@@ -7,8 +7,8 @@ import { formatCustomInstructions, loadCustomInstructions } from './customInstru
  */
 interface PromptVariables {
   TARGET_BRANCH: string;
-  GITHUB_ISSUE_URL: string;
-  GITHUB_ISSUE_FIELD: string;
+  ISSUE_URL: string;
+  ISSUE_URL_FIELD: string;
   WORKSPACE_PATH: string;
   WORK_TITLE_STRATEGY: string;
   WORK_TITLE_FALLBACK_INDICATOR: string;
@@ -52,29 +52,29 @@ function substituteVariables(template: string, variables: PromptVariables): stri
  */
 export function constructAgentPrompt(
   targetBranch: string,
-  githubIssueUrl: string | undefined,
+  issueUrl: string | undefined,
   workspacePath: string
 ): string {
   const customInstructions = loadCustomInstructions(workspacePath);
   const customInstructionsSection = formatCustomInstructions(customInstructions);
 
-  // Build Work Title strategy section based on whether GitHub issue URL is provided
-  const workTitleStrategy = githubIssueUrl
-    ? `**Preferred - Fetch From GitHub Issue:**
-- Retrieve the issue title from ${githubIssueUrl}
-- Use the issue title as the Work Title (shorten for clarity if necessary)
+  // Build Work Title strategy section based on whether an issue or work item URL is provided
+  const workTitleStrategy = issueUrl
+    ? `**Preferred - Fetch From Issue:**
+- Retrieve the issue or work item title from ${issueUrl}
+- Use the title as the Work Title (shorten for clarity if necessary)
 - If the fetch fails, fall back to the branch-based generation rules below
 
 `
     : '';
   
-  const workTitleFallbackIndicator = githubIssueUrl ? ' (Fallback)' : '';
+  const workTitleFallbackIndicator = issueUrl ? ' (Fallback)' : '';
   
   // Prepare template variables
   const variables: PromptVariables = {
     TARGET_BRANCH: targetBranch,
-    GITHUB_ISSUE_URL: githubIssueUrl || 'Not provided',
-    GITHUB_ISSUE_FIELD: githubIssueUrl || 'none',
+    ISSUE_URL: issueUrl || 'Not provided',
+    ISSUE_URL_FIELD: issueUrl || 'none',
     WORKSPACE_PATH: workspacePath,
     WORK_TITLE_STRATEGY: workTitleStrategy,
     WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator,

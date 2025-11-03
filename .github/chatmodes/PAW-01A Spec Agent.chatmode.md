@@ -23,12 +23,12 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, GitHub Issue, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
-- Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. When reading an issue, ensure issue and all comments are retrieved. If neither exists, ask the user what they want to work on.
+- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. When reading an issue work item, ensure all comments are also retrieved. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
   1. **Both missing (no Work Title or Feature Slug):**
-     - Generate Work Title from GitHub Issue title or feature brief (existing logic)
+     - Generate Work Title from issue title or feature brief
      - Generate Feature Slug by normalizing the Work Title:
        - Apply all normalization rules (lowercase, hyphens, etc.)
        - Validate format
@@ -52,7 +52,7 @@ Before responding, inspect the invocation context (prompt files, prior user turn
      - Use provided values (validate Feature Slug as above)
      - No auto-generation needed
   
-  **Alignment Requirement:** When auto-generating both Work Title and Feature Slug, derive them from the same source (GitHub Issue title or brief) to ensure they align and represent the same concept.
+  **Alignment Requirement:** When auto-generating both Work Title and Feature Slug, derive them from the same source (issue title or brief) to ensure they align and represent the same concept.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
 - Research preference: default to running research unless the user explicitly skips it.
 
@@ -67,13 +67,14 @@ If the user explicitly says research is already done and provides a `SpecResearc
 Work Title: <work_title>
 Feature Slug: <feature-slug>
 Target Branch: <target_branch>
-GitHub Issue: <issue_url>
+Issue URL: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the GitHub Issue title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
+- **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the issue or work item title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
 - **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
+- **Issue URL**: Full URL to the issue or work item. Accepts both GitHub Issue URLs (https://github.com/<owner>/<repo>/issues/<number>) and Azure DevOps Work Item URLs (https://dev.azure.com/<org>/<project>/_workitems/edit/<id>).
 - If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
   1. Gather or derive Target Branch (from current branch if not main/default)
   2. Generate or prompt for Work Title (if missing)
@@ -82,12 +83,12 @@ Additional Inputs: <comma-separated or none>
      - Validate format using the Feature Slug Validation rules
      - Check uniqueness using the Feature Slug Uniqueness Check
      - Check similarity using the Feature Slug Similarity Warning (for user-provided slugs)
-  4. Gather GitHub Issue, Remote (default to 'origin'), Additional Inputs
+  4. Gather Issue URL, Remote (default to 'origin'), Additional Inputs
   5. Write complete WorkflowContext.md to `.paw/work/<feature-slug>/WorkflowContext.md`
   6. Persist derived artifact paths as "auto-derived" so downstream agents inherit authoritative record
   7. Proceed with specification task
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
-- When you learn a new parameter (e.g., GitHub Issue link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
+- When you learn a new parameter (e.g., Issue URL link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
 - Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
 ## High-Level Responsibilities
@@ -103,7 +104,7 @@ Additional Inputs: <comma-separated or none>
 ## Explicit Non‑Responsibilities
 - Git add/commit/push operations.
 - No Planning PR creation.
-- No posting comments / status to GitHub Issues or PRs (Status Agent does that).
+- No posting comments / status to issues, work items, or PRs (Status Agent does that).
 - No editing of other artifacts besides writing the *prompt file* (and only with user confirmation).
 - No implementation detail exploration beyond what’s required to phrase **behavioral requirements**.
 
@@ -161,7 +162,7 @@ mode: 'PAW-01B Spec Research Agent'
 Perform research to answer the following questions.
 
 Target Branch: <target_branch>
-GitHub Issue: <issue number or 'none'>
+Issue URL: <issue_url or 'none'>
 Additional Inputs: <comma-separated list or 'none'>
 
 ## Questions
@@ -339,10 +340,11 @@ Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent t
 
 If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
 
-### GitHub Issues (if relevant)
+### Working with Issues and PRs
 
-- ALWAYS use the **github mcp** tools to interact with GitHub issues and PRs. Do not fetch pages directly or use the gh cli.
-- When reading a GitHub issue, retrieve the issue body AND all comments.
+- For GitHub: ALWAYS use the **github mcp** tools to interact with issues and PRs. Do not fetch pages directly or use the gh cli.
+- For Azure DevOps: Use the **azuredevops mcp** tools when available.
+- When reading an issue or work item, retrieve the body AND all comments.
 
 ---
 Operate with rigor: **Behavioral clarity first, research second, specification last.**

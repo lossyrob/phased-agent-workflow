@@ -27,7 +27,7 @@
     "commands": [
       {
         "command": "paw.initializeWorkItem",
-        "title": "Initialize Work Item",
+        "title": "New PAW Workflow",
         "category": "PAW"
       }
     ],

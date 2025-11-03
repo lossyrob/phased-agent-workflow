@@ -292,17 +292,25 @@ Check command descriptions and update if they mention "GitHub Issue":
 "commands": [
   {
     "command": "paw.initializeWorkItem",
-    "title": "Initialize PAW Work Item (with optional issue URL)"
+    "title": "New PAW Workflow"
   }
 ]
 ```
 
 #### Success Criteria
 
-- [ ] README.md uses platform-neutral language (if applicable)
-- [ ] Examples reflect both GitHub and Azure DevOps (if applicable)
-- [ ] package.json command descriptions are platform-neutral
-- [ ] No GitHub-specific language in user-facing documentation
+- [x] README.md uses platform-neutral language (if applicable)
+- [x] Examples reflect both GitHub and Azure DevOps (if applicable)
+- [x] package.json command descriptions are platform-neutral
+- [x] No GitHub-specific language in user-facing documentation
+
+**Status:** Completed 2025-11-03
+
+**Notes:** Reworded the README customization guidance to call out generic issue or work item URLs and confirmed the usage section already highlighted both GitHub and Azure DevOps formats. Renamed the Command Palette entry to "New PAW Workflow" to keep the label concise while platform-neutral documentation continues to explain the optional issue URL support. Reviewed the sample custom instructions file to ensure its existing platform-neutral language remained accurate. Reviewers should spot check other documentation surfaces as they polish the release notes in case future updates introduce new GitHub-specific phrasing.
+
+**Addressed Review Comments:** Updated the command title in `package.json` per reviewer feedback (see PR #52, comment https://github.com/lossyrob/phased-agent-workflow/pull/52#discussion_r2487692719) to adopt the "New PAW Workflow" phrasing requested during review.
+
+**Verification:** `npm run compile`, `npm test`
 
 ---
 

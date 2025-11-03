@@ -122,7 +122,7 @@ Configure the VS Code development environment to support debugging the extension
 ### Changes Required:
 
 #### 1. VS Code Launch Configuration
-**File**: `vscode-extension/.vscode/launch.json`
+**File**: `.vscode/launch.json` (repository root)
 **Changes**: Create launch configuration for Extension Development Host debugging
 
 ```json
@@ -134,10 +134,10 @@ Configure the VS Code development environment to support debugging the extension
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension"
       ],
       "outFiles": [
-        "${workspaceFolder}/out/**/*.js"
+        "${workspaceFolder}/vscode-extension/out/**/*.js"
       ],
       "preLaunchTask": "${defaultBuildTask}",
       "sourceMaps": true
@@ -147,11 +147,11 @@ Configure the VS Code development environment to support debugging the extension
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}",
-        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+        "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
+        "--extensionTestsPath=${workspaceFolder}/vscode-extension/out/test/suite/index"
       ],
       "outFiles": [
-        "${workspaceFolder}/out/test/**/*.js"
+        "${workspaceFolder}/vscode-extension/out/test/**/*.js"
       ],
       "preLaunchTask": "${defaultBuildTask}",
       "sourceMaps": true
@@ -162,20 +162,20 @@ Configure the VS Code development environment to support debugging the extension
 
 #### 2. Update Package Exclusions
 **File**: `vscode-extension/.vscodeignore`
-**Changes**: Ensure `.vscode` directory is excluded from packaged extension (already present, verify)
+**Changes**: No changes needed - `.vscode` directory at repository root is not part of the extension package
 
-The `.vscode/` pattern should be present in `.vscodeignore` to prevent development-only configuration from being included in the packaged `.vsix` file.
+The `.vscode/` directory is located at the repository root (not in `vscode-extension/`), so it won't be included in the packaged extension by default.
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `.vscode/launch.json` file exists in `vscode-extension/` directory
-- [x] Launch configuration specifies correct `extensionDevelopmentPath`
+- [x] `.vscode/launch.json` file exists at repository root
+- [x] Launch configuration specifies correct `extensionDevelopmentPath` pointing to `vscode-extension/` subdirectory
 - [x] Source maps enabled for debugging TypeScript
-- [x] `.vscodeignore` excludes `.vscode/**` directory
+- [x] `.vscode/` directory at root won't be packaged with extension
 
 #### Manual Verification:
-- [ ] Open `vscode-extension/` folder in VS Code
+- [ ] Open repository root in VS Code
 - [ ] Press F5 to launch Extension Development Host
 - [ ] Extension Development Host window opens with extension loaded
 - [ ] Set breakpoint in `src/extension.ts` activate function
@@ -187,15 +187,16 @@ The `.vscode/` pattern should be present in `.vscodeignore` to prevent developme
 
 **Completed**: 2025-11-03
 
-- Created `.vscode/launch.json` with two debug configurations: "Run Extension" for normal debugging and "Extension Tests" for debugging tests
-- Verified `.vscodeignore` already excludes `.vscode/**` pattern to prevent development files from being packaged
+- Created `.vscode/launch.json` at repository root with two debug configurations: "Run Extension" for normal debugging and "Extension Tests" for debugging tests
+- Both configurations point to `vscode-extension/` subdirectory as the extension development path
 - Both configurations use `preLaunchTask: ${defaultBuildTask}` to ensure TypeScript compilation before debugging
 - Source maps enabled for seamless TypeScript debugging experience
+- `.vscode/` at repository root is automatically detected by VS Code when workspace is opened at root level
 
 All automated verification checks passed:
-- ✅ `.vscode/launch.json` exists with correct paths
+- ✅ `.vscode/launch.json` exists at repository root with correct paths to `vscode-extension/` subdirectory
 - ✅ Source maps enabled (`sourceMaps: true`)
-- ✅ `.vscodeignore` excludes `.vscode/**`
+- ✅ `.vscode/` directory at root won't be packaged in extension `.vsix`
 
 **Notes for Review:**
 - Manual verification pending: F5 debugging workflow should be tested to ensure breakpoints work correctly

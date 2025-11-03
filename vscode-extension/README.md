@@ -40,7 +40,7 @@ You can tailor the initialization workflow for your project by providing optiona
 - Naming conventions for feature slugs and branches
 - Required metadata that must appear in `WorkflowContext.md`
 - Additional prompt templates beyond the standard nine
-- Integration requirements (for example, mandatory GitHub issue URLs)
+- Integration requirements (for example, mandatory issue or work item URLs)
 
 When present, the extension injects the instructions into the agent prompt so the Copilot agent follows both the PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with the standard behavior.
 

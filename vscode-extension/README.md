@@ -16,7 +16,7 @@ Streamline your Phased Agent Workflow (PAW) development with automated work item
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
 3. Type "PAW: Initialize Work Item"
 4. Enter target branch name (e.g., `feature/my-feature`)
-5. Optionally enter GitHub issue URL
+5. Optionally enter issue or work item URL (GitHub Issues or Azure DevOps Work Items supported)
 6. Watch as your work item structure is created automatically
 
 ## Custom Instructions

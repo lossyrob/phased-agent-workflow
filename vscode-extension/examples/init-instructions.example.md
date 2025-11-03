@@ -32,6 +32,6 @@ This project uses additional prompt templates beyond the standard 9:
 
 Create these additional templates alongside the standard set for every work item.
 
-## GitHub Integration
+## Issue Tracking Integration
 
-Always require a GitHub issue URL for this project. The Work Title must match the issue title exactly (no abbreviations or modifications).
+Always require an issue or work item URL for this project (GitHub Issues or Azure DevOps Work Items). The Work Title must match the issue/work item title exactly (no abbreviations or modifications).

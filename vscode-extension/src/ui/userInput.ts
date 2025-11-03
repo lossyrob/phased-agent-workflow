@@ -11,7 +11,17 @@ export interface WorkItemInputs {
   /** Git branch name for the work item (e.g., "feature/my-feature") */
   targetBranch: string;
   
-  /** Optional issue or work item URL to associate with the work item */
+  /**
+   * Optional issue or work item URL to associate with the work item.
+   * 
+   * Supports both GitHub Issues and Azure DevOps Work Items. When provided,
+   * the agent will attempt to fetch the issue/work item title and use it as
+   * the Work Title. If omitted, the Work Title will be derived from the branch name.
+   * 
+   * Supported formats:
+   * - GitHub: `https://github.com/{owner}/{repo}/issues/{number}`
+   * - Azure DevOps: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
+   */
   issueUrl?: string;
 }
 
@@ -24,9 +34,21 @@ export function isValidBranchName(value: string): boolean {
 
 /**
  * Determine whether the provided value matches expected issue URL formats.
- * Supports:
- * - GitHub Issues: https://github.com/owner/repo/issues/123
- * - Azure DevOps Work Items: https://dev.azure.com/org/project/_workitems/edit/123
+ * 
+ * This validator supports multiple platform-specific URL patterns to enable
+ * PAW to work with both GitHub Issues and Azure DevOps Work Items.
+ * 
+ * Supported formats:
+ * - GitHub Issues: `https://github.com/{owner}/{repo}/issues/{number}`
+ * - Azure DevOps Work Items: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
+ * 
+ * @param value - The URL string to validate
+ * @returns true if the value matches a supported issue URL format, false otherwise
+ * 
+ * @example
+ * isValidIssueUrl('https://github.com/owner/repo/issues/123') // true
+ * isValidIssueUrl('https://dev.azure.com/org/project/_workitems/edit/456') // true
+ * isValidIssueUrl('https://example.com') // false
  */
 export function isValidIssueUrl(value: string): boolean {
   const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;

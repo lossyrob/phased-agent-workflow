@@ -1,0 +1,2 @@
+- Consolidate package.json s
+- .gitingore packaged vsix

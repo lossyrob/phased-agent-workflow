@@ -11,7 +11,7 @@ import { loadCustomInstructions } from '../prompts/customInstructions';
  * the entire initialization workflow:
  * 1. Validates that a workspace folder is open
  * 2. Checks that the workspace is a Git repository
- * 3. Collects user inputs (target branch, optional GitHub issue URL)
+ * 3. Collects user inputs (target branch, optional issue URL)
  * 4. Constructs a comprehensive prompt for the GitHub Copilot agent
  * 5. Invokes the agent to create the PAW work item structure
  * 
@@ -69,14 +69,14 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
-    if (inputs.githubIssueUrl) {
-      outputChannel.appendLine(`[INFO] GitHub issue: ${inputs.githubIssueUrl}`);
+    if (inputs.issueUrl) {
+      outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
 
     outputChannel.appendLine('[INFO] Constructing agent prompt...');
     const prompt = constructAgentPrompt(
       inputs.targetBranch,
-      inputs.githubIssueUrl,
+      inputs.issueUrl,
       workspaceFolder.uri.fsPath
     );
 

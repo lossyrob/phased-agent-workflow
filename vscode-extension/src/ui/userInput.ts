@@ -11,8 +11,8 @@ export interface WorkItemInputs {
   /** Git branch name for the work item (e.g., "feature/my-feature") */
   targetBranch: string;
   
-  /** Optional GitHub issue URL to associate with the work item */
-  githubIssueUrl?: string;
+  /** Optional issue or work item URL to associate with the work item */
+  issueUrl?: string;
 }
 
 /**
@@ -23,10 +23,15 @@ export function isValidBranchName(value: string): boolean {
 }
 
 /**
- * Determine whether the provided value matches the expected GitHub issue URL format.
+ * Determine whether the provided value matches expected issue URL formats.
+ * Supports:
+ * - GitHub Issues: https://github.com/owner/repo/issues/123
+ * - Azure DevOps Work Items: https://dev.azure.com/org/project/_workitems/edit/123
  */
-export function isValidGitHubIssueUrl(value: string): boolean {
-  return /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/.test(value);
+export function isValidIssueUrl(value: string): boolean {
+  const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;
+  const azureDevOpsPattern = /^https:\/\/dev\.azure\.com\/[^/]+\/[^/]+\/_workitems\/edit\/\d+$/;
+  return githubPattern.test(value) || azureDevOpsPattern.test(value);
 }
 
 /**
@@ -34,7 +39,7 @@ export function isValidGitHubIssueUrl(value: string): boolean {
  * 
  * Presents two sequential input prompts to the user:
  * 1. Target branch name (required) - basic validation ensures valid git branch characters
- * 2. GitHub issue URL (optional) - validates GitHub issue URL format if provided
+ * 2. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to feature slug, fetching issue title).
@@ -66,29 +71,29 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  const githubIssueUrl = await vscode.window.showInputBox({
-    prompt: 'Enter GitHub issue URL (optional, press Enter to skip)',
-    placeHolder: 'https://github.com/owner/repo/issues/123',
+  const issueUrl = await vscode.window.showInputBox({
+    prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
+    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
     validateInput: (value: string) => {
       if (!value || value.trim().length === 0) {
         return undefined;
       }
 
-      if (!isValidGitHubIssueUrl(value)) {
-        return 'Invalid GitHub issue URL format. Expected: https://github.com/owner/repo/issues/123';
+      if (!isValidIssueUrl(value)) {
+        return 'Invalid issue URL format. Expected GitHub issue or Azure DevOps work item URL.';
       }
 
       return undefined;
     }
   });
 
-  if (githubIssueUrl === undefined) {
-    outputChannel.appendLine('[INFO] GitHub issue URL input cancelled');
+  if (issueUrl === undefined) {
+    outputChannel.appendLine('[INFO] Issue URL input cancelled');
     return undefined;
   }
 
   return {
     targetBranch: targetBranch.trim(),
-    githubIssueUrl: githubIssueUrl.trim() === '' ? undefined : githubIssueUrl.trim()
+    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };
 }

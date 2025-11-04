@@ -48,7 +48,7 @@ Additional Inputs: <comma-separated or none>
 * **Be concise**: Provide direct, factual answers without exhaustive detail. Avoid context bloat—the goal is to give the Spec Agent enough information to write clear requirements, not to document every edge case or implementation nuance.
 * Produce `SpecResearch.md` with clearly separated sections:
    - Internal System Behavior
-   - Open Unknowns (internal only)
+   - Open Unknowns (internal only, manual fill)
    - User-Provided External Knowledge (manual fill; list of external/context questions)
 
 ## Scope: Behavioral Documentation Only
@@ -95,7 +95,7 @@ One-paragraph factual overview of internal findings. Optional external/context q
 ## Cross-cutting
 * Auth, errors, retries, observability (behavioral notes only)
 
-## Open Unknowns
+## Open Unknowns (Manual Fill)
 * Unanswered internal question – rationale
 
 ## User-Provided External Knowledge (Manual Fill)

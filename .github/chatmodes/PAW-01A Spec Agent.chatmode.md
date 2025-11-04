@@ -24,7 +24,7 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
 - Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
-- Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. If neither exists, ask the user what they want to work on.
+- Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. When reading an issue work item, ensure all comments are also retrieved. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
   1. **Both missing (no Work Title or Feature Slug):**
@@ -344,6 +344,7 @@ If research was skipped: include an Assumptions section and Risks section note s
 
 - For GitHub: ALWAYS use the **github mcp** tools to interact with issues and PRs. Do not fetch pages directly or use the gh cli.
 - For Azure DevOps: Use the **azuredevops mcp** tools when available.
+- When reading an issue or work item, retrieve the body AND all comments.
 
 ---
 Operate with rigor: **Behavioral clarity first, research second, specification last.**

@@ -78,6 +78,19 @@ See [PAW Review Workflow Documentation](.paw/work/paw-review/Docs.md) for detail
   - *Make them apply to all projects by copying to VS Code's global configuration directory (e.g. on Windows `%APPDATA%\Code\User\prompts`).*
 - Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
 
+### VS Code Extension (Optional)
+
+The **PAW Workflow Extension** automates work item initialization, eliminating manual setup:
+
+- **One command** to create complete `.paw/work/<feature-slug>/` directory structure
+- **Automated file generation** for WorkflowContext.md and all 9 prompt templates
+- **Git branch creation** and checkout handled automatically
+- **Custom instructions** support for project-specific conventions
+
+**Installation**: See [vscode-extension/README.md](vscode-extension/README.md) for installation and usage instructions.
+
+The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
+
 ## Workflow
 
 ![full workflow](./img/full-workflow.png)

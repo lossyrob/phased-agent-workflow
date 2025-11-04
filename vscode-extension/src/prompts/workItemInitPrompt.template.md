@@ -1,0 +1,107 @@
+# PAW Workflow Initialization
+
+You are tasked with creating a complete PAW (Phased Agent Workflow) workflow directory structure.
+
+## Parameters Provided
+
+- **Target Branch**: {{TARGET_BRANCH}}
+- **Issue URL**: {{ISSUE_URL}}
+- **Workspace Path**: {{WORKSPACE_PATH}}
+
+{{CUSTOM_INSTRUCTIONS}}
+
+## Your Tasks
+
+### 1. Generate Work Title
+
+{{WORK_TITLE_STRATEGY}}
+
+**Branch-Based Generation{{WORK_TITLE_FALLBACK_INDICATOR}}:**
+- Remove standard prefixes (feature/, bugfix/, hotfix/)
+- Split on hyphens, underscores, and slashes
+- Capitalize first letter of each word
+- Keep concise (ideally 2-4 words)
+- Example: feature/user-auth-system → User Auth System
+
+### 2. Generate Feature Slug
+
+Generate a normalized slug from the Work Title:
+
+**Expected Format:**
+- Lowercase letters (a-z), numbers (0-9), hyphens (-) only
+- No leading, trailing, or consecutive hyphens
+- Length between 1-100 characters
+- Not reserved names (., .., node_modules, .git, .paw)
+
+**Uniqueness:**
+- Verify `.paw/work/<slug>/` doesn't exist
+- If conflict, append -2, -3, etc. until unique
+
+### 3. Create Directory Structure
+
+Create the following structure:
+
+```
+.paw/work/<feature-slug>/
+├── WorkflowContext.md
+└── prompts/
+```
+
+### 4. Generate WorkflowContext.md
+
+Create `.paw/work/<feature-slug>/WorkflowContext.md`:
+
+```markdown
+# WorkflowContext
+
+Work Title: <generated_work_title>
+Feature Slug: <generated_feature_slug>
+Target Branch: {{TARGET_BRANCH}}
+Issue URL: {{ISSUE_URL_FIELD}}
+Remote: origin
+Artifact Paths: auto-derived
+Additional Inputs: none
+```
+
+**Field Definitions:**
+
+- **Work Title** (Required): 2-4 word human-readable name for PR titles
+- **Feature Slug** (Required): Normalized identifier for artifact directory
+- **Target Branch** (Required): Git branch that will hold completed work
+- **Issue URL** (Optional): URL to associated issue/work item, or "none"
+- **Remote** (Required): Git remote name (default: "origin")
+- **Artifact Paths** (Required): Location hint for artifacts (default: "auto-derived")
+- **Additional Inputs** (Optional): Comma-separated extra inputs, or "none"
+
+### 5. Call Tool to Generate Prompt Templates
+
+Invoke the language model tool to create prompt template files:
+
+```
+paw_create_prompt_templates(
+  feature_slug: "<generated_feature_slug>",
+  workspace_path: "{{WORKSPACE_PATH}}"
+)
+```
+
+If the tool reports errors, surface them to the user and stop.
+
+### 6. Create and Checkout Git Branch
+
+Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflicts (existing branch names) by prompting the user for resolution.
+
+### 7. Open WorkflowContext.md
+
+Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
+
+## Error Handling
+
+- **Slug conflicts**: Prompt user for alternate slug or auto-append suffix
+- **Existing branches**: Ask user to checkout existing or choose new name
+- **Git errors**: Provide clear messages with recovery guidance
+- **Network failures**: Fall back to branch-derived titles
+- **Tool failures**: Show errors and do not continue
+
+---
+
+Begin initialization now. After completion, instruct the user to run the 01A spec prompt as the next step in the PAW workflow.

@@ -49,14 +49,6 @@ When present, the extension injects the instructions into the agent prompt so th
 - Git repository
 - GitHub Copilot extension installed and active
 
-## Extension Settings
-
-This extension contributes no settings in v0.0.1.
-
-## Known Issues
-
-None reported yet. Please file issues at: https://github.com/lossyrob/phased-agent-workflow/issues
-
 ## Release Notes
 
 ### 0.0.1

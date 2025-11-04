@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { collectUserInputs } from '../ui/userInput';
 import { validateGitRepository } from '../git/validation';
-import { constructAgentPrompt } from '../prompts/agentPrompt';
+import { constructAgentPrompt } from '../prompts/workflowInitPrompt';
 import { loadCustomInstructions } from '../prompts/customInstructions';
 
 /**

@@ -28,7 +28,7 @@ interface CreatePromptTemplatesResult {
 }
 
 /**
- * Template definitions for all 9 PAW prompt files.
+ * Template definitions for all PAW prompt files.
  * 
  * Each template includes:
  * - filename: The exact filename to use
@@ -67,6 +67,16 @@ const PROMPT_TEMPLATES = [
     instruction: 'Review implementation from'
   },
   {
+    filename: '03C-pr-review.prompt.md',
+    mode: 'PAW-03A Implementer',
+    instruction: 'Address PR review comments from'
+  },
+  {
+    filename: '03D-review-pr-review.prompt.md',
+    mode: 'PAW-03B Impl Reviewer',
+    instruction: 'Verify PR comment responses from'
+  },
+  {
     filename: '04-docs.prompt.md',
     mode: 'PAW-04 Documenter Agent',
     instruction: 'Generate documentation from'
@@ -103,7 +113,7 @@ function generatePromptTemplate(
 }
 
 /**
- * Create all 9 PAW prompt template files for a work item.
+ * Create all PAW prompt template files for a workflow.
  * 
  * This function is the core implementation of the paw_create_prompt_templates
  * language model tool. It creates the .paw/work/<feature_slug>/prompts/ directory
@@ -193,22 +203,12 @@ export function registerPromptTemplatesTool(
       async prepareInvocation(options, _token) {
         const { feature_slug } = options.input;
         return {
-          invocationMessage: `Creating 9 PAW prompt template files for feature: ${feature_slug}`,
+          invocationMessage: `Creating PAW prompt template files for feature: ${feature_slug}`,
           confirmationMessages: {
             title: 'Create PAW Prompt Templates',
             message: new vscode.MarkdownString(
-              `This will create 9 prompt template files in:\n\n` +
-              `\`.paw/work/${feature_slug}/prompts/\`\n\n` +
-              `The following files will be created:\n` +
-              `- 01A-spec.prompt.md\n` +
-              `- 01B-spec-research.prompt.md\n` +
-              `- 02A-code-research.prompt.md\n` +
-              `- 02B-impl-plan.prompt.md\n` +
-              `- 03A-implement.prompt.md\n` +
-              `- 03B-review.prompt.md\n` +
-              `- 04-docs.prompt.md\n` +
-              `- 05-pr.prompt.md\n` +
-              `- 0X-status.prompt.md`
+              `This will create prompt template files as part of the PAW workflow in:\n\n` +
+              `\`.paw/work/${feature_slug}/prompts/\``
             )
           }
         };

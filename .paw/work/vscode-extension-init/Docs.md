@@ -1,8 +1,8 @@
-# VS Code Extension Init - PAW Work Item Initializer
+# VS Code Extension Init - PAW Workflow Initializer
 
 ## Overview
 
-The PAW Workflow VS Code Extension provides a single command—**"PAW: Initialize Work Item"**—that automates the creation of complete PAW work item directory structures. This extension eliminates manual setup time and ensures consistency across all PAW work items by leveraging an agent-driven architecture where the extension orchestrates user input collection and delegates complex workflow logic to GitHub Copilot's agent mode.
+The PAW Workflow VS Code Extension provides a single command—**"PAW: New PAW Workflow"**—that automates the creation of complete PAW workflow directory structures. This extension eliminates manual setup time and ensures consistency across all PAW workflows by leveraging an agent-driven architecture where the extension orchestrates user input collection and delegates complex workflow logic to GitHub Copilot's agent mode.
 
 ### Problem Solved
 
@@ -19,7 +19,7 @@ This manual process was error-prone, time-consuming, and inconsistent across tea
 ### Solution
 
 The extension automates the entire initialization workflow in under 60 seconds:
-1. User invokes "PAW: Initialize Work Item" from Command Palette
+1. User invokes "PAW: New PAW Workflow" from Command Palette
 2. Extension collects target branch and optional issue URL
 3. Extension constructs a comprehensive prompt with PAW specification rules
 4. GitHub Copilot agent executes the workflow (normalization, validation, file creation, git operations)
@@ -169,7 +169,7 @@ See the [DEVELOPING.md](/DEVELOPING.md#vs-code-extension-development) section fo
 
 2. **Invoke the command**
    - Open Command Palette: `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (Mac)
-   - Type "PAW: Initialize Work Item"
+   - Type "PAW: New PAW Workflow"
    - Press Enter
 
 3. **Enter target branch name**
@@ -266,7 +266,7 @@ If `.paw/work/<slug>/` already exists:
 
 **Command ID**: `paw.initializeWorkItem`
 
-**Command Title**: "PAW: Initialize Work Item"
+**Command Title**: "PAW: New PAW Workflow"
 
 **Activation**: Lazy (extension only loads when command is invoked)
 
@@ -406,7 +406,7 @@ The extension handles errors at multiple levels:
 ### Known Limitations
 
 1. **GitHub Copilot Required**: Extension requires active GitHub Copilot subscription with agent mode support
-2. **Git Repository Required**: Cannot initialize work items in non-git workspaces
+2. **Git Repository Required**: Cannot initialize workflows in non-git workspaces
 3. **Single Workspace**: Multi-root workspaces use first workspace folder only
 4. **Network Dependency**: Optional issue title fetching requires network access (graceful fallback)
 5. **Agent API Dependency**: Extension behavior depends on agent mode API stability and agent quality
@@ -437,7 +437,7 @@ The extension handles errors at multiple levels:
 #### Scenario 1: Basic Initialization (Happy Path)
 
 1. Open a git repository in VS Code
-2. Run "PAW: Initialize Work Item"
+2. Run "PAW: New PAW Workflow"
 3. Enter branch: `feature/test-basic`
 4. Skip issue URL (press Enter)
 5. **Verify**:

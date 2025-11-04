@@ -1,10 +1,10 @@
 # PAW Workflow Extension
 
-Streamline your Phased Agent Workflow (PAW) development with automated work item initialization.
+Streamline your Phased Agent Workflow (PAW) development with automated workflow initialization.
 
 ## Features
 
-- **Initialize Work Item**: One command to create complete PAW directory structure
+- **New PAW Workflow**: One command to create complete PAW directory structure
   - Creates `.paw/work/<feature-slug>/` with WorkflowContext.md
   - Generates all 9 prompt template files
   - Creates and checks out git branch
@@ -14,10 +14,10 @@ Streamline your Phased Agent Workflow (PAW) development with automated work item
 
 1. Open a git repository in VS Code
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
-3. Type "PAW: Initialize Work Item"
+3. Type "PAW: New PAW Workflow"
 4. Enter target branch name (e.g., `feature/my-feature`)
 5. Optionally enter issue or work item URL (GitHub Issues or Azure DevOps Work Items supported)
-6. Watch as your work item structure is created automatically
+6. Watch as your workflow structure is created automatically
 
 ## Custom Instructions
 
@@ -62,6 +62,6 @@ None reported yet. Please file issues at: https://github.com/lossyrob/phased-age
 ### 0.0.1
 
 Initial release:
-- PAW: Initialize Work Item command
+- PAW: New PAW Workflow command
 - Automated directory structure creation
 - Git branch creation and checkout

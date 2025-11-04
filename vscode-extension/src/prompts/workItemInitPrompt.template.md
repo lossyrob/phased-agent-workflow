@@ -1,6 +1,6 @@
-# PAW Work Item Initialization
+# PAW Workflow Initialization
 
-You are tasked with creating a complete PAW (Phased Agent Workflow) work item directory structure.
+You are tasked with creating a complete PAW (Phased Agent Workflow) workflow directory structure.
 
 ## Parameters Provided
 

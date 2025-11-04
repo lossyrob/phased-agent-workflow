@@ -2,8 +2,11 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { formatCustomInstructions, loadCustomInstructions } from '../../prompts/customInstructions';
-import { constructAgentPrompt } from '../../prompts/agentPrompt';
+import * as vscode from 'vscode';
+import { loadCustomInstructions, formatCustomInstructions } from '../../prompts/customInstructions';
+import { constructAgentPrompt } from '../../prompts/workflowInitPrompt';
+
+const CUSTOM_INSTRUCTIONS_PATH = path.join('.paw', 'instructions', 'init-instructions.md');
 
 /**
  * Create a temporary workspace directory for testing.
@@ -29,7 +32,7 @@ suite('Custom Instructions Loader', () => {
   test('returns exists=false when file is missing', () => {
     const workspace = createWorkspaceRoot();
     try {
-      const result = loadCustomInstructions(workspace);
+      const result = loadCustomInstructions(workspace, CUSTOM_INSTRUCTIONS_PATH);
       assert.strictEqual(result.exists, false);
       assert.strictEqual(result.content, '');
       assert.strictEqual(result.error, undefined);
@@ -43,7 +46,7 @@ suite('Custom Instructions Loader', () => {
     try {
       writeCustomInstructions(workspace, '# Custom Rules\n- Enforce component prefix');
 
-      const result = loadCustomInstructions(workspace);
+      const result = loadCustomInstructions(workspace, CUSTOM_INSTRUCTIONS_PATH);
       assert.strictEqual(result.exists, true);
       assert.strictEqual(result.error, undefined);
       assert.strictEqual(result.content, '# Custom Rules\n- Enforce component prefix');
@@ -61,7 +64,7 @@ suite('Custom Instructions Loader', () => {
     try {
       writeCustomInstructions(workspace, '   \n  \n');
 
-      const result = loadCustomInstructions(workspace);
+      const result = loadCustomInstructions(workspace, CUSTOM_INSTRUCTIONS_PATH);
       assert.strictEqual(result.exists, true);
       assert.strictEqual(result.content, '');
       assert.ok(result.error?.includes('empty'));
@@ -80,7 +83,7 @@ suite('Custom Instructions Loader', () => {
       const instructionsPath = path.join(instructionsDir, 'init-instructions.md');
       fs.mkdirSync(instructionsPath, { recursive: true });
 
-      const result = loadCustomInstructions(workspace);
+      const result = loadCustomInstructions(workspace, CUSTOM_INSTRUCTIONS_PATH);
       assert.strictEqual(result.exists, true);
       assert.strictEqual(result.content, '');
       assert.ok(result.error?.includes('Failed to read custom instructions'));

@@ -10,20 +10,19 @@ export interface CustomInstructions {
   error?: string;
 }
 
-const CUSTOM_INSTRUCTIONS_RELATIVE_PATH = path.join(
-  '.paw',
-  'instructions',
-  'init-instructions.md'
-);
-
 /**
- * Load custom initialization instructions for the workspace if they exist.
+ * Load custom instructions from a specified path.
+ * Generic loader that can be used for any custom instructions file.
  *
  * @param workspacePath Absolute path to the workspace root.
+ * @param relativePath Relative path from workspace root to the custom instructions file.
  * @returns CustomInstructions describing the presence and content of the file.
  */
-export function loadCustomInstructions(workspacePath: string): CustomInstructions {
-  const absolutePath = path.join(workspacePath, CUSTOM_INSTRUCTIONS_RELATIVE_PATH);
+export function loadCustomInstructions(
+  workspacePath: string,
+  relativePath: string
+): CustomInstructions {
+  const absolutePath = path.join(workspacePath, relativePath);
 
   try {
     if (!fs.existsSync(absolutePath)) {

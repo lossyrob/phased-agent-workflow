@@ -3,13 +3,22 @@ import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
 
 /**
- * Template variable substitutions for the work item initialization prompt.
+ * Relative path from workspace root to workflow initialization custom instructions file.
+ */
+const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
+  '.paw',
+  'instructions',
+  'init-instructions.md'
+);
+
+/**
+ * Template variable substitutions for the workflow initialization prompt.
  * 
  * These variables are replaced in the prompt template to customize instructions
- * for the specific work item being initialized.
+ * for the specific workflow being initialized.
  */
 interface PromptVariables {
-  /** Git branch name for the work item */
+  /** Git branch name for the workflow */
   TARGET_BRANCH: string;
   /** Issue or work item URL (GitHub or Azure DevOps), or "Not provided" */
   ISSUE_URL: string;
@@ -21,7 +30,7 @@ interface PromptVariables {
   WORK_TITLE_STRATEGY: string;
   /** Fallback indicator text for branch-based work title generation */
   WORK_TITLE_FALLBACK_INDICATOR: string;
-  /** Formatted custom instructions section from .github/copilot-instructions.md */
+  /** Formatted custom instructions section from .paw/instructions/init-instructions.md */
   CUSTOM_INSTRUCTIONS: string;
 }
 
@@ -58,7 +67,7 @@ function substituteVariables(template: string, variables: PromptVariables): stri
 }
 
 /**
- * Construct the agent prompt that instructs the Copilot agent how to initialize the work item.
+ * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
  * @param targetBranch - The git branch name where work will be committed
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
@@ -70,7 +79,10 @@ export function constructAgentPrompt(
   issueUrl: string | undefined,
   workspacePath: string
 ): string {
-  const customInstructions = loadCustomInstructions(workspacePath);
+  const customInstructions = loadCustomInstructions(
+    workspacePath,
+    WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
+  );
   const customInstructionsSection = formatCustomInstructions(customInstructions);
 
   // Build Work Title strategy section based on whether an issue or work item URL is provided

@@ -2,18 +2,28 @@ import * as vscode from 'vscode';
 import { collectUserInputs } from '../ui/userInput';
 import { validateGitRepository } from '../git/validation';
 import { constructAgentPrompt } from '../prompts/workflowInitPrompt';
-import { loadCustomInstructions } from '../prompts/customInstructions';
+import * as path from 'path';
+import * as fs from 'fs';
 
 /**
- * Main command handler for initializing a PAW work item.
+ * Relative path from workspace root to workflow initialization custom instructions file.
+ */
+const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
+  '.paw',
+  'instructions',
+  'init-instructions.md'
+);
+
+/**
+ * Main command handler for initializing a PAW workflow.
  * 
- * This is the entry point for the "PAW: Initialize Work Item" command. It orchestrates
+ * This is the entry point for the "PAW: New PAW Workflow" command. It orchestrates
  * the entire initialization workflow:
  * 1. Validates that a workspace folder is open
  * 2. Checks that the workspace is a Git repository
  * 3. Collects user inputs (target branch, optional issue URL)
  * 4. Constructs a comprehensive prompt for the GitHub Copilot agent
- * 5. Invokes the agent to create the PAW work item structure
+ * 5. Invokes the agent to create the PAW workflow structure
  * 
  * The function delegates complex tasks (file creation, git operations, slug normalization)
  * to the GitHub Copilot agent via a carefully crafted prompt, keeping the extension code
@@ -25,13 +35,13 @@ import { loadCustomInstructions } from '../prompts/customInstructions';
 export async function initializeWorkItemCommand(
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
-  outputChannel.appendLine('[INFO] Starting PAW work item initialization...');
+  outputChannel.appendLine('[INFO] Starting PAW workflow initialization...');
 
   try {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
       vscode.window.showErrorMessage(
-        'No workspace folder open. Please open a workspace to initialize a PAW work item.'
+        'No workspace folder open. Please open a workspace to initialize a PAW workflow.'
       );
       outputChannel.appendLine('[ERROR] No workspace folder open');
       return;
@@ -51,11 +61,16 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine('[INFO] Git repository validated');
 
-    const customInstructions = loadCustomInstructions(workspaceFolder.uri.fsPath);
-    if (customInstructions.exists && customInstructions.content.length > 0) {
+    // Check for custom instructions
+    outputChannel.appendLine('[INFO] Checking for custom instructions...');
+    const customInstructionsPath = path.join(
+      workspaceFolder.uri.fsPath,
+      WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
+    );
+    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
+    
+    if (hasCustomInstructions) {
       outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
-    } else if (customInstructions.exists && customInstructions.error) {
-      outputChannel.appendLine(`[WARN] Custom instructions could not be used: ${customInstructions.error}`);
     } else {
       outputChannel.appendLine('[INFO] No custom instructions found (optional)');
     }

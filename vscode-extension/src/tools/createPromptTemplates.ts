@@ -40,12 +40,7 @@ const PROMPT_TEMPLATES = [
     filename: '01A-spec.prompt.md',
     mode: 'PAW-01A Spec Agent',
     instruction: 'Create spec from'
-  },
-  {
-    filename: '01B-spec-research.prompt.md',
-    mode: 'PAW-01B Spec Research Agent',
-    instruction: 'Answer research questions from'
-  },
+  },  
   {
     filename: '02A-code-research.prompt.md',
     mode: 'PAW-02A Code Researcher',

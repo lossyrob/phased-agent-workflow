@@ -100,7 +100,13 @@ suite('Custom Instructions Loader', () => {
     try {
       writeCustomInstructions(workspace, '## Custom Section\n- Follow additional rules');
 
-      const prompt = constructAgentPrompt('feature/test', undefined, workspace);
+      const prompt = constructAgentPrompt(
+        'feature/test',
+        { mode: 'full' },
+        'prs',
+        undefined,
+        workspace
+      );
       assert.ok(prompt.includes('## Custom Instructions'));
       assert.ok(prompt.includes('## Custom Section'));
     } finally {
@@ -111,7 +117,13 @@ suite('Custom Instructions Loader', () => {
   test('omits custom instructions section when file is absent', () => {
     const workspace = createWorkspaceRoot();
     try {
-      const prompt = constructAgentPrompt('feature/test', undefined, workspace);
+      const prompt = constructAgentPrompt(
+        'feature/test',
+        { mode: 'full' },
+        'prs',
+        undefined,
+        workspace
+      );
       assert.ok(!prompt.includes('## Custom Instructions'));
       assert.ok(!prompt.includes('{{CUSTOM_INSTRUCTIONS}}'));
     } finally {

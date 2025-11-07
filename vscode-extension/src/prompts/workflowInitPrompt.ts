@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
+import { WorkflowModeSelection, ReviewStrategy } from '../ui/userInput';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -20,6 +21,14 @@ const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
 interface PromptVariables {
   /** Git branch name for the workflow */
   TARGET_BRANCH: string;
+  /** Workflow mode (full, minimal, or custom) */
+  WORKFLOW_MODE: string;
+  /** Review strategy (prs or local) */
+  REVIEW_STRATEGY: string;
+  /** Custom workflow instructions section (for custom mode) */
+  CUSTOM_INSTRUCTIONS_SECTION: string;
+  /** Custom workflow instructions field for WorkflowContext.md */
+  CUSTOM_INSTRUCTIONS_FIELD: string;
   /** Issue or work item URL (GitHub or Azure DevOps), or "Not provided" */
   ISSUE_URL: string;
   /** Issue URL field value for WorkflowContext.md, or "none" */
@@ -70,12 +79,16 @@ function substituteVariables(template: string, variables: PromptVariables): stri
  * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
  * @param targetBranch - The git branch name where work will be committed
+ * @param workflowMode - Workflow mode selection including optional custom instructions
+ * @param reviewStrategy - Review strategy (prs or local)
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
  * @param workspacePath - Absolute path to the workspace root directory
  * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
   targetBranch: string,
+  workflowMode: WorkflowModeSelection,
+  reviewStrategy: ReviewStrategy,
   issueUrl: string | undefined,
   workspacePath: string
 ): string {
@@ -84,6 +97,16 @@ export function constructAgentPrompt(
     WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
   );
   const customInstructionsSection = formatCustomInstructions(customInstructions);
+
+  // Build custom workflow instructions section if custom mode with instructions
+  const customWorkflowInstructionsSection = workflowMode.customInstructions
+    ? `- **Custom Workflow Instructions**: ${workflowMode.customInstructions}\n`
+    : '';
+
+  // Build custom workflow instructions field for WorkflowContext.md
+  const customWorkflowInstructionsField = workflowMode.customInstructions
+    ? `Custom Workflow Instructions: ${workflowMode.customInstructions}\n`
+    : '';
 
   // Build Work Title strategy section based on whether an issue or work item URL is provided
   const workTitleStrategy = issueUrl
@@ -100,6 +123,10 @@ export function constructAgentPrompt(
   // Prepare template variables
   const variables: PromptVariables = {
     TARGET_BRANCH: targetBranch,
+    WORKFLOW_MODE: workflowMode.mode,
+    REVIEW_STRATEGY: reviewStrategy,
+    CUSTOM_INSTRUCTIONS_SECTION: customWorkflowInstructionsSection,
+    CUSTOM_INSTRUCTIONS_FIELD: customWorkflowInstructionsField,
     ISSUE_URL: issueUrl || 'Not provided',
     ISSUE_URL_FIELD: issueUrl || 'none',
     WORKSPACE_PATH: workspacePath,

@@ -5,7 +5,9 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 ## Parameters Provided
 
 - **Target Branch**: {{TARGET_BRANCH}}
-- **Issue URL**: {{ISSUE_URL}}
+- **Workflow Mode**: {{WORKFLOW_MODE}}
+- **Review Strategy**: {{REVIEW_STRATEGY}}
+{{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
 {{CUSTOM_INSTRUCTIONS}}
@@ -57,7 +59,9 @@ Create `.paw/work/<feature-slug>/WorkflowContext.md`:
 Work Title: <generated_work_title>
 Feature Slug: <generated_feature_slug>
 Target Branch: {{TARGET_BRANCH}}
-Issue URL: {{ISSUE_URL_FIELD}}
+Workflow Mode: {{WORKFLOW_MODE}}
+Review Strategy: {{REVIEW_STRATEGY}}
+{{CUSTOM_INSTRUCTIONS_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
 Additional Inputs: none
@@ -68,6 +72,9 @@ Additional Inputs: none
 - **Work Title** (Required): 2-4 word human-readable name for PR titles
 - **Feature Slug** (Required): Normalized identifier for artifact directory
 - **Target Branch** (Required): Git branch that will hold completed work
+- **Workflow Mode** (Required): Workflow mode selection ('full', 'minimal', or 'custom')
+- **Review Strategy** (Required): Review strategy ('prs' or 'local')
+- **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"
 - **Remote** (Required): Git remote name (default: "origin")
 - **Artifact Paths** (Required): Location hint for artifacts (default: "auto-derived")
@@ -75,12 +82,32 @@ Additional Inputs: none
 
 ### 5. Call Tool to Generate Prompt Templates
 
+Determine which stages to include based on the workflow mode:
+
+**Workflow Mode: full**
+- All stages: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status
+- Generate all 10 prompt files
+
+**Workflow Mode: minimal**
+- Core stages only: code-research, plan, implementation, implementation-review, final-pr, status
+- Generate 6 prompt files (skip spec and documentation stages)
+
+**Workflow Mode: custom**
+- Interpret the Custom Workflow Instructions to determine which stages to include
+- Parse the instructions and generate only the required prompt files
+
+**Review Strategy Validation:**
+- If Workflow Mode is 'minimal', verify Review Strategy is 'local' (required constraint)
+- If mismatch detected, stop and report error to user
+
 Invoke the language model tool to create prompt template files:
 
 ```
 paw_create_prompt_templates(
   feature_slug: "<generated_feature_slug>",
-  workspace_path: "{{WORKSPACE_PATH}}"
+  workspace_path: "{{WORKSPACE_PATH}}",
+  workflow_mode: "{{WORKFLOW_MODE}}",
+  review_strategy: "{{REVIEW_STRATEGY}}"
 )
 ```
 
@@ -104,4 +131,8 @@ Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 
 ---
 
-Begin initialization now. After completion, instruct the user to run the 01A spec prompt as the next step in the PAW workflow.
+Begin initialization now. After completion, instruct the user on the next step based on workflow mode:
+
+- **Full mode**: Run the `01A-spec.prompt.md` to create the specification
+- **Minimal mode**: Run the `02A-code-research.prompt.md` to begin code research
+- **Custom mode**: Run the appropriate first prompt file based on custom instructions

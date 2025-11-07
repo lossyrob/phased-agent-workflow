@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement configurable workflow modes (full, minimal, custom) for PAW, allowing users to skip unnecessary stages and work on single branches for smaller tasks while maintaining code quality requirements. This implementation extends the VS Code extension to capture workflow mode preferences, enhances the prompt template generation tool to create mode-appropriate prompt files, and updates all agent instructions to adapt behavior based on the selected mode.
+Implement configurable workflow modes (full, minimal, custom) and review strategies (prs, local) for PAW, allowing users to skip unnecessary stages and choose how to review their work (via intermediate PRs or locally on a single branch). This implementation extends the VS Code extension to capture workflow preferences, enhances the prompt template generation tool to create mode-appropriate prompt files, and updates all agent instructions to adapt behavior based on the selected mode and review strategy.
 
 ## Current State Analysis
 
@@ -24,18 +24,20 @@ PAW currently implements a single, comprehensive workflow path:
 ## Desired End State
 
 After this plan is complete:
-1. Users selecting "minimal" mode during initialization generate only 6 prompt files (02A, 02B, 03A, 03B, 05, 0X) and work on single branch
-2. Users selecting "custom" mode can provide free-text instructions describing their desired workflow, and agents interpret these to generate appropriate prompt files
-3. All agents read Workflow Mode from WorkflowContext.md and adapt branching behavior (single-branch vs multi-branch)
-4. WorkflowContext.md contains `Workflow Mode: <full|minimal|custom>` and optionally `Custom Workflow Instructions: <text>`
-5. Quality gates (tests, linting, type checking, build) remain mandatory regardless of mode
-6. Backward compatibility: existing WorkflowContext.md files without Workflow Mode default to "full" mode
+1. Users selecting "minimal" mode during initialization generate only 6 prompt files (02A, 02B, 03A, 03B, 05, 0X) and work on single branch with local review strategy
+2. Users selecting "full" mode can choose between "prs" review strategy (planning, phase, docs branches with intermediate PRs) or "local" review strategy (single branch, final PR only)
+3. Users selecting "custom" mode can provide free-text instructions describing their desired workflow, and agents interpret these to generate appropriate prompt files
+4. All agents read Workflow Mode and Review Strategy from WorkflowContext.md and adapt branching behavior accordingly
+5. WorkflowContext.md contains `Workflow Mode: <full|minimal|custom>` and `Review Strategy: <prs|local>` and optionally `Custom Workflow Instructions: <text>`
+6. Quality gates (tests, linting, type checking, build) remain mandatory regardless of mode
+7. Backward compatibility: existing WorkflowContext.md files without these fields default to "full" mode with "prs" review strategy
 
 **Verification**:
 - Run `PAW: New PAW Workflow` command, select "minimal" mode → verify exactly 6 prompt files created in `.paw/work/<slug>/prompts/`
-- Initialize workflow with "full" mode → verify all 10 prompt files created
+- Initialize workflow with "full" mode + "prs" strategy → verify all 10 prompt files created
+- Initialize workflow with "full" mode + "local" strategy → verify all 10 prompt files created, but no intermediate branches/PRs
 - Run minimal workflow end-to-end → verify no _plan, _phaseN, or _docs branches created, all commits on target branch
-- Check old WorkflowContext.md without Workflow Mode field → agents treat as "full" mode without errors
+- Check old WorkflowContext.md without Workflow Mode field → agents treat as "full" mode with "prs" strategy without errors
 
 ## What We're NOT Doing
 
@@ -62,7 +64,7 @@ Each phase is independently testable and produces a working (though incomplete) 
 ## Phase 1: Extension UI and WorkflowContext.md Schema
 
 ### Overview
-Extend the VS Code extension to prompt users for workflow mode selection during initialization and store the mode in WorkflowContext.md. This phase establishes the data model and user interface for workflow mode configuration.
+Extend the VS Code extension to prompt users for workflow mode and review strategy selection during initialization and store both in WorkflowContext.md. This phase establishes the data model and user interface for workflow configuration.
 
 ### Changes Required:
 
@@ -70,34 +72,43 @@ Extend the VS Code extension to prompt users for workflow mode selection during 
 **File**: `vscode-extension/src/ui/userInput.ts`
 **Changes**:
 - Add `WorkflowMode` type: string literal union of 'full', 'minimal', 'custom'
+- Add `ReviewStrategy` type: string literal union of 'prs', 'local'
 - Add `WorkflowModeSelection` interface with `mode: WorkflowMode` and optional `customInstructions?: string`
-- Update `WorkItemInputs` interface to include `workflowMode: WorkflowModeSelection` field
+- Update `WorkItemInputs` interface to include `workflowMode: WorkflowModeSelection` and `reviewStrategy: ReviewStrategy` fields
 - Create new `collectWorkflowMode()` function that:
   - Shows Quick Pick with 3 mode options (full, minimal, custom) with descriptions
   - If custom mode selected, prompts for custom instructions with validation (min 10 chars)
   - Returns WorkflowModeSelection object
-- Update `collectUserInputs()` to call `collectWorkflowMode()` after target branch, before issue URL
-- Add workflow mode to returned WorkItemInputs object
+- Create new `collectReviewStrategy()` function that:
+  - Shows Quick Pick with 2 strategy options (prs, local) with descriptions
+  - If minimal mode selected, skip prompt and default to 'local' (with note to user)
+  - Returns ReviewStrategy value
+- Update `collectUserInputs()` to call `collectWorkflowMode()` after target branch, then `collectReviewStrategy()`, before issue URL
+- Add workflow mode and review strategy to returned WorkItemInputs object
 
 #### 2. Initialization Prompt Template
 **File**: `vscode-extension/src/prompts/workItemInitPrompt.template.md`
 **Changes**:
 - Add workflow mode template variable after ISSUE_URL variable
+- Add review strategy template variable after workflow mode
 - Add conditional custom instructions template variable (only rendered if present)
 - Update WorkflowContext.md generation instructions to include:
   - `Workflow Mode: {{WORKFLOW_MODE}}` field
+  - `Review Strategy: {{REVIEW_STRATEGY}}` field
   - Conditional `Custom Workflow Instructions: {{CUSTOM_INSTRUCTIONS}}` field
 - Add section instructing agent to determine stages based on workflow mode:
   - Full mode → all stages
   - Minimal mode → CodeResearch, Plan, Implementation, ImplementationReview, FinalPR, Status only
   - Custom mode → interpret instructions to determine stages
+- Add validation rule: minimal mode must use local review strategy
 
 #### 3. Prompt Construction Function
 **File**: `vscode-extension/src/prompts/workflowInitPrompt.ts`
 **Changes**:
-- Import `WorkflowModeSelection` type from userInput module
-- Add `workflowMode: WorkflowModeSelection` parameter to `constructAgentPrompt()` function
+- Import `WorkflowModeSelection` and `ReviewStrategy` types from userInput module
+- Add `workflowMode: WorkflowModeSelection` and `reviewStrategy: ReviewStrategy` parameters to `constructAgentPrompt()` function
 - Add template substitution for `{{WORKFLOW_MODE}}` variable
+- Add template substitution for `{{REVIEW_STRATEGY}}` variable
 - Handle conditional `{{CUSTOM_INSTRUCTIONS}}` section:
   - If customInstructions present: replace placeholders with actual value
   - If absent: remove entire conditional section from template
@@ -105,7 +116,7 @@ Extend the VS Code extension to prompt users for workflow mode selection during 
 #### 4. Command Handler Update
 **File**: `vscode-extension/src/commands/initializeWorkItem.ts`
 **Changes**:
-- Pass `inputs.workflowMode` to `constructAgentPrompt()` call
+- Pass `inputs.workflowMode` and `inputs.reviewStrategy` to `constructAgentPrompt()` call
 
 #### 5. TypeScript Compilation
 **File**: `vscode-extension/tsconfig.json`
@@ -121,9 +132,12 @@ Extend the VS Code extension to prompt users for workflow mode selection during 
 #### Manual Verification:
 - [ ] Run `PAW: New PAW Workflow` command in VS Code
 - [ ] Verify workflow mode selection UI appears with 3 options (full, minimal, custom)
-- [ ] Select "minimal" mode → verify WorkflowContext.md created with `Workflow Mode: minimal`
+- [ ] Verify review strategy selection UI appears with 2 options (prs, local)
+- [ ] Select "minimal" mode → verify review strategy automatically set to "local" (no prompt)
+- [ ] Select "full" mode + "prs" strategy → verify WorkflowContext.md created with both fields
+- [ ] Select "full" mode + "local" strategy → verify WorkflowContext.md contains `Workflow Mode: full` and `Review Strategy: local`
 - [ ] Select "custom" mode → verify prompted for custom instructions
-- [ ] Provide custom instructions "skip docs, single branch" → verify WorkflowContext.md contains both mode and instructions
+- [ ] Provide custom instructions "skip docs, single branch" → verify WorkflowContext.md contains mode, strategy, and instructions
 - [ ] Check that target branch and issue URL collection still work as before (no regressions)
 
 ---
@@ -131,7 +145,7 @@ Extend the VS Code extension to prompt users for workflow mode selection during 
 ## Phase 2: Prompt Template Tool Enhancement
 
 ### Overview
-Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optional stages parameters, enabling conditional generation of prompt files based on the selected workflow mode.
+Enhance the `paw_create_prompt_templates` tool to accept workflow mode, review strategy, and optional stages parameters, enabling conditional generation of prompt files based on the selected workflow mode.
 
 ### Changes Required:
 
@@ -141,6 +155,7 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 - Add `WorkflowStage` enum with values: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status
 - Update `CreatePromptTemplatesParams` interface to add:
   - `workflow_mode?: string` (optional parameter for 'full' | 'minimal' | 'custom')
+  - `review_strategy?: string` (optional parameter for 'prs' | 'local')
   - `stages?: WorkflowStage[]` (optional array for explicit stage list)
 
 #### 2. Stage-to-Prompt Mapping
@@ -181,6 +196,7 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 **Changes**:
 - Update tool registration description to document new parameters
 - Add `workflow_mode` to parametersSchema properties with enum constraint
+- Add `review_strategy` to parametersSchema properties with enum constraint
 - Add `stages` to parametersSchema properties as array of stage enum values
 - Keep feature_slug and workspace_path as required parameters only
 
@@ -192,7 +208,8 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 - [ ] Tool parameter validation accepts workflow_mode and stages parameters
 
 #### Manual Verification:
-- [ ] Initialize workflow with "full" mode → verify 10 prompt files created (01A, 02A, 02B, 03A, 03B, 03C, 03D, 04, 05, 0X)
+- [ ] Initialize workflow with "full" mode + "prs" strategy → verify 10 prompt files created (01A, 02A, 02B, 03A, 03B, 03C, 03D, 04, 05, 0X)
+- [ ] Initialize workflow with "full" mode + "local" strategy → verify 10 prompt files created (same as prs - review strategy doesn't affect which prompts are generated)
 - [ ] Initialize workflow with "minimal" mode → verify exactly 6 prompt files created (02A, 02B, 03A, 03B, 05, 0X)
 - [ ] Verify no 01A-spec.prompt.md or 04-docs.prompt.md in minimal mode
 - [ ] Check that generated prompt files have correct frontmatter (`mode: PAW-XX`) and content
@@ -203,27 +220,30 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 ## Phase 3: Agent Instruction Updates
 
 ### Overview
-Update all PAW agent chatmode files to include workflow mode handling sections that adapt branching behavior and artifact discovery based on the workflow mode in WorkflowContext.md.
+Update all PAW agent chatmode files to include workflow mode and review strategy handling sections that adapt branching behavior and artifact discovery based on the configuration in WorkflowContext.md.
 
 ### Changes Required:
 
-#### 1. Common Workflow Mode Handling Pattern
+#### 1. Common Workflow Mode and Review Strategy Handling Pattern
 
-All 10 agent chatmode files need a new "Workflow Mode Handling" section added after their "WorkflowContext.md Parameters" section. Each agent's section should:
-- Read Workflow Mode from WorkflowContext.md at startup
-- Describe behavior for full mode (standard multi-branch workflow)
-- Describe behavior for minimal mode (single-branch, skip certain stages)
+All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handling" section added after their "WorkflowContext.md Parameters" section. Each agent's section should:
+- Read both Workflow Mode and Review Strategy from WorkflowContext.md at startup
+- Describe behavior for full mode (all stages)
+- Describe behavior for minimal mode (subset of stages)
 - Describe behavior for custom mode (interpret Custom Workflow Instructions)
-- Handle backward compatibility (missing Workflow Mode field defaults to full)
+- Describe behavior for prs review strategy (create intermediate branches and PRs)
+- Describe behavior for local review strategy (single branch, no intermediate PRs)
+- Handle backward compatibility (missing fields default to full mode with prs strategy)
 
 #### 2. PAW-01A Spec Agent
 **File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
-**Changes**: Add workflow mode handling section after WorkflowContext.md Parameters
+**Changes**: Add workflow mode and review strategy handling section after WorkflowContext.md Parameters
 **Behavior**:
 - Full mode: Standard spec creation with Spec.md and SpecResearch.md
 - Minimal mode: Agent should not be invoked (spec stage skipped)
 - Custom mode: Check if spec stage included in instructions
-- Backward compatibility: Default to full mode if field missing
+- Review Strategy: prs or local both work the same for spec stage (no branching yet)
+- Backward compatibility: Default to full mode with prs strategy if fields missing
 
 #### 3. PAW-02A Code Researcher
 **File**: `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`
@@ -236,54 +256,64 @@ All 10 agent chatmode files need a new "Workflow Mode Handling" section added af
 
 #### 4. PAW-02B Impl Planner
 **File**: `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
-**Changes**: Add workflow mode handling and update branching instructions
+**Changes**: Add workflow mode and review strategy handling and update branching instructions
 **Behavior**:
-- Full mode: Create planning branch (`<target>_plan`), open Planning PR
-- Minimal mode: Work on target branch, no planning branch, no Planning PR
-- Custom mode: Interpret branch strategy from instructions
-- Update existing branching section to be mode-aware
+- Full mode: All stages in plan
+- Minimal mode: Single implementation phase only
+- prs strategy: Create planning branch (`<target>_plan`), open Planning PR
+- local strategy: Work on target branch, no planning branch, no Planning PR
+- Custom mode: Interpret phase count and branch strategy from instructions
 
 #### 5. PAW-03A Implementer
 **File**: `.github/chatmodes/PAW-03A Implementer.chatmode.md`
-**Changes**: Add workflow mode handling and update phase branch creation logic
+**Changes**: Add workflow mode and review strategy handling and update phase branch creation logic
 **Behavior**:
-- Full mode: Create phase branches (`<target>_phase[N]`), open Phase PRs
-- Minimal mode: Work on target branch, no phase branches, no Phase PRs
-- Custom mode: Interpret branch strategy from instructions
-- Update existing phase branch section to be mode-aware
+- Full mode: Multi-phase implementation typical
+- Minimal mode: Single-phase implementation only
+- prs strategy: Create phase branches (`<target>_phase[N]`), open Phase PRs
+- local strategy: Work on target branch, no phase branches, no Phase PRs
+- Custom mode: Interpret phase count and branch strategy from instructions
 
 #### 6. PAW-03B Impl Reviewer
 **File**: `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
-**Changes**: Add workflow mode handling for PR creation
+**Changes**: Add workflow mode and review strategy handling for PR creation
 **Behavior**:
-- Full mode: Push phase branch, create Phase PR
-- Minimal mode: Push target branch, no Phase PR
-- Custom mode: Adapt based on branch strategy
+- Full mode: Review all phases
+- Minimal mode: Review single phase
+- prs strategy: Push phase branch, create Phase PR
+- local strategy: Push target branch, no Phase PR
+- Custom mode: Adapt based on phase count and branch strategy
 
 #### 7. PAW-04 Documenter
 **File**: `.github/chatmodes/PAW-04 Documenter.chatmode.md`
-**Changes**: Add workflow mode handling
+**Changes**: Add workflow mode and review strategy handling
 **Behavior**:
-- Full mode: Create docs branch (`<target>_docs`), open Docs PR
+- Full mode: Create comprehensive documentation
 - Minimal mode: Agent should not be invoked (docs stage skipped)
+- prs strategy: Create docs branch (`<target>_docs`), open Docs PR
+- local strategy: Work on target branch, commit docs directly, no Docs PR
 - Custom mode: Check if docs included, adapt branch strategy
 
 #### 8. PAW-05 PR Agent
 **File**: `.github/chatmodes/PAW-05 PR.chatmode.md`
-**Changes**: Add workflow mode handling (final PR always created)
+**Changes**: Add workflow mode and review strategy handling (final PR always created)
 **Behavior**:
-- Full mode: Reference all intermediate PRs in description
-- Minimal mode: No intermediate PRs to reference, describe work directly
+- Full mode: May reference planning, phase, and docs artifacts
+- Minimal mode: Reference only code research and implementation artifacts
+- prs strategy: Reference all intermediate PRs in description
+- local strategy: No intermediate PRs to reference, describe work directly
 - Custom mode: Adapt PR description based on which PRs exist
-- Note: Final PR creation is mandatory in all modes
+- Note: Final PR creation is mandatory in all modes and strategies
 
 #### 9. PAW-0X Status Agent
 **File**: `.github/chatmodes/PAW-X Status Update.chatmode.md`
-**Changes**: Add workflow mode handling for status reporting
+**Changes**: Add workflow mode and review strategy handling for status reporting
 **Behavior**:
-- Full mode: Report all stages and branches
+- Full mode: Report all stages and all branches
 - Minimal mode: Report only included stages, single branch
-- Custom mode: Infer stages from instructions and existing artifacts
+- prs strategy: Check for planning, phase, and docs branches and PRs
+- local strategy: Check only target branch and final PR
+- Custom mode: Infer stages from instructions and existing artifacts, adapt branch/PR checking
 
 ### Success Criteria:
 
@@ -295,9 +325,10 @@ All 10 agent chatmode files need a new "Workflow Mode Handling" section added af
 - [ ] Initialize minimal workflow → run 02A-code-research.prompt.md → verify agent doesn't error about missing Spec.md
 - [ ] Complete minimal workflow end-to-end → verify no planning branch, phase branches, or docs branch created
 - [ ] Run `git branch -a` after minimal workflow → see only target branch and remote tracking branches
-- [ ] Initialize full workflow → verify all agents still create appropriate branches (_plan, _phaseN, _docs)
-- [ ] Test backward compatibility: Remove "Workflow Mode" from WorkflowContext.md → run agent → verify treats as "full" mode with log message
-- [ ] Initialize custom workflow with "single branch, skip docs" → verify agents adapt correctly
+- [ ] Initialize full workflow with prs strategy → verify all agents create appropriate branches (_plan, _phaseN, _docs)
+- [ ] Initialize full workflow with local strategy → verify all agents work on target branch, no intermediate branches
+- [ ] Test backward compatibility: Remove "Workflow Mode" and "Review Strategy" from WorkflowContext.md → run agent → verify treats as "full" mode with "prs" strategy with log message
+- [ ] Initialize custom workflow with "single branch, skip docs" (local strategy implied) → verify agents adapt correctly
 
 ---
 
@@ -379,47 +410,59 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 
 **Extension Tests** (`vscode-extension/src/test/suite/`):
 - Workflow mode type validation
+- Review strategy type validation
 - WorkflowModeSelection interface usage
-- User input collection with mode parameter
+- User input collection with mode and strategy parameters
 - Prompt template generation with different modes
 - Stage-to-prompt-file mapping correctness
+- Validation rule: minimal mode requires local strategy
 
 **Key Test Cases**:
-1. Full mode generates exactly 10 prompt files
-2. Minimal mode generates exactly 5 prompt files (02A, 02B, 03A, 05, 0X)
-3. Custom mode with explicit stages generates only specified files
-4. Default behavior (no mode) generates all files for backward compatibility
-5. Generated files have correct frontmatter and content format
-6. Invalid custom instructions rejected during input collection
+1. Full mode + prs strategy generates exactly 10 prompt files and creates intermediate branches
+2. Full mode + local strategy generates exactly 10 prompt files but no intermediate branches
+3. Minimal mode (local strategy enforced) generates exactly 6 prompt files (02A, 02B, 03A, 03B, 05, 0X)
+4. Custom mode with explicit stages generates only specified files
+5. Default behavior (no mode/strategy) generates all files for backward compatibility (full + prs)
+6. Generated files have correct frontmatter and content format
+7. Invalid custom instructions rejected during input collection
+8. Minimal mode + prs strategy combination rejected with clear error
 
 ### Integration Tests
 
 **End-to-End Workflow Tests**:
-1. **Full Mode E2E**:
-   - Initialize workflow with full mode
+1. **Full Mode + prs Strategy E2E**:
+   - Initialize workflow with full mode and prs strategy
    - Complete all stages: Spec → Code Research → Planning → Implementation → Docs → PR
    - Verify branches: _plan, _phaseN, _docs all created
    - Verify PRs: Planning PR, Phase PR(s), Docs PR, Final PR all opened
    - Verify artifacts: All 6 markdown files created
 
-2. **Minimal Mode E2E**:
-   - Initialize workflow with minimal mode
-   - Complete stages: Code Research → Planning → Implementation → PR
+2. **Full Mode + local Strategy E2E**:
+   - Initialize workflow with full mode and local strategy
+   - Complete all stages on target branch
    - Verify branches: Only target branch exists (no _plan, _phaseN, _docs)
+   - Verify PRs: Only Final PR created
+   - Verify artifacts: All 6 markdown files created
+
+3. **Minimal Mode E2E**:
+   - Initialize workflow with minimal mode (local strategy enforced)
+   - Complete stages: Code Research → Planning → Implementation → PR
+   - Verify branches: Only target branch exists
    - Verify PRs: Only Final PR created
    - Verify artifacts: CodeResearch.md and ImplementationPlan.md (single phase) created
    - Verify no Spec.md or Docs.md
 
-3. **Custom Mode E2E**:
-   - Initialize with instructions: "skip docs, single branch, multi-phase plan"
+4. **Custom Mode E2E**:
+   - Initialize with instructions: "skip docs, prs review strategy, multi-phase plan"
    - Verify prompt files: No 01A-spec or 04-docs generated
-   - Verify branching: Single branch (no intermediate branches)
-   - Verify planning: Multi-phase ImplementationPlan.md created despite minimal branching
+   - Verify branching: Planning and phase branches created
+   - Verify planning: Multi-phase ImplementationPlan.md created
+   - Verify PRs: Planning PR and Phase PR(s) created
 
-4. **Backward Compatibility**:
-   - Create WorkflowContext.md without Workflow Mode field
+5. **Backward Compatibility**:
+   - Create WorkflowContext.md without Workflow Mode and Review Strategy fields
    - Run various agents
-   - Verify all treat as full mode with informational log messages
+   - Verify all treat as full mode with prs strategy with informational log messages
    - Verify no errors or crashes
 
 ### Manual Testing Steps
@@ -428,54 +471,69 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 1. Open PAW-enabled workspace
 2. Run `PAW: New PAW Workflow` command
 3. Enter branch name: `fix/login-timeout`
-3. Select "minimal" mode → verify UI shows clear description
-4. Enter GitHub issue URL
-5. Verify WorkflowContext.md created with `Workflow Mode: minimal`
-6. Verify exactly 6 prompt files in `.paw/work/fix-login-timeout/prompts/`
-7. Run `02A-code-research.prompt.md` → verify agent doesn't error about missing Spec.md
+4. Select "minimal" mode → verify UI shows clear description and automatically sets local strategy
+5. Enter GitHub issue URL
+6. Verify WorkflowContext.md created with `Workflow Mode: minimal` and `Review Strategy: local`
+7. Verify exactly 6 prompt files in `.paw/work/fix-login-timeout/prompts/`
+8. Run `02A-code-research.prompt.md` → verify agent doesn't error about missing Spec.md
 9. Run `02B-impl-plan.prompt.md` → verify single-phase plan created
 10. Run `03A-implement.prompt.md` → verify no phase branch created
 11. Verify all commits on `fix/login-timeout` branch
 12. Run `05-pr.prompt.md` → verify Final PR opened from `fix/login-timeout` → `main`
 
-**Scenario 2: Large Feature with Full Workflow**
+**Scenario 2: Large Feature with Full Workflow + prs Strategy**
 1. Run `PAW: New PAW Workflow` command
 2. Enter branch name: `feature/oauth-integration`
 3. Select "full" mode
-4. Enter GitHub issue URL
-5. Verify all 10 prompt files generated
-6. Complete full workflow sequentially
-7. Verify planning branch `feature/oauth-integration_plan` created
-8. Verify phase branches created for each phase
-9. Verify Planning PR, Phase PRs, Docs PR, Final PR all opened
-10. Verify all artifacts created (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs)
+4. Select "prs" review strategy
+5. Enter GitHub issue URL
+6. Verify all 10 prompt files generated
+7. Complete full workflow sequentially
+8. Verify planning branch `feature/oauth-integration_plan` created
+9. Verify phase branches created for each phase
+10. Verify Planning PR, Phase PRs, Docs PR, Final PR all opened
+11. Verify all artifacts created (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs)
 
-**Scenario 3: Custom Workflow**
+**Scenario 3: Large Feature with Full Workflow + local Strategy**
+1. Run `PAW: New PAW Workflow` command
+2. Enter branch name: `feature/oauth-integration`
+3. Select "full" mode
+4. Select "local" review strategy
+5. Enter GitHub issue URL
+6. Verify all 10 prompt files generated
+7. Complete full workflow sequentially on single branch
+8. Verify all work on `feature/oauth-integration` branch (no _plan, _phaseN, _docs branches)
+9. Verify only Final PR created
+10. Verify all artifacts created and committed to target branch
+
+**Scenario 4: Custom Workflow with prs Strategy**
 1. Run `PAW: New PAW Workflow` command
 2. Enter branch name: `refactor/api-client`
 3. Select "custom" mode
-4. Enter instructions: "Skip specification stage, include documentation, work on single branch"
-5. Verify prompt files: No 01A-spec, includes 04-docs, includes 02A, 02B, 03A, 05, 0X
-6. Run Code Research → verify no error about missing Spec.md
-7. Run Implementation → verify no phase branches created
-8. Run Documentation → verify Docs.md committed to target branch (no docs branch)
-9. Verify all work on `refactor/api-client` branch
+4. Enter instructions: "Skip specification stage, include documentation, use prs review strategy"
+5. Select "prs" review strategy
+6. Verify prompt files: No 01A-spec, includes 04-docs, includes 02A, 02B, 03A, 03B, 05, 0X
+7. Run Code Research → verify no error about missing Spec.md
+8. Run Planning → verify planning branch created
+9. Run Implementation → verify phase branches created
+10. Run Documentation → verify docs branch created
+11. Verify Planning PR, Phase PR(s), Docs PR created
 
-**Scenario 4: Backward Compatibility**
-1. Navigate to existing PAW workflow with old WorkflowContext.md (no Workflow Mode field)
+**Scenario 5: Backward Compatibility**
+1. Navigate to existing PAW workflow with old WorkflowContext.md (no Workflow Mode or Review Strategy fields)
 2. Run Status Agent
-3. Verify informational log: "No Workflow Mode found, assuming full mode"
+3. Verify informational log: "No Workflow Mode or Review Strategy found, assuming full mode with prs strategy"
 4. Verify agent functions correctly (checks for all branches)
-5. Manually add `Workflow Mode: full` to WorkflowContext.md
+5. Manually add `Workflow Mode: full` and `Review Strategy: prs` to WorkflowContext.md
 6. Run Status Agent again → verify no more informational message
 
-**Scenario 5: Invalid Configuration**
+**Scenario 6: Invalid Configuration**
 1. Manually edit WorkflowContext.md, set `Workflow Mode: turbo-fast`
 2. Run any agent (e.g., Status Agent)
 3. Verify clear error message: "Invalid Workflow Mode 'turbo-fast'... Valid modes are: full, minimal, custom"
 4. Verify agent stops execution (doesn't proceed with invalid config)
 
-**Scenario 6: Quality Gates in Minimal Mode**
+**Scenario 7: Quality Gates in Minimal Mode**
 1. Initialize minimal workflow
 2. Implement phase with intentional test failure
 3. Run tests → verify failure detected

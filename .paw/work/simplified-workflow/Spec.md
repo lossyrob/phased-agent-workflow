@@ -17,26 +17,26 @@ Acceptance Scenarios:
 ### User Story P1 – Work on Single Branch Without Planning/Phase/Docs PRs
 Narrative: As a developer making a focused change, I want to commit all artifacts and code directly to my feature branch without creating separate planning, phase, or documentation branches so that I can reduce PR overhead and merge complexity for straightforward work.
 
-Independent Test: Given a workflow mode configured for single-branch operation, when agents execute through all stages, then all artifacts and code changes are committed to the target branch only, and no planning branch, phase branches, or docs branch are created.
+Independent Test: Given a workflow configured with local review strategy, when agents execute through all stages, then all artifacts and code changes are committed to the target branch only, and no planning branch, phase branches, or docs branch are created.
 
 Acceptance Scenarios:
-1. Given a user selects a workflow mode with single-branch strategy, When any agent needs to commit artifacts or code, Then it commits directly to the target branch specified in WorkflowContext.md
-2. Given a single-branch workflow is active, When the Implementation Plan Agent completes, Then no planning branch (_plan suffix) is created and no Planning PR is opened
-3. Given a single-branch workflow is active, When the Implementer Agent completes a phase, Then no phase branch (_phaseN suffix) is created and no Phase PR is opened
-4. Given a single-branch workflow is active, When the Documentation Agent completes, Then no docs branch (_docs suffix) is created and no Docs PR is opened
-5. Given all workflow stages complete in single-branch mode, When the PR Agent runs, Then it creates only one PR from the target branch to the base branch (e.g., feature/simplified-workflow → main)
+1. Given a user selects "local" review strategy, When any agent needs to commit artifacts or code, Then it commits directly to the target branch specified in WorkflowContext.md
+2. Given local review strategy is active, When the Implementation Plan Agent completes, Then no planning branch (_plan suffix) is created and no Planning PR is opened
+3. Given local review strategy is active, When the Implementer Agent completes a phase, Then no phase branch (_phaseN suffix) is created and no Phase PR is opened
+4. Given local review strategy is active, When the Documentation Agent completes, Then no docs branch (_docs suffix) is created and no Docs PR is opened
+5. Given all workflow stages complete with local review strategy, When the PR Agent runs, Then it creates only one PR from the target branch to the base branch (e.g., feature/simplified-workflow → main)
 
 ### User Story P1 – Configure Workflow Mode During Initialization
-Narrative: As a developer starting a new PAW workflow, I want to select my desired workflow mode (full, minimal, custom) during the initial setup so that the system generates appropriate prompt files and agents behave correctly for my chosen workflow path without requiring manual configuration.
+Narrative: As a developer starting a new PAW workflow, I want to select my desired workflow mode (full, minimal, custom) and review strategy (prs, local) during the initial setup so that the system generates appropriate prompt files and agents behave correctly for my chosen workflow path without requiring manual configuration.
 
-Independent Test: Given a user runs the PAW initialization command, when they select a workflow mode from the presented options, then WorkflowContext.md is created with the selected mode, only relevant prompt files are generated, and agents adapt their behavior according to that mode.
+Independent Test: Given a user runs the PAW initialization command, when they select a workflow mode and review strategy from the presented options, then WorkflowContext.md is created with both selections, only relevant prompt files are generated, and agents adapt their behavior according to that configuration.
 
 Acceptance Scenarios:
-1. Given a user runs "PAW: New PAW Workflow" command, When the extension prompts for inputs, Then a "Workflow Mode" selection is presented with options: full, minimal, custom
-2. Given a user selects "full" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: full" and all 10 prompt files are generated
-3. 1. Given a user selects "minimal" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: minimal" and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-007)
+1. Given a user runs "PAW: New PAW Workflow" command, When the extension prompts for inputs, Then a "Workflow Mode" selection is presented with options: full, minimal, custom; followed by a "Review Strategy" selection with options: prs, local
+2. Given a user selects "full" mode and "prs" strategy, When initialization completes, Then WorkflowContext.md contains both fields and all 10 prompt files are generated
+3. Given a user selects "minimal" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: minimal" and "Review Strategy: local" (automatically set) and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-007)
 4. Given a user selects "custom" mode, When prompted, Then the user can provide free-text custom workflow instructions that are stored in WorkflowContext.md
-5. Given WorkflowContext.md contains a workflow mode, When any agent reads WorkflowContext.md, Then it correctly interprets the mode and adapts its behavior (e.g., skipping branch creation in single-branch mode)
+5. Given WorkflowContext.md contains workflow mode and review strategy, When any agent reads WorkflowContext.md, Then it correctly interprets both fields and adapts its behavior (e.g., skipping branch creation with local review strategy)
 
 ### User Story P2 – Maintain Quality Gates Across All Workflow Modes
 Narrative: As a project maintainer, I want all quality requirements (tests, linting, type checking, build success) to remain mandatory regardless of workflow mode so that code quality is never compromised even when using simplified workflows.
@@ -79,16 +79,19 @@ Acceptance Scenarios:
 ## Requirements
 ### Functional Requirements
 - FR-001: WorkflowContext.md must contain a "Workflow Mode" field with values limited to: full, minimal, custom (Stories: P1-Configure)
+- FR-001b: WorkflowContext.md must contain a "Review Strategy" field with values limited to: prs, local (Stories: P1-Configure, P1-SingleBranch)
 - FR-002: When workflow mode is "custom", WorkflowContext.md must contain a "Custom Workflow Instructions" field with user-provided free-text instructions (Stories: P2-Custom)
-- FR-003: VS Code extension "PAW: New PAW Workflow" command must prompt user to select workflow mode during initialization (Stories: P1-Configure)
-- FR-004: Initialization agent must call paw_create_prompt_templates tool with workflow mode parameter to generate only relevant prompt files for the selected mode (Stories: P1-Configure)
-- FR-005: paw_create_prompt_templates tool must accept workflow_mode parameter and optional stages array to control which prompt files are generated (Stories: P1-Configure)
+- FR-003: VS Code extension "PAW: New PAW Workflow" command must prompt user to select workflow mode and review strategy during initialization (Stories: P1-Configure)
+- FR-003b: When workflow mode is "minimal", review strategy must be automatically set to "local" without prompting user (Stories: P1-Configure, P1-SingleBranch)
+- FR-004: Initialization agent must call paw_create_prompt_templates tool with workflow mode and review strategy parameters to generate only relevant prompt files for the selected mode (Stories: P1-Configure)
+- FR-005: paw_create_prompt_templates tool must accept workflow_mode, review_strategy parameters and optional stages array to control which prompt files are generated (Stories: P1-Configure)
 - FR-006: When workflow mode is "full", all 10 prompt files must be generated: 01A-spec, 01B-spec-research, 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 05-pr, 0X-status (Stories: P1-Configure)
 - FR-007: When workflow mode is "minimal", only 6 prompt files must be generated: 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 05-pr, 0X-status (Stories: P1-Skip, P1-Configure)
 - FR-008: When workflow mode is "custom", initialization agent must parse custom instructions to determine which stages are needed and generate corresponding prompt files (Stories: P2-Custom, P1-Configure)
-- FR-009: All PAW agents must read Workflow Mode from WorkflowContext.md at start and adapt behavior according to mode-specific instructions (Stories: P1-Skip, P1-SingleBranch, P1-Configure, P2-Custom)
-- FR-010: When workflow mode indicates single-branch strategy (minimal or specified in custom instructions), no agent shall create planning branch (_plan), phase branches (_phaseN), or docs branch (_docs) (Stories: P1-SingleBranch)
-- FR-011: When workflow mode indicates single-branch strategy, all agents must commit artifacts and code changes directly to the target branch specified in WorkflowContext.md (Stories: P1-SingleBranch)
+- FR-009: All PAW agents must read Workflow Mode and Review Strategy from WorkflowContext.md at start and adapt behavior according to mode and strategy-specific instructions (Stories: P1-Skip, P1-SingleBranch, P1-Configure, P2-Custom)
+- FR-010: When review strategy is "local", no agent shall create planning branch (_plan), phase branches (_phaseN), or docs branch (_docs) (Stories: P1-SingleBranch)
+- FR-011: When review strategy is "local", all agents must commit artifacts and code changes directly to the target branch specified in WorkflowContext.md (Stories: P1-SingleBranch)
+- FR-011b: When review strategy is "prs", agents must create planning, phase, and docs branches as appropriate for the selected workflow mode and open corresponding PRs (Stories: P1-SingleBranch)
 - FR-012: When workflow mode is "minimal", Implementation Plan Agent must create ImplementationPlan.md with a single phase only (Stories: P1-Skip)
 - FR-013: When Spec.md or SpecResearch.md artifacts are missing (due to skipped specification stage), agents requiring requirements context must reference Issue URL from WorkflowContext.md as the requirements source (Stories: P1-Skip, P3-MissingArtifacts)
 - FR-014: When an agent encounters a missing artifact that has no valid substitution, it must fail with a clear error message indicating which artifact is missing and why it's required (Stories: P3-MissingArtifacts)
@@ -96,41 +99,46 @@ Acceptance Scenarios:
 - FR-016: When workflow mode is "custom" and instructions are ambiguous or insufficient, agents must prompt user for clarification before proceeding (Stories: P2-Custom)
 - FR-017: When WorkflowContext.md is missing at agent runtime, agent must fail with error message directing user to run "PAW: New PAW Workflow" command (no defensive creation) (Stories: P1-Configure)
 - FR-018: When WorkflowContext.md contains invalid or unrecognized workflow mode value, agents must fail with error message listing valid modes: full, minimal, custom (Stories: Edge Cases)
-- FR-019: PR Agent must create final PR from target branch to base branch (e.g., main) in all workflow modes, including single-branch modes (Stories: P1-SingleBranch)
+- FR-018b: When WorkflowContext.md contains invalid or unrecognized review strategy value, agents must fail with error message listing valid strategies: prs, local (Stories: Edge Cases)
+- FR-019: PR Agent must create final PR from target branch to base branch (e.g., main) in all workflow modes and review strategies (Stories: P1-SingleBranch)
 - FR-020: Generated prompt files must reference WorkflowContext.md using standard path format: `.paw/work/<feature-slug>/WorkflowContext.md` (Stories: P1-Configure)
 
 ### Key Entities
 - **Workflow Mode**: Enumerated configuration value (full, minimal, custom) stored in WorkflowContext.md that determines which stages are executed and which prompt files are generated
+- **Review Strategy**: Enumerated configuration value (prs, local) stored in WorkflowContext.md that determines whether intermediate branches and PRs are created or all work happens on a single branch
 - **Custom Workflow Instructions**: Free-text field in WorkflowContext.md (when mode=custom) containing user's description of desired workflow behavior
 - **Prompt Template**: Generated .prompt.md file in `.paw/work/<feature-slug>/prompts/` directory that invokes a specific PAW agent with context
 - **Stage**: Logical workflow phase (Spec, Code Research, Implementation Plan, Implementation, Documentation, Final PR, Status) that may be included or skipped based on workflow mode
-- **Single-Branch Strategy**: Workflow behavior modifier where all work commits to target branch without creating separate planning, phase, or docs branches
-- **Target Branch**: Git branch specified in WorkflowContext.md where all work occurs in single-branch strategy, or where planning/phase/docs branches merge to in multi-branch strategy
+- **Target Branch**: Git branch specified in WorkflowContext.md where all work occurs with local review strategy, or where planning/phase/docs branches merge to with prs review strategy
 
 ### Cross-Cutting / Non-Functional
-- **Backward Compatibility**: Existing WorkflowContext.md files without "Workflow Mode" field should be treated as "full" mode by agents to preserve current behavior
-- **Usability**: Workflow mode selection during initialization must use clear labels with brief descriptions to guide users toward appropriate mode choice
-- **Extensibility**: Adding new predefined workflow modes in the future must not require changes to agent instructions beyond adding new mode-specific behavior sections
-- **Error Recovery**: When agents detect workflow mode inconsistencies or invalid configurations, error messages must provide actionable guidance (e.g., "run X command" or "edit Y field to Z")
+- **Backward Compatibility**: Existing WorkflowContext.md files without "Workflow Mode" or "Review Strategy" fields should be treated as "full" mode with "prs" strategy by agents to preserve current behavior
+- **Usability**: Workflow mode and review strategy selection during initialization must use clear labels with brief descriptions to guide users toward appropriate choices
+- **Extensibility**: Adding new predefined workflow modes or review strategies in the future must not require changes to agent instructions beyond adding new mode/strategy-specific behavior sections
+- **Error Recovery**: When agents detect workflow configuration inconsistencies or invalid values, error messages must provide actionable guidance (e.g., "run X command" or "edit Y field to Z")
 
 ## Success Criteria
-- SC-001: Given a user initializes workflow with "minimal" mode, when initialization completes, then WorkflowContext.md contains "Workflow Mode: minimal" and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-007)
-- SC-002: Given a user initializes workflow with "full" mode, when initialization completes, then exactly 10 prompt files exist in prompts/ directory matching the full workflow sequence (FR-006)
-- SC-003: Given a user initializes workflow with "custom" mode and provides instructions "skip spec, single branch", when initialization completes, then no spec-related prompt files are generated and WorkflowContext.md contains the custom instructions (FR-002, FR-008)
+- SC-001: Given a user initializes workflow with "minimal" mode, when initialization completes, then WorkflowContext.md contains "Workflow Mode: minimal" and "Review Strategy: local" and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-001b, FR-003b, FR-007)
+- SC-002: Given a user initializes workflow with "full" mode and "prs" strategy, when initialization completes, then exactly 10 prompt files exist in prompts/ directory matching the full workflow sequence (FR-006, FR-011b)
+- SC-002b: Given a user initializes workflow with "full" mode and "local" strategy, when initialization completes, then exactly 10 prompt files exist and WorkflowContext.md contains both field values (FR-001, FR-001b)
+- SC-003: Given a user initializes workflow with "custom" mode and provides instructions "skip spec, local strategy", when initialization completes, then no spec-related prompt files are generated and WorkflowContext.md contains the custom instructions (FR-002, FR-008)
 - SC-004: Given workflow mode is "minimal", when Implementation Plan Agent executes, then it creates ImplementationPlan.md referencing Issue URL from WorkflowContext.md (not Spec.md) and completes without errors (FR-012, FR-013)
-- SC-005: Given workflow mode indicates single-branch strategy, when any agent commits artifacts or code, then git log shows all commits on target branch only with no _plan, _phaseN, or _docs branches created (FR-010, FR-011)
-- SC-006: Given workflow mode is "minimal", when PR Agent executes, then it creates exactly one PR from target branch to base branch, and no other PRs exist for this feature (FR-019)
+- SC-005: Given review strategy is "local", when any agent commits artifacts or code, then git log shows all commits on target branch only with no _plan, _phaseN, or _docs branches created (FR-010, FR-011)
+- SC-006: Given workflow mode is "minimal" and review strategy is "local", when PR Agent executes, then it creates exactly one PR from target branch to base branch, and no other PRs exist for this feature (FR-019)
 - SC-007: Given WorkflowContext.md is missing, when any PAW agent starts, then it fails immediately with error message containing "run PAW: New PAW Workflow command" (FR-017)
 - SC-008: Given WorkflowContext.md contains "Workflow Mode: invalid-mode", when any PAW agent starts, then it fails with error listing valid modes: full, minimal, custom (FR-018)
+- SC-008b: Given WorkflowContext.md contains "Review Strategy: invalid-strategy", when any PAW agent starts, then it fails with error listing valid strategies: prs, local (FR-018b)
 - SC-009: Given workflow mode is "full" or "minimal", when code changes are ready to merge, then CI pipeline shows all quality checks (tests, linting, type checking, build) executed and passed (FR-015)
 - SC-010: Given workflow mode is "custom" with ambiguous instructions, when initialization agent processes them, then it prompts user with clarifying questions before generating prompt files (FR-016)
-- SC-011: Given paw_create_prompt_templates tool is called with workflow_mode="minimal" and stages array, when tool executes, then only prompt files corresponding to specified stages are created in prompts/ directory (FR-004, FR-005)
-- SC-012: Given an existing WorkflowContext.md lacks "Workflow Mode" field, when an agent reads it, then agent treats it as "full" mode and logs informational message about assumed mode (Cross-Cutting: Backward Compatibility)
+- SC-011: Given paw_create_prompt_templates tool is called with workflow_mode="minimal", review_strategy="local" and stages array, when tool executes, then only prompt files corresponding to specified stages are created in prompts/ directory (FR-004, FR-005)
+- SC-012: Given an existing WorkflowContext.md lacks "Workflow Mode" or "Review Strategy" fields, when an agent reads it, then agent treats it as "full" mode with "prs" strategy and logs informational message about assumed values (Cross-Cutting: Backward Compatibility)
 
 ## Assumptions
 - **Three Initial Modes Sufficient**: The three predefined modes (full, minimal, custom) cover the majority of workflow variations users need; additional modes can be added later based on usage patterns
+- **Two Review Strategies Sufficient**: The two review strategies (prs, local) cover the primary branching approaches; additional strategies can be added later if needed
 - **Custom Mode Interpretation**: Agents using LLM reasoning can effectively parse and interpret free-text custom workflow instructions without requiring structured configuration syntax
-- **Single-Branch as Implicit Strategy**: When workflow mode is "minimal", single-branch strategy is implied and does not require separate configuration field; "full" mode implies multi-branch strategy
+- **Minimal Mode Requires Local Strategy**: When workflow mode is "minimal", local review strategy is implied and enforced; minimal mode cannot be combined with prs strategy
+- **Full Mode Supports Both Strategies**: When workflow mode is "full", either prs or local review strategy can be selected based on user preference
 - **Extension Required**: All PAW workflows must begin via VS Code extension's "PAW: New PAW Workflow" command; manual WorkflowContext.md creation is no longer supported
 - **Prompt File Naming Stable**: The existing prompt file naming convention (01A-, 02A-, etc.) remains stable and does not need to change for workflow mode support
 - **Issue URL Always Available**: For workflows skipping specification stage, a valid Issue URL must be present in WorkflowContext.md to serve as requirements source; workflows without issue URL must use full mode
@@ -140,15 +148,16 @@ Acceptance Scenarios:
 
 ## Scope
 In Scope:
-- Adding Workflow Mode field to WorkflowContext.md specification
-- Extending VS Code extension to prompt for workflow mode during initialization
-- Implementing workflow_mode and stages parameters in paw_create_prompt_templates tool
-- Updating all 9 PAW agent instructions to include workflow mode handling sections
+- Adding Workflow Mode and Review Strategy fields to WorkflowContext.md specification
+- Extending VS Code extension to prompt for workflow mode and review strategy during initialization
+- Implementing workflow_mode, review_strategy, and stages parameters in paw_create_prompt_templates tool
+- Updating all 9 PAW agent instructions to include workflow mode and review strategy handling sections
 - Generating mode-appropriate prompt files based on selected workflow
-- Implementing single-branch strategy behavior in relevant agents (no planning/phase/docs branches)
-- Documenting predefined workflow modes (full, minimal, custom) with clear usage guidance
+- Implementing local review strategy behavior in relevant agents (no planning/phase/docs branches)
+- Implementing prs review strategy behavior in relevant agents (create intermediate branches and PRs)
+- Documenting predefined workflow modes (full, minimal, custom) and review strategies (prs, local) with clear usage guidance
 - Implementing graceful artifact handling when specification stage skipped
-- Validation and error handling for invalid or missing workflow mode values
+- Validation and error handling for invalid or missing workflow mode or review strategy values
 
 Out of Scope:
 - Creating additional predefined modes beyond full, minimal, and custom in initial implementation
@@ -169,12 +178,12 @@ Out of Scope:
 
 ## Risks & Mitigations
 - **Custom Mode Ambiguity**: Free-text custom instructions may be ambiguous or contradictory, leading to agent confusion or incorrect behavior. Mitigation: Agents prompt for clarification when instructions unclear; provide examples of good custom instructions in documentation.
-- **Incomplete Agent Updates**: Missing or inconsistent workflow mode handling in one or more agents causes runtime errors or unexpected behavior. Mitigation: Comprehensive testing of all workflow mode combinations across all agents; quality checklist for agent instruction updates.
-- **User Confusion on Mode Selection**: Users unsure which workflow mode to choose, leading to suboptimal workflow selection or repeated re-initialization. Mitigation: Provide clear descriptions and use-case examples for each mode during VS Code extension prompt; include decision flowchart in documentation.
-- **Backward Compatibility Breakage**: Existing WorkflowContext.md files without Workflow Mode field cause errors when agents expect the field. Mitigation: Agents treat missing Workflow Mode as "full" mode default; log informational message about assumed mode.
-- **Single-Branch Merge Conflicts**: Working entirely on target branch increases risk of merge conflicts if multiple developers work on same feature. Mitigation: Document single-branch strategy as intended for single-developer focused work; recommend full mode for collaborative features.
+- **Incomplete Agent Updates**: Missing or inconsistent workflow mode and review strategy handling in one or more agents causes runtime errors or unexpected behavior. Mitigation: Comprehensive testing of all mode and strategy combinations across all agents; quality checklist for agent instruction updates.
+- **User Confusion on Mode/Strategy Selection**: Users unsure which workflow mode or review strategy to choose, leading to suboptimal workflow selection or repeated re-initialization. Mitigation: Provide clear descriptions and use-case examples for each option during VS Code extension prompt; include decision flowchart in documentation.
+- **Backward Compatibility Breakage**: Existing WorkflowContext.md files without Workflow Mode or Review Strategy fields cause errors when agents expect the fields. Mitigation: Agents treat missing fields as "full" mode with "prs" strategy defaults; log informational message about assumed values.
+- **Local Review Strategy Merge Conflicts**: Working entirely on target branch with local strategy increases risk of merge conflicts if multiple developers work on same feature. Mitigation: Document local strategy as intended for single-developer focused work; recommend prs strategy for collaborative features.
 - **Quality Gate Bypass Temptation**: Users may expect simplified workflows to skip quality checks, leading to frustration when checks remain mandatory. Mitigation: Clearly communicate in documentation that workflow modes affect stages/branches, not quality requirements; prominently display this in mode descriptions.
-- **Tool Parameter Validation**: Invalid stages array passed to paw_create_prompt_templates tool generates incorrect or incomplete prompt files. Mitigation: Tool validates stages enum values and fails fast with clear error; agent instructions document valid stage values.
+- **Tool Parameter Validation**: Invalid stages array or strategy values passed to paw_create_prompt_templates tool generates incorrect or incomplete prompt files. Mitigation: Tool validates stages enum and strategy values and fails fast with clear error; agent instructions document valid values.
 
 ## References
 - Issue: https://github.com/lossyrob/phased-agent-workflow/issues/13

@@ -26,6 +26,7 @@ Currently, PAW implements a single, comprehensive multi-stage workflow optimized
    - **Target Branch** name (e.g., "feature/my-feature")
    - **Issue/Work Item URL** (optional - GitHub Issue or Azure DevOps Work Item)
    - **Workflow Mode** (NEW - enum selection from predefined modes)
+   - **Review Strategy** (NEW - enum selection: prs or local)
    - If mode = `custom`: **Custom Workflow Instructions** (NEW - free text describing desired workflow)
 3. Extension invokes agent via chat with initialization prompt containing all inputs
 4. Agent performs:
@@ -46,7 +47,8 @@ Work Title: <work_title>
 Feature Slug: <feature-slug>
 Target Branch: <target_branch>
 Issue URL: <issue_url_or_none>
-Workflow Mode: <mode_enum>
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
 Custom Workflow Instructions: <instructions_if_custom>
 Remote: origin
 Artifact Paths: auto-derived
@@ -64,38 +66,30 @@ Additional Inputs: none
 
 Initial set of predefined modes to support:
 
-1. **`full`** - Complete PAW workflow (current behavior)
-   - Stages: Spec → Code Research → Plan → Implementation (phases) → Docs → Final PR
-   - Branches: Planning branch, phase branches, docs branch
+1. **`full`** - Complete PAW workflow with all stages
+   - Stages: Spec → Spec Research → Code Research → Plan → Implementation (phases) → Docs → Final PR
+   - Can be combined with either review strategy
    - All artifacts created
 
-2. **`final-pr-only`** - Full stages, single branch (modifier mode)
-   - Stages: Spec → Code Research → Plan → Implementation → Docs
-   - All work on target branch (no planning/phase/docs branches)
-   - Only final PR created (to main/base branch)
-   - All artifacts created and committed to target branch
-   - **Note**: This is a **modifier** that can be combined with other modes to indicate single-branch workflow
-
-3. **`minimal`** - Fastest path for small changes
+2. **`minimal`** - Fastest path for small changes
    - Stages: Code Research → Implementation (single phase) → Final PR
-   - All work on target branch
+   - Review Strategy locked to `local` (single branch only)
    - Artifacts: CodeResearch.md, ImplementationPlan.md (single phase)
-   - No spec, no docs, no phase branches
-   - Can be combined with `final-pr-only` modifier (though already implies single branch)
+   - No spec, no docs
 
-4. **`custom`** - User-defined workflow
+3. **`custom`** - User-defined workflow
    - User provides free-text instructions describing:
      - Which stages to include/skip
-     - Branch strategy preferences
-     - Artifact requirements
      - Any special considerations
+   - Can be combined with either review strategy
    - Agents interpret instructions and adapt behavior
    - Extension/agent reasons about which prompt files to generate based on instructions
 
 **Notes**:
 - These modes are starting points and may evolve based on usage
 - Mode names should be descriptive and self-documenting
-- `final-pr-only` is a modifier that can be applied to other modes (e.g., "full with final-pr-only" means all stages but single branch)
+- Workflow Mode determines which stages to run
+- Review Strategy determines branching approach (separate decision)
 - Each mode implies specific agent behaviors (documented in agent instructions)
 
 ### 3. Extension as Required Entry Point
@@ -136,7 +130,8 @@ interface CreatePromptTemplatesParams {
 interface CreatePromptTemplatesParams {
   feature_slug: string;
   workspace_path: string;
-  workflow_mode: string;           // NEW: mode enum value (full, final-pr-only, minimal, custom)
+  workflow_mode: string;           // NEW: mode enum value (full, minimal, custom)
+  review_strategy: string;         // NEW: review strategy (prs, local)
   stages?: WorkflowStage[];        // NEW: explicit list of stages to generate prompts for
 }
 
@@ -167,7 +162,6 @@ enum WorkflowStage {
 **For Predefined Modes** (agent determines stages based on mode):
 - `full` mode → agent calls tool with: `[Spec, CodeResearch, Plan, Implementation, ImplementationReview, PRReviewResponse, Documentation, FinalPR, Status]`
 - `minimal` mode → agent calls tool with: `[CodeResearch, Plan, Implementation, ImplementationReview, FinalPR, Status]`
-- `final-pr-only` modifier → agent passes workflow_mode but same stages as base mode
 
 **For Custom Mode**:
 - Agent reads Custom Workflow Instructions from WorkflowContext.md
@@ -176,10 +170,10 @@ enum WorkflowStage {
 - Example: User says "just code research and implementation" → agent calls with `[CodeResearch, Plan, Implementation, FinalPR, Status]`
 
 **Tool Behavior**:
-- Receives workflow_mode and optional stages list
+- Receives workflow_mode, review_strategy, and optional stages list
 - If stages list provided: generates prompt files for those stages only
 - If stages list omitted: uses default mapping based on workflow_mode
-- Injects workflow_mode context into generated prompt files (for agent awareness)
+- Injects workflow_mode and review_strategy context into generated prompt files (for agent awareness)
 
 **Rationale**:
 - Agent has full control over which prompts to generate
@@ -189,33 +183,38 @@ enum WorkflowStage {
 
 ### 5. Agent Behavior Adaptation
 
-**Agents receive workflow mode context via WorkflowContext.md**. Each agent includes mode-specific instructions:
+**Agents receive workflow mode and review strategy context via WorkflowContext.md**. Each agent includes mode-specific instructions:
 
 **Example Agent Instruction Pattern**:
 ```markdown
-## Workflow Mode Handling
+## Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode from WorkflowContext.md. Adapt behavior as follows:
+Read Workflow Mode and Review Strategy from WorkflowContext.md. Adapt behavior as follows:
 
-### Mode: full
-- [Standard full workflow behavior]
+### Workflow Mode: full
+- [Standard full workflow behavior with all stages]
 
-### Mode: final-pr-only
-- All work on target branch (no planning/phase/docs branches)
-- Skip branch creation/checkout operations for planning, phases, docs
-- Commit artifacts and code together to target branch
-- Create only final PR (target branch → main/base)
-
-### Mode: minimal
+### Workflow Mode: minimal
 - Single implementation phase only
 - Skip docs stage preparation
 - Focus on essential artifacts (CodeResearch.md, ImplementationPlan.md with single phase)
 - Use Issue URL content as requirements source (no Spec.md)
 
-### Mode: custom
+### Workflow Mode: custom
 - Read Custom Workflow Instructions from WorkflowContext.md
 - Adapt behavior according to those instructions
 - Ask clarifying questions if instructions ambiguous
+
+### Review Strategy: prs
+- Create planning branch, phase branches, docs branch as appropriate for the workflow mode
+- Open intermediate PRs for planning, phases, and docs
+- Final PR merges target branch to main/base
+
+### Review Strategy: local
+- All work on target branch (no planning/phase/docs branches)
+- Skip branch creation/checkout operations for planning, phases, docs
+- Commit artifacts and code together to target branch
+- Create only final PR (target branch → main/base)
 ```
 
 **Rationale**:
@@ -229,16 +228,16 @@ Read Workflow Mode from WorkflowContext.md. Adapt behavior as follows:
 
 **Artifact Matrix**:
 
-| Artifact | full | final-pr-only | minimal | custom |
-|----------|------|---------------|---------|--------|
-| WorkflowContext.md | ✓ | ✓ | ✓ | ✓ |
-| Spec.md | ✓ | ✓ | ✗ | ? |
-| SpecResearch.md | ✓ | ✓ | ✗ | ? |
-| CodeResearch.md | ✓ | ✓ | ✓ | ? |
-| ImplementationPlan.md | ✓ | ✓ | ✓ (single phase) | ? |
-| Docs.md | ✓ | ✓ | ✗ | ? |
+| Artifact | full | minimal | custom |
+|----------|------|---------|--------|
+| WorkflowContext.md | ✓ | ✓ | ✓ |
+| Spec.md | ✓ | ✗ | ? |
+| SpecResearch.md | ✓ | ✗ | ? |
+| CodeResearch.md | ✓ | ✓ | ? |
+| ImplementationPlan.md | ✓ | ✓ (single phase) | ? |
+| Docs.md | ✓ | ✗ | ? |
 
-**Note**: `final-pr-only` is a branch strategy modifier and includes all artifacts from the stages being run. When combined with another mode (e.g., "minimal with final-pr-only"), use the artifact requirements of the base mode.
+**Note**: Review Strategy (prs vs local) does not affect which artifacts are created, only how they are reviewed (via PRs or locally).
 
 **Agent Handling of Missing Artifacts**:
 - Agents check if artifact exists before referencing
@@ -280,15 +279,58 @@ Read Workflow Mode from WorkflowContext.md. Adapt behavior as follows:
    - Mode-specific: "Skip to code research (minimal mode)"
    - Generic: "Create spec from WorkflowContext.md" (agent interprets mode)
 
-4. **final-pr-only modifier syntax**: How should users specify this modifier?
-   - Option A: Separate field in WorkflowContext.md (`Branch Strategy: final-pr-only`)
-   - Option B: Compound mode name (`full-final-pr-only`, `minimal-final-pr-only`)
-   - Option C: Boolean flag (`Final PR Only: true`)
-
-5. **Extension requirement fallback**: How do we handle users who want to use PAW without the extension?
+4. **Extension requirement fallback**: How do we handle users who want to use PAW without the extension?
    - Maintain legacy manual WorkflowContext.md creation in agent instructions?
    - Clear error message directing to extension install?
    - Deprecate manual approach entirely?
+
+## Resolved Design Decisions
+
+### Review Strategy Configuration (Resolved 2025-11-07)
+
+**Question**: How should users specify single-branch vs multi-branch workflow?
+
+**Decision**: Separate `Review Strategy` field with values `prs` or `local`
+
+**Rationale**:
+- **Clear separation of concerns**: Workflow Mode determines which stages to run, Review Strategy determines how reviews happen
+- **Natural UI pattern**: Radio buttons for mode + radio buttons for strategy
+- **Extensible**: Can add future configuration fields following the same pattern (e.g., "Quality Gates", "Merge Strategy")
+- **No combinatorial explosion**: Unlike compound mode names (full-single-branch, minimal-single-branch), this keeps modes simple
+- **Intuitive semantics**: 
+  - `prs` = "Review my work via intermediate PRs (planning, phases, docs)"
+  - `local` = "I'll review locally, just give me one final PR"
+
+**WorkflowContext.md Format**:
+```markdown
+Workflow Mode: full
+Review Strategy: prs
+```
+
+**Validation Rules**:
+- `minimal` + `prs` = ❌ Error: "Minimal mode only supports local review strategy"
+- `full` + `prs` = ✓ Default full PAW workflow
+- `full` + `local` = ✓ Full stages, single branch
+- `minimal` + `local` = ✓ Fast path (default for minimal)
+- `custom` + either = ✓ User-defined
+
+**UI Flow**:
+```
+PAW: New PAW Workflow
+
+1. Target Branch: _____________
+2. Issue/Work Item URL (optional): _____________
+3. Workflow Mode:
+   ○ full     - Complete PAW workflow (all stages)
+   ○ minimal  - Fast path for small changes (code research → implementation)
+   ○ custom   - Define your own workflow
+   
+4. Review Strategy:
+   ○ prs   - Review stages via GitHub/Azure PRs (planning, phases, docs)
+   ○ local - Review locally, single final PR only
+   
+5. [Only if mode = custom] Custom Workflow Instructions: _____________
+```
 
 ## Next Steps
 
@@ -309,6 +351,13 @@ Read Workflow Mode from WorkflowContext.md. Adapt behavior as follows:
 
 ## Document History
 
+- 2025-11-07: Resolved Review Strategy configuration (Open Question #4)
+  - Decided on separate `Review Strategy` field with values `prs` or `local`
+  - Removed `final-pr-only` mode (replaced with Review Strategy field)
+  - Updated WorkflowContext.md format to include Review Strategy
+  - Added validation rules and UI flow
+  - Updated tool interface to include review_strategy parameter
+  - Updated agent behavior sections to handle both Workflow Mode and Review Strategy
 - 2025-11-06: Initial design capture based on discussion
   - Researched current VS Code extension implementation
   - Corrected user flow to match actual extension behavior

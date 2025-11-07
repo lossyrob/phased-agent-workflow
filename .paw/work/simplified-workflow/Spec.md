@@ -34,7 +34,7 @@ Independent Test: Given a user runs the PAW initialization command, when they se
 Acceptance Scenarios:
 1. Given a user runs "PAW: New PAW Workflow" command, When the extension prompts for inputs, Then a "Workflow Mode" selection is presented with options: full, minimal, custom
 2. Given a user selects "full" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: full" and all 10 prompt files are generated
-3. Given a user selects "minimal" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: minimal" and only 5 prompt files are generated (02A-code-research, 02B-impl-plan, 03A-implement, 05-pr, 0X-status)
+3. 1. Given a user selects "minimal" mode, When initialization completes, Then WorkflowContext.md contains "Workflow Mode: minimal" and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-007)
 4. Given a user selects "custom" mode, When prompted, Then the user can provide free-text custom workflow instructions that are stored in WorkflowContext.md
 5. Given WorkflowContext.md contains a workflow mode, When any agent reads WorkflowContext.md, Then it correctly interprets the mode and adapts its behavior (e.g., skipping branch creation in single-branch mode)
 
@@ -84,7 +84,7 @@ Acceptance Scenarios:
 - FR-004: Initialization agent must call paw_create_prompt_templates tool with workflow mode parameter to generate only relevant prompt files for the selected mode (Stories: P1-Configure)
 - FR-005: paw_create_prompt_templates tool must accept workflow_mode parameter and optional stages array to control which prompt files are generated (Stories: P1-Configure)
 - FR-006: When workflow mode is "full", all 10 prompt files must be generated: 01A-spec, 01B-spec-research, 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 05-pr, 0X-status (Stories: P1-Configure)
-- FR-007: When workflow mode is "minimal", only 5 prompt files must be generated: 02A-code-research, 02B-impl-plan, 03A-implement, 05-pr, 0X-status (Stories: P1-Skip, P1-Configure)
+- FR-007: When workflow mode is "minimal", only 6 prompt files must be generated: 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 05-pr, 0X-status (Stories: P1-Skip, P1-Configure)
 - FR-008: When workflow mode is "custom", initialization agent must parse custom instructions to determine which stages are needed and generate corresponding prompt files (Stories: P2-Custom, P1-Configure)
 - FR-009: All PAW agents must read Workflow Mode from WorkflowContext.md at start and adapt behavior according to mode-specific instructions (Stories: P1-Skip, P1-SingleBranch, P1-Configure, P2-Custom)
 - FR-010: When workflow mode indicates single-branch strategy (minimal or specified in custom instructions), no agent shall create planning branch (_plan), phase branches (_phaseN), or docs branch (_docs) (Stories: P1-SingleBranch)
@@ -114,7 +114,7 @@ Acceptance Scenarios:
 - **Error Recovery**: When agents detect workflow mode inconsistencies or invalid configurations, error messages must provide actionable guidance (e.g., "run X command" or "edit Y field to Z")
 
 ## Success Criteria
-- SC-001: Given a user initializes workflow with "minimal" mode, when initialization completes, then WorkflowContext.md contains "Workflow Mode: minimal" and exactly 5 prompt files exist in prompts/ directory (FR-001, FR-007)
+- SC-001: Given a user initializes workflow with "minimal" mode, when initialization completes, then WorkflowContext.md contains "Workflow Mode: minimal" and exactly 6 prompt files exist in prompts/ directory (FR-001, FR-007)
 - SC-002: Given a user initializes workflow with "full" mode, when initialization completes, then exactly 10 prompt files exist in prompts/ directory matching the full workflow sequence (FR-006)
 - SC-003: Given a user initializes workflow with "custom" mode and provides instructions "skip spec, single branch", when initialization completes, then no spec-related prompt files are generated and WorkflowContext.md contains the custom instructions (FR-002, FR-008)
 - SC-004: Given workflow mode is "minimal", when Implementation Plan Agent executes, then it creates ImplementationPlan.md referencing Issue URL from WorkflowContext.md (not Spec.md) and completes without errors (FR-012, FR-013)

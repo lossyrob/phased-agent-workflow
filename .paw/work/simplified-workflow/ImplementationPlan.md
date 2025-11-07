@@ -24,7 +24,7 @@ PAW currently implements a single, comprehensive workflow path:
 ## Desired End State
 
 After this plan is complete:
-1. Users selecting "minimal" mode during initialization generate only 5 prompt files (02A, 02B, 03A, 05, 0X) and work on single branch
+1. Users selecting "minimal" mode during initialization generate only 6 prompt files (02A, 02B, 03A, 03B, 05, 0X) and work on single branch
 2. Users selecting "custom" mode can provide free-text instructions describing their desired workflow, and agents interpret these to generate appropriate prompt files
 3. All agents read Workflow Mode from WorkflowContext.md and adapt branching behavior (single-branch vs multi-branch)
 4. WorkflowContext.md contains `Workflow Mode: <full|minimal|custom>` and optionally `Custom Workflow Instructions: <text>`
@@ -32,7 +32,7 @@ After this plan is complete:
 6. Backward compatibility: existing WorkflowContext.md files without Workflow Mode default to "full" mode
 
 **Verification**:
-- Run `PAW: New PAW Workflow` command, select "minimal" mode → verify exactly 5 prompt files created in `.paw/work/<slug>/prompts/`
+- Run `PAW: New PAW Workflow` command, select "minimal" mode → verify exactly 6 prompt files created in `.paw/work/<slug>/prompts/`
 - Initialize workflow with "full" mode → verify all 10 prompt files created
 - Run minimal workflow end-to-end → verify no _plan, _phaseN, or _docs branches created, all commits on target branch
 - Check old WorkflowContext.md without Workflow Mode field → agents treat as "full" mode without errors
@@ -89,7 +89,7 @@ Extend the VS Code extension to prompt users for workflow mode selection during 
   - Conditional `Custom Workflow Instructions: {{CUSTOM_INSTRUCTIONS}}` field
 - Add section instructing agent to determine stages based on workflow mode:
   - Full mode → all stages
-  - Minimal mode → CodeResearch, Plan, Implementation, FinalPR, Status only
+  - Minimal mode → CodeResearch, Plan, Implementation, ImplementationReview, FinalPR, Status only
   - Custom mode → interpret instructions to determine stages
 
 #### 3. Prompt Construction Function
@@ -138,7 +138,7 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 #### 1. Tool Parameter Interface
 **File**: `vscode-extension/src/tools/createPromptTemplates.ts`
 **Changes**:
-- Add `WorkflowStage` enum with values: spec, code-research, plan, implementation, documentation, final-pr, status
+- Add `WorkflowStage` enum with values: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status
 - Update `CreatePromptTemplatesParams` interface to add:
   - `workflow_mode?: string` (optional parameter for 'full' | 'minimal' | 'custom')
   - `stages?: WorkflowStage[]` (optional array for explicit stage list)
@@ -152,7 +152,9 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
   - 01A-spec.prompt.md → Spec stage
   - 02A-code-research.prompt.md → CodeResearch stage
   - 02B-impl-plan.prompt.md → Plan stage
-  - 03A/03B/03C/03D-*.prompt.md → Implementation stage (all 4 files)
+  - 03A-implement.prompt.md → Implementation stage
+  - 03B-review.prompt.md → ImplementationReview stage
+  - 03C-pr-review.prompt.md, 03D-review-pr-review.prompt.md → PRReviewResponse stage
   - 04-docs.prompt.md → Documentation stage
   - 05-pr.prompt.md → FinalPR stage
   - 0X-status.prompt.md → Status stage
@@ -162,7 +164,7 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 **Changes**:
 - Create `determineStagesFromMode()` function that:
   - If `explicitStages` provided, return them (custom mode behavior)
-  - If workflow_mode is 'minimal', return: CodeResearch, Plan, Implementation, FinalPR, Status
+  - If workflow_mode is 'minimal', return: CodeResearch, Plan, Implementation, ImplementationReview, FinalPR, Status
   - If workflow_mode is 'custom' without explicit stages, fall back to minimal
   - If workflow_mode is 'full' or undefined, return all stages
 
@@ -191,7 +193,7 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode and optio
 
 #### Manual Verification:
 - [ ] Initialize workflow with "full" mode → verify 10 prompt files created (01A, 02A, 02B, 03A, 03B, 03C, 03D, 04, 05, 0X)
-- [ ] Initialize workflow with "minimal" mode → verify exactly 5 prompt files created (02A, 02B, 03A, 05, 0X)
+- [ ] Initialize workflow with "minimal" mode → verify exactly 6 prompt files created (02A, 02B, 03A, 03B, 05, 0X)
 - [ ] Verify no 01A-spec.prompt.md or 04-docs.prompt.md in minimal mode
 - [ ] Check that generated prompt files have correct frontmatter (`mode: PAW-XX`) and content
 - [ ] Initialize workflow with "full" mode twice → verify files are overwritten correctly (idempotent)
@@ -319,7 +321,7 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 **Changes**: Create comprehensive test suite
 **Tests**:
 - Full mode generates all 10 prompt files
-- Minimal mode generates exactly 5 files (02A, 02B, 03A, 05, 0X)
+- Minimal mode generates exactly 6 files (02A, 02B, 03A, 03B, 05, 0X)
 - Custom mode with explicit stages generates only specified files
 - Default behavior (no mode) generates all files
 - Generated files have correct frontmatter format
@@ -426,11 +428,11 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 1. Open PAW-enabled workspace
 2. Run `PAW: New PAW Workflow` command
 3. Enter branch name: `fix/login-timeout`
-4. Select "minimal" mode → verify UI shows clear description
-5. Enter GitHub issue URL
-6. Verify WorkflowContext.md created with `Workflow Mode: minimal`
-7. Verify exactly 5 prompt files in `.paw/work/fix-login-timeout/prompts/`
-8. Run `02A-code-research.prompt.md` → verify agent doesn't error about missing Spec.md
+3. Select "minimal" mode → verify UI shows clear description
+4. Enter GitHub issue URL
+5. Verify WorkflowContext.md created with `Workflow Mode: minimal`
+6. Verify exactly 6 prompt files in `.paw/work/fix-login-timeout/prompts/`
+7. Run `02A-code-research.prompt.md` → verify agent doesn't error about missing Spec.md
 9. Run `02B-impl-plan.prompt.md` → verify single-phase plan created
 10. Run `03A-implement.prompt.md` → verify no phase branch created
 11. Verify all commits on `fix/login-timeout` branch

@@ -141,14 +141,15 @@ interface CreatePromptTemplatesParams {
 }
 
 enum WorkflowStage {
-  Spec = "spec",                    // 01A-spec.prompt.md, 01B-spec-research.prompt.md
-  CodeResearch = "code-research",   // 02A-code-research.prompt.md
-  Plan = "plan",                    // 02B-impl-plan.prompt.md
-  Implementation = "implementation", // 03A-implement.prompt.md, 03B-review.prompt.md, 
-                                    // 03C-pr-review.prompt.md, 03D-review-pr-review.prompt.md
-  Documentation = "documentation",  // 04-docs.prompt.md
-  FinalPR = "final-pr",            // 05-pr.prompt.md
-  Status = "status"                // 0X-status.prompt.md (always included)
+  Spec = "spec",                          // 01A-spec.prompt.md, 01B-spec-research.prompt.md
+  CodeResearch = "code-research",         // 02A-code-research.prompt.md
+  Plan = "plan",                          // 02B-impl-plan.prompt.md
+  Implementation = "implementation",       // 03A-implement.prompt.md
+  ImplementationReview = "implementation-review", // 03B-review.prompt.md
+  PRReviewResponse = "pr-review-response", // 03C-pr-review.prompt.md, 03D-review-pr-review.prompt.md
+  Documentation = "documentation",        // 04-docs.prompt.md
+  FinalPR = "final-pr",                  // 05-pr.prompt.md
+  Status = "status"                      // 0X-status.prompt.md (always included)
 }
 ```
 
@@ -156,14 +157,16 @@ enum WorkflowStage {
 - `Spec` → `01A-spec.prompt.md`, `01B-spec-research.prompt.md`
 - `CodeResearch` → `02A-code-research.prompt.md`
 - `Plan` → `02B-impl-plan.prompt.md`
-- `Implementation` → `03A-implement.prompt.md`, `03B-review.prompt.md`, `03C-pr-review.prompt.md`, `03D-review-pr-review.prompt.md`
+- `Implementation` → `03A-implement.prompt.md`
+- `ImplementationReview` → `03B-review.prompt.md`
+- `PRReviewResponse` → `03C-pr-review.prompt.md`, `03D-review-pr-review.prompt.md`
 - `Documentation` → `04-docs.prompt.md`
 - `FinalPR` → `05-pr.prompt.md`
 - `Status` → `0X-status.prompt.md` (always generated regardless of stages list)
 
 **For Predefined Modes** (agent determines stages based on mode):
-- `full` mode → agent calls tool with: `[Spec, CodeResearch, Plan, Implementation, Documentation, FinalPR, Status]`
-- `minimal` mode → agent calls tool with: `[CodeResearch, Plan, Implementation, FinalPR, Status]`
+- `full` mode → agent calls tool with: `[Spec, CodeResearch, Plan, Implementation, ImplementationReview, PRReviewResponse, Documentation, FinalPR, Status]`
+- `minimal` mode → agent calls tool with: `[CodeResearch, Plan, Implementation, ImplementationReview, FinalPR, Status]`
 - `final-pr-only` modifier → agent passes workflow_mode but same stages as base mode
 
 **For Custom Mode**:

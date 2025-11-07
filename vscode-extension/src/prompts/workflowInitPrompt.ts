@@ -98,17 +98,21 @@ export function constructAgentPrompt(
   );
   const customInstructionsSection = formatCustomInstructions(customInstructions);
 
-  // Build custom workflow instructions section if custom mode with instructions
+  // Build custom workflow instructions section for the prompt if custom mode with instructions
+  // This section appears in the "Parameters Provided" area of the generated prompt
   const customWorkflowInstructionsSection = workflowMode.customInstructions
     ? `- **Custom Workflow Instructions**: ${workflowMode.customInstructions}\n`
     : '';
 
   // Build custom workflow instructions field for WorkflowContext.md
+  // This field is included in the generated WorkflowContext.md when custom mode is used
   const customWorkflowInstructionsField = workflowMode.customInstructions
     ? `Custom Workflow Instructions: ${workflowMode.customInstructions}\n`
     : '';
 
   // Build Work Title strategy section based on whether an issue or work item URL is provided
+  // When an issue URL is provided, the agent attempts to fetch the title from the issue
+  // Otherwise, the work title is derived from the branch name
   const workTitleStrategy = issueUrl
     ? `**Preferred - Fetch From Issue:**
 - Retrieve the issue or work item title from ${issueUrl}
@@ -118,9 +122,10 @@ export function constructAgentPrompt(
 `
     : '';
   
+  // Add fallback indicator when issue URL is provided to clarify branch-based generation is fallback
   const workTitleFallbackIndicator = issueUrl ? ' (Fallback)' : '';
   
-  // Prepare template variables
+  // Prepare template variables for substitution
   const variables: PromptVariables = {
     TARGET_BRANCH: targetBranch,
     WORKFLOW_MODE: workflowMode.mode,

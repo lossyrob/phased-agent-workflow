@@ -104,6 +104,8 @@ export function isValidIssueUrl(value: string): boolean {
 export async function collectWorkflowMode(
   outputChannel: vscode.OutputChannel
 ): Promise<WorkflowModeSelection | undefined> {
+  // Present Quick Pick menu with workflow mode options
+  // Each option includes a label, description, detail (help text), and value
   const modeSelection = await vscode.window.showQuickPick([
     {
       label: 'Full',
@@ -133,7 +135,8 @@ export async function collectWorkflowMode(
     return undefined;
   }
 
-  // If custom mode, prompt for custom instructions
+  // If custom mode selected, prompt for custom workflow instructions
+  // These instructions help agents determine which stages to include
   if (modeSelection.value === 'custom') {
     const customInstructions = await vscode.window.showInputBox({
       prompt: 'Describe your desired workflow stages (e.g., "skip docs, single branch, multi-phase plan")',
@@ -179,12 +182,14 @@ export async function collectReviewStrategy(
   outputChannel: vscode.OutputChannel,
   workflowMode: WorkflowMode
 ): Promise<ReviewStrategy | undefined> {
-  // Minimal mode requires local strategy
+  // Minimal mode enforces local strategy to avoid complexity of intermediate PRs
+  // This constraint simplifies the workflow for bug fixes and small features
   if (workflowMode === 'minimal') {
     outputChannel.appendLine('[INFO] Minimal mode requires local review strategy - auto-selected');
     return 'local';
   }
 
+  // Present Quick Pick menu with review strategy options
   const strategySelection = await vscode.window.showQuickPick([
     {
       label: 'PRs',

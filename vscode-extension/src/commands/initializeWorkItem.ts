@@ -84,6 +84,11 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
+    outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
+    if (inputs.workflowMode.customInstructions) {
+      outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
+    }
+    outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
@@ -91,6 +96,8 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine('[INFO] Constructing agent prompt...');
     const prompt = constructAgentPrompt(
       inputs.targetBranch,
+      inputs.workflowMode,
+      inputs.reviewStrategy,
       inputs.issueUrl,
       workspaceFolder.uri.fsPath
     );

@@ -154,9 +154,13 @@ Your selections are stored in `WorkflowContext.md` and guide all agents througho
 
 All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected.
 
-### Backward Compatibility
+### Defaults
 
-Workflows created before workflow mode support (without `Workflow Mode` and `Review Strategy` fields in WorkflowContext.md) are treated as full mode with prs strategy. Agents will log an informational message when defaulting to these values.
+When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowContext.md, agents use the following defaults:
+- **Workflow Mode**: `full` (all stages included)
+- **Review Strategy**: `prs` (intermediate pull requests)
+
+Agents will log an informational message when using default values to indicate that these fields were not explicitly specified.
 
 ---
 

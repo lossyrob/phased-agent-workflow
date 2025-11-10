@@ -17,7 +17,7 @@ PAW currently implements a single, comprehensive workflow path:
 ### Key Discoveries:
 - Extension already has validation infrastructure for user inputs with typed interfaces (`WorkItemInputs`) at `vscode-extension/src/ui/userInput.ts:12-20`
 - Prompt template tool is registered as a language model tool allowing agents to invoke it (`vscode-extension/src/tools/createPromptTemplates.ts:149-189`)
-- All agents have defensive WorkflowContext.md creation logic that can be leveraged for backward compatibility (e.g., `.github/chatmodes/PAW-01A Spec Agent.chatmode.md:70-103`)
+- All agents have defensive WorkflowContext.md creation logic that defaults to full mode with prs strategy when fields are missing (e.g., `.github/chatmodes/PAW-01A Spec Agent.chatmode.md:70-103`)
 - Stage-to-prompt mapping follows consistent naming: 01A-spec, 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 05-pr, 0X-status
 - Git operations centralized in agent instructions (no git library usage), allowing mode-based branching to be controlled purely via instruction changes
 
@@ -30,14 +30,14 @@ After this plan is complete:
 4. All agents read Workflow Mode and Review Strategy from WorkflowContext.md and adapt branching behavior accordingly
 5. WorkflowContext.md contains `Workflow Mode: <full|minimal|custom>` and `Review Strategy: <prs|local>` and optionally `Custom Workflow Instructions: <text>`
 6. Quality gates (tests, linting, type checking, build) remain mandatory regardless of mode
-7. Backward compatibility: existing WorkflowContext.md files without these fields default to "full" mode with "prs" review strategy
+7. Defaults: WorkflowContext.md files without Workflow Mode or Review Strategy fields default to "full" mode with "prs" review strategy
 
 **Verification**:
 - Run `PAW: New PAW Workflow` command, select "minimal" mode → verify exactly 6 prompt files created in `.paw/work/<slug>/prompts/`
 - Initialize workflow with "full" mode + "prs" strategy → verify all 10 prompt files created
 - Initialize workflow with "full" mode + "local" strategy → verify all 10 prompt files created, but no intermediate branches/PRs
 - Run minimal workflow end-to-end → verify no _plan, _phaseN, or _docs branches created, all commits on target branch
-- Check old WorkflowContext.md without Workflow Mode field → agents treat as "full" mode with "prs" strategy without errors
+- Check WorkflowContext.md without Workflow Mode field → agents default to "full" mode with "prs" strategy without errors
 
 ## What We're NOT Doing
 
@@ -159,7 +159,7 @@ All automated verification passed successfully. The extension now collects workf
 - Minimal mode enforces local review strategy (no intermediate PRs)
 - Custom mode prompts for custom instructions with 10 character minimum validation
 - Template includes clear stage determination logic for agents to follow
-- All changes maintain backward compatibility through optional parameters
+- All changes use optional parameters to maintain defaults when fields are missing
 - Type safety enforced through TypeScript strict mode
 
 **Review Tasks for Implementation Review Agent:**
@@ -257,7 +257,7 @@ All automated verification passed successfully. The prompt template tool now sup
   - Full mode: All 9 stages (10 prompt files)
   - Minimal mode: 7 stages excluding spec and documentation (7 prompt files: 02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
   - Custom mode: Uses explicit stages array or falls back to minimal
-  - Undefined/backward compatibility: Defaults to all stages
+  - Undefined: Defaults to all stages
 - Modified createPromptTemplates() to filter templates based on determined stages
 - Updated package.json inputSchema with new optional parameters and appropriate enum constraints
 - Tool registration now documents workflow mode support in modelDescription
@@ -266,8 +266,8 @@ All automated verification passed successfully. The prompt template tool now sup
 - Stage filtering happens at template generation time, not file creation time
 - PRReviewResponse stage includes both 03C and 03D prompt files
 - Review strategy parameter accepted but doesn't affect which prompts are generated (documented in comments)
-- Backward compatibility preserved: undefined workflow_mode generates all prompt files
-- All parameters except feature_slug and workspace_path remain optional for backward compatibility
+- Defaults preserved: undefined workflow_mode generates all prompt files
+- All parameters except feature_slug and workspace_path remain optional to support defaults when missing
 
 **Review Tasks for Implementation Review Agent:**
 - Verify stage-to-prompt-file mapping is complete and accurate
@@ -314,7 +314,7 @@ All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handli
 - Describe behavior for custom mode (interpret Custom Workflow Instructions)
 - Describe behavior for prs review strategy (create intermediate branches and PRs)
 - Describe behavior for local review strategy (single branch, no intermediate PRs)
-- Handle backward compatibility (missing fields default to full mode with prs strategy)
+- Handle defaults (missing fields default to full mode with prs strategy)
 
 #### 2. PAW-01A Spec Agent
 **File**: `.github/chatmodes/PAW-01A Spec Agent.chatmode.md`
@@ -324,7 +324,7 @@ All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handli
 - Minimal mode: Agent should not be invoked (spec stage skipped)
 - Custom mode: Check if spec stage included in instructions
 - Review Strategy: prs or local both work the same for spec stage (no branching yet)
-- Backward compatibility: Default to full mode with prs strategy if fields missing
+- Defaults: Default to full mode with prs strategy if fields missing
 
 #### 3. PAW-02A Code Researcher
 **File**: `.github/chatmodes/PAW-02A Code Researcher.chatmode.md`
@@ -408,7 +408,7 @@ All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handli
 - [ ] Run `git branch -a` after minimal workflow → see only target branch and remote tracking branches
 - [ ] Initialize full workflow with prs strategy → verify all agents create appropriate branches (_plan, _phaseN, _docs)
 - [ ] Initialize full workflow with local strategy → verify all agents work on target branch, no intermediate branches
-- [ ] Test backward compatibility: Remove "Workflow Mode" and "Review Strategy" from WorkflowContext.md → run agent → verify treats as "full" mode with "prs" strategy with log message
+- [ ] Test defaults: Remove "Workflow Mode" and "Review Strategy" from WorkflowContext.md → run agent → verify defaults to "full" mode with "prs" strategy with log message
 - [ ] Initialize custom workflow with "single branch, skip docs" (local strategy implied) → verify agents adapt correctly
 
 **Phase 3 Implementation Complete - 2025-11-10**
@@ -429,10 +429,10 @@ All automated verification passed successfully. All 8 PAW agent chatmode files n
   - **full mode**: Multi-phase implementation approach
   - **minimal mode**: Single-phase implementation only
   - **custom mode**: Interprets Custom Workflow Instructions for phase structure
-- Added comprehensive backward compatibility handling:
+- Added comprehensive defaults handling:
   - Missing mode/strategy fields default to full mode with prs strategy
-  - Agents log informational messages when defaulting
-  - No errors or breaking changes for existing workflows
+  - Agents log informational messages when using defaults
+  - Works seamlessly when fields are not explicitly specified
 
 **Key Implementation Notes:**
 - PAW-02B Impl Planner renamed its existing "Workflow Modes" section to "Agent Operating Modes" to distinguish from PAW workflow mode handling
@@ -446,7 +446,7 @@ All automated verification passed successfully. All 8 PAW agent chatmode files n
 - Verify consistency of workflow mode handling sections across all agents
 - Check that branching logic clearly differentiates prs vs local strategies
 - Validate artifact discovery patterns handle missing files gracefully
-- Ensure backward compatibility defaults are well-documented
+- Ensure defaults are well-documented
 - Confirm phase count adaptation logic is clear and correct
 
 **Manual Testing Pending:** Manual verification steps require end-to-end workflow execution and cannot be completed during Phase 3 implementation. These will be verified during Phase 4 integration testing or by running actual workflows with different mode configurations.
@@ -514,7 +514,7 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 - [ ] Complete minimal workflow end-to-end → verify single branch, no intermediate PRs, 7 prompt files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
 - [ ] Initialize custom workflow with specific instructions → verify correct prompt files generated and behavior matches instructions
 - [ ] Test invalid mode in WorkflowContext.md → verify clear error message displayed
-- [ ] Test backward compatibility: Use old WorkflowContext.md → verify treats as full mode with prs strategy
+- [ ] Test defaults: Use WorkflowContext.md without mode/strategy fields → verify defaults to full mode with prs strategy
 - [ ] Run Status Agent in each mode → verify reports appropriate status for that mode
 - [ ] Verify quality gates enforced in all modes (tests, linting, type checking)
 - [ ] Check documentation clarity: Can a new user understand how to select appropriate mode?
@@ -532,7 +532,7 @@ All automated verification passed successfully. Comprehensive testing infrastruc
   - Full mode: 10 prompt files generated
   - Minimal mode: 8 prompt files generated (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X - includes PRReviewResponse stage)
   - Custom mode: only specified stages generated
-  - Default behavior: all files for backward compatibility
+  - Default behavior: all files when mode not specified
   - Frontmatter format validation
   - Status stage always included
   - Idempotent file generation
@@ -611,7 +611,7 @@ Addressed PR review comment https://github.com/lossyrob/phased-agent-workflow/pu
 2. Full mode + local strategy generates exactly 10 prompt files
 3. Minimal mode (local strategy enforced) generates exactly 7 prompt files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
 4. Custom mode with explicit stages generates only specified files
-5. Default behavior (no mode/strategy) generates all files for backward compatibility (full + prs)
+5. Default behavior (no mode/strategy) generates all files (defaults to full + prs)
 6. Generated files have correct frontmatter and content format
 7. Invalid custom instructions rejected during input collection
 8. Minimal mode + prs strategy combination rejected with clear error
@@ -654,10 +654,10 @@ Agent behavior verification across different workflow modes and review strategie
 - Execute agents → verify planning and phase branches created
 - Verify intermediate PRs created according to prs strategy
 
-**Scenario 5: Backward Compatibility**
-- Use existing WorkflowContext.md without Workflow Mode or Review Strategy fields
-- Execute any agent → verify treats as full mode with prs strategy
-- Verify informational log message about assumed defaults
+**Scenario 5: Defaults Handling**
+- Use WorkflowContext.md without Workflow Mode or Review Strategy fields
+- Execute any agent → verify defaults to full mode with prs strategy
+- Verify informational log message about using default values
 - Verify no errors or crashes
 
 **Scenario 6: Invalid Configuration Handling**
@@ -677,13 +677,13 @@ Agent behavior verification across different workflow modes and review strategie
 - **Branch Operations**: Git operations (checkout, branch creation) are delegated to agents via terminal commands. Performance depends on repository size, but no new overhead introduced.
 - **User Input Collection**: Sequential prompts may feel slower than form-based input. Consider multi-step input box if user feedback indicates UX issue.
 
-## Migration Notes
+## Defaults Handling
 
-### For Existing Workflows
-- In-progress workflows created before workflow mode support will continue to work
-- Agents treat missing Workflow Mode field as "full" mode (backward compatible)
-- No migration required for existing `.paw/work/` directories
-- Users can optionally add `Workflow Mode: full` to old WorkflowContext.md files for clarity
+### WorkflowContext.md Without Mode/Strategy Fields
+- WorkflowContext.md files without Workflow Mode or Review Strategy fields work seamlessly
+- Agents use default values: full mode with prs strategy
+- No migration required for `.paw/work/` directories
+- Users can optionally add explicit `Workflow Mode: full` and `Review Strategy: prs` to WorkflowContext.md files for clarity
 
 ### For Future Mode Additions
 - To add new predefined mode:

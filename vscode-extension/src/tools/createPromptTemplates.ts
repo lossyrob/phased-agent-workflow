@@ -42,7 +42,7 @@ interface CreatePromptTemplatesParams {
    * - full: All stages included
    * - minimal: Core stages only (code-research, plan, implementation, implementation-review, final-pr, status)
    * - custom: Uses explicit stages array or falls back to minimal
-   * - undefined: Defaults to all stages for backward compatibility
+   * - undefined: Defaults to all stages (full mode default)
    */
   workflow_mode?: string;
   
@@ -166,7 +166,7 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
  * - minimal: Core stages only (code-research, plan, implementation, implementation-review, 
  *           final-pr, status) - skips spec and documentation
  * - custom: Uses explicit stages array if provided, otherwise falls back to minimal
- * - undefined: Defaults to all stages for backward compatibility
+ * - undefined: Defaults to all stages (full mode default)
  * 
  * @param workflowMode - The workflow mode ('full', 'minimal', 'custom', or undefined)
  * @param explicitStages - Optional explicit list of stages (used for custom mode)
@@ -210,7 +210,7 @@ function determineStagesFromMode(
     case 'full':
     case undefined:
     default:
-      // Full mode or undefined (backward compatibility): Include all stages
+      // Full mode or undefined (defaults to full mode): Include all stages
       return [
         WorkflowStage.Spec,
         WorkflowStage.CodeResearch,

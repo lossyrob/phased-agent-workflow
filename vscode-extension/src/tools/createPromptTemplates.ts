@@ -3,6 +3,31 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * Workflow stages that can be included in a PAW workflow.
+ * 
+ * Each stage corresponds to one or more prompt template files:
+ * - Spec: 01A-spec.prompt.md
+ * - CodeResearch: 02A-code-research.prompt.md
+ * - Plan: 02B-impl-plan.prompt.md
+ * - Implementation: 03A-implement.prompt.md, 03B-review.prompt.md
+ * - PRReviewResponse: 03C-pr-review.prompt.md, 03D-review-pr-review.prompt.md
+ * - Documentation: 04-docs.prompt.md
+ * - FinalPR: 05-pr.prompt.md
+ * - Status: 0X-status.prompt.md
+ */
+export enum WorkflowStage {
+  Spec = 'spec',
+  CodeResearch = 'code-research',
+  Plan = 'plan',
+  Implementation = 'implementation',
+  ImplementationReview = 'implementation-review',
+  PRReviewResponse = 'pr-review-response',
+  Documentation = 'documentation',
+  FinalPR = 'final-pr',
+  Status = 'status'
+}
+
+/**
  * Parameters for the paw_create_prompt_templates language model tool.
  */
 interface CreatePromptTemplatesParams {
@@ -11,6 +36,22 @@ interface CreatePromptTemplatesParams {
   
   /** Absolute path to the workspace root directory */
   workspace_path: string;
+  
+  /** 
+   * Optional workflow mode selection ('full', 'minimal', or 'custom').
+   * - full: All stages included
+   * - minimal: Core stages only (code-research, plan, implementation, implementation-review, final-pr, status)
+   * - custom: Uses explicit stages array or falls back to minimal
+   * - undefined: Defaults to all stages for backward compatibility
+   */
+  workflow_mode?: string;
+  
+  /**
+   * Optional explicit list of stages to include.
+   * When provided, this overrides workflow_mode stage determination.
+   * Used primarily for custom workflow modes.
+   */
+  stages?: WorkflowStage[];
 }
 
 /**
@@ -28,65 +69,161 @@ interface CreatePromptTemplatesResult {
 }
 
 /**
+ * Template definition for a single prompt file.
+ */
+interface PromptTemplate {
+  /** The exact filename to use (e.g., "01A-spec.prompt.md") */
+  filename: string;
+  
+  /** The chatmode to invoke (e.g., "PAW-01A Spec Agent") */
+  mode: string;
+  
+  /** The instruction for the agent (e.g., "Create spec from") */
+  instruction: string;
+  
+  /** The workflow stage this template belongs to */
+  stage: WorkflowStage;
+}
+
+/**
  * Template definitions for all PAW prompt files.
  * 
  * Each template includes:
  * - filename: The exact filename to use
  * - mode: The chatmode to invoke (corresponds to .github/chatmodes/*.chatmode.md)
  * - instruction: The action the agent should perform
+ * - stage: The workflow stage this template belongs to
  */
-const PROMPT_TEMPLATES = [
+const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     filename: '01A-spec.prompt.md',
     mode: 'PAW-01A Spec Agent',
-    instruction: 'Create spec from'
+    instruction: 'Create spec from',
+    stage: WorkflowStage.Spec
   },  
   {
     filename: '02A-code-research.prompt.md',
     mode: 'PAW-02A Code Researcher',
-    instruction: 'Run code research from'
+    instruction: 'Run code research from',
+    stage: WorkflowStage.CodeResearch
   },
   {
     filename: '02B-impl-plan.prompt.md',
     mode: 'PAW-02B Impl Planner',
-    instruction: 'Create implementation plan from'
+    instruction: 'Create implementation plan from',
+    stage: WorkflowStage.Plan
   },
   {
     filename: '03A-implement.prompt.md',
     mode: 'PAW-03A Implementer',
-    instruction: 'Implement phase from'
+    instruction: 'Implement phase from',
+    stage: WorkflowStage.Implementation
   },
   {
     filename: '03B-review.prompt.md',
     mode: 'PAW-03B Impl Reviewer',
-    instruction: 'Review implementation from'
+    instruction: 'Review implementation from',
+    stage: WorkflowStage.ImplementationReview
   },
   {
     filename: '03C-pr-review.prompt.md',
     mode: 'PAW-03A Implementer',
-    instruction: 'Address PR review comments from'
+    instruction: 'Address PR review comments from',
+    stage: WorkflowStage.PRReviewResponse
   },
   {
     filename: '03D-review-pr-review.prompt.md',
     mode: 'PAW-03B Impl Reviewer',
-    instruction: 'Verify PR comment responses from'
+    instruction: 'Verify PR comment responses from',
+    stage: WorkflowStage.PRReviewResponse
   },
   {
     filename: '04-docs.prompt.md',
     mode: 'PAW-04 Documenter Agent',
-    instruction: 'Generate documentation from'
+    instruction: 'Generate documentation from',
+    stage: WorkflowStage.Documentation
   },
   {
     filename: '05-pr.prompt.md',
     mode: 'PAW-05 PR Agent',
-    instruction: 'Create final PR from'
+    instruction: 'Create final PR from',
+    stage: WorkflowStage.FinalPR
   },
   {
     filename: '0X-status.prompt.md',
     mode: 'PAW-0X Status Agent',
-    instruction: 'Update status from'
+    instruction: 'Update status from',
+    stage: WorkflowStage.Status
   }
 ];
+
+/**
+ * Determine which workflow stages to include based on workflow mode.
+ * 
+ * This function maps workflow modes to their corresponding stage arrays:
+ * - full: All stages (spec, code-research, plan, implementation, implementation-review, 
+ *         pr-review-response, documentation, final-pr, status)
+ * - minimal: Core stages only (code-research, plan, implementation, implementation-review, 
+ *           final-pr, status) - skips spec and documentation
+ * - custom: Uses explicit stages array if provided, otherwise falls back to minimal
+ * - undefined: Defaults to all stages for backward compatibility
+ * 
+ * @param workflowMode - The workflow mode ('full', 'minimal', 'custom', or undefined)
+ * @param explicitStages - Optional explicit list of stages (used for custom mode)
+ * @returns Array of WorkflowStage values to include in the workflow
+ */
+function determineStagesFromMode(
+  workflowMode: string | undefined,
+  explicitStages: WorkflowStage[] | undefined
+): WorkflowStage[] {
+  // If explicit stages provided (custom mode with specific requirements), use them
+  if (explicitStages && explicitStages.length > 0) {
+    return explicitStages;
+  }
+
+  // Handle predefined workflow modes
+  switch (workflowMode) {
+    case 'minimal':
+      // Minimal mode: Skip spec and docs, include only core implementation stages
+      return [
+        WorkflowStage.CodeResearch,
+        WorkflowStage.Plan,
+        WorkflowStage.Implementation,
+        WorkflowStage.ImplementationReview,
+        WorkflowStage.PRReviewResponse,
+        WorkflowStage.FinalPR,
+        WorkflowStage.Status
+      ];
+
+    case 'custom':
+      // Custom mode without explicit stages: Fall back to minimal
+      return [
+        WorkflowStage.CodeResearch,
+        WorkflowStage.Plan,
+        WorkflowStage.Implementation,
+        WorkflowStage.ImplementationReview,
+        WorkflowStage.PRReviewResponse,
+        WorkflowStage.FinalPR,
+        WorkflowStage.Status
+      ];
+
+    case 'full':
+    case undefined:
+    default:
+      // Full mode or undefined (backward compatibility): Include all stages
+      return [
+        WorkflowStage.Spec,
+        WorkflowStage.CodeResearch,
+        WorkflowStage.Plan,
+        WorkflowStage.Implementation,
+        WorkflowStage.ImplementationReview,
+        WorkflowStage.PRReviewResponse,
+        WorkflowStage.Documentation,
+        WorkflowStage.FinalPR,
+        WorkflowStage.Status
+      ];
+  }
+}
 
 /**
  * Generate content for a single prompt template file.
@@ -108,22 +245,27 @@ function generatePromptTemplate(
 }
 
 /**
- * Create all PAW prompt template files for a workflow.
+ * Create PAW prompt template files for a workflow based on workflow mode.
  * 
  * This function is the core implementation of the paw_create_prompt_templates
  * language model tool. It creates the .paw/work/<feature_slug>/prompts/ directory
- * and generates all required prompt template files with correct frontmatter.
+ * and generates prompt template files based on the selected workflow mode.
+ * 
+ * The function:
+ * 1. Determines which stages to include based on workflow_mode and stages parameters
+ * 2. Filters PROMPT_TEMPLATES to only include templates for those stages
+ * 3. Generates and writes the filtered prompt files
  * 
  * The function is designed to be idempotent - it will create the directory if it
  * doesn't exist and overwrite existing files.
  * 
- * @param params - Parameters specifying feature slug and workspace path
+ * @param params - Parameters including feature slug, workspace path, and optional workflow configuration
  * @returns Result object with success status, created files, and any errors
  */
 export async function createPromptTemplates(
   params: CreatePromptTemplatesParams
 ): Promise<CreatePromptTemplatesResult> {
-  const { feature_slug, workspace_path } = params;
+  const { feature_slug, workspace_path, workflow_mode, stages } = params;
   const filesCreated: string[] = [];
   const errors: string[] = [];
 
@@ -140,7 +282,15 @@ export async function createPromptTemplates(
       fs.mkdirSync(promptsDir, { recursive: true });
     }
 
-    for (const template of PROMPT_TEMPLATES) {
+    // Determine which stages to include based on workflow mode
+    const stagesToInclude = determineStagesFromMode(workflow_mode, stages);
+
+    // Filter templates to only include those matching the determined stages
+    const templatesToGenerate = PROMPT_TEMPLATES.filter(template =>
+      stagesToInclude.includes(template.stage)
+    );
+
+    for (const template of templatesToGenerate) {
       const filePath = path.join(promptsDir, template.filename);
       const content = generatePromptTemplate(
         template.mode,

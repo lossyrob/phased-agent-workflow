@@ -233,9 +233,9 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode, review s
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compilation passes: `cd vscode-extension && npm run compile`
-- [ ] No type errors in createPromptTemplates.ts: `npx tsc --noEmit`
-- [ ] Tool parameter validation accepts workflow_mode and stages parameters
+- [x] TypeScript compilation passes: `cd vscode-extension && npm run compile`
+- [x] No type errors in createPromptTemplates.ts: `npx tsc --noEmit`
+- [x] Tool parameter validation accepts workflow_mode and stages parameters
 
 #### Manual Verification:
 - [ ] Initialize workflow with "full" mode + "prs" strategy → verify 10 prompt files created (01A, 02A, 02B, 03A, 03B, 03C, 03D, 04, 05, 0X)
@@ -244,6 +244,38 @@ Enhance the `paw_create_prompt_templates` tool to accept workflow mode, review s
 - [ ] Verify no 01A-spec.prompt.md or 04-docs.prompt.md in minimal mode
 - [ ] Check that generated prompt files have correct frontmatter (`mode: PAW-XX`) and content
 - [ ] Initialize workflow with "full" mode twice → verify files are overwritten correctly (idempotent)
+
+**Phase 2 Implementation Complete - 2025-11-09**
+
+All automated verification passed successfully. The prompt template tool now supports conditional generation based on workflow mode:
+
+**Implementation Summary:**
+- Added WorkflowStage enum with 9 stage values (spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status)
+- Updated CreatePromptTemplatesParams interface to include optional workflow_mode, review_strategy, and stages parameters
+- Created PromptTemplate interface and updated PROMPT_TEMPLATES array to map each template to its corresponding stage
+- Implemented determineStagesFromMode() function with logic for:
+  - Full mode: All 9 stages (10 prompt files)
+  - Minimal mode: 7 stages excluding spec and documentation (7 prompt files: 02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
+  - Custom mode: Uses explicit stages array or falls back to minimal
+  - Undefined/backward compatibility: Defaults to all stages
+- Modified createPromptTemplates() to filter templates based on determined stages
+- Updated package.json inputSchema with new optional parameters and appropriate enum constraints
+- Tool registration now documents workflow mode support in modelDescription
+
+**Key Implementation Notes:**
+- Stage filtering happens at template generation time, not file creation time
+- PRReviewResponse stage includes both 03C and 03D prompt files
+- Review strategy parameter accepted but doesn't affect which prompts are generated (documented in comments)
+- Backward compatibility preserved: undefined workflow_mode generates all prompt files
+- All parameters except feature_slug and workspace_path remain optional for backward compatibility
+
+**Review Tasks for Implementation Review Agent:**
+- Verify stage-to-prompt-file mapping is complete and accurate
+- Check that determineStagesFromMode logic correctly handles all mode cases
+- Validate that package.json schema changes match TypeScript interface
+- Ensure minimal mode stage count matches spec (should be 7 files, not 6 as initially stated in plan - includes PRReviewResponse stage)
+
+**Note on Stage Count:** The implementation plan initially stated minimal mode would generate 6 files, but the actual implementation generates 7 files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X) because PRReviewResponse stage includes both 03C and 03D prompt files, which are important for handling PR review comment workflows even in minimal mode.
 
 ---
 

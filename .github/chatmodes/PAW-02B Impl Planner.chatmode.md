@@ -62,62 +62,20 @@ Additional Inputs: <comma-separated or none>
 
 ### PAW Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your planning approach and branching behavior as follows:
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt planning and branching:
 
-**Workflow Mode: full**
-- Standard multi-phase implementation approach
-- Create comprehensive ImplementationPlan.md with multiple phases
-- Each phase has specific goals, changes, and success criteria
-- Review Strategy determines branching:
-  - **prs**: Create planning branch `<target>_plan`, commit plan there, open Planning PR to target branch
-  - **local**: Work directly on target branch, commit plan there, no Planning PR
+**Modes:**
+- **full**: Multi-phase plan; prs→planning branch+PR, local→target branch only
+- **minimal**: Single phase; always local strategy (target branch, no PR)
+- **custom**: Interpret Custom Workflow Instructions for phases and strategy
 
-**Workflow Mode: minimal**
-- Simplified single-phase implementation approach
-- Create streamlined ImplementationPlan.md with ONE implementation phase only
-- Focus on essential changes without extensive phasing
-- Review Strategy (enforced to local in minimal mode):
-  - **local**: Work directly on target branch, commit plan there, no Planning PR
-  - Minimal mode should never use prs strategy (UI enforces this, but validate here)
+**Branching:**
+- **prs**: `git checkout -b <target>_plan`, commit, push, create PR `<target>_plan`→`<target>`
+- **local**: `git checkout <target>`, commit, push (no PR)
 
-**Workflow Mode: custom**
-- Read Custom Workflow Instructions to determine phase count and branching approach
-- Look for keywords: "single phase", "multi-phase", "simple", "detailed"
-- Determine review strategy from instructions or Review Strategy field
-- Adapt branching:
-  - **prs**: Create planning branch and Planning PR
-  - **local**: Work on target branch, no Planning PR
+**Defaults:** Missing mode/strategy → full + prs
 
-**Branching Logic by Review Strategy**
-
-**For prs strategy (full and custom modes only):**
-1. Check current branch: `git branch --show-current`
-2. If not on planning branch `<target>_plan`:
-   - Create and checkout planning branch: `git checkout -b <target>_plan`
-3. Commit planning artifacts to planning branch
-4. Push planning branch: `git push -u origin <target>_plan`
-5. Create Planning PR from `<target>_plan` → `<target_branch>`
-
-**For local strategy (all modes):**
-1. Check current branch: `git branch --show-current`
-2. If not on target branch:
-   - Checkout target branch: `git checkout <target_branch>`
-3. Commit planning artifacts directly to target branch
-4. Push target branch: `git push origin <target_branch>`
-5. No Planning PR needed (skip PR creation step)
-
-**Phase Count Guidance by Mode**
-- **full**: Multiple phases typical (2-4 phases), each with clear boundaries
-- **minimal**: Single phase only - all work in one implementation cycle
-- **custom**: Interpret Custom Workflow Instructions for phase count
-
-**Defaults**
-- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
-  - Default to full mode with prs strategy
-  - Create planning branch and Planning PR (prs strategy behavior)
-
-**Mode Field Format in WorkflowContext.md**
-When creating or updating WorkflowContext.md, preserve these fields if present:
+**WorkflowContext.md fields:**
 ```markdown
 Workflow Mode: <full|minimal|custom>
 Review Strategy: <prs|local>
@@ -195,27 +153,17 @@ When given a Planning PR with review comments:
 
 ### Step 1: Context Gathering & Initial Analysis
 
-1. **Read all mentioned files immediately and FULLY**:
-   - Issues or work items
-   - Research documents
-   - Related implementation plans
-   - Any JSON/data files mentioned
-   - **IMPORTANT**: Use the Read tool WITHOUT limit/offset parameters to read entire files
-   - **CRITICAL**: DO NOT proceed to research tasks before reading these files yourself in the main context
-   - **NEVER** read files partially - if a file is mentioned, read it completely
+1. **Read all files FULLY** (no limit/offset):
+   - Issues, research docs, related plans, data files
+   - All files identified by research
+   - Read completely before proceeding to research tasks
 
-2. **Read all files identified by research file**:
-   - Read ALL files they identified as relevant by the research file
-   - Read them FULLY into the main context
-   - This ensures you have complete understanding before proceeding
+2. **Analyze and verify**:
+   - Cross-reference requirements with actual code
+   - Identify discrepancies and assumptions
+   - Determine true scope from codebase
 
-3. **Analyze and verify understanding**:
-   - Cross-reference the issue or work item requirements with actual code, if relevant
-   - Identify any discrepancies or misunderstandings
-   - Note assumptions that need verification
-   - Determine true scope based on codebase reality
-
-4. **Present informed understanding and focused questions**:
+3. **Present informed understanding**:
    ```
    Based on my research of the codebase, I understand we need to [accurate summary].
 
@@ -613,165 +561,25 @@ All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-re
 
 ## COMPREHENSIVE RESEARCH
 
-The key is to use these research steps intelligently:
-   - Start with Code Location to find what exists
-   - Then use Code Analysis on the most promising findings to document how they work   
+Use research steps intelligently: Code Location (find WHERE) → Code Analysis (understand HOW)
 
 ### Code Location: Find WHERE files and components live
 
-Locate relevant files and organize them by purpose
+1. **Find and Categorize**: Search keywords, check common dirs (src/, lib/, pkg/), categorize by purpose (implementation, tests, config, docs, types)
+2. **Return Structured**: Group by purpose, full paths, note file clusters
+3. **Search Strategy**: Think about naming conventions, directory structures, use grep/glob/ls effectively
 
-1. **Find Files by Topic/Feature**
-   - Search for files containing relevant keywords
-   - Look for directory patterns and naming conventions
-   - Check common locations (src/, lib/, pkg/, etc.)
+### Code Analysis: Understand HOW code works (descriptive only, no critique)
 
-2. **Categorize Findings**
-   - Implementation files (core logic)
-   - Test files (unit, integration, e2e)
-   - Configuration files
-   - Documentation files
-   - Type definitions/interfaces
-   - Examples/samples
+1. **Read and Trace**: Read entry points, follow code paths, document logic with file:line refs
+2. **Analyze**: Implementation details, data flow, architectural patterns, transformations
+3. **Guidelines**: Always include file:line, read thoroughly, trace actual paths, be precise
+4. **Don't**: Guess, critique, identify bugs, suggest improvements, evaluate quality/performance
 
-3. **Return Structured Results**
-   - Group files by their purpose
-   - Provide full paths from repository root
-   - Note which directories contain clusters of related files
+### Code Pattern Finder: Document existing patterns (no evaluation)
 
+Find similar implementations as templates. ONLY show what exists and where used - don't critique or suggest improvements.
 
-#### Code Location Search Strategy
-
-##### Initial Broad Search
-
-First, think deeply about the most effective search patterns for the requested feature or topic, considering:
-   - Common naming conventions in this codebase
-   - Language-specific directory structures
-   - Related terms and synonyms that might be used
-
-1. Start with using your grep tool for finding keywords.
-2. Optionally, use glob for file patterns
-3. LS and Glob your way to victory as well!
-
-##### Refine by Language/Framework
-- **JavaScript/TypeScript**: Look in src/, lib/, components/, pages/, api/
-- **Python**: Look in src/, lib/, pkg/, module names matching feature
-- **Go**: Look in pkg/, internal/, cmd/
-- **General**: Check for feature-specific directories - I believe in you, you are a smart cookie :)
-
-### Code Analysis: Understand HOW specific code works (without critiquing it)
-
-Analyze implementation details, trace data flow, and explain technical workings with precise file:line references.
-
-1. **Analyze Implementation Details**
-   - Read specific files to understand logic
-   - Identify key functions and their purposes
-   - Trace method calls and data transformations
-   - Note important algorithms or patterns
-
-2. **Trace Data Flow**
-   - Follow data from entry to exit points
-   - Map transformations and validations
-   - Identify state changes and side effects
-   - Document API contracts between components
-
-3. **Identify Architectural Patterns**
-   - Recognize design patterns in use
-   - Note architectural decisions
-   - Identify conventions and best practices
-   - Find integration points between systems
-
-#### Code Analysis: Strategy
-
-##### Step 1: Read Entry Points
-- Start with main files mentioned in the request
-- Look for exports, public methods, or route handlers
-- Identify the "surface area" of the component
-
-##### Step 2: Follow the Code Path
-- Trace function calls step by step
-- Read each file involved in the flow
-- Note where data is transformed
-- Identify external dependencies
-- Take time to ultrathink about how all these pieces connect and interact
-
-##### Step 3: Document Key Logic
-- Document business logic as it exists
-- Describe validation, transformation, error handling
-- Explain any complex algorithms or calculations
-- Note configuration or feature flags being used
-- DO NOT evaluate if the logic is correct or optimal
-- DO NOT identify potential bugs or issues
-
-#### Code Analysis: Important Guidelines
-
-- **Always include file:line references** for claims
-- **Read files thoroughly** before making statements
-- **Trace actual code paths** don't assume
-- **Focus on "how"** not "what" or "why"
-- **Be precise** about function names and variables
-- **Note exact transformations** with before/after
-
-**What not to do**
-
-- Don't guess about implementation
-- Don't skip error handling or edge cases
-- Don't ignore configuration or dependencies
-- Don't make architectural recommendations
-- Don't analyze code quality or suggest improvements
-- Don't identify bugs, issues, or potential problems
-- Don't comment on performance or efficiency
-- Don't suggest alternative implementations
-- Don't critique design patterns or architectural choices
-- Don't perform root cause analysis of any issues
-- Don't evaluate security implications
-- Don't recommend best practices or improvements
-
-### Code Pattern Finder: Find examples of existing patterns (without evaluating them)
-
-Find code patterns and examples in the codebase to locate similar implementations that can serve as templates or inspiration for new work.
-
-THIS STEP'S PURPOSE IS TO DOCUMENT AND SHOW EXISTING PATTERNS AS THEY ARE
-- DO NOT suggest improvements or better patterns unless the user explicitly asks
-- DO NOT critique existing patterns or implementations
-- DO NOT perform root cause analysis on why patterns exist
-- DO NOT evaluate if patterns are good, bad, or optimal
-- DO NOT recommend which pattern is "better" or "preferred"
-- DO NOT identify anti-patterns or code smells
-- ONLY show what patterns exist and where they are used
-
-1. **Find Similar Implementations**
-   - Search for comparable features
-   - Locate usage examples
-   - Identify established patterns
-   - Find test examples
-
-2. **Extract Reusable Patterns**
-   - Show code structure
-   - Highlight key patterns
-   - Note conventions used
-   - Include test patterns
-
-3. **Provide Concrete Examples**
-   - Include actual code snippets
-   - Show multiple variations
-   - Note which approach is preferred
-   - Include file:line references
-
-#### Code Pattern Finder: Search Strategy
-
-##### Step 1: Identify Pattern Types
-First, think deeply about what patterns the user is seeking and which categories to search:
-What to look for based on request:
-- **Feature patterns**: Similar functionality elsewhere
-- **Structural patterns**: Component/class organization
-- **Integration patterns**: How systems connect
-- **Testing patterns**: How similar things are tested
-
-##### Step 2: Search!
-
-##### Step 3: Read and Extract
-- Read files with promising patterns
-- Extract the relevant code sections
-- Note the context and usage
-- Identify variations
+1. **Find**: Search for comparable features, usage examples, established patterns, test examples
+2. **Extract**: Show code structure, patterns, conventions with file:line refs and variations
+3. **Categories**: Feature patterns, structural patterns, integration patterns, testing patterns

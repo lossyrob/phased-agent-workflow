@@ -226,20 +226,33 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
      - `refactor: remove unused <parameter/code>` for small refactors
    - **Selective staging**: Use `git add <file>` for each file; verify with `git diff --cached` before committing
 
-7. **Push and open PR** (REQUIRED):
-   - **PR Operations Context**: When opening PRs, provide branch names (source: phase branch, target: Target Branch from WorkflowContext.md), Work Title, and Issue URL. Describe operations naturally (e.g., "open a PR from <phase_branch> to <Target Branch>"). Copilot will automatically resolve workspace git remotes and route to the appropriate platform tools.
-   - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
-   - Open phase PR with description referencing plan
-   - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>` where Work Title comes from WorkflowContext.md
-   - Include phase objectives, changes made, and testing performed
-   - **Link to issue**: Include Issue URL from WorkflowContext.md in the PR description
-   - **Artifact links:**
-     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - Read Feature Slug from WorkflowContext.md to construct link
-   - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+7. **DETERMINE REVIEW STRATEGY AND PUSH/PR** (REQUIRED):
+
+   **Step 7.1: Read Review Strategy** (REQUIRED FIRST):
+   - Read WorkflowContext.md to extract Review Strategy field
+   - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
+   - Set strategy variable: `<prs or local>`
+
+   **Step 7.2a: IF Review Strategy = 'prs' - Push Phase Branch and Create Phase PR**:
+   - Verify on phase branch: `git branch --show-current` should show `<target>_phase[N]`
+   - Push phase branch: `git push -u <remote> <target>_phase[N]`
+   - **REQUIRED**: Create Phase PR:
+     - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
+     - Source: `<target>_phase[N]` → Target: `<target_branch>`
+     - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
+     - Include phase objectives, changes made, testing performed
+     - Link to Issue URL from WorkflowContext.md
+     - Artifact links: Implementation Plan at `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
-   - Post a PR timeline comment summarizing the review, starting with `**🐾 Implementation Reviewer 🤖:**` and covering whether additional commits were made, verification status, and any next steps
-   - If no commits were necessary, explicitly state that the review resulted in no additional changes
+   - Post PR timeline comment starting with `**🐾 Implementation Reviewer 🤖:**` summarizing review and commits
+
+   **Step 7.2b: IF Review Strategy = 'local' - Push Target Branch Only**:
+   - Verify on target branch: `git branch --show-current` should show `<target_branch>`
+   - Push target branch: `git push <remote> <target_branch>`
+   - **Skip Phase PR creation** (no intermediate PR in local strategy)
+   - Document phase completion in ImplementationPlan.md notes if needed
+   - Phase review complete, ready for next phase or final PR
 
 ### For Review Comment Follow-up
 

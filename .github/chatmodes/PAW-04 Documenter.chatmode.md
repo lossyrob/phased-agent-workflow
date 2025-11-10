@@ -191,19 +191,41 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - **API docs**: Follow existing API documentation format and level of detail exactly.
    - When in doubt, be MORE concise in project docs - Docs.md is where detail lives
 
-5. **Create docs branch and PR**:
-   - Create `<target_branch>_docs` branch
-   - Stage ONLY documentation files you modified: `git add <file1> <file2>`
+5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
+
+   **Step 5.1: Read Review Strategy** (REQUIRED FIRST):
+   - Read WorkflowContext.md to extract Review Strategy field
+   - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
+   - Set strategy variable: `<prs or local>`
+
+   **Step 5.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
+   - Check current branch: `git branch --show-current`
+   - If not on docs branch `<target>_docs`:
+     - Create and checkout: `git checkout -b <target>_docs`
+   - Verify: `git branch --show-current`
+   - Stage ONLY documentation files modified: `git add <file1> <file2>` (Docs.md, README.md, CHANGELOG.md, etc.)
    - Verify staged changes: `git diff --cached`
-   - Commit documentation changes
-   - Push branch
-   - Open docs PR with description
-   - **Title**: `[<Work Title>] Documentation` where Work Title comes from WorkflowContext.md
-   - Include summary of documentation added (highlight that Docs.md is the detailed feature reference) and reference to ImplementationPlan.md
-   - **Artifact links:**
-     - Documentation: `.paw/work/<feature-slug>/Docs.md`
-     - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - Read Feature Slug from WorkflowContext.md to construct links
+   - Commit documentation changes with descriptive message
+   - Push docs branch: `git push -u <remote> <target>_docs`
+   - **REQUIRED**: Create Docs PR:
+     - Source: `<target>_docs` → Target: `<target_branch>`
+     - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
+     - Include summary of Docs.md (detailed feature reference) and project documentation updates
+     - Artifact links: `.paw/work/<feature-slug>/Docs.md` and `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+   - Pause for human review of Docs PR
+
+   **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
+   - Check current branch: `git branch --show-current`
+   - If not on target branch:
+     - Checkout target branch: `git checkout <target_branch>`
+   - Verify: `git branch --show-current`
+   - Stage ONLY documentation files modified: `git add <file1> <file2>`
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes with descriptive message
+   - Push target branch: `git push <remote> <target_branch>`
+   - **Skip Docs PR creation** (no intermediate PR in local strategy)
+   - Documentation complete, ready for final PR
 
 ### For Review Comment Follow-up
 

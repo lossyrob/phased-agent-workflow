@@ -91,6 +91,44 @@ Additional Inputs: <comma-separated or none>
 - When you learn a new parameter (e.g., Issue URL link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
 - Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt behavior as follows:
+
+**Workflow Mode: full**
+- Standard spec creation with Spec.md and SpecResearch.md
+- Generate comprehensive specifications covering all aspects
+- Follow complete research workflow with internal and optional external questions
+
+**Workflow Mode: minimal**
+- Spec stage is typically skipped in minimal mode
+- If invoked anyway, create lightweight spec focusing on core requirements
+- Reduce ceremony: fewer sections, focus on essential FRs and acceptance criteria
+- Research questions should focus on implementation-critical unknowns only
+
+**Workflow Mode: custom**
+- Check Custom Workflow Instructions to determine if spec stage is included
+- If instructions mention "skip spec" or similar, inform user and exit gracefully
+- If spec stage is included, adapt depth based on custom instructions
+- Look for keywords like "lightweight", "detailed", "comprehensive" to guide detail level
+
+**Review Strategy (prs or local)**
+- Review strategy doesn't affect spec creation behavior
+- Both strategies produce the same spec artifacts
+- Note: Branching happens in later stages (Planning, Implementation)
+
+**Defaults**
+  - Default to full mode with prs strategy
+  - if Workflow Mode or Review Strategy fields missing from WorkflowContext.md, use defaults
+
+**Mode Field Format in WorkflowContext.md**
+When creating or updating WorkflowContext.md, include these fields:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).
 2. Extract key concepts → derive prioritized user stories (independently testable slices).

@@ -35,6 +35,104 @@ Additional Inputs: <comma-separated or none>
 - When required parameters are absent, explicitly call out the missing field, gather or confirm it, and persist the update so the workflow keeps a single source of truth. Treat missing `Remote` entries as `origin` without extra prompts.
 - Update the file whenever you uncover new parameter values (e.g., newly created PR links, artifact overrides) so future status updates inherit the latest information. Record derived artifact paths when relying on conventional locations.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your status reporting and PR/branch checking based on the workflow configuration:
+
+**Workflow Mode: full**
+- Check for all artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+- Report status for all stages: Spec, Planning, Implementation (multiple phases), Docs, Final PR
+- Review Strategy determines what to check:
+  - **prs**: Check for Planning PR, Phase PRs, Docs PR, and Final PR
+  - **local**: Check target branch only, no Planning/Phase/Docs PRs (only Final PR)
+
+**Workflow Mode: minimal**
+- Check only minimal artifacts: CodeResearch.md, ImplementationPlan.md (Spec.md and Docs.md skipped)
+- Report status for minimal stages: Code Research, Planning, Implementation (single phase), Final PR
+- Review Strategy (enforced to local in minimal mode):
+  - **local**: Check target branch, no intermediate PRs, only Final PR
+
+**Workflow Mode: custom**
+- Dynamically determine which artifacts and stages exist based on Custom Workflow Instructions
+- Check for artifacts that exist on disk (don't assume)
+- Adapt PR checks based on Review Strategy from instructions
+
+**Artifact Discovery for Status Reporting**
+```
+artifacts_to_check = ['Spec.md', 'SpecResearch.md', 'CodeResearch.md', 'ImplementationPlan.md', 'Docs.md']
+existing_artifacts = {}
+
+for artifact in artifacts_to_check:
+    path = f".paw/work/<feature-slug>/{artifact}"
+    if file_exists(path):
+        existing_artifacts[artifact] = "✅ Exists"
+    else:
+        existing_artifacts[artifact] = "⏭️ Skipped" if mode == "minimal" and artifact in ["Spec.md", "Docs.md"] else "❌ Missing"
+
+# Report only relevant artifacts based on mode
+```
+
+**PR/Branch Checking by Review Strategy**
+
+**For prs strategy (full and custom modes):**
+- Check for Planning PR: `git branch --list <target>_plan` and search for PR
+- Check for Phase PR(s): `git branch --list <target>_phase*` and search for PRs
+- Check for Docs PR: `git branch --list <target>_docs` and search for PR
+- Check for Final PR: Search for PR from `<target>` → `main`
+- Include all found PRs in status dashboard with links and states
+
+**For local strategy (all modes):**
+- Skip Planning PR check (no planning branch)
+- Skip Phase PR checks (no phase branches)
+- Skip Docs PR check (no docs branch)
+- Only check Final PR: Search for PR from `<target>` → `main`
+- Status dashboard shows commits on target branch instead of intermediate PRs
+
+**Status Dashboard Adaptation by Mode and Strategy**
+
+**For full + prs:**
+```
+**Artifacts**:
+- ✅ Spec.md
+- ✅ SpecResearch.md
+- ✅ CodeResearch.md
+- ✅ ImplementationPlan.md
+- ✅ Docs.md
+
+**PRs**:
+- Planning PR: #123 — merged
+- Phase 1: #124 — merged
+- Phase 2: #125 — open
+- Docs PR: #126 — open
+- Final PR: #127 — not yet opened
+```
+
+**For minimal + local:**
+```
+**Artifacts**:
+- ⏭️ Spec.md (skipped in minimal mode)
+- ✅ CodeResearch.md
+- ✅ ImplementationPlan.md
+- ⏭️ Docs.md (skipped in minimal mode)
+
+**Target Branch**: feature/my-feature
+- Implementation commits: 15 commits
+- Final PR: #123 — open
+```
+
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Check for all artifacts and all intermediate PRs (prs strategy behavior)
+
+**Mode Field Format in WorkflowContext.md**
+When updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
 ## Process Steps
 
 ### Step 1: Determine Actual Phase Count

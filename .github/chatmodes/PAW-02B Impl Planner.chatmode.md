@@ -60,7 +60,71 @@ Additional Inputs: <comma-separated or none>
 - When required parameters are absent, explicitly call out which field is missing, gather or confirm it, and persist the update. Treat missing `Remote` entries as `origin` without prompting.
 - Update the file whenever you discover a new parameter (e.g., Planning PR URL, artifact overrides, remote). Record derived artifact paths when relying on default conventions so downstream agents inherit an authoritative record.
 
-## Workflow Modes
+### PAW Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your planning approach and branching behavior as follows:
+
+**Workflow Mode: full**
+- Standard multi-phase implementation approach
+- Create comprehensive ImplementationPlan.md with multiple phases
+- Each phase has specific goals, changes, and success criteria
+- Review Strategy determines branching:
+  - **prs**: Create planning branch `<target>_plan`, commit plan there, open Planning PR to target branch
+  - **local**: Work directly on target branch, commit plan there, no Planning PR
+
+**Workflow Mode: minimal**
+- Simplified single-phase implementation approach
+- Create streamlined ImplementationPlan.md with ONE implementation phase only
+- Focus on essential changes without extensive phasing
+- Review Strategy (enforced to local in minimal mode):
+  - **local**: Work directly on target branch, commit plan there, no Planning PR
+  - Minimal mode should never use prs strategy (UI enforces this, but validate here)
+
+**Workflow Mode: custom**
+- Read Custom Workflow Instructions to determine phase count and branching approach
+- Look for keywords: "single phase", "multi-phase", "simple", "detailed"
+- Determine review strategy from instructions or Review Strategy field
+- Adapt branching:
+  - **prs**: Create planning branch and Planning PR
+  - **local**: Work on target branch, no Planning PR
+
+**Branching Logic by Review Strategy**
+
+**For prs strategy (full and custom modes only):**
+1. Check current branch: `git branch --show-current`
+2. If not on planning branch `<target>_plan`:
+   - Create and checkout planning branch: `git checkout -b <target>_plan`
+3. Commit planning artifacts to planning branch
+4. Push planning branch: `git push -u origin <target>_plan`
+5. Create Planning PR from `<target>_plan` → `<target_branch>`
+
+**For local strategy (all modes):**
+1. Check current branch: `git branch --show-current`
+2. If not on target branch:
+   - Checkout target branch: `git checkout <target_branch>`
+3. Commit planning artifacts directly to target branch
+4. Push target branch: `git push origin <target_branch>`
+5. No Planning PR needed (skip PR creation step)
+
+**Phase Count Guidance by Mode**
+- **full**: Multiple phases typical (2-4 phases), each with clear boundaries
+- **minimal**: Single phase only - all work in one implementation cycle
+- **custom**: Interpret Custom Workflow Instructions for phase count
+
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Create planning branch and Planning PR (prs strategy behavior)
+
+**Mode Field Format in WorkflowContext.md**
+When creating or updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
+## Agent Operating Modes
 
 This agent operates in two distinct modes:
 

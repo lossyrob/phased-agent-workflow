@@ -421,19 +421,26 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 4. **Continue refining** until the user is satisfied
 
-5. **Commit, push, and open/update the Planning PR** (Initial Planning Only):
-    - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
-    - Stage ONLY planning artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files you created
-    - Verify staged changes before committing: `git diff --cached`
-    - Commit with a descriptive message
-    - Push the planning branch using the `github mcp` git tools (do **not** run raw git commands).
-    - Use the `github mcp` pull-request tools to open or update the Planning PR (`<target_branch>_plan` → `<target_branch>`). Include:
-       - **Title**: `[<Work Title>] Planning: <brief description>` where Work Title comes from WorkflowContext.md
-       - Summary of the spec, research, and planning deliverables
-       - Links to `.paw/work/<feature-slug>/Spec.md`, `.paw/work/<feature-slug>/SpecResearch.md`, `.paw/work/<feature-slug>/CodeResearch.md`, and `.paw/work/<feature-slug>/ImplementationPlan.md`. Read Feature Slug from WorkflowContext.md to construct links.
-       - Outstanding questions or risks that require human attention (should be zero)
-       - At the bottom of the PR, add `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
-    - Pause for human review of the Planning PR before proceeding to downstream stages.
+5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (Initial Planning Only - REQUIRED):
+
+   **Read Review Strategy from WorkflowContext.md** (REQUIRED FIRST):
+   - Extract Review Strategy field; if missing, log "defaulting to 'prs'" and use prs strategy
+
+   **IF Review Strategy = 'prs'**:
+   - Ensure on planning branch: `git branch --show-current`, create if needed: `git checkout -b <target_branch>_plan`
+   - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
+   - Verify: `git diff --cached`, commit, push: `git push -u <remote> <target_branch>_plan`
+   - Create Planning PR (`<target_branch>_plan` → `<target_branch>`):
+     - Title: `[<Work Title>] Planning: <brief description>`
+     - Summary of deliverables, links to artifacts
+     - Footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+   - Pause for review
+
+   **IF Review Strategy = 'local'**:
+   - Ensure on target branch: `git branch --show-current`, checkout if needed: `git checkout <target_branch>`
+   - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
+   - Verify: `git diff --cached`, commit, push: `git push <remote> <target_branch>`
+   - Skip Planning PR (no intermediate PRs in local strategy)
 
 ## Important Guidelines
 

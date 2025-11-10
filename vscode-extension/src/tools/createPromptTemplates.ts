@@ -139,19 +139,19 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
   },
   {
     filename: '04-docs.prompt.md',
-    mode: 'PAW-04 Documenter Agent',
+    mode: 'PAW-04 Documenter',
     instruction: 'Generate documentation from',
     stage: WorkflowStage.Documentation
   },
   {
     filename: '05-pr.prompt.md',
-    mode: 'PAW-05 PR Agent',
+    mode: 'PAW-05 PR',
     instruction: 'Create final PR from',
     stage: WorkflowStage.FinalPR
   },
   {
     filename: '0X-status.prompt.md',
-    mode: 'PAW-0X Status Agent',
+    mode: 'PAW-X Status Update',
     instruction: 'Update status from',
     stage: WorkflowStage.Status
   }

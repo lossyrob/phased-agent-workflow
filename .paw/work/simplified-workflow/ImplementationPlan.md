@@ -479,12 +479,7 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 - Generated files have correct frontmatter format
 - Status stage handling in different modes
 
-#### 3. Integration Test Script
-**File**: `scripts/test-workflow-modes.sh` (new file)
-**Changes**: Create bash script for manual E2E testing
-**Purpose**: Provides test checklist for manual verification of workflow modes
-
-#### 4. Documentation Updates
+#### 3. Documentation Updates
 **File**: `README.md`
 **Changes**: Add "Workflow Modes" section after existing content
 **Content**:
@@ -494,11 +489,11 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 - Clarification that quality gates remain mandatory
 - Examples for each mode
 
-#### 5. Validation and Error Handling
+#### 4. Validation and Error Handling
 **Location**: Agent chatmode files (already added in Phase 3)
 **Purpose**: Validate Workflow Mode field, provide clear errors for invalid values
 
-#### 6. Error Handling Test Cases
+#### 5. Error Handling Test Cases
 **File**: `vscode-extension/src/test/suite/errorHandling.test.ts` (new file)
 **Changes**: Test error conditions
 **Tests**:
@@ -514,11 +509,12 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 - [ ] Test coverage includes workflow mode selection, prompt generation, and validation
 
 #### Manual Verification:
-- [ ] Complete full workflow end-to-end → verify all branches created, all PRs opened
-- [ ] Complete minimal workflow end-to-end → verify single branch, no intermediate PRs, 5 prompt files
-- [ ] Initialize custom workflow with "skip spec and docs, single branch" → verify correct prompt files generated and single-branch behavior
+- [ ] Complete full workflow end-to-end with prs strategy → verify all intermediate branches and PRs created
+- [ ] Complete full workflow end-to-end with local strategy → verify single branch, no intermediate PRs
+- [ ] Complete minimal workflow end-to-end → verify single branch, no intermediate PRs, 7 prompt files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
+- [ ] Initialize custom workflow with specific instructions → verify correct prompt files generated and behavior matches instructions
 - [ ] Test invalid mode in WorkflowContext.md → verify clear error message displayed
-- [ ] Test backward compatibility: Use old WorkflowContext.md → verify treats as full mode
+- [ ] Test backward compatibility: Use old WorkflowContext.md → verify treats as full mode with prs strategy
 - [ ] Run Status Agent in each mode → verify reports appropriate status for that mode
 - [ ] Verify quality gates enforced in all modes (tests, linting, type checking)
 - [ ] Check documentation clarity: Can a new user understand how to select appropriate mode?
@@ -539,128 +535,68 @@ Add comprehensive testing for all workflow modes, implement validation for inval
 - Validation rule: minimal mode requires local strategy
 
 **Key Test Cases**:
-1. Full mode + prs strategy generates exactly 10 prompt files and creates intermediate branches
-2. Full mode + local strategy generates exactly 10 prompt files but no intermediate branches
-3. Minimal mode (local strategy enforced) generates exactly 6 prompt files (02A, 02B, 03A, 03B, 05, 0X)
+1. Full mode + prs strategy generates exactly 10 prompt files
+2. Full mode + local strategy generates exactly 10 prompt files
+3. Minimal mode (local strategy enforced) generates exactly 7 prompt files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
 4. Custom mode with explicit stages generates only specified files
 5. Default behavior (no mode/strategy) generates all files for backward compatibility (full + prs)
 6. Generated files have correct frontmatter and content format
 7. Invalid custom instructions rejected during input collection
 8. Minimal mode + prs strategy combination rejected with clear error
 
-### Integration Tests
+### Manual Testing and Validation
 
-**End-to-End Workflow Tests**:
-1. **Full Mode + prs Strategy E2E**:
-   - Initialize workflow with full mode and prs strategy
-   - Complete all stages: Spec → Code Research → Planning → Implementation → Docs → PR
-   - Verify branches: _plan, _phaseN, _docs all created
-   - Verify PRs: Planning PR, Phase PR(s), Docs PR, Final PR all opened
-   - Verify artifacts: All 6 markdown files created
+Agent behavior verification across different workflow modes and review strategies requires manual end-to-end testing. There is no automated integration test framework for PAW workflows at this time.
 
-2. **Full Mode + local Strategy E2E**:
-   - Initialize workflow with full mode and local strategy
-   - Complete all stages on target branch
-   - Verify branches: Only target branch exists (no _plan, _phaseN, _docs)
-   - Verify PRs: Only Final PR created
-   - Verify artifacts: All 6 markdown files created
+**Manual Verification Scenarios:**
 
-3. **Minimal Mode E2E**:
-   - Initialize workflow with minimal mode (local strategy enforced)
-   - Complete stages: Code Research → Planning → Implementation → PR
-   - Verify branches: Only target branch exists
-   - Verify PRs: Only Final PR created
-   - Verify artifacts: CodeResearch.md and ImplementationPlan.md (single phase) created
-   - Verify no Spec.md or Docs.md
+**Scenario 1: Minimal Mode (Single Branch, No Intermediate PRs)**
+- Initialize workflow with minimal mode
+- Verify exactly 7 prompt files generated (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X)
+- Execute Code Research agent → verify no error about missing Spec.md
+- Execute Implementation Plan agent → verify single-phase plan created
+- Execute Implementer agent → verify work happens on target branch (no phase branches)
+- Verify all commits on target branch only
+- Execute PR agent → verify Final PR created from target branch to base
 
-4. **Custom Mode E2E**:
-   - Initialize with instructions: "skip docs, prs review strategy, multi-phase plan"
-   - Verify prompt files: No 01A-spec or 04-docs generated
-   - Verify branching: Planning and phase branches created
-   - Verify planning: Multi-phase ImplementationPlan.md created
-   - Verify PRs: Planning PR and Phase PR(s) created
+**Scenario 2: Full Mode + prs Strategy (Multiple Branches and PRs)**
+- Initialize workflow with full mode and prs strategy
+- Verify all 10 prompt files generated
+- Execute Planning agent → verify planning branch created and Planning PR opened
+- Execute Implementer agent → verify phase branches created and Phase PRs opened
+- Execute Documentation agent → verify docs branch created and Docs PR opened
+- Execute PR agent → verify Final PR created
+- Verify all intermediate branches exist (_plan, _phaseN, _docs)
 
-5. **Backward Compatibility**:
-   - Create WorkflowContext.md without Workflow Mode and Review Strategy fields
-   - Run various agents
-   - Verify all treat as full mode with prs strategy with informational log messages
-   - Verify no errors or crashes
+**Scenario 3: Full Mode + local Strategy (Single Branch, Multiple Stages)**
+- Initialize workflow with full mode and local strategy
+- Verify all 10 prompt files generated
+- Execute all agents sequentially
+- Verify all work happens on target branch (no _plan, _phaseN, _docs branches)
+- Verify only Final PR created (no Planning PR, Phase PRs, Docs PR)
+- Verify all artifacts created and committed to target branch
 
-### Manual Testing Steps
-
-**Scenario 1: New User with Bug Fix**
-1. Open PAW-enabled workspace
-2. Run `PAW: New PAW Workflow` command
-3. Enter branch name: `fix/login-timeout`
-4. Select "minimal" mode → verify UI shows clear description and automatically sets local strategy
-5. Enter GitHub issue URL
-6. Verify WorkflowContext.md created with `Workflow Mode: minimal` and `Review Strategy: local`
-7. Verify exactly 6 prompt files in `.paw/work/fix-login-timeout/prompts/`
-8. Run `02A-code-research.prompt.md` → verify agent doesn't error about missing Spec.md
-9. Run `02B-impl-plan.prompt.md` → verify single-phase plan created
-10. Run `03A-implement.prompt.md` → verify no phase branch created
-11. Verify all commits on `fix/login-timeout` branch
-12. Run `05-pr.prompt.md` → verify Final PR opened from `fix/login-timeout` → `main`
-
-**Scenario 2: Large Feature with Full Workflow + prs Strategy**
-1. Run `PAW: New PAW Workflow` command
-2. Enter branch name: `feature/oauth-integration`
-3. Select "full" mode
-4. Select "prs" review strategy
-5. Enter GitHub issue URL
-6. Verify all 10 prompt files generated
-7. Complete full workflow sequentially
-8. Verify planning branch `feature/oauth-integration_plan` created
-9. Verify phase branches created for each phase
-10. Verify Planning PR, Phase PRs, Docs PR, Final PR all opened
-11. Verify all artifacts created (Spec, SpecResearch, CodeResearch, ImplementationPlan, Docs)
-
-**Scenario 3: Large Feature with Full Workflow + local Strategy**
-1. Run `PAW: New PAW Workflow` command
-2. Enter branch name: `feature/oauth-integration`
-3. Select "full" mode
-4. Select "local" review strategy
-5. Enter GitHub issue URL
-6. Verify all 10 prompt files generated
-7. Complete full workflow sequentially on single branch
-8. Verify all work on `feature/oauth-integration` branch (no _plan, _phaseN, _docs branches)
-9. Verify only Final PR created
-10. Verify all artifacts created and committed to target branch
-
-**Scenario 4: Custom Workflow with prs Strategy**
-1. Run `PAW: New PAW Workflow` command
-2. Enter branch name: `refactor/api-client`
-3. Select "custom" mode
-4. Enter instructions: "Skip specification stage, include documentation, use prs review strategy"
-5. Select "prs" review strategy
-6. Verify prompt files: No 01A-spec, includes 04-docs, includes 02A, 02B, 03A, 03B, 05, 0X
-7. Run Code Research → verify no error about missing Spec.md
-8. Run Planning → verify planning branch created
-9. Run Implementation → verify phase branches created
-10. Run Documentation → verify docs branch created
-11. Verify Planning PR, Phase PR(s), Docs PR created
+**Scenario 4: Custom Mode with prs Strategy**
+- Initialize with custom instructions: "Skip specification stage, include documentation, use prs review strategy"
+- Verify prompt files generated match instructions (no 01A-spec, includes 04-docs)
+- Execute agents → verify planning and phase branches created
+- Verify intermediate PRs created according to prs strategy
 
 **Scenario 5: Backward Compatibility**
-1. Navigate to existing PAW workflow with old WorkflowContext.md (no Workflow Mode or Review Strategy fields)
-2. Run Status Agent
-3. Verify informational log: "No Workflow Mode or Review Strategy found, assuming full mode with prs strategy"
-4. Verify agent functions correctly (checks for all branches)
-5. Manually add `Workflow Mode: full` and `Review Strategy: prs` to WorkflowContext.md
-6. Run Status Agent again → verify no more informational message
+- Use existing WorkflowContext.md without Workflow Mode or Review Strategy fields
+- Execute any agent → verify treats as full mode with prs strategy
+- Verify informational log message about assumed defaults
+- Verify no errors or crashes
 
-**Scenario 6: Invalid Configuration**
-1. Manually edit WorkflowContext.md, set `Workflow Mode: turbo-fast`
-2. Run any agent (e.g., Status Agent)
-3. Verify clear error message: "Invalid Workflow Mode 'turbo-fast'... Valid modes are: full, minimal, custom"
-4. Verify agent stops execution (doesn't proceed with invalid config)
+**Scenario 6: Invalid Configuration Handling**
+- Manually edit WorkflowContext.md with invalid mode value (e.g., "Workflow Mode: turbo-fast")
+- Execute any agent → verify clear error message listing valid modes
+- Verify agent stops execution and doesn't proceed with invalid config
 
-**Scenario 7: Quality Gates in Minimal Mode**
-1. Initialize minimal workflow
-2. Implement phase with intentional test failure
-3. Run tests → verify failure detected
-4. Verify PR cannot be merged until tests pass
-5. Fix tests → verify quality gates now pass
-6. Verify linting, type checking also enforced
+**Scenario 7: Quality Gates Enforcement**
+- Execute workflow in any mode with intentional test failure
+- Verify tests must pass before PR can be merged
+- Verify linting, type checking, and build checks enforced regardless of mode
 
 ## Performance Considerations
 

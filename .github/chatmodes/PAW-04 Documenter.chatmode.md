@@ -43,9 +43,80 @@ Additional Inputs: <comma-separated or none>
 - When required parameters are absent, explicitly note the missing field, gather or confirm the value, and persist it so subsequent stages inherit the authoritative record. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., docs branch name, artifact overrides, additional inputs) so the workflow continues to rely on a single source of truth. Record derived artifact paths when using conventional locations.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your documentation approach and branching behavior as follows:
+
+**Workflow Mode: full**
+- Standard comprehensive documentation workflow
+- Create detailed Docs.md with all sections
+- Review Strategy determines branching and PR:
+  - **prs**: Create docs branch `<target>_docs`, commit there, open Docs PR to target branch
+  - **local**: Work on target branch, commit there, no Docs PR
+
+**Workflow Mode: minimal**
+- Documentation stage typically skipped in minimal mode
+- If invoked anyway (user requests docs):
+  - Create streamlined Docs.md focusing on essential information only
+  - Review Strategy (enforced to local in minimal mode):
+    - **local**: Work on target branch, commit there, no Docs PR
+  - Minimal mode should never create Docs PR
+- Otherwise, exit gracefully with message: "Documentation stage is skipped in minimal workflow mode"
+
+**Workflow Mode: custom**
+- Check Custom Workflow Instructions to determine if docs stage is included
+- If instructions say "skip docs" or similar:
+  - Exit gracefully: "Documentation skipped per custom workflow instructions"
+- If docs included, adapt depth based on instructions:
+  - Look for keywords: "comprehensive", "lightweight", "essential only"
+- Review Strategy determines branching per instructions
+
+**Branching Logic by Review Strategy**
+
+**For prs strategy (full and custom modes only):**
+1. Check current branch: `git branch --show-current`
+2. If not on docs branch `<target>_docs`:
+   - Create and checkout: `git checkout -b <target>_docs`
+3. Verify: `git branch --show-current`
+4. Create Docs.md on docs branch
+5. Commit documentation changes to docs branch
+6. Push docs branch: `git push -u <remote> <target>_docs`
+7. Create Docs PR:
+   - Source: `<target>_docs`
+   - Target: `<target_branch>`
+   - Title: `[<Work Title>] Documentation`
+
+**For local strategy (all modes):**
+1. Check current branch: `git branch --show-current`
+2. If not on target branch:
+   - Checkout target branch: `git checkout <target_branch>`
+3. Verify: `git branch --show-current`
+4. Create Docs.md on target branch
+5. Commit documentation directly to target branch
+6. Push target branch: `git push <remote> <target_branch>`
+7. **Skip Docs PR creation** (no intermediate PR needed)
+
+**Documentation Depth by Mode**
+- **full**: Comprehensive Docs.md with all standard sections
+- **minimal**: Streamlined Docs.md with essential information only (if invoked at all)
+- **custom**: Adapt sections based on Custom Workflow Instructions
+
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Create docs branch and Docs PR (prs strategy behavior)
+
+**Mode Field Format in WorkflowContext.md**
+When updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
 ### Work Title for PR Naming
 
-The Documentation PR must be prefixed with the Work Title from WorkflowContext.md:
+The Documentation PR must be prefixed with the Work Title from WorkflowContext.md (only when using prs strategy):
 - Read `.paw/work/<feature-slug>/WorkflowContext.md` to get the Work Title
 - Format: `[<Work Title>] Documentation`
 - Example: `[Auth System] Documentation`

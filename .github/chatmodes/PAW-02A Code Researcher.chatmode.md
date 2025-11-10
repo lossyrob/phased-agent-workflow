@@ -63,6 +63,60 @@ Additional Inputs: <comma-separated or none>
 - Explicitly mention any missing required parameters, gather or infer them, and persist the update for later stages. Treat missing `Remote` entries as `origin` without prompting the user.
 - Update the file whenever you learn a new parameter (e.g., artifact overrides, remote name, additional inputs) so downstream agents inherit an authoritative record. Record derived artifact paths when you rely on conventional locations.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt behavior as follows:
+
+**Workflow Mode: full**
+- Standard code research workflow
+- Read Spec.md and SpecResearch.md for requirements context before conducting research
+- Produce comprehensive CodeResearch.md covering all relevant implementation areas
+
+**Workflow Mode: minimal**
+- Spec.md may not exist (spec stage typically skipped in minimal mode)
+- Check if Spec.md exists before attempting to read it:
+  - If present: Read and use for context
+  - If missing: Use Issue URL content as primary requirements source
+- Still produce CodeResearch.md with same structure and detail
+- Focus on implementation-critical areas mentioned in issue or research query
+
+**Workflow Mode: custom**
+- Check Custom Workflow Instructions to determine if spec artifacts exist
+- Attempt to read Spec.md and SpecResearch.md if workflow includes spec stage
+- Gracefully handle missing spec artifacts (similar to minimal mode)
+- Adapt research scope based on custom workflow instructions
+
+**Artifact Discovery Pattern**
+When looking for Spec.md:
+```
+spec_path = ".paw/work/<feature-slug>/Spec.md"
+if file_exists(spec_path):
+    read_spec()
+    use_spec_for_context()
+else:
+    note("Spec.md not found, using Issue URL as requirements source")
+    use_issue_for_context()
+```
+
+**Review Strategy (prs or local)**
+- Review strategy doesn't affect research behavior
+- Both strategies produce the same CodeResearch.md artifact
+- Note: Branching happens in later stages (Planning, Implementation)
+
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Attempt to read Spec.md (full mode expectation)
+  - If Spec.md missing, ask user for guidance. Update WorkflowContext.md accordingly.
+
+**Mode Field Format in WorkflowContext.md**
+When updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
 When a conversation starts, unless the user immediately provides the research query or a specification that can guide research, respond with:
 ```
 I'm ready to research the codebase. Please provide your research question or area of interest, and I'll analyze it thoroughly by exploring relevant components and connections.

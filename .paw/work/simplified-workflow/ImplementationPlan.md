@@ -399,8 +399,8 @@ All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handli
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All chatmode files pass linting: `./scripts/lint-chatmode.sh .github/chatmodes/*.chatmode.md`
-- [ ] No markdown syntax errors in updated chatmode files
+- [x] All chatmode files pass linting: `./scripts/lint-chatmode.sh .github/chatmodes/*.chatmode.md`
+- [x] No markdown syntax errors in updated chatmode files
 
 #### Manual Verification:
 - [ ] Initialize minimal workflow → run 02A-code-research.prompt.md → verify agent doesn't error about missing Spec.md
@@ -410,6 +410,46 @@ All 10 agent chatmode files need a new "Workflow Mode and Review Strategy Handli
 - [ ] Initialize full workflow with local strategy → verify all agents work on target branch, no intermediate branches
 - [ ] Test backward compatibility: Remove "Workflow Mode" and "Review Strategy" from WorkflowContext.md → run agent → verify treats as "full" mode with "prs" strategy with log message
 - [ ] Initialize custom workflow with "single branch, skip docs" (local strategy implied) → verify agents adapt correctly
+
+**Phase 3 Implementation Complete - 2025-11-10**
+
+All automated verification passed successfully. All 8 PAW agent chatmode files now include comprehensive workflow mode and review strategy handling:
+
+**Implementation Summary:**
+- Added "Workflow Mode and Review Strategy Handling" section to all agent chatmode files after WorkflowContext.md Parameters
+- Each agent now adapts behavior based on Workflow Mode (full, minimal, custom) and Review Strategy (prs, local)
+- Implemented branching logic differences:
+  - **prs strategy**: Creates intermediate branches (_plan, _phaseN, _docs) and corresponding PRs
+  - **local strategy**: Works directly on target branch, no intermediate branches or PRs
+- Added artifact discovery patterns for agents to gracefully handle missing artifacts in minimal/custom modes:
+  - Code Researcher checks for Spec.md existence before reading (uses Issue URL if missing)
+  - PR Agent dynamically checks which artifacts exist before including in PR description
+  - Status Agent reports only relevant artifacts based on mode
+- Implemented phase count adaptation:
+  - **full mode**: Multi-phase implementation approach
+  - **minimal mode**: Single-phase implementation only
+  - **custom mode**: Interprets Custom Workflow Instructions for phase structure
+- Added comprehensive backward compatibility handling:
+  - Missing mode/strategy fields default to full mode with prs strategy
+  - Agents log informational messages when defaulting
+  - No errors or breaking changes for existing workflows
+
+**Key Implementation Notes:**
+- PAW-02B Impl Planner renamed its existing "Workflow Modes" section to "Agent Operating Modes" to distinguish from PAW workflow mode handling
+- All agents follow consistent pattern: read mode/strategy at startup, adapt behavior accordingly
+- Minimal mode enforces local strategy (no intermediate PRs)
+- Documentation stage typically skipped in minimal mode but can be invoked if needed
+- Final PR creation is mandatory in all modes and strategies
+- All lint checks passed (token count warnings expected and acceptable)
+
+**Review Tasks for Implementation Review Agent:**
+- Verify consistency of workflow mode handling sections across all agents
+- Check that branching logic clearly differentiates prs vs local strategies
+- Validate artifact discovery patterns handle missing files gracefully
+- Ensure backward compatibility defaults are well-documented
+- Confirm phase count adaptation logic is clear and correct
+
+**Manual Testing Pending:** Manual verification steps require end-to-end workflow execution and cannot be completed during Phase 3 implementation. These will be verified during Phase 4 integration testing or by running actual workflows with different mode configurations.
 
 ---
 

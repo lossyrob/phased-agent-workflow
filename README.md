@@ -91,6 +91,19 @@ The **PAW Workflow Extension** automates work item initialization, eliminating m
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 
+## Workflow Modes
+
+PAW supports three workflow modes—**Full**, **Minimal**, and **Custom**—to match your task scope and development style. Each mode determines which workflow stages are included and how work is reviewed (via intermediate PRs or locally on a single branch).
+
+**Quick Overview:**
+- **Full Mode**: All stages from Spec through Documentation. Supports both PRs (intermediate reviews) and Local (single branch) strategies.
+- **Minimal Mode**: Core stages only (Code Research → Implementation → Final PR). Enforces Local strategy for simplicity.
+- **Custom Mode**: User-defined stages and review strategy based on your specific workflow needs.
+
+When using the VS Code extension's `PAW: New PAW Workflow` command, you'll select your workflow mode and review strategy during initialization. Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.
+
+For detailed information about each mode, when to use them, and how review strategies work, see the [PAW Specification](paw-specification.md#workflow-modes).
+
 ## Workflow
 
 ![full workflow](./img/full-workflow.png)

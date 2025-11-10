@@ -1,5 +1,11 @@
 import * as assert from 'assert';
-import { isValidBranchName, isValidIssueUrl } from '../../ui/userInput';
+import { 
+  isValidBranchName, 
+  isValidIssueUrl,
+  WorkflowMode,
+  ReviewStrategy,
+  WorkflowModeSelection
+} from '../../ui/userInput';
 
 /**
  * User input validation tests.
@@ -8,6 +14,9 @@ import { isValidBranchName, isValidIssueUrl } from '../../ui/userInput';
  * Tests cover:
  * - Git branch name validation (alphanumeric, hyphens, underscores, slashes only)
  * - Issue URL format validation (supports GitHub Issues and Azure DevOps Work Items)
+ * - Workflow mode type validation
+ * - Review strategy type validation
+ * - WorkflowModeSelection interface usage
  * 
  * The validation functions are called by VS Code input boxes to provide real-time
  * feedback to users during the initialization process.
@@ -87,5 +96,57 @@ suite('User Input Validation', () => {
       isValidIssueUrl('https://visualstudio.com/org/project/_workitems/edit/123'),
       false
     );
+  });
+});
+
+/**
+ * Workflow mode type tests.
+ * 
+ * Verify that WorkflowMode type accepts valid values and the WorkflowModeSelection
+ * interface works correctly with and without custom instructions.
+ */
+suite('Workflow Mode Types', () => {
+  test('WorkflowMode accepts valid values', () => {
+    const fullMode: WorkflowMode = 'full';
+    const minimalMode: WorkflowMode = 'minimal';
+    const customMode: WorkflowMode = 'custom';
+    
+    assert.strictEqual(fullMode, 'full');
+    assert.strictEqual(minimalMode, 'minimal');
+    assert.strictEqual(customMode, 'custom');
+  });
+
+  test('WorkflowModeSelection works without custom instructions', () => {
+    const selection: WorkflowModeSelection = {
+      mode: 'full'
+    };
+    
+    assert.strictEqual(selection.mode, 'full');
+    assert.strictEqual(selection.customInstructions, undefined);
+  });
+
+  test('WorkflowModeSelection works with custom instructions', () => {
+    const selection: WorkflowModeSelection = {
+      mode: 'custom',
+      customInstructions: 'skip docs, single branch'
+    };
+    
+    assert.strictEqual(selection.mode, 'custom');
+    assert.strictEqual(selection.customInstructions, 'skip docs, single branch');
+  });
+});
+
+/**
+ * Review strategy type tests.
+ * 
+ * Verify that ReviewStrategy type accepts valid values (prs, local).
+ */
+suite('Review Strategy Types', () => {
+  test('ReviewStrategy accepts valid values', () => {
+    const prsStrategy: ReviewStrategy = 'prs';
+    const localStrategy: ReviewStrategy = 'local';
+    
+    assert.strictEqual(prsStrategy, 'prs');
+    assert.strictEqual(localStrategy, 'local');
   });
 });

@@ -567,6 +567,30 @@ All automated verification passed successfully. Comprehensive testing infrastruc
 
 **Manual Testing Pending:** Manual verification steps require end-to-end workflow execution across all modes and strategies. These will be verified during integration testing or by running actual workflows with different configurations. The manual testing scenarios described in the plan provide comprehensive coverage of all workflow mode and review strategy combinations.
 
+**Addressed Review Comments: - 2025-11-10**
+
+Addressed PR review comment https://github.com/lossyrob/phased-agent-workflow/pull/68#discussion_r2511200653 requesting that the README.md workflow modes section be more terse, with detailed documentation moved to paw-specification.md.
+
+**Changes Made:**
+1. **README.md**: Condensed the "Workflow Modes" section from ~70 lines to ~15 lines. The new section provides:
+   - Brief overview of the three modes (Full, Minimal, Custom)
+   - High-level summary of what each mode does
+   - Quick reference to workflow selection during initialization
+   - Link to paw-specification.md for detailed information
+   
+2. **paw-specification.md**: Added comprehensive "Workflow Modes" section (~130 lines) after the Overview and before Repository Layout, including:
+   - Detailed description of Full mode with stages, best use cases, and review strategy options
+   - Detailed description of Minimal mode with skipped stages, best use cases, and enforced local strategy
+   - Detailed description of Custom mode with flexibility and example instructions
+   - Comprehensive review strategies section explaining PRs vs Local with branch structures, workflows, trade-offs
+   - Workflow mode selection process
+   - Quality gates clarification (mandatory regardless of mode)
+   - Backward compatibility notes
+
+**Rationale**: The README.md is the entry point for users and should provide quick orientation. The paw-specification.md is the authoritative reference where users go for detailed understanding of concepts. Moving detailed workflow mode documentation to the specification reduces README.md length while ensuring comprehensive documentation exists in the appropriate location.
+
+**Review Tasks**: Verify that the README.md workflow modes section is sufficiently informative for quick understanding while remaining concise, and that the paw-specification.md section provides complete detail for users who need deeper understanding.
+
 ---
 
 ## Testing Strategy

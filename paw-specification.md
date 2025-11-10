@@ -15,6 +15,151 @@ The **Phased Agent Workflow (PAW)** streamlines development of GitHub Copilot ch
 
 ---
 
+## Workflow Modes
+
+PAW supports three workflow modes that determine which stages are included and how work is reviewed. Select the appropriate mode during workflow initialization to match your task scope and development style.
+
+### Full Mode
+
+**Stages Included**: Spec → Spec Research → Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+
+**Description**: The complete PAW workflow with all stages from initial specification through comprehensive documentation.
+
+**Best for**:
+- Large features requiring comprehensive documentation
+- Complex system changes needing formal specifications
+- New features where requirements need to be refined through the spec process
+- Work that benefits from detailed technical documentation for future maintainers
+- Projects where complete traceability and documentation are organizational requirements
+
+**Review Strategies**:
+- **PRs strategy**: Creates intermediate PRs (planning, phase, docs branches) for review at multiple stages. Best for complex work requiring review checkpoints throughout development.
+- **Local strategy**: Single branch workflow with all work on the target branch, only creating the final PR. Best when you prefer consolidated review but still want all stages executed.
+
+### Minimal Mode
+
+**Stages Included**: Code Research → Implementation Plan → Implementation → Final PR → Status
+
+**Stages Skipped**: Specification and Documentation stages
+
+**Description**: A streamlined workflow focusing on core implementation activities. Assumes requirements are already clear (e.g., from a well-defined bug report or simple enhancement request).
+
+**Best for**:
+- Bug fixes with clear requirements from issue description
+- Small features or enhancements where the goal is well-understood
+- Refactoring work where objectives and approach are already clear
+- Quick iterations when formal specs and comprehensive docs aren't needed
+- Work where existing project documentation is sufficient
+
+**Review Strategy**: Enforces **local strategy** (single branch workflow) to simplify the process. No intermediate planning, phase, or docs branches or PRs—all work happens on the target branch with only a final PR created.
+
+**Quality Assurance**: Even though specification and documentation stages are skipped, all quality gates (tests, linting, type checking, build verification) remain mandatory. The implementation plan still includes detailed success criteria and phase breakdown for reviewable work.
+
+### Custom Mode
+
+**Stages Included**: User-defined based on custom instructions provided during initialization
+
+**Description**: A flexible workflow mode where you define which stages to include and how work should be reviewed. The agents interpret your custom instructions to determine the appropriate workflow structure.
+
+**Best for**:
+- Unique workflows that don't fit full or minimal patterns
+- Experimenting with different workflow configurations
+- Project-specific requirements that need non-standard stage combinations
+- Workflows where you want some but not all optional stages (e.g., spec without docs, or docs without spec)
+
+**Review Strategies**: Supports both **prs** and **local** strategies based on your instructions. You can specify the review approach as part of your custom instructions.
+
+**Usage**: When selecting custom mode during initialization, you'll be prompted to provide custom instructions describing:
+- Which stages to include or exclude
+- The review strategy (prs or local)
+- Any specific phase structure or branching requirements
+- Any other workflow-specific guidance
+
+**Example Custom Instructions**:
+- "Skip specification stage, include documentation, use prs review strategy"
+- "Include code research and implementation only, single branch workflow"
+- "Full stages but combine all implementation phases into one, use local strategy"
+
+### Review Strategies
+
+PAW supports two review strategies that determine how work is reviewed and integrated:
+
+#### PRs Strategy (Intermediate Pull Requests)
+
+**Branch Structure**:
+- Planning branch: `<target>_plan` → Planning PR to target branch
+- Phase branches: `<target>_phase[N]` → Phase PRs to target branch (one per implementation phase)
+- Docs branch: `<target>_docs` → Docs PR to target branch
+- Final PR: target branch → base branch (usually `main`)
+
+**Workflow**:
+1. Planning stage work committed to planning branch, Planning PR opened for review
+2. Once Planning PR approved and merged, implementation begins
+3. Each implementation phase developed on dedicated phase branch with Phase PR
+4. Phase PRs reviewed, approved, and merged sequentially
+5. Documentation work committed to docs branch, Docs PR opened for review
+6. Once Docs PR approved and merged, Final PR created from target to base branch
+
+**Best for**:
+- Complex work requiring review at multiple stages
+- Large features where incremental review reduces cognitive load
+- Teams with multiple reviewers who can review different phases
+- Work where early feedback on planning or individual phases is valuable
+- Projects where intermediate review checkpoints improve quality
+
+**Trade-offs**:
+- More PR overhead (planning, phases, docs, final)
+- Longer time from start to merge (multiple review cycles)
+- Better quality assurance through staged review
+- Easier to rewind and fix issues at specific stages
+
+#### Local Strategy (Single Branch)
+
+**Branch Structure**:
+- All work committed directly to target branch
+- Final PR: target branch → base branch (usually `main`)
+
+**Workflow**:
+1. All stages executed with commits made directly to target branch
+2. No intermediate planning, phase, or docs branches or PRs
+3. All work reviewed together in the final PR
+4. Final PR reviewed, approved, and merged
+
+**Best for**:
+- Simpler work where consolidated review is preferred
+- Solo developers or small teams with streamlined review processes
+- Work where you want to complete all stages but prefer single review point
+- Bug fixes or small enhancements (especially with minimal mode)
+- Projects where PR overhead should be minimized
+
+**Trade-offs**:
+- Less PR overhead (only final PR)
+- Faster path to merge (single review cycle)
+- Larger final PR to review (all stages combined)
+- Harder to rewind to specific stages (requires git operations on target branch)
+
+### Workflow Mode Selection
+
+When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:
+
+1. **Select workflow mode** (Full, Minimal, or Custom)
+2. **Select review strategy** (PRs or Local) - automatically set to Local for Minimal mode
+3. **Provide custom instructions** (if Custom mode selected) - describe which stages to include and review approach
+
+Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow. All agents read the workflow mode and review strategy at startup and adapt their behavior accordingly.
+
+### Quality Gates
+
+**IMPORTANT**: Quality gates (tests, linting, type checking, build verification) remain mandatory regardless of workflow mode or review strategy. Skipping stages or choosing local strategy streamlines the process but never compromises code quality.
+
+All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected.
+
+### Backward Compatibility
+
+Workflows created before workflow mode support (without `Workflow Mode` and `Review Strategy` fields in WorkflowContext.md) are treated as full mode with prs strategy. Agents will log an informational message when defaulting to these values.
+
+---
+
 ## Repository Layout & Naming
 
 ```

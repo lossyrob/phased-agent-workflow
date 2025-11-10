@@ -47,13 +47,6 @@ interface CreatePromptTemplatesParams {
   workflow_mode?: string;
   
   /**
-   * Optional review strategy ('prs' or 'local').
-   * Note: This parameter does not affect which prompt files are generated.
-   * It influences branching behavior in agent instructions, not template generation.
-   */
-  review_strategy?: string;
-  
-  /**
    * Optional explicit list of stages to include.
    * When provided, this overrides workflow_mode stage determination.
    * Used primarily for custom workflow modes.

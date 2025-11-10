@@ -35,7 +35,7 @@
       {
         "name": "paw_create_prompt_templates",
         "displayName": "Create PAW Prompt Templates",
-        "modelDescription": "Generate PAW prompt template files for a work item based on workflow mode. Supports full (all stages), minimal (core stages only), and custom (explicit stages) workflow modes.",
+        "modelDescription": "Generate PAW prompt template files for a work item based on workflow mode. Supports full (all stages), minimal (core stages only), and custom (explicit stages) modes.",
         "toolReferenceName": "pawPromptTemplates",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
@@ -53,11 +53,6 @@
               "type": "string",
               "description": "Workflow mode selection: 'full' (all stages), 'minimal' (core stages only), or 'custom' (explicit stages)",
               "enum": ["full", "minimal", "custom"]
-            },
-            "review_strategy": {
-              "type": "string",
-              "description": "Review strategy: 'prs' (intermediate PRs) or 'local' (single branch). Does not affect which prompt files are generated.",
-              "enum": ["prs", "local"]
             },
             "stages": {
               "type": "array",

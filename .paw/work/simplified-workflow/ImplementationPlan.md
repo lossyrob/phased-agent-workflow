@@ -277,6 +277,25 @@ All automated verification passed successfully. The prompt template tool now sup
 
 **Note on Stage Count:** The implementation plan initially stated minimal mode would generate 6 files, but the actual implementation generates 7 files (02A, 02B, 03A, 03B, 03C, 03D, 05, 0X) because PRReviewResponse stage includes both 03C and 03D prompt files, which are important for handling PR review comment workflows even in minimal mode.
 
+**Addressed Review Comments: - 2025-11-10**
+
+Addressed PR review comment https://github.com/lossyrob/phased-agent-workflow/pull/66#discussion_r2508755646 regarding the unnecessary `review_strategy` parameter in the `paw_create_prompt_templates` tool.
+
+**Issue**: The `review_strategy` parameter was accepted by the tool but documented as not affecting which prompt files are generated. Since the tool's sole purpose is to generate prompt files, accepting a parameter that doesn't affect its output is unnecessary and confusing.
+
+**Resolution**: Removed `review_strategy` parameter from:
+- `CreatePromptTemplatesParams` interface in `vscode-extension/src/tools/createPromptTemplates.ts`
+- `inputSchema` in `vscode-extension/package.json`
+- Tool `modelDescription` to remove any reference to review strategy
+
+**Rationale**: The review strategy configuration is still collected during workflow initialization (Phase 1) and written to WorkflowContext.md. Agents will read the review strategy directly from WorkflowContext.md when they need it (Phase 3) to adapt their branching behavior. The prompt template generation tool doesn't need this information because it only determines which prompt files to create, not how branches or PRs should be managed.
+
+**Other Parameters Verified**: Confirmed that remaining parameters are all necessary:
+- `feature_slug` (required): Used to determine directory path
+- `workspace_path` (required): Used to determine directory path  
+- `workflow_mode` (optional): Determines which stages to include, directly affects which files are generated
+- `stages` (optional): Explicit stage list, directly affects which files are generated
+
 ---
 
 ## Phase 3: Agent Instruction Updates

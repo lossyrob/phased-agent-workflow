@@ -91,6 +91,77 @@ The **PAW Workflow Extension** automates work item initialization, eliminating m
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 
+## Workflow Modes
+
+PAW supports three workflow modes to match your task scope and development style. Choose the appropriate mode when initializing a new work item:
+
+### Full Mode
+
+**All stages**: Spec → Spec Research → Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+
+**Best for**:
+- Large features requiring comprehensive documentation
+- Complex system changes needing formal specifications
+- New features where requirements need to be refined through the spec process
+- Work that benefits from detailed technical documentation for future maintainers
+
+**Review strategies**:
+- **PRs strategy**: Creates intermediate PRs (planning, phase, docs branches) for review at multiple stages
+- **Local strategy**: Single branch workflow with all work on the target branch, only creating the final PR
+
+### Minimal Mode
+
+**Core stages only**: Code Research → Implementation Plan → Implementation → Final PR → Status
+
+**Skips**: Specification and Documentation stages
+
+**Best for**:
+- Bug fixes with clear requirements
+- Small features or enhancements
+- Refactoring work where the goal is well-understood
+- Quick iterations when formal specs and docs aren't needed
+
+**Review strategy**: Enforces **local strategy** (single branch workflow) to simplify the process
+
+### Custom Mode
+
+**User-defined stages**: Specify custom instructions describing which stages to include
+
+**Best for**:
+- Unique workflows that don't fit full or minimal patterns
+- Experimenting with different workflow configurations
+- Project-specific requirements
+
+**Review strategies**: Supports both **prs** and **local** strategies based on your instructions
+
+### Review Strategies Explained
+
+**PRs Strategy** (intermediate PRs):
+- Creates planning branch (`<target>_plan`) with Planning PR
+- Creates phase branches (`<target>_phase[N]`) with Phase PRs for each implementation phase
+- Creates docs branch (`<target>_docs`) with Docs PR
+- Best for complex work requiring review at multiple stages
+
+**Local Strategy** (single branch):
+- All work happens directly on the target branch
+- No intermediate branches or PRs
+- Only creates the final PR (target → main)
+- Best for simpler work or when you prefer to review everything at once
+
+### Selecting Workflow Mode
+
+When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:
+
+1. **Select workflow mode** (Full, Minimal, or Custom)
+2. **Select review strategy** (PRs or Local) - auto-selected as Local for Minimal mode
+3. **Provide custom instructions** (if Custom mode selected) - describe which stages to include
+
+Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.
+
+### Quality Gates
+
+**Important**: Quality gates (tests, linting, type checking, build verification) remain mandatory regardless of workflow mode. Skipping stages streamlines the process but never compromises code quality.
+
 ## Workflow
 
 ![full workflow](./img/full-workflow.png)

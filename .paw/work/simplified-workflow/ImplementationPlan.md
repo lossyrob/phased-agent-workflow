@@ -168,7 +168,264 @@ All automated verification passed successfully. The extension now collects workf
 - Validate custom instructions prompt placeholder text is helpful
 - Ensure WorkflowContext.md schema documentation is complete and clear
 
-**Manual Testing Pending:** Manual verification steps require running the extension in VS Code and cannot be completed during Phase 1 implementation. These will be verified by the Implementation Review Agent or during Phase 4 integration testing.
+**Manual Testing Pending:** Manual verification steps require end-to-end workflow execution across all modes and strategies. These will be verified during integration testing or by running actual workflows with different configurations. The manual testing scenarios described in the plan provide comprehensive coverage of all workflow mode and review strategy combinations.
+
+---
+
+## Phase 5: Fix Process Steps Integration for Review Strategy Handling
+
+### Overview
+Fix a critical structural issue identified during Phase 4 implementation: three agents (PAW-02B Impl Planner, PAW-03B Impl Reviewer, PAW-04 Documenter) have review strategy conditional logic in their "Workflow Mode and Review Strategy Handling" sections, but this logic is NOT integrated into their numbered "Process Steps" sections. This causes agents to follow prs strategy behavior even when local strategy is configured, resulting in unwanted intermediate branches and PRs.
+
+### Root Cause
+During Phase 3, workflow mode and review strategy handling sections were added to all agents, but the conditional branching logic was not integrated into the numbered process steps that agents actually follow during execution. The process steps still assume prs strategy exclusively, causing agents to miss the strategy check and create branches/PRs inappropriately.
+
+**Example**: PAW-04 Documenter created Docs.md and committed it directly to the target branch instead of creating a docs branch and Docs PR, because it didn't check the Review Strategy field (which was missing, defaulting to prs strategy).
+
+### Changes Required:
+
+#### 1. PAW-02B Implementation Planner
+**File**: `.github/chatmodes/PAW-02B Impl Planner.chatmode.md`
+**Changes**: Replace Step 5 (lines ~424) with conditional logic
+
+**Current Step 5 (Problematic)**:
+```markdown
+5. **Commit, push, and open/update the Planning PR** (Initial Planning Only):
+    - Ensure the planning branch exists: checkout or create `<target_branch>_plan` from `<target_branch>`.
+    - Stage ONLY planning artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}`
+    - Verify staged changes before committing: `git diff --cached`
+    - Commit with a descriptive message
+    - Push the planning branch using the `github mcp` git tools
+    - Use the `github mcp` pull-request tools to open or update the Planning PR
+```
+
+**Replacement Step 5 (Fixed)**:
+```markdown
+5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (Initial Planning Only - REQUIRED):
+
+   **Step 5.1: Read Review Strategy** (REQUIRED FIRST):
+   - Read WorkflowContext.md to extract Review Strategy field
+   - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
+   - Set strategy variable: `<prs or local>`
+
+   **Step 5.2a: IF Review Strategy = 'prs' - Create Planning Branch and PR**:
+   - Check current branch: `git branch --show-current`
+   - If not on planning branch `<target_branch>_plan`:
+     - Create and checkout: `git checkout -b <target_branch>_plan`
+   - Verify: `git branch --show-current`
+   - Stage ONLY planning artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files created
+   - Verify staged changes: `git diff --cached`
+   - Commit with descriptive message
+   - Push planning branch: `git push -u <remote> <target_branch>_plan` using github mcp git tools
+   - **REQUIRED**: Create Planning PR using github mcp pull-request tools:
+     - Source: `<target_branch>_plan` → Target: `<target_branch>`
+     - Title: `[<Work Title>] Planning: <brief description>`
+     - Include summary of spec, research, and planning deliverables
+     - Links to artifacts in `.paw/work/<feature-slug>/`
+     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+   - Pause for human review of Planning PR
+
+   **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
+   - Check current branch: `git branch --show-current`
+   - If not on target branch:
+     - Checkout target branch: `git checkout <target_branch>`
+   - Verify: `git branch --show-current`
+   - Stage ONLY planning artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and any prompt files created
+   - Verify staged changes: `git diff --cached`
+   - Commit with descriptive message
+   - Push target branch: `git push <remote> <target_branch>` using github mcp git tools
+   - **Skip Planning PR creation** (no intermediate PR in local strategy)
+   - Planning complete, ready for implementation phases
+```
+
+#### 2. PAW-03B Implementation Reviewer
+**File**: `.github/chatmodes/PAW-03B Impl Reviewer.chatmode.md`
+**Changes**: Replace Step 7 (lines ~229) with conditional logic
+
+**Current Step 7 (Problematic)**:
+```markdown
+7. **Push and open PR** (REQUIRED):
+   - **PR Operations Context**: When opening PRs, provide branch names...
+   - Push implementation branch (includes both Implementation Agent's commits and your documentation commits)
+   - Open phase PR with description referencing plan
+   - **Title**: `[<Work Title>] Implementation Phase <N>: <brief description>`
+   - Include phase objectives, changes made, and testing performed
+   - Pause for human review
+```
+
+**Replacement Step 7 (Fixed)**:
+```markdown
+7. **DETERMINE REVIEW STRATEGY AND PUSH/PR** (REQUIRED):
+
+   **Step 7.1: Read Review Strategy** (REQUIRED FIRST):
+   - Read WorkflowContext.md to extract Review Strategy field
+   - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
+   - Set strategy variable: `<prs or local>`
+
+   **Step 7.2a: IF Review Strategy = 'prs' - Push Phase Branch and Create Phase PR**:
+   - Verify on phase branch: `git branch --show-current` should show `<target>_phase[N]`
+   - Push phase branch: `git push -u <remote> <target>_phase[N]`
+   - **REQUIRED**: Create Phase PR:
+     - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
+     - Source: `<target>_phase[N]` → Target: `<target_branch>`
+     - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
+     - Include phase objectives, changes made, testing performed
+     - Link to Issue URL from WorkflowContext.md
+     - Artifact links: Implementation Plan at `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+   - Pause for human review
+   - Post PR timeline comment starting with `**🐾 Implementation Reviewer 🤖:**` summarizing review and commits
+
+   **Step 7.2b: IF Review Strategy = 'local' - Push Target Branch Only**:
+   - Verify on target branch: `git branch --show-current` should show `<target_branch>`
+   - Push target branch: `git push <remote> <target_branch>`
+   - **Skip Phase PR creation** (no intermediate PR in local strategy)
+   - Document phase completion in ImplementationPlan.md notes if needed
+   - Phase review complete, ready for next phase or final PR
+```
+
+#### 3. PAW-04 Documenter
+**File**: `.github/chatmodes/PAW-04 Documenter.chatmode.md`
+**Changes**: Replace Step 5 (lines ~193) with conditional logic
+
+**Current Step 5 (Problematic)**:
+```markdown
+5. **Create docs branch and PR**:
+   - Create `<target_branch>_docs` branch
+   - Stage ONLY documentation files you modified: `git add <file1> <file2>`
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes
+   - Push branch
+   - Open docs PR with description
+```
+
+**Replacement Step 5 (Fixed)**:
+```markdown
+5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
+
+   **Step 5.1: Read Review Strategy** (REQUIRED FIRST):
+   - Read WorkflowContext.md to extract Review Strategy field
+   - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
+   - Set strategy variable: `<prs or local>`
+
+   **Step 5.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
+   - Check current branch: `git branch --show-current`
+   - If not on docs branch `<target>_docs`:
+     - Create and checkout: `git checkout -b <target>_docs`
+   - Verify: `git branch --show-current`
+   - Stage ONLY documentation files modified: `git add <file1> <file2>` (Docs.md, README.md, CHANGELOG.md, etc.)
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes with descriptive message
+   - Push docs branch: `git push -u <remote> <target>_docs`
+   - **REQUIRED**: Create Docs PR:
+     - Source: `<target>_docs` → Target: `<target_branch>`
+     - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
+     - Include summary of Docs.md (detailed feature reference) and project documentation updates
+     - Artifact links: `.paw/work/<feature-slug>/Docs.md` and `.paw/work/<feature-slug>/ImplementationPlan.md`
+     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+   - Pause for human review of Docs PR
+
+   **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
+   - Check current branch: `git branch --show-current`
+   - If not on target branch:
+     - Checkout target branch: `git checkout <target_branch>`
+   - Verify: `git branch --show-current`
+   - Stage ONLY documentation files modified: `git add <file1> <file2>`
+   - Verify staged changes: `git diff --cached`
+   - Commit documentation changes with descriptive message
+   - Push target branch: `git push <remote> <target_branch>`
+   - **Skip Docs PR creation** (no intermediate PR in local strategy)
+   - Documentation complete, ready for final PR
+```
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] All chatmode files pass linting: `./scripts/lint-chatmode.sh .github/chatmodes/*.chatmode.md`
+- [x] No markdown syntax errors in updated chatmode files
+
+#### Manual Verification:
+- [ ] Initialize workflow with full mode + **local strategy**:
+  - Run PAW-02B → verify planning artifacts committed to target branch, no planning branch created, no Planning PR
+  - Run PAW-03A + PAW-03B → verify code committed to target branch, no phase branches created, no Phase PRs
+  - Run PAW-04 → verify Docs.md committed to target branch, no docs branch created, no Docs PR
+  - Check `git branch -a` → verify only target branch and remote tracking branches (no _plan, _phase, _docs branches)
+
+- [ ] Initialize workflow with full mode + **prs strategy**:
+  - Run PAW-02B → verify planning branch created, Planning PR opened to target branch
+  - Run PAW-03A + PAW-03B → verify phase branches created, Phase PRs opened to target branch
+  - Run PAW-04 → verify docs branch created, Docs PR opened to target branch
+  - Check `git branch -a` → verify intermediate branches exist (_plan, _phaseN, _docs)
+
+- [ ] Initialize workflow with minimal mode (enforces local strategy):
+  - Run PAW-02B (skipped—no planning stage in minimal mode)
+  - Run PAW-03A + PAW-03B → verify code committed to target branch, no phase branches/PRs
+  - Run PAW-04 (skipped—no docs stage in minimal mode)
+  - Verify only target branch used throughout
+
+- [ ] Test defaults handling:
+  - Remove Review Strategy field from WorkflowContext.md
+  - Run any of the three agents
+  - Verify agent logs "Review Strategy not specified, defaulting to 'prs'"
+  - Verify agent follows prs strategy (creates branches and PRs)
+
+- [ ] Test review strategy switching:
+  - Start with prs strategy, complete planning with Planning PR
+  - Manually change WorkflowContext.md to local strategy
+  - Run implementation phase → verify works on target branch (no phase branch/PR)
+
+### Rationale
+
+**Why This Fix Is Critical:**
+1. **Violates User Intent**: Users selecting local strategy expect single-branch workflow, but agents create intermediate branches/PRs anyway
+2. **Confusing User Experience**: Agents say they support review strategies but don't actually check the configured strategy
+3. **Systematic Problem**: Three agents have identical structural issue, suggesting instruction pattern needs correction
+4. **Discovered Through Real Usage**: This issue was discovered when PAW-04 agent created Docs.md during Phase 4 but failed to create docs branch/PR
+
+**Why Process Steps Need Explicit Conditionals:**
+- Agents follow numbered procedural steps more literally than narrative sections
+- No explicit checkpoint forces agents to check strategy before git operations
+- Conditional sub-steps (5.2a vs 5.2b) make branching logic explicit and unavoidable
+- "REQUIRED FIRST" markers emphasize strategy check is mandatory
+
+**Why Not Just Reference Workflow Mode Section:**
+- Separation between explanatory sections and execution steps causes agents to miss connections
+- Process steps need to be self-contained for agents to follow correctly
+- Duplication of logic ensures agents can't skip the strategy check
+
+### Testing Strategy
+
+**Automated Tests:**
+- Chatmode linting: Verify all three files pass linter with no errors
+- No new unit tests needed (behavior change in prompts, not code)
+
+**Manual Tests:**
+- Test matrix: 2 strategies × 3 agents = 6 test scenarios
+- Plus defaults handling and strategy switching tests
+
+### Impact Assessment
+
+**User-Facing Impact:**
+- **HIGH**: Fixes blocking bug where local strategy doesn't work as documented
+- Users selecting local strategy will now correctly get single-branch workflow
+- Users relying on defaults will see explicit log message about using prs strategy
+
+**Development Impact:**
+- **LOW**: Changes only affect three chatmode instruction files
+- No code changes required (agents use natural language instructions)
+- Pattern can be applied to future agents with similar branching behavior
+
+### Documentation Updates
+
+No user-facing documentation changes needed. The feature already documents that:
+- prs strategy creates intermediate branches and PRs
+- local strategy works on target branch with no intermediate PRs
+
+This phase fixes the implementation to match the documented behavior.
+
+---
+
+## Testing Strategy
 
 ---
 

@@ -73,42 +73,20 @@ This agent focuses on **how the system behaves today** at a conceptual level:
 - CodeResearch.md: "Authentication implemented in auth/handlers.go:45 using bcrypt" (implementation with file:line)
 
 ### Document format
-```
 
-# Spec Research: [topic]
-
-## Summary
-
-One-paragraph factual overview of internal findings. Optional external/context questions (if any) are listed for manual completion.
-
-## Internal System Behavior
-
-### [Area]
-* Behavior summary
-* Entry triggers / interactions (conceptual)
-* Data concepts (entities & purposes)
-* Config / flags influencing behavior
-
-## Endpoints/CLIs/Jobs (if applicable)
-* Verb/path/args → behavior (conceptual, no file refs)
-
-## Cross-cutting
-* Auth, errors, retries, observability (behavioral notes only)
-
-## Open Unknowns
-* Unanswered internal question – rationale
-
-## User-Provided External Knowledge (Manual Fill)
-* [ ] External/context question 1
-* [ ] External/context question 2
-* (Add answers inline when available)
-* Any other relevant external/context knowledge the user provides
-
-```
+Structure:
+1. **Summary** (1-2 paragraphs): Key findings overview
+2. **Research Findings**: One section per question
+   - **Question**: From the prompt
+   - **Answer**: Factual behavior (what system does, not how)
+   - **Evidence**: Source of info (e.g., "API docs", "config behavior"). No file:line references.
+   - **Implications**: (When relevant) How this impacts spec requirements or scope
+3. **Open Unknowns**: Unanswered internal questions with rationale. Note: "The Spec Agent will review these with you. You may provide answers here if possible."
+4. **User-Provided External Knowledge (Manual Fill)**: Unchecked list of optional external/context questions for manual completion
 
 ## Output
 - Save at: `.paw/work/<feature-slug>/SpecResearch.md` (canonical path)
-- Build the document incrementally, appending sections as you answer questions. Do not try to output the entire document at once.
+- Build incrementally: summary placeholder → answer questions one at a time → finalize summary → add open unknowns and external knowledge list
 
 ## Guardrails
 - No proposals, refactors, “shoulds”.

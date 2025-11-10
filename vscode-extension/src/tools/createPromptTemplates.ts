@@ -96,65 +96,65 @@ interface PromptTemplate {
  */
 const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
-    filename: '01A-spec.prompt.md',
-    mode: 'PAW-01A Spec Agent',
-    instruction: 'Create spec from',
-    stage: WorkflowStage.Spec
-  },  
-  {
-    filename: '02A-code-research.prompt.md',
-    mode: 'PAW-02A Code Researcher',
-    instruction: 'Run code research from',
-    stage: WorkflowStage.CodeResearch
+    filename: "01A-spec.prompt.md",
+    mode: "PAW-01A Spec Agent",
+    instruction: "Create spec from",
+    stage: WorkflowStage.Spec,
   },
   {
-    filename: '02B-impl-plan.prompt.md',
-    mode: 'PAW-02B Impl Planner',
-    instruction: 'Create implementation plan from',
-    stage: WorkflowStage.Plan
+    filename: "02A-code-research.prompt.md",
+    mode: "PAW-02A Code Researcher",
+    instruction: "Run code research from",
+    stage: WorkflowStage.CodeResearch,
   },
   {
-    filename: '03A-implement.prompt.md',
-    mode: 'PAW-03A Implementer',
-    instruction: 'Implement phase from',
-    stage: WorkflowStage.Implementation
+    filename: "02B-impl-plan.prompt.md",
+    mode: "PAW-02B Impl Planner",
+    instruction: "Create implementation plan from",
+    stage: WorkflowStage.Plan,
   },
   {
-    filename: '03B-review.prompt.md',
-    mode: 'PAW-03B Impl Reviewer',
-    instruction: 'Review implementation from',
-    stage: WorkflowStage.ImplementationReview
+    filename: "03A-implement.prompt.md",
+    mode: "PAW-03A Implementer",
+    instruction: "Implement phase from",
+    stage: WorkflowStage.Implementation,
   },
   {
-    filename: '03C-pr-review.prompt.md',
-    mode: 'PAW-03A Implementer',
-    instruction: 'Address PR review comments from',
-    stage: WorkflowStage.PRReviewResponse
+    filename: "03B-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Review implementation from",
+    stage: WorkflowStage.ImplementationReview,
   },
   {
-    filename: '03D-review-pr-review.prompt.md',
-    mode: 'PAW-03B Impl Reviewer',
-    instruction: 'Verify PR comment responses from',
-    stage: WorkflowStage.PRReviewResponse
+    filename: "03C-pr-review.prompt.md",
+    mode: "PAW-03A Implementer",
+    instruction: "Address PR review comments from",
+    stage: WorkflowStage.PRReviewResponse,
   },
   {
-    filename: '04-docs.prompt.md',
-    mode: 'PAW-04 Documenter',
-    instruction: 'Generate documentation from',
-    stage: WorkflowStage.Documentation
+    filename: "03D-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify PR comment responses from",
+    stage: WorkflowStage.PRReviewResponse,
   },
   {
-    filename: '05-pr.prompt.md',
-    mode: 'PAW-05 PR',
-    instruction: 'Create final PR from',
-    stage: WorkflowStage.FinalPR
+    filename: "04-docs.prompt.md",
+    mode: "PAW-04 Documenter",
+    instruction: "Generate documentation from",
+    stage: WorkflowStage.Documentation,
   },
   {
-    filename: '0X-status.prompt.md',
-    mode: 'PAW-X Status Update',
-    instruction: 'Update status from',
-    stage: WorkflowStage.Status
-  }
+    filename: "05-pr.prompt.md",
+    mode: "PAW-05 PR",
+    instruction: "Create final PR from",
+    stage: WorkflowStage.FinalPR,
+  },
+  {
+    filename: "0X-status.prompt.md",
+    mode: "PAW-X Status Update",
+    instruction: "Update status from",
+    stage: WorkflowStage.Status,
+  },
 ];
 
 /**

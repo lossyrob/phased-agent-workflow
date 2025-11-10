@@ -343,6 +343,7 @@ During Phase 3, workflow mode and review strategy handling sections were added t
 #### Automated Verification:
 - [x] All chatmode files pass linting: `./scripts/lint-chatmode.sh .github/chatmodes/*.chatmode.md`
 - [x] No markdown syntax errors in updated chatmode files
+- [x] PAW-02B token count under 6500 limit after adding Phase 5 logic
 
 #### Manual Verification:
 - [ ] Initialize workflow with full mode + **local strategy**:
@@ -422,6 +423,45 @@ No user-facing documentation changes needed. The feature already documents that:
 - local strategy works on target branch with no intermediate PRs
 
 This phase fixes the implementation to match the documented behavior.
+
+**Phase 5 Implementation Complete - 2025-11-10**
+
+All automated verification passed successfully. Process steps in three agents now correctly check Review Strategy and branch accordingly:
+
+**Implementation Summary:**
+- Replaced Step 5 in PAW-02B Impl Planner with conditional logic:
+  - Reads Review Strategy from WorkflowContext.md (defaults to prs if missing)
+  - prs strategy: creates planning branch, pushes, opens Planning PR
+  - local strategy: commits to target branch, skips Planning PR
+- Replaced Step 7 in PAW-03B Impl Reviewer with conditional logic:
+  - Reads Review Strategy from WorkflowContext.md (defaults to prs if missing)
+  - prs strategy: pushes phase branch, creates Phase PR
+  - local strategy: pushes target branch, skips Phase PR
+- Replaced Step 5 in PAW-04 Documenter with conditional logic:
+  - Reads Review Strategy from WorkflowContext.md (defaults to prs if missing)
+  - prs strategy: creates docs branch, pushes, opens Docs PR
+  - local strategy: commits to target branch, skips Docs PR
+- All three agents now have explicit "REQUIRED FIRST" checkpoint to read strategy before git operations
+- Condensed verbose sections in PAW-02B to keep token count under 6500 limit (reduced from 6362 to 4867 tokens)
+
+**Key Implementation Notes:**
+- Conditional sub-steps (5.2a/5.2b, 7.2a/7.2b) make branching logic explicit and unavoidable
+- Agents follow numbered process steps literally, so strategy check must be in those steps
+- Defaults handling: logs informational message when Review Strategy field missing
+- Token reduction in PAW-02B preserved all essential information while removing redundancy
+
+**Commits:**
+- `9cbc6bd`: Phase 5 changes for PAW-03B and PAW-04
+- `bcf3149`: Phase 5 Step 5 replacement for PAW-02B
+- `cc17799`: Token reduction for PAW-02B (separate commit for non-Phase-5 changes)
+
+**Review Tasks for Implementation Review Agent:**
+- Verify conditional logic is clear and agents will follow correctly
+- Check that "REQUIRED FIRST" markers are emphatic enough
+- Validate defaults handling provides good user experience
+- Ensure condensed sections in PAW-02B maintain clarity
+
+**Manual Testing Pending:** Manual verification scenarios require end-to-end workflow execution across different mode/strategy combinations and cannot be completed during Phase 5 implementation. Will be verified through integration testing or actual workflow runs.
 
 ---
 

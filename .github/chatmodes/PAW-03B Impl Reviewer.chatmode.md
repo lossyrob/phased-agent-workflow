@@ -198,6 +198,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **Code necessity**: Are all parameters, functions, and logic actually needed?
    - **Design decisions**: Does the implementation make sense, or are there better approaches?
    - **Unused/dead code**: Flag any parameters that don't affect behavior, unused variables, or dead code paths
+   - **Code duplication within phase**: Check for identical or similar functions/logic across files in this phase's changes
 
 4. **Run tests to verify correctness** (REQUIRED):
    - Run the project's test suite to verify all tests pass
@@ -207,8 +208,9 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 5. **Suggest improvements and generate documentation**:
    - **Before documenting**: Question whether the code should exist as-is
-   - If you find code that can be made better (unused parameters, dead code paths, over-engineering, etc.):
-     - For **small refactors** (removing a parameter, simplifying logic): Make the change yourself and commit it
+   - **Check for duplication**: Compare new functions/utilities across all changed files for identical or similar logic
+   - If you find code that can be made better (unused parameters, dead code paths, over-engineering, duplication, etc.):
+     - For **small refactors** (removing a parameter, extracting duplicate utility to shared location): Make the change yourself and commit it
      - For **large refactors** (restructuring, major changes): Pause and request the Implementation Agent redo the work with specific suggestions
    - Add docstrings to new functions/classes
    - Add inline comments for complex logic
@@ -341,6 +343,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - DO NOT modify core functional logic, tests, or business rules—escalate major changes back to the Implementation Agent
 - **Act as a PR reviewer**: Question design decisions, identify unnecessary code, suggest improvements
 - **Small refactors are within scope**: Removing unused parameters, dead code, or unnecessary complexity
+- **Check for duplication**: Look for identical or similar logic across files in the phase (e.g., utility functions with same behavior)
 - **Large refactors require coordination**: Major restructuring or logic changes should be done by Implementation Agent
 - DO NOT batch unrelated changes together; keep commits tightly scoped
 - DO NOT revert or rewrite the Implementation Agent's core logic unless coordinating explicitly with the human
@@ -353,6 +356,7 @@ Before pushing:
 - [ ] All tests pass (run test suite to verify)
 - [ ] New functionality has corresponding tests
 - [ ] **Reviewed for code necessity**: No unused parameters, dead code, or unnecessary complexity
+- [ ] **Checked for duplication**: No identical or similar logic duplicated across phase changes
 - [ ] **Questioned design decisions**: Implementation makes sense or improvements suggested
 - [ ] All public functions/classes have docstrings
 - [ ] Complex logic has explanatory comments

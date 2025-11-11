@@ -1,3 +1,7 @@
+# Automatically builds and releases the PAW VS Code extension when version tags are pushed.
+# Triggers on tags matching v* pattern (e.g., v0.2.0, v1.0.0).
+# Phase 1: Establishes workflow structure and trigger configuration.
+# Phase 2 (pending): Will add build, package, changelog, and release creation steps.
 name: Release VSIX
 
 on:

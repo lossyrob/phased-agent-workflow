@@ -47,7 +47,71 @@ Additional Inputs: <comma-separated or none>
 - When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
 - Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
 
-**WHY**: Target branches are for merging completed PRs, not direct implementation commits. Phase branches keep work isolated and allow the Review Agent to push and create PRs without polluting the target branch history.
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your implementation approach and branching behavior as follows:
+
+**Workflow Mode: full**
+- Standard multi-phase implementation approach
+- Each phase typically has its own phase branch (when using prs strategy)
+- Follow implementation plan phases as designed
+- Review Strategy determines branching:
+  - **prs**: Create phase branches `<target>_phase[N]`, implement on phase branch, commit there
+  - **local**: Work directly on target branch for all phases, no phase branches
+
+**Workflow Mode: minimal**
+- Simplified single-phase implementation
+- ImplementationPlan.md will have only ONE phase
+- All work completed in single implementation cycle
+- Review Strategy (enforced to local in minimal mode):
+  - **local**: Work directly on target branch, no phase branches
+  - Minimal mode should never use prs strategy (validated by planner, but double-check here)
+
+**Workflow Mode: custom**
+- Read Custom Workflow Instructions to understand phase structure
+- Adapt to specified number of phases (could be single or multiple)
+- Review Strategy determines branching per instructions
+
+**Branching Logic by Review Strategy**
+
+**For prs strategy (full and custom modes):**
+1. Determine phase branch name: `<target>_phase[N]`
+2. Check current branch: `git branch --show-current`
+3. If not on correct phase branch:
+   - Create and checkout: `git checkout -b <target>_phase[N]`
+4. Verify: `git branch --show-current`
+5. Implement phase on phase branch
+6. Commit changes to phase branch
+7. DO NOT push (Implementation Review Agent handles that)
+
+**For local strategy (all modes):**
+1. Check current branch: `git branch --show-current`
+2. If not on target branch:
+   - Checkout target branch: `git checkout <target_branch>`
+3. Verify: `git branch --show-current`
+4. Implement all phases on target branch
+5. Commit changes to target branch
+6. DO NOT push (Implementation Review Agent handles that)
+
+**Phase Approach by Mode**
+- **full**: Implement one phase at a time, each with focused scope
+- **minimal**: Implement the single phase completely
+- **custom**: Follow phase structure defined in Custom Workflow Instructions
+  
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Create phase branches as per prs strategy
+
+**Mode Field Format in WorkflowContext.md**
+When updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
+**WHY**: Target branches are for merging completed PRs, not direct implementation commits. Phase branches keep work isolated and allow the Review Agent to push and create PRs without polluting the target branch history. However, in local review strategy, all work happens directly on target branch to simplify the workflow.
 
 When given just a plan path:
 - Read the plan completely and check for any existing checkmarks (- [x]) and notes on completed phases.

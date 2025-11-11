@@ -91,11 +91,49 @@ Additional Inputs: <comma-separated or none>
 - When you learn a new parameter (e.g., Issue URL link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
 - Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt behavior as follows:
+
+**Workflow Mode: full**
+- Standard spec creation with Spec.md and SpecResearch.md
+- Generate comprehensive specifications covering all aspects
+- Follow complete research workflow with internal and optional external questions
+
+**Workflow Mode: minimal**
+- Spec stage is typically skipped in minimal mode
+- If invoked anyway, create lightweight spec focusing on core requirements
+- Reduce ceremony: fewer sections, focus on essential FRs and acceptance criteria
+- Research questions should focus on implementation-critical unknowns only
+
+**Workflow Mode: custom**
+- Check Custom Workflow Instructions to determine if spec stage is included
+- If instructions mention "skip spec" or similar, inform user and exit gracefully
+- If spec stage is included, adapt depth based on custom instructions
+- Look for keywords like "lightweight", "detailed", "comprehensive" to guide detail level
+
+**Review Strategy (prs or local)**
+- Review strategy doesn't affect spec creation behavior
+- Both strategies produce the same spec artifacts
+- Note: Branching happens in later stages (Planning, Implementation)
+
+**Defaults**
+  - Default to full mode with prs strategy
+  - if Workflow Mode or Review Strategy fields missing from WorkflowContext.md, use defaults
+
+**Mode Field Format in WorkflowContext.md**
+When creating or updating WorkflowContext.md, include these fields:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).
 2. Extract key concepts → derive prioritized user stories (independently testable slices).
 3. Enumerate factual unknowns; classify as: (a) Reasonable default assumption, (b) Research question, or (c) Clarification required (must be answered before drafting the spec body).
-4. Generate `prompts/spec-research.prompt.md` containing questions about the behavior of the system (must be answered) and Optional External / Context questions (user may fill manually). 
+4. Generate `prompts/01B-spec-research.prompt.md` containing questions about the behavior of the system (must be answered) and Optional External / Context questions (user may fill manually). 
 5. Pause for research; integrate `SpecResearch.md` findings, updating assumptions. If any clarification remains unresolved, pause again rather than proceeding. Blocking clarification questions must be resolved interactively before drafting the Spec.md.
 6. Produce the specification using the inline template (see "Inline Specification Template") only after all clarification questions are answered: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. **Build the specification incrementally by writing sections to `Spec.md` as you create them**—do not present large blocks of spec text in chat.
 7. Validate against the Spec Quality Checklist and surface any failing items for iterative refinement.
@@ -111,7 +149,7 @@ Additional Inputs: <comma-separated or none>
 ## Working Modes
 | Mode | Trigger | Output |
 |------|---------|--------|
-| Research Preparation | No `SpecResearch.md` yet & research not skipped | `prompts/spec-research.prompt.md` + pause |
+| Research Preparation | No `SpecResearch.md` yet & research not skipped | `prompts/01B-spec-research.prompt.md` + pause |
 | Research Integration | `SpecResearch.md` supplied | Refined spec; all clarification questions answered prior to drafting |
 | Direct Spec (Skip Research) | User: "skip research" | Spec with assumptions list + explicit risk note |
 
@@ -123,7 +161,7 @@ Additional Inputs: <comma-separated or none>
    - High‑impact uncertainties (scope, security/privacy, user experience, compliance) that lack a defensible default become explicit clarification questions; resolve them via user dialogue before proceeding.
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
    - **Design decisions** (file names, structure, conventions) informed by research should be made directly without asking the user—document the choice and rationale.
-4. **Research Prompt Generation**: Create `prompts/spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
+4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
 5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting.
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
@@ -328,7 +366,7 @@ How should we reconcile?
 ```
 Specification Ready for Planning Stage:
 - [ ] Spec.md drafted (written to disk at `.paw/work/<feature-slug>/Spec.md`)
-- [ ] spec-research.prompt.md generated (final version referenced)
+- [ ] 01B-spec-research.prompt.md generated (final version referenced)
 - [ ] SpecResearch.md integrated (hash/date noted)
 - [ ] No unresolved clarification questions
 - [ ] All FRs & SCs traceable and testable

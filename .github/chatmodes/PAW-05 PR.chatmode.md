@@ -44,6 +44,83 @@ Additional Inputs: <comma-separated or none>
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
 - Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
 
+### Workflow Mode and Review Strategy Handling
+
+Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your PR creation and description based on the workflow configuration:
+
+**Workflow Mode: full**
+- Comprehensive PR description with all sections
+- Reference all artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+- Review Strategy affects what to reference:
+  - **prs**: Include links to all intermediate PRs (Planning, Phase, Docs PRs)
+  - **local**: No intermediate PRs to reference, describe work directly from commits
+
+**Workflow Mode: minimal**
+- Streamlined PR description focusing on essential information
+- Reference only core artifacts: CodeResearch.md, ImplementationPlan.md (Spec.md and Docs.md may not exist)
+- Check artifact existence before referencing:
+  - If Spec.md exists, include it
+  - If Docs.md exists, include it
+  - Always include CodeResearch.md and ImplementationPlan.md
+- Review Strategy (enforced to local in minimal mode):
+  - **local**: No intermediate PRs, describe implementation work from commits on target branch
+
+**Workflow Mode: custom**
+- Adapt PR description based on Custom Workflow Instructions and which artifacts exist
+- Dynamically check for each artifact before including in PR description
+- Review Strategy determines intermediate PR references per instructions
+
+**Artifact Discovery Pattern**
+```
+artifacts_to_check = ['Spec.md', 'SpecResearch.md', 'CodeResearch.md', 'ImplementationPlan.md', 'Docs.md']
+existing_artifacts = []
+
+for artifact in artifacts_to_check:
+    path = f".paw/work/<feature-slug>/{artifact}"
+    if file_exists(path):
+        existing_artifacts.append(artifact)
+
+# Include only existing artifacts in PR description
+```
+
+**PR Description Adaptation by Review Strategy**
+
+**For prs strategy (full and custom modes):**
+- Include "Implementation Phases" section listing Phase PRs
+- Include "Planning" section referencing Planning PR
+- Include "Documentation" section referencing Docs PR
+- Each section links to the respective merged PR
+
+**For local strategy (all modes):**
+- Skip "Implementation Phases" section (no Phase PRs)
+- Skip "Planning" section (no Planning PR)
+- Skip separate "Documentation" section (docs committed to target branch)
+- Instead, include "Implementation Summary" section describing work from commit history
+- Focus on what was implemented, not which PRs were involved
+
+**Pre-flight Checks Adaptation by Mode**
+
+Adjust validation checks based on mode:
+- **full + prs**: Check all intermediate PRs merged (Planning, Phase, Docs)
+- **full + local**: Check all artifacts exist on target branch, skip PR checks
+- **minimal + local**: Check only required artifacts (CodeResearch, ImplementationPlan), Spec and Docs optional
+- **custom**: Adapt checks based on Custom Workflow Instructions
+
+**Defaults**
+- If Workflow Mode or Review Strategy fields missing from WorkflowContext.md:
+  - Default to full mode with prs strategy
+  - Reference all artifacts and intermediate PRs (prs strategy behavior)
+
+**Mode Field Format in WorkflowContext.md**
+When updating WorkflowContext.md, preserve these fields if present:
+```markdown
+Workflow Mode: <full|minimal|custom>
+Review Strategy: <prs|local>
+Custom Workflow Instructions: <text or none>
+```
+
+**Note**: Final PR creation is mandatory in all workflow modes. This PR always goes from target branch → main/base branch regardless of mode or strategy.
+
 ### Work Title for PR Naming
 
 The Final PR must be prefixed with the Work Title from WorkflowContext.md:

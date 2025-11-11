@@ -84,6 +84,11 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
+    outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
+    if (inputs.workflowMode.customInstructions) {
+      outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
+    }
+    outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
@@ -91,6 +96,8 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine('[INFO] Constructing agent prompt...');
     const prompt = constructAgentPrompt(
       inputs.targetBranch,
+      inputs.workflowMode,
+      inputs.reviewStrategy,
       inputs.issueUrl,
       workspaceFolder.uri.fsPath
     );
@@ -98,11 +105,14 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');
     outputChannel.show(true);
 
-    // Opens chat in a new thread (workbench.action.chat.open creates a new thread when
-    // invoked programmatically rather than appending to an existing conversation)
-    await vscode.commands.executeCommand('workbench.action.chat.open', {
-      query: prompt,
-      mode: 'agent'
+    // Create a new chat
+    await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async value => {
+      outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
+      // Opens chat in the new thread 
+      await vscode.commands.executeCommand('workbench.action.chat.open', {
+        query: prompt,
+        mode: 'agent'
+      })
     });
 
     outputChannel.appendLine('[INFO] Agent invoked - check chat panel for progress');

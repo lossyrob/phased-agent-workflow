@@ -1,0 +1,33 @@
+# Automatically builds and releases the PAW VS Code extension when version tags are pushed.
+# Triggers on tags matching v* pattern (e.g., v0.2.0, v1.0.0).
+# Phase 1: Establishes workflow structure and trigger configuration.
+# Phase 2 (pending): Will add build, package, changelog, and release creation steps.
+name: Release VSIX
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required to create releases and upload assets
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'vscode-extension/package-lock.json'
+      
+      - name: Verify workflow trigger
+        run: |
+          echo "Triggered by tag: ${{ github.ref_name }}"
+          echo "Repository: ${{ github.repository }}"

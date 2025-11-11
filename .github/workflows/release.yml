@@ -37,14 +37,18 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
+          # Extract semantic version from tag (e.g., v0.2.0 -> 0.2.0)
+          # This version is used for VSIX filename and validation
           TAG_NAME="${{ github.ref_name }}"
-          VERSION="${TAG_NAME#v}"  # Remove 'v' prefix
+          VERSION="${TAG_NAME#v}"  # Remove 'v' prefix using bash parameter expansion
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Extracted version: ${VERSION}"
       
       - name: Verify package.json version matches tag
         working-directory: vscode-extension
         run: |
+          # Ensure package.json version matches the git tag to prevent mismatches
+          # This catches cases where developers forget to update package.json before tagging
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION="${{ steps.version.outputs.version }}"
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
@@ -56,8 +60,11 @@ jobs:
       - name: Determine pre-release status
         id: prerelease
         run: |
+          # VS Code extension convention: odd minor versions (0.1.x, 0.3.x) are pre-releases,
+          # even minor versions (0.2.x, 0.4.x) are stable releases
+          # This follows the VS Code pre-release extension best practices
           VERSION="${{ steps.version.outputs.version }}"
-          # Extract minor version (second number in semver)
+          # Extract minor version (second number in semver, e.g., 0.2.0 -> 2)
           MINOR=$(echo $VERSION | cut -d. -f2)
           # Check if minor version is odd (pre-release) or even (stable)
           if [ $((MINOR % 2)) -eq 1 ]; then
@@ -76,11 +83,14 @@ jobs:
         id: vsix
         working-directory: vscode-extension
         run: |
+          # Verify the VSIX file was created with the expected filename format
+          # The package name comes from package.json and matches: paw-workflow-<version>.vsix
           VSIX_FILE="paw-workflow-${{ steps.version.outputs.version }}.vsix"
           if [ ! -f "$VSIX_FILE" ]; then
             echo "Error: Expected VSIX file not found: $VSIX_FILE"
             exit 1
           fi
+          # Export both the full path (for release upload) and filename (for display)
           echo "vsix_path=vscode-extension/${VSIX_FILE}" >> $GITHUB_OUTPUT
           echo "vsix_name=${VSIX_FILE}" >> $GITHUB_OUTPUT
           echo "VSIX created successfully: $VSIX_FILE"
@@ -97,6 +107,8 @@ jobs:
       - name: Check if release exists
         id: check_release
         run: |
+          # Check for existing release to provide idempotency
+          # Re-running the workflow won't fail or create duplicates if release already exists
           RELEASE_EXISTS=$(gh release view "${{ github.ref_name }}" --json id 2>/dev/null || echo "")
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT

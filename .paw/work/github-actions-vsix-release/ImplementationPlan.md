@@ -2,7 +2,11 @@
 
 ## Overview
 
-This implementation plan creates a GitHub Actions workflow that automatically builds the PAW VS Code extension, packages it as a VSIX file, generates a changelog from commit history, and creates a GitHub Release with the VSIX attached as a downloadable asset whenever a version tag matching `v*` is pushed to the repository.
+This implementation plan creates two GitHub Actions workflows for the PAW VS Code extension:
+
+1. **Release Workflow**: Automatically builds the extension, packages it as a VSIX file, generates a changelog from commit history, and creates a GitHub Release with the VSIX attached as a downloadable asset whenever a version tag matching `v*` is pushed to the repository.
+
+2. **PR Gate Workflow**: Automatically runs on pull requests to validate code quality before merging. This workflow runs unit tests for the extension and lints all chatmode files to ensure they don't exceed token limits, serving as a quality gate to prevent broken code or oversized chatmode files from being merged.
 
 ## Current State Analysis
 
@@ -23,8 +27,9 @@ The phased-agent-workflow repository contains a VS Code extension in `vscode-ext
 
 ## Desired End State
 
-A fully automated release system where:
+A fully automated release and quality assurance system where:
 
+**Release Automation:**
 1. Developers update `vscode-extension/package.json` version to match desired release (e.g., `0.2.0`)
 2. Developers create and push a matching git tag (e.g., `git tag v0.2.0 && git push origin v0.2.0`)
 3. GitHub Actions automatically:
@@ -34,33 +39,50 @@ A fully automated release system where:
    - Creates a GitHub Release with the VSIX attached
 4. Users can download the VSIX from the Releases page and install it in VS Code
 
+**PR Quality Gates:**
+1. Developers open pull requests with code changes
+2. GitHub Actions automatically:
+   - Compiles the extension TypeScript code
+   - Runs all unit tests with proper VS Code environment
+   - Lints all chatmode files to ensure they don't exceed token limits
+   - Reports pass/fail status on the PR
+3. PRs cannot be merged until all checks pass
+4. Failed checks clearly indicate which test or lint rule failed
+
 ### Verification:
-- **Automated**: Push tag `v0.2.0` and within 5 minutes, a GitHub Release exists with attached VSIX
-- **Automated**: Download VSIX from release, install with `code --install-extension paw-workflow-0.2.0.vsix`, verify extension loads
-- **Automated**: Check workflow logs show successful completion without errors
-- **Manual**: Verify changelog in release description contains commits since previous tag
-- **Manual**: Verify pre-release flag is correctly set (odd minor = pre-release, even minor = stable)
+- **Automated (Release)**: Push tag `v0.2.0` and within 5 minutes, a GitHub Release exists with attached VSIX
+- **Automated (Release)**: Download VSIX from release, install with `code --install-extension paw-workflow-0.2.0.vsix`, verify extension loads
+- **Automated (Release)**: Check workflow logs show successful completion without errors
+- **Automated (PR Gate)**: Open PR and verify workflow runs automatically within 1 minute
+- **Automated (PR Gate)**: Verify unit tests run and report results
+- **Automated (PR Gate)**: Verify chatmode linting runs and reports results
+- **Manual (Release)**: Verify changelog in release description contains commits since previous tag
+- **Manual (Release)**: Verify pre-release flag is correctly set (odd minor = pre-release, even minor = stable)
+- **Manual (PR Gate)**: Create failing test and verify PR workflow fails with clear error message
+- **Manual (PR Gate)**: Create oversized chatmode file and verify PR workflow fails with token count error
 
 ## What We're NOT Doing
 
 - Publishing to Visual Studio Code Marketplace (future enhancement)
-- Running tests in the release workflow (tests run in separate CI)
 - Supporting non-`v*` tag patterns or non-semver versions
 - Automatically updating `package.json` version (manual step before tagging)
 - Building multi-platform VSIX variants (extension is platform-agnostic)
 - Creating release branches or managing git workflows
 - Editing or deleting releases via automation
-- Uploading build artifacts beyond the final VSIX
+- Uploading build artifacts beyond the final VSIX (in release workflow)
+- Running performance or integration tests (only unit tests and linting)
 
 ## Implementation Approach
 
-The implementation is divided into two phases:
+The implementation is divided into three phases:
 
-1. **Phase 1** establishes the workflow file structure, trigger configuration, and environment setup. This creates a minimal workflow that responds to tag pushes and sets up the Node.js build environment.
+1. **Phase 1** establishes the release workflow file structure, trigger configuration, and environment setup. This creates a minimal workflow that responds to tag pushes and sets up the Node.js build environment.
 
-2. **Phase 2** implements all functional steps: building the extension, packaging the VSIX, generating the changelog, detecting pre-release versions, and creating the GitHub Release with proper metadata and assets.
+2. **Phase 2** implements all release functional steps: building the extension, packaging the VSIX, generating the changelog, detecting pre-release versions, and creating the GitHub Release with proper metadata and assets.
 
-This phasing allows us to verify the trigger mechanism works correctly (Phase 1) before adding the complex release logic (Phase 2). The two phases are kept separate because Phase 1 can be tested immediately (trigger + environment), while Phase 2 requires all steps to work together for meaningful validation.
+3. **Phase 3** creates a separate PR gate workflow that runs on pull requests to validate code quality before merging. This includes unit tests for the extension and linting for chatmode files to ensure they don't exceed token limits.
+
+This phasing allows us to verify the trigger mechanism works correctly (Phase 1) before adding the complex release logic (Phase 2). Phase 3 is separate because it's a distinct workflow with different triggers and purposes - it gates PR merges rather than creating releases. Each workflow can be tested and validated independently.
 
 ## Phase 1: Create GitHub Actions Workflow Structure
 
@@ -411,6 +433,137 @@ Implement the complete release functionality: install dependencies, compile Type
 
 ---
 
+## Phase 3: Create PR Gate Workflow
+
+### Overview
+Create a separate GitHub Actions workflow that runs on pull requests to validate code quality before merging. This workflow runs unit tests for the VS Code extension and lints all chatmode files to ensure they don't exceed token limits. This serves as a quality gate to prevent broken code or oversized chatmode files from being merged.
+
+### Changes Required:
+
+#### 1. Create PR Workflow File
+**File**: `.github/workflows/pr-checks.yml`
+**Changes**: Create new workflow that triggers on pull requests
+
+```yaml
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'vscode-extension/**'
+      - '.github/chatmodes/**'
+      - 'scripts/**'
+      - '.github/workflows/pr-checks.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            vscode-extension/package-lock.json
+            package-lock.json
+      
+      - name: Install root dependencies
+        run: npm ci
+      
+      - name: Install extension dependencies
+        working-directory: vscode-extension
+        run: npm ci
+      
+      - name: Compile extension
+        working-directory: vscode-extension
+        run: npm run compile
+      
+      - name: Run extension unit tests
+        working-directory: vscode-extension
+        run: |
+          # Install xvfb for headless VS Code testing
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          
+          # Run tests with virtual display
+          xvfb-run -a npm test
+        env:
+          # Prevent VS Code from showing UI during tests
+          DISPLAY: ':99.0'
+      
+      - name: Lint chatmode files
+        run: npm run lint:chatmode:all
+      
+      - name: PR checks summary
+        if: success()
+        run: |
+          echo "✅ All PR checks passed!"
+          echo "- Extension unit tests: PASSED"
+          echo "- Chatmode linting: PASSED"
+```
+
+**Rationale:**
+- Triggers only on PRs targeting `main` or `feature/**` branches
+- `paths` filter ensures workflow only runs when relevant files change
+- Installs dependencies for both root (chatmode linting) and extension (tests)
+- Uses `xvfb` for headless VS Code testing (required for extension tests)
+- Runs both unit tests and chatmode linting
+- Provides clear summary of what passed
+
+#### 2. Add xvfb Setup Comments to Extension Test Runner
+**File**: `vscode-extension/src/test/runTest.ts`
+**Changes**: Add comment documenting xvfb requirement (no code changes needed)
+
+```typescript
+/**
+ * Test runner for VS Code extension tests
+ * 
+ * Note: In CI environments (like GitHub Actions), tests require xvfb
+ * for headless VS Code execution. The CI workflow handles this setup.
+ * 
+ * Local testing: Just run `npm test` - VS Code will launch normally.
+ * CI testing: Handled by `xvfb-run -a npm test` in the workflow.
+ */
+```
+
+**Rationale:**
+- Documents the xvfb requirement for future maintainers
+- Clarifies why CI setup differs from local testing
+- No functional changes needed - just documentation
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Create a test branch with a small change to extension code
+- [ ] Open PR to merge test branch into target branch
+- [ ] Verify PR workflow appears in Actions tab and starts automatically
+- [ ] Workflow completes all steps successfully
+- [ ] Extension tests run and pass
+- [ ] Chatmode linting runs and passes
+- [ ] Test failure scenario: Add a failing test and verify workflow fails
+- [ ] Test failure scenario: Create an oversized chatmode file (>6500 tokens) and verify workflow fails
+- [ ] Verify workflow does NOT run when pushing to branches without opening a PR
+- [ ] Verify workflow does NOT run when changing files outside the `paths` filter
+
+#### Manual Verification:
+- [ ] Review workflow logs to ensure all test output is visible
+- [ ] Verify xvfb setup works correctly (no display errors)
+- [ ] Confirm chatmode linting errors are clearly reported
+- [ ] Check that workflow completes in reasonable time (<5 minutes)
+- [ ] Verify GitHub PR interface shows workflow status clearly
+- [ ] Test with PR that modifies only chatmode files (extension tests should still run)
+- [ ] Test with PR that modifies only extension code (chatmode linting should still run)
+
+---
+
 ## Testing Strategy
 
 ### Automated Testing:
@@ -426,6 +579,13 @@ The workflow itself serves as the automated test. Each phase has automated verif
 - Download and install VSIX to verify it works
 - Test idempotency by re-running workflow
 - Test pre-release detection with odd minor version
+
+**Phase 3 Testing:**
+- Create test PR and verify workflow triggers
+- Verify unit tests run successfully
+- Verify chatmode linting passes
+- Test failure scenarios (failing test, oversized chatmode)
+- Verify workflow doesn't run on non-PR pushes
 
 ### Manual Testing Steps:
 1. **First Release (v0.1.0)**:
@@ -454,8 +614,16 @@ The workflow itself serves as the automated test. Each phase has automated verif
    - Verify extension appears in Extensions view
    - Verify extension commands work (e.g., `paw.initializeWorkItem`)
 
+6. **PR Workflow Test**:
+   - Create PR with extension code changes
+   - Verify unit tests run automatically
+   - Verify chatmode linting runs automatically
+   - Create PR with failing test and verify workflow blocks merge
+   - Create PR with oversized chatmode and verify workflow fails with clear error
+
 ## Performance Considerations
 
+### Release Workflow (Phase 1-2):
 - **Expected workflow duration**: 2-4 minutes for typical runs
   - Checkout: ~10 seconds
   - Node.js setup with cache: ~20 seconds (first run), ~5 seconds (cached)
@@ -465,11 +633,23 @@ The workflow itself serves as the automated test. Each phase has automated verif
   - Changelog generation: ~5-10 seconds
   - Release creation: ~5-10 seconds
 
-- **Caching strategy**: Node.js action caches `node_modules` based on lock file hash, significantly speeding up subsequent runs
+### PR Checks Workflow (Phase 3):
+- **Expected workflow duration**: 3-5 minutes for typical PRs
+  - Checkout: ~10 seconds
+  - Node.js setup with cache: ~20 seconds (first run), ~5 seconds (cached)
+  - Root dependency installation: ~10-20 seconds
+  - Extension dependency installation: ~30-60 seconds
+  - TypeScript compilation: ~10-20 seconds
+  - xvfb setup: ~5-10 seconds
+  - Extension unit tests: ~30-60 seconds (depends on test suite size)
+  - Chatmode linting: ~5-10 seconds (for ~30 files)
 
-- **Resource usage**: Minimal - standard Node.js build requires <1GB RAM, ubuntu-latest runner provides 7GB
+### General:
+- **Caching strategy**: Node.js action caches `node_modules` based on lock file hash, significantly speeding up subsequent runs. Both workflows benefit from shared cache for extension dependencies.
 
-- **Concurrent releases**: GitHub Actions queues jobs by default; multiple tags pushed simultaneously will run sequentially
+- **Resource usage**: Minimal - standard Node.js build requires <1GB RAM, ubuntu-latest runner provides 7GB. Extension tests with xvfb add ~200MB overhead.
+
+- **Concurrent execution**: Release and PR workflows are independent and can run concurrently. Multiple PRs will queue and run in parallel (up to GitHub Actions concurrency limits).
 
 ## Migration Notes
 

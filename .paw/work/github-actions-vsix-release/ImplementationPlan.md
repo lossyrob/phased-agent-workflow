@@ -30,9 +30,9 @@ The phased-agent-workflow repository contains a VS Code extension in `vscode-ext
 A fully automated release and quality assurance system where:
 
 **Release Automation:**
-1. Developers update `vscode-extension/package.json` version to match desired release (e.g., `0.2.0`)
-2. Developers create and push a matching git tag (e.g., `git tag v0.2.0 && git push origin v0.2.0`)
-3. GitHub Actions automatically:
+1. Developers create and push a git tag matching desired version (e.g., `git tag v0.2.0 && git push origin v0.2.0`)
+2. GitHub Actions automatically:
+   - Updates `package.json` version to match the tag
    - Builds and packages the extension into a VSIX file
    - Generates a changelog from commits since the previous tag
    - Detects if version is pre-release (odd minor) or stable (even minor)
@@ -203,7 +203,7 @@ Implement the complete release functionality: install dependencies, compile Type
 
 #### 2. Extract Version and Detect Pre-release Status
 **File**: `.github/workflows/release.yml`
-**Changes**: Add steps to parse the tag, extract version, and determine if it's a pre-release
+**Changes**: Add steps to parse the tag, extract version, update package.json, and determine if it's a pre-release
 
 ```yaml
       - name: Extract version from tag
@@ -214,16 +214,12 @@ Implement the complete release functionality: install dependencies, compile Type
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Extracted version: ${VERSION}"
       
-      - name: Verify package.json version matches tag
+      - name: Update package.json version to match tag
         working-directory: vscode-extension
         run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION="${{ steps.version.outputs.version }}"
-          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-            echo "Error: package.json version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
-            exit 1
-          fi
-          echo "Version match confirmed: $PACKAGE_VERSION"
+          npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version
+          echo "Updated package.json to version: ${TAG_VERSION}"
       
       - name: Determine pre-release status
         id: prerelease
@@ -243,7 +239,9 @@ Implement the complete release functionality: install dependencies, compile Type
 
 **Rationale:**
 - Extract version once and reuse via `$GITHUB_OUTPUT` for consistency
-- Version verification prevents accidental mismatches between git tag and package.json
+- `npm version` command updates package.json automatically without git operations
+- `--no-git-tag-version` prevents npm from creating a git tag (tag already exists)
+- `--allow-same-version` allows re-running workflow on same tag (idempotency)
 - Pre-release detection uses modulo arithmetic on minor version: `minor % 2 === 1` means odd (pre-release)
 - Bash parameter expansion `${TAG_NAME#v}` cleanly removes `v` prefix
 
@@ -413,8 +411,6 @@ Implement the complete release functionality: install dependencies, compile Type
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Update `vscode-extension/package.json` version to `0.2.0`
-- [ ] Commit change: `git add vscode-extension/package.json && git commit -m "chore: bump version to 0.2.0"`
 - [ ] Create and push tag: `git tag v0.2.0 && git push origin feature/github-actions-vsix-release && git push origin v0.2.0`
 - [ ] Workflow completes successfully within 5 minutes
 - [ ] GitHub Release exists at `https://github.com/lossyrob/phased-agent-workflow/releases/tag/v0.2.0`
@@ -451,20 +447,28 @@ Implement the complete release functionality: install dependencies, compile Type
 
 **Note on Changelog Template**: The implementation plan included a reference to `${{ steps.version.outputs.version }}` in the JSON config template, which is GitHub Actions syntax and doesn't work in the changelog action's template. I replaced it with `#{{TO_TAG}}` which is the correct placeholder syntax for the changelog builder action's template system.
 
+**Addressed Review Comments - 2025-11-12**
+
+Modified the workflow to use git tags as the single source of truth for versioning. Changes:
+- Replaced "Verify package.json version matches tag" step with "Update package.json version to match tag" step
+- Uses `npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version` to update package.json automatically
+- Eliminates manual version update step from release process
+- Tag version becomes authoritative; package.json is derived
+
+This simplifies the release workflow: developers only need to create and push a tag (e.g., `git tag v0.2.0 && git push origin v0.2.0`). The workflow automatically updates package.json to match.
+
 **Remaining Verification**: The automated and manual verification steps require:
-1. Updating `vscode-extension/package.json` to version `0.2.0`
-2. Committing and tagging the change
-3. Pushing the tag to trigger the workflow on GitHub Actions
-4. Testing download and installation of the generated VSIX
-5. Verifying idempotency by re-running the workflow
-6. Testing pre-release detection with an odd minor version (e.g., `v0.3.0`)
+1. Creating and pushing a tag to trigger the workflow on GitHub Actions
+2. Testing download and installation of the generated VSIX
+3. Verifying idempotency by re-running the workflow
+4. Testing pre-release detection with an odd minor version (e.g., `v0.3.0`)
 
 These verification steps will be performed after the Phase PR is merged to the target branch.
 
 **Review Notes**: 
 - Reviewer should verify all workflow steps match the implementation plan specifications
 - Check that the changelog configuration properly categorizes commits by label
-- Verify the version verification step will fail fast if package.json doesn't match tag
+- Verify the version update step correctly uses npm version command with appropriate flags
 - Ensure pre-release logic correctly uses modulo arithmetic on minor version
 - Confirm VSIX path construction matches the extension's naming pattern (`paw-workflow-<version>.vsix`)
 - Validate that the release creation step properly uses conditional execution to skip if release already exists
@@ -669,32 +673,28 @@ The workflow itself serves as the automated test. Each phase has automated verif
 
 ### Manual Testing Steps:
 1. **First Release (v0.1.0)**:
-   - Update package.json to `0.1.0`
    - Push tag `v0.1.0`
    - Verify changelog includes all commits since repository start
    - Verify release is marked as pre-release (minor = 1, odd)
+   - Verify package.json in VSIX has version `0.1.0`
    
 2. **Second Release (v0.2.0)**:
-   - Update package.json to `0.2.0`
    - Push tag `v0.2.0`
    - Verify changelog only includes commits between `v0.1.0` and `v0.2.0`
    - Verify release is marked as stable (minor = 2, even)
+   - Verify package.json in VSIX has version `0.2.0`
    
-3. **Version Mismatch Test**:
-   - Update package.json to `0.3.0` but push tag `v0.4.0`
-   - Verify workflow fails with clear error message about version mismatch
-   
-4. **Non-semver Tag Test**:
+3. **Non-semver Tag Test**:
    - Push tag `v1.0` (missing patch version)
    - Verify workflow behavior (should fail or skip gracefully)
 
-5. **Installation Test**:
+4. **Installation Test**:
    - Download VSIX from any release
    - Install with `code --install-extension <file>`
    - Verify extension appears in Extensions view
    - Verify extension commands work (e.g., `paw.initializeWorkItem`)
 
-6. **PR Workflow Test**:
+5. **PR Workflow Test**:
    - Create PR with extension code changes
    - Verify unit tests run automatically
    - Verify chatmode linting runs automatically
@@ -735,18 +735,15 @@ The workflow itself serves as the automated test. Each phase has automated verif
 
 **Initial Setup:**
 1. Merge this implementation to the target branch
-2. Ensure `vscode-extension/package.json` version reflects current state (e.g., `0.0.1`)
-3. Create initial release tag: `git tag v0.0.1 && git push origin v0.0.1`
-4. Verify workflow runs and creates first release
+2. Create initial release tag: `git tag v0.0.1 && git push origin v0.0.1`
+3. Verify workflow runs and creates first release
 
 **Ongoing Usage:**
 1. Make changes to the extension
-2. Update `vscode-extension/package.json` version to next desired version (e.g., `0.2.0` for stable, `0.3.0` for pre-release)
-3. Commit the version change
-4. Create matching tag: `git tag v0.2.0`
-5. Push both commit and tag: `git push origin main && git push origin v0.2.0`
-6. Wait for GitHub Actions to complete
-7. Announce release to users with link to GitHub Releases page
+2. Create tag with desired version: `git tag v0.2.0`
+3. Push tag: `git push origin main && git push origin v0.2.0`
+4. Wait for GitHub Actions to complete
+5. Announce release to users with link to GitHub Releases page
 
 **Rollback:**
 - If a release is created incorrectly, manually delete it from GitHub Releases page

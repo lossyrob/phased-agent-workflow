@@ -124,12 +124,10 @@ PAW includes two automated workflows for the VS Code extension:
 Automatically creates GitHub Releases with VSIX files when version tags are pushed.
 
 **Usage**:
-1. Update `vscode-extension/package.json` version (e.g., `0.2.0`)
-2. Commit: `git commit -am "chore: bump version to 0.2.0"`
-3. Tag: `git tag v0.2.0`
-4. Push: `git push origin <branch> && git push origin v0.2.0`
+1. Tag: `git tag v0.2.0`
+2. Push: `git push origin <branch> && git push origin v0.2.0`
 
-The workflow builds the extension, packages it as VSIX, generates a changelog, and creates a GitHub Release. Odd minor versions (`0.1.x`, `0.3.x`) are marked as pre-releases; even versions (`0.2.x`, `0.4.x`) are stable releases.
+The workflow builds the extension, packages it as VSIX, generates a changelog, and creates a GitHub Release. The tag version automatically becomes the VSIX version (no manual `package.json` updates needed). Odd minor versions (`0.1.x`, `0.3.x`) are marked as pre-releases; even versions (`0.2.x`, `0.4.x`) are stable releases.
 
 ### PR Gate Workflow
 

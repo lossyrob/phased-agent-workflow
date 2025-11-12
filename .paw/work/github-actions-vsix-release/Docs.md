@@ -9,7 +9,7 @@ This implementation adds automated release management and quality assurance for 
 
 These workflows solve the problem of manual release processes and lack of automated quality gates, enabling the PAW project to:
 - Release extension versions efficiently without manual build and upload steps
-- Maintain consistent versioning between git tags and package.json
+- Use git tags as the single source of truth for versioning (no manual package.json updates needed)
 - Provide users with easy-to-find, installable extension builds
 - Prevent broken code or oversized chatmode files from being merged via pull requests
 - Generate human-readable changelogs automatically from commit history
@@ -42,10 +42,10 @@ Both workflows use GitHub's built-in `GITHUB_TOKEN` for authentication, eliminat
 - Release and PR checks are independent workflows rather than combined jobs
 - Rationale: Different triggers (tags vs. pull requests), different audiences (users vs. developers), and different failure modes require clear separation for maintainability
 
-**2. Tag-Driven Releases Instead of Automated Version Bumping**
-- Developers manually update `package.json` version and create matching git tags
-- Workflow validates version match between tag and `package.json`
-- Rationale: Explicit version control gives developers full control over release timing and versioning decisions; prevents accidental releases from automated commits
+**2. Tag-Driven Versioning**
+- Git tags are the single source of truth for version numbers
+- Workflow automatically updates `package.json` to match the tag version
+- Rationale: Eliminates manual version update step; prevents version mismatches; simplifies release process to just creating and pushing a tag
 
 **3. Odd/Even Minor Version Pre-Release Detection**
 - Uses modulo arithmetic on minor version number: `minor % 2 === 1` means pre-release
@@ -80,7 +80,7 @@ Both workflows use GitHub's built-in `GITHUB_TOKEN` for authentication, eliminat
 **Git Tags → Release Workflow**:
 - Git tags matching `v*` pattern trigger the release workflow
 - Tags must match semantic versioning format (e.g., `v0.2.0`, `v1.0.5`)
-- Version extracted from tag is validated against `vscode-extension/package.json`
+- Version extracted from tag is used to update `vscode-extension/package.json`
 
 **Pull Requests → PR Gate Workflow**:
 - Pull requests targeting `main` or `feature/**` branches trigger quality checks
@@ -108,7 +108,6 @@ Both workflows use GitHub's built-in `GITHUB_TOKEN` for authentication, eliminat
 **For Release Workflow**:
 - Repository with GitHub Actions enabled
 - VS Code extension code in `vscode-extension/` directory
-- Extension `package.json` with valid version field
 - Git repository with commit history
 
 **For PR Gate Workflow**:
@@ -118,48 +117,30 @@ Both workflows use GitHub's built-in `GITHUB_TOKEN` for authentication, eliminat
 
 ### Creating a Release
 
-**Step 1: Update Extension Version**
-
-Edit `vscode-extension/package.json` and update the `version` field:
-
-```json
-{
-  "name": "paw-workflow",
-  "version": "0.2.0",
-  ...
-}
-```
+**Step 1: Choose Your Version Number**
 
 Choose your version number according to the pre-release convention:
 - Odd minor versions (`0.1.x`, `0.3.x`, `0.5.x`) = Pre-releases
 - Even minor versions (`0.2.x`, `0.4.x`, `0.6.x`) = Stable releases
 
-**Step 2: Commit Version Change**
+**Step 2: Create and Push Git Tag**
 
 ```bash
-git add vscode-extension/package.json
-git commit -m "chore: bump version to 0.2.0"
-```
-
-**Step 3: Create and Push Git Tag**
-
-```bash
-# Create tag matching the package.json version (with v prefix)
+# Create tag with your chosen version (the tag is the source of truth)
 git tag v0.2.0
 
-# Push commit and tag together
-git push origin <branch-name>
+# Push the tag
 git push origin v0.2.0
 ```
 
-**Step 4: Monitor Workflow**
+**Step 3: Monitor Workflow**
 
 1. Navigate to your repository's **Actions** tab on GitHub
 2. Find the "Release VSIX" workflow run for your tag
 3. Monitor the workflow progress (typically completes in 2-4 minutes)
 4. Check for any errors in the workflow logs
 
-**Step 5: Verify Release**
+**Step 4: Verify Release**
 
 1. Navigate to your repository's **Releases** page
 2. Confirm a new release exists for your tag (e.g., `v0.2.0`)
@@ -244,10 +225,11 @@ npm run compile     # Compile TypeScript
 npm run package     # Create VSIX with vsce
 ```
 
-**4. Version Extraction and Validation**
+**4. Version Extraction and Update**
 - Extracts version from tag: `v0.2.0` → `0.2.0`
-- Reads `package.json` version using Node.js
-- Fails if mismatch detected (prevents accidental version inconsistencies)
+- Updates `package.json` version using `npm version` command
+- Uses `--no-git-tag-version` flag to prevent creating a git tag
+- Uses `--allow-same-version` flag to allow re-running workflow
 
 **5. Pre-Release Detection**
 ```bash
@@ -390,13 +372,6 @@ Configures changelog generation behavior:
 
 ### Error Handling
 
-**Version Mismatch**:
-```
-Error: package.json version (0.2.0) does not match tag version (0.3.0)
-```
-- Cause: Tag and package.json have different versions
-- Fix: Update `package.json` to match tag, or delete tag and create correct one
-
 **VSIX Not Found**:
 ```
 Error: Expected VSIX file not found: paw-workflow-0.2.0.vsix
@@ -424,28 +399,20 @@ Release already exists for tag v0.2.0, skipping
 
 **Steps**:
 
-1. Update version in `vscode-extension/package.json`:
-```json
-{
-  "version": "0.2.0"
-}
-```
-
-2. Commit and tag:
+1. Create and push tag:
 ```bash
-git add vscode-extension/package.json
-git commit -m "chore: release v0.2.0"
 git tag v0.2.0
 git push origin main
 git push origin v0.2.0
 ```
 
-3. Wait for workflow to complete (check Actions tab)
+2. Wait for workflow to complete (check Actions tab)
 
 4. Verify release at `https://github.com/<owner>/<repo>/releases/tag/v0.2.0`:
    - Release is NOT marked as pre-release (even minor version)
    - VSIX file `paw-workflow-0.2.0.vsix` is attached
    - Changelog includes all commits since previous tag
+   - `package.json` in the VSIX has version `0.2.0`
 
 ### Example 2: Creating a Pre-Release
 
@@ -453,10 +420,15 @@ git push origin v0.2.0
 
 **Steps**:
 
-1. Update version to `0.3.0` (odd minor = pre-release)
-2. Commit and tag as shown above
-3. Workflow automatically marks release as "Pre-release" on GitHub
-4. Users see pre-release badge and can opt in to testing
+1. Create and push tag for odd minor version (pre-release):
+```bash
+git tag v0.3.0
+git push origin main
+git push origin v0.3.0
+```
+
+2. Workflow automatically marks release as "Pre-release" on GitHub
+3. Users see pre-release badge and can opt in to testing
 
 **Key Difference**: GitHub displays a "Pre-release" badge, warning users this is not production-ready.
 
@@ -526,17 +498,14 @@ code --install-extension ~/Downloads/paw-workflow-0.2.0.vsix
 - Non-matching tags (e.g., `release-1.0`, `v1.0`) are ignored
 - Non-semver tags may cause version extraction to fail
 
-**Manual Version Management**:
-- Developers must manually update `package.json` version
-- No automated version bumping from commit messages
-- Prevents accidental releases but requires discipline
-
+**No Marketplace Publishing**:
+- Workflows only create GitHub Releases
+- Manual publishing to VS Code Marketplace still required
+- Future enhancement could automate marketplace publishing
 **Changelog Accuracy Depends on Labels**:
 - Unlabeled PRs appear in changelog without categorization
 - Incorrect labels result in mis-categorized changes
 - Requires consistent PR labeling discipline
-
-**No Marketplace Publishing**:
 - Workflows only create GitHub Releases
 - Manual publishing to VS Code Marketplace still required
 - Future enhancement could automate marketplace publishing
@@ -558,58 +527,49 @@ code --install-extension ~/Downloads/paw-workflow-0.2.0.vsix
 **Prerequisites**:
 - Repository with GitHub Actions enabled
 - Extension code committed to a branch
-- Version in `package.json` ready to be tagged
 
 **Test Steps**:
 
-1. **Update Version**: Edit `vscode-extension/package.json` to version `0.2.0`
-
-2. **Commit**: 
-   ```bash
-   git add vscode-extension/package.json
-   git commit -m "chore: release v0.2.0"
-   ```
-
-3. **Create Tag**:
+1. **Create Tag**:
    ```bash
    git tag v0.2.0
    ```
 
-4. **Push Tag**:
+2. **Push Tag**:
    ```bash
    git push origin <branch-name>
    git push origin v0.2.0
    ```
 
-5. **Monitor Workflow**:
+3. **Monitor Workflow**:
    - Go to repository Actions tab
    - Find "Release VSIX" workflow run
    - Watch steps execute (should complete in 2-4 minutes)
 
-6. **Verify Release Created**:
+4. **Verify Release Created**:
    - Navigate to repository Releases page
    - Confirm release `v0.2.0` exists
    - Check release is NOT marked as pre-release (even minor)
    - Verify VSIX file is attached
 
-7. **Download and Install VSIX**:
+5. **Download and Install VSIX**:
    ```bash
    # Download paw-workflow-0.2.0.vsix from release
    code --install-extension ~/Downloads/paw-workflow-0.2.0.vsix
    ```
 
-8. **Test Extension**:
+6. **Test Extension**:
    - Reload VS Code
    - Open Command Palette (`Ctrl+Shift+P`)
    - Search for "PAW: Initialize Work Item"
    - Verify command exists and executes
 
-9. **Test Pre-Release**:
+7. **Test Pre-Release**:
    - Change version to `0.3.0` (odd minor)
    - Repeat steps 2-6
    - Verify release IS marked as "Pre-release"
 
-10. **Test Idempotency**:
+8. **Test Idempotency**:
     - Go to Actions tab
     - Find successful workflow run for `v0.2.0`
     - Click "Re-run jobs" → "Re-run all jobs"
@@ -707,7 +667,6 @@ code --install-extension ~/Downloads/paw-workflow-0.2.0.vsix
    - PRs now require passing tests and linting before merge
 
 3. **Create Initial Release**:
-   - Ensure `vscode-extension/package.json` version reflects current state (e.g., `0.0.1`)
    - Create initial tag: `git tag v0.0.1 && git push origin v0.0.1`
    - Verify workflow creates first release
    - This establishes baseline for future changelog generation

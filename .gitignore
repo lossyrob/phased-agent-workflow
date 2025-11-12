@@ -49,7 +49,7 @@ lerna-debug.log*
 .tsbuildinfo
 
 # Package manager files
-package-lock.json
+# Note: package-lock.json is tracked for reproducible builds in CI/CD
 yarn.lock
 pnpm-lock.yaml
 .yarn/

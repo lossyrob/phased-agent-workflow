@@ -87,7 +87,7 @@ The **PAW Workflow Extension** automates work item initialization, eliminating m
 - **Git branch creation** and checkout handled automatically
 - **Custom instructions** support for project-specific conventions
 
-**Installation**: See [vscode-extension/README.md](vscode-extension/README.md) for installation and usage instructions.
+**Installation**: Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossyrob/phased-agent-workflow/releases) and install it in VS Code via `code --install-extension <file>.vsix` or the Extensions view. See [vscode-extension/README.md](vscode-extension/README.md) for details.
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 

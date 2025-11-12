@@ -1,0 +1,139 @@
+# Automatically builds and releases the PAW VS Code extension when version tags are pushed.
+# Triggers on tags matching v* pattern (e.g., v0.2.0, v1.0.0).
+# Builds extension, packages VSIX, generates changelog, and creates GitHub Release with VSIX attached.
+name: Release VSIX
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required to create releases and upload assets
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'vscode-extension/package-lock.json'
+      
+      - name: Install dependencies
+        working-directory: vscode-extension
+        run: npm ci
+      
+      - name: Compile extension
+        working-directory: vscode-extension
+        run: npm run compile
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Extract semantic version from tag (e.g., v0.2.0 -> 0.2.0)
+          # This version becomes the source of truth for the release
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION="${TAG_NAME#v}"  # Remove 'v' prefix using bash parameter expansion
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: ${VERSION}"
+      
+      - name: Update package.json version to match tag
+        working-directory: vscode-extension
+        run: |
+          # Set package.json version to match the git tag
+          # This eliminates the need for manual version updates before tagging
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version
+          echo "Updated package.json to version: ${TAG_VERSION}"
+      
+      - name: Determine pre-release status
+        id: prerelease
+        run: |
+          # VS Code extension convention: odd minor versions (0.1.x, 0.3.x) are pre-releases,
+          # even minor versions (0.2.x, 0.4.x) are stable releases
+          # This follows the VS Code pre-release extension best practices
+          VERSION="${{ steps.version.outputs.version }}"
+          # Extract minor version (second number in semver, e.g., 0.2.0 -> 2)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          # Check if minor version is odd (pre-release) or even (stable)
+          if [ $((MINOR % 2)) -eq 1 ]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "This is a pre-release version (minor=$MINOR is odd)"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "This is a stable release version (minor=$MINOR is even)"
+          fi
+      
+      - name: Package VSIX
+        working-directory: vscode-extension
+        run: npm run package
+      
+      - name: Verify VSIX created
+        id: vsix
+        working-directory: vscode-extension
+        run: |
+          # Verify the VSIX file was created with the expected filename format
+          # The package name comes from package.json and matches: paw-workflow-<version>.vsix
+          VSIX_FILE="paw-workflow-${{ steps.version.outputs.version }}.vsix"
+          if [ ! -f "$VSIX_FILE" ]; then
+            echo "Error: Expected VSIX file not found: $VSIX_FILE"
+            exit 1
+          fi
+          # Export both the full path (for release upload) and filename (for display)
+          echo "vsix_path=vscode-extension/${VSIX_FILE}" >> $GITHUB_OUTPUT
+          echo "vsix_name=${VSIX_FILE}" >> $GITHUB_OUTPUT
+          echo "VSIX created successfully: $VSIX_FILE"
+      
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: .github/release-changelog-config.json
+          failOnError: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check if release exists
+        id: check_release
+        run: |
+          # Check for existing release to provide idempotency
+          # Re-running the workflow won't fail or create duplicates if release already exists
+          RELEASE_EXISTS=$(gh release view "${{ github.ref_name }}" --json id 2>/dev/null || echo "")
+          if [ -n "$RELEASE_EXISTS" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release already exists for tag ${{ github.ref_name }}, skipping"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No existing release found, will create new release"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: ${{ steps.vsix.outputs.vsix_path }}
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Release summary
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          echo "✅ Release created successfully!"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Pre-release: ${{ steps.prerelease.outputs.is_prerelease }}"
+          echo "VSIX: ${{ steps.vsix.outputs.vsix_name }}"
+          echo "View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

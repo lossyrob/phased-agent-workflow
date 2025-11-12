@@ -1,0 +1,68 @@
+# Runs automated quality checks on pull requests before merging.
+# Validates code quality by running extension unit tests and chatmode file linting.
+# Serves as a quality gate to prevent broken code or oversized chatmode files from being merged.
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+    paths:
+      - 'vscode-extension/**'
+      - '.github/chatmodes/**'
+      - 'scripts/**'
+      - '.github/workflows/pr-checks.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            vscode-extension/package-lock.json
+            package-lock.json
+      
+      - name: Install root dependencies
+        run: npm ci
+      
+      - name: Install extension dependencies
+        working-directory: vscode-extension
+        run: npm ci
+      
+      - name: Compile extension
+        working-directory: vscode-extension
+        run: npm run compile
+      
+      - name: Run extension unit tests
+        working-directory: vscode-extension
+        run: |
+          # Install xvfb for headless VS Code testing
+          # xvfb provides a virtual display server, required for VS Code's Electron environment
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          
+          # Run tests with virtual display
+          # xvfb-run -a automatically finds an available display number
+          xvfb-run -a npm test
+        env:
+          # Prevent VS Code from showing UI during tests
+          DISPLAY: ':99.0'
+      
+      - name: Lint chatmode files
+        run: npm run lint:chatmode:all
+      
+      - name: PR checks summary
+        if: success()
+        run: |
+          echo "✅ All PR checks passed!"
+          echo "- Extension unit tests: PASSED"
+          echo "- Chatmode linting: PASSED"

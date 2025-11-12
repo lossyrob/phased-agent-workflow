@@ -115,8 +115,35 @@ code --uninstall-extension paw-workflow.paw-workflow
 
 Or uninstall from the Extensions view inside VS Code.
 
+## GitHub Actions Workflows
+
+PAW includes two automated workflows for the VS Code extension:
+
+### Release Workflow
+
+Automatically creates GitHub Releases with VSIX files when version tags are pushed.
+
+**Usage**:
+1. Update `vscode-extension/package.json` version (e.g., `0.2.0`)
+2. Commit: `git commit -am "chore: bump version to 0.2.0"`
+3. Tag: `git tag v0.2.0`
+4. Push: `git push origin <branch> && git push origin v0.2.0`
+
+The workflow builds the extension, packages it as VSIX, generates a changelog, and creates a GitHub Release. Odd minor versions (`0.1.x`, `0.3.x`) are marked as pre-releases; even versions (`0.2.x`, `0.4.x`) are stable releases.
+
+### PR Gate Workflow
+
+Runs automated quality checks on pull requests before merging.
+
+**Checks**:
+- Extension unit tests
+- Chatmode file linting (token limits)
+
+The workflow triggers automatically on PRs to `main` or `feature/**` branches when relevant files change. Failed checks prevent merge when branch protection is enabled.
+
 ## Project Structure
 
 - `.github/chatmodes/` - Contains chatmode definitions for different agents
+- `.github/workflows/` - GitHub Actions workflows for releases and PR checks
 - `scripts/` - Development and utility scripts
 - `vscode-extension/` - VS Code extension for PAW workflow automation

@@ -110,7 +110,7 @@ For detailed information about each mode, when to use them, and how review strat
 
 ### Stage 1: Creating the spec
 
-Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md` (with a section for optional user-provided external knowledge), and surface any remaining questions so downstream agents start with shared, testable requirements.
+Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md` (with a section for optional user-provided external knowledge), and surface any remaining questions so downstream agents start with shared, testable requirements. Each spec includes Overview and Objectives narrative sections that provide big-picture context before diving into detailed user stories and requirements.
 
 ![stage 1](./img/workflow-stage-1.png)
 

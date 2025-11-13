@@ -164,7 +164,10 @@ Custom Workflow Instructions: <text or none>
 4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
 5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting.
-7. **Specification Assembly**: Iteratively build the full spec with section order below. Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
+7. **Specification Assembly**: Iteratively build the full spec with section order below. Start with narrative sections (Overview and Objectives) to establish context, then enumerate detailed requirements.
+   - **Overview**: Write 2-4 paragraphs (3-5 sentences each) describing the feature as a cohesive user journey. Create a vivid, realistic scenario showing how users will experience the feature from start to finish. Structure the narrative to flow logically: describe the user's problem or need, walk through their interaction with the feature step-by-step, and explain the value delivered. Focus on behavioral outcomes and user experience, not technical implementation. Use insights from issue, research, and clarifications to paint a coherent picture. Write in flowing prose that tells a story - avoid bullet fragments or disjointed statements. The narrative should set the stage for the structured sections that follow.
+   - **Objectives**: List key behavioral goals as bullets - observable outcomes the feature achieves. Keep technology-agnostic and focused on WHAT, not HOW. Each objective may optionally include a brief rationale to explain why this goal matters: "(Rationale: this allows users to...)". Understanding the why helps both reviewers and AI implementers make better decisions.
+   - **Requirements & Criteria**: Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
 8. **Quality Checklist Pass**: Evaluate spec against the Spec Quality Checklist (below). Show pass/fail. Iterate until all pass (or user accepts explicit residual risks).
 9. **Finalize & Hand‑Off**: Present final readiness checklist confirming `Spec.md` has been written to disk. Do not commit/push.
 
@@ -223,6 +226,19 @@ Use this exact minimal structure; remove sections that are not applicable rather
 
 **Branch**: <feature-branch>  |  **Created**: <YYYY-MM-DD>  |  **Status**: Draft
 **Input Brief**: <one-line distilled intent>
+
+## Overview
+<2-4 paragraphs (3-5 sentences each) describing WHAT the feature does and WHY it matters from the user perspective.
+Write in flowing narrative prose that tells a cohesive story - avoid bullet fragments or disjointed statements.
+Focus on user journey and value. Paint the big picture before diving into detailed requirements.
+Avoid implementation details, technical architecture, file paths, or code structure.
+Transform any technical insights into behavioral descriptions of what users will experience.>
+
+## Objectives
+<Bulleted list of key behavioral goals the feature achieves.
+Focus on observable outcomes - WHAT the feature accomplishes, not HOW it's implemented.
+Keep bullets concise and technology-agnostic. Each bullet should describe a user-facing capability or system behavior.
+Optionally include brief rationale: "Enable X (Rationale: this allows users to...)".>
 
 ## User Scenarios & Testing
 ### User Story P1 – <Title>
@@ -305,6 +321,12 @@ Use this during validation (auto-generate in narrative, not as a committed file 
 - [ ] Each user story independently testable
 - [ ] Each story has ≥1 acceptance scenario
 - [ ] Edge cases enumerated
+
+### Narrative Quality
+- [ ] Narrative sections exist with appropriate format: Overview (2-4 paragraphs of flowing prose) and Objectives (bulleted behavioral goals) appear between header and User Scenarios
+- [ ] Narrative maintains user perspective: Both sections focus on WHAT/WHY from user viewpoint, avoiding implementation details (file paths, architecture, code), technical approaches, and formal specifications
+- [ ] Content is specific and unique: Uses measurable language (not vague terms), doesn't duplicate User Stories/FRs/SCs, and Overview connects logically to User Stories
+- [ ] Objectives are behavioral and technology-agnostic: Describe observable outcomes (not HOW), may include optional rationale notes
 
 ### Requirement Completeness
 - [ ] All FRs testable & observable

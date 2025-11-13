@@ -4,8 +4,8 @@
   "description": "Phased Agent Workflow - A structured approach to AI-assisted software development",
   "private": true,
   "scripts": {
-    "lint:chatmode": "./scripts/lint-chatmode.sh",
-    "lint:chatmode:all": "./scripts/lint-chatmode.sh"
+    "lint:agent": "./scripts/lint-agent.sh",
+    "lint:agent:all": "./scripts/lint-agent.sh"
   },
   "devDependencies": {
     "@dqbd/tiktoken": "^1.0.0"

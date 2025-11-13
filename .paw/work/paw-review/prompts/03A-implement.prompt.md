@@ -1,5 +1,5 @@
 ---
-mode: PAW-03A Implementer
+agent: PAW-03A Implementer
 model: Claude Sonnet 4.5 (copilot)
 ---
 

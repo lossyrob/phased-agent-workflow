@@ -167,16 +167,16 @@ Agents will log an informational message when using default values to indicate t
 ## Repository Layout & Naming
 
 ```
-/.github/chatmodes                       # chat-mode prompts (final outputs of this work)
-  PAW-01A Spec Agent.chatmode.md
-  PAW-01B Spec Research Agent.chatmode.md
-  PAW-02A Code Research Agent.chatmode.md
-  PAW-02B Impl Plan Agent.chatmode.md
-  PAW-03A Impl Agent.chatmode.md
-  PAW-03B Impl Review Agent.chatmode.md
-  PAW-04 Documentation Agent.chatmode.md
-  PAW-05 PR Agent.chatmode.md
-  PAW-0X Status Agent.chatmode.md
+/.github/agents                          # custom agent prompts (final outputs of this work)
+  PAW-01A Spec Agent.agent.md
+  PAW-01B Spec Research Agent.agent.md
+  PAW-02A Code Research Agent.agent.md
+  PAW-02B Impl Plan Agent.agent.md
+  PAW-03A Impl Agent.agent.md
+  PAW-03B Impl Review Agent.agent.md
+  PAW-04 Documentation Agent.agent.md
+  PAW-05 PR Agent.agent.md
+  PAW-0X Status Agent.agent.md
 
 /.paw/work/                     # artifacts created by the PAW process
   <feature-slug>/               # e.g., add-authentication or bugfix-rate-limit
@@ -211,7 +211,7 @@ Auto-generated from Work Title or issue title when not explicitly provided. Rema
 
 ## Agents
 
-> The following “agents” are implemented as **Copilot Agent Mode chat modes** in `.github/chatmodes/` using the `PAW-XX` naming scheme.
+> The following “agents” are implemented as **Copilot custom agents" in `.github/agents/` using the `PAW-XX` naming scheme.
 
 ### Spec Agent
 
@@ -333,7 +333,7 @@ Below describes each **Stage** of the PAW process, including agents involved, in
 
 * Create an issue or work item if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
 * Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
-* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each chatmode instruction for the structure.
+* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each agent instruction for the structure.
 
 **Artifacts:** issue link (optional), branches created, WorkflowContext.md (optional).
 

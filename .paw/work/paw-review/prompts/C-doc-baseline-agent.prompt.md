@@ -1,5 +1,5 @@
 ---
-mode: PAW-04 Documenter
+agent: PAW-04 Documenter
 model: Claude Sonnet 4.5 (copilot)
 ---
 

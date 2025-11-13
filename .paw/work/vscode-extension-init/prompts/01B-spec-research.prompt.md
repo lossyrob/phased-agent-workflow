@@ -1,5 +1,5 @@
 ---
-mode: 'PAW-01B Spec Research Agent'
+agent: 'PAW-01B Spec Research Agent'
 ---
 # Spec Research Prompt: VS Code Extension - PAW Work Item Initializer
 

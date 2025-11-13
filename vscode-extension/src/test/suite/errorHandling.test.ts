@@ -83,7 +83,7 @@ suite('Error Handling', () => {
     // const invalidStrategy: ReviewStrategy = 'auto';            // Type error
   });
 
-  test('Agent chatmode files validate workflow mode at runtime', () => {
+  test('Agent files validate workflow mode at runtime', () => {
     // Agents read workflow mode from WorkflowContext.md and validate it
     // This simulates the validation logic agents should implement
     

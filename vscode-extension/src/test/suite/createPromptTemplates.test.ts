@@ -195,7 +195,7 @@ suite('Prompt Template Generation', () => {
 
     // Verify frontmatter format
     assert.ok(content.startsWith('---\n'), 'File should start with frontmatter delimiter');
-    assert.ok(content.includes('mode: PAW-01A Spec Agent'), 'Frontmatter should include mode');
+    assert.ok(content.includes('agent: PAW-01A Spec Agent'), 'Frontmatter should include agent');
     assert.ok(content.includes('Create spec from .paw/work/test-feature/WorkflowContext.md'), 'Body should reference WorkflowContext.md');
   });
 
@@ -258,7 +258,7 @@ suite('Prompt Template Generation', () => {
 
     // Verify file was overwritten with correct template content
     const restoredContent = fs.readFileSync(testFile, 'utf-8');
-    assert.ok(restoredContent.includes('mode: PAW-01A Spec Agent'), 'File should be restored to template content');
+    assert.ok(restoredContent.includes('agent: PAW-01A Spec Agent'), 'File should be restored to template content');
     assert.ok(restoredContent !== 'MODIFIED CONTENT', 'Modified content should be overwritten');
   });
 

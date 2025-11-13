@@ -2,12 +2,12 @@
 
 This file contains instructions for GitHub Copilot when working with the Phased Agent Workflow (PAW) project.
 
-## Chatmode Development
+## Agent Development
 
-When creating or modifying chatmode files in `.github/chatmodes/`, ALWAYS run the chatmode linter script:
+When creating or modifying agent files in `.github/agents/`, ALWAYS run the agent linter script:
 
 ```bash
-./scripts/lint-chatmode.sh .github/chatmodes/<filename>.chatmode.md
+./scripts/lint-agent.sh .github/agents/<filename>.agent.md
 ```
 
 ## Pull Request Labels

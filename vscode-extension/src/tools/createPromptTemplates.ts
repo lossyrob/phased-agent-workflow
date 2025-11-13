@@ -75,7 +75,7 @@ interface PromptTemplate {
   /** The exact filename to use (e.g., "01A-spec.prompt.md") */
   filename: string;
   
-  /** The chatmode to invoke (e.g., "PAW-01A Spec Agent") */
+  /** The agent to invoke (e.g., "PAW-01A Spec Agent") */
   mode: string;
   
   /** The instruction for the agent (e.g., "Create spec from") */
@@ -90,7 +90,7 @@ interface PromptTemplate {
  * 
  * Each template includes:
  * - filename: The exact filename to use
- * - mode: The chatmode to invoke (corresponds to .github/chatmodes/*.chatmode.md)
+ * - mode: The agent to invoke (corresponds to .github/agents/*.agent.md)
  * - instruction: The action the agent should perform
  * - stage: The workflow stage this template belongs to
  */
@@ -228,10 +228,10 @@ function determineStagesFromMode(
 /**
  * Generate content for a single prompt template file.
  * 
- * Creates a markdown file with frontmatter specifying the chatmode and a body
+ * Creates a markdown file with frontmatter specifying the agent and a body
  * that references the WorkflowContext.md file for the feature.
  * 
- * @param mode - The chatmode to invoke (e.g., "PAW-01A Spec Agent")
+ * @param mode - The agent to invoke (e.g., "PAW-01A Spec Agent")
  * @param instruction - The instruction for the agent (e.g., "Create spec from")
  * @param featureSlug - The feature slug to reference in the template body
  * @returns The complete file content with frontmatter and body
@@ -241,7 +241,7 @@ function generatePromptTemplate(
   instruction: string,
   featureSlug: string
 ): string {
-  return `---\nmode: ${mode}\n---\n\n${instruction} .paw/work/${featureSlug}/WorkflowContext.md\n`;
+  return `---\nagent: ${mode}\n---\n\n${instruction} .paw/work/${featureSlug}/WorkflowContext.md\n`;
 }
 
 /**

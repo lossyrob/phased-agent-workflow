@@ -263,7 +263,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 Generated guidance for PAW-R1B Baseline Researcher Agent to analyze pre-change system state.
 
 **Contents:**
-- Target mode: "PAW-R1B Baseline Researcher Agent"
+- Target agent: "PAW-R1B Baseline Researcher Agent"
 - PR/Branch title and context
 - Base branch and commit SHA
 - List of changed files
@@ -276,7 +276,7 @@ Generated guidance for PAW-R1B Baseline Researcher Agent to analyze pre-change s
   - Test Coverage: Existing tests and patterns
   - Specific Ambiguities: Questions from initial analysis
 
-**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system. The PAW-R1B Baseline Researcher Agent chatmode defines its own output format, so the prompt does not include output format instructions.
+**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system. The PAW-R1B Baseline Researcher Agent defines its own output format, so the prompt does not include output format instructions.
 
 ---
 

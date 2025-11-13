@@ -1,5 +1,5 @@
 ---
-mode: PAW-02B Impl Planner
+agent: PAW-02B Impl Planner
 ---
 
 Address review comments on the planning PR.

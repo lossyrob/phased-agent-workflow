@@ -592,6 +592,98 @@ If you have previously copied the `.github/chatmodes/` directory to your reposit
 
 VS Code 1.106+ supports both old and new terminology during the transition period, so existing setups will continue to work, but updating is recommended.
 
+## Phase 7: Remove Redundant "Agent" Suffixes from Names
+
+**Status**: Not Started
+
+### Overview
+
+Now that files are explicitly `.agent.md`, the word "Agent" in agent names is redundant. Remove "Agent" suffix from 7 agent names for clarity and conciseness.
+
+### Files to Rename
+
+**Agent Definition Files (7 renames):**
+1. `PAW-01A Spec Agent.agent.md` → `PAW-01A Specification.agent.md`
+2. `PAW-01B Spec Research Agent.agent.md` → `PAW-01B Spec Researcher.agent.md`
+3. `PAW-R1A Understanding Agent.agent.md` → `PAW-R1A Understanding.agent.md`
+4. `PAW-R1B Baseline Researcher Agent.agent.md` → `PAW-R1B Baseline Researcher.agent.md`
+5. `PAW-R2A Impact Analysis Agent.agent.md` → `PAW-R2A Impact Analyzer.agent.md`
+6. `PAW-R2B Gap Analysis Agent.agent.md` → `PAW-R2B Gap Analyzer.agent.md`
+7. `PAW-R3A Feedback Generation Agent.agent.md` → `PAW-R3A Feedback Generator.agent.md`
+
+**Already correct (no changes needed):**
+- PAW-02A Code Researcher
+- PAW-02B Impl Planner
+- PAW-03A Implementer
+- PAW-03B Impl Reviewer
+- PAW-04 Documenter
+- PAW-05 PR
+- PAW-R3B Feedback Critic
+- PAW-X Status Update
+
+### References to Update
+
+**Documentation Files:**
+1. `paw-specification.md` - Update agent names in directory structure and agent descriptions
+2. `paw-review-specification.md` - Update review agent names throughout
+3. `README.md` - Update any agent name references
+4. `DEVELOPING.md` - Update any agent name references
+
+**TypeScript Code:**
+- `vscode-extension/src/tools/createPromptTemplates.ts` - Update `mode` field values in PROMPT_TEMPLATES array
+
+**Prompt Templates (excluding .paw/work/):**
+- No prompt templates exist outside of `.paw/work/` - skip this step
+
+**Test Files:**
+- `vscode-extension/src/test/suite/createPromptTemplates.test.ts` - Update test assertions to use new agent names
+
+### Implementation Steps
+
+1. **Rename Agent Files** (7 files)
+   ```bash
+   cd .github/agents
+   git mv "PAW-01A Spec Agent.agent.md" "PAW-01A Specification.agent.md"
+   git mv "PAW-01B Spec Research Agent.agent.md" "PAW-01B Spec Researcher.agent.md"
+   git mv "PAW-R1A Understanding Agent.agent.md" "PAW-R1A Understanding.agent.md"
+   git mv "PAW-R1B Baseline Researcher Agent.agent.md" "PAW-R1B Baseline Researcher.agent.md"
+   git mv "PAW-R2A Impact Analysis Agent.agent.md" "PAW-R2A Impact Analyzer.agent.md"
+   git mv "PAW-R2B Gap Analysis Agent.agent.md" "PAW-R2B Gap Analyzer.agent.md"
+   git mv "PAW-R3A Feedback Generation Agent.agent.md" "PAW-R3A Feedback Generator.agent.md"
+   ```
+
+2. **Update TypeScript Code**
+   - Update `vscode-extension/src/tools/createPromptTemplates.ts` PROMPT_TEMPLATES array
+   - Update test assertions in test files
+
+3. **Update Documentation**
+   - Update `paw-specification.md` with new names
+   - Update `paw-review-specification.md` with new review agent names
+   - Update README.md and DEVELOPING.md if they reference specific agent names
+
+4. **Verify Changes**
+   - Run linter on all agents
+   - Run all TypeScript tests
+   - Verify agent files are recognized in VS Code
+   - Search for any remaining old names
+
+### Verification Checklist
+
+- [ ] All 7 agent files renamed successfully
+- [ ] TypeScript code uses new agent names
+- [ ] All documentation updated
+- [ ] All tests pass
+- [ ] Linter works with new names
+- [ ] No references to old names remain (excluding `.paw/work/`)
+
+### Notes
+
+- Skip updating `.paw/work/` directory - these are historical work artifacts
+- The `.agent.md` extension makes the role clear without needing "Agent" in the name
+- Consistency: Most agents already use active role names (Implementer, Documenter, Reviewer)
+
+---
+
 ## References
 
 - Original Issue: https://github.com/lossyrob/phased-agent-workflow/issues/83

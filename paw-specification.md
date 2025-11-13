@@ -606,69 +606,78 @@ The Specification focuses exclusively on requirements and outcomes, avoiding imp
 
 #### Structure & Content
 
-The Specification follows a structured format designed for clarity and testability:
+The Specification follows a structured format designed for clarity and testability. Each spec begins with narrative sections that provide big-picture context before diving into detailed requirements:
 
 **Header**
 - **Feature/Task Name**: Clear, descriptive title
-- **Overview**: Brief summary of what the feature accomplishes and why it's needed
-- **Context**: Background information, related work, or broader project goals
+- **Branch**: Feature branch name
+- **Created**: Date the spec was created
+- **Status**: Draft/Final
+- **Input Brief**: One-line distilled intent
+
+**Overview**
+- 2-4 paragraphs of narrative prose describing what the feature does and why it matters from the user perspective
+- Tells the feature's story as a cohesive user journey
+- Focuses on behavioral outcomes and user experience, avoiding technical implementation details
+- Sets the stage for the structured sections that follow
+
+**Objectives**
+- Bulleted list of key behavioral goals the feature achieves
+- Observable outcomes focusing on WHAT the feature accomplishes, not HOW
+- Technology-agnostic and user-facing
+- May include optional rationale notes explaining why each goal matters
+
+**User Scenarios & Testing**
+- Prioritized user stories (P1, P2, P3) with narrative journeys
+- Independent test descriptions for each story
+- Acceptance scenarios in Given/When/Then format
+- Edge cases and error conditions
 
 **Requirements**
 
-**Functional Requirements**
-- Numbered list of specific capabilities the feature must provide
-- Written as observable behaviors: "The system shall/must..."
+**Functional Requirements (FR-001, FR-002, etc.)**
+- Numbered requirements with unique IDs
+- Written as observable, testable capabilities: "The system SHALL..."
+- Each FR references the user stories it supports (Stories: P1, P2)
 - Each requirement is atomic and independently verifiable
 
-**Non-Functional Requirements**
-- Performance constraints (response times, throughput, scalability)
-- Security requirements (authentication, authorization, data protection)
-- Usability requirements (accessibility, user experience)
-- Compatibility requirements (browsers, platforms, versions)
+**Key Entities (omit if none)**
+- Domain entities and their conceptual attributes
+- Descriptions focus on purpose and behavior, not implementation
 
-**Data Requirements**
-- New data entities or attributes needed
-- Business rules governing data (validation, relationships, lifecycle)
-- Data migration or transformation needs (conceptual, not technical)
+**Cross-Cutting / Non-Functional (omit if all covered in Success Criteria)**
+- Performance constraints, security requirements, usability needs
+- Constraints or qualitative rules with measurable aspects
 
-**User Experience**
-- User workflows and interaction patterns
-- Expected behavior in different scenarios
-- Error messages and user feedback
+**Success Criteria (SC-001, SC-002, etc.)**
+- Numbered criteria with unique IDs
+- Each SC is a measurable outcome that validates one or more FRs
+- Technology-agnostic and observable
+- Links back to relevant FR IDs
 
-**Acceptance Criteria**
-- Specific, testable conditions that define "done"
-- Written in Given/When/Then format or as verification steps
-- Each criterion is independently verifiable
-- Covers both happy paths and edge cases
+**Assumptions**
+- Assumptions about defaults, context, or external factors with rationale
+- Helps clarify what's taken for granted vs. what's explicitly required
 
-**Example:**
-```markdown
-### Acceptance Criteria
+**Scope**
+- **In Scope**: Explicit boundaries of what's included
+- **Out of Scope**: What this feature will NOT do (helps prevent scope creep)
 
-1. **User Authentication**
-   - Given a user with valid credentials
-   - When they submit the login form
-   - Then they are redirected to the dashboard within 2 seconds
-   - And their session persists for 24 hours
+**Dependencies**
+- External systems, services, or features that must exist or be available
+- May include feature flags or configuration requirements
 
-2. **Invalid Credentials**
-   - Given a user with invalid credentials
-   - When they submit the login form
-   - Then they see an error message "Invalid username or password"
-   - And the form is cleared for retry
-   - And no sensitive information is revealed
-```
+**Risks & Mitigations**
+- Identified risks with their impact and mitigation strategies
+- Format: `Risk: <description>. Impact: <consequence>. Mitigation: <approach>.`
 
-**Out of Scope**
-- Explicit list of what this feature will NOT do
-- Helps prevent scope creep and clarifies boundaries
-- May reference future work or related features
+**References**
+- Issue/work item link
+- Research documents (SpecResearch.md, external sources)
+- Related specifications or standards
 
-**Open Questions**
-- Questions about the current system that require investigation
-- Tracked in `prompts/spec-research.prompt.md` for the Spec Research Agent
-- This section should be empty in the final spec (all questions resolved)
+**Glossary (omit if not needed)**
+- Definitions of domain-specific terms used in the spec
 
 #### Interactive Creation Process
 

@@ -58,12 +58,11 @@ This spec was created through iteration with the Spec Agent, proving current gui
 
 After this implementation:
 
-1. **Guardrails section** contains 7+ explicit NEVER/DO NOT directives preventing:
-   - Code snippets and interface definitions
-   - File paths and directory structure
-   - API/library references
-   - Technical design sections
-   - Implementation details during iteration
+1. **Guardrails section** establishes strong defaults against proactive implementation details while preserving user autonomy:
+   - Agent never generates code snippets, file paths, or technical design on its own initiative
+   - Agent transforms technical discussions into behavioral language by default
+   - User can explicitly request implementation detail inclusion (with gentle guidance)
+   - Focuses on preventing accidental implementation detail creep, not blocking intentional choices
 
 2. **Quality checklist** includes 4+ specific items checking for:
    - No code snippets in any language
@@ -71,9 +70,12 @@ After this implementation:
    - No API/method call examples
    - No technical design sections
 
-3. **Communication patterns** include redirect guidance when users request implementation details
+3. **Communication patterns** guide handling of implementation details:
+   - Use technical discussions as context to inform behavioral requirements
+   - Transform technical details to behavioral language by default
+   - Respect user override when explicitly requested
 
-4. **Verification**: Running the Spec Agent with identical inputs to the problematic spec should refuse to add implementation details and redirect to planning stage
+4. **Verification**: Running the Spec Agent with identical inputs to the problematic spec should transform implementation discussions into behavioral descriptions unless user explicitly requests implementation detail inclusion
 
 ## What We're NOT Doing
 
@@ -116,44 +118,42 @@ Insert 7 new NEVER/DO NOT/CRITICAL guardrails into the Guardrails section to exp
 - NEVER: silently assume critical external standards; if needed list as optional external/context question + assumption.
 - NEVER: produce a spec-research prompt that reintroduces removed sections (Purpose, Output) unless user explicitly requests legacy format.
 - NEVER: proceed to final spec if unanswered **critical** internal clarification questions remain (optional external/context questions do not block).
-- NEVER: include code snippets, interface definitions, class definitions, or type definitions in specifications (not even as examples or during iteration).
-- NEVER: specify file paths, directory structure, module organization, or component locations in specifications.
-- NEVER: reference specific API methods, class names, framework-specific calls, library names, or package imports in specifications.
-- NEVER: create "Technical Design", "Implementation Details", "Architecture", or technical "Data Flow" sections in specifications.
-- DO NOT: include implementation-level code examples in any programming language (TypeScript, Python, JavaScript, etc.) even when refining requirements.
-- DO NOT: specify data structure implementations (exact property names, field types, database schemas) beyond conceptual entity descriptions.
-- CRITICAL: During iteration and refinement, maintain strict focus on WHAT the system does and WHY, never HOW to implement it. Reject requests for implementation details.
-- CRITICAL: When users request technical details, file paths, code examples, or implementation guidance during spec refinement, redirect them: "Implementation details belong in the Implementation Plan (Stage 02/PAW-02B). The spec must focus on behavioral requirements and user value."
+- NEVER: proactively generate code snippets, interface definitions, class definitions, or type definitions in specifications without explicit user request.
+- NEVER: proactively specify file paths, directory structure, module organization, or component locations in specifications without explicit user request.
+- NEVER: proactively reference specific API methods, class names, framework-specific calls, library names, or package imports in specifications without explicit user request.
+- NEVER: proactively create "Technical Design", "Implementation Details", "Architecture", or technical "Data Flow" sections in specifications without explicit user request.
 - ALWAYS: differentiate *requirements* (what) from *acceptance criteria* (verification of what).
 - ALWAYS: pause after writing the research prompt until research results (or explicit skips) are provided.
 - ALWAYS: surface if external research was skipped and note potential risk areas.
 - ALWAYS: ensure minimal format header lines are present and correctly ordered.
-- ALWAYS: describe system behavior in natural language focusing on observable outcomes, not internal mechanisms or code structures.
+- ALWAYS: describe system behavior in natural language focusing on observable outcomes, not internal mechanisms or code structures, unless user explicitly requests implementation detail inclusion.
+- ALWAYS: use implementation discussions as context to inform behavioral requirements, transforming technical details into behavioral language by default.
+- ALWAYS: respect user autonomy—if user explicitly requests including implementation details in the spec, comply while offering gentle guidance about typical spec focus (WHAT/WHY vs HOW).
 - When updating previously drafted artifacts (spec, research prompt), modify only the sections impacted by new information so that re-running with unchanged inputs produces minimal diffs.
 ```
 
-**Rationale**: The new guardrails (lines 5-12, 16) use strong directive language (NEVER/DO NOT/CRITICAL) to explicitly forbid the implementation details found in the problematic spec example. They cover:
-- Code snippets and interfaces
-- File paths and structure
-- API/library references
-- Technical design sections
-- Implementation during iteration
-- Redirect pattern for user requests
+**Rationale**: The new guardrails establish strong defaults against implementation details while preserving user autonomy:
+- Use "proactively" to indicate agent shouldn't generate implementation details on its own initiative
+- Add "without explicit user request" to allow user override
+- Add ALWAYS items that encourage transforming technical discussions into behavioral language
+- Maintain user control while guiding toward best practices
+- Focus on preventing accidental implementation detail creep, not blocking intentional user choices
 
 ### Success Criteria
 
 #### Automated Verification
 
 - [ ] Chatmode file exists: `test -f .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
-- [ ] File contains new guardrails: `grep -q "NEVER: include code snippets" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
-- [ ] File contains redirect pattern: `grep -q "Implementation details belong in the Implementation Plan" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
+- [ ] File contains proactive prevention guardrail: `grep -q "NEVER: proactively generate code snippets" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
+- [ ] File contains user autonomy guidance: `grep -q "respect user autonomy" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
 - [ ] Chatmode linter passes: `./scripts/lint-chatmode.sh .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
 
 #### Manual Verification
 
-- [ ] All 7 new guardrails appear in Guardrails section
-- [ ] Guardrails use consistent NEVER/DO NOT/CRITICAL language
-- [ ] Redirect message references correct stage (Stage 02/PAW-02B)
+- [ ] Guardrails use "proactively" and "without explicit user request" qualifiers
+- [ ] Guardrails preserve user autonomy (allow override)
+- [ ] New ALWAYS items encourage transformation of technical to behavioral language
+- [ ] Guardrails balance strong defaults with user control
 - [ ] New guardrails don't conflict with existing ones
 
 ---
@@ -221,7 +221,7 @@ Add 4 specific quality checklist items that detect implementation details during
 
 ### Overview
 
-Add guidance to the Communication Patterns section for redirecting users who request implementation details during spec iteration.
+Add guidance to the Communication Patterns section for handling implementation details during spec creation, balancing user autonomy with behavioral focus.
 
 ### Changes Required
 
@@ -245,29 +245,36 @@ Add guidance to the Communication Patterns section for redirecting users who req
 - When pausing for research, clearly enumerate pending research question IDs
 - Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`
 - **Write spec sections to `Spec.md` incrementally**—only present summaries or specific excerpts in chat when explaining changes or seeking feedback
-- **When user requests implementation details** (code snippets, file paths, technical design, API calls) during spec creation or iteration:
-  - Immediately refuse the request
-  - Redirect with: "Implementation details belong in the Implementation Plan (Stage 02/PAW-02B). The spec must focus on WHAT the system does and WHY, not HOW to implement it. Let's keep this spec focused on behavioral requirements and user value."
-  - Offer to rephrase as behavioral requirements if applicable
-  - Do not include ANY code, file paths, or technical design even if user insists
+- **When implementation details arise in conversation**:
+  - Implementation discussions are valuable context for understanding requirements
+  - Use implementation insights to inform behavioral requirements without embedding code, file paths, or technical design in the spec itself
+  - Transform technical discussions into behavioral descriptions (e.g., "service that monitors deployment status" instead of "`FlexDeploymentTracker` class")
+  - If user explicitly requests including implementation details in the spec, respect their decision and follow user instructions, while offering gentle guidance about typical spec focus (WHAT/WHY vs HOW)
+  - Default behavior: Never proactively generate code snippets, file paths, API signatures, or technical architecture sections unless explicitly requested by the user
 ```
 
-**Rationale**: Provides explicit pattern for the most common failure mode: users requesting implementation details during iteration. The agent now has clear instructions to refuse and redirect rather than accommodating the request.
+**Rationale**: Strikes a balance between preventing accidental implementation detail creep and respecting user autonomy. The agent:
+1. Uses implementation discussions as context to inform better behavioral requirements
+2. Transforms technical details into behavioral language by default
+3. Allows user override when explicitly requested (with gentle guidance)
+4. Never proactively generates implementation details without being asked
+
+This approach preserves PAW's value of user control while establishing a strong default toward behavioral specifications.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- [ ] Communication pattern added: `grep -A 10 "## Communication Patterns" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md | grep -q "When user requests implementation details"`
-- [ ] Redirect message present: `grep -q "Implementation details belong in the Implementation Plan (Stage 02/PAW-02B)" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
+- [ ] Communication pattern added: `grep -A 10 "## Communication Patterns" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md | grep -q "When implementation details arise"`
 - [ ] Chatmode linter passes: `./scripts/lint-chatmode.sh .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode.md`
 
 #### Manual Verification
 
 - [ ] New pattern appears in Communication Patterns section
-- [ ] Redirect message is clear and actionable
-- [ ] Pattern includes both refusal and alternative approach
-- [ ] References correct stage (PAW-02B Implementation Plan)
+- [ ] Pattern distinguishes between discussion context and spec content
+- [ ] Pattern allows user override with gentle guidance (not refusal)
+- [ ] Pattern emphasizes transformation of technical details to behavioral language
+- [ ] References Implementation Plan stage appropriately
 
 ---
 
@@ -299,23 +306,23 @@ grep -A 20 "### Content Quality" .github/chatmodes/PAW-01A\ Spec\ Agent.chatmode
 
 Test the Spec Agent's behavior with the updated guardrails:
 
-1. **Test Case: Request for code snippet during iteration**
+1. **Test Case: Implementation details discussed in conversation (default behavior)**
    - **Setup**: Start Spec Agent with a feature request
-   - **Action**: Ask "Can you add a TypeScript interface showing the data structure?"
-   - **Expected**: Agent refuses and redirects to Implementation Plan stage
-   - **Verify**: No code appears in Spec.md
+   - **Action**: Discuss TypeScript interfaces and file structure during spec creation
+   - **Expected**: Agent uses discussion as context, transforms to behavioral language
+   - **Verify**: No code or file paths appear in Spec.md (behavioral descriptions only)
 
-2. **Test Case: Request for file paths**
+2. **Test Case: User explicitly requests code snippet**
    - **Setup**: Draft a spec for a new feature
-   - **Action**: Ask "Where should I put these new files?"
-   - **Expected**: Agent redirects to planning stage, keeps spec behavioral
-   - **Verify**: No file paths in Spec.md
+   - **Action**: Explicitly say "Please include a TypeScript interface in the spec"
+   - **Expected**: Agent offers guidance, asks for confirmation, respects user decision if confirmed
+   - **Verify**: User control preserved with appropriate guidance
 
-3. **Test Case: Request for technical design section**
-   - **Setup**: Iterate on existing spec
-   - **Action**: Request "Add a Technical Design section with architecture"
-   - **Expected**: Agent refuses and explains spec focuses on behavior
-   - **Verify**: No Technical Design section created
+3. **Test Case: Transformation of technical discussion**
+   - **Setup**: Iterate on existing spec while discussing API design
+   - **Action**: Talk about `FlexDeploymentTracker` service and polling intervals
+   - **Expected**: Agent describes "background service that monitors status every 15 seconds"
+   - **Verify**: Behavioral language in spec, technical details not embedded
 
 4. **Test Case: Quality checklist validation**
    - **Setup**: Create spec with implementation details manually inserted
@@ -325,32 +332,41 @@ Test the Spec Agent's behavior with the updated guardrails:
 
 ### Manual Testing Scenarios
 
-**Scenario 1: Recreate problematic spec conditions**
+**Scenario 1: Recreate problematic spec conditions (default behavior)**
 1. Use the same issue/brief that created the problematic spec example
 2. Invoke Spec Agent with updated guardrails
-3. During iteration, request technical details as user did originally
-4. **Success**: Agent refuses all implementation detail requests
-5. **Success**: Final spec contains only behavioral requirements
+3. During iteration, discuss technical implementation details in conversation
+4. **Success**: Agent uses technical discussion to inform behavioral requirements
+5. **Success**: Final spec contains behavioral descriptions, not implementation code
 
-**Scenario 2: Edge case - User insists on technical details**
+**Scenario 2: User explicitly requests implementation details**
 1. Start spec creation for a feature
-2. Request code examples repeatedly
-3. User explicitly says "I need to see the code structure"
-4. **Success**: Agent maintains refusal and redirects consistently
-5. **Success**: Agent offers to rephrase as behavioral requirements
+2. Explicitly request "Include a TypeScript interface showing the data structure in the spec"
+3. **Success**: Agent offers gentle guidance about spec focus (WHAT/WHY vs HOW)
+4. **Success**: Agent asks for confirmation before proceeding
+5. **Success**: If user confirms, agent includes the requested details
+6. **Success**: Agent documents the user override decision
 
-**Scenario 3: Verify no regression in normal spec creation**
-1. Create spec for simple feature without requesting implementation details
+**Scenario 3: Verify transformation of technical discussion**
+1. Create spec while discussing file locations and API names
+2. Agent participates in technical discussion for context
+3. **Success**: Agent transforms technical details into behavioral language
+4. **Success**: Spec describes "a background service monitors deployment" not "`FlexDeploymentTracker` class in `src/services/`"
+5. **Success**: Behavioral requirements accurately reflect the technical context
+
+**Scenario 4: Verify no regression in normal spec creation**
+1. Create spec for simple feature without discussing implementation
 2. Follow standard workflow: research → integration → spec drafting
 3. **Success**: Process works normally
 4. **Success**: Quality checklist passes
 5. **Success**: No false positives from new checklist items
 
-**Scenario 4: Verify behavioral descriptions still allowed**
-1. Draft spec describing system behavior
-2. Use natural language to describe data concepts (e.g., "profile with name and email")
+**Scenario 5: Verify behavioral descriptions still allowed**
+1. Draft spec describing system behavior using natural language
+2. Use conceptual terms (e.g., "profile contains name and email fields")
 3. **Success**: Agent allows conceptual entity descriptions
-4. **Success**: Agent only blocks when descriptions become implementation (exact property names, types)
+4. **Success**: Agent only suggests transformation when descriptions become too implementation-specific
+5. **Success**: User retains final control over level of detail
 
 ## Performance Considerations
 

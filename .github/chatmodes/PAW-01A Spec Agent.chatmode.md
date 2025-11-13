@@ -228,7 +228,8 @@ Use this exact minimal structure; remove sections that are not applicable rather
 **Input Brief**: <one-line distilled intent>
 
 ## Overview
-<2-4 paragraphs describing WHAT the feature does and WHY it matters from the user perspective.
+<2-4 paragraphs (3-5 sentences each) describing WHAT the feature does and WHY it matters from the user perspective.
+Write in flowing narrative prose that tells a cohesive story - avoid bullet fragments or disjointed statements.
 Focus on user journey and value. Paint the big picture before diving into detailed requirements.
 Avoid implementation details, technical architecture, file paths, or code structure.
 Transform any technical insights into behavioral descriptions of what users will experience.>
@@ -236,7 +237,8 @@ Transform any technical insights into behavioral descriptions of what users will
 ## Objectives
 <Bulleted list of key behavioral goals the feature achieves.
 Focus on observable outcomes - WHAT the feature accomplishes, not HOW it's implemented.
-Keep bullets concise and technology-agnostic. Each bullet should describe a user-facing capability or system behavior.>
+Keep bullets concise and technology-agnostic. Each bullet should describe a user-facing capability or system behavior.
+Optionally include brief rationale: "Enable X (Rationale: this allows users to...)".>
 
 ## User Scenarios & Testing
 ### User Story P1 – <Title>

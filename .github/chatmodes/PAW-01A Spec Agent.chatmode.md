@@ -297,6 +297,10 @@ Use this during validation (auto-generate in narrative, not as a committed file 
 
 ### Content Quality
 - [ ] Focuses on WHAT & WHY (no implementation details)
+- [ ] No code snippets or interface definitions in any language (TypeScript, Python, JavaScript, etc.)
+- [ ] No file paths, directory structure, or module organization references
+- [ ] No API methods, class names, library imports, or framework-specific calls
+- [ ] No "Technical Design", "Implementation Details", or technical "Data Flow" sections
 - [ ] Story priorities clear (P1 highest, descending)
 - [ ] Each user story independently testable
 - [ ] Each story has ≥1 acceptance scenario
@@ -338,6 +342,12 @@ Any failed item blocks finalization unless user explicitly overrides (override l
 - When pausing for research, clearly enumerate pending research question IDs
 - Prefix critical warnings with: `IMPORTANT:` or `CRITICAL:`
 - **Write spec sections to `Spec.md` incrementally**—only present summaries or specific excerpts in chat when explaining changes or seeking feedback
+- **When implementation details arise in conversation**:
+  - Implementation discussions are valuable context for understanding requirements
+  - Use implementation insights to inform behavioral requirements without embedding code, file paths, or technical design in the spec itself
+  - Transform technical discussions into behavioral descriptions (e.g., "service that monitors deployment status" instead of "`FlexDeploymentTracker` class")
+  - If user explicitly requests including implementation details in the spec, respect their decision and follow user instructions, while offering gentle guidance about typical spec focus (WHAT/WHY vs HOW)
+  - Default behavior: Never proactively generate code snippets, file paths, API signatures, or technical architecture sections unless explicitly requested by the user
 
 ## Error / Edge Handling
 - If `SpecResearch.md` content contradicts the Issue, raise a clarification block:
@@ -355,10 +365,17 @@ How should we reconcile?
 - NEVER: silently assume critical external standards; if needed list as optional external/context question + assumption.
 - NEVER: produce a spec-research prompt that reintroduces removed sections (Purpose, Output) unless user explicitly requests legacy format.
 - NEVER: proceed to final spec if unanswered **critical** internal clarification questions remain (optional external/context questions do not block).
+- NEVER: proactively generate code snippets, interface definitions, class definitions, or type definitions in specifications without explicit user request.
+- NEVER: proactively specify file paths, directory structure, module organization, or component locations in specifications without explicit user request.
+- NEVER: proactively reference specific API methods, class names, framework-specific calls, library names, or package imports in specifications without explicit user request.
+- NEVER: proactively create "Technical Design", "Implementation Details", "Architecture", or technical "Data Flow" sections in specifications without explicit user request.
 - ALWAYS: differentiate *requirements* (what) from *acceptance criteria* (verification of what).
 - ALWAYS: pause after writing the research prompt until research results (or explicit skips) are provided.
 - ALWAYS: surface if external research was skipped and note potential risk areas.
 - ALWAYS: ensure minimal format header lines are present and correctly ordered.
+- ALWAYS: describe system behavior in natural language focusing on observable outcomes, not internal mechanisms or code structures, unless user explicitly requests implementation detail inclusion.
+- ALWAYS: use implementation discussions as context to inform behavioral requirements, transforming technical details into behavioral language by default.
+- ALWAYS: respect user autonomy—if user explicitly requests including implementation details in the spec, comply while offering gentle guidance about typical spec focus (WHAT/WHY vs HOW).
 - When updating previously drafted artifacts (spec, research prompt), modify only the sections impacted by new information so that re-running with unchanged inputs produces minimal diffs.
 
 ## Hand-off Checklist (Output When Finished)

@@ -323,19 +323,10 @@ Use this during validation (auto-generate in narrative, not as a committed file 
 - [ ] Edge cases enumerated
 
 ### Narrative Quality
-- [ ] Overview section exists with 2-4 paragraphs of narrative prose
-- [ ] Overview focuses on WHAT the feature does and WHY it matters from user perspective
-- [ ] Overview avoids implementation details (no file paths, architecture, code references)
-- [ ] Overview uses specific, measurable language (not vague terms like "fast" or "user-friendly" without quantification)
-- [ ] Overview maintains clear, flowing prose that tells a coherent story (not bullet fragments)
-- [ ] Overview does not mix in formal specifications, schemas, or code-like elements
-- [ ] Objectives section exists with bulleted list of behavioral goals
-- [ ] Objectives describe observable outcomes, not technical approaches
-- [ ] Objectives are technology-agnostic and focus on WHAT, not HOW
-- [ ] Objectives may include optional rationale notes explaining the why behind each goal
-- [ ] Non-functional requirements (if any) are quantified with specific metrics or thresholds
-- [ ] Narrative sections do not duplicate User Stories, FRs, or Success Criteria content
-- [ ] Overview narrative logically connects to and sets up the User Stories section that follows
+- [ ] Narrative sections exist with appropriate format: Overview (2-4 paragraphs of flowing prose) and Objectives (bulleted behavioral goals) appear between header and User Scenarios
+- [ ] Narrative maintains user perspective: Both sections focus on WHAT/WHY from user viewpoint, avoiding implementation details (file paths, architecture, code), technical approaches, and formal specifications
+- [ ] Content is specific and unique: Uses measurable language (not vague terms), doesn't duplicate User Stories/FRs/SCs, and Overview connects logically to User Stories
+- [ ] Objectives are behavioral and technology-agnostic: Describe observable outcomes (not HOW), may include optional rationale notes
 
 ### Requirement Completeness
 - [ ] All FRs testable & observable

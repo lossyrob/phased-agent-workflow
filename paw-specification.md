@@ -167,7 +167,7 @@ Agents will log an informational message when using default values to indicate t
 ## Repository Layout & Naming
 
 ```
-/.github/agents                          # custom agent prompts (final outputs of this work)
+/.github/agents                          # custom agent prompts
   PAW-01A Specification.agent.md
   PAW-01B Spec Researcher.agent.md
   PAW-02A Code Research Agent.agent.md

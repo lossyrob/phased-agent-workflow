@@ -191,6 +191,7 @@ function determineStagesFromMode(
         WorkflowStage.Implementation,
         WorkflowStage.ImplementationReview,
         WorkflowStage.PRReviewResponse,
+        WorkflowStage.Documentation,
         WorkflowStage.FinalPR,
         WorkflowStage.Status
       ];
@@ -203,6 +204,7 @@ function determineStagesFromMode(
         WorkflowStage.Implementation,
         WorkflowStage.ImplementationReview,
         WorkflowStage.PRReviewResponse,
+        WorkflowStage.Documentation,
         WorkflowStage.FinalPR,
         WorkflowStage.Status
       ];

@@ -38,9 +38,9 @@ PAW supports three workflow modes that determine which stages are included and h
 
 ### Minimal Mode
 
-**Stages Included**: Code Research → Implementation Plan → Implementation → Final PR → Status
+**Stages Included**: Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
 
-**Stages Skipped**: Specification and Documentation stages
+**Stages Skipped**: Specification stage
 
 **Description**: A streamlined workflow focusing on core implementation activities. Assumes requirements are already clear (e.g., from a well-defined bug report or simple enhancement request).
 

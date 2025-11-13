@@ -75,7 +75,7 @@ interface PromptTemplate {
   /** The exact filename to use (e.g., "01A-spec.prompt.md") */
   filename: string;
   
-  /** The agent to invoke (e.g., "PAW-01A Spec Agent") */
+  /** The agent to invoke (e.g., "PAW-01A Specification") */
   mode: string;
   
   /** The instruction for the agent (e.g., "Create spec from") */
@@ -97,7 +97,7 @@ interface PromptTemplate {
 const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     filename: "01A-spec.prompt.md",
-    mode: "PAW-01A Spec Agent",
+    mode: "PAW-01A Specification",
     instruction: "Create spec from",
     stage: WorkflowStage.Spec,
   },
@@ -231,7 +231,7 @@ function determineStagesFromMode(
  * Creates a markdown file with frontmatter specifying the agent and a body
  * that references the WorkflowContext.md file for the feature.
  * 
- * @param mode - The agent to invoke (e.g., "PAW-01A Spec Agent")
+ * @param mode - The agent to invoke (e.g., "PAW-01A Specification")
  * @param instruction - The instruction for the agent (e.g., "Create spec from")
  * @param featureSlug - The feature slug to reference in the template body
  * @returns The complete file content with frontmatter and body

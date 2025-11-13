@@ -168,8 +168,8 @@ Agents will log an informational message when using default values to indicate t
 
 ```
 /.github/agents                          # custom agent prompts (final outputs of this work)
-  PAW-01A Spec Agent.agent.md
-  PAW-01B Spec Research Agent.agent.md
+  PAW-01A Specification.agent.md
+  PAW-01B Spec Researcher.agent.md
   PAW-02A Code Research Agent.agent.md
   PAW-02B Impl Plan Agent.agent.md
   PAW-03A Impl Agent.agent.md

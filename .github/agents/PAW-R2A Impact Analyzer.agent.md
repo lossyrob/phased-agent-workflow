@@ -455,4 +455,4 @@ Impact Analysis Complete
 - Security assessment: [Low|Medium|High] risk
 - Deployment complexity: [Low|Medium|High]
 
-Next: Invoke **PAW-R2B Gap Analysis Agent** to identify correctness, testing, and quality gaps.
+Next: Invoke **PAW-R2B Gap Analyzer** to identify correctness, testing, and quality gaps.

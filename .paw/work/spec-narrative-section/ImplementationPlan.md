@@ -125,8 +125,8 @@ Enhance the "Drafting Workflow" section to include explicit instructions for gen
 **Updated text**:
 ```markdown
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Start with narrative sections (Overview and Objectives) to establish context, then enumerate detailed requirements.
-   - **Overview**: Write 2-4 paragraphs describing the feature from user perspective - what it does, why it matters, and how users will experience it. Focus on behavioral outcomes, not technical implementation. Use insights from issue, research, and clarifications to paint a coherent picture.
-   - **Objectives**: List key behavioral goals as bullets - observable outcomes the feature achieves. Keep technology-agnostic and focused on WHAT, not HOW.
+   - **Overview**: Write 2-4 paragraphs (3-5 sentences each) describing the feature as a cohesive user journey. Create a vivid, realistic scenario showing how users will experience the feature from start to finish. Structure the narrative to flow logically: describe the user's problem or need, walk through their interaction with the feature step-by-step, and explain the value delivered. Focus on behavioral outcomes and user experience, not technical implementation. Use insights from issue, research, and clarifications to paint a coherent picture. Write in flowing prose that tells a story - avoid bullet fragments or disjointed statements. The narrative should set the stage for the structured sections that follow.
+   - **Objectives**: List key behavioral goals as bullets - observable outcomes the feature achieves. Keep technology-agnostic and focused on WHAT, not HOW. Each objective may optionally include a brief rationale to explain why this goal matters: "(Rationale: this allows users to...)". Understanding the why helps both reviewers and AI implementers make better decisions.
    - **Requirements & Criteria**: Introduce requirement IDs such as FR-001 and success criteria IDs such as SC-001, link user stories to their supporting requirements, and keep numbering sequential.
 ```
 
@@ -141,8 +141,10 @@ Enhance the "Drafting Workflow" section to include explicit instructions for gen
 
 #### Manual Verification:
 - [ ] Spec Agent follows guidance when generating specs
-- [ ] Generated Overview sections are narrative prose, not bullet points
+- [ ] Generated Overview sections are narrative prose (3-5 sentence paragraphs), not bullet points
+- [ ] Generated Overview tells a coherent user journey story from start to finish
 - [ ] Generated Objectives sections are bulleted behavioral goals
+- [ ] Objectives optionally include rationale notes where helpful
 - [ ] Narrative sections appear before detailed requirements in generation order
 
 ---
@@ -166,10 +168,16 @@ Add checklist items to validate that narrative sections exist, contain appropria
 - [ ] Overview section exists with 2-4 paragraphs of narrative prose
 - [ ] Overview focuses on WHAT the feature does and WHY it matters from user perspective
 - [ ] Overview avoids implementation details (no file paths, architecture, code references)
+- [ ] Overview uses specific, measurable language (not vague terms like "fast" or "user-friendly" without quantification)
+- [ ] Overview maintains clear, flowing prose that tells a coherent story (not bullet fragments)
+- [ ] Overview does not mix in formal specifications, schemas, or code-like elements
 - [ ] Objectives section exists with bulleted list of behavioral goals
 - [ ] Objectives describe observable outcomes, not technical approaches
 - [ ] Objectives are technology-agnostic and focus on WHAT, not HOW
+- [ ] Objectives may include optional rationale notes explaining the why behind each goal
+- [ ] Non-functional requirements (if any) are quantified with specific metrics or thresholds
 - [ ] Narrative sections do not duplicate User Stories, FRs, or Success Criteria content
+- [ ] Overview narrative logically connects to and sets up the User Stories section that follows
 ```
 
 **Rationale**: The quality checklist is used during spec validation to ensure all requirements are met. Adding narrative-specific items ensures the agent validates these sections against the same standards applied to other spec content.
@@ -177,7 +185,7 @@ Add checklist items to validate that narrative sections exist, contain appropria
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Checklist includes 7 new items under "Narrative Quality" subsection
+- [ ] Checklist includes 13 new items under "Narrative Quality" subsection
 - [ ] Each item is measurable and actionable
 - [ ] Checklist items align with requirements from Spec.md (FR-002, FR-003, FR-005, FR-008)
 
@@ -186,6 +194,8 @@ Add checklist items to validate that narrative sections exist, contain appropria
 - [ ] Failed checklist items are surfaced for iterative refinement
 - [ ] Checklist helps catch narrative sections with implementation details
 - [ ] Checklist validates narrative sections don't duplicate structured sections
+- [ ] Checklist validates vague language is avoided or quantified
+- [ ] Checklist ensures Overview narrative connects to User Stories
 
 ---
 
@@ -208,9 +218,9 @@ Verify that the chatmode modifications stay within the 6500 token error threshol
 
 **Token Budget Analysis**:
 - Phase 1 additions: ~150 tokens (inline template guidance)
-- Phase 2 additions: ~100 tokens (workflow enhancement)
-- Phase 3 additions: ~80 tokens (checklist items)
-- Total estimated increase: ~330 tokens
+- Phase 2 additions: ~200 tokens (enhanced workflow guidance with narrative writing instructions and rationale)
+- Phase 3 additions: ~150 tokens (expanded checklist items with anti-patterns)
+- Total estimated increase: ~500 tokens
 
 Given that the current chatmode is likely well under 6500 tokens, this addition should be safe. However, verification is required.
 
@@ -294,14 +304,19 @@ Not applicable - this is a template/documentation change without programmatic va
 ### Manual Testing Steps:
 1. Create a test feature brief: "Add user profile editing capability allowing users to update their name, email, and avatar"
 2. Run Spec Agent with modified chatmode
-3. Verify Overview section appears after header with 2-4 paragraphs describing user profile editing from user perspective
-4. Verify Objectives section appears after Overview with bulleted goals like "Enable users to maintain accurate profile information" and "Provide intuitive interface for profile updates"
-5. Verify User Scenarios & Testing section follows Objectives
-6. Review Overview content to ensure no file paths, class names, or technical architecture
-7. Review Objectives content to ensure focus on observable outcomes
-8. Verify quality checklist includes narrative validation items
-9. Run chatmode linter to confirm token count within limits
-10. Compare generated spec to existing specs (without narrative sections) to verify improved readability
+3. Verify Overview section appears after header with 2-4 paragraphs (3-5 sentences each) describing user profile editing as a coherent user journey
+4. Verify Overview tells a vivid, realistic scenario walking through the user experience step-by-step
+5. Verify Overview avoids vague language (e.g., uses specific descriptions, not just "fast" or "easy")
+6. Verify Overview maintains flowing prose without bullet fragments
+7. Verify Objectives section appears after Overview with bulleted goals like "Enable users to maintain accurate profile information" and "Provide intuitive interface for profile updates"
+8. Verify Objectives optionally include rationale notes where they add clarity
+9. Verify User Scenarios & Testing section follows Objectives
+10. Review Overview content to ensure no file paths, class names, or technical architecture
+11. Review Objectives content to ensure focus on observable outcomes
+12. Verify Overview narrative logically connects to and sets up the User Stories
+13. Verify quality checklist includes all narrative validation items (anti-patterns, linkage, quantification)
+14. Run chatmode linter to confirm token count within limits
+15. Compare generated spec to existing specs (without narrative sections) to verify improved readability
 
 ## Performance Considerations
 

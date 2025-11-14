@@ -1,6 +1,6 @@
 # Runs automated quality checks on pull requests before merging.
-# Validates code quality by running extension unit tests and chatmode file linting.
-# Serves as a quality gate to prevent broken code or oversized chatmode files from being merged.
+# Validates code quality by running extension unit tests and agent file linting.
+# Serves as a quality gate to prevent broken code or oversized agent files from being merged.
 name: PR Checks
 
 on:
@@ -10,7 +10,7 @@ on:
       - 'feature/**'
     paths:
       - 'vscode-extension/**'
-      - '.github/chatmodes/**'
+      - '.github/agents/**'
       - 'scripts/**'
       - '.github/workflows/pr-checks.yml'
 
@@ -57,12 +57,12 @@ jobs:
           # Prevent VS Code from showing UI during tests
           DISPLAY: ':99.0'
       
-      - name: Lint chatmode files
-        run: npm run lint:chatmode:all
+      - name: Lint agent files
+        run: npm run lint:agent:all
       
       - name: PR checks summary
         if: success()
         run: |
           echo "✅ All PR checks passed!"
           echo "- Extension unit tests: PASSED"
-          echo "- Chatmode linting: PASSED"
+          echo "- Agent linting: PASSED"

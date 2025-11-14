@@ -74,7 +74,7 @@ See [PAW Review Workflow Documentation](.paw/work/paw-review/Docs.md) for detail
 
 ## Getting Started
 
-- Copy the .github/chatmodes into your repository's `.github/chatmodes` folder. This will make them available in VS Code's Github Copilot chat.
+- Copy the .github/agents into your repository's `.github/agents` folder. This will make them available in VS Code's Github Copilot chat as custom agents.
   - *Make them apply to all projects by copying to VS Code's global configuration directory (e.g. on Windows `%APPDATA%\Code\User\prompts`).*
 - Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
 

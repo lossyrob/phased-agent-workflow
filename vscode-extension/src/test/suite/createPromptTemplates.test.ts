@@ -72,9 +72,9 @@ suite('Prompt Template Generation', () => {
 
     assert.strictEqual(result.success, true);
     assert.strictEqual(result.errors.length, 0);
-    assert.strictEqual(result.files_created.length, 8);
+    assert.strictEqual(result.files_created.length, 9);
 
-    // Verify expected files were created (no spec, no docs)
+    // Verify expected files were created (no spec, but includes docs)
     const expectedFiles = [
       '02A-code-research.prompt.md',
       '02B-impl-plan.prompt.md',
@@ -82,6 +82,7 @@ suite('Prompt Template Generation', () => {
       '03B-review.prompt.md',
       '03C-pr-review.prompt.md',
       '03D-review-pr-review.prompt.md',
+      '04-docs.prompt.md',
       '05-pr.prompt.md',
       '0X-status.prompt.md'
     ];
@@ -92,10 +93,9 @@ suite('Prompt Template Generation', () => {
       assert.ok(fs.existsSync(filePath), `${filename} should exist`);
     }
 
-    // Verify spec and docs files were NOT created
+    // Verify spec files were NOT created
     const unexpectedFiles = [
-      '01A-spec.prompt.md',
-      '04-docs.prompt.md'
+      '01A-spec.prompt.md'
     ];
 
     for (const filename of unexpectedFiles) {
@@ -195,7 +195,7 @@ suite('Prompt Template Generation', () => {
 
     // Verify frontmatter format
     assert.ok(content.startsWith('---\n'), 'File should start with frontmatter delimiter');
-    assert.ok(content.includes('mode: PAW-01A Spec Agent'), 'Frontmatter should include mode');
+    assert.ok(content.includes('agent: PAW-01A Specification'), 'Frontmatter should include agent');
     assert.ok(content.includes('Create spec from .paw/work/test-feature/WorkflowContext.md'), 'Body should reference WorkflowContext.md');
   });
 
@@ -210,13 +210,13 @@ suite('Prompt Template Generation', () => {
     const fullStatusFile = path.join(tempDir, '.paw', 'work', 'test-feature-full', 'prompts', '0X-status.prompt.md');
     assert.ok(fs.existsSync(fullStatusFile), 'Status file should exist in full mode');
 
-    // Test minimal mode - should have 8 files including status
+    // Test minimal mode - should have 9 files including status (documentation was added to minimal)
     const minimalResult = await createPromptTemplates({
       feature_slug: 'test-feature-minimal',
       workspace_path: tempDir,
       workflow_mode: 'minimal'
     });
-    assert.strictEqual(minimalResult.files_created.length, 8);
+    assert.strictEqual(minimalResult.files_created.length, 9);
     const minimalStatusFile = path.join(tempDir, '.paw', 'work', 'test-feature-minimal', 'prompts', '0X-status.prompt.md');
     assert.ok(fs.existsSync(minimalStatusFile), 'Status file should exist in minimal mode');
 
@@ -258,7 +258,7 @@ suite('Prompt Template Generation', () => {
 
     // Verify file was overwritten with correct template content
     const restoredContent = fs.readFileSync(testFile, 'utf-8');
-    assert.ok(restoredContent.includes('mode: PAW-01A Spec Agent'), 'File should be restored to template content');
+    assert.ok(restoredContent.includes('agent: PAW-01A Specification'), 'File should be restored to template content');
     assert.ok(restoredContent !== 'MODIFIED CONTENT', 'Modified content should be overwritten');
   });
 

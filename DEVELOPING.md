@@ -19,19 +19,28 @@ npm install
 
 ## Development Scripts
 
-### Chatmode Linting
+### Agent Linting
 
-Chatmode files should be kept within reasonable token limits to ensure they work effectively with language models.
+Agent files should be kept within reasonable token limits to ensure they work effectively with language models.
 
-**Script**: `scripts/lint-chatmode.sh`
+**Script**: `scripts/lint-agent.sh`
 
 **Usage**:
 ```bash
-# Lint all chatmode files in .github/chatmodes/
-./scripts/lint-chatmode.sh
+# Lint all agent files in .github/agents/
+./scripts/lint-agent.sh
 
-# Lint a specific chatmode file
-./scripts/lint-chatmode.sh .github/chatmodes/PAW-01A.chatmode.md
+# Lint a specific agent file
+./scripts/lint-agent.sh .github/agents/PAW-01A.agent.md
+```
+
+**npm Scripts**:
+```bash
+# Lint all agents
+npm run lint:agent:all
+
+# Or just
+npm run lint:agent
 ```
 
 **Token Thresholds**:
@@ -41,10 +50,10 @@ Chatmode files should be kept within reasonable token limits to ensure they work
 The linter uses `@dqbd/tiktoken` with the `gpt-4o-mini` model to count tokens, which provides accurate token counts for OpenAI models.
 
 **Best Practices**:
-- Keep chatmode files focused and concise
+- Keep agent files focused and concise
 - Break up large instructions into multiple sections
 - Remove redundant or overly verbose explanations
-- Run the linter before committing changes to chatmode files
+- Run the linter before committing changes to agent files
 
 ## VS Code Extension Development
 
@@ -135,13 +144,13 @@ Runs automated quality checks on pull requests before merging.
 
 **Checks**:
 - Extension unit tests
-- Chatmode file linting (token limits)
+- Agent file linting (token limits)
 
 The workflow triggers automatically on PRs to `main` or `feature/**` branches when relevant files change. Failed checks prevent merge when branch protection is enabled.
 
 ## Project Structure
 
-- `.github/chatmodes/` - Contains chatmode definitions for different agents
+- `.github/agents/` - Contains agent definitions for different PAW agents
 - `.github/workflows/` - GitHub Actions workflows for releases and PR checks
 - `scripts/` - Development and utility scripts
 - `vscode-extension/` - VS Code extension for PAW workflow automation

@@ -1,5 +1,5 @@
 ---
-mode: PAW-01A Spec Agent
+agent: PAW-01A Spec Agent
 model: Claude Sonnet 4.5 (copilot)
 ---
 

@@ -1,5 +1,5 @@
 ---
-mode: PAW-03B Impl Reviewer
+agent: PAW-03B Impl Reviewer
 model: Claude Sonnet 4.5
 ---
 

@@ -1,6 +1,6 @@
 ---
 description: "Phase 2 Enhancement based on Google Engineering Practices Analysis"
-mode: PAW-03A Implementer
+agent: PAW-03A Implementer
 model: Claude Sonnet 4.5 (copilot)
 ---
 

@@ -1,5 +1,5 @@
 ---
-mode: PAW-03A Implementer
+agent: PAW-03A Implementer
 model: GPT-5-Codex (Preview) (copilot)
 ---
 

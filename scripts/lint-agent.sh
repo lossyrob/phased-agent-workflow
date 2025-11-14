@@ -1,7 +1,7 @@
 #!/bin/bash
-# Lint chatmode files for token size
-# Usage: ./scripts/lint-chatmode.sh [file.chatmode.md]
-#        If no file is provided, lints all chatmodes in .github/chatmodes/
+# Lint agent files for token size
+# Usage: ./scripts/lint-agent.sh [file.agent.md]
+#        If no file is provided, lints all agents in .github/agents/
 
 set -euo pipefail
 
@@ -60,19 +60,19 @@ main() {
     local exit_code=0
     
     if [[ $# -eq 0 ]]; then
-        # No arguments: lint all chatmodes
-        echo "Linting all chatmode files in .github/chatmodes/"
+        # No arguments: lint all agents
+        echo "Linting all agent files in .github/agents/"
         echo ""
         
-        local chatmode_dir=".github/chatmodes"
-        if [[ ! -d "$chatmode_dir" ]]; then
-            echo -e "${RED}ERROR: Directory not found: $chatmode_dir${NC}"
+        local agent_dir=".github/agents"
+        if [[ ! -d "$agent_dir" ]]; then
+            echo -e "${RED}ERROR: Directory not found: $agent_dir${NC}"
             exit 1
         fi
         
-        local files=("$chatmode_dir"/*.chatmode.md)
+        local files=("$agent_dir"/*.agent.md)
         if [[ ! -e "${files[0]}" ]]; then
-            echo -e "${YELLOW}WARNING: No chatmode files found in $chatmode_dir${NC}"
+            echo -e "${YELLOW}WARNING: No agent files found in $agent_dir${NC}"
             exit 0
         fi
         
@@ -94,7 +94,7 @@ main() {
     if [[ $exit_code -eq 0 ]]; then
         echo -e "${GREEN}All checks passed!${NC}"
     else
-        echo -e "${RED}Some checks failed. Please reduce token count in chatmode files.${NC}"
+        echo -e "${RED}Some checks failed. Please reduce token count in agent files.${NC}"
     fi
     
     exit $exit_code

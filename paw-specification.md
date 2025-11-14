@@ -38,9 +38,9 @@ PAW supports three workflow modes that determine which stages are included and h
 
 ### Minimal Mode
 
-**Stages Included**: Code Research → Implementation Plan → Implementation → Final PR → Status
+**Stages Included**: Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
 
-**Stages Skipped**: Specification and Documentation stages
+**Stages Skipped**: Specification stage
 
 **Description**: A streamlined workflow focusing on core implementation activities. Assumes requirements are already clear (e.g., from a well-defined bug report or simple enhancement request).
 
@@ -167,16 +167,16 @@ Agents will log an informational message when using default values to indicate t
 ## Repository Layout & Naming
 
 ```
-/.github/chatmodes                       # chat-mode prompts (final outputs of this work)
-  PAW-01A Spec Agent.chatmode.md
-  PAW-01B Spec Research Agent.chatmode.md
-  PAW-02A Code Research Agent.chatmode.md
-  PAW-02B Impl Plan Agent.chatmode.md
-  PAW-03A Impl Agent.chatmode.md
-  PAW-03B Impl Review Agent.chatmode.md
-  PAW-04 Documentation Agent.chatmode.md
-  PAW-05 PR Agent.chatmode.md
-  PAW-0X Status Agent.chatmode.md
+/.github/agents                          # custom agent prompts
+  PAW-01A Specification.agent.md
+  PAW-01B Spec Researcher.agent.md
+  PAW-02A Code Researcher.agent.md
+  PAW-02B Impl Planner.agent.md
+  PAW-03A Implementer.agent.md
+  PAW-03B Impl Reviewer.agent.md
+  PAW-04 Documenter.agent.md
+  PAW-05 PR.agent.md
+  PAW-X Status Update.agent.md
 
 /.paw/work/                     # artifacts created by the PAW process
   <feature-slug>/               # e.g., add-authentication or bugfix-rate-limit
@@ -211,7 +211,7 @@ Auto-generated from Work Title or issue title when not explicitly provided. Rema
 
 ## Agents
 
-> The following “agents” are implemented as **Copilot Agent Mode chat modes** in `.github/chatmodes/` using the `PAW-XX` naming scheme.
+> The following “agents” are implemented as **Copilot custom agents" in `.github/agents/` using the `PAW-XX` naming scheme.
 
 ### Spec Agent
 
@@ -333,7 +333,7 @@ Below describes each **Stage** of the PAW process, including agents involved, in
 
 * Create an issue or work item if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
 * Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
-* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each chatmode instruction for the structure.
+* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each agent instruction for the structure.
 
 **Artifacts:** issue link (optional), branches created, WorkflowContext.md (optional).
 

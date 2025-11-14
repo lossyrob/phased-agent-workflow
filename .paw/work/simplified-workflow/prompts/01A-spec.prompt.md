@@ -1,5 +1,5 @@
 ---
-mode: PAW-01A Spec Agent
+agent: PAW-01A Spec Agent
 ---
 
 Create spec from .paw/work/simplified-workflow/WorkflowContext.md.

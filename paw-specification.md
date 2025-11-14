@@ -170,13 +170,13 @@ Agents will log an informational message when using default values to indicate t
 /.github/agents                          # custom agent prompts
   PAW-01A Specification.agent.md
   PAW-01B Spec Researcher.agent.md
-  PAW-02A Code Research Agent.agent.md
-  PAW-02B Impl Plan Agent.agent.md
-  PAW-03A Impl Agent.agent.md
-  PAW-03B Impl Review Agent.agent.md
-  PAW-04 Documentation Agent.agent.md
-  PAW-05 PR Agent.agent.md
-  PAW-0X Status Agent.agent.md
+  PAW-02A Code Researcher.agent.md
+  PAW-02B Impl Planner.agent.md
+  PAW-03A Implementer.agent.md
+  PAW-03B Impl Reviewer.agent.md
+  PAW-04 Documenter.agent.md
+  PAW-05 PR.agent.md
+  PAW-X Status Update.agent.md
 
 /.paw/work/                     # artifacts created by the PAW process
   <feature-slug>/               # e.g., add-authentication or bugfix-rate-limit

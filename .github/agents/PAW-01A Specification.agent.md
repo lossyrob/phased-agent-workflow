@@ -87,6 +87,7 @@ Additional Inputs: <comma-separated or none>
   5. Write complete WorkflowContext.md to `.paw/work/<feature-slug>/WorkflowContext.md`
   6. Persist derived artifact paths as "auto-derived" so downstream agents inherit authoritative record
   7. Proceed with specification task
+- If `SpecResearch.md` exists at `.paw/work/<feature-slug>/SpecResearch.md`, skip research prompt generation and proceed directly to spec drafting/integration mode.
 - When required parameters are absent, explicitly state which field is missing while you gather or confirm the value, then persist the update.
 - When you learn a new parameter (e.g., Issue URL link, remote name, artifact path, additional input), immediately update the file so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without prompting.
 - Artifact paths can be auto-derived using `.paw/work/<feature-slug>/<Artifact>.md` when not explicitly provided; record overrides when supplied.
@@ -383,6 +384,7 @@ How should we reconcile?
 - If user insists on skipping research with many unknowns, proceed but add a temporary “Assumptions” section.
 
 ## Guardrails (Enforced)
+- ALWAYS: Check for existing `SpecResearch.md` before generating research prompts or doing decomposition work.
 - NEVER: fabricate answers not supported by Issue, SpecResearch, or user-provided inputs.
 - NEVER: silently assume critical external standards; if needed list as optional external/context question + assumption.
 - NEVER: produce a spec-research prompt that reintroduces removed sections (Purpose, Output) unless user explicitly requests legacy format.

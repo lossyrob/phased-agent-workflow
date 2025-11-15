@@ -83,6 +83,7 @@ This phase establishes the foundational capabilities needed for agent installati
 ```typescript
 import * as os from 'os';
 import * as path from 'path';
+import * as vscode from 'vscode';
 
 /**
  * Supported VS Code distribution variants
@@ -138,8 +139,19 @@ export function detectVSCodeVariant(): VSCodeVariant {
 
 /**
  * Resolve the User/prompts directory for current platform and VS Code variant
+ * Checks for user-configured override setting first
  */
 export function resolvePromptsDirectory(info: PlatformInfo): string {
+  // Check if user has configured a custom prompt directory
+  const config = vscode.workspace.getConfiguration('paw');
+  const customPath = config.get<string>('promptDirectory');
+  
+  if (customPath) {
+    // User has specified a custom path - use it
+    return customPath;
+  }
+  
+  // Use auto-detected path
   const { platform, homeDir, variant } = info;
   
   switch (platform) {
@@ -157,7 +169,7 @@ export function resolvePromptsDirectory(info: PlatformInfo): string {
       return path.join(homeDir, '.config', variant, 'User', 'prompts');
       
     default:
-      throw new Error(`Unsupported platform: ${platform}`);
+      throw new Error(`Unsupported platform: ${platform}. Set the 'paw.promptDirectory' setting to manually specify the prompt directory location.`);
   }
 }
 ```
@@ -292,13 +304,25 @@ function extractAgentName(filename: string): string {
 
 #### 4. Update Extension Package Manifest
 **File**: `vscode-extension/package.json`
-**Changes**: Add `onStartupFinished` activation event
+**Changes**: Add `onStartupFinished` activation event and configuration setting
 
 ```json
 {
   "activationEvents": [
     "onStartupFinished"
-  ]
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "PAW Workflow",
+      "properties": {
+        "paw.promptDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the VS Code User/prompts directory. If not set, PAW will attempt to auto-detect the location based on your platform and VS Code variant. Use this setting if auto-detection fails or you want to use a custom location."
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -317,7 +341,9 @@ function extractAgentName(filename: string): string {
 #### Manual Verification:
 - [ ] Verify agent templates bundled in VSIX package after running `npm run vscode:prepublish`
 - [ ] Test `resolvePromptsDirectory()` output matches actual VS Code prompts directory on local machine
+- [ ] Test `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` setting is configured
 - [ ] Verify extension activates on VS Code startup (check "PAW Workflow" output channel appears)
+- [ ] Verify `paw.promptDirectory` setting appears in VS Code Settings UI under PAW Workflow section
 
 ---
 
@@ -637,11 +663,13 @@ function handleFileSystemError(error: any, operation: string, path: string): str
   let guidance = '';
   
   if (error.code === 'EACCES' || error.code === 'EPERM') {
-    guidance = 'Permission denied. Check file permissions and try running VS Code with appropriate privileges.';
+    guidance = 'Permission denied. Check file permissions and try running VS Code with appropriate privileges. Alternatively, set the "paw.promptDirectory" setting to specify a custom location.';
   } else if (error.code === 'ENOSPC') {
     guidance = 'Disk is full. Free up disk space and try again.';
   } else if (error.code === 'EROFS') {
-    guidance = 'File system is read-only. Ensure the directory is writable.';
+    guidance = 'File system is read-only. Ensure the directory is writable, or set the "paw.promptDirectory" setting to specify a writable location.';
+  } else if (error.message?.includes('Unsupported platform')) {
+    guidance = 'Platform auto-detection failed. Set the "paw.promptDirectory" setting to manually specify the prompt directory location.';
   } else {
     guidance = error.message || String(error);
   }

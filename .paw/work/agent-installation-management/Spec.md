@@ -59,14 +59,15 @@ Acceptance Scenarios:
 
 ### User Story P4 – Installation Error Recovery
 
-Narrative: A developer's VS Code configuration directory has restrictive permissions due to corporate security policies, preventing write access. When the PAW extension attempts to install agents during activation, file system operations fail. The extension catches these errors gracefully, logs detailed error information to the output channel (including file paths and permission details), and displays a user notification explaining the problem with actionable remediation steps (such as "Check file permissions for <path>"). The extension completes activation successfully despite the installation failure, allowing the developer to use PAW's non-agent features and resolve the permission issue independently.
+Narrative: A developer's VS Code configuration directory has restrictive permissions due to corporate security policies, preventing write access. When the PAW extension attempts to install agents during activation, file system operations fail. The extension catches these errors gracefully, logs detailed error information to the output channel (including file paths and permission details), and displays a user notification explaining the problem with actionable remediation steps (such as "Check file permissions for <path>" or "Set the 'paw.promptDirectory' setting to specify a custom location"). The extension completes activation successfully despite the installation failure, allowing the developer to use PAW's non-agent features and resolve the permission issue independently.
 
 Independent Test: Simulate permission-denied error on prompts directory, activate extension, verify error notification appears and extension remains functional.
 
 Acceptance Scenarios:
-1. Given the prompts directory is not writable, When the extension attempts agent installation, Then the extension logs detailed error (path, error type) to output channel and displays user notification.
-2. Given installation failed due to permissions, When the developer opens the output channel, Then they see specific file paths that failed and suggested remediation actions.
+1. Given the prompts directory is not writable, When the extension attempts agent installation, Then the extension logs detailed error (path, error type) to output channel and displays user notification with remediation steps including the setting override option.
+2. Given installation failed due to permissions, When the developer opens the output channel, Then they see specific file paths that failed and suggested remediation actions including the 'paw.promptDirectory' setting.
 3. Given agent installation encountered errors, When the developer invokes non-agent PAW commands, Then those commands work normally (extension activation succeeded despite installation failure).
+4. Given the auto-detected platform is unsupported, When the extension attempts agent installation, Then the error message indicates that the 'paw.promptDirectory' setting can be used to manually specify the location.
 
 ### User Story P5 – Idempotent Installation Recovery
 
@@ -104,6 +105,7 @@ Acceptance Scenarios:
 ### Functional Requirements
 
 - FR-001: System shall determine the platform-appropriate VS Code user configuration directory path on Windows, macOS, and Linux (Stories: P1, P2, P3, P4, P5, P6)
+- FR-001A: System shall provide a user-configurable setting to override the auto-detected prompt directory path (Stories: P4)
 - FR-002: System shall support standard VS Code, VS Code Insiders, Code-OSS, and VSCodium distribution variants with their respective configuration paths (Stories: P1)
 - FR-003: System shall detect whether agent installation is needed by comparing installed agent files against expected set and version markers (Stories: P1, P2, P5)
 - FR-004: System shall write agent definition files to the `User/prompts/` subdirectory within the VS Code configuration directory (Stories: P1, P2, P5)
@@ -146,12 +148,13 @@ Acceptance Scenarios:
 
 ## Success Criteria
 
-- SC-001: Fresh PAW installation writes all 5 agent files to the user's `User/prompts/` directory within 5 seconds of first activation (FR-001, FR-003, FR-004, FR-005)
+- SC-001: Fresh PAW installation writes all 5 agent files to the user's `User/prompts/` directory within 5 seconds of first activation (FR-001, FR-001A, FR-003, FR-004, FR-005)
+- SC-001A: When 'paw.promptDirectory' setting is configured with a custom path, agents are installed to that path instead of the auto-detected location (FR-001A)
 - SC-002: Installed agent files appear in GitHub Copilot Chat agent selector without requiring VS Code restart when Copilot extension is active (FR-004, FR-023)
 - SC-003: Version upgrade from 0.3.0 to 0.4.0 overwrites all agent files with 0.4.0 content and updates stored version marker to 0.4.0 (FR-010, FR-011, FR-012)
 - SC-004: Custom instruction file in `.paw/instructions/implementation-instructions.md` appears at the beginning of the composed Implementation agent file, before base PAW content (FR-006, FR-008)
 - SC-005: When workspace and user-level custom instructions both exist for an agent, both appear in the final agent file in workspace-first order (FR-006, FR-007, FR-008)
-- SC-006: File permission errors during installation produce error notifications containing the specific file path that failed and at least one remediation suggestion (FR-013, FR-014)
+- SC-006: File permission errors during installation produce error notifications containing the specific file path that failed and at least one remediation suggestion including the 'paw.promptDirectory' setting override (FR-001A, FR-013, FR-014)
 - SC-007: Extension activation completes successfully (extension status shows "Active") even when all agent file writes fail due to file system errors (FR-015)
 - SC-008: Deleting 2 of 5 installed agent files and reactivating the extension results in only the 2 missing files being rewritten (FR-016, FR-017)
 - SC-009: When all expected agent files exist with correct version marker, reactivation performs no file writes (verified via output channel logs showing "Installation up to date") (FR-003, FR-017)

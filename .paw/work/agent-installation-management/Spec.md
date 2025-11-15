@@ -36,16 +36,17 @@ Acceptance Scenarios:
 2. Given agent files successfully written to the prompts directory, When the developer opens Copilot Chat, Then all PAW agents (PAW-01A Specification, PAW-02 Planning, PAW-03 Implementation, PAW-04 Review, PAW-05 Documentation) appear in the agent selector.
 3. Given the extension has installed agents, When the developer opens a new VS Code window without PAW commands, Then previously installed agents remain available (agents persist across sessions).
 
-### User Story P2 – Automatic Agent Updates
+### User Story P2 – Automatic Agent Updates and Rollback
 
-Narrative: A developer using PAW 0.3.0 updates to PAW 0.4.0 through VS Code's extension manager. When VS Code restarts and the PAW extension activates, it detects the version change by comparing stored version metadata against the current extension version. The extension then refreshes all agent files by overwriting them with the new versions, ensuring behavioral improvements and instruction updates take effect immediately. The developer continues working with enhanced agents without manual intervention.
+Narrative: A developer using PAW 0.3.0 updates to PAW 0.4.0 through VS Code's extension manager. When VS Code restarts and the PAW extension activates, it detects the version change by comparing stored version metadata against the current extension version. The extension then refreshes all agent files by overwriting them with the new versions, ensuring behavioral improvements and instruction updates take effect immediately. If the developer later encounters issues with 0.4.0 and downgrades to 0.3.0, the extension detects the version regression during activation and replaces the 0.4.0 agent files with 0.3.0 versions. This bidirectional version management ensures developers can safely move between PAW versions without leaving orphaned or mismatched agents.
 
-Independent Test: With PAW 0.3.0 agents installed, update extension to 0.4.0, restart VS Code, invoke PAW command, verify agent files contain 0.4.0 content.
+Independent Test: With PAW 0.3.0 agents installed, update extension to 0.4.0, restart VS Code, verify agent files contain 0.4.0 content. Then downgrade to 0.3.0, restart VS Code, verify agent files revert to 0.3.0 content.
 
 Acceptance Scenarios:
 1. Given PAW 0.3.0 agents installed with stored version marker, When the extension activates after upgrading to 0.4.0, Then the extension detects version mismatch and overwrites all agent files with 0.4.0 versions.
-2. Given agent files have been refreshed, When the developer checks the output channel, Then installation logs show which files were updated and confirm 0.4.0 installation complete.
-3. Given the update completed successfully, When the developer invokes any PAW agent, Then the agent exhibits 0.4.0 behavior with updated instructions.
+2. Given PAW 0.4.0 agents installed, When the developer downgrades to PAW 0.3.0 and restarts VS Code, Then the extension detects version regression and overwrites all agent files with 0.3.0 versions.
+3. Given agent files have been refreshed (upgrade or downgrade), When the developer checks the output channel, Then installation logs show which files were updated and confirm the current version installation complete.
+4. Given the version change completed successfully, When the developer invokes any PAW agent, Then the agent exhibits behavior matching the currently installed PAW extension version.
 
 ### User Story P3 – Installation Error Recovery
 
@@ -70,15 +71,27 @@ Acceptance Scenarios:
 2. Given all agent files are present and version markers match, When extension activates, Then no file writes occur (idempotent behavior).
 3. Given agent file content was manually corrupted, When extension activates with version marker intact, Then the extension does not rewrite files (preserves user modifications until explicit version update).
 
-### User Story P5 – Agent Migration and Cleanup
+### User Story P5 – Version Migration and Cleanup
 
-Narrative: PAW 0.4.0 renamed agent files from `.chatmode.md` to `.agent.md` extension and renamed "Planner" to "Planning". A developer upgrades from 0.3.0 to 0.4.0. During activation, the extension consults an internal migration manifest mapping old filenames to new ones. It installs the new `.agent.md` files, then removes obsolete `.chatmode.md` files based on known PAW naming patterns. The developer's prompts directory contains only current agent files without legacy clutter.
+Narrative: As PAW evolves, agent filenames may change (e.g., renaming "Planner" to "Planning" or changing file extensions). A developer running PAW 0.5.0 has agents installed from that version. When they upgrade to 0.6.0 which renames an agent file, the extension installs the new file and removes the old one based on its internal migration manifest. If they later downgrade back to 0.5.0 to avoid a regression, the extension reverses the migration by restoring the 0.5.0 filename and removing the 0.6.0 file. This ensures the developer's prompts directory always contains exactly the agents for their current PAW version, without orphaned files from other versions. Note that PAW versions prior to 0.4.0 used chatmodes stored in workspaces, not extension-managed agents, so no chatmode→agent migration is needed (users manually migrated when adopting 0.4.0+).
 
-Independent Test: Install PAW 0.3.0 agents, upgrade to 0.4.0, verify old `.chatmode.md` files removed and new `.agent.md` files installed.
+Independent Test: Install PAW 0.5.0 agents including `paw-planner.agent.md`, upgrade to 0.6.0 which uses `paw-planning.agent.md`, verify old file removed and new file installed. Then downgrade to 0.5.0, verify `paw-planning.agent.md` removed and `paw-planner.agent.md` restored.
 
 Acceptance Scenarios:
-1. Given PAW 0.3.0 installed `paw-planner.chatmode.md`, When upgrading to 0.4.0 with new `paw-planning.agent.md` filename, Then the extension installs new file and removes old file.
-2. Given multiple old agent files exist from previous versions, When extension activates with current version, Then all obsolete PAW-managed files are removed.
+1. Given PAW 0.5.0 installed `paw-planner.agent.md`, When upgrading to 0.6.0 with new `paw-planning.agent.md` filename, Then the extension installs new file and removes old file.
+2. Given PAW 0.6.0 installed `paw-planning.agent.md`, When downgrading to 0.5.0 with old `paw-planner.agent.md` filename, Then the extension installs old file and removes new file.
+3. Given multiple agent files exist from previous versions, When extension activates with current version, Then all agent files not belonging to the current version are removed.
+
+### User Story P6 – Extension Uninstall Cleanup
+
+Narrative: A developer decides to uninstall the PAW extension, either to switch to a different workflow tool or because they no longer need it. When the extension is uninstalled, VS Code triggers the extension's deactivation hook. The extension uses this opportunity to clean up all installed agent files from the `User/prompts/` directory, removing the PAW agents from Copilot Chat. This prevents orphaned agent files from cluttering the developer's VS Code configuration and ensures a clean uninstall experience. The developer's VS Code environment returns to its pre-PAW state without manual cleanup.
+
+Independent Test: With PAW agents installed, uninstall PAW extension, verify all PAW agent files are removed from `User/prompts/` directory.
+
+Acceptance Scenarios:
+1. Given PAW extension is installed with agents in `User/prompts/`, When the developer uninstalls the PAW extension through VS Code's extension manager, Then all PAW-managed agent files are deleted from the prompts directory.
+2. Given PAW agents have been removed, When the developer opens Copilot Chat after uninstall completes, Then PAW agents no longer appear in the agent selector.
+3. Given the extension was uninstalled but file deletion failed due to permissions, When the developer checks the output channel, Then they see an error message explaining the cleanup failure with paths to manually remove.
 
 ### Edge Cases
 
@@ -101,18 +114,19 @@ Acceptance Scenarios:
 - FR-005: System shall read agent template content from bundled extension resources using extension context absolute paths (Stories: P1, P2)
 - FR-006: System shall perform agent installation during extension activation when triggered by activation events (Stories: P1, P2, P3)
 - FR-007: System shall store installation version marker in extension global state for version comparison on subsequent activations (Stories: P2, P4)
-- FR-008: System shall compare stored version marker against current extension version to detect upgrades (Stories: P2, P5)
-- FR-009: System shall overwrite existing agent files when version upgrade is detected (Stories: P2)
+- FR-008: System shall compare stored version marker against current extension version to detect version changes (upgrades and downgrades) (Stories: P2, P5)
+- FR-009: System shall overwrite existing agent files when version change (upgrade or downgrade) is detected (Stories: P2)
 - FR-010: System shall handle file system errors gracefully by catching exceptions, logging details, and displaying user notifications (Stories: P3)
 - FR-011: System shall include specific error details in notifications (file paths, error types, suggested actions) when installation fails (Stories: P3)
 - FR-012: System shall allow extension activation to complete successfully even when agent installation fails (Stories: P3)
 - FR-013: System shall validate installation completeness by checking for expected agent files on each activation (Stories: P4)
 - FR-014: System shall write only missing agent files when some files already exist (idempotent installation) (Stories: P4)
-- FR-015: System shall maintain internal migration manifest mapping old agent filenames to new filenames across versions (Stories: P5)
-- FR-016: System shall remove obsolete agent files listed in migration manifest during version upgrades (Stories: P5)
+- FR-015: System shall maintain internal migration manifest mapping agent filenames across versions, supporting both forward (upgrade) and backward (downgrade) migrations (Stories: P5)
+- FR-016: System shall remove obsolete agent files not belonging to the current version during version changes (upgrades and downgrades) (Stories: P5)
 - FR-017: System shall log all installation operations (file writes, deletions, errors) to a dedicated output channel (Stories: P1, P2, P3, P4, P5)
 - FR-018: System shall support agent naming pattern `paw-<agent-name>.agent.md` for installed files (Stories: P1, P2, P5)
 - FR-019: System shall generate agent files with YAML frontmatter containing name and description fields (Stories: P1, P2)
+- FR-020: System shall remove all PAW-managed agent files during extension deactivation when uninstall is detected (Stories: P6)
 
 ### Key Entities
 
@@ -134,12 +148,12 @@ Acceptance Scenarios:
 - SC-001: Fresh PAW installation writes all 5 agent files to the user's `User/prompts/` directory within 5 seconds of first activation (FR-001, FR-001A, FR-003, FR-004, FR-005)
 - SC-001A: When 'paw.promptDirectory' setting is configured with a custom path, agents are installed to that path instead of the auto-detected location (FR-001A)
 - SC-002: Installed agent files appear in GitHub Copilot Chat agent selector without requiring VS Code restart when Copilot extension is active (FR-004, FR-019)
-- SC-003: Version upgrade from 0.3.0 to 0.4.0 overwrites all agent files with 0.4.0 content and updates stored version marker to 0.4.0 (FR-007, FR-008, FR-009)
+- SC-003: Version upgrade from 0.3.0 to 0.4.0 overwrites all agent files with 0.4.0 content and updates stored version marker to 0.4.0; subsequent downgrade to 0.3.0 restores 0.3.0 agent files (FR-007, FR-008, FR-009)
 - SC-004: File permission errors during installation produce error notifications containing the specific file path that failed and at least one remediation suggestion including the 'paw.promptDirectory' setting override (FR-001A, FR-010, FR-011)
 - SC-005: Extension activation completes successfully (extension status shows "Active") even when all agent file writes fail due to file system errors (FR-012)
 - SC-006: Deleting 2 of 5 installed agent files and reactivating the extension results in only the 2 missing files being rewritten (FR-013, FR-014)
 - SC-007: When all expected agent files exist with correct version marker, reactivation performs no file writes (verified via output channel logs showing "Installation up to date") (FR-003, FR-014)
-- SC-008: Upgrading from version with `paw-planner.chatmode.md` to version with `paw-planning.agent.md` results in old file deleted and new file created (FR-015, FR-016)
+- SC-008: Upgrading from version 0.5.0 with `paw-planner.agent.md` to version 0.6.0 with `paw-planning.agent.md` results in old file deleted and new file created; downgrading back to 0.5.0 reverses the migration (FR-015, FR-016)
 - SC-009: Installation on Windows writes agents to `%APPDATA%\Code\User\prompts\` directory (FR-001, FR-002)
 - SC-010: Installation on macOS writes agents to `~/Library/Application Support/Code/User/prompts/` directory (FR-001, FR-002)
 - SC-011: Installation on Linux writes agents to `~/.config/Code/User/prompts/` directory (FR-001, FR-002)
@@ -147,6 +161,7 @@ Acceptance Scenarios:
 - SC-013: Output channel logs contain timestamps, operation type (install/update/delete), file path, and outcome (success/failure) for every file operation (FR-017)
 - SC-014: Extension successfully installs agents even when GitHub Copilot extension is not installed (FR-004, FR-012)
 - SC-015: When disk is full, installation failure produces error notification explaining disk space issue and extension continues functioning (FR-010, FR-011, FR-012)
+- SC-016: Uninstalling the PAW extension removes all PAW-managed agent files from the `User/prompts/` directory, verified by checking that no `paw-*.agent.md` files remain (FR-020)
 
 ## Assumptions
 
@@ -173,12 +188,13 @@ Acceptance Scenarios:
 ### In Scope
 
 - Automatic agent installation during extension activation
-- Agent file updates during version upgrades
+- Agent file updates during version changes (both upgrades and downgrades)
 - Platform-specific configuration directory path detection (Windows, macOS, Linux)
 - Support for VS Code distribution variants (standard, Insiders, Code-OSS, VSCodium)
 - Error handling and user notifications for file system failures
 - Idempotent installation that completes partial installations
-- Migration and cleanup of obsolete agent files during version upgrades
+- Migration and cleanup of agent files during version changes (forward and backward)
+- Extension uninstall cleanup to remove all installed agent files
 - Version tracking using extension global state
 - Detailed operation logging to output channel
 
@@ -186,6 +202,7 @@ Acceptance Scenarios:
 
 - Custom instructions for agents (handled separately through PAW Context tool - see issue #86)
 - Composition of workspace or user-level instruction files with agent templates
+- Migration from pre-0.4.0 chatmode files to extension-managed agents (users manually migrated when adopting extension-based workflow)
 - Manual agent installation UI or commands (agents install automatically only)
 - User configuration settings for installation location or behavior (except `paw.promptDirectory` override)
 - Backup or preservation of user modifications to installed agent files (agents are managed assets)
@@ -193,7 +210,7 @@ Acceptance Scenarios:
 - Automatic Copilot refresh or reload after agent installation (user must reload manually)
 - Dynamic agent discovery from external sources or registries
 - Agent file validation beyond version marker comparison
-- Rollback mechanisms to restore previous agent versions
+- Manual rollback UI or commands (downgrade via VS Code's extension version picker provides rollback)
 - Telemetry or analytics about agent installation success/failure rates
 - GUI for managing or viewing installed agents (VS Code's native Copilot UI provides this)
 - Hot-reload of agent changes without VS Code restart
@@ -219,6 +236,8 @@ Acceptance Scenarios:
 - **Concurrent VS Code instances write agents simultaneously**: Impact: File corruption or incomplete writes due to race conditions. Mitigation: Rely on file system atomicity for individual file writes; accept last-writer-wins behavior as sufficient given idempotent installation; document behavior if users report issues.
 
 - **Extension global state becomes corrupted or cleared**: Impact: Version tracking fails, causing unnecessary reinstallation or failed upgrade detection. Mitigation: Treat missing version marker as fresh install (safe default); use version marker as optimization rather than strict requirement; log state mismatches for diagnostics.
+
+- **Extension deactivation hook fails or is not called during uninstall**: Impact: Agent files remain in prompts directory after PAW uninstall, appearing as orphaned agents in Copilot Chat. Mitigation: Log uninstall cleanup operations; document manual cleanup steps in extension README; accept that VS Code's uninstall semantics may not guarantee cleanup in all scenarios (e.g., forced termination).
 
 ## References
 

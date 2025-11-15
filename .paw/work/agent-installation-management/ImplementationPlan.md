@@ -30,17 +30,20 @@ The VS Code extension currently:
 After implementation:
 - Extension activates on VS Code startup via `onStartupFinished` activation event
 - Agents automatically install to platform-appropriate prompts directory on first activation
-- Agents update automatically when extension version changes
-- Version tracking in `globalState` enables upgrade detection
-- Obsolete agent files cleaned up during version migrations
+- Agents update automatically when extension version changes (upgrades and downgrades)
+- Version tracking in `globalState` enables version change detection
+- Obsolete agent files cleaned up during version migrations (bidirectional)
+- Uninstalled agents removed when extension is uninstalled
 - File system errors handled gracefully with detailed logging and user notifications
 - All file operations are idempotent and resilient to interruption
 
 ### Verification:
 - All 15+ PAW agents appear in GitHub Copilot Chat agent selector after first activation
 - Upgrading extension version triggers automatic agent file refresh
+- Downgrading extension version reverses migrations and restores appropriate agent files
 - Installation completes successfully on Windows, macOS, and Linux with standard VS Code and variants
 - Extension remains functional even when agent installation fails due to permissions
+- Uninstalling extension removes all installed agent files
 
 ## What We're NOT Doing
 
@@ -61,1326 +64,493 @@ After implementation:
 
 The implementation follows a four-phase approach:
 
-1. **Core Infrastructure**: Add platform detection, path resolution, and agent template bundling to provide foundation for installation
-2. **Installation Logic**: Implement file writing, version tracking, and activation event handling
-3. **Update and Migration**: Add version change detection (upgrades and downgrades), migration manifest, and bidirectional cleanup of obsolete files
-4. **Uninstall Cleanup**: Implement deactivation hook to remove all PAW agents when extension is uninstalled
+1. **Core Infrastructure**: Platform detection, path resolution, agent bundling - foundation for installation
+2. **Installation Logic**: File writing, version tracking, activation integration - core installation functionality
+3. **Version Changes and Migration**: Upgrade/downgrade detection, migration manifest, bidirectional cleanup - production-ready version management
+4. **Uninstall Cleanup**: Deactivation hook to remove agents - clean uninstall experience
 
-Each phase builds incrementally and includes comprehensive testing at both automated and manual levels. The approach prioritizes reliability through idempotent operations, graceful error handling, and detailed logging.
+Each phase builds incrementally with automated and manual verification criteria. The approach prioritizes reliability through idempotent operations, graceful error handling, and detailed logging.
 
 ---
 
 ## Phase 1: Core Infrastructure
 
 ### Overview
-This phase establishes the foundational capabilities needed for agent installation: detecting the platform and VS Code variant, resolving the correct prompts directory path, and bundling agent templates with the extension.
+Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template bundling.
 
 ### Changes Required:
 
 #### 1. Platform Detection Module
 **File**: `vscode-extension/src/agents/platformDetection.ts` (new)
-**Changes**: Create module to detect operating system and VS Code distribution variant
 
-```typescript
-import * as os from 'os';
-import * as path from 'path';
-import * as vscode from 'vscode';
+**Purpose**: Detect operating system, VS Code variant, and resolve User/prompts directory paths.
 
-/**
- * Supported VS Code distribution variants
- */
-export enum VSCodeVariant {
-  Code = 'Code',
-  Insiders = 'Code - Insiders',
-  CodeOSS = 'Code - OSS',
-  VSCodium = 'VSCodium'
-}
+**Key Capabilities**:
+- Detect OS (Windows, macOS, Linux) via Node.js APIs
+- Identify VS Code variant (Code, Insiders, Code-OSS, VSCodium) from environment variables
+- Resolve platform-specific prompts directory paths
+- Support user-configurable override via `paw.promptDirectory` setting
+- Return structured platform information (platform, homeDir, variant)
 
-/**
- * Platform information for determining paths
- */
-export interface PlatformInfo {
-  platform: NodeJS.Platform;
-  homeDir: string;
-  variant: VSCodeVariant;
-}
+**Path Resolution Logic**:
+- Check `paw.promptDirectory` configuration setting first
+- If set, use custom path without modification
+- Otherwise use hardcoded platform paths:
+  - Windows: `%APPDATA%\<variant>\User\prompts`
+  - macOS: `~/Library/Application Support/<variant>/User/prompts`
+  - Linux: `~/.config/<variant>/User/prompts`
+- Throw descriptive error for unsupported platforms mentioning override option
 
-/**
- * Get current platform information
- */
-export function getPlatformInfo(): PlatformInfo {
-  return {
-    platform: os.platform(),
-    homeDir: os.homedir(),
-    variant: detectVSCodeVariant()
-  };
-}
-
-/**
- * Detect which VS Code variant is running
- * Detection based on environment variables and process information
- */
-export function detectVSCodeVariant(): VSCodeVariant {
-  // Check environment variable set by VS Code variants
-  const productName = process.env.VSCODE_PRODUCT_NAME;
-  
-  if (productName?.includes('Insiders')) {
-    return VSCodeVariant.Insiders;
-  }
-  if (productName?.includes('OSS')) {
-    return VSCodeVariant.CodeOSS;
-  }
-  if (productName?.includes('VSCodium')) {
-    return VSCodeVariant.VSCodium;
-  }
-  
-  // Default to standard Code
-  return VSCodeVariant.Code;
-}
-
-/**
- * Resolve the User/prompts directory for current platform and VS Code variant
- * Checks for user-configured override setting first
- */
-export function resolvePromptsDirectory(info: PlatformInfo): string {
-  // Check if user has configured a custom prompt directory
-  const config = vscode.workspace.getConfiguration('paw');
-  const customPath = config.get<string>('promptDirectory');
-  
-  if (customPath) {
-    // User has specified a custom path - use it
-    return customPath;
-  }
-  
-  // Use auto-detected path
-  const { platform, homeDir, variant } = info;
-  
-  switch (platform) {
-    case 'win32':
-      // Windows: %APPDATA%\<variant>\User\prompts
-      const appData = process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming');
-      return path.join(appData, variant, 'User', 'prompts');
-      
-    case 'darwin':
-      // macOS: ~/Library/Application Support/<variant>/User/prompts
-      return path.join(homeDir, 'Library', 'Application Support', variant, 'User', 'prompts');
-      
-    case 'linux':
-      // Linux: ~/.config/<variant>/User/prompts
-      return path.join(homeDir, '.config', variant, 'User', 'prompts');
-      
-    default:
-      throw new Error(`Unsupported platform: ${platform}. Set the 'paw.promptDirectory' setting to manually specify the prompt directory location.`);
-  }
-}
-```
+**Key Interfaces**:
+- VSCodeVariant enum (Code, Insiders, CodeOSS, VSCodium)
+- PlatformInfo interface (platform, homeDir, variant)
+- Functions: getPlatformInfo(), detectVSCodeVariant(), resolvePromptsDirectory()
 
 #### 2. Agent Template Bundling
 **File**: `vscode-extension/scripts/copyAgents.js` (new)
-**Changes**: Create build script to copy agent templates from `.github/agents/` to extension resources
 
-```javascript
-const fs = require('fs');
-const path = require('path');
+**Purpose**: Copy agent templates from repository to extension resources during build.
 
-const sourceDir = path.join(__dirname, '..', '..', '.github', 'agents');
-const targetDir = path.join(__dirname, '..', 'resources', 'agents');
-
-// Create target directory if it doesn't exist
-if (!fs.existsSync(targetDir)) {
-  fs.mkdirSync(targetDir, { recursive: true });
-}
-
-// Copy all .agent.md files
-const files = fs.readdirSync(sourceDir);
-files.forEach(file => {
-  if (file.endsWith('.agent.md')) {
-    const sourcePath = path.join(sourceDir, file);
-    const targetPath = path.join(targetDir, file);
-    fs.copyFileSync(sourcePath, targetPath);
-    console.log(`Copied: ${file}`);
-  }
-});
-
-console.log(`Agent templates copied to ${targetDir}`);
-```
+**Behavior**:
+- Source: `.github/agents/*.agent.md` files
+- Target: `vscode-extension/resources/agents/` directory
+- Create target directory recursively if needed
+- Copy only `.agent.md` files
+- Log each file copied
+- Integrate into npm build and watch scripts
 
 **File**: `vscode-extension/package.json`
-**Changes**: Update build scripts to include agent copying
 
-```json
-{
-  "scripts": {
-    "vscode:prepublish": "npm run copy-agents && npm run compile",
-    "copy-agents": "node scripts/copyAgents.js",
-    "compile": "tsc -p ./",
-    "watch": "npm run copy-agents && tsc -watch -p ./"
-  }
-}
-```
+**Script Changes**:
+- Add `copy-agents` script executing copyAgents.js
+- Update `vscode:prepublish` to run copy-agents before compile
+- Update `watch` to run copy-agents before TypeScript watch
+- Ensures agents always bundled with extension package
 
 #### 3. Agent Template Loader
 **File**: `vscode-extension/src/agents/agentTemplates.ts` (new)
-**Changes**: Create module to load bundled agent templates
 
-```typescript
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
+**Purpose**: Load bundled agent templates from extension resources.
 
-/**
- * Agent template metadata
- */
-export interface AgentTemplate {
-  filename: string;
-  name: string;
-  description: string;
-  content: string;
-}
+**Key Responsibilities**:
+- Locate `<extensionPath>/resources/agents/` directory
+- Enumerate all `.agent.md` files
+- Read file content
+- Parse YAML frontmatter for metadata (description)
+- Extract clean agent name from filename (strip `PAW-##X` prefix and extension)
+- Return array of agent templates with filename, name, description, content
 
-/**
- * Load all bundled agent templates from extension resources
- */
-export function loadAgentTemplates(context: vscode.ExtensionContext): AgentTemplate[] {
-  const agentsDir = path.join(context.extensionPath, 'resources', 'agents');
-  
-  if (!fs.existsSync(agentsDir)) {
-    throw new Error(`Agent templates directory not found: ${agentsDir}`);
-  }
-  
-  const files = fs.readdirSync(agentsDir);
-  const templates: AgentTemplate[] = [];
-  
-  for (const file of files) {
-    if (!file.endsWith('.agent.md')) {
-      continue;
-    }
-    
-    const filePath = path.join(agentsDir, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    
-    // Parse YAML frontmatter to extract description
-    const metadata = parseFrontmatter(content);
-    
-    templates.push({
-      filename: file,
-      name: extractAgentName(file),
-      description: metadata.description || '',
-      content: content
-    });
-  }
-  
-  return templates;
-}
+**Error Handling**:
+- Throw error if resources/agents directory missing
+- Skip non-`.agent.md` files
+- Handle missing/malformed frontmatter gracefully
 
-/**
- * Parse YAML frontmatter from agent file
- */
-function parseFrontmatter(content: string): { description?: string } {
-  const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
-  if (!frontmatterMatch) {
-    return {};
-  }
-  
-  const frontmatter = frontmatterMatch[1];
-  const descMatch = frontmatter.match(/description:\s*['"](.+?)['"]/);
-  
-  return {
-    description: descMatch ? descMatch[1] : undefined
-  };
-}
-
-/**
- * Extract agent name from filename
- * Example: "PAW-01A Specification.agent.md" -> "Specification"
- */
-function extractAgentName(filename: string): string {
-  // Remove .agent.md extension
-  const withoutExt = filename.replace(/\.agent\.md$/, '');
-  // Remove PAW-##X prefix pattern
-  const withoutPrefix = withoutExt.replace(/^PAW-[0-9]+[A-Z]?\s+/, '');
-  return withoutPrefix;
-}
-```
-
-#### 4. Update Extension Package Manifest
+#### 4. Extension Package Manifest
 **File**: `vscode-extension/package.json`
-**Changes**: Add `onStartupFinished` activation event and configuration setting
 
-```json
-{
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "contributes": {
-    "configuration": {
-      "title": "PAW Workflow",
-      "properties": {
-        "paw.promptDirectory": {
-          "type": "string",
-          "default": "",
-          "description": "Custom path to the VS Code User/prompts directory. If not set, PAW will attempt to auto-detect the location based on your platform and VS Code variant. Use this setting if auto-detection fails or you want to use a custom location."
-        }
-      }
-    }
-  }
-}
-```
+**Activation Events**:
+- Add `onStartupFinished` to trigger extension after VS Code startup
+- Provides timing for agent installation without blocking editor load
+
+**Configuration**:
+- Add `paw.promptDirectory` setting (type: string, default: "")
+- Purpose: Override auto-detected prompts path
+- Used for unsupported platforms or custom configurations
+- Takes precedence over platform detection
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `getPlatformInfo()` returns correct platform, homeDir, and variant on Windows, macOS, Linux
-- [ ] `detectVSCodeVariant()` correctly identifies Code, Insiders, Code-OSS, VSCodium from environment
+- [ ] `getPlatformInfo()` returns correct values on Windows, macOS, Linux
+- [ ] `detectVSCodeVariant()` identifies all variants from environment
 - [ ] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
-- [ ] `npm run copy-agents` successfully copies all .agent.md files to `resources/agents/`
-- [ ] `loadAgentTemplates()` loads all 15+ agent templates with correct metadata
-- [ ] `extractAgentName()` correctly extracts agent names from PAW filename pattern
-- [ ] Extension compiles successfully with new modules: `npm run compile`
-- [ ] No TypeScript errors: `npx tsc --noEmit`
+- [ ] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
+- [ ] `npm run copy-agents` copies all `.agent.md` files to resources/agents/
+- [ ] `loadAgentTemplates()` loads all agent templates with correct metadata
+- [ ] Extension compiles without TypeScript errors
+- [ ] Agent templates present in VSIX after `npm run vscode:prepublish`
 
 #### Manual Verification:
-- [ ] Verify agent templates bundled in VSIX package after running `npm run vscode:prepublish`
-- [ ] Test `resolvePromptsDirectory()` output matches actual VS Code prompts directory on local machine
-- [ ] Test `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` setting is configured
-- [ ] Verify extension activates on VS Code startup (check "PAW Workflow" output channel appears)
-- [ ] Verify `paw.promptDirectory` setting appears in VS Code Settings UI under PAW Workflow section
+- [ ] Verify agent templates bundled in VSIX package
+- [ ] Test `resolvePromptsDirectory()` matches actual VS Code prompts directory
+- [ ] Extension activates on VS Code startup (output channel appears)
+- [ ] `paw.promptDirectory` setting visible in VS Code Settings UI
 
 ---
 
 ## Phase 2: Installation Logic
 
 ### Overview
-This phase implements the core agent installation functionality: writing agent files to the prompts directory, tracking installed versions, and handling errors gracefully.
+Implement core installation: write agents to prompts directory, track versions, handle errors gracefully.
 
 ### Changes Required:
 
 #### 1. Agent Installer Module
 **File**: `vscode-extension/src/agents/installer.ts` (new)
-**Changes**: Create module to handle agent installation operations
 
-```typescript
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { getPlatformInfo, resolvePromptsDirectory } from './platformDetection';
-import { loadAgentTemplates } from './agentTemplates';
+**Purpose**: Handle agent installation operations with error tracking and version management.
 
-export interface InstallationResult {
-  success: boolean;
-  filesInstalled: string[];
-  filesSkipped: string[];
-  errors: Array<{ file: string; error: string }>;
-}
+**Key Functions**:
 
-/**
- * Install or update all PAW agents to the user prompts directory
- */
-export async function installAgents(
-  context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
-): Promise<InstallationResult> {
-  const result: InstallationResult = {
-    success: true,
-    filesInstalled: [],
-    filesSkipped: [],
-    errors: []
-  };
-  
-  try {
-    // 1. Determine prompts directory path
-    const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo);
-    
-    outputChannel.appendLine(`[INFO] Installing agents to: ${promptsDir}`);
-    
-    // 2. Ensure prompts directory exists
-    if (!fs.existsSync(promptsDir)) {
-      outputChannel.appendLine('[INFO] Creating prompts directory...');
-      fs.mkdirSync(promptsDir, { recursive: true });
-    }
-    
-    // 3. Load agent templates
-    const templates = loadAgentTemplates(context);
-    outputChannel.appendLine(`[INFO] Loaded ${templates.length} agent templates`);
-    
-    // 4. Write each agent file
-    for (const template of templates) {
-      try {
-        const filename = `paw-${template.name.toLowerCase()}.agent.md`;
-        const targetPath = path.join(promptsDir, filename);
-        
-        // Write file (idempotent - overwrites if exists)
-        fs.writeFileSync(targetPath, template.content, 'utf-8');
-        
-        result.filesInstalled.push(filename);
-        outputChannel.appendLine(`[INFO] Installed: ${filename}`);
-      } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        result.errors.push({ file: template.filename, error: errorMsg });
-        result.success = false;
-        outputChannel.appendLine(`[ERROR] Failed to install ${template.filename}: ${errorMsg}`);
-      }
-    }
-    
-    // 6. Update installation state
-    await updateInstallationState(context, result);
-    
-    return result;
-    
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Agent installation failed: ${errorMsg}`);
-    result.success = false;
-    result.errors.push({ file: 'installation', error: errorMsg });
-    return result;
-  }
-}
+**installAgents()**: Main installation orchestrator
+- Determine prompts directory path (platform detection + override)
+- Create prompts directory if needed (recursive)
+- Load agent templates from extension resources
+- Write each agent file to prompts directory
+- Track success/failure per file
+- Update installation state in globalState
+- Return structured result (filesInstalled, filesSkipped, errors)
 
-/**
- * Update installation state in global storage
- */
-async function updateInstallationState(
-  context: vscode.ExtensionContext,
-  result: InstallationResult
-): Promise<void> {
-  const state = {
-    version: context.extension.packageJSON.version,
-    installedAt: new Date().toISOString(),
-    filesInstalled: result.filesInstalled,
-    success: result.success
-  };
-  
-  await context.globalState.update('paw.agentInstallation', state);
-}
+**needsInstallation()**: Determine if installation required
+- Check globalState for previous installation record
+- If no record, return true (fresh install)
+- If version changed from stored version, return true (upgrade/downgrade)
+- If any expected files missing, return true (repair)
+- Otherwise return false (up to date)
 
-/**
- * Check if agents need to be installed or updated
- */
-export function needsInstallation(context: vscode.ExtensionContext): boolean {
-  const state = context.globalState.get<any>('paw.agentInstallation');
-  
-  if (!state) {
-    // No previous installation
-    return true;
-  }
-  
-  const currentVersion = context.extension.packageJSON.version;
-  if (state.version !== currentVersion) {
-    // Version changed - need update
-    return true;
-  }
-  
-  // Check if all files are present
-  try {
-    const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo);
-    
-    for (const file of state.filesInstalled) {
-      const filePath = path.join(promptsDir, file);
-      if (!fs.existsSync(filePath)) {
-        // File missing - need reinstall
-        return true;
-      }
-    }
-    
-    return false; // All files present and version matches
-  } catch (error) {
-    // If we can't check, assume installation needed
-    return true;
-  }
-}
-```
+**updateInstallationState()**: Persist installation metadata
+- Store current extension version
+- Store list of installed filenames
+- Store installation timestamp
+- Store success status
+- Write to `globalState['paw.agentInstallation']`
 
-#### 2. Integration with Extension Activation
+**Error Handling**:
+- Catch and log all file system errors
+- Continue installing other agents after individual failures
+- Return partial success with error details
+- Never throw unhandled exceptions
+
+**Idempotent Behavior**:
+- Overwrite existing files (always write current version)
+- Skip files already installed with current version when unnecessary
+- Safe to re-run after partial installation
+
+#### 2. Extension Activation Integration
 **File**: `vscode-extension/src/extension.ts`
-**Changes**: Add agent installation to activation flow
 
-```typescript
-export async function activate(context: vscode.ExtensionContext) {
-  // Create output channel
-  const outputChannel = vscode.window.createOutputChannel('PAW Workflow');
-  context.subscriptions.push(outputChannel);
+**Changes**: Add agent installation to activation flow.
 
-  // Install or update agents on activation
-  try {
-    if (needsInstallation(context)) {
-      outputChannel.appendLine('[INFO] Starting agent installation...');
-      outputChannel.show(true); // Show output channel during installation
-      
-      const result = await installAgents(context, outputChannel);
-      
-      if (result.success) {
-        outputChannel.appendLine(`[INFO] Successfully installed ${result.filesInstalled.length} agents`);
-        
-        // Notify user
-        vscode.window.showInformationMessage(
-          `PAW agents installed successfully. ${result.filesInstalled.length} agents are now available in Copilot Chat.`
-        );
-      } else {
-        outputChannel.appendLine(`[ERROR] Agent installation completed with errors`);
-        
-        // Show error notification with actionable guidance
-        const errorDetails = result.errors.map(e => `${e.file}: ${e.error}`).join('\n');
-        vscode.window.showErrorMessage(
-          `PAW agent installation encountered errors. Check the output channel for details.`,
-          'View Output'
-        ).then(action => {
-          if (action === 'View Output') {
-            outputChannel.show();
-          }
-        });
-      }
-    } else {
-      outputChannel.appendLine('[INFO] Agents are up to date');
-    }
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Agent installation failed: ${errorMsg}`);
-    
-    // Show error but don't block activation
-    vscode.window.showErrorMessage(
-      `Failed to install PAW agents: ${errorMsg}. Extension will continue loading.`
-    );
-  }
+**Activation Sequence**:
+1. Create output channel for logging
+2. Check if installation needed via `needsInstallation()`
+3. If needed:
+   - Log installation start
+   - Show output channel
+   - Call `installAgents()` 
+   - Log results
+   - Show success notification with agent count
+   - On errors: show error notification with "View Output" action
+4. If not needed:
+   - Log "Agents up to date"
+5. On exceptions:
+   - Log error to output channel
+   - Show error notification
+   - Continue extension activation (don't block)
+6. Register commands and tools as normal
+7. Return extension context
 
-  // Register existing commands and tools
-  registerPromptTemplatesTool(context);
-  
-  context.subscriptions.push(
-    vscode.commands.registerCommand('paw.initializeWorkItem', async () => {
-      await initializeWorkItem(outputChannel);
-    })
-  );
+**Error Handling Philosophy**:
+- Installation failures don't block extension activation
+- Users can still use non-agent PAW features
+- Detailed logging for troubleshooting
+- Actionable error messages with remediation steps
 
-  return context;
-}
-```
+#### 3. User Notifications
+**Purpose**: Provide clear feedback about installation status.
 
-#### 3. Error Handling Enhancement
-**File**: `vscode-extension/src/agents/installer.ts`
-**Changes**: Add comprehensive error handling and recovery
+**Success Notification**:
+- Message: "PAW agents installed successfully. N agents available in Copilot Chat."
+- Type: Information
+- No action buttons (fire and forget)
 
-```typescript
-/**
- * Handle file system errors with detailed user guidance
- */
-function handleFileSystemError(error: any, operation: string, path: string): string {
-  let message = `${operation} failed for ${path}`;
-  let guidance = '';
-  
-  if (error.code === 'EACCES' || error.code === 'EPERM') {
-    guidance = 'Permission denied. Check file permissions and try running VS Code with appropriate privileges. Alternatively, set the "paw.promptDirectory" setting to specify a custom location.';
-  } else if (error.code === 'ENOSPC') {
-    guidance = 'Disk is full. Free up disk space and try again.';
-  } else if (error.code === 'EROFS') {
-    guidance = 'File system is read-only. Ensure the directory is writable, or set the "paw.promptDirectory" setting to specify a writable location.';
-  } else if (error.message?.includes('Unsupported platform')) {
-    guidance = 'Platform auto-detection failed. Set the "paw.promptDirectory" setting to manually specify the prompt directory location.';
-  } else {
-    guidance = error.message || String(error);
-  }
-  
-  return `${message}: ${guidance}`;
-}
-```
+**Error Notification**:
+- Message: "PAW agent installation encountered errors. Check output channel."
+- Type: Error
+- Action button: "View Output" (opens PAW Workflow output channel)
+- Include specific error details in output channel
+- Mention `paw.promptDirectory` setting for permission issues
+
+**Up-to-date Case**:
+- No user notification (silent)
+- Log to output channel only
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `installAgents()` writes all agent files to prompts directory
-- [ ] `needsInstallation()` returns true on first activation, false on subsequent activations with same version
+- [ ] `needsInstallation()` returns true on fresh install
 - [ ] `needsInstallation()` returns true when version changes
-- [ ] `needsInstallation()` returns true when agent files are missing
-- [ ] Installation updates `globalState` with version, timestamp, and file list
-- [ ] Extension compiles and activates successfully: `npm run compile`
-- [ ] All unit tests pass: `npm test`
+- [ ] `needsInstallation()` returns true when files missing
+- [ ] `needsInstallation()` returns false when up to date
+- [ ] `installAgents()` writes all agent files to prompts directory
+- [ ] globalState updated with version, filenames, timestamp
+- [ ] Installation succeeds even without Copilot extension
+- [ ] Extension activates successfully even when installation fails
+- [ ] Partial installation tracked correctly (some files written, some failed)
 
 #### Manual Verification:
-- [ ] Install fresh extension and verify agents appear in `<config>/User/prompts/` directory
-- [ ] Verify all 15+ agents appear in GitHub Copilot Chat agent selector after activation
-- [ ] Simulate permission error by making prompts directory read-only - verify error notification
-- [ ] Check output channel logs show detailed installation progress and any errors
+- [ ] First activation shows "installing" message
+- [ ] Success notification appears with agent count
+- [ ] Agents appear in Copilot Chat after installation
+- [ ] Reactivation shows "up to date" (no reinstall)
+- [ ] Permission error shows actionable notification
+- [ ] Output channel contains detailed installation logs
 
 ---
 
 ## Phase 3: Version Changes and Migration
 
 ### Overview
-This phase implements version change detection (both upgrades and downgrades), bidirectional migration of agent files, and cleanup logic to ensure smooth transitions between PAW versions in either direction.
+Add version change detection (upgrades and downgrades) and cleanup of previously installed agent files.
+
+**Simplified Approach**: Instead of maintaining complex version-specific migration mappings, use a simpler strategy:
+- Track which files were installed (already stored in globalState)
+- On version change: delete all previously tracked files, then install fresh set
+- This handles renames, removals, and additions automatically
+- Works identically for upgrades and downgrades
+- No version-specific mapping needed
 
 ### Changes Required:
 
-#### 1. Migration Manifest
-**File**: `vscode-extension/src/agents/migrations.ts` (new)
-**Changes**: Create migration manifest for handling renamed or removed agents
+#### 1. Version Change Detection
+**File**: `vscode-extension/src/agents/installer.ts` (enhance)
 
-```typescript
-/**
- * Migration rule for handling renamed or removed agent files
- */
-export interface MigrationRule {
-  oldFilename: string;
-  newFilename?: string; // undefined means file was removed
-  version: string; // Version when migration applies
-}
+**Changes**: Enhance `needsInstallation()` and `installAgents()` to detect downgrades.
 
-/**
- * Migration manifest tracking agent file changes across versions
- * Add new entries when agents are renamed or removed
- * Supports bidirectional migrations: upgrades apply forward rules, downgrades apply reverse rules
- * Note: No chatmode→agent migration needed (users manually migrated to 0.4.0+)
- */
-export const MIGRATION_MANIFEST: MigrationRule[] = [
-  // Example: If agent was renamed in 0.6.0
-  // {
-  //   oldFilename: 'paw-planner.agent.md',  // Used in 0.5.0
-  //   newFilename: 'paw-planning.agent.md', // Used in 0.6.0+
-  //   version: '0.6.0'
-  // },
-  // Example: If agent was removed in 0.7.0
-  // {
-  //   oldFilename: 'paw-deprecated.agent.md',
-  //   newFilename: undefined,
-  //   version: '0.7.0'
-  // }
-];
+**Version Change Detection**:
+- Compare stored version to current version
+- If versions differ (upgrade OR downgrade), reinstallation needed
+- Treat all version changes identically (no upgrade vs downgrade distinction)
 
-/**
- * Get list of obsolete files that should be removed for given version change
- * @param fromVersion Version being migrated from
- * @param toVersion Version being migrated to
- * @returns Array of filenames to remove
- */
-export function getObsoleteFiles(fromVersion: string, toVersion: string): string[] {
-  const isDowngrade = isVersionDowngrade(fromVersion, toVersion);
-  
-  // For simplicity, apply all migrations (could be version-range filtered in future)
-  return MIGRATION_MANIFEST
-    .filter(rule => !rule.newFilename) // Only removed files
-    .map(rule => isDowngrade ? rule.newFilename || rule.oldFilename : rule.oldFilename)
-    .filter(f => f !== undefined) as string[];
-}
+**Version Change Handling**:
+- Log old and new versions
+- Delete all previously installed files (from globalState tracking)
+- Install fresh set of agents from current version
+- Update version marker and file list in globalState
+- Works for any version transition
 
-/**
- * Get file renames that should be applied for given version change
- * For upgrades: old → new, For downgrades: new → old
- */
-export function getFileRenames(fromVersion: string, toVersion: string): Map<string, string> {
-  const renames = new Map<string, string>();
-  const isDowngrade = isVersionDowngrade(fromVersion, toVersion);
-  
-  for (const rule of MIGRATION_MANIFEST) {
-    if (rule.newFilename) {
-      if (isDowngrade) {
-        // Reverse the mapping for downgrades
-        renames.set(rule.newFilename, rule.oldFilename);
-      } else {
-        // Forward mapping for upgrades
-        renames.set(rule.oldFilename, rule.newFilename);
-      }
-    }
-  }
-  
-  return renames;
-}
+#### 2. Cleanup of Previous Installation
+**File**: `vscode-extension/src/agents/installer.ts` (enhance)
 
-/**
- * Check if version change is a downgrade
- */
-function isVersionDowngrade(fromVersion: string, toVersion: string): boolean {
-  // Simple semver comparison (extend for production use)
-  const from = fromVersion.split('.').map(Number);
-  const to = toVersion.split('.').map(Number);
-  
-  for (let i = 0; i < Math.max(from.length, to.length); i++) {
-    const f = from[i] || 0;
-    const t = to[i] || 0;
-    if (f > t) return true;
-    if (f < t) return false;
-  }
-  
-  return false; // Versions equal
-}
-```
+**Purpose**: Remove all agent files from previous version before installing new version.
 
-#### 2. Migration Logic
-**File**: `vscode-extension/src/agents/installer.ts`
-**Changes**: Add migration and cleanup operations to installer
+**Cleanup Logic**:
+- Read `globalState['paw.agentInstallation'].filesInstalled`
+- For each previously installed file:
+  - Attempt to delete from prompts directory
+  - Log success/failure per file
+  - Continue on errors (don't block installation)
+- Clear old file list from globalState
+- Run before installing new version's files
 
-```typescript
-import { getObsoleteFiles, getFileRenames } from './migrations';
+**Benefits of This Approach**:
+- No version-specific mapping required
+- Handles renames, removals, additions automatically
+- Works identically for upgrades and downgrades
+- Simpler to maintain (no hardcoded version rules)
+- Robust against partial installations
 
-/**
- * Perform migration operations when changing versions (upgrade or downgrade)
- * Handles file renames and removals in appropriate direction based on version change
- */
-export async function migrateAgents(
-  fromVersion: string,
-  toVersion: string,
-  outputChannel: vscode.OutputChannel
-): Promise<void> {
-  try {
-    const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo);
-    
-    outputChannel.appendLine(`[INFO] Migrating agents from v${fromVersion} to v${toVersion}`);
-    
-    // 1. Handle file renames
-    const renames = getFileRenames(fromVersion, toVersion);
-    for (const [oldName, newName] of renames) {
-      const oldPath = path.join(promptsDir, oldName);
-      const newPath = path.join(promptsDir, newName);
-      
-      if (fs.existsSync(oldPath)) {
-        try {
-          // New file will be written by installer, just remove old
-          fs.unlinkSync(oldPath);
-          outputChannel.appendLine(`[INFO] Removed renamed file: ${oldName} -> ${newName}`);
-        } catch (error) {
-          outputChannel.appendLine(`[WARN] Failed to remove old file ${oldName}: ${error}`);
-        }
-      }
-    }
-    
-    // 2. Remove obsolete files
-    const obsoleteFiles = getObsoleteFiles(fromVersion, toVersion);
-    for (const filename of obsoleteFiles) {
-      const filePath = path.join(promptsDir, filename);
-      
-      if (fs.existsSync(filePath)) {
-        try {
-          fs.unlinkSync(filePath);
-          outputChannel.appendLine(`[INFO] Removed obsolete file: ${filename}`);
-        } catch (error) {
-          outputChannel.appendLine(`[WARN] Failed to remove obsolete file ${filename}: ${error}`);
-        }
-      }
-    }
-    
-    // 3. Clean up unknown PAW files (safety measure)
-    // Only remove files matching PAW naming pattern that aren't in current templates
-    await cleanupUnknownPAWFiles(promptsDir, outputChannel);
-    
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Migration failed: ${errorMsg}`);
-    // Don't throw - allow installation to proceed even if migration fails
-  }
-}
+**Error Handling**:
+- Log deletion failures but continue with installation
+- Track deleted files count in result
+- Report cleanup errors in output channel
+- Installation proceeds even if cleanup partially fails
 
-/**
- * Clean up PAW agent files that don't match current templates
- * Only removes files matching PAW naming pattern (paw-*.agent.md)
- */
-async function cleanupUnknownPAWFiles(
-  promptsDir: string,
-  outputChannel: vscode.OutputChannel
-): Promise<void> {
-  try {
-    if (!fs.existsSync(promptsDir)) {
-      return;
-    }
-    
-    const files = fs.readdirSync(promptsDir);
-    const pawPattern = /^paw-.*\.agent\.md$/;
-    
-    for (const file of files) {
-      if (!pawPattern.test(file)) {
-        continue; // Not a PAW agent file
-      }
-      
-      // Check if this file is in our current templates
-      // (This will be checked by comparing against installed files from state)
-      const filePath = path.join(promptsDir, file);
-      
-      // Skip removal for now - only remove files explicitly in migration manifest
-      // This prevents accidental deletion of custom user agents
-      // Future: Could add more sophisticated detection
-    }
-  } catch (error) {
-    outputChannel.appendLine(`[WARN] Cleanup check failed: ${error}`);
-  }
-}
-```
+#### 3. Enhanced Installation State
+**File**: `vscode-extension/src/agents/installer.ts` (enhance)
 
-#### 3. Update Installation Flow
-**File**: `vscode-extension/src/agents/installer.ts`
-**Changes**: Integrate migration into installation flow
+**State Fields**:
+- version: Current extension version (for change detection)
+- filesInstalled: List of installed filenames (for cleanup on next version change)
+- installedAt: Timestamp (for troubleshooting)
+- previousVersion: Version before this installation (for logging)
+- filesDeleted: Count of files removed during cleanup (for verification)
 
-```typescript
-export async function installAgents(
-  context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
-): Promise<InstallationResult> {
-  const result: InstallationResult = {
-    success: true,
-    filesInstalled: [],
-    filesSkipped: [],
-    errors: []
-  };
-  
-  try {
-    // Check if this is a version change (upgrade or downgrade)
-    const previousState = context.globalState.get<any>('paw.agentInstallation');
-    const currentVersion = context.extension.packageJSON.version;
-    
-    if (previousState && previousState.version !== currentVersion) {
-      outputChannel.appendLine(`[INFO] Version change detected: ${previousState.version} -> ${currentVersion}`);
-      await migrateAgents(previousState.version, currentVersion, outputChannel);
-    }
-    
-    // Determine prompts directory path
-    const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo);
-    
-    // ... rest of installation logic from Phase 2 ...
-    
-    return result;
-    
-  } catch (error) {
-    // ... error handling ...
-  }
-}
-```
-
-#### 4. Add Manual Reinstall Command
-**File**: `vscode-extension/src/commands/reinstallAgents.ts` (new)
-**Changes**: Create command to manually trigger agent reinstallation
-
-```typescript
-import * as vscode from 'vscode';
-import { installAgents } from '../agents/installer';
-
-export async function reinstallAgentsCommand(
-  context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
-): Promise<void> {
-  const confirm = await vscode.window.showWarningMessage(
-    'This will reinstall all PAW agents, overwriting any local modifications. Continue?',
-    'Reinstall',
-    'Cancel'
-  );
-  
-  if (confirm !== 'Reinstall') {
-    return;
-  }
-  
-  outputChannel.clear();
-  outputChannel.show();
-  outputChannel.appendLine('[INFO] Manual agent reinstallation started...');
-  
-  try {
-    const result = await installAgents(context, outputChannel);
-    
-    if (result.success) {
-      vscode.window.showInformationMessage(
-        `Successfully reinstalled ${result.filesInstalled.length} PAW agents.`
-      );
-    } else {
-      vscode.window.showErrorMessage(
-        'Agent reinstallation completed with errors. Check output channel for details.'
-      );
-    }
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Reinstallation failed: ${errorMsg}`);
-    vscode.window.showErrorMessage(`Agent reinstallation failed: ${errorMsg}`);
-  }
-}
-```
-
-**File**: `vscode-extension/src/extension.ts`
-**Changes**: Register reinstall command
-
-```typescript
-export async function activate(context: vscode.ExtensionContext) {
-  // ... existing activation code ...
-  
-  // Register reinstall command
-  context.subscriptions.push(
-    vscode.commands.registerCommand('paw.reinstallAgents', async () => {
-      await reinstallAgentsCommand(context, outputChannel);
-    })
-  );
-  
-  return context;
-}
-```
-
-**File**: `vscode-extension/package.json`
-**Changes**: Add reinstall command to package manifest
-
-```json
-{
-  "contributes": {
-    "commands": [
-      {
-        "command": "paw.initializeWorkItem",
-        "title": "New PAW Workflow",
-        "category": "PAW"
-      },
-      {
-        "command": "paw.reinstallAgents",
-        "title": "Reinstall Agents",
-        "category": "PAW"
-      }
-    ]
-  }
-}
-```
+**Purpose**: Track installation state for version change detection and cleanup.
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `isVersionDowngrade()` correctly identifies downgrades vs upgrades
-- [ ] `getObsoleteFiles()` returns correct files for both upgrades and downgrades
-- [ ] `getFileRenames()` returns forward mapping for upgrades, reverse mapping for downgrades
-- [ ] `migrateAgents()` successfully removes obsolete files when they exist
-- [ ] `migrateAgents()` handles missing old files gracefully (no errors)
-- [ ] Migration preserves all files in `.paw/instructions/` directory (never deleted)
-- [ ] Version change (upgrade or downgrade) triggers migration automatically
-- [ ] Manual reinstall command successfully overwrites all agent files
-- [ ] Extension compiles successfully: `npm run compile`
-- [ ] All tests pass: `npm test`
+- [ ] `needsInstallation()` returns true when stored version differs from current (any direction)
+- [ ] Version change deletes all previously installed files
+- [ ] Version change installs complete fresh set of agents
+- [ ] Upgrade 0.5 → 0.6 removes 0.5 agents, installs 0.6 agents
+- [ ] Downgrade 0.6 → 0.5 removes 0.6 agents, installs 0.5 agents
+- [ ] Cleanup happens before installation
+- [ ] Cleanup errors logged but don't block installation
+- [ ] globalState updated with new version and file list
 
 #### Manual Verification:
-- [ ] Simulate upgrade by changing version in package.json and reactivating - verify migration runs
-- [ ] Simulate downgrade by reverting version and reactivating - verify reverse migration runs
-- [ ] Create obsolete agent file manually, trigger version change, verify file removed
-- [ ] Run "PAW: Reinstall Agents" command and verify all agents rewritten
-- [ ] Check output channel logs show migration operations clearly for both directions
-- [ ] Verify globalState updated with new version after migration in both directions
+- [ ] Simulate version upgrade, verify old agents removed and new agents installed
+- [ ] Simulate version downgrade, verify newer agents removed and older agents installed
+- [ ] After version change, only current version's agents present (no orphaned files)
+- [ ] Output channel shows cleanup and installation details
+- [ ] Multiple version changes don't accumulate orphaned files
 
 ---
 
 ## Phase 4: Uninstall Cleanup
 
 ### Overview
-This phase implements cleanup logic to remove all PAW-managed agent files when the extension is uninstalled, ensuring a clean uninstall experience without orphaned files.
+Implement deactivation hook to remove all PAW agents when extension is uninstalled.
 
 ### Changes Required:
 
-#### 1. Uninstall Detection and Cleanup
-**File**: `vscode-extension/src/agents/uninstall.ts` (new)
-**Changes**: Create module to handle cleanup during extension deactivation
-
-```typescript
-import * as fs from 'fs';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { getPlatformInfo, resolvePromptsDirectory } from './platformDetection';
-
-/**
- * Remove all PAW-managed agent files from the prompts directory
- * Called during extension deactivation
- */
-export async function cleanupAgents(
-  context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
-): Promise<void> {
-  try {
-    outputChannel.appendLine('[INFO] Starting agent cleanup for extension uninstall...');
-    
-    // Get installation state to know which files to remove
-    const state = context.globalState.get<any>('paw.agentInstallation');
-    
-    if (!state || !state.filesInstalled) {
-      outputChannel.appendLine('[INFO] No installed agents found in state');
-      return;
-    }
-    
-    // Resolve prompts directory
-    const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo);
-    
-    if (!fs.existsSync(promptsDir)) {
-      outputChannel.appendLine('[INFO] Prompts directory does not exist, nothing to clean');
-      return;
-    }
-    
-    // Remove each installed agent file
-    let removedCount = 0;
-    let failedCount = 0;
-    
-    for (const filename of state.filesInstalled) {
-      const filePath = path.join(promptsDir, filename);
-      
-      if (fs.existsSync(filePath)) {
-        try {
-          fs.unlinkSync(filePath);
-          removedCount++;
-          outputChannel.appendLine(`[INFO] Removed: ${filename}`);
-        } catch (error) {
-          failedCount++;
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          outputChannel.appendLine(`[ERROR] Failed to remove ${filename}: ${errorMsg}`);
-        }
-      }
-    }
-    
-    outputChannel.appendLine(
-      `[INFO] Cleanup complete: ${removedCount} files removed, ${failedCount} failures`
-    );
-    
-    // Clear installation state
-    await context.globalState.update('paw.agentInstallation', undefined);
-    
-    if (failedCount > 0) {
-      outputChannel.appendLine(
-        '[WARN] Some agent files could not be removed. Please delete them manually from:'
-      );
-      outputChannel.appendLine(`  ${promptsDir}`);
-    }
-    
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Cleanup failed: ${errorMsg}`);
-    // Don't throw - best effort cleanup
-  }
-}
-
-/**
- * Check if the extension is being uninstalled
- * VS Code doesn't provide direct uninstall detection, so this is a heuristic
- */
-export function isUninstalling(): boolean {
-  // Unfortunately, VS Code doesn't expose a reliable way to detect uninstall
-  // deactivate() is called on uninstall, disable, and reload
-  // We'll perform cleanup on every deactivation as a safety measure
-  return true;
-}
-```
-
-#### 2. Integration with Extension Deactivation
+#### 1. Deactivation Function
 **File**: `vscode-extension/src/extension.ts`
-**Changes**: Add deactivation handler to clean up agents
 
-```typescript
-import { cleanupAgents, isUninstalling } from './agents/uninstall';
+**Purpose**: Clean up installed agents when extension deactivates (uninstall or disable).
 
-// Store output channel reference at module level for deactivate access
-let globalOutputChannel: vscode.OutputChannel;
+**Implementation**:
+- Export `deactivate()` function (called by VS Code on uninstall/disable)
+- Determine prompts directory path
+- Enumerate all PAW agent files (paw-*.agent.md pattern)
+- Delete each file
+- Log deletions to output channel
+- Clear globalState installation record
+- Catch and log errors without throwing
 
-export async function activate(context: vscode.ExtensionContext) {
-  // Create output channel
-  globalOutputChannel = vscode.window.createOutputChannel('PAW Workflow');
-  context.subscriptions.push(globalOutputChannel);
+**Pattern Matching**:
+- Use glob pattern `paw-*.agent.md` to find PAW agents
+- Avoid deleting non-PAW agent files
+- Safe even if other extensions use `.agent.md` format
 
-  // ... rest of activation logic ...
-}
+**Error Handling**:
+- Continue deleting remaining files after individual failures
+- Log detailed errors (file path, error message)
+- If permission errors, log manual cleanup instructions
+- Never throw exceptions (deactivation should complete)
 
-/**
- * Extension deactivation handler
- * Called when extension is disabled, uninstalled, or VS Code is closing
- */
-export async function deactivate(): Promise<void> {
-  if (!globalOutputChannel) {
-    return;
-  }
-  
-  try {
-    // Get extension context from somewhere (challenge: context not passed to deactivate)
-    // For now, we'll document manual cleanup in README
-    
-    globalOutputChannel.appendLine('[INFO] Extension deactivating...');
-    
-    // Note: Full cleanup implementation requires storing context reference at module level
-    // or using alternative approach to track installed files
-    
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    globalOutputChannel.appendLine(`[ERROR] Deactivation cleanup failed: ${errorMsg}`);
-  }
-}
-```
-
-#### 3. Alternative Cleanup Approach via Command
-**File**: `vscode-extension/src/commands/uninstallCleanup.ts` (new)
-**Changes**: Create manual cleanup command as fallback
-
-```typescript
-import * as vscode from 'vscode';
-import { cleanupAgents } from '../agents/uninstall';
-
-/**
- * Manual cleanup command for users to run before uninstalling
- */
-export async function uninstallCleanupCommand(
-  context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
-): Promise<void> {
-  const confirm = await vscode.window.showWarningMessage(
-    'This will remove all PAW agents from VS Code. This is useful before uninstalling the extension. Continue?',
-    'Remove Agents',
-    'Cancel'
-  );
-  
-  if (confirm !== 'Remove Agents') {
-    return;
-  }
-  
-  outputChannel.clear();
-  outputChannel.show();
-  
-  await cleanupAgents(context, outputChannel);
-  
-  vscode.window.showInformationMessage(
-    'PAW agents removed. You can now safely uninstall the extension.'
-  );
-}
-```
-
+#### 2. Output Channel Cleanup
 **File**: `vscode-extension/src/extension.ts`
-**Changes**: Register cleanup command
 
-```typescript
-export async function activate(context: vscode.ExtensionContext) {
-  // ... existing activation code ...
-  
-  // Register cleanup command
-  context.subscriptions.push(
-    vscode.commands.registerCommand('paw.uninstallCleanup', async () => {
-      await uninstallCleanupCommand(context, outputChannel);
-    })
-  );
-  
-  return context;
-}
-```
+**Changes**: Ensure output channel remains available during deactivation.
 
-**File**: `vscode-extension/package.json`
-**Changes**: Add cleanup command to package manifest
+**Approach**:
+- Don't dispose output channel until after agent cleanup
+- Log cleanup operations to channel
+- Dispose output channel as final step
 
-```json
-{
-  "contributes": {
-    "commands": [
-      {
-        "command": "paw.initializeWorkItem",
-        "title": "New PAW Workflow",
-        "category": "PAW"
-      },
-      {
-        "command": "paw.reinstallAgents",
-        "title": "Reinstall Agents",
-        "category": "PAW"
-      },
-      {
-        "command": "paw.uninstallCleanup",
-        "title": "Remove Agents (for Uninstall)",
-        "category": "PAW"
-      }
-    ]
-  }
-}
-```
+#### 3. User Guidance
+**File**: Extension README.md
 
-#### 4. Documentation
-**File**: `vscode-extension/README.md`
-**Changes**: Add uninstall instructions
+**Changes**: Add uninstall cleanup documentation.
 
-```markdown
-## Uninstalling
-
-Before uninstalling the PAW extension, we recommend running the cleanup command to remove installed agents:
-
-1. Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
-2. Run: `PAW: Remove Agents (for Uninstall)`
-3. Confirm the removal
-4. Uninstall the extension through VS Code's Extensions view
-
-If you uninstall without running the cleanup command, PAW agents may remain in your VS Code configuration. You can manually remove them from:
-
-- **Windows**: `%APPDATA%\Code\User\prompts\paw-*.agent.md`
-- **macOS**: `~/Library/Application Support/Code/User/prompts/paw-*.agent.md`
-- **Linux**: `~/.config/Code/User/prompts/paw-*.agent.md`
-```
+**Content**:
+- Explain that agents are automatically removed on uninstall
+- If permission errors prevent cleanup, provide manual removal instructions
+- List typical prompts directory paths per platform
+- Mention that orphaned agents are harmless (no longer managed)
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `cleanupAgents()` removes all files listed in installation state
-- [ ] `cleanupAgents()` handles missing files gracefully (no errors)
-- [ ] `cleanupAgents()` clears globalState after cleanup
-- [ ] `cleanupAgents()` logs all operations to output channel
-- [ ] Manual cleanup command successfully removes all PAW agents
-- [ ] Extension compiles successfully: `npm run compile`
-- [ ] All tests pass: `npm test`
+- [ ] `deactivate()` function exported from extension.ts
+- [ ] Deactivation deletes all paw-*.agent.md files
+- [ ] Deactivation clears globalState installation record
+- [ ] Deactivation completes successfully even with permission errors
+- [ ] Only PAW agent files deleted (not other extensions' agents)
 
 #### Manual Verification:
-- [ ] Run "PAW: Remove Agents (for Uninstall)" command and verify all PAW agents removed from prompts directory
-- [ ] Verify PAW agents no longer appear in Copilot Chat after cleanup
-- [ ] Check output channel shows detailed cleanup progress
-- [ ] Simulate permission error during cleanup - verify error message with manual cleanup instructions
-- [ ] Install extension, run cleanup, verify globalState cleared
+- [ ] Uninstall extension, verify agents removed from prompts directory
+- [ ] After uninstall, PAW agents absent from Copilot Chat
+- [ ] Output channel shows cleanup confirmation
+- [ ] Permission error during cleanup shows manual instructions
+- [ ] README documents uninstall behavior
 
 ---
 
 ## Testing Strategy
 
 ### Unit Tests:
-
-**Platform Detection Tests** (`test/suite/platformDetection.test.ts`):
-- Test `getPlatformInfo()` returns valid platform, homeDir, variant
-- Test `detectVSCodeVariant()` with mocked environment variables
-- Test `resolvePromptsDirectory()` for all platform/variant combinations
-- Test path construction uses correct separators for each platform
-
-**Agent Template Tests** (`test/suite/agentTemplates.test.ts`):
-- Test `loadAgentTemplates()` loads all templates from resources directory
-- Test `extractAgentName()` correctly parses PAW filename patterns
-- Test `parseFrontmatter()` extracts description from YAML correctly
-- Test error handling when templates directory missing
-
-**Installer Tests** (`test/suite/installer.test.ts`):
-- Test `needsInstallation()` returns true when no prior installation
-- Test `needsInstallation()` returns true when version changes
-- Test `needsInstallation()` returns true when files missing
-- Test `needsInstallation()` returns false when all files present with correct version
-- Test `installAgents()` creates prompts directory if missing
-- Test `installAgents()` writes all agent files
-- Test error handling for permission errors
-- Test error handling for disk full errors
-
-**Migration Tests** (`test/suite/migrations.test.ts`):
-- Test `isVersionDowngrade()` correctly identifies upgrades vs downgrades
-- Test `getObsoleteFiles()` returns correct files for upgrades and downgrades
-- Test `getFileRenames()` returns forward mapping for upgrades
-- Test `getFileRenames()` returns reverse mapping for downgrades
-- Test `migrateAgents()` removes obsolete files in both directions
-- Test `migrateAgents()` handles missing old files gracefully
-
-**Uninstall Tests** (`test/suite/uninstall.test.ts`):
-- Test `cleanupAgents()` removes all installed files
-- Test `cleanupAgents()` clears globalState after cleanup
-- Test `cleanupAgents()` handles missing files gracefully
-- Test `cleanupAgents()` handles permission errors gracefully
+- Platform detection logic (all OS/variant combinations)
+- Path resolution with and without custom override
+- Agent template loading and parsing
+- Installation state management (globalState read/write)
+- Migration manifest lookups (upgrades and downgrades)
+- needsInstallation() logic (all conditions)
 
 ### Integration Tests:
+- Full installation flow from activation
+- Version upgrade scenario (install → upgrade → verify)
+- Version downgrade scenario (install → upgrade → downgrade → verify)
+- Idempotent installation (reinstall after partial failure)
+- Error recovery (permission denied, disk full)
+- Uninstall cleanup
 
-**End-to-End Installation** (`test/integration/installation.test.ts`):
-- Test complete installation flow from extension activation
-- Test agents appear in prompts directory with correct content
-- Test globalState updated correctly after installation
-- Test reinstallation with existing files (idempotent behavior)
-
-**Version Change Simulation** (`test/integration/versionChange.test.ts`):
-- Test upgrade from version 0.5.0 to 0.6.0 (mocked)
-- Test downgrade from version 0.6.0 to 0.5.0 (mocked)
-- Test migration runs and removes obsolete files in both directions
-- Test version marker updated after version change
-- Test all appropriate agents installed after version change
-
-**Uninstall Simulation** (`test/integration/uninstall.test.ts`):
-- Test manual cleanup command removes all agents
-- Test globalState cleared after cleanup
-- Test agents removed from prompts directory
-
-### Manual Testing Steps:
+### Manual Testing Scenarios:
 
 **Fresh Installation**:
-1. Uninstall PAW extension completely
-2. Remove all PAW agent files from prompts directory manually
-3. Install PAW extension from VSIX
-4. Open VS Code and trigger extension activation
-5. Verify all agents appear in `<config>/User/prompts/` directory
-6. Open GitHub Copilot Chat and verify all agents appear in selector
-7. Invoke a PAW agent and verify it responds correctly
+1. Install PAW extension on clean VS Code
+2. Trigger activation
+3. Verify agents install to correct directory
+4. Verify agents appear in Copilot Chat
+5. Check output channel logs
 
-**Version Change Scenario**:
-1. Install PAW version 0.5.0 (simulated)
+**Version Change**:
+1. Install PAW 0.5.0
 2. Verify agents installed
-3. Update to PAW version 0.6.0 which renames an agent (or simulate by changing package.json version)
-4. Reload VS Code to trigger reactivation
-5. Verify old filename removed and new filename installed
-6. Verify all current agent files present and updated
-7. Downgrade back to PAW version 0.5.0
-8. Reload VS Code
-9. Verify new filename removed and old filename restored
-10. Verify agents match 0.5.0 exactly
+3. Update to 0.6.0 (simulated via version change)
+4. Reload VS Code
+5. Verify old files removed, new files installed
+6. Downgrade back to 0.5.0
+7. Verify reverse migration (new files removed, old files restored)
 
 **Error Recovery**:
-1. Make prompts directory read-only (chmod 444 on Linux/macOS)
-2. Trigger agent installation
-3. Verify error notification appears with actionable message
-4. Verify output channel shows detailed error information
-5. Verify extension continues functioning (doesn't crash)
-6. Restore permissions and run "PAW: Reinstall Agents" - verify success
+1. Make prompts directory read-only
+2. Trigger installation
+3. Verify error notification with actionable message
+4. Verify extension continues functioning
+5. Restore permissions, verify successful reinstall
 
 **Platform Compatibility**:
-1. Test installation on Windows with standard VS Code
-2. Test installation on macOS with VS Code Insiders
-3. Test installation on Linux with Code-OSS
-4. Test installation on Linux with VSCodium
-5. Verify correct prompts directory path used for each platform/variant
-
-**Idempotent Installation**:
-1. Install agents successfully
-2. Delete 2 random agent files from prompts directory
-3. Reload VS Code to trigger activation
-4. Verify only the 2 missing files are rewritten (check file timestamps)
-5. Verify existing files not modified
+1. Test on Windows (standard VS Code)
+2. Test on macOS (VS Code Insiders)
+3. Test on Linux (Code-OSS)
+4. Test on Linux (VSCodium)
+5. Verify correct paths for each platform/variant
 
 **Uninstall Cleanup**:
-1. Install PAW extension and verify agents installed
-2. Run "PAW: Remove Agents (for Uninstall)" command
-3. Verify all PAW agents removed from prompts directory
-4. Verify PAW agents no longer appear in Copilot Chat
+1. Install PAW, verify agents present
+2. Uninstall extension
+3. Verify all PAW agents removed
+4. Verify agents absent from Copilot Chat
 5. Check output channel for cleanup confirmation
-6. Simulate permission error by making a file read-only
-7. Run cleanup again and verify error message with manual cleanup instructions
+
+---
 
 ## Performance Considerations
 
-**Installation Time**: Agent installation should complete within 2-3 seconds for all 15+ agents. This is acceptable during extension activation since it only happens on first install or version upgrades.
+- **Installation Time**: Should complete within 2-3 seconds for 15+ agents (acceptable during activation)
+- **File I/O**: Use synchronous operations during activation (VS Code activation is synchronous context)
+- **Memory**: Agent templates total <500KB (small footprint, no caching needed)
+- **Activation Overhead**: When up-to-date, check is <100ms (single globalState read + file existence checks)
+- **Migration**: File deletion typically <10ms per file (rare operation, only on version changes)
 
-**File I/O Optimization**: 
-- Use synchronous file operations during activation (VS Code activation is synchronous)
-- Batch file writes within single try-catch to minimize error handling overhead
-- Load templates once at start of installation, reuse for all agents
-
-**Memory Usage**: 
-- Agent templates are small (typically 5-20KB each)
-- Total memory footprint for all templates is <500KB
-- No caching needed - templates loaded fresh on each installation
-
-**Activation Performance**:
-- `needsInstallation()` check is fast (single globalState read + file existence checks)
-- When installation not needed, activation overhead is <100ms
-- When installation needed, user sees progress in output channel
-
-**Migration Performance**:
-- Migration operations are rare (only on version upgrades)
-- File deletion is fast (typically <10ms per file)
-- Migration failures don't block installation (logged and continue)
+---
 
 ## Migration Notes
 
-**Version 1.0.0 Initial Release**: No migration needed - fresh installations only. No chatmode→agent migration needed as users manually migrated when adopting extension-based workflow in 0.4.0+.
+**Initial Release (1.0.0)**: Fresh installations only, no migration from older versions needed. No pre-0.4.0 chatmode migration (users manually migrated when adopting extension-based workflow).
 
-**Future Version Changes**: 
-- Add entries to `MIGRATION_MANIFEST` when renaming or removing agents
-- Test migration logic thoroughly for both upgrade and downgrade paths before release
-- Include migration notes in changelog for transparency
-- Bidirectional migration ensures users can safely move between versions
+**Version Changes**: All version changes (upgrades and downgrades) follow the same pattern:
+1. Delete all files from previous version (tracked in globalState)
+2. Install fresh set from current version
+3. Update version marker
 
-**Version Downgrades**: 
-- Extension automatically detects downgrades and reverses migrations
-- Agents are reinstalled to match downgraded version exactly
-- Old filenames restored, new filenames removed as appropriate
-- Users can safely test new versions and rollback if they encounter issues
+**Future Versions**: No migration manifest maintenance required. Renaming, adding, or removing agents automatically handled by delete-all-then-reinstall pattern.
 
-**Uninstall Cleanup**:
-- Users should run "PAW: Remove Agents (for Uninstall)" before uninstalling
-- If uninstalled without cleanup, agents remain but are harmless (no longer managed)
-- Manual cleanup instructions provided in README for such cases
+**Downgrades**: Automatically supported. Users can safely test new versions and rollback without orphaned files.
+
+**Uninstall**: Extension removes agents automatically during deactivation. If cleanup fails due to permissions, manual removal instructions provided in README.
+
+---
 
 ## References
 
 - Original Issue: https://github.com/lossyrob/phased-agent-workflow/issues/36
 - Spec: `.paw/work/agent-installation-management/Spec.md`
-- Research: `.paw/work/agent-installation-management/SpecResearch.md`, `.paw/work/agent-installation-management/CodeResearch.md`
+- SpecResearch: `.paw/work/agent-installation-management/SpecResearch.md`
+- CodeResearch: `.paw/work/agent-installation-management/CodeResearch.md`
 - VS Code Extension API: https://code.visualstudio.com/api/references/vscode-api
-- VS Code Custom Chat Participants: https://code.visualstudio.com/api/extension-guides/chat
-- Similar implementation (file creation tool): `vscode-extension/src/tools/createPromptTemplates.ts:228-268`
+- Similar pattern: `vscode-extension/src/tools/createPromptTemplates.ts:228-268`

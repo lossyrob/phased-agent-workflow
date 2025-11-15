@@ -7,20 +7,21 @@
 
 When developers install the PAW VS Code extension, they gain immediate access to specialized AI agents (Specification, Planning, Implementation, Review, and Documentation) that guide them through structured software development workflows. These agents appear as custom personalities in GitHub Copilot Chat, each trained for a specific phase of development. Rather than requiring manual setup, the extension automatically discovers the user's VS Code configuration directory and installs agent definition files there during activation, ensuring agents are available the moment a developer needs them.
 
-As PAW evolves and releases new versions, developers benefit from agent improvements without manual intervention. When the extension activates after an update, it detects version changes and refreshes installed agent files with the latest instructions while preserving any team-specific or personal customizations stored separately. If a developer works across multiple projects with different PAW requirements, they can maintain workspace-specific instruction files that merge seamlessly with the base agent definitions, allowing project conventions to enhance rather than replace core agent behavior.
+As PAW evolves and releases new versions, developers benefit from agent improvements without manual intervention. When the extension activates after an update, it detects version changes and refreshes installed agent files with the latest instructions. The system handles common real-world complications gracefully. When file system permissions prevent installation, developers receive clear error messages with actionable remediation steps rather than silent failures. If VS Code crashes mid-installation, the next activation completes any partial work automatically. When PAW renames or removes agents between versions, obsolete files are cleaned up automatically. Developers working on different machines experience consistent agent availability because the extension installs to deterministic, platform-appropriate locations that VS Code recognizes across all instances.
 
-The system handles common real-world complications gracefully. When file system permissions prevent installation, developers receive clear error messages with actionable remediation steps rather than silent failures. If VS Code crashes mid-installation, the next activation completes any partial work automatically. When PAW renames or removes agents between versions, obsolete files are cleaned up without touching user customizations. Developers working on different machines experience consistent agent availability because the extension installs to deterministic, platform-appropriate locations that VS Code recognizes across all instances.
+This automatic agent management transforms PAW from a documentation framework into an integrated development companion, reducing setup friction while maintaining consistency across all installations.
 
-This automatic agent management transforms PAW from a documentation framework into an integrated development companion, reducing setup friction while maintaining flexibility for teams that need specialized workflows.
+**Note**: Custom instructions for agents will be handled as a separate feature through a PAW Context tool (see issue #86). This implementation focuses solely on installing base agent templates.
 
 ## Objectives
 
 - Enable developers to access PAW agents immediately after installing the extension without manual configuration steps
 - Keep installed agents synchronized with PAW version updates, ensuring developers always work with current instructions
-- Allow teams and individuals to customize agent behavior through separate instruction files that persist across updates (Rationale: projects often have specific conventions or constraints that should enhance agent behavior without requiring fork maintenance)
 - Provide transparent feedback when installation encounters problems, with enough detail for developers to resolve issues independently
 - Ensure installation operations complete reliably even when interrupted by system events or VS Code crashes (Rationale: partial installations create confusing states where some agents work while others are missing)
-- Remove obsolete agent files during version migrations while preserving all user-created customization content
+- Remove obsolete agent files during version migrations
+
+**Note**: Custom instructions capability will be implemented separately through a PAW Context tool (issue #86) to avoid workspace-specific content leaking into global agent files.
 
 ## User Scenarios & Testing
 
@@ -46,18 +47,7 @@ Acceptance Scenarios:
 2. Given agent files have been refreshed, When the developer checks the output channel, Then installation logs show which files were updated and confirm 0.4.0 installation complete.
 3. Given the update completed successfully, When the developer invokes any PAW agent, Then the agent exhibits 0.4.0 behavior with updated instructions.
 
-### User Story P3 – Custom Instruction Composition
-
-Narrative: A development team maintains project-specific coding standards in `.paw/instructions/implementation-instructions.md` within their repository. When a developer activates the PAW extension in that workspace, the extension reads both the base agent templates and the project's custom instruction files. For agents with matching customization files, the extension composes the final agent content by prepending workspace instructions, followed by user-level instructions (if any from `~/.paw/instructions/`), followed by the base PAW template. The resulting composed agent files are written to the prompts directory, enabling the Implementation agent to follow project conventions while retaining core PAW workflow guidance.
-
-Independent Test: Place custom instructions in `.paw/instructions/implementation-instructions.md`, activate PAW extension, verify composed agent file contains both custom and base instructions in correct precedence order.
-
-Acceptance Scenarios:
-1. Given workspace contains `.paw/instructions/implementation-instructions.md` with project rules, When the extension activates, Then the composed Implementation agent file includes workspace instructions at the top, followed by base PAW content.
-2. Given both workspace and user-level custom instructions exist for the same agent, When composition occurs, Then workspace instructions appear first, user instructions second, base content last.
-3. Given custom instruction files for some agents but not others, When installation occurs, Then customized agents include composed content while non-customized agents contain only base PAW templates.
-
-### User Story P4 – Installation Error Recovery
+### User Story P3 – Installation Error Recovery
 
 Narrative: A developer's VS Code configuration directory has restrictive permissions due to corporate security policies, preventing write access. When the PAW extension attempts to install agents during activation, file system operations fail. The extension catches these errors gracefully, logs detailed error information to the output channel (including file paths and permission details), and displays a user notification explaining the problem with actionable remediation steps (such as "Check file permissions for <path>" or "Set the 'paw.promptDirectory' setting to specify a custom location"). The extension completes activation successfully despite the installation failure, allowing the developer to use PAW's non-agent features and resolve the permission issue independently.
 
@@ -80,21 +70,20 @@ Acceptance Scenarios:
 2. Given all agent files are present and version markers match, When extension activates, Then no file writes occur (idempotent behavior).
 3. Given agent file content was manually corrupted, When extension activates with version marker intact, Then the extension does not rewrite files (preserves user modifications until explicit version update).
 
-### User Story P6 – Agent Migration and Cleanup
+### User Story P5 – Agent Migration and Cleanup
 
-Narrative: PAW 0.4.0 renamed agent files from `.chatmode.md` to `.agent.md` extension and renamed "Planner" to "Planning". A developer upgrades from 0.3.0 to 0.4.0. During activation, the extension consults an internal migration manifest mapping old filenames to new ones. It installs the new `.agent.md` files, then removes obsolete `.chatmode.md` files based on known PAW naming patterns. User customization files in `.paw/instructions/` remain untouched because they are never part of the cleanup logic. The developer's prompts directory contains only current agent files without legacy clutter.
+Narrative: PAW 0.4.0 renamed agent files from `.chatmode.md` to `.agent.md` extension and renamed "Planner" to "Planning". A developer upgrades from 0.3.0 to 0.4.0. During activation, the extension consults an internal migration manifest mapping old filenames to new ones. It installs the new `.agent.md` files, then removes obsolete `.chatmode.md` files based on known PAW naming patterns. The developer's prompts directory contains only current agent files without legacy clutter.
 
 Independent Test: Install PAW 0.3.0 agents, upgrade to 0.4.0, verify old `.chatmode.md` files removed and new `.agent.md` files installed.
 
 Acceptance Scenarios:
 1. Given PAW 0.3.0 installed `paw-planner.chatmode.md`, When upgrading to 0.4.0 with new `paw-planning.agent.md` filename, Then the extension installs new file and removes old file.
-2. Given user has `.paw/instructions/planner-instructions.md`, When migration occurs, Then the instruction file remains unchanged (only managed agent files are removed).
-3. Given multiple old agent files exist from previous versions, When extension activates with current version, Then all obsolete PAW-managed files are removed while preserving user files.
+2. Given multiple old agent files exist from previous versions, When extension activates with current version, Then all obsolete PAW-managed files are removed.
 
 ### Edge Cases
 
 - **Multiple VS Code instances**: If multiple VS Code windows activate simultaneously and attempt to write agents concurrently, file system race conditions may occur. Expected behavior: Last writer wins; idempotent installation ensures eventual consistency across all instances.
-- **User manual modification of agent files**: If a user manually edits an installed agent file, the next version upgrade will overwrite their changes (because agents are treated as managed assets). Expected behavior: Changes lost on upgrade; custom instructions should be placed in designated customization files.
+- **User manual modification of agent files**: If a user manually edits an installed agent file, the next version upgrade will overwrite their changes (because agents are treated as managed assets). Expected behavior: Changes lost on upgrade.
 - **Non-standard VS Code distributions**: VSCodium and Code-OSS use different configuration paths than standard VS Code. Expected behavior: Extension detects distribution-specific paths and installs to appropriate location for each variant.
 - **Disk full during installation**: If disk space is exhausted mid-write, partial files may be written. Expected behavior: File system error caught, error notification displayed, idempotent installation completes missing files on next activation.
 - **Copilot extension not installed**: If GitHub Copilot extension is not installed, agent files are written but unusable. Expected behavior: Agents installed successfully; no error (agents become available when user later installs Copilot).
@@ -109,31 +98,26 @@ Acceptance Scenarios:
 - FR-002: System shall support standard VS Code, VS Code Insiders, Code-OSS, and VSCodium distribution variants with their respective configuration paths (Stories: P1)
 - FR-003: System shall detect whether agent installation is needed by comparing installed agent files against expected set and version markers (Stories: P1, P2, P5)
 - FR-004: System shall write agent definition files to the `User/prompts/` subdirectory within the VS Code configuration directory (Stories: P1, P2, P5)
-- FR-005: System shall read agent template content from bundled extension resources using extension context absolute paths (Stories: P1, P2, P3)
-- FR-006: System shall discover workspace-level custom instruction files in `.paw/instructions/<agent>-instructions.md` within the active workspace (Stories: P3)
-- FR-007: System shall discover user-level custom instruction files in `~/.paw/instructions/<agent>-instructions.md` in the user's home directory (Stories: P3)
-- FR-008: System shall compose final agent content by concatenating workspace instructions, user instructions, and base template in that precedence order (Stories: P3)
-- FR-009: System shall perform agent installation during extension activation when triggered by activation events (Stories: P1, P2, P5)
-- FR-010: System shall store installation version marker in extension global state for version comparison on subsequent activations (Stories: P2, P5)
-- FR-011: System shall compare stored version marker against current extension version to detect upgrades (Stories: P2, P6)
-- FR-012: System shall overwrite existing agent files when version upgrade is detected (Stories: P2)
-- FR-013: System shall handle file system errors gracefully by catching exceptions, logging details, and displaying user notifications (Stories: P4)
-- FR-014: System shall include specific error details in notifications (file paths, error types, suggested actions) when installation fails (Stories: P4)
-- FR-015: System shall allow extension activation to complete successfully even when agent installation fails (Stories: P4)
-- FR-016: System shall validate installation completeness by checking for expected agent files on each activation (Stories: P5)
-- FR-017: System shall write only missing agent files when some files already exist (idempotent installation) (Stories: P5)
-- FR-018: System shall maintain internal migration manifest mapping old agent filenames to new filenames across versions (Stories: P6)
-- FR-019: System shall remove obsolete agent files listed in migration manifest during version upgrades (Stories: P6)
-- FR-020: System shall never modify or delete files in `.paw/instructions/` directories during migration or cleanup (Stories: P6)
-- FR-021: System shall log all installation operations (file writes, deletions, errors) to a dedicated output channel (Stories: P1, P2, P4, P5, P6)
-- FR-022: System shall support agent naming pattern `paw-<agent-name>.agent.md` for installed files (Stories: P1, P2, P6)
-- FR-023: System shall generate agent files with YAML frontmatter containing name and description fields (Stories: P1, P2)
+- FR-005: System shall read agent template content from bundled extension resources using extension context absolute paths (Stories: P1, P2)
+- FR-006: System shall perform agent installation during extension activation when triggered by activation events (Stories: P1, P2, P3)
+- FR-007: System shall store installation version marker in extension global state for version comparison on subsequent activations (Stories: P2, P4)
+- FR-008: System shall compare stored version marker against current extension version to detect upgrades (Stories: P2, P5)
+- FR-009: System shall overwrite existing agent files when version upgrade is detected (Stories: P2)
+- FR-010: System shall handle file system errors gracefully by catching exceptions, logging details, and displaying user notifications (Stories: P3)
+- FR-011: System shall include specific error details in notifications (file paths, error types, suggested actions) when installation fails (Stories: P3)
+- FR-012: System shall allow extension activation to complete successfully even when agent installation fails (Stories: P3)
+- FR-013: System shall validate installation completeness by checking for expected agent files on each activation (Stories: P4)
+- FR-014: System shall write only missing agent files when some files already exist (idempotent installation) (Stories: P4)
+- FR-015: System shall maintain internal migration manifest mapping old agent filenames to new filenames across versions (Stories: P5)
+- FR-016: System shall remove obsolete agent files listed in migration manifest during version upgrades (Stories: P5)
+- FR-017: System shall log all installation operations (file writes, deletions, errors) to a dedicated output channel (Stories: P1, P2, P3, P4, P5)
+- FR-018: System shall support agent naming pattern `paw-<agent-name>.agent.md` for installed files (Stories: P1, P2, P5)
+- FR-019: System shall generate agent files with YAML frontmatter containing name and description fields (Stories: P1, P2)
 
 ### Key Entities
 
 - **Agent Template**: Bundled markdown file containing base PAW agent instructions, stored in extension resources, read-only
-- **Custom Instruction File**: User-created or team-created markdown file containing additional agent instructions, stored in `.paw/instructions/` directories, never modified by extension
-- **Installed Agent File**: Final composed agent definition file with `.agent.md` extension, written to VS Code `User/prompts/` directory, managed by extension
+- **Installed Agent File**: Agent definition file with `.agent.md` extension, written to VS Code `User/prompts/` directory, managed by extension
 - **Version Marker**: String value stored in extension global state, represents version of currently installed agents, used for upgrade detection
 - **Migration Manifest**: Internal data structure mapping old agent filenames to new filenames, enables cleanup of renamed or removed agents
 
@@ -144,29 +128,25 @@ Acceptance Scenarios:
 - **Error Tolerance**: Extension must activate successfully and provide core functionality even when agent installation fails due to file system issues
 - **Platform Compatibility**: Installation logic must detect and handle platform-specific VS Code configuration directory paths correctly across Windows, macOS, Linux
 - **Distribution Compatibility**: System must recognize and support VS Code Insiders, Code-OSS, and VSCodium variants with their distinct configuration paths
-- **User Data Safety**: Migration and cleanup operations must never delete or modify user-created customization files; only extension-managed agent files may be removed
 
 ## Success Criteria
 
 - SC-001: Fresh PAW installation writes all 5 agent files to the user's `User/prompts/` directory within 5 seconds of first activation (FR-001, FR-001A, FR-003, FR-004, FR-005)
 - SC-001A: When 'paw.promptDirectory' setting is configured with a custom path, agents are installed to that path instead of the auto-detected location (FR-001A)
-- SC-002: Installed agent files appear in GitHub Copilot Chat agent selector without requiring VS Code restart when Copilot extension is active (FR-004, FR-023)
-- SC-003: Version upgrade from 0.3.0 to 0.4.0 overwrites all agent files with 0.4.0 content and updates stored version marker to 0.4.0 (FR-010, FR-011, FR-012)
-- SC-004: Custom instruction file in `.paw/instructions/implementation-instructions.md` appears at the beginning of the composed Implementation agent file, before base PAW content (FR-006, FR-008)
-- SC-005: When workspace and user-level custom instructions both exist for an agent, both appear in the final agent file in workspace-first order (FR-006, FR-007, FR-008)
-- SC-006: File permission errors during installation produce error notifications containing the specific file path that failed and at least one remediation suggestion including the 'paw.promptDirectory' setting override (FR-001A, FR-013, FR-014)
-- SC-007: Extension activation completes successfully (extension status shows "Active") even when all agent file writes fail due to file system errors (FR-015)
-- SC-008: Deleting 2 of 5 installed agent files and reactivating the extension results in only the 2 missing files being rewritten (FR-016, FR-017)
-- SC-009: When all expected agent files exist with correct version marker, reactivation performs no file writes (verified via output channel logs showing "Installation up to date") (FR-003, FR-017)
-- SC-010: Upgrading from version with `paw-planner.chatmode.md` to version with `paw-planning.agent.md` results in old file deleted and new file created (FR-018, FR-019)
-- SC-011: Migration cleanup operations never modify or delete files in `.paw/instructions/` directories, verified by directory hash comparison before and after migration (FR-020)
-- SC-012: Installation on Windows writes agents to `%APPDATA%\Code\User\prompts\` directory (FR-001, FR-002)
-- SC-013: Installation on macOS writes agents to `~/Library/Application Support/Code/User/prompts/` directory (FR-001, FR-002)
-- SC-014: Installation on Linux writes agents to `~/.config/Code/User/prompts/` directory (FR-001, FR-002)
-- SC-015: Installation on VSCodium writes agents to `~/.config/VSCodium/User/prompts/` directory (FR-002)
-- SC-016: Output channel logs contain timestamps, operation type (install/update/delete), file path, and outcome (success/failure) for every file operation (FR-021)
-- SC-017: Extension successfully installs agents even when GitHub Copilot extension is not installed (FR-004, FR-015)
-- SC-018: When disk is full, installation failure produces error notification explaining disk space issue and extension continues functioning (FR-013, FR-014, FR-015)
+- SC-002: Installed agent files appear in GitHub Copilot Chat agent selector without requiring VS Code restart when Copilot extension is active (FR-004, FR-019)
+- SC-003: Version upgrade from 0.3.0 to 0.4.0 overwrites all agent files with 0.4.0 content and updates stored version marker to 0.4.0 (FR-007, FR-008, FR-009)
+- SC-004: File permission errors during installation produce error notifications containing the specific file path that failed and at least one remediation suggestion including the 'paw.promptDirectory' setting override (FR-001A, FR-010, FR-011)
+- SC-005: Extension activation completes successfully (extension status shows "Active") even when all agent file writes fail due to file system errors (FR-012)
+- SC-006: Deleting 2 of 5 installed agent files and reactivating the extension results in only the 2 missing files being rewritten (FR-013, FR-014)
+- SC-007: When all expected agent files exist with correct version marker, reactivation performs no file writes (verified via output channel logs showing "Installation up to date") (FR-003, FR-014)
+- SC-008: Upgrading from version with `paw-planner.chatmode.md` to version with `paw-planning.agent.md` results in old file deleted and new file created (FR-015, FR-016)
+- SC-009: Installation on Windows writes agents to `%APPDATA%\Code\User\prompts\` directory (FR-001, FR-002)
+- SC-010: Installation on macOS writes agents to `~/Library/Application Support/Code/User/prompts/` directory (FR-001, FR-002)
+- SC-011: Installation on Linux writes agents to `~/.config/Code/User/prompts/` directory (FR-001, FR-002)
+- SC-012: Installation on VSCodium writes agents to `~/.config/VSCodium/User/prompts/` directory (FR-002)
+- SC-013: Output channel logs contain timestamps, operation type (install/update/delete), file path, and outcome (success/failure) for every file operation (FR-017)
+- SC-014: Extension successfully installs agents even when GitHub Copilot extension is not installed (FR-004, FR-012)
+- SC-015: When disk is full, installation failure produces error notification explaining disk space issue and extension continues functioning (FR-010, FR-011, FR-012)
 
 ## Assumptions
 
@@ -177,8 +157,6 @@ Acceptance Scenarios:
 - **User prompts directory is global across all VS Code profiles**: Research confirms the `User/prompts/` directory is shared by all profiles rather than being profile-specific. Extension will install agents once to this global location rather than per-profile.
 
 - **Agent file naming follows pattern `paw-<agent-name>.agent.md`**: Based on PAW's current agent naming conventions and VS Code's recognition of `.agent.md` extension. Extension will use this pattern consistently for all installed agents.
-
-- **Custom instruction files use simple concatenation composition**: Absent community standards for markdown instruction merging, extension will use straightforward concatenation in precedence order (workspace, user, base) without complex heading-level merging or conflict resolution.
 
 - **Activation event `onStartupFinished` provides appropriate timing for agent installation**: VS Code fires this event after initial workspace setup completes but before user interaction begins, providing suitable context for file system operations. Extension will use this activation event to trigger installation logic.
 
@@ -196,7 +174,6 @@ Acceptance Scenarios:
 
 - Automatic agent installation during extension activation
 - Agent file updates during version upgrades
-- Composition of base agent templates with workspace and user custom instruction files
 - Platform-specific configuration directory path detection (Windows, macOS, Linux)
 - Support for VS Code distribution variants (standard, Insiders, Code-OSS, VSCodium)
 - Error handling and user notifications for file system failures
@@ -204,12 +181,13 @@ Acceptance Scenarios:
 - Migration and cleanup of obsolete agent files during version upgrades
 - Version tracking using extension global state
 - Detailed operation logging to output channel
-- Preservation of user customization files during all operations
 
 ### Out of Scope
 
+- Custom instructions for agents (handled separately through PAW Context tool - see issue #86)
+- Composition of workspace or user-level instruction files with agent templates
 - Manual agent installation UI or commands (agents install automatically only)
-- User configuration settings for installation location or behavior (paths are deterministic)
+- User configuration settings for installation location or behavior (except `paw.promptDirectory` override)
 - Backup or preservation of user modifications to installed agent files (agents are managed assets)
 - Per-profile agent installation (agents install globally, shared by all profiles)
 - Automatic Copilot refresh or reload after agent installation (user must reload manually)
@@ -217,10 +195,8 @@ Acceptance Scenarios:
 - Agent file validation beyond version marker comparison
 - Rollback mechanisms to restore previous agent versions
 - Telemetry or analytics about agent installation success/failure rates
-- Cross-machine synchronization of custom instruction files (users manage via version control)
 - GUI for managing or viewing installed agents (VS Code's native Copilot UI provides this)
 - Hot-reload of agent changes without VS Code restart
-- Conflict resolution UI for custom instruction composition
 
 ## Dependencies
 
@@ -238,9 +214,7 @@ Acceptance Scenarios:
 
 - **Extension activation occurs before file system is ready**: Impact: Installation fails due to I/O errors on slow systems or network drives. Mitigation: Use activation event `onStartupFinished` rather than immediate activation; implement retry logic with exponential backoff for file operations.
 
-- **Large number of custom instruction files causes performance degradation**: Impact: Composition operation takes multiple seconds, blocking activation. Mitigation: Limit custom instruction file size through documentation guidance; consider async composition if blocking becomes problematic; log warning if composition exceeds reasonable time threshold.
-
-- **User manually modifies installed agent files expecting persistence**: Impact: User changes lost on next version upgrade, causing confusion. Mitigation: Document that agents are managed assets; include clear comments in agent file headers directing users to customization file mechanism; consider warning notification on first upgrade.
+- **User manually modifies installed agent files expecting persistence**: Impact: User changes lost on next version upgrade, causing confusion. Mitigation: Document that agents are managed assets; include clear comments in agent file headers; consider warning notification on first upgrade.
 
 - **Concurrent VS Code instances write agents simultaneously**: Impact: File corruption or incomplete writes due to race conditions. Mitigation: Rely on file system atomicity for individual file writes; accept last-writer-wins behavior as sufficient given idempotent installation; document behavior if users report issues.
 
@@ -256,10 +230,8 @@ Acceptance Scenarios:
 ## Glossary
 
 - **Agent**: Custom GitHub Copilot Chat personality defined by markdown instruction file, specialized for specific PAW workflow phase
-- **Agent Template**: Base instruction content for an agent, bundled in extension resources, forms foundation of installed agent file
-- **Custom Instruction File**: User-created or team-created markdown file containing additional instructions that extend or modify agent behavior
-- **Composition**: Process of merging custom instruction files with base agent template to create final installed agent file
-- **Installed Agent File**: Final `.agent.md` file written to VS Code `User/prompts/` directory, discovered and loaded by GitHub Copilot
+- **Agent Template**: Base instruction content for an agent, bundled in extension resources
+- **Installed Agent File**: `.agent.md` file written to VS Code `User/prompts/` directory, discovered and loaded by GitHub Copilot
 - **Version Marker**: String stored in extension global state representing version of currently installed agents, used to detect when updates are needed
 - **Migration Manifest**: Internal data structure listing agent filename changes between versions, enables cleanup of obsolete files
 - **Idempotent Installation**: Installation logic that produces same result when run multiple times, safely completing partial installations without corruption

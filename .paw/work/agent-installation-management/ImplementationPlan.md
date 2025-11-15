@@ -2,7 +2,9 @@
 
 ## Overview
 
-This plan implements automatic agent installation and upgrade management for the PAW VS Code extension. When users install or upgrade the extension, PAW agents will automatically become available in GitHub Copilot Chat without manual configuration. The system will compose base agent templates with optional workspace and user customizations, track installed versions, and handle migrations cleanly.
+This plan implements automatic agent installation and upgrade management for the PAW VS Code extension. When users install or upgrade the extension, PAW agents will automatically become available in GitHub Copilot Chat without manual configuration. The system will install base agent templates, track installed versions, and handle migrations cleanly.
+
+**Note**: Custom instructions for agents will be handled separately through a PAW Context tool (see issue #86). This implementation focuses solely on installing base agent templates.
 
 ## Current State Analysis
 
@@ -20,7 +22,6 @@ The VS Code extension currently:
 - VS Code does not expose profile path through API - must hardcode platform-specific paths (SpecResearch.md)
 - User prompts directory is global across all profiles: `<config>/User/prompts/` (SpecResearch.md)
 - Current extension uses `path.join()` for all path operations (extension.ts, customInstructions.ts)
-- Custom instruction loading pattern exists at `vscode-extension/src/prompts/customInstructions.ts:24-48`
 - Agent files follow naming pattern `PAW-##X Agent Name.agent.md` in `.github/agents/`
 - Extension uses structured result objects with `{ success, data, errors }` pattern (createPromptTemplates.ts:228-268)
 
@@ -30,7 +31,6 @@ After implementation:
 - Extension activates on VS Code startup via `onStartupFinished` activation event
 - Agents automatically install to platform-appropriate prompts directory on first activation
 - Agents update automatically when extension version changes
-- Custom instructions from workspace (`.paw/instructions/`) and user (`~/.paw/instructions/`) compose with base templates
 - Version tracking in `globalState` enables upgrade detection
 - Obsolete agent files cleaned up during version migrations
 - File system errors handled gracefully with detailed logging and user notifications
@@ -39,21 +39,20 @@ After implementation:
 ### Verification:
 - All 15+ PAW agents appear in GitHub Copilot Chat agent selector after first activation
 - Upgrading extension version triggers automatic agent file refresh
-- Custom instruction files compose in correct precedence order (workspace → user → base)
 - Installation completes successfully on Windows, macOS, and Linux with standard VS Code and variants
 - Extension remains functional even when agent installation fails due to permissions
 
 ## What We're NOT Doing
 
+- Custom instructions composition (handled separately through PAW Context tool - see issue #86)
 - Manual agent installation UI or commands (agents install automatically only)
-- User configuration settings for installation location or behavior
+- User configuration settings for installation location or behavior (except `paw.promptDirectory` override)
 - Backup or preservation of user modifications to installed agent files
 - Per-profile agent installation (prompts directory is global)
 - Automatic Copilot refresh or reload after installation
 - Dynamic agent discovery from external registries
 - Rollback mechanisms to restore previous agent versions
 - Telemetry or analytics about installation success rates
-- Cross-machine synchronization of custom instruction files
 - GUI for managing or viewing installed agents
 - Hot-reload of agent changes without VS Code restart
 
@@ -62,7 +61,7 @@ After implementation:
 The implementation follows a three-phase approach:
 
 1. **Core Infrastructure**: Add platform detection, path resolution, and agent template bundling to provide foundation for installation
-2. **Installation Logic**: Implement agent composition, file writing, version tracking, and activation event handling
+2. **Installation Logic**: Implement file writing, version tracking, and activation event handling
 3. **Update and Migration**: Add upgrade detection, migration manifest, and cleanup of obsolete files
 
 Each phase builds incrementally and includes comprehensive testing at both automated and manual levels. The approach prioritizes reliability through idempotent operations, graceful error handling, and detailed logging.
@@ -350,86 +349,11 @@ function extractAgentName(filename: string): string {
 ## Phase 2: Installation Logic
 
 ### Overview
-This phase implements the core agent installation functionality: composing agent files with custom instructions, writing them to the prompts directory, tracking installed versions, and handling errors gracefully.
+This phase implements the core agent installation functionality: writing agent files to the prompts directory, tracking installed versions, and handling errors gracefully.
 
 ### Changes Required:
 
-#### 1. Custom Instructions Composition
-**File**: `vscode-extension/src/agents/customInstructions.ts` (new - extends existing customInstructions.ts)
-**Changes**: Create module to compose agent content with custom instructions
-
-```typescript
-import * as fs from 'fs';
-import * as path from 'path';
-import { CustomInstructions, loadCustomInstructions } from '../prompts/customInstructions';
-
-export interface ComposedAgent {
-  filename: string;
-  content: string;
-  hasWorkspaceCustomizations: boolean;
-  hasUserCustomizations: boolean;
-}
-
-/**
- * Compose agent content with custom instructions
- * Precedence order: workspace instructions -> user instructions -> base template
- */
-export function composeAgentContent(
-  agentName: string,
-  baseContent: string,
-  workspacePath: string | undefined
-): ComposedAgent {
-  const parts: string[] = [];
-  let hasWorkspace = false;
-  let hasUser = false;
-  
-  // 1. Load workspace-level custom instructions
-  if (workspacePath) {
-    const workspaceInstructions = loadCustomInstructions(
-      workspacePath,
-      path.join('.paw', 'instructions', `${agentName.toLowerCase()}-instructions.md`)
-    );
-    
-    if (workspaceInstructions.exists && workspaceInstructions.content) {
-      parts.push('<!-- Workspace-level custom instructions -->');
-      parts.push(workspaceInstructions.content);
-      parts.push('');
-      hasWorkspace = true;
-    }
-  }
-  
-  // 2. Load user-level custom instructions
-  const userHome = require('os').homedir();
-  const userInstructionsPath = path.join(userHome, '.paw', 'instructions', `${agentName.toLowerCase()}-instructions.md`);
-  
-  if (fs.existsSync(userInstructionsPath)) {
-    try {
-      const userContent = fs.readFileSync(userInstructionsPath, 'utf-8');
-      if (userContent.trim()) {
-        parts.push('<!-- User-level custom instructions -->');
-        parts.push(userContent);
-        parts.push('');
-        hasUser = true;
-      }
-    } catch (error) {
-      // Log but don't fail - user instructions are optional
-      console.error(`Failed to read user instructions for ${agentName}:`, error);
-    }
-  }
-  
-  // 3. Add base template content
-  parts.push(baseContent);
-  
-  return {
-    filename: `paw-${agentName.toLowerCase()}.agent.md`,
-    content: parts.join('\n'),
-    hasWorkspaceCustomizations: hasWorkspace,
-    hasUserCustomizations: hasUser
-  };
-}
-```
-
-#### 2. Agent Installer Module
+#### 1. Agent Installer Module
 **File**: `vscode-extension/src/agents/installer.ts` (new)
 **Changes**: Create module to handle agent installation operations
 
@@ -439,7 +363,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { getPlatformInfo, resolvePromptsDirectory } from './platformDetection';
 import { loadAgentTemplates } from './agentTemplates';
-import { composeAgentContent } from './customInstructions';
 
 export interface InstallationResult {
   success: boolean;
@@ -479,35 +402,17 @@ export async function installAgents(
     const templates = loadAgentTemplates(context);
     outputChannel.appendLine(`[INFO] Loaded ${templates.length} agent templates`);
     
-    // 4. Get workspace path for custom instructions
-    const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    
-    // 5. Compose and write each agent
+    // 4. Write each agent file
     for (const template of templates) {
       try {
-        const composed = composeAgentContent(
-          template.name,
-          template.content,
-          workspacePath
-        );
-        
-        const targetPath = path.join(promptsDir, composed.filename);
+        const filename = `paw-${template.name.toLowerCase()}.agent.md`;
+        const targetPath = path.join(promptsDir, filename);
         
         // Write file (idempotent - overwrites if exists)
-        fs.writeFileSync(targetPath, composed.content, 'utf-8');
+        fs.writeFileSync(targetPath, template.content, 'utf-8');
         
-        result.filesInstalled.push(composed.filename);
-        
-        const customInfo = [];
-        if (composed.hasWorkspaceCustomizations) {
-          customInfo.push('workspace customizations');
-        }
-        if (composed.hasUserCustomizations) {
-          customInfo.push('user customizations');
-        }
-        const customSuffix = customInfo.length > 0 ? ` (with ${customInfo.join(' + ')})` : '';
-        
-        outputChannel.appendLine(`[INFO] Installed: ${composed.filename}${customSuffix}`);
+        result.filesInstalled.push(filename);
+        outputChannel.appendLine(`[INFO] Installed: ${filename}`);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         result.errors.push({ file: template.filename, error: errorMsg });
@@ -585,7 +490,7 @@ export function needsInstallation(context: vscode.ExtensionContext): boolean {
 }
 ```
 
-#### 3. Integration with Extension Activation
+#### 2. Integration with Extension Activation
 **File**: `vscode-extension/src/extension.ts`
 **Changes**: Add agent installation to activation flow
 
@@ -650,7 +555,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 ```
 
-#### 4. Error Handling Enhancement
+#### 3. Error Handling Enhancement
 **File**: `vscode-extension/src/agents/installer.ts`
 **Changes**: Add comprehensive error handling and recovery
 
@@ -681,7 +586,6 @@ function handleFileSystemError(error: any, operation: string, path: string): str
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `composeAgentContent()` correctly combines workspace, user, and base instructions in precedence order
 - [ ] `installAgents()` writes all agent files to prompts directory
 - [ ] `needsInstallation()` returns true on first activation, false on subsequent activations with same version
 - [ ] `needsInstallation()` returns true when version changes
@@ -693,8 +597,6 @@ function handleFileSystemError(error: any, operation: string, path: string): str
 #### Manual Verification:
 - [ ] Install fresh extension and verify agents appear in `<config>/User/prompts/` directory
 - [ ] Verify all 15+ agents appear in GitHub Copilot Chat agent selector after activation
-- [ ] Create workspace custom instructions and verify they appear in installed agent files
-- [ ] Create user custom instructions and verify composition precedence (workspace before user before base)
 - [ ] Simulate permission error by making prompts directory read-only - verify error notification
 - [ ] Check output channel logs show detailed installation progress and any errors
 
@@ -1007,7 +909,6 @@ export async function activate(context: vscode.ExtensionContext) {
 #### Manual Verification:
 - [ ] Simulate upgrade by changing version in package.json and reactivating - verify migration runs
 - [ ] Create obsolete agent file manually, trigger upgrade, verify file removed
-- [ ] Verify custom instruction files never deleted during migration
 - [ ] Run "PAW: Reinstall Agents" command and verify all agents rewritten
 - [ ] Check output channel logs show migration operations clearly
 - [ ] Verify globalState updated with new version after migration
@@ -1030,13 +931,6 @@ export async function activate(context: vscode.ExtensionContext) {
 - Test `parseFrontmatter()` extracts description from YAML correctly
 - Test error handling when templates directory missing
 
-**Custom Instructions Tests** (`test/suite/agentCustomInstructions.test.ts`):
-- Test `composeAgentContent()` combines workspace, user, and base content
-- Test composition precedence order is correct
-- Test handling of missing workspace path
-- Test handling of missing custom instruction files
-- Test empty custom instruction files ignored
-
 **Installer Tests** (`test/suite/installer.test.ts`):
 - Test `needsInstallation()` returns true when no prior installation
 - Test `needsInstallation()` returns true when version changes
@@ -1052,7 +946,6 @@ export async function activate(context: vscode.ExtensionContext) {
 - Test `getFileRenames()` returns correct rename mapping
 - Test `migrateAgents()` removes obsolete files
 - Test `migrateAgents()` handles missing old files gracefully
-- Test migration never touches `.paw/instructions/` directory
 
 ### Integration Tests:
 
@@ -1087,14 +980,6 @@ export async function activate(context: vscode.ExtensionContext) {
 5. Reload VS Code to trigger reactivation
 6. Verify obsolete file removed
 7. Verify all current agent files present and updated
-
-**Custom Instructions**:
-1. Create workspace custom instructions: `.paw/instructions/specification-instructions.md`
-2. Create user custom instructions: `~/.paw/instructions/implementation-instructions.md`
-3. Trigger agent reinstallation
-4. Open installed agent files and verify custom instructions present
-5. Verify composition order: workspace first, user second, base last
-6. Remove custom instruction files and reinstall - verify agents contain only base content
 
 **Error Recovery**:
 1. Make prompts directory read-only (chmod 444 on Linux/macOS)
@@ -1153,10 +1038,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 **Rolling Back**: If users need to downgrade:
 - Agents will be reinstalled to match downgraded version
-- Custom instruction files remain untouched
 - Users may see duplicate agents temporarily if new version added agents that old version doesn't know about
-
-**Custom Instruction Migration**: Custom instruction files are never migrated or modified. If agent names change, users must manually rename their instruction files to match new agent names.
 
 ## References
 
@@ -1165,5 +1047,4 @@ export async function activate(context: vscode.ExtensionContext) {
 - Research: `.paw/work/agent-installation-management/SpecResearch.md`, `.paw/work/agent-installation-management/CodeResearch.md`
 - VS Code Extension API: https://code.visualstudio.com/api/references/vscode-api
 - VS Code Custom Chat Participants: https://code.visualstudio.com/api/extension-guides/chat
-- Similar implementation (custom instructions): `vscode-extension/src/prompts/customInstructions.ts:24-48`
 - Similar implementation (file creation tool): `vscode-extension/src/tools/createPromptTemplates.ts:228-268`

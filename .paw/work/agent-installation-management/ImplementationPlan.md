@@ -6,9 +6,12 @@ This plan implements automatic agent installation and upgrade management for the
 
 **Note**: Custom instructions for agents will be handled separately through a PAW Context tool (see issue #86). This implementation focuses solely on installing base agent templates.
 
+**Codebase Refactoring**: This implementation begins with a significant codebase refactoring (Phase 1) to establish PAW as VS Code extension-centric. The refactoring flattens the directory structure and consolidates agent files, enabling cleaner development workflows and eliminating duplicate agents when developing PAW with PAW.
+
 ## Current State Analysis
 
 The VS Code extension currently:
+- Lives in `vscode-extension/` subdirectory with its own package.json
 - Uses lazy activation (empty `activationEvents` array) - activates only when commands are invoked
 - Registers one command (`paw.initializeWorkItem`) and one language model tool (`paw_create_prompt_templates`)
 - Stores agent templates in `.github/agents/` as `.agent.md` files with YAML frontmatter
@@ -24,10 +27,14 @@ The VS Code extension currently:
 - Current extension uses `path.join()` for all path operations (extension.ts, customInstructions.ts)
 - Agent files follow naming pattern `PAW-##X Agent Name.agent.md` in `.github/agents/`
 - Extension uses structured result objects with `{ success, data, errors }` pattern (createPromptTemplates.ts:228-268)
+- Duplicate directory structure causes confusion: project-level agents conflict with extension-managed agents during PAW development
 
 ## Desired End State
 
 After implementation:
+- Codebase uses flattened directory structure (no `vscode-extension/` subdirectory)
+- Agent templates stored in `agents/` (not `.github/agents/`)
+- Single package.json at repository root
 - Extension activates on VS Code startup via `onStartupFinished` activation event
 - Agents automatically install to platform-appropriate prompts directory on first activation
 - Agents update automatically when extension version changes (upgrades and downgrades)
@@ -36,6 +43,7 @@ After implementation:
 - Uninstalled agents removed when extension is uninstalled
 - File system errors handled gracefully with detailed logging and user notifications
 - All file operations are idempotent and resilient to interruption
+- PAW developers must install built VSIX to use local agent changes during development
 
 ### Verification:
 - All 15+ PAW agents appear in GitHub Copilot Chat agent selector after first activation
@@ -62,26 +70,206 @@ After implementation:
 
 ## Implementation Approach
 
-The implementation follows a four-phase approach:
+The implementation follows a five-phase approach:
 
-1. **Core Infrastructure**: Platform detection, path resolution, agent bundling - foundation for installation
-2. **Installation Logic**: File writing, version tracking, activation integration - core installation functionality
-3. **Version Changes and Migration**: Upgrade/downgrade detection, migration manifest, bidirectional cleanup - production-ready version management
-4. **Uninstall Cleanup**: Deactivation hook to remove agents - clean uninstall experience
+1. **Codebase Refactoring**: Flatten directory structure, consolidate agent files, merge package.json - establish extension-centric architecture
+2. **Core Infrastructure**: Platform detection, path resolution, agent bundling - foundation for installation
+3. **Installation Logic**: File writing, version tracking, activation integration - core installation functionality
+4. **Version Changes and Migration**: Upgrade/downgrade detection, migration manifest, bidirectional cleanup - production-ready version management
+5. **Uninstall Cleanup**: Deactivation hook to remove agents - clean uninstall experience
 
 Each phase builds incrementally with automated and manual verification criteria. The approach prioritizes reliability through idempotent operations, graceful error handling, and detailed logging.
 
 ---
 
-## Phase 1: Core Infrastructure
+## Phase 1: Codebase Refactoring
 
 ### Overview
-Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template bundling.
+Refactor PAW codebase to use extension-centric architecture with flattened directory structure. This eliminates duplicate agents during PAW development, simplifies the build process, and establishes a single source of truth for agent templates.
+
+### Changes Required:
+
+#### 1. Move Agent Files
+**Action**: Relocate agent templates from `.github/agents/` to `agents/`
+
+**Rationale**: 
+- Eliminates duplicate agents when developing PAW with VS Code extension installed
+- Single source of truth for agent templates (bundled in extension)
+- Simplifies build process (no copying needed across directories)
+- Prevents mid-development agent changes from affecting active PAW workflows
+
+**Steps**:
+1. Create `agents/` directory at repository root
+2. Move all `.agent.md` files from `.github/agents/` to `agents/`
+3. Delete `.github/agents/` directory
+4. Update `.gitignore` if needed
+
+**Files Affected**:
+- All 15 agent templates: `PAW-*.agent.md`
+- New location: `agents/PAW-*.agent.md`
+
+#### 2. Flatten Directory Structure
+**Action**: Move all `vscode-extension/` contents to repository root
+
+**Rationale**:
+- Repository IS the VS Code extension (no separate subdirectory needed)
+- Simpler navigation and development workflow
+- Consistent with most VS Code extension repositories
+- Eliminates confusion about project vs extension boundaries
+
+**Steps**:
+1. Move all files/folders from `vscode-extension/` to root:
+   - `src/` → `src/`
+   - `scripts/` → `scripts/` (merge with existing root scripts/)
+   - `resources/` → `resources/` (already created in step 1)
+   - `test/` → `test/`
+   - `tsconfig.json` → `tsconfig.json`
+   - `vscode-extension/package.json` → merge with root `package.json`
+   - `vscode-extension/README.md` → merge with root `README.md`
+   - `vscode-extension/LICENSE` → verify matches root LICENSE
+2. Delete empty `vscode-extension/` directory
+
+**Conflict Resolution**:
+- `scripts/`: Merge directories, keep both root scripts (count-tokens.js, lint-agent.sh, build-vsix.sh) and extension scripts (copyAgents.js - to be removed since agents no longer need copying)
+- `package.json`: Merge carefully (see next section)
+- `README.md`: Consolidate extension README into root README
+- `LICENSE`: Verify both are identical, keep root version
+
+#### 3. Merge package.json Files
+**Action**: Consolidate root and extension package.json into single file at root
+
+**Merge Strategy**:
+- **Name**: Use extension name (`paw-workflow`)
+- **Version**: Use extension version (0.0.1 or current)
+- **Description**: Use extension description
+- **Main/Activation**: Use extension fields (`main`, `activationEvents`, `contributes`)
+- **Scripts**: 
+  - Remove `copy-agents` script (no longer needed)
+  - Keep extension build scripts: `compile`, `watch`, `vscode:prepublish`, `package`
+  - Keep root utility scripts if useful: `count-tokens`, `lint-agent`, `build-vsix`
+- **Dependencies**: Merge both dependency lists, deduplicate
+- **DevDependencies**: Merge both devDependency lists, deduplicate
+- **VS Code Fields**: Use extension fields (`engines`, `categories`, `publisher`, `repository`, `contributes`)
+- **Root-only fields**: Drop if not relevant to extension (e.g., workspace scripts)
+
+**Key Changes to Scripts**:
+- Remove `copy-agents` script entirely
+- Update `vscode:prepublish` to remove `npm run copy-agents` step
+- Update `watch` to remove `npm run copy-agents` step
+- Keep `build-vsix` script from root if useful
+
+#### 4. Update All File Paths
+**Action**: Update imports, references, and scripts to reflect new flat structure
+
+**Files Requiring Path Updates**:
+
+**TypeScript Source Files**:
+- `src/extension.ts`: No path changes needed (already relative to src/)
+- `src/agents/agentTemplates.ts`: Update to load from `agents/` directory at repository root
+- `src/agents/platformDetection.ts`: No path changes needed
+- `src/commands/initializeWorkItem.ts`: No path changes needed
+- `src/prompts/customInstructions.ts`: No path changes needed
+- `src/tools/createPromptTemplates.ts`: No path changes needed
+- `src/test/**/*.ts`: Update test imports if any referred to vscode-extension/
+
+**Scripts**:
+- Delete `scripts/copyAgents.js` (no longer needed)
+- Keep `scripts/build-vsix.sh`, update if it references vscode-extension/
+- Keep `scripts/count-tokens.js` (no changes needed)
+- Keep `scripts/lint-agent.sh` (no changes needed)
+
+**Configuration Files**:
+- `tsconfig.json`: Update `include`/`exclude` paths if they referenced vscode-extension/
+- `.vscodeignore`: Update to exclude test files, scripts, etc. from VSIX (use paths relative to root)
+- `.gitignore`: Update if it had vscode-extension-specific entries
+
+**Documentation**:
+- `README.md`: Update all references to directory structure, installation paths
+- `DEVELOPING.md`: Update development instructions for new structure
+- Any other docs mentioning file paths or directory structure
+
+#### 5. Update Build and Test Scripts
+**Action**: Ensure build and test scripts work with new structure
+
+**Script Updates**:
+- `npm run compile`: Should work as-is (tsconfig handles source locations)
+- `npm run watch`: Should work as-is
+- `npm run test`: Update test paths if needed
+- `npm run vscode:prepublish`: Remove copy-agents step
+- `npm run package`: Should work as-is (vsce uses package.json)
+
+**Test Updates**:
+- Verify test runner configuration (`src/test/runTest.ts`) uses correct paths
+- Update any test fixtures or data files that reference old structure
+- Ensure test output directories are correct
+
+#### 6. Update Documentation
+**Files**: `README.md`, `DEVELOPING.md`
+
+**README.md Updates**:
+- Merge extension README content into root README
+- Update directory structure diagrams
+- Update installation/development instructions
+- Update file path examples throughout
+- Clarify that repository IS the extension
+- Add note about developers needing to install built VSIX for local PAW development
+
+**DEVELOPING.md Updates**:
+- Update all file path references
+- Update build instructions (no more copy-agents)
+- Add section: "Developing PAW with PAW"
+  - Explain that local agent changes require building and installing VSIX
+  - Provide workflow: make changes → `npm run package` → Install VSIX → reload VS Code
+  - Mention this prevents mid-workflow agent changes
+
+#### 7. Clean Up Obsolete Files
+**Action**: Remove files no longer needed after refactoring
+
+**Files to Delete**:
+- `scripts/copyAgents.js` (agents no longer copied)
+- `vscode-extension/` directory (should be empty after move)
+- Old `vscode-extension/package.json` (merged into root)
+- Old `vscode-extension/README.md` (merged into root)
+- Old `vscode-extension/LICENSE` (if identical to root)
+
+**Files to Verify**:
+- Check for any broken symbolic links
+- Check for any orphaned configuration files
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] All agent files present in `agents/`
+- [ ] `.github/agents/` directory removed
+- [ ] `vscode-extension/` directory removed
+- [ ] Single `package.json` at root with merged content
+- [ ] TypeScript compilation succeeds: `npm run compile`
+- [ ] All unit tests pass: `npm test`
+- [ ] VSIX builds successfully: `npm run package`
+- [ ] No references to `vscode-extension/` in any source files
+- [ ] No references to `.github/agents/` in any source files
+- [ ] No references to `copy-agents` script in package.json
+
+#### Manual Verification:
+- [ ] Extension loads in VS Code without errors
+- [ ] All commands still work (`paw.initializeWorkItem`)
+- [ ] Language model tool still works (`paw_create_prompt_templates`)
+- [ ] README accurately describes new structure
+- [ ] DEVELOPING.md provides clear local development workflow
+- [ ] Built VSIX installs successfully
+- [ ] Agents appear correctly when extension is used
+
+---
+
+## Phase 2: Core Infrastructure
+
+### Overview
+Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template loading from refactored `agents/` directory.
 
 ### Changes Required:
 
 #### 1. Platform Detection Module
-**File**: `vscode-extension/src/agents/platformDetection.ts` (new)
+**File**: `src/agents/platformDetection.ts` (new)
 
 **Purpose**: Detect operating system, VS Code variant, and resolve User/prompts directory paths.
 
@@ -106,34 +294,13 @@ Establish foundational capabilities for agent installation: platform/variant det
 - PlatformInfo interface (platform, homeDir, variant)
 - Functions: getPlatformInfo(), detectVSCodeVariant(), resolvePromptsDirectory()
 
-#### 2. Agent Template Bundling
-**File**: `vscode-extension/scripts/copyAgents.js` (new)
+#### 2. Agent Template Loader
+**File**: `src/agents/agentTemplates.ts` (new)
 
-**Purpose**: Copy agent templates from repository to extension resources during build.
-
-**Behavior**:
-- Source: `.github/agents/*.agent.md` files
-- Target: `vscode-extension/resources/agents/` directory
-- Create target directory recursively if needed
-- Copy only `.agent.md` files
-- Log each file copied
-- Integrate into npm build and watch scripts
-
-**File**: `vscode-extension/package.json`
-
-**Script Changes**:
-- Add `copy-agents` script executing copyAgents.js
-- Update `vscode:prepublish` to run copy-agents before compile
-- Update `watch` to run copy-agents before TypeScript watch
-- Ensures agents always bundled with extension package
-
-#### 3. Agent Template Loader
-**File**: `vscode-extension/src/agents/agentTemplates.ts` (new)
-
-**Purpose**: Load bundled agent templates from extension resources.
+**Purpose**: Load agent templates directly from extension resources (no build-time copying needed).
 
 **Key Responsibilities**:
-- Locate `<extensionPath>/resources/agents/` directory
+- Locate `<extensionPath>/agents/` directory
 - Enumerate all `.agent.md` files
 - Read file content
 - Parse YAML frontmatter for metadata (description)
@@ -141,12 +308,12 @@ Establish foundational capabilities for agent installation: platform/variant det
 - Return array of agent templates with filename, name, description, content
 
 **Error Handling**:
-- Throw error if resources/agents directory missing
+- Throw error if agents directory missing
 - Skip non-`.agent.md` files
 - Handle missing/malformed frontmatter gracefully
 
-#### 4. Extension Package Manifest
-**File**: `vscode-extension/package.json`
+#### 3. Extension Package Manifest
+**File**: `package.json`
 
 **Activation Events**:
 - Add `onStartupFinished` to trigger extension after VS Code startup
@@ -165,10 +332,10 @@ Establish foundational capabilities for agent installation: platform/variant det
 - [ ] `detectVSCodeVariant()` identifies all variants from environment
 - [ ] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
 - [ ] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
-- [ ] `npm run copy-agents` copies all `.agent.md` files to resources/agents/
 - [ ] `loadAgentTemplates()` loads all agent templates with correct metadata
 - [ ] Extension compiles without TypeScript errors
-- [ ] Agent templates present in VSIX after `npm run vscode:prepublish`
+- [ ] Agent templates present in `agents/` directory
+- [ ] Agent templates present in VSIX after `npm run package`
 
 #### Manual Verification:
 - [ ] Verify agent templates bundled in VSIX package
@@ -178,7 +345,7 @@ Establish foundational capabilities for agent installation: platform/variant det
 
 ---
 
-## Phase 2: Installation Logic
+## Phase 3: Installation Logic
 
 ### Overview
 Implement core installation: write agents to prompts directory, track versions, handle errors gracefully.
@@ -186,7 +353,7 @@ Implement core installation: write agents to prompts directory, track versions, 
 ### Changes Required:
 
 #### 1. Agent Installer Module
-**File**: `vscode-extension/src/agents/installer.ts` (new)
+**File**: `src/agents/installer.ts` (new)
 
 **Purpose**: Handle agent installation operations with error tracking and version management.
 
@@ -227,7 +394,7 @@ Implement core installation: write agents to prompts directory, track versions, 
 - Safe to re-run after partial installation
 
 #### 2. Extension Activation Integration
-**File**: `vscode-extension/src/extension.ts`
+**File**: `src/extension.ts`
 
 **Changes**: Add agent installation to activation flow.
 
@@ -298,7 +465,7 @@ Implement core installation: write agents to prompts directory, track versions, 
 
 ---
 
-## Phase 3: Version Changes and Migration
+## Phase 4: Version Changes and Migration
 
 ### Overview
 Add version change detection (upgrades and downgrades) and cleanup of previously installed agent files.
@@ -313,7 +480,7 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 ### Changes Required:
 
 #### 1. Version Change Detection
-**File**: `vscode-extension/src/agents/installer.ts` (enhance)
+**File**: `src/agents/installer.ts` (enhance)
 
 **Changes**: Enhance `needsInstallation()` and `installAgents()` to detect downgrades.
 
@@ -330,7 +497,7 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 - Works for any version transition
 
 #### 2. Cleanup of Previous Installation
-**File**: `vscode-extension/src/agents/installer.ts` (enhance)
+**File**: `src/agents/installer.ts` (enhance)
 
 **Purpose**: Remove all agent files from previous version before installing new version.
 
@@ -357,7 +524,7 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 - Installation proceeds even if cleanup partially fails
 
 #### 3. Enhanced Installation State
-**File**: `vscode-extension/src/agents/installer.ts` (enhance)
+**File**: `src/agents/installer.ts` (enhance)
 
 **State Fields**:
 - version: Current extension version (for change detection)
@@ -389,7 +556,7 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 
 ---
 
-## Phase 4: Uninstall Cleanup
+## Phase 5: Uninstall Cleanup
 
 ### Overview
 Implement deactivation hook to remove all PAW agents when extension is uninstalled.
@@ -397,7 +564,7 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 ### Changes Required:
 
 #### 1. Deactivation Function
-**File**: `vscode-extension/src/extension.ts`
+**File**: `src/extension.ts`
 
 **Purpose**: Clean up installed agents when extension deactivates (uninstall or disable).
 
@@ -422,7 +589,7 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 - Never throw exceptions (deactivation should complete)
 
 #### 2. Output Channel Cleanup
-**File**: `vscode-extension/src/extension.ts`
+**File**: `src/extension.ts`
 
 **Changes**: Ensure output channel remains available during deactivation.
 
@@ -463,14 +630,16 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 ## Testing Strategy
 
 ### Unit Tests:
+- Codebase structure validation (agents in agents/, no vscode-extension/ references)
 - Platform detection logic (all OS/variant combinations)
 - Path resolution with and without custom override
-- Agent template loading and parsing
+- Agent template loading and parsing from agents/
 - Installation state management (globalState read/write)
 - Migration manifest lookups (upgrades and downgrades)
 - needsInstallation() logic (all conditions)
 
 ### Integration Tests:
+- Post-refactor build and package validation
 - Full installation flow from activation
 - Version upgrade scenario (install → upgrade → verify)
 - Version downgrade scenario (install → upgrade → downgrade → verify)
@@ -479,6 +648,15 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 - Uninstall cleanup
 
 ### Manual Testing Scenarios:
+
+**Post-Refactor Validation** (Phase 1):
+1. Build extension: `npm run compile`
+2. Package extension: `npm run package`
+3. Install VSIX in VS Code
+4. Verify extension loads without errors
+5. Verify all commands work
+6. Verify no duplicate agents when developing PAW
+7. Test local development workflow (make change → build VSIX → install → verify)
 
 **Fresh Installation**:
 1. Install PAW extension on clean VS Code
@@ -553,4 +731,5 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 - SpecResearch: `.paw/work/agent-installation-management/SpecResearch.md`
 - CodeResearch: `.paw/work/agent-installation-management/CodeResearch.md`
 - VS Code Extension API: https://code.visualstudio.com/api/references/vscode-api
-- Similar pattern: `vscode-extension/src/tools/createPromptTemplates.ts:228-268`
+- Similar pattern: `src/tools/createPromptTemplates.ts:228-268`
+- PR #91 Review Comment: Codebase refactoring requirement

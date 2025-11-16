@@ -21,9 +21,21 @@
     "agent",
     "productivity"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "PAW Workflow",
+      "properties": {
+        "paw.promptDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to VS Code User/prompts directory. Leave empty to use auto-detected platform-specific path."
+        }
+      }
+    },
     "commands": [
       {
         "command": "paw.initializeWorkItem",
@@ -72,9 +84,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "copy-agents": "node ./scripts/copyAgents.js",
+    "vscode:prepublish": "npm run copy-agents && npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch": "npm run copy-agents && tsc -watch -p ./",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src --ext ts",

@@ -36,9 +36,17 @@ npm run compile
 
 # Package the extension
 echo "Packaging extension..."
-npm run package
+PACKAGE_OUTPUT=$(npm run package 2>&1)
+echo "$PACKAGE_OUTPUT"
 
-VSIX_PATH="paw-workflow-0.0.1.vsix"
+# Extract the VSIX filename from the package output
+# The output contains a line like: "Packaged: /path/to/paw-workflow-X.Y.Z.vsix (N files, SIZE)"
+VSIX_PATH=$(echo "$PACKAGE_OUTPUT" | grep -oP 'Packaged: .*/\K[^/]+\.vsix' | head -1)
+
+if [ -z "$VSIX_PATH" ]; then
+    echo "Error: Could not determine VSIX filename from package output"
+    exit 1
+fi
 
 echo "✓ VSIX built successfully!"
 echo "Package location: vscode-extension/$VSIX_PATH"

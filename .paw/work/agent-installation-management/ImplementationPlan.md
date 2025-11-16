@@ -33,7 +33,7 @@ The VS Code extension currently:
 
 After implementation:
 - Codebase uses flattened directory structure (no `vscode-extension/` subdirectory)
-- Agent templates stored in `resources/agents/` (not `.github/agents/`)
+- Agent templates stored in `agents/` (not `.github/agents/`)
 - Single package.json at repository root
 - Extension activates on VS Code startup via `onStartupFinished` activation event
 - Agents automatically install to platform-appropriate prompts directory on first activation
@@ -90,7 +90,7 @@ Refactor PAW codebase to use extension-centric architecture with flattened direc
 ### Changes Required:
 
 #### 1. Move Agent Files
-**Action**: Relocate agent templates from `.github/agents/` to `resources/agents/`
+**Action**: Relocate agent templates from `.github/agents/` to `agents/`
 
 **Rationale**: 
 - Eliminates duplicate agents when developing PAW with VS Code extension installed
@@ -99,14 +99,14 @@ Refactor PAW codebase to use extension-centric architecture with flattened direc
 - Prevents mid-development agent changes from affecting active PAW workflows
 
 **Steps**:
-1. Create `resources/agents/` directory at repository root
-2. Move all `.agent.md` files from `.github/agents/` to `resources/agents/`
+1. Create `agents/` directory at repository root
+2. Move all `.agent.md` files from `.github/agents/` to `agents/`
 3. Delete `.github/agents/` directory
 4. Update `.gitignore` if needed
 
 **Files Affected**:
 - All 15 agent templates: `PAW-*.agent.md`
-- New location: `resources/agents/PAW-*.agent.md`
+- New location: `agents/PAW-*.agent.md`
 
 #### 2. Flatten Directory Structure
 **Action**: Move all `vscode-extension/` contents to repository root
@@ -165,7 +165,7 @@ Refactor PAW codebase to use extension-centric architecture with flattened direc
 
 **TypeScript Source Files**:
 - `src/extension.ts`: No path changes needed (already relative to src/)
-- `src/agents/agentTemplates.ts`: Update `resources/agents` path (no longer ../resources)
+- `src/agents/agentTemplates.ts`: Update to load from `agents/` directory at repository root
 - `src/agents/platformDetection.ts`: No path changes needed
 - `src/commands/initializeWorkItem.ts`: No path changes needed
 - `src/prompts/customInstructions.ts`: No path changes needed
@@ -239,7 +239,7 @@ Refactor PAW codebase to use extension-centric architecture with flattened direc
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All agent files present in `resources/agents/`
+- [ ] All agent files present in `agents/`
 - [ ] `.github/agents/` directory removed
 - [ ] `vscode-extension/` directory removed
 - [ ] Single `package.json` at root with merged content
@@ -264,7 +264,7 @@ Refactor PAW codebase to use extension-centric architecture with flattened direc
 ## Phase 2: Core Infrastructure
 
 ### Overview
-Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template loading from refactored `resources/agents/` directory.
+Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template loading from refactored `agents/` directory.
 
 ### Changes Required:
 
@@ -300,7 +300,7 @@ Establish foundational capabilities for agent installation: platform/variant det
 **Purpose**: Load agent templates directly from extension resources (no build-time copying needed).
 
 **Key Responsibilities**:
-- Locate `<extensionPath>/resources/agents/` directory
+- Locate `<extensionPath>/agents/` directory
 - Enumerate all `.agent.md` files
 - Read file content
 - Parse YAML frontmatter for metadata (description)
@@ -308,7 +308,7 @@ Establish foundational capabilities for agent installation: platform/variant det
 - Return array of agent templates with filename, name, description, content
 
 **Error Handling**:
-- Throw error if resources/agents directory missing
+- Throw error if agents directory missing
 - Skip non-`.agent.md` files
 - Handle missing/malformed frontmatter gracefully
 
@@ -332,10 +332,10 @@ Establish foundational capabilities for agent installation: platform/variant det
 - [ ] `detectVSCodeVariant()` identifies all variants from environment
 - [ ] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
 - [ ] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
-- [ ] `npm run copy-agents` copies all `.agent.md` files to resources/agents/
 - [ ] `loadAgentTemplates()` loads all agent templates with correct metadata
 - [ ] Extension compiles without TypeScript errors
-- [ ] Agent templates present in VSIX after `npm run vscode:prepublish`
+- [ ] Agent templates present in `agents/` directory
+- [ ] Agent templates present in VSIX after `npm run package`
 
 #### Manual Verification:
 - [ ] Verify agent templates bundled in VSIX package
@@ -630,10 +630,10 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 ## Testing Strategy
 
 ### Unit Tests:
-- Codebase structure validation (agents in resources/agents/, no vscode-extension/ references)
+- Codebase structure validation (agents in agents/, no vscode-extension/ references)
 - Platform detection logic (all OS/variant combinations)
 - Path resolution with and without custom override
-- Agent template loading and parsing from resources/agents/
+- Agent template loading and parsing from agents/
 - Installation state management (globalState read/write)
 - Migration manifest lookups (upgrades and downgrades)
 - needsInstallation() logic (all conditions)

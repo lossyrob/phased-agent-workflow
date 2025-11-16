@@ -90,7 +90,7 @@ interface PromptTemplate {
  * 
  * Each template includes:
  * - filename: The exact filename to use
- * - mode: The agent to invoke (corresponds to .github/agents/*.agent.md)
+ * - mode: The agent to invoke (corresponds to agents/*.agent.md)
  * - instruction: The action the agent should perform
  * - stage: The workflow stage this template belongs to
  */

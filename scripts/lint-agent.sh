@@ -1,7 +1,7 @@
 #!/bin/bash
 # Lint agent files for token size
 # Usage: ./scripts/lint-agent.sh [file.agent.md]
-#        If no file is provided, lints all agents in .github/agents/
+#        If no file is provided, lints all agents in agents/
 
 set -euo pipefail
 
@@ -61,10 +61,10 @@ main() {
     
     if [[ $# -eq 0 ]]; then
         # No arguments: lint all agents
-        echo "Linting all agent files in .github/agents/"
+        echo "Linting all agent files in agents/"
         echo ""
         
-        local agent_dir=".github/agents"
+        local agent_dir="agents"
         if [[ ! -d "$agent_dir" ]]; then
             echo -e "${RED}ERROR: Directory not found: $agent_dir${NC}"
             exit 1

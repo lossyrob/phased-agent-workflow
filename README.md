@@ -74,20 +74,68 @@ See [PAW Review Workflow Documentation](.paw/work/paw-review/Docs.md) for detail
 
 ## Getting Started
 
-- Copy the .github/agents into your repository's `.github/agents` folder. This will make them available in VS Code's Github Copilot chat as custom agents.
-  - *Make them apply to all projects by copying to VS Code's global configuration directory (e.g. on Windows `%APPDATA%\Code\User\prompts`).*
-- Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
+### Installing PAW Agents
 
-### VS Code Extension (Optional)
+PAW agents are automatically installed when you install the PAW Workflow VS Code extension (see below). Agents will appear in GitHub Copilot Chat after installation.
 
-The **PAW Workflow Extension** automates work item initialization, eliminating manual setup:
+For manual installation, copy the `agents/` folder contents to VS Code's global prompts directory:
+- **Windows**: `%APPDATA%\Code\User\prompts`
+- **macOS**: `~/Library/Application Support/Code/User/prompts`
+- **Linux**: `~/.config/Code/User/prompts`
 
-- **One command** to create complete `.paw/work/<feature-slug>/` directory structure
-- **Automated file generation** for WorkflowContext.md and all 9 prompt templates
-- **Git branch creation** and checkout handled automatically
-- **Custom instructions** support for project-specific conventions
+Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
 
-**Installation**: Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossyrob/phased-agent-workflow/releases) and install it in VS Code via `code --install-extension <file>.vsix` or the Extensions view. See [vscode-extension/README.md](vscode-extension/README.md) for details.
+### VS Code Extension
+
+The **PAW Workflow Extension** automates PAW agent installation and work item initialization.
+
+#### Features
+
+- **Automatic agent installation**: PAW agents install to VS Code prompts directory on first activation and appear in GitHub Copilot Chat
+- **New PAW Workflow command**: One command to create complete `.paw/work/<feature-slug>/` directory structure
+  - Creates `.paw/work/<feature-slug>/` with WorkflowContext.md
+  - Generates all prompt template files (9 for full mode, 8 for minimal)
+  - Creates and checks out git branch
+  - Opens WorkflowContext.md for immediate editing
+- **Custom instructions support**: Tailor the initialization workflow for your project
+
+#### Installation
+
+Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossyrob/phased-agent-workflow/releases) and install it in VS Code via:
+- `Extensions: Install from VSIX...` command, or
+- `code --install-extension paw-workflow-0.0.1.vsix` from command line
+
+#### Usage
+
+1. Open a git repository in VS Code
+2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+3. Type "PAW: New PAW Workflow"
+4. Enter target branch name (e.g., `feature/my-feature`)
+5. Optionally enter issue or work item URL (GitHub Issues or Azure DevOps Work Items supported)
+6. Watch as your workflow structure is created automatically
+
+#### Custom Instructions (Optional)
+
+You can tailor the initialization workflow for your project:
+
+1. Create the directory and file:
+   ```bash
+   mkdir -p .paw/instructions
+   touch .paw/instructions/init-instructions.md
+   ```
+
+2. Add your project-specific guidance using Markdown format:
+   - Naming conventions for feature slugs and branches
+   - Required metadata that must appear in `WorkflowContext.md`
+   - Additional prompt templates beyond the standard set
+   - Integration requirements (e.g., mandatory issue URLs)
+
+When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
+
+#### Requirements
+
+- Git repository
+- GitHub Copilot extension installed and active
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 

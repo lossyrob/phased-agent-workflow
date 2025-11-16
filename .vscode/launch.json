@@ -9,12 +9,12 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension"
+        "--extensionDevelopmentPath=${workspaceFolder}"
       ],
       "outFiles": [
-        "${workspaceFolder}/vscode-extension/out/**/*.js"
+        "${workspaceFolder}/out/**/*.js"
       ],
-      "preLaunchTask": "npm: compile - vscode-extension",
+      "preLaunchTask": "npm: compile",
       "sourceMaps": true
     },
     {
@@ -25,13 +25,13 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
-        "--extensionTestsPath=${workspaceFolder}/vscode-extension/out/test/suite/index"
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
       ],
       "outFiles": [
-        "${workspaceFolder}/vscode-extension/out/test/**/*.js"
+        "${workspaceFolder}/out/test/**/*.js"
       ],
-      "preLaunchTask": "npm: compile - vscode-extension",
+      "preLaunchTask": "npm: compile",
       "sourceMaps": true
     }
   ]

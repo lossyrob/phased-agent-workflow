@@ -3,8 +3,8 @@
 
 set -e
 
-# Change to the vscode-extension directory
-cd "$(dirname "$0")/../vscode-extension"
+# Change to the repository root directory
+cd "$(dirname "$0")/.."
 
 echo "Building PAW Workflow VS Code extension..."
 
@@ -23,4 +23,4 @@ echo "Packaging extension..."
 npm run package
 
 echo "✓ VSIX built successfully!"
-echo "Package location: vscode-extension/paw-workflow-0.0.1.vsix"
+echo "Package location: paw-workflow-0.0.1.vsix"

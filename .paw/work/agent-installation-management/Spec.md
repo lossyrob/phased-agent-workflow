@@ -48,7 +48,19 @@ Acceptance Scenarios:
 3. Given agent files have been refreshed (upgrade or downgrade), When the developer checks the output channel, Then installation logs show which files were updated and confirm the current version installation complete.
 4. Given the version change completed successfully, When the developer invokes any PAW agent, Then the agent exhibits behavior matching the currently installed PAW extension version.
 
-### User Story P3 – Installation Error Recovery
+### User Story P3 – Development Version Handling
+
+Narrative: A developer working on PAW itself modifies agent instructions and needs to test the changes. The extension version in package.json is set to `0.0.1-dev` to indicate development mode. When the developer builds and installs the VSIX repeatedly to test agent changes, the extension detects the `-dev` suffix and always reinstalls agents, even though the version number hasn't changed. This ensures agent content updates are reflected immediately without requiring manual version bumps. When a production release is created, the GitHub Actions workflow overwrites the version (e.g., to `0.2.0`), and the extension correctly migrates from the dev version to the production version.
+
+Independent Test: Install extension with version `0.0.1-dev`, modify agent files, rebuild and reinstall with same version `0.0.1-dev`, verify agents are reinstalled with updated content.
+
+Acceptance Scenarios:
+1. Given PAW extension version is `0.0.1-dev`, When the developer modifies agent files and rebuilds the VSIX with the same version, Then agents are automatically reinstalled on next activation.
+2. Given PAW extension version `0.0.1-dev` is installed, When the developer installs a production version `0.2.0`, Then the extension detects version change and migrates from dev to production.
+3. Given PAW extension version `0.2.0` is installed, When the developer reverts to development version `0.0.1-dev`, Then the extension detects version change and reinstalls dev agents.
+4. Given the extension version contains `-dev`, When checking the output channel logs, Then they clearly indicate "Development version detected, reinstalling agents".
+
+### User Story P4 – Installation Error Recovery
 
 Narrative: A developer's VS Code configuration directory has restrictive permissions due to corporate security policies, preventing write access. When the PAW extension attempts to install agents during activation, file system operations fail. The extension catches these errors gracefully, logs detailed error information to the output channel (including file paths and permission details), and displays a user notification explaining the problem with actionable remediation steps (such as "Check file permissions for <path>" or "Set the 'paw.promptDirectory' setting to specify a custom location"). The extension completes activation successfully despite the installation failure, allowing the developer to use PAW's non-agent features and resolve the permission issue independently.
 
@@ -71,7 +83,7 @@ Acceptance Scenarios:
 2. Given all agent files are present and version markers match, When extension activates, Then no file writes occur (idempotent behavior).
 3. Given agent file content was manually corrupted, When extension activates with version marker intact, Then the extension does not rewrite files (preserves user modifications until explicit version update).
 
-### User Story P5 – Version Migration and Cleanup
+### User Story P6 – Version Migration and Cleanup
 
 Narrative: As PAW evolves, agent filenames may change (e.g., renaming "Planner" to "Planning" or changing file extensions). A developer running PAW 0.5.0 has agents installed from that version. When they upgrade to 0.6.0 which renames an agent file, the extension installs the new file and removes the old one based on its internal migration manifest. If they later downgrade back to 0.5.0 to avoid a regression, the extension reverses the migration by restoring the 0.5.0 filename and removing the 0.6.0 file. This ensures the developer's prompts directory always contains exactly the agents for their current PAW version, without orphaned files from other versions. Note that PAW versions prior to 0.4.0 used chatmodes stored in workspaces, not extension-managed agents, so no chatmode→agent migration is needed (users manually migrated when adopting 0.4.0+).
 
@@ -82,7 +94,7 @@ Acceptance Scenarios:
 2. Given PAW 0.6.0 installed `paw-planning.agent.md`, When downgrading to 0.5.0 with old `paw-planner.agent.md` filename, Then the extension installs old file and removes new file.
 3. Given multiple agent files exist from previous versions, When extension activates with current version, Then all agent files not belonging to the current version are removed.
 
-### User Story P6 – Extension Uninstall Cleanup
+### User Story P7 – Extension Uninstall Cleanup
 
 Narrative: A developer decides to uninstall the PAW extension, either to switch to a different workflow tool or because they no longer need it. When the extension is uninstalled, VS Code triggers the extension's deactivation hook. The extension uses this opportunity to clean up all installed agent files from the `User/prompts/` directory, removing the PAW agents from Copilot Chat. This prevents orphaned agent files from cluttering the developer's VS Code configuration and ensures a clean uninstall experience. The developer's VS Code environment returns to its pre-PAW state without manual cleanup.
 
@@ -126,7 +138,10 @@ Acceptance Scenarios:
 - FR-017: System shall log all installation operations (file writes, deletions, errors) to a dedicated output channel (Stories: P1, P2, P3, P4, P5)
 - FR-018: System shall support agent naming pattern `paw-<agent-name>.agent.md` for installed files (Stories: P1, P2, P5)
 - FR-019: System shall generate agent files with YAML frontmatter containing name and description fields (Stories: P1, P2)
-- FR-020: System shall remove all PAW-managed agent files during extension deactivation when uninstall is detected (Stories: P6)
+- FR-020: System shall remove all PAW-managed agent files during extension deactivation when uninstall is detected (Stories: P7)
+- FR-021: System shall detect development versions by checking for `-dev` suffix in version string (Stories: P3)
+- FR-022: System shall always reinstall agents when current version or stored version contains `-dev` suffix, regardless of whether versions match (Stories: P3)
+- FR-023: System shall log "Development version detected" message when `-dev` suffix is present in either version (Stories: P3)
 
 ### Key Entities
 
@@ -162,6 +177,10 @@ Acceptance Scenarios:
 - SC-014: Extension successfully installs agents even when GitHub Copilot extension is not installed (FR-004, FR-012)
 - SC-015: When disk is full, installation failure produces error notification explaining disk space issue and extension continues functioning (FR-010, FR-011, FR-012)
 - SC-016: Uninstalling the PAW extension removes all PAW-managed agent files from the `User/prompts/` directory, verified by checking that no `paw-*.agent.md` files remain (FR-020)
+- SC-017: When extension version is `0.0.1-dev`, reinstalling with the same version `0.0.1-dev` after agent file modifications results in agents being reinstalled with updated content (FR-021, FR-022)
+- SC-018: Migrating from development version `0.0.1-dev` to production version `0.2.0` triggers agent reinstallation with version change logged (FR-021, FR-022)
+- SC-019: Migrating from production version `0.2.0` back to development version `0.0.1-dev` triggers agent reinstallation with version change logged (FR-021, FR-022)
+- SC-020: Output channel logs contain "Development version detected" message when either current or stored version contains `-dev` suffix (FR-023)
 
 ## Assumptions
 

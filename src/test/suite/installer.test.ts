@@ -300,4 +300,199 @@ suite('Agent Installation', () => {
       (vscode.workspace as any).getConfiguration = originalConfig;
     }
   });
+
+  // Version Change and Migration Tests
+  test('installAgents cleans up previous installation on version upgrade', async () => {
+    const promptsDir = path.join(testDir, 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    
+    const originalConfig = vscode.workspace.getConfiguration;
+    (vscode.workspace as any).getConfiguration = () => ({
+      get: () => promptsDir
+    });
+    
+    try {
+      // Install with version 0.0.1
+      const result1 = await installAgents(mockContext);
+      assert.strictEqual(result1.errors.length, 0, 'First installation should succeed');
+      const filesCount = result1.filesInstalled.length;
+      
+      // Verify files exist
+      for (const filename of result1.filesInstalled) {
+        assert.ok(fs.existsSync(path.join(promptsDir, filename)), `${filename} should exist after install`);
+      }
+      
+      // Change version to simulate upgrade
+      mockContext.extension.packageJSON.version = '0.0.2';
+      
+      // Install again - should clean up old files and install new ones
+      const result2 = await installAgents(mockContext);
+      assert.strictEqual(result2.errors.length, 0, 'Second installation should succeed');
+      assert.strictEqual(result2.filesInstalled.length, filesCount, 'Should install same number of files');
+      
+      // Check state reflects version change
+      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      assert.strictEqual(state.version, '0.0.2', 'Should update to new version');
+      assert.strictEqual(state.previousVersion, '0.0.1', 'Should track previous version');
+      assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
+    } finally {
+      (vscode.workspace as any).getConfiguration = originalConfig;
+    }
+  });
+
+  test('installAgents cleans up previous installation on version downgrade', async () => {
+    const promptsDir = path.join(testDir, 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    
+    const originalConfig = vscode.workspace.getConfiguration;
+    (vscode.workspace as any).getConfiguration = () => ({
+      get: () => promptsDir
+    });
+    
+    try {
+      // Install with version 0.0.2
+      mockContext.extension.packageJSON.version = '0.0.2';
+      const result1 = await installAgents(mockContext);
+      assert.strictEqual(result1.errors.length, 0, 'First installation should succeed');
+      const filesCount = result1.filesInstalled.length;
+      
+      // Change version to simulate downgrade
+      mockContext.extension.packageJSON.version = '0.0.1';
+      
+      // Install again - should clean up old files and install new ones
+      const result2 = await installAgents(mockContext);
+      assert.strictEqual(result2.errors.length, 0, 'Second installation should succeed');
+      assert.strictEqual(result2.filesInstalled.length, filesCount, 'Should install same number of files');
+      
+      // Check state reflects version change
+      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      assert.strictEqual(state.version, '0.0.1', 'Should update to downgraded version');
+      assert.strictEqual(state.previousVersion, '0.0.2', 'Should track previous version');
+      assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
+    } finally {
+      (vscode.workspace as any).getConfiguration = originalConfig;
+    }
+  });
+
+  test('cleanup errors do not block installation', async () => {
+    const promptsDir = path.join(testDir, 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    
+    const originalConfig = vscode.workspace.getConfiguration;
+    (vscode.workspace as any).getConfiguration = () => ({
+      get: () => promptsDir
+    });
+    
+    try {
+      // Install with version 0.0.1
+      const result1 = await installAgents(mockContext);
+      assert.strictEqual(result1.errors.length, 0, 'First installation should succeed');
+      
+      // Simulate cleanup error by manually updating state with a non-existent file
+      // This is more reliable than file permissions which vary by platform
+      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      state.filesInstalled = [...result1.filesInstalled, 'nonexistent-file.agent.md'];
+      await mockContext.globalState.update('paw.agentInstallation', state);
+      
+      // Change version to trigger cleanup
+      mockContext.extension.packageJSON.version = '0.0.2';
+      
+      // Install again - cleanup should proceed despite missing file
+      const result2 = await installAgents(mockContext);
+      
+      // Installation should succeed for all files (nonexistent file doesn't cause error)
+      assert.ok(result2.filesInstalled.length > 0, 'Should install files even if cleanup encounters missing files');
+      
+      // State should reflect successful installation
+      const newState = mockContext.globalState.get<any>('paw.agentInstallation');
+      assert.strictEqual(newState.version, '0.0.2', 'Should update version');
+      assert.ok(newState.filesDeleted !== undefined, 'Should track cleanup even with missing files');
+    } finally {
+      (vscode.workspace as any).getConfiguration = originalConfig;
+    }
+  });
+
+  test('needsInstallation detects version changes in both directions', async () => {
+    const promptsDir = path.join(testDir, 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    
+    const originalConfig = vscode.workspace.getConfiguration;
+    (vscode.workspace as any).getConfiguration = () => ({
+      get: () => promptsDir
+    });
+    
+    try {
+      // Install with version 0.0.1
+      await installAgents(mockContext);
+      assert.strictEqual(
+        needsInstallation(mockContext, mockContext.extension.extensionUri, promptsDir),
+        false,
+        'Should not need installation when up to date'
+      );
+      
+      // Test upgrade detection
+      mockContext.extension.packageJSON.version = '0.0.2';
+      assert.strictEqual(
+        needsInstallation(mockContext, mockContext.extension.extensionUri, promptsDir),
+        true,
+        'Should detect version upgrade'
+      );
+      
+      // Install upgraded version
+      await installAgents(mockContext);
+      assert.strictEqual(
+        needsInstallation(mockContext, mockContext.extension.extensionUri, promptsDir),
+        false,
+        'Should not need installation after upgrade'
+      );
+      
+      // Test downgrade detection
+      mockContext.extension.packageJSON.version = '0.0.1';
+      assert.strictEqual(
+        needsInstallation(mockContext, mockContext.extension.extensionUri, promptsDir),
+        true,
+        'Should detect version downgrade'
+      );
+    } finally {
+      (vscode.workspace as any).getConfiguration = originalConfig;
+    }
+  });
+
+  test('version change deletes all previously tracked files', async () => {
+    const promptsDir = path.join(testDir, 'prompts');
+    fs.mkdirSync(promptsDir, { recursive: true });
+    
+    const originalConfig = vscode.workspace.getConfiguration;
+    (vscode.workspace as any).getConfiguration = () => ({
+      get: () => promptsDir
+    });
+    
+    try {
+      // Install with version 0.0.1
+      const result1 = await installAgents(mockContext);
+      const installedFiles = [...result1.filesInstalled];
+      
+      // Verify all files exist
+      for (const filename of installedFiles) {
+        assert.ok(fs.existsSync(path.join(promptsDir, filename)), `${filename} should exist`);
+      }
+      
+      // Change version
+      mockContext.extension.packageJSON.version = '0.0.2';
+      
+      // Install again
+      await installAgents(mockContext);
+      
+      // All files should still exist (reinstalled), but old ones were deleted first
+      for (const filename of installedFiles) {
+        assert.ok(fs.existsSync(path.join(promptsDir, filename)), `${filename} should exist after reinstall`);
+      }
+      
+      // State should track the cleanup
+      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      assert.strictEqual(state.filesDeleted, installedFiles.length, 'Should have deleted all previous files');
+    } finally {
+      (vscode.workspace as any).getConfiguration = originalConfig;
+    }
+  });
 });

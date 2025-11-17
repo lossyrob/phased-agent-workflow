@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
-import { installAgents, needsInstallation } from './agents/installer';
+import {
+  installAgents,
+  needsInstallation,
+  isDevelopmentVersion,
+  INSTALLATION_STATE_KEY,
+  InstallationState
+} from './agents/installer';
 import { getPlatformInfo, resolvePromptsDirectory } from './agents/platformDetection';
 
 /**
@@ -67,6 +73,22 @@ async function installAgentsIfNeeded(
     const customPromptDir = customPath && customPath.trim().length > 0 ? customPath : undefined;
     const platformInfo = getPlatformInfo();
     const promptsDir = resolvePromptsDirectory(platformInfo, customPromptDir);
+    const currentVersion = context.extension.packageJSON.version as string;
+    const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+
+    if (isDevelopmentVersion(currentVersion)) {
+      outputChannel.appendLine('[INFO] Development build detected (-dev); agents will reinstall on every activation.');
+    }
+
+    if (
+      previousState?.version &&
+      isDevelopmentVersion(previousState.version) &&
+      !isDevelopmentVersion(currentVersion)
+    ) {
+      outputChannel.appendLine(
+        `[INFO] Migrating from development build ${previousState.version} to production version ${currentVersion}.`
+      );
+    }
     
     // Check if installation is needed
     const installationNeeded = needsInstallation(

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { installAgents, needsInstallation } from '../../agents/installer';
+import { installAgents, needsInstallation, isDevelopmentVersion } from '../../agents/installer';
 
 suite('Agent Installation', () => {
   let testDir: string;
@@ -494,5 +494,93 @@ suite('Agent Installation', () => {
     } finally {
       (vscode.workspace as any).getConfiguration = originalConfig;
     }
+  });
+
+  suite('Development Version Handling', () => {
+    test('needsInstallation returns true for dev -> dev with same version', async () => {
+      const promptsDir = path.join(testDir, 'prompts-dev-dev');
+      fs.mkdirSync(promptsDir, { recursive: true });
+
+      const originalConfig = vscode.workspace.getConfiguration;
+      (vscode.workspace as any).getConfiguration = () => ({
+        get: () => promptsDir
+      });
+
+      try {
+        mockContext.extension.packageJSON.version = '0.0.1-dev';
+        await installAgents(mockContext);
+
+        const result = needsInstallation(
+          mockContext,
+          mockContext.extension.extensionUri,
+          promptsDir
+        );
+
+        assert.strictEqual(result, true, 'Dev builds should always trigger reinstall');
+      } finally {
+        (vscode.workspace as any).getConfiguration = originalConfig;
+      }
+    });
+
+    test('needsInstallation returns true for dev -> prod migration', async () => {
+      const promptsDir = path.join(testDir, 'prompts-dev-prod');
+      fs.mkdirSync(promptsDir, { recursive: true });
+
+      const originalConfig = vscode.workspace.getConfiguration;
+      (vscode.workspace as any).getConfiguration = () => ({
+        get: () => promptsDir
+      });
+
+      try {
+        mockContext.extension.packageJSON.version = '0.0.1-dev';
+        await installAgents(mockContext);
+
+        mockContext.extension.packageJSON.version = '0.2.0';
+        const result = needsInstallation(
+          mockContext,
+          mockContext.extension.extensionUri,
+          promptsDir
+        );
+
+        assert.strictEqual(result, true, 'Switching from dev to prod should reinstall');
+      } finally {
+        (vscode.workspace as any).getConfiguration = originalConfig;
+      }
+    });
+
+    test('needsInstallation returns true for prod -> dev migration', async () => {
+      const promptsDir = path.join(testDir, 'prompts-prod-dev');
+      fs.mkdirSync(promptsDir, { recursive: true });
+
+      const originalConfig = vscode.workspace.getConfiguration;
+      (vscode.workspace as any).getConfiguration = () => ({
+        get: () => promptsDir
+      });
+
+      try {
+        mockContext.extension.packageJSON.version = '0.2.0';
+        await installAgents(mockContext);
+
+        mockContext.extension.packageJSON.version = '0.0.1-dev';
+        const result = needsInstallation(
+          mockContext,
+          mockContext.extension.extensionUri,
+          promptsDir
+        );
+
+        assert.strictEqual(result, true, 'Switching from prod to dev should reinstall');
+      } finally {
+        (vscode.workspace as any).getConfiguration = originalConfig;
+      }
+    });
+
+    test('isDevelopmentVersion detects -dev suffix', () => {
+      assert.strictEqual(isDevelopmentVersion('0.0.1-dev'), true);
+      assert.strictEqual(isDevelopmentVersion('1.2.3-dev'), true);
+      assert.strictEqual(isDevelopmentVersion('0.2.0'), false);
+      assert.strictEqual(isDevelopmentVersion('1.0.0'), false);
+      assert.strictEqual(isDevelopmentVersion(undefined), false);
+      assert.strictEqual(isDevelopmentVersion(null), false);
+    });
   });
 });

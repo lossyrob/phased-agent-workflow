@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { installAgents, needsInstallation, isDevelopmentVersion } from '../../agents/installer';
+import { installAgents, needsInstallation, isDevelopmentVersion, removeInstalledAgents } from '../../agents/installer';
 
 suite('Agent Installation', () => {
   let testDir: string;
@@ -494,6 +494,98 @@ suite('Agent Installation', () => {
     } finally {
       (vscode.workspace as any).getConfiguration = originalConfig;
     }
+  });
+
+  suite('Uninstall Cleanup', () => {
+    test('removeInstalledAgents deletes tracked files and clears state', async () => {
+      const promptsDir = path.join(testDir, 'prompts-cleanup-success');
+      fs.mkdirSync(promptsDir, { recursive: true });
+
+      const originalConfig = vscode.workspace.getConfiguration;
+      (vscode.workspace as any).getConfiguration = () => ({
+        get: () => promptsDir
+      });
+
+      try {
+        const installResult = await installAgents(mockContext);
+        assert.strictEqual(installResult.errors.length, 0, 'Installation should succeed before cleanup');
+
+        // Ensure files exist prior to cleanup
+        for (const filename of installResult.filesInstalled) {
+          assert.ok(fs.existsSync(path.join(promptsDir, filename)), `${filename} should exist before cleanup`);
+        }
+
+        const cleanupResult = await removeInstalledAgents(mockContext);
+        assert.strictEqual(cleanupResult.errors.length, 0, 'Cleanup should not error');
+        assert.strictEqual(
+          cleanupResult.filesRemoved.length,
+          installResult.filesInstalled.length,
+          'Cleanup should remove all installed files'
+        );
+
+        for (const filename of installResult.filesInstalled) {
+          assert.strictEqual(
+            fs.existsSync(path.join(promptsDir, filename)),
+            false,
+            `${filename} should be deleted during cleanup`
+          );
+        }
+
+        const state = mockContext.globalState.get<any>('paw.agentInstallation');
+        assert.strictEqual(state, undefined, 'Installation state should be cleared after cleanup');
+      } finally {
+        (vscode.workspace as any).getConfiguration = originalConfig;
+      }
+    });
+
+    test('removeInstalledAgents leaves non-PAW files untouched and reports failures', async () => {
+      const promptsDir = path.join(testDir, 'prompts-cleanup-partial');
+      fs.mkdirSync(promptsDir, { recursive: true });
+
+      const originalConfig = vscode.workspace.getConfiguration;
+      (vscode.workspace as any).getConfiguration = () => ({
+        get: () => promptsDir
+      });
+
+      // Track whether we simulated a permission error
+      let permissionErrorHit = false;
+      const nativeFs = require('fs') as typeof fs;
+      const originalUnlinkSync = nativeFs.unlinkSync;
+
+      try {
+        mockContext.extension.packageJSON.version = '0.0.1';
+        const installResult = await installAgents(mockContext);
+        assert.ok(installResult.filesInstalled.length > 0, 'Install should produce files');
+
+        // Create a non-PAW agent file that should remain after cleanup
+        const otherFile = path.join(promptsDir, 'custom-other.agent.md');
+        fs.writeFileSync(otherFile, '# Other agent');
+
+        const protectedFile = installResult.filesInstalled[0];
+        nativeFs.unlinkSync = (targetPath: fs.PathLike) => {
+          if (String(targetPath).endsWith(protectedFile)) {
+            permissionErrorHit = true;
+            throw new Error('permission denied');
+          }
+          return originalUnlinkSync(targetPath);
+        };
+
+        const cleanupResult = await removeInstalledAgents(mockContext);
+
+        assert.ok(permissionErrorHit, 'Permission error simulation should run');
+        assert.ok(cleanupResult.errors.length > 0, 'Errors should be reported for failed deletions');
+        assert.ok(
+          cleanupResult.filesRemoved.length < installResult.filesInstalled.length,
+          'Not all files should be removed due to simulated failure'
+        );
+
+        // Non-PAW file should remain untouched
+        assert.ok(fs.existsSync(otherFile), 'Non-PAW files should not be deleted');
+      } finally {
+        nativeFs.unlinkSync = originalUnlinkSync;
+        (vscode.workspace as any).getConfiguration = originalConfig;
+      }
+    });
   });
 
   suite('Development Version Handling', () => {

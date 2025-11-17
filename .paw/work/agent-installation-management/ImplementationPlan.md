@@ -353,13 +353,13 @@ Establish foundational capabilities for agent installation: platform/variant det
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `getPlatformInfo()` returns correct values on Windows, macOS, Linux
-- [ ] `detectVSCodeVariant()` identifies all variants from environment
-- [ ] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
-- [ ] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
-- [ ] `loadAgentTemplates()` loads all agent templates with correct metadata
-- [ ] Extension compiles without TypeScript errors
-- [ ] Agent templates present in `agents/` directory
+- [x] `getPlatformInfo()` returns correct values on Windows, macOS, Linux
+- [x] `detectVSCodeVariant()` identifies all variants from environment
+- [x] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
+- [x] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
+- [x] `loadAgentTemplates()` loads all agent templates with correct metadata
+- [x] Extension compiles without TypeScript errors
+- [x] Agent templates present in `agents/` directory
 - [ ] Agent templates present in VSIX after `npm run package`
 
 #### Manual Verification:
@@ -367,6 +367,12 @@ Establish foundational capabilities for agent installation: platform/variant det
 - [ ] Test `resolvePromptsDirectory()` matches actual VS Code prompts directory
 - [ ] Extension activates on VS Code startup (output channel appears)
 - [ ] `paw.promptDirectory` setting visible in VS Code Settings UI
+
+#### Phase 2 Completion Notes (2025-11-16)
+- Added `src/agents/platformDetection.ts` and `agentTemplates.ts` to centralize OS/variant handling, prompt path resolution, and agent metadata loading with explicit error flows for overrides.
+- Updated `package.json` to activate on startup and expose the `paw.promptDirectory` configuration entry so users can override unsupported setups.
+- Introduced `agents.test.ts` to cover platform permutations and loader edge cases; `npm run compile` and `npm test` (38 passing) validate the new infrastructure.
+- Manual follow-ups for the review/documentation agents: confirm VSIX packaging includes `agents/`, validate prompts directory detection on real installs, and capture screenshots of the new setting within VS Code.
 
 ---
 

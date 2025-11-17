@@ -936,14 +936,14 @@ The GitHub Actions release workflow (`release.yml`) overwrites the version durin
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `isDevelopmentVersion()` returns true for versions containing `-dev`
-- [ ] `isDevelopmentVersion()` returns false for production versions
-- [ ] `needsInstallation()` returns true when current version is `0.0.1-dev` and stored version is `0.0.1-dev`
-- [ ] `needsInstallation()` returns true when migrating from `0.0.1-dev` to `0.2.0`
-- [ ] `needsInstallation()` returns true when migrating from `0.2.0` to `0.0.1-dev`
-- [ ] Unit tests pass with new development version test cases
-- [ ] TypeScript compilation succeeds with updated logic
-- [ ] `package.json` version set to `0.0.1-dev`
+- [x] `isDevelopmentVersion()` returns true for versions containing `-dev`
+- [x] `isDevelopmentVersion()` returns false for production versions
+- [x] `needsInstallation()` returns true when current version is `0.0.1-dev` and stored version is `0.0.1-dev`
+- [x] `needsInstallation()` returns true when migrating from `0.0.1-dev` to `0.2.0`
+- [x] `needsInstallation()` returns true when migrating from `0.2.0` to `0.0.1-dev`
+- [x] Unit tests pass with new development version test cases
+- [x] TypeScript compilation succeeds with updated logic
+- [x] `package.json` version set to `0.0.1-dev`
 
 #### Manual Verification:
 - [ ] Build VSIX with `0.0.1-dev`, install, verify agents installed
@@ -954,6 +954,16 @@ The GitHub Actions release workflow (`release.yml`) overwrites the version durin
 - [ ] Install test VSIX with version `0.2.0`, verify migration from dev to prod
 - [ ] Install test VSIX with version `0.0.1-dev`, verify migration from prod to dev
 - [ ] DEVELOPING.md clearly documents dev version behavior and testing workflow
+
+---
+
+**Phase 5.5 Implementation Complete**
+
+- Introduced development build detection via `isDevelopmentVersion()` so `needsInstallation()` forces reinstalls whenever either version carries the `-dev` suffix.
+- Extended installer cleanup logic to delete tracked files even when versions match but dev builds are in play, ensuring removed agents do not linger between local edits.
+- Added output-channel logs that call out when the extension is running a dev build or migrating away from one, helping contributors understand why installations re-run.
+- Created `scripts/test-migration.sh` to automate temporary version swapping and VSIX builds for migration testing, plus documented the workflow alongside the new `0.0.1-dev` package version in `DEVELOPING.md` and clarified the release workflow comments.
+- Verification: `npm run compile` and `npm test` (57 passing) executed successfully on the new phase branch; manual install/migration validation still pending for reviewers.
 
 ---
 

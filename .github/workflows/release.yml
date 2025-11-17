@@ -49,6 +49,8 @@ jobs:
         run: |
           # Set package.json version to match the git tag
           # This eliminates the need for manual version updates before tagging
+          # Local development stays on "0.0.1-dev" so every activation reinstalls agents
+          # The release workflow overwrites that dev suffix with the semver tag (e.g., v0.2.0)
           TAG_VERSION="${{ steps.version.outputs.version }}"
           npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version
           echo "Updated package.json to version: ${TAG_VERSION}"

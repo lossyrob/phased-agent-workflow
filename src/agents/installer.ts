@@ -20,7 +20,7 @@ export interface InstallationResult {
 /**
  * Installation state persisted in globalState for version tracking and repair.
  */
-interface InstallationState {
+export interface InstallationState {
   /** The extension version when agents were last installed */
   version: string;
   /** List of installed agent filenames for cleanup and verification */
@@ -38,7 +38,19 @@ interface InstallationState {
 /**
  * Storage key for installation state in globalState.
  */
-const INSTALLATION_STATE_KEY = 'paw.agentInstallation';
+export const INSTALLATION_STATE_KEY = 'paw.agentInstallation';
+
+/**
+ * Determine whether a version string represents a development build.
+ * Development builds use a "-dev" suffix to force reinstallation on every activation.
+ */
+export function isDevelopmentVersion(version: string | undefined | null): boolean {
+  if (!version) {
+    return false;
+  }
+
+  return version.includes('-dev');
+}
 
 /**
  * Gets the custom prompts directory path from configuration, if set.
@@ -83,16 +95,25 @@ export function needsInstallation(
 ): boolean {
   // Check if we have a previous installation record
   const state = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+  const currentVersion = context.extension.packageJSON.version;
   
   if (!state) {
     // No previous installation record - fresh install needed
     return true;
   }
 
-  // Check if version has changed
-  const currentVersion = context.extension.packageJSON.version;
+  if (!state.version) {
+    // Safety fallback - treat missing version as needing reinstall
+    return true;
+  }
+
+  // Development builds always reinstall to pick up agent content edits
+  if (isDevelopmentVersion(state.version) || isDevelopmentVersion(currentVersion)) {
+    return true;
+  }
+
+  // Check if version has changed (upgrade/downgrade)
   if (state.version !== currentVersion) {
-    // Version changed - reinstallation needed for upgrade/downgrade
     return true;
   }
 
@@ -241,15 +262,23 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
     // Check for version change and clean up previous installation if needed
     const currentVersion = context.extension.packageJSON.version;
     const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+    const currentIsDev = isDevelopmentVersion(currentVersion);
     let previousVersion: string | undefined;
     let filesDeleted = 0;
-    
-    if (previousState && previousState.version !== currentVersion) {
-      // Version changed - clean up old installation
+
+    const shouldCleanup = Boolean(
+      previousState && (
+        previousState.version !== currentVersion ||
+        isDevelopmentVersion(previousState.version) ||
+        currentIsDev
+      )
+    );
+
+    if (shouldCleanup && previousState?.version) {
       previousVersion = previousState.version;
       const cleanupResult = cleanupPreviousInstallation(context, promptsDir);
       filesDeleted = cleanupResult.filesDeleted;
-      
+
       // Add cleanup errors to result but don't stop installation
       result.errors.push(...cleanupResult.errors);
     }

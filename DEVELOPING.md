@@ -95,14 +95,14 @@ Use either the VS Code UI or the command line.
 #### Command Line
 
 ```bash
-code --install-extension paw-workflow-0.0.1.vsix
+code --install-extension paw-workflow-0.0.1-dev.vsix
 ```
 
 #### VS Code UI
 
 1. Open the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
 2. Open the overflow menu (`…`) and choose **Install from VSIX...**.
-3. Select `paw-workflow-0.0.1.vsix` from the extension directory.
+3. Select `paw-workflow-0.0.1-dev.vsix` from the extension directory.
 4. Reload VS Code when prompted.
 
 ### Development Workflow
@@ -116,11 +116,43 @@ code --install-extension paw-workflow-0.0.1.vsix
 When developing PAW itself using PAW agents:
 
 1. **Make agent changes** in `agents/` directory
-2. **Build and install VSIX**: `npm run package && code --install-extension paw-workflow-0.0.1.vsix`
+2. **Build and install VSIX**: `npm run package && code --install-extension paw-workflow-0.0.1-dev.vsix`
 3. **Reload VS Code** to use updated agents in your PAW workflow
 4. **Important**: Local agent changes DO NOT automatically update installed agents. You must rebuild and reinstall the VSIX to test agent modifications.
 
 This workflow prevents mid-session agent changes from disrupting active PAW workflows.
+
+### Development Version Behavior
+
+Local builds use version `0.0.1-dev`, which forces agent reinstallation on every activation so agent content changes are reflected immediately. Production releases overwrite this version number during the GitHub Actions release workflow.
+
+#### Testing Agent Changes
+
+1. Modify agents in `agents/`
+2. Run `npm run package`
+3. Install the VSIX: `code --install-extension paw-workflow-0.0.1-dev.vsix`
+4. Reload VS Code and monitor the **PAW Workflow** output channel for the "Development build detected" log
+5. Validate agents inside Copilot Chat
+
+#### Testing Migration Logic
+
+Use `scripts/test-migration.sh` to build VSIX files with temporary versions:
+
+```bash
+# Build VSIX tagged as 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Return to dev version builds
+./scripts/test-migration.sh 0.0.1-dev
+```
+
+The script updates `package.json`, runs the standard VSIX build, restores the original version, and prints follow-up installation steps. After installing each VSIX, reload VS Code and verify the migration logs plus agent availability.
+
+#### Production Releases
+
+- Keep `package.json` set to `0.0.1-dev` locally
+- When tagging a release, the workflow replaces the version with the tag (e.g., `v0.2.0` -> `0.2.0`)
+- Published VSIX files therefore use their tag-based semantic version instead of `-dev`
 
 ### Uninstalling
 

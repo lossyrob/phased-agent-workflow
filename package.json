@@ -21,9 +21,21 @@
     "agent",
     "productivity"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "PAW Workflow",
+      "properties": {
+        "paw.promptDirectory": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute path to the VS Code prompts directory. When set, PAW installs agents here instead of using the auto-detected location."
+        }
+      }
+    },
     "commands": [
       {
         "command": "paw.initializeWorkItem",
@@ -52,14 +64,28 @@
             "workflow_mode": {
               "type": "string",
               "description": "Workflow mode selection: 'full' (all stages), 'minimal' (core stages only), or 'custom' (explicit stages)",
-              "enum": ["full", "minimal", "custom"]
+              "enum": [
+                "full",
+                "minimal",
+                "custom"
+              ]
             },
             "stages": {
               "type": "array",
               "description": "Explicit list of stages to include (for custom mode). Valid stages: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status",
               "items": {
                 "type": "string",
-                "enum": ["spec", "code-research", "plan", "implementation", "implementation-review", "pr-review-response", "documentation", "final-pr", "status"]
+                "enum": [
+                  "spec",
+                  "code-research",
+                  "plan",
+                  "implementation",
+                  "implementation-review",
+                  "pr-review-response",
+                  "documentation",
+                  "final-pr",
+                  "status"
+                ]
               }
             }
           },

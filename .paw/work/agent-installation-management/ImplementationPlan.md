@@ -655,7 +655,309 @@ Test version changes by:
 
 ---
 
-## Phase 5: Uninstall Cleanup
+## Phase 5.5: Development Version Support
+
+### Overview
+Add support for development versions using `-dev` suffix to ensure agent content updates are reflected during local development without requiring manual version bumps. Development builds use version `0.0.1-dev` which triggers automatic reinstallation on every activation, while production releases override the version during the GitHub Actions release workflow.
+
+### Rationale
+Developers working on PAW agent content need to test changes frequently by building and installing the VSIX. Without development version support, the migration logic only triggers when version numbers change, making it cumbersome to test agent updates. By using a `-dev` suffix, the extension automatically reinstalls agents on every activation, ensuring changes are immediately reflected. The release workflow overwrites the version with production versions (e.g., `0.2.0`), keeping production behavior unchanged.
+
+### Changes Required:
+
+#### 1. Update package.json Version
+**File**: `package.json`
+**Changes**: Set version to development mode.
+
+```json
+{
+  "version": "0.0.1-dev"
+}
+```
+
+**Rationale**: The `-dev` suffix signals this is a development build. GitHub Actions release workflow will overwrite this with production versions during releases.
+
+#### 2. Enhance Version Change Detection
+**File**: `src/agents/installer.ts`
+**Changes**: Update `needsInstallation()` to detect development versions.
+
+**Add helper function**:
+```typescript
+/**
+ * Check if a version string represents a development build.
+ * Development versions contain '-dev' suffix (e.g., '0.0.1-dev').
+ */
+function isDevelopmentVersion(version: string): boolean {
+  return version.includes('-dev');
+}
+```
+
+**Update `needsInstallation()` logic**:
+```typescript
+export function needsInstallation(
+  state: InstallationState | undefined,
+  currentVersion: string
+): boolean {
+  // Fresh install - no previous state
+  if (!state || !state.version) {
+    return true;
+  }
+
+  // Development version handling: always reinstall if either version is -dev
+  // This ensures:
+  // - dev -> dev: reinstalls (agent content may have changed)
+  // - dev -> prod: migrates (upgrading to production release)
+  // - prod -> dev: migrates (returning to development)
+  if (isDevelopmentVersion(state.version) || isDevelopmentVersion(currentVersion)) {
+    return true;
+  }
+
+  // Normal version change (production to production)
+  if (state.version !== currentVersion) {
+    return true;
+  }
+
+  // Check if any expected files are missing
+  const expectedFiles = loadAgentTemplates().map(t => t.filename);
+  for (const filename of expectedFiles) {
+    const filePath = path.join(resolvePromptsDirectory(), filename);
+    if (!fs.existsSync(filePath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+```
+
+**Enhanced logging in `installAgents()`**:
+```typescript
+// Add development version detection logging
+if (isDevelopmentVersion(currentVersion)) {
+  outputChannel.appendLine('[INFO] Development version detected, forcing reinstallation');
+}
+
+if (previousState?.version && isDevelopmentVersion(previousState.version)) {
+  outputChannel.appendLine(`[INFO] Migrating from development version ${previousState.version}`);
+}
+```
+
+#### 3. Update Unit Tests
+**File**: `src/test/suite/installer.test.ts`
+**Changes**: Add test cases for development version behavior.
+
+**Test cases to add**:
+```typescript
+suite('Development Version Handling', () => {
+  test('needsInstallation returns true for dev -> dev with same version', () => {
+    const state: InstallationState = {
+      version: '0.0.1-dev',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.0.1-dev');
+    assert.strictEqual(result, true, 'Should reinstall when both versions are dev');
+  });
+
+  test('needsInstallation returns true for dev -> prod migration', () => {
+    const state: InstallationState = {
+      version: '0.0.1-dev',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.2.0');
+    assert.strictEqual(result, true, 'Should reinstall when migrating from dev to prod');
+  });
+
+  test('needsInstallation returns true for prod -> dev migration', () => {
+    const state: InstallationState = {
+      version: '0.2.0',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.0.1-dev');
+    assert.strictEqual(result, true, 'Should reinstall when migrating from prod to dev');
+  });
+
+  test('isDevelopmentVersion detects -dev suffix', () => {
+    assert.strictEqual(isDevelopmentVersion('0.0.1-dev'), true);
+    assert.strictEqual(isDevelopmentVersion('1.2.3-dev'), true);
+    assert.strictEqual(isDevelopmentVersion('0.2.0'), false);
+    assert.strictEqual(isDevelopmentVersion('1.0.0'), false);
+  });
+});
+```
+
+#### 4. Create Migration Test Helper Script
+**File**: `scripts/test-migration.sh` (new)
+**Purpose**: Automate version manipulation for testing migration scenarios.
+
+```bash
+#!/bin/bash
+# Test helper script for agent migration testing
+# Usage: ./scripts/test-migration.sh <version>
+# Example: ./scripts/test-migration.sh 0.2.0
+
+set -e
+
+VERSION=$1
+if [ -z "$VERSION" ]; then
+    echo "Usage: ./scripts/test-migration.sh <version>"
+    echo ""
+    echo "Examples:"
+    echo "  ./scripts/test-migration.sh 0.2.0      # Test migration to production version"
+    echo "  ./scripts/test-migration.sh 0.4.0      # Test upgrade scenario"
+    echo "  ./scripts/test-migration.sh 0.0.1-dev  # Test back to dev version"
+    exit 1
+fi
+
+# Store original version
+ORIGINAL_VERSION=$(node -p "require('./package.json').version")
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PAW Migration Test Helper"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Target version:   $VERSION"
+echo "Original version: $ORIGINAL_VERSION"
+echo ""
+
+# Update version temporarily
+echo "→ Updating package.json version to $VERSION..."
+npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+# Build VSIX
+echo "→ Building VSIX..."
+./scripts/build-vsix.sh
+
+# Restore original version
+echo "→ Restoring package.json version to $ORIGINAL_VERSION..."
+npm version "$ORIGINAL_VERSION" --no-git-tag-version --allow-same-version
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✓ Built: paw-workflow-${VERSION}.vsix"
+echo "✓ Restored: package.json version to $ORIGINAL_VERSION"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Next steps:"
+echo "  1. Install: code --install-extension paw-workflow-${VERSION}.vsix"
+echo "  2. Reload VS Code"
+echo "  3. Check output channel (View → Output → PAW Workflow)"
+echo "  4. Verify agents in Copilot Chat"
+echo ""
+```
+
+Make script executable:
+```bash
+chmod +x scripts/test-migration.sh
+```
+
+#### 5. Update DEVELOPING.md
+**File**: `DEVELOPING.md`
+**Changes**: Document development version behavior and testing procedures.
+
+Add section after build instructions:
+
+```markdown
+## Development Version Behavior
+
+The extension uses version `0.0.1-dev` during development. The `-dev` suffix enables:
+- **Automatic reinstallation**: Agents reinstall on every activation, even without version changes
+- **Immediate testing**: Agent file modifications are reflected immediately after rebuild
+- **Production separation**: Clear distinction between dev builds and production releases
+
+### Testing Agent Changes
+
+When working on agent content:
+
+1. Modify agent files in `agents/`
+2. Build VSIX: `npm run package`
+3. Install VSIX: `code --install-extension paw-workflow-0.0.1-dev.vsix`
+4. Reload VS Code
+5. Check Output panel (View → Output → PAW Workflow) for installation logs
+6. Test agents in Copilot Chat
+
+The extension automatically detects the `-dev` suffix and reinstalls agents, ensuring your changes are reflected.
+
+### Testing Migration Logic
+
+To test version migrations (upgrade/downgrade scenarios):
+
+```bash
+# Test migration to version 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Test upgrade to 0.4.0
+./scripts/test-migration.sh 0.4.0
+
+# Test downgrade to 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Return to dev version
+./scripts/test-migration.sh 0.0.1-dev
+```
+
+The script:
+1. Temporarily updates `package.json` version
+2. Builds VSIX with that version
+3. Restores original version in `package.json`
+4. Provides installation instructions
+
+After installing each test VSIX:
+- Check output channel for migration logs
+- Verify correct agents are installed
+- Confirm no orphaned files remain
+
+### Production Releases
+
+The GitHub Actions release workflow (`release.yml`) overwrites the version during releases:
+- Development: `package.json` contains `0.0.1-dev`
+- Release: Workflow sets version to match git tag (e.g., `v0.2.0` → `0.2.0`)
+- Published VSIX contains production version, not `-dev`
+```
+
+#### 6. Update Release Workflow Documentation
+**File**: `.github/workflows/release.yml`
+**Changes**: Add comment explaining version override behavior.
+
+```yaml
+      - name: Update package.json version to match tag
+        working-directory: vscode-extension
+        run: |
+          # Set package.json version to match the git tag
+          # This eliminates the need for manual version updates before tagging
+          # During development, package.json contains "0.0.1-dev" which is
+          # overwritten here with the production version from the git tag
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version
+          echo "Updated package.json to version: ${TAG_VERSION}"
+```
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `isDevelopmentVersion()` returns true for versions containing `-dev`
+- [ ] `isDevelopmentVersion()` returns false for production versions
+- [ ] `needsInstallation()` returns true when current version is `0.0.1-dev` and stored version is `0.0.1-dev`
+- [ ] `needsInstallation()` returns true when migrating from `0.0.1-dev` to `0.2.0`
+- [ ] `needsInstallation()` returns true when migrating from `0.2.0` to `0.0.1-dev`
+- [ ] Unit tests pass with new development version test cases
+- [ ] TypeScript compilation succeeds with updated logic
+- [ ] `package.json` version set to `0.0.1-dev`
+
+#### Manual Verification:
+- [ ] Build VSIX with `0.0.1-dev`, install, verify agents installed
+- [ ] Modify agent file, rebuild with `0.0.1-dev`, reinstall, verify agents updated
+- [ ] Output channel logs show "Development version detected" message
+- [ ] Test migration script successfully builds VSIX with custom versions
+- [ ] Test migration script restores original version after build
+- [ ] Install test VSIX with version `0.2.0`, verify migration from dev to prod
+- [ ] Install test VSIX with version `0.0.1-dev`, verify migration from prod to dev
+- [ ] DEVELOPING.md clearly documents dev version behavior and testing workflow
+
+---
+
+## Phase 6: Uninstall Cleanup
 
 ### Overview
 Implement deactivation hook to remove all PAW agents when extension is uninstalled.
@@ -735,7 +1037,8 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 - Agent template loading and parsing from agents/
 - Installation state management (globalState read/write)
 - Migration manifest lookups (upgrades and downgrades)
-- needsInstallation() logic (all conditions)
+- needsInstallation() logic (all conditions including development versions)
+- isDevelopmentVersion() detection of -dev suffix
 
 ### Integration Tests:
 - Post-refactor build and package validation
@@ -779,6 +1082,18 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 3. Verify error notification with actionable message
 4. Verify extension continues functioning
 5. Restore permissions, verify successful reinstall
+
+**Development Version Testing**:
+1. Build and install `0.0.1-dev` VSIX
+2. Verify agents installed in prompts directory
+3. Modify agent content
+4. Rebuild and reinstall `0.0.1-dev` VSIX
+5. Verify agents updated with new content
+6. Check output channel for "Development version detected" message
+7. Use test helper script to build production version: `./scripts/test-migration.sh 0.2.0`
+8. Install production VSIX, verify migration from dev to prod
+9. Use test helper script to return to dev: `./scripts/test-migration.sh 0.0.1-dev`
+10. Verify migration from prod back to dev
 
 **Platform Compatibility**:
 1. Test on Windows (standard VS Code)

@@ -29,6 +29,10 @@ interface InstallationState {
   installedAt: string;
   /** Whether the installation completed successfully */
   success: boolean;
+  /** The previous extension version before this installation (for logging version changes) */
+  previousVersion?: string;
+  /** Count of files deleted during cleanup (for verification) */
+  filesDeleted?: number;
 }
 
 /**
@@ -113,21 +117,84 @@ export function needsInstallation(
  * @param version - Current extension version
  * @param filesInstalled - List of installed filenames
  * @param success - Whether installation completed successfully
+ * @param previousVersion - Optional previous version before this installation
+ * @param filesDeleted - Optional count of files deleted during cleanup
  */
 async function updateInstallationState(
   context: vscode.ExtensionContext,
   version: string,
   filesInstalled: string[],
-  success: boolean
+  success: boolean,
+  previousVersion?: string,
+  filesDeleted?: number
 ): Promise<void> {
   const state: InstallationState = {
     version,
     filesInstalled,
     installedAt: new Date().toISOString(),
-    success
+    success,
+    previousVersion,
+    filesDeleted
   };
   
   await context.globalState.update(INSTALLATION_STATE_KEY, state);
+}
+
+/**
+ * Result of cleanup operation for previous installation.
+ */
+interface CleanupResult {
+  /** Count of files successfully deleted */
+  filesDeleted: number;
+  /** Error messages for any failed deletions */
+  errors: string[];
+}
+
+/**
+ * Cleans up all previously installed agent files.
+ * 
+ * This function deletes all files listed in the previous installation state
+ * to ensure clean version changes (upgrades and downgrades). Individual
+ * deletion failures are logged but don't prevent the cleanup from continuing.
+ * 
+ * @param context - Extension context for accessing globalState
+ * @param promptsDir - Path to the prompts directory
+ * @returns Cleanup result with count of files deleted and any errors
+ */
+function cleanupPreviousInstallation(
+  context: vscode.ExtensionContext,
+  promptsDir: string
+): CleanupResult {
+  const result: CleanupResult = {
+    filesDeleted: 0,
+    errors: []
+  };
+
+  // Get previous installation state
+  const state = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+  if (!state || !state.filesInstalled || state.filesInstalled.length === 0) {
+    // No previous installation to clean up
+    return result;
+  }
+
+  // Delete each previously installed file
+  for (const filename of state.filesInstalled) {
+    const filePath = path.join(promptsDir, filename);
+    
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        result.filesDeleted++;
+      }
+      // If file doesn't exist, consider it already cleaned up (no error)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to delete ${filename}: ${message}`);
+      // Continue with remaining files
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -169,6 +236,22 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
       return result;
     }
 
+    // Check for version change and clean up previous installation if needed
+    const currentVersion = context.extension.packageJSON.version;
+    const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+    let previousVersion: string | undefined;
+    let filesDeleted = 0;
+    
+    if (previousState && previousState.version !== currentVersion) {
+      // Version changed - clean up old installation
+      previousVersion = previousState.version;
+      const cleanupResult = cleanupPreviousInstallation(context, promptsDir);
+      filesDeleted = cleanupResult.filesDeleted;
+      
+      // Add cleanup errors to result but don't stop installation
+      result.errors.push(...cleanupResult.errors);
+    }
+
     // Load agent templates from extension resources
     let templates;
     try {
@@ -194,13 +277,14 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
     }
 
     // Update installation state
-    const currentVersion = context.extension.packageJSON.version;
     const success = result.errors.length === 0;
     await updateInstallationState(
       context,
       currentVersion,
       result.filesInstalled,
-      success
+      success,
+      previousVersion,
+      filesDeleted > 0 ? filesDeleted : undefined
     );
 
     return result;

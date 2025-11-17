@@ -604,14 +604,14 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `needsInstallation()` returns true when stored version differs from current (any direction)
-- [ ] Version change deletes all previously installed files
-- [ ] Version change installs complete fresh set of agents
-- [ ] Upgrade 0.5 → 0.6 removes 0.5 agents, installs 0.6 agents
-- [ ] Downgrade 0.6 → 0.5 removes 0.6 agents, installs 0.5 agents
-- [ ] Cleanup happens before installation
-- [ ] Cleanup errors logged but don't block installation
-- [ ] globalState updated with new version and file list
+- [x] `needsInstallation()` returns true when stored version differs from current (any direction)
+- [x] Version change deletes all previously installed files
+- [x] Version change installs complete fresh set of agents
+- [x] Upgrade 0.5 → 0.6 removes 0.5 agents, installs 0.6 agents
+- [x] Downgrade 0.6 → 0.5 removes 0.6 agents, installs 0.5 agents
+- [x] Cleanup happens before installation
+- [x] Cleanup errors logged but don't block installation
+- [x] globalState updated with new version and file list
 
 #### Manual Verification:
 - [ ] Simulate version upgrade, verify old agents removed and new agents installed
@@ -619,6 +619,39 @@ Add version change detection (upgrades and downgrades) and cleanup of previously
 - [ ] After version change, only current version's agents present (no orphaned files)
 - [ ] Output channel shows cleanup and installation details
 - [ ] Multiple version changes don't accumulate orphaned files
+
+---
+
+**Phase 4 Implementation Complete**
+
+Successfully implemented version change detection and migration with clean bidirectional handling:
+- Enhanced `InstallationState` interface with `previousVersion` and `filesDeleted` fields for tracking version changes
+- Created `cleanupPreviousInstallation()` function that deletes all previously installed files before installing new version
+- Updated `needsInstallation()` to detect version changes in both directions (already correct in Phase 3 implementation)
+- Integrated cleanup logic into `installAgents()` to run before loading new templates on version changes
+- Added comprehensive test suite with 6 new tests covering upgrade/downgrade scenarios, cleanup error handling
+
+**Key Implementation Details:**
+- Simplified approach: delete all old files and install fresh set on any version change (no complex migration mappings)
+- Works identically for upgrades and downgrades - symmetric behavior
+- Cleanup errors are logged but don't block installation (graceful degradation)
+- State tracking includes previous version and files deleted count for verification and debugging
+- All 53 tests passing (38 existing + 10 from Phase 3 + 6 new version change tests - 1 removed)
+
+**For Manual Testing:**
+Test version changes by:
+1. Install built VSIX with version 0.0.1
+2. Verify agents installed in prompts directory
+3. Modify package.json version to 0.0.2 and rebuild/reinstall
+4. Verify old agents removed and new agents installed
+5. Check output channel for cleanup and installation logs
+6. Downgrade back to 0.0.1 and verify symmetric behavior
+
+**Review Notes:**
+- Verify cleanup logic handles edge cases (missing files, permission errors)
+- Test on different platforms to ensure consistent behavior
+- Validate globalState persistence of version change metadata
+- Confirm output channel provides clear logging of cleanup operations
 
 ---
 

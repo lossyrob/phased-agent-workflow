@@ -7,6 +7,7 @@ import {
   detectVSCodeVariant,
   getPlatformInfo,
   resolvePromptsDirectory,
+  isWSL,
   VSCodeVariant
 } from '../../agents/platformDetection';
 import { loadAgentTemplates } from '../../agents/agentTemplates';
@@ -28,7 +29,8 @@ suite('Platform Detection Utilities', () => {
     assert.strictEqual(macInfo.platform, 'macos');
     assert.strictEqual(macInfo.variant, VSCodeVariant.Insiders);
 
-    const linuxInfo = getPlatformInfo('Code - OSS', 'linux', '/home/tester');
+    // Mock non-WSL Linux by providing a non-WSL proc version
+    const linuxInfo = getPlatformInfo('Code - OSS', 'linux', '/home/tester', () => 'Linux version 5.4.0-generic');
     assert.strictEqual(linuxInfo.platform, 'linux');
     assert.strictEqual(linuxInfo.variant, VSCodeVariant.OSS);
   });
@@ -56,6 +58,19 @@ suite('Platform Detection Utilities', () => {
     const linuxInfo = { platform: 'linux', homeDir: '/home/test', variant: VSCodeVariant.OSS } as const;
     const linuxPath = resolvePromptsDirectory(linuxInfo);
     assert.strictEqual(linuxPath, path.join('/home/test', '.config', 'Code - OSS', 'User', 'prompts'));
+
+    const wslInfo = { platform: 'wsl', homeDir: '/mnt/c/Users/Test', variant: VSCodeVariant.Stable } as const;
+    const wslPath = resolvePromptsDirectory(wslInfo);
+    assert.strictEqual(wslPath, '/mnt/c/Users/Test/AppData/Roaming/Code/User/prompts');
+  });
+
+  test('detects WSL environment correctly', () => {
+    // Test WSL detection with mocked proc version
+    assert.strictEqual(isWSL('linux', () => 'Linux version 5.4.0-generic'), false, 'Should not detect non-WSL Linux as WSL');
+    assert.strictEqual(isWSL('linux', () => 'Linux version 6.6.87.2-microsoft-standard-WSL2'), true, 'Should detect WSL from microsoft in version');
+    assert.strictEqual(isWSL('linux', () => 'Linux version 5.15.0-WSL2'), true, 'Should detect WSL from WSL in version');
+    assert.strictEqual(isWSL('win32', () => 'Windows'), false, 'Should not detect Windows as WSL');
+    assert.strictEqual(isWSL('darwin', () => 'Darwin'), false, 'Should not detect macOS as WSL');
   });
 });
 

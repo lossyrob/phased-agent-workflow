@@ -1023,11 +1023,11 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `deactivate()` function exported from extension.ts
-- [ ] Deactivation deletes all paw-*.agent.md files
-- [ ] Deactivation clears globalState installation record
-- [ ] Deactivation completes successfully even with permission errors
-- [ ] Only PAW agent files deleted (not other extensions' agents)
+- [x] `deactivate()` function exported from extension.ts
+- [x] Deactivation deletes all paw-*.agent.md files
+- [x] Deactivation clears globalState installation record
+- [x] Deactivation completes successfully even with permission errors
+- [x] Only PAW agent files deleted (not other extensions' agents)
 
 #### Manual Verification:
 - [ ] Uninstall extension, verify agents removed from prompts directory
@@ -1035,6 +1035,18 @@ Implement deactivation hook to remove all PAW agents when extension is uninstall
 - [ ] Output channel shows cleanup confirmation
 - [ ] Permission error during cleanup shows manual instructions
 - [ ] README documents uninstall behavior
+
+---
+
+**Phase 6 Implementation Complete**
+
+- Added shared extension context/output-channel tracking so the deactivation hook can reuse logging infrastructure before VS Code disposes subscriptions.
+- Implemented `removeInstalledAgents()` to delete tracked PAW agent files plus any `paw-*.agent.md` stragglers, clear global installation state, and surface errors without throwing.
+- Updated `deactivate()` to await cleanup, log manual remediation instructions for failures, and keep the channel alive until cleanup completes.
+- Documented uninstall behavior and manual cleanup steps in `README.md`.
+- Added two uninstall-focused tests covering successful cleanup and partial failures; `npm run compile` and `npm test` (59 passing) verify the new logic.
+
+Manual follow-ups: uninstall the packaged VSIX on each platform to confirm the output-channel messaging, verify Copilot no longer lists PAW agents post-uninstall, and screenshot the notification for docs.
 
 ---
 

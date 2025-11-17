@@ -41,6 +41,16 @@ export interface InstallationState {
 export const INSTALLATION_STATE_KEY = 'paw.agentInstallation';
 
 /**
+ * Result of uninstall cleanup when removing installed agents.
+ */
+export interface AgentCleanupResult {
+  /** Names of agent files successfully removed during cleanup */
+  filesRemoved: string[];
+  /** Error messages describing files that could not be removed */
+  errors: string[];
+}
+
+/**
  * Determine whether a version string represents a development build.
  * Development builds use a "-dev" suffix to force reinstallation on every activation.
  */
@@ -325,4 +335,74 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
     result.errors.push(`Unexpected error during installation: ${message}`);
     return result;
   }
+}
+
+/**
+ * Removes installed PAW agent files from the prompts directory.
+ *
+ * This helper is used during extension deactivation/uninstall to ensure that
+ * PAW agents do not remain on the user's system after the extension is
+ * removed. The cleanup is conservative: it attempts to delete the files tracked
+ * in installation state and any additional files that match the PAW agent
+ * filename pattern. Errors are collected but do not throw.
+ *
+ * @param context - Extension context for accessing configuration and global state
+ * @returns Cleanup summary with removed files and any errors encountered
+ */
+export async function removeInstalledAgents(
+  context: vscode.ExtensionContext
+): Promise<AgentCleanupResult> {
+  const result: AgentCleanupResult = {
+    filesRemoved: [],
+    errors: []
+  };
+
+  let promptsDir: string;
+  try {
+    promptsDir = getPromptsDirectoryPath();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    result.errors.push(`Unable to determine prompts directory for cleanup: ${message}`);
+    // Still clear global state so the uninstall is treated as complete
+    await context.globalState.update(INSTALLATION_STATE_KEY, undefined);
+    return result;
+  }
+
+  const candidateFiles = new Set<string>();
+  const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+  if (previousState?.filesInstalled?.length) {
+    for (const filename of previousState.filesInstalled) {
+      candidateFiles.add(filename);
+    }
+  }
+
+  if (fs.existsSync(promptsDir)) {
+    try {
+      const directoryEntries = fs.readdirSync(promptsDir);
+      for (const entry of directoryEntries) {
+        if (/^paw-.*\.agent\.md$/i.test(entry)) {
+          candidateFiles.add(entry);
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Unable to list prompts directory contents: ${message}`);
+    }
+  }
+
+  for (const filename of candidateFiles) {
+    const filePath = path.join(promptsDir, filename);
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        result.filesRemoved.push(filename);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to delete ${filename}: ${message}`);
+    }
+  }
+
+  await context.globalState.update(INSTALLATION_STATE_KEY, undefined);
+  return result;
 }

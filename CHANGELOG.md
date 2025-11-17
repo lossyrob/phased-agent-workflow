@@ -1,0 +1,12 @@
+# Changelog
+
+All notable changes to the PAW Workflow project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Automatic agent installation management system that installs PAW agents to VS Code prompts directory on extension activation, handles version upgrades and downgrades bidirectionally with automatic cleanup of obsolete files, supports development builds with force-reinstallation for local testing, and removes agents during extension uninstall - transforms PAW into a fully integrated VS Code development companion with zero manual configuration
+

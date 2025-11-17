@@ -476,15 +476,15 @@ Implement core installation: write agents to prompts directory, track versions, 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `needsInstallation()` returns true on fresh install
-- [ ] `needsInstallation()` returns true when version changes
-- [ ] `needsInstallation()` returns true when files missing
-- [ ] `needsInstallation()` returns false when up to date
-- [ ] `installAgents()` writes all agent files to prompts directory
-- [ ] globalState updated with version, filenames, timestamp
-- [ ] Installation succeeds even without Copilot extension
-- [ ] Extension activates successfully even when installation fails
-- [ ] Partial installation tracked correctly (some files written, some failed)
+- [x] `needsInstallation()` returns true on fresh install
+- [x] `needsInstallation()` returns true when version changes
+- [x] `needsInstallation()` returns true when files missing
+- [x] `needsInstallation()` returns false when up to date
+- [x] `installAgents()` writes all agent files to prompts directory
+- [x] globalState updated with version, filenames, timestamp
+- [x] Installation succeeds even without Copilot extension
+- [x] Extension activates successfully even when installation fails
+- [x] Partial installation tracked correctly (some files written, some failed)
 
 #### Manual Verification:
 - [ ] First activation shows "installing" message
@@ -493,6 +493,41 @@ Implement core installation: write agents to prompts directory, track versions, 
 - [ ] Reactivation shows "up to date" (no reinstall)
 - [ ] Permission error shows actionable notification
 - [ ] Output channel contains detailed installation logs
+
+---
+
+**Phase 3 Implementation Complete**
+
+Successfully implemented core agent installation functionality:
+- Created `src/agents/installer.ts` with `installAgents()`, `needsInstallation()`, and `updateInstallationState()` functions
+- Integrated installation logic into extension activation in `src/extension.ts` with proper error handling
+- Implemented user notifications: success messages with agent count, error notifications with "View Output" action
+- Added comprehensive test suite (`src/test/suite/installer.test.ts`) with 10 tests covering all success criteria
+- All automated verification passed: 48 tests passing (38 existing + 10 new installer tests)
+
+**Key Implementation Details:**
+- Installation runs during extension activation (via `onStartupFinished` event from Phase 2)
+- Installation is idempotent - safe to run multiple times without side effects
+- Individual file failures tracked but don't block other installations
+- Detailed logging to output channel for debugging
+- globalState tracks version, installed files, timestamp, and success status
+- Extension continues to function even if installation fails (graceful degradation)
+
+**For Manual Testing:**
+Install built VSIX in VS Code to verify:
+- First activation shows "installing" message in output channel
+- Success notification appears with accurate agent count
+- Agents appear in GitHub Copilot Chat agent selector
+- Reactivation shows "up to date" (no unnecessary reinstall)
+- Permission errors show actionable notification with remediation guidance
+
+**Review Notes:**
+- Verify error handling covers edge cases (disk full, permission denied, missing agents directory)
+- Confirm notification messages are clear and actionable
+- Test installation flow on different platforms (Windows, macOS, Linux)
+- Validate globalState persistence across VS Code restarts
+
+**Commit:** Phase 3: Installation Logic - agent installer with version tracking and user notifications
 
 ---
 

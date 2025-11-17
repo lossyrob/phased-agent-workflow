@@ -178,6 +178,8 @@ function cleanupPreviousInstallation(
   }
 
   // Delete each previously installed file
+  // Note: Missing files are treated as already cleaned (no error), but
+  // permission errors or other failures are logged without blocking cleanup
   for (const filename of state.filesInstalled) {
     const filePath = path.join(promptsDir, filename);
     
@@ -190,7 +192,7 @@ function cleanupPreviousInstallation(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to delete ${filename}: ${message}`);
-      // Continue with remaining files
+      // Continue with remaining files (errors don't block cleanup)
     }
   }
 

@@ -199,7 +199,7 @@ Feature Slugs are normalized identifiers for workflow artifacts stored in `.paw/
 Required header & format:
 ```
 ---
-mode: 'PAW-01B Spec Research Agent'
+agent: 'PAW-01B Spec Researcher'
 ---
 # Spec Research Prompt: <feature>
 Perform research to answer the following questions.

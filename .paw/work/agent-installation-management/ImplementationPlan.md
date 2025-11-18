@@ -967,86 +967,69 @@ The GitHub Actions release workflow (`release.yml`) overwrites the version durin
 
 ---
 
-## Phase 6: Uninstall Cleanup
+## Phase 6: Fix Deactivate Hook (Correcting Original Oversight)
 
 ### Overview
-Implement deactivation hook to remove all PAW agents when extension is uninstalled.
+
+**Note**: This phase corrects a critical design flaw from the original Phase 6 implementation. The original implementation incorrectly assumed that `deactivate()` could be used for uninstall cleanup, but VS Code provides no API to distinguish between normal shutdown and extension uninstall. This phase removes the incorrect automatic cleanup behavior.
+
+**Original Problem**: The implemented `deactivate()` function calls `removeInstalledAgents()`, which deletes all PAW agents every time VS Code shuts down—not just during uninstall. This means users lose their installed agents with every VS Code restart, which is clearly wrong.
+
+**Root Cause**: VS Code's extension lifecycle does not expose an "onUninstall" event. The `deactivate()` hook runs for shutdown, reload, disable, and uninstall—there's no way to detect which scenario triggered it.
+
+**Solution**: Simplify `deactivate()` to be a no-op and document manual cleanup process for users who want to remove agents after uninstalling the extension.
 
 ### Changes Required:
 
-#### 1. Deactivation Function
+#### 1. Remove Agent Cleanup from Deactivation Function
 **File**: `src/extension.ts`
 
-**Purpose**: Clean up installed agents when extension deactivates (uninstall or disable).
+**What needs to be fixed**:
+- Remove all agent cleanup logic from `deactivate()` function
+- Remove the call to `removeInstalledAgents()`
+- Remove shared extension context and output channel tracking variables (`sharedExtensionContext`, `sharedOutputChannel`)
+- Remove the corresponding variable assignments in `activate()`
+- Simplify `deactivate()` to be empty or a minimal no-op
+- Add explanatory comment explaining why cleanup is not performed
+- Remove unused `removeInstalledAgents` import from imports section
 
-**Implementation**:
-- Export `deactivate()` function (called by VS Code on uninstall/disable)
-- Determine prompts directory path
-- Enumerate all PAW agent files (paw-*.agent.md pattern)
-- Delete each file
-- Log deletions to output channel
-- Clear globalState installation record
-- Catch and log errors without throwing
+**Why this fix is needed**:
+- `deactivate()` runs on every VS Code shutdown, not just uninstall
+- No VS Code API exists to detect uninstall vs shutdown
+- Current implementation deletes agents on every shutdown (unintended)
+- Users expect agents to persist between VS Code sessions
 
-**Pattern Matching**:
-- Use glob pattern `paw-*.agent.md` to find PAW agents
-- Avoid deleting non-PAW agent files
-- Safe even if other extensions use `.agent.md` format
+#### 2. Update Documentation
+**File**: README.md
 
-**Error Handling**:
-- Continue deleting remaining files after individual failures
-- Log detailed errors (file path, error message)
-- If permission errors, log manual cleanup instructions
-- Never throw exceptions (deactivation should complete)
-
-#### 2. Output Channel Cleanup
-**File**: `src/extension.ts`
-
-**Changes**: Ensure output channel remains available during deactivation.
-
-**Approach**:
-- Don't dispose output channel until after agent cleanup
-- Log cleanup operations to channel
-- Dispose output channel as final step
-
-#### 3. User Guidance
-**File**: Extension README.md
-
-**Changes**: Add uninstall cleanup documentation.
-
-**Content**:
-- Explain that agents are automatically removed on uninstall
-- If permission errors prevent cleanup, provide manual removal instructions
-- List typical prompts directory paths per platform
-- Mention that orphaned agents are harmless (no longer managed)
+**What needs to be updated**:
+- Remove the "Automatic uninstall cleanup" bullet point from the Features section
+- Update the "Uninstalling the Extension" section to explain that agents persist after uninstall
+- Document manual cleanup instructions (filesystem paths and VS Code UI method)
+- Explain why automatic cleanup is not possible (no uninstall detection API)
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [x] `deactivate()` function exported from extension.ts
-- [x] Deactivation deletes all paw-*.agent.md files
-- [x] Deactivation clears globalState installation record
-- [x] Deactivation completes successfully even with permission errors
-- [x] Only PAW agent files deleted (not other extensions' agents)
+- [ ] `deactivate()` simplified to no-op with explanatory comment
+- [ ] Removed shared extension context/output channel tracking variables
+- [ ] Removed unused `removeInstalledAgents` import from extension.ts
+- [ ] Type checking passes: `npm run compile`
+- [ ] All tests pass: `npm test`
 
 #### Manual Verification:
-- [ ] Uninstall extension, verify agents removed from prompts directory
-- [ ] After uninstall, PAW agents absent from Copilot Chat
-- [ ] Output channel shows cleanup confirmation
-- [ ] Permission error during cleanup shows manual instructions
-- [ ] README documents uninstall behavior
+- [ ] VS Code shutdown does NOT remove PAW agents
+- [ ] Agents persist between VS Code sessions
+- [ ] README accurately documents manual cleanup process
+- [ ] README mentions VS Code UI deletion method
+- [ ] README lists correct platform-specific paths
+- [ ] README no longer claims automatic cleanup during uninstall
 
 ---
 
-**Phase 6 Implementation Complete**
+**Phase 6 Status**
 
-- Added shared extension context/output-channel tracking so the deactivation hook can reuse logging infrastructure before VS Code disposes subscriptions.
-- Implemented `removeInstalledAgents()` to delete tracked PAW agent files plus any `paw-*.agent.md` stragglers, clear global installation state, and surface errors without throwing.
-- Updated `deactivate()` to await cleanup, log manual remediation instructions for failures, and keep the channel alive until cleanup completes.
-- Documented uninstall behavior and manual cleanup steps in `README.md`.
-- Added two uninstall-focused tests covering successful cleanup and partial failures; `npm run compile` and `npm test` (59 passing) verify the new logic.
-
-Manual follow-ups: uninstall the packaged VSIX on each platform to confirm the output-channel messaging, verify Copilot no longer lists PAW agents post-uninstall, and screenshot the notification for docs.
+Unimplemented
 
 ---
 

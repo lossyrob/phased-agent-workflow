@@ -96,7 +96,7 @@ Add the following guideline after the existing 8 guidelines:
    - Focus on describing **WHAT** needs to be built (component purposes, interface contracts, behavior specifications) rather than **HOW** to implement it (algorithms, detailed code, specific function implementations)
    - For significant architectural decisions (technology choices, design patterns, component boundaries, integration approaches), present **2-3 options with trade-offs** against quality attributes (performance, reliability, maintainability, security) and justify the selected approach
    - Apply **YAGNI** (You Aren't Gonna Need It) and avoid premature optimization; only specify optimizations when required by explicit performance constraints or SLOs
-   - Use **Architecture Decision Record (ADR) format** when documenting significant choices: Context, Decision, Consequences
+   - For significant architectural decisions, document the **rationale** (why this approach over alternatives) inline; you may use **ADR format** (Context, Decision, Consequences) if the decision is complex and will impact multiple phases
    - Describe success criteria via **observable outcomes** (SLIs/SLOs, acceptance tests, behavior verification) rather than code inspection
    - Reference file paths, module names, component boundaries, and existing patterns, but delegate detailed implementation to the Implementation Agent
    

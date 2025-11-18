@@ -1,5 +1,5 @@
 ---
-mode: 'agent'
+agent: 'agent'
 description: 'Get Next Ready Issue from PAW Project'
 model: Claude Sonnet 4.5 (copilot)
 ---

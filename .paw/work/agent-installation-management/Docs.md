@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Agent Installation Management feature transforms PAW from a documentation framework into a fully integrated VS Code development companion by automatically managing PAW agent installation, upgrades, and cleanup. When developers install the PAW VS Code extension, all PAW agents (Specification, Planning, Implementation, Review, Documentation, etc.) become immediately available in GitHub Copilot Chat without manual configuration. The system handles version upgrades and downgrades bidirectionally, cleans up obsolete agent files during version transitions, and removes agents completely when the extension is uninstalled—all while maintaining resilience against interruptions and providing clear error recovery guidance.
+The Agent Installation Management feature transforms PAW from a documentation framework into a fully integrated VS Code development companion by automatically managing PAW agent installation, upgrades, and cleanup. When developers install the PAW VS Code extension, all PAW agents (Specification, Planning, Implementation, Review, Documentation, etc.) become immediately available in GitHub Copilot Chat without manual configuration. The system handles version upgrades and downgrades bidirectionally, cleans up obsolete agent files during version transitions, and documents clear manual removal steps for scenarios where the extension is uninstalled—all while maintaining resilience against interruptions and providing clear error recovery guidance.
 
 This implementation establishes PAW as an extension-first architecture where the repository itself serves as the extension project. All agent templates are bundled within the extension and installed to platform-appropriate VS Code configuration directories, ensuring consistent agent availability across all developer machines regardless of platform or VS Code variant.
 
@@ -30,7 +30,6 @@ The agent installation system consists of three primary modules working in conce
 - Detects version changes (upgrades, downgrades, development builds)
 - Cleans up previous installations during version changes
 - Handles errors gracefully without blocking extension activation
-- Removes agents during extension uninstall
 
 ### Extension Activation Flow
 
@@ -86,7 +85,7 @@ Update globalState with new version and files
 - `vscode.workspace.getConfiguration()`: Reads `paw.promptDirectory` configuration override
 - `vscode.window.showErrorMessage()` / `showInformationMessage()`: User notifications
 - `vscode.window.createOutputChannel()`: Detailed logging for troubleshooting
-- Extension lifecycle: `activate()` for installation, `deactivate()` for cleanup
+- Extension lifecycle: `activate()` triggers installation logic during startup
 
 **File System**:
 - Reads agent templates from `<extensionPath>/agents/*.agent.md`
@@ -171,21 +170,15 @@ Agent upgrades happen automatically when you update the PAW extension:
 
 ### Uninstalling
 
-PAW agents are automatically removed when you uninstall or disable the extension:
+VS Code does not provide an uninstall-specific lifecycle event—`deactivate()` fires for every shutdown, reload, disable, and uninstall. To avoid deleting agents on each restart, the extension leaves installed agents in place. If you no longer need them after uninstalling the extension, use the configure agents UI in GitHub Copilot Chat to delete the PAW agents.
 
-1. Uninstall PAW Workflow extension through VS Code
-2. The extension's deactivation hook removes all PAW agent files
-3. Check Output panel for cleanup confirmation
-4. PAW agents no longer appear in GitHub Copilot Chat
+Alternatively, you can manually delete files matching `paw-*.agent.md` from your prompts directory:
+- **Windows**: `%APPDATA%\Code\User\prompts`
+- **macOS**: `~/Library/Application Support/Code/User/prompts`
+- **Linux**: `~/.config/Code/User/prompts`
+- **Custom path**: the value configured via `paw.promptDirectory`
 
-**Manual cleanup** (if automatic cleanup fails due to permissions):
-
-Remove PAW agent files manually from your prompts directory:
-- **Windows**: `%APPDATA%\Code\User\prompts\PAW-*.agent.md`
-- **macOS**: `~/Library/Application Support/Code/User/prompts/PAW-*.agent.md`
-- **Linux**: `~/.config/Code/User/prompts/PAW-*.agent.md`
-
-### Troubleshooting
+The installer module still exposes `removeInstalledAgents(context)` for tooling or scripts that want to perform automated cleanup, but the extension no longer invokes it automatically during shutdown.### Troubleshooting
 
 **Agents not appearing in Copilot Chat after installation**:
 - Reload VS Code (Command Palette → Developer: Reload Window)
@@ -286,7 +279,7 @@ interface AgentCleanupResult {
 Key functions:
 - `needsInstallation(context, extensionUri, promptsDir)`: Returns true if installation needed
 - `installAgents(context)`: Installs agents and returns result
-- `removeInstalledAgents(context)`: Removes agents during uninstall
+- `removeInstalledAgents(context)`: Optional helper for scripted/manual uninstall cleanup
 - `isDevelopmentVersion(version)`: Checks for `-dev` suffix
 
 Installation state storage:
@@ -367,11 +360,11 @@ Installation errors follow graceful degradation:
 - Suggests setting `paw.promptDirectory` configuration
 - Lists common paths for reference
 
-**Cleanup Errors** (during uninstall):
-- Logged to output channel
-- If any files cannot be deleted, manual cleanup instructions provided
-- globalState cleared regardless of cleanup success
-- Extension uninstall completes
+**Manual Cleanup Guidance**:
+- README documents platform-specific prompts directory paths
+- Users delete `paw-*.agent.md` files after uninstalling the extension
+- Global state is cleared when manual cleanup helpers run, but the default workflow now leaves state untouched so users can reinstall later without issue
+- Tooling can call `removeInstalledAgents(context)` if scripted cleanup is needed (e.g., in automated tests)
 
 ## Edge Cases and Limitations
 
@@ -490,9 +483,9 @@ Installation errors follow graceful degradation:
 1. Install PAW extension
 2. Verify agents present in prompts directory
 3. Note prompts directory path from output panel
-4. Uninstall extension through VS Code
-5. Check output panel for cleanup confirmation
-6. Navigate to prompts directory and verify all PAW-*.agent.md files removed
+4. Uninstall extension through VS Code (agents remain so they persist across restart)
+5. Follow manual cleanup instructions and delete `paw-*.agent.md`
+6. Reload VS Code (optional)
 7. Open Copilot Chat and verify PAW agents no longer appear
 
 **Platform Compatibility Testing**:

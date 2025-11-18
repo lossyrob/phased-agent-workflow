@@ -6,14 +6,11 @@ import {
   needsInstallation,
   isDevelopmentVersion,
   INSTALLATION_STATE_KEY,
-  InstallationState,
-  removeInstalledAgents
+  InstallationState
 } from './agents/installer';
 import { getPlatformInfo, resolvePromptsDirectory } from './agents/platformDetection';
 
 const OUTPUT_CHANNEL_NAME = 'PAW Workflow';
-let sharedOutputChannel: vscode.OutputChannel | undefined;
-let sharedExtensionContext: vscode.ExtensionContext | undefined;
 
 /**
  * Extension activation function called when extension is first needed.
@@ -32,11 +29,9 @@ let sharedExtensionContext: vscode.ExtensionContext | undefined;
  *                  disposable resources and accessing extension-specific APIs
  */
 export async function activate(context: vscode.ExtensionContext) {
-  sharedExtensionContext = context;
   // Create output channel for logging
   // The channel provides transparency into PAW operations and helps with debugging
   const outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
-  sharedOutputChannel = outputChannel;
   context.subscriptions.push(outputChannel);
   
   outputChannel.appendLine('[INFO] PAW Workflow extension activated');
@@ -167,63 +162,5 @@ async function installAgentsIfNeeded(
     }
     
     // Don't throw - allow extension to continue activating
-  }
-}
-
-/**
- * Extension deactivation function called when extension is deactivated.
- * 
- * This function is called when the extension is deactivated, either because
- * VS Code is shutting down or the extension is being disabled/uninstalled.
- * 
- * All resources registered via context.subscriptions are automatically disposed,
- * so no manual cleanup is required in this implementation.
- */
-export async function deactivate(): Promise<void> {
-  if (!sharedExtensionContext) {
-    return;
-  }
-
-  const outputChannel = sharedOutputChannel ?? vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
-  const createdTempChannel = sharedOutputChannel === undefined;
-
-  outputChannel.appendLine('[INFO] PAW Workflow extension deactivating - removing installed agents.');
-
-  try {
-    const cleanupResult = await removeInstalledAgents(sharedExtensionContext);
-
-    if (cleanupResult.filesRemoved.length > 0) {
-      outputChannel.appendLine(
-        `[INFO] Removed ${cleanupResult.filesRemoved.length} PAW agent file(s) during uninstall cleanup.`
-      );
-      for (const file of cleanupResult.filesRemoved) {
-        outputChannel.appendLine(`[INFO]   - ${file}`);
-      }
-    } else {
-      outputChannel.appendLine('[INFO] No PAW agent files were found during uninstall cleanup.');
-    }
-
-    if (cleanupResult.errors.length > 0) {
-      outputChannel.appendLine('[WARN] Some PAW agent files could not be removed automatically:');
-      for (const error of cleanupResult.errors) {
-        outputChannel.appendLine(`[WARN]   ${error}`);
-      }
-      outputChannel.appendLine('[WARN] Manual removal instructions:');
-      outputChannel.appendLine('[WARN]   Windows: %APPDATA%\\Code\\User\\prompts');
-      outputChannel.appendLine('[WARN]   macOS: ~/Library/Application Support/Code/User/prompts');
-      outputChannel.appendLine('[WARN]   Linux: ~/.config/Code/User/prompts');
-      outputChannel.appendLine('[WARN] If you use a custom prompts directory, delete any paw-*.agent.md files manually.');
-    } else {
-      outputChannel.appendLine('[INFO] PAW agent cleanup completed successfully.');
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    outputChannel.appendLine(`[ERROR] Failed to clean up PAW agents during uninstall: ${message}`);
-  } finally {
-    if (createdTempChannel) {
-      outputChannel.dispose();
-    }
-    sharedOutputChannel = undefined;
-    sharedExtensionContext = undefined;
   }
 }

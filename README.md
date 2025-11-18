@@ -139,29 +139,9 @@ When present, the extension injects these instructions into the agent prompt so 
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 
-#### Removing PAW Agents
+#### Uninstalling the Extension
 
-**Note**: PAW agents persist in your prompts directory after uninstalling the PAW Workflow extension. This is intentional—VS Code does not provide a way for extensions to detect when they are being uninstalled (vs. normal shutdown), so automatic cleanup is not possible.
-
-To remove PAW agents after uninstalling the extension:
-
-1. Navigate to your VS Code prompts directory:
-   - **Windows**: `%APPDATA%\Code\User\prompts`
-   - **macOS**: `~/Library/Application Support/Code/User/prompts`
-   - **Linux**: `~/.config/Code/User/prompts`
-
-2. Delete all files matching the pattern: `paw-*.agent.md`
-
-3. Reload VS Code to update GitHub Copilot's agent list
-
-**Alternative**: Use VS Code's built-in UI:
-1. Open GitHub Copilot Chat
-2. Click the agent selector (@ icon)
-3. Right-click any PAW agent
-4. Select "Delete Agent File"
-5. Repeat for each PAW agent
-
-If you configured a custom prompts directory via the `paw.promptDirectory` setting, use that location instead of the defaults above.
+After uninstalling the extension, use the configure agents UI in GitHub Copilot Chat to remove the PAW agents.
 
 ## Workflow Modes
 

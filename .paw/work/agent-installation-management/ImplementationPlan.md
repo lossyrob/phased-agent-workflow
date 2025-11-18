@@ -1011,11 +1011,11 @@ The GitHub Actions release workflow (`release.yml`) overwrites the version durin
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `deactivate()` simplified to no-op with explanatory comment
-- [ ] Removed shared extension context/output channel tracking variables
-- [ ] Removed unused `removeInstalledAgents` import from extension.ts
-- [ ] Type checking passes: `npm run compile`
-- [ ] All tests pass: `npm test`
+- [x] `deactivate()` simplified (hook removed per VS Code shutdown behavior)
+- [x] Removed shared extension context/output channel tracking variables
+- [x] Removed unused `removeInstalledAgents` import from extension.ts
+- [x] Type checking passes: `npm run compile`
+- [x] All tests pass: `npm test`
 
 #### Manual Verification:
 - [ ] VS Code shutdown does NOT remove PAW agents
@@ -1027,9 +1027,14 @@ The GitHub Actions release workflow (`release.yml`) overwrites the version durin
 
 ---
 
-**Phase 6 Status**
+**Phase 6 Implementation Complete (2025-11-17)**
 
-Unimplemented
+- Removed the `deactivate` export entirely so the extension no longer performs uninstall cleanup that triggers on normal shutdown; installation helper remains available for tooling but is not auto-invoked.
+- Simplified `activate` by dropping shared context/output channel globals now that lifecycle cleanup is gone.
+- Updated `README.md` and `Docs.md` with manual removal instructions, rationale for avoiding `deactivate`, and references to platform-specific prompts directories.
+- Verification: `npm run compile` and `npm test` (60 passing) executed on `feature/agent-installation-management` with direct commits per user guidance.
+
+**Pending Manual Verification:** Confirm agents persist between VS Code restarts and validate manual cleanup steps in a real environment.
 
 ---
 

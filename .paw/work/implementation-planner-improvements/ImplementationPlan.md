@@ -119,16 +119,18 @@ This guidance establishes the strategic focus principle and provides concrete ex
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
-- [ ] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
-- [ ] No markdown formatting errors when viewing the file
+- [x] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
+- [x] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] No markdown formatting errors when viewing the file
 
 #### Manual Verification:
-- [ ] New guideline 9 appears in "Important Guidelines" section with proper numbering
-- [ ] Anti-patterns section clearly identifies behaviors to avoid
-- [ ] Good examples section demonstrates appropriate abstraction level
-- [ ] Guideline integrates smoothly with existing guidelines without contradictions
-- [ ] Language is clear and actionable for the agent to follow
+- [x] New guideline 9 appears in "Important Guidelines" section with proper numbering
+- [x] Anti-patterns section clearly identifies behaviors to avoid
+- [x] Good examples section demonstrates appropriate abstraction level
+- [x] Guideline integrates smoothly with existing guidelines without contradictions
+- [x] Language is clear and actionable for the agent to follow
+
+**Phase 1 Completed**: Successfully added new guideline 9 "Think Strategically, Not Tactically" to the Important Guidelines section. The guideline includes comprehensive guidance on C4 abstraction levels, code detail limits (3-10 lines), YAGNI principles, trade-off analysis requirements, anti-patterns to avoid, and good examples to follow. Agent linting passes with 5884 tokens total. The guideline is positioned correctly after guideline 8 and before the "Complete means:" section.
 
 ---
 
@@ -219,17 +221,19 @@ This explicitly connects the template to the new strategic guidance.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
-- [ ] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
-- [ ] Template maintains valid markdown structure
+- [x] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
+- [x] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] Template maintains valid markdown structure
 
 #### Manual Verification:
-- [ ] Phase Summary section appears in the correct position within the template
-- [ ] Phase Summary format is consistent and machine-readable (numbered list with bold phase names)
-- [ ] Code block example is replaced with architectural description approach
-- [ ] New template example demonstrates appropriate abstraction level
-- [ ] Template instruction references the new strategic guideline
-- [ ] Template remains usable and clear for generating actual implementation plans
+- [x] Phase Summary section appears in the correct position within the template
+- [x] Phase Summary format is consistent and machine-readable (numbered list with bold phase names)
+- [x] Code block example is replaced with architectural description approach
+- [x] New template example demonstrates appropriate abstraction level
+- [x] Template instruction references the new strategic guideline
+- [x] Template remains usable and clear for generating actual implementation plans
+
+**Phase 2 Completed**: Successfully updated the plan template structure with three key changes: (1) Added Phase Summary section after Implementation Approach with numbered list format showing phase names and objectives, (2) Replaced the code block placeholder with architectural description examples showing component implementation patterns and brief illustrative code (3-10 lines), and (3) Updated Step 4 instruction to reference Guideline 9. The template now defaults to strategic descriptions while retaining flexibility for brief code examples when architecturally significant.
 
 ---
 
@@ -262,15 +266,17 @@ This explicitly prevents the anti-pattern of including documentation phases in i
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
-- [ ] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
+- [x] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
 
 #### Manual Verification:
-- [ ] New guideline 10 appears after guideline 9 with proper numbering
-- [ ] Guidance clearly states what NOT to do (no documentation phases)
-- [ ] Guidance references Documenter agent by name and stage number (PAW-04)
-- [ ] Guidance clarifies the distinction between inline code comments (OK in success criteria) and documentation artifacts (out of scope)
-- [ ] Reference to workflow sequence makes the stage separation clear
+- [x] New guideline 10 appears after guideline 9 with proper numbering
+- [x] Guidance clearly states what NOT to do (no documentation phases)
+- [x] Guidance references Documenter agent by name and stage number (PAW-04)
+- [x] Guidance clarifies the distinction between inline code comments (OK in success criteria) and documentation artifacts (out of scope)
+- [x] Reference to workflow sequence makes the stage separation clear
+
+**Phase 3 Completed**: Successfully added new guideline 10 "Separate Implementation from Documentation" to prevent documentation phases in implementation plans. The guideline explicitly states not to create documentation phases, references the Documenter agent (PAW-04) as owner of documentation work, clarifies the workflow sequence (Specification → Planning → Implementation → Documentation), and distinguishes between inline code comments (acceptable in success criteria) and documentation artifacts (out of scope). This ensures clean separation of implementation and documentation concerns.
 
 ---
 
@@ -342,16 +348,18 @@ This ensures all PR review response comments include agent identification.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
-- [ ] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
+- [x] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
 
 #### Manual Verification:
-- [ ] PR description format includes agent identification at the beginning
-- [ ] Agent identification uses the established pattern (`**🐾 Implementation Planner 🤖:**`)
-- [ ] PAW footer remains present (agent ID complements, doesn't replace)
-- [ ] PR review response comment format includes agent identification
-- [ ] Format examples are clear and show the complete structure with markdown code blocks
-- [ ] Instructions align with patterns used by Implementation Reviewer (PAW-03B) and Documenter (PAW-04)
+- [x] PR description format includes agent identification at the beginning
+- [x] Agent identification uses the established pattern (`**🐾 Implementation Planner 🤖:**`)
+- [x] PAW footer remains present (agent ID complements, doesn't replace)
+- [x] PR review response comment format includes agent identification
+- [x] Format examples are clear and show the complete structure with markdown code blocks
+- [x] Instructions align with patterns used by Implementation Reviewer (PAW-03B) and Documenter (PAW-04)
+
+**Phase 4 Completed**: Successfully updated PR identification patterns in two locations: (1) Planning PR creation instructions now include agent-specific identification (`**🐾 Implementation Planner 🤖:**`) at the beginning of PR descriptions while preserving the PAW footer, and (2) PR review response mode now includes the same identification in comment replies. The format matches patterns established by PAW-03B and PAW-04 agents, providing clear agent identity in all Planning PR communications.
 
 ---
 
@@ -384,16 +392,18 @@ These items enforce the new requirements established in the previous phases.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
-- [ ] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] File syntax is valid: Agent file can be loaded by VS Code Chatagent extension
+- [x] Linting passes: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
 
 #### Manual Verification:
-- [ ] New checklist items appear in the "For Initial Planning:" section
-- [ ] Items are clear and verifiable (agent can check each one before completion)
-- [ ] Items cover all major requirements: Phase Summary, code detail limits, strategic focus, no documentation phases
-- [ ] Items align with the guidance added in previous phases
-- [ ] Checklist maintains markdown formatting consistency with existing items
-- [ ] Items use checkbox syntax (`- [ ]`) for consistency
+- [x] New checklist items appear in the "For Initial Planning:" section
+- [x] Items are clear and verifiable (agent can check each one before completion)
+- [x] Items cover all major requirements: Phase Summary, code detail limits, strategic focus, no documentation phases
+- [x] Items align with the guidance added in previous phases
+- [x] Checklist maintains markdown formatting consistency with existing items
+- [x] Items use checkbox syntax (`- [ ]`) for consistency
+
+**Phase 5 Completed**: Successfully enhanced the Quality Checklist by adding 7 new verification items to the "For Initial Planning:" section. The new items verify: Phase Summary existence and format, code block limits (<10 lines), Changes Required sections focus on architecture not implementation, presence of trade-off analysis for architectural decisions, absence of documentation phases, and limitation of documentation work to inline code comments. All items are clear, actionable, and aligned with guidelines added in Phases 1-4.
 
 ---
 

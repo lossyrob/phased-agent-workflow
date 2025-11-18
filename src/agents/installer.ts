@@ -190,19 +190,23 @@ interface CleanupResult {
  * 
  * @param context - Extension context for accessing globalState
  * @param promptsDir - Path to the prompts directory
+ * @param outputChannel - Optional output channel for logging deletion operations
  * @returns Cleanup result with count of files deleted and any errors
  */
 function cleanupPreviousInstallation(
   context: vscode.ExtensionContext,
-  promptsDir: string
+  promptsDir: string,
+  outputChannel?: vscode.OutputChannel
 ): CleanupResult {
   const result: CleanupResult = {
     filesDeleted: 0,
-    errors: []
+    errors: [],
   };
 
   // Get previous installation state
-  const state = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+  const state = context.globalState.get<InstallationState>(
+    INSTALLATION_STATE_KEY
+  );
   if (!state || !state.filesInstalled || state.filesInstalled.length === 0) {
     // No previous installation to clean up
     return result;
@@ -213,16 +217,26 @@ function cleanupPreviousInstallation(
   // permission errors or other failures are logged without blocking cleanup
   for (const filename of state.filesInstalled) {
     const filePath = path.join(promptsDir, filename);
-    
+
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         result.filesDeleted++;
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[INFO] Deleted previous agent: ${filename}`
+          );
+        }
       }
       // If file doesn't exist, consider it already cleaned up (no error)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       result.errors.push(`Failed to delete ${filename}: ${message}`);
+      if (outputChannel) {
+        outputChannel.appendLine(
+          `[ERROR] Failed to delete ${filename}: ${message}`
+        );
+      }
       // Continue with remaining files (errors don't block cleanup)
     }
   }
@@ -245,23 +259,32 @@ function cleanupPreviousInstallation(
  * failures are tracked but don't prevent other files from being installed.
  * 
  * @param context - Extension context for version tracking and state storage
+ * @param outputChannel - Optional output channel for logging installation details
  * @returns Installation result with files installed, skipped, and any errors
  */
-export async function installAgents(context: vscode.ExtensionContext): Promise<InstallationResult> {
+export async function installAgents(
+  context: vscode.ExtensionContext,
+  outputChannel?: vscode.OutputChannel
+): Promise<InstallationResult> {
   const result: InstallationResult = {
     filesInstalled: [],
     filesSkipped: [],
-    errors: []
+    errors: [],
   };
 
   try {
     // Determine where to install agents
     const promptsDir = getPromptsDirectoryPath();
-    
+
     // Create prompts directory if needed (recursive)
     try {
       if (!fs.existsSync(promptsDir)) {
         fs.mkdirSync(promptsDir, { recursive: true });
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[INFO] Created prompts directory: ${promptsDir}`
+          );
+        }
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -271,22 +294,47 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
 
     // Check for version change and clean up previous installation if needed
     const currentVersion = context.extension.packageJSON.version;
-    const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+    const previousState = context.globalState.get<InstallationState>(
+      INSTALLATION_STATE_KEY
+    );
     const currentIsDev = isDevelopmentVersion(currentVersion);
     let previousVersion: string | undefined;
     let filesDeleted = 0;
 
     const shouldCleanup = Boolean(
-      previousState && (
-        previousState.version !== currentVersion ||
-        isDevelopmentVersion(previousState.version) ||
-        currentIsDev
-      )
+      previousState &&
+        (previousState.version !== currentVersion ||
+          isDevelopmentVersion(previousState.version) ||
+          currentIsDev)
     );
 
     if (shouldCleanup && previousState?.version) {
       previousVersion = previousState.version;
-      const cleanupResult = cleanupPreviousInstallation(context, promptsDir);
+
+      // Log prompts directory and platform info before cleanup
+      if (outputChannel) {
+        outputChannel.appendLine(
+          `[INFO] Prompts directory path: ${promptsDir}`
+        );
+        const customPath = getCustomPromptsDirectory();
+        if (customPath) {
+          outputChannel.appendLine(
+            `[INFO] Using custom prompts directory from configuration`
+          );
+        } else {
+          const platformInfo = getPlatformInfo();
+          outputChannel.appendLine(`[INFO] Platform: ${platformInfo.platform}`);
+          outputChannel.appendLine(
+            `[INFO] VS Code variant: ${platformInfo.variant}`
+          );
+        }
+      }
+
+      const cleanupResult = cleanupPreviousInstallation(
+        context,
+        promptsDir,
+        outputChannel
+      );
       filesDeleted = cleanupResult.filesDeleted;
 
       // Add cleanup errors to result but don't stop installation
@@ -306,13 +354,23 @@ export async function installAgents(context: vscode.ExtensionContext): Promise<I
     // Install each agent file
     for (const template of templates) {
       const filePath = path.join(promptsDir, template.filename);
-      
+
       try {
-        fs.writeFileSync(filePath, template.content, 'utf-8');
+        fs.writeFileSync(filePath, template.content, "utf-8");
         result.filesInstalled.push(template.filename);
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[INFO] Installed agent: ${template.filename}`
+          );
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result.errors.push(`Failed to write ${template.filename}: ${message}`);
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[ERROR] Failed to write ${template.filename}: ${message}`
+          );
+        }
         // Continue installing other files
       }
     }

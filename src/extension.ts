@@ -113,21 +113,15 @@ async function installAgentsIfNeeded(
     outputChannel.appendLine('[INFO] Installing PAW agents...');
     outputChannel.show(true); // Show but don't focus
     
-    const result = await installAgents(context);
+    const result = await installAgents(context, outputChannel);
     
     // Log installation results
     if (result.filesInstalled.length > 0) {
-      outputChannel.appendLine(`[INFO] Successfully installed ${result.filesInstalled.length} agent(s):`);
-      for (const file of result.filesInstalled) {
-        outputChannel.appendLine(`[INFO]   - ${file}`);
-      }
+      outputChannel.appendLine(`[INFO] Successfully installed ${result.filesInstalled.length} agent(s):`);      
     }
     
     if (result.filesSkipped.length > 0) {
-      outputChannel.appendLine(`[INFO] Skipped ${result.filesSkipped.length} agent(s) (already up to date):`);
-      for (const file of result.filesSkipped) {
-        outputChannel.appendLine(`[INFO]   - ${file}`);
-      }
+      outputChannel.appendLine(`[INFO] Skipped ${result.filesSkipped.length} agent(s) (already up to date):`);      
     }
     
     if (result.errors.length > 0) {

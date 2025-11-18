@@ -109,9 +109,12 @@ async function installAgentsIfNeeded(
       return;
     }
 
-    // Installation needed - show output channel and start installation
+    // Installation needed - show output channel for production builds only
+    // Development builds reinstall frequently, so showing output each time is noisy
     outputChannel.appendLine('[INFO] Installing PAW agents...');
-    outputChannel.show(true); // Show but don't focus
+    if (!isDevelopmentVersion(currentVersion)) {
+      outputChannel.show(true); // Show but don't focus
+    }
     
     const result = await installAgents(context, outputChannel);
     
@@ -146,11 +149,7 @@ async function installAgentsIfNeeded(
       outputChannel.appendLine('[INFO]   2. Search for "paw.promptDirectory"');
       outputChannel.appendLine('[INFO]   3. Set a path where you have write permissions');
     } else {
-      // Full success - show success notification
-      const agentCount = result.filesInstalled.length;
-      vscode.window.showInformationMessage(
-        `PAW agents installed successfully. ${agentCount} agent${agentCount !== 1 ? 's' : ''} available in Copilot Chat.`
-      );
+      // Full success - log to output channel only (no notification popup)
       outputChannel.appendLine(`[INFO] PAW agent installation completed successfully`);
     }
   } catch (error) {

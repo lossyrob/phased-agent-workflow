@@ -24,14 +24,12 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'vscode-extension/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
-        working-directory: vscode-extension
         run: npm ci
       
       - name: Compile extension
-        working-directory: vscode-extension
         run: npm run compile
       
       - name: Extract version from tag
@@ -45,7 +43,6 @@ jobs:
           echo "Extracted version: ${VERSION}"
       
       - name: Update package.json version to match tag
-        working-directory: vscode-extension
         run: |
           # Set package.json version to match the git tag
           # This eliminates the need for manual version updates before tagging
@@ -74,12 +71,10 @@ jobs:
           fi
       
       - name: Package VSIX
-        working-directory: vscode-extension
         run: npm run package
       
       - name: Verify VSIX created
         id: vsix
-        working-directory: vscode-extension
         run: |
           # Verify the VSIX file was created with the expected filename format
           # The package name comes from package.json and matches: paw-workflow-<version>.vsix
@@ -89,7 +84,7 @@ jobs:
             exit 1
           fi
           # Export both the full path (for release upload) and filename (for display)
-          echo "vsix_path=vscode-extension/${VSIX_FILE}" >> $GITHUB_OUTPUT
+          echo "vsix_path=${VSIX_FILE}" >> $GITHUB_OUTPUT
           echo "vsix_name=${VSIX_FILE}" >> $GITHUB_OUTPUT
           echo "VSIX created successfully: $VSIX_FILE"
       

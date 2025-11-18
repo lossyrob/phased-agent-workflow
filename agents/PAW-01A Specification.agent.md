@@ -24,6 +24,7 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
 - Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- **Check for existing `SpecResearch.md`**: If `WorkflowContext.md` exists, check for `SpecResearch.md` at `.paw/work/<feature-slug>/SpecResearch.md`. If found, skip research prompt generation and proceed directly to spec drafting/integration mode. Inform user: "Found existing research—proceeding with spec integration."
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. When reading an issue work item, ensure all comments are also retrieved. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
 - **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
@@ -57,7 +58,7 @@ Before responding, inspect the invocation context (prompt files, prior user turn
 - Research preference: default to running research unless the user explicitly skips it.
 
 Explicitly confirm the inferred inputs and ask only for missing or ambiguous details before moving on to **Intake & Decomposition**.
-If the user explicitly says research is already done and provides a `SpecResearch.md` path, skip the research prompt generation step (after validating the file exists) and proceed to drafting/refining the spec.
+If `SpecResearch.md` exists or the user explicitly says research is already done, skip research prompt generation and proceed directly to spec drafting/integration.
 
 ### WorkflowContext.md Parameters
 - Minimal format to create or update:
@@ -150,8 +151,8 @@ Custom Workflow Instructions: <text or none>
 ## Working Modes
 | Mode | Trigger | Output |
 |------|---------|--------|
-| Research Preparation | No `SpecResearch.md` yet & research not skipped | `prompts/01B-spec-research.prompt.md` + pause |
-| Research Integration | `SpecResearch.md` supplied | Refined spec; all clarification questions answered prior to drafting |
+| Research Preparation | No `SpecResearch.md` detected & research not skipped | `prompts/01B-spec-research.prompt.md` + pause |
+| Research Integration | `SpecResearch.md` exists or supplied by user | Refined spec; all clarification questions answered prior to drafting |
 | Direct Spec (Skip Research) | User: "skip research" | Spec with assumptions list + explicit risk note |
 
 ## Drafting Workflow (Detailed Steps)
@@ -163,8 +164,8 @@ Custom Workflow Instructions: <text or none>
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
    - **Design decisions** (file names, structure, conventions) informed by research should be made directly without asking the user—document the choice and rationale.
 4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
-5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent.
-6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting.
+5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent. (Skip if `SpecResearch.md` already exists.)
+6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting. (If returning after research, start here.)
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Start with narrative sections (Overview and Objectives) to establish context, then enumerate detailed requirements.
    - **Overview**: Write 2-4 paragraphs (3-5 sentences each) describing the feature as a cohesive user journey. Create a vivid, realistic scenario showing how users will experience the feature from start to finish. Structure the narrative to flow logically: describe the user's problem or need, walk through their interaction with the feature step-by-step, and explain the value delivered. Focus on behavioral outcomes and user experience, not technical implementation. Use insights from issue, research, and clarifications to paint a coherent picture. Write in flowing prose that tells a story - avoid bullet fragments or disjointed statements. The narrative should set the stage for the structured sections that follow.
    - **Objectives**: List key behavioral goals as bullets - observable outcomes the feature achieves. Keep technology-agnostic and focused on WHAT, not HOW. Each objective may optionally include a brief rationale to explain why this goal matters: "(Rationale: this allows users to...)". Understanding the why helps both reviewers and AI implementers make better decisions.
@@ -198,7 +199,7 @@ Feature Slugs are normalized identifiers for workflow artifacts stored in `.paw/
 Required header & format:
 ```
 ---
-mode: 'PAW-01B Spec Research Agent'
+agent: 'PAW-01B Spec Researcher'
 ---
 # Spec Research Prompt: <feature>
 Perform research to answer the following questions.

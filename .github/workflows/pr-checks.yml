@@ -9,8 +9,8 @@ on:
       - main
       - 'feature/**'
     paths:
-      - 'vscode-extension/**'
-      - '.github/agents/**'
+      - 'src/**'
+      - 'agents/**'
       - 'scripts/**'
       - '.github/workflows/pr-checks.yml'
 
@@ -27,23 +27,15 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: |
-            vscode-extension/package-lock.json
-            package-lock.json
+          cache-dependency-path: package-lock.json
       
-      - name: Install root dependencies
-        run: npm ci
-      
-      - name: Install extension dependencies
-        working-directory: vscode-extension
+      - name: Install dependencies
         run: npm ci
       
       - name: Compile extension
-        working-directory: vscode-extension
         run: npm run compile
       
       - name: Run extension unit tests
-        working-directory: vscode-extension
         run: |
           # Install xvfb for headless VS Code testing
           # xvfb provides a virtual display server, required for VS Code's Electron environment

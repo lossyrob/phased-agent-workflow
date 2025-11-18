@@ -27,11 +27,11 @@ Agent files should be kept within reasonable token limits to ensure they work ef
 
 **Usage**:
 ```bash
-# Lint all agent files in .github/agents/
+# Lint all agent files in agents/
 ./scripts/lint-agent.sh
 
 # Lint a specific agent file
-./scripts/lint-agent.sh .github/agents/PAW-01A.agent.md
+./scripts/lint-agent.sh agents/PAW-01A.agent.md
 ```
 
 **npm Scripts**:
@@ -57,7 +57,7 @@ The linter uses `@dqbd/tiktoken` with the `gpt-4o-mini` model to count tokens, w
 
 ## VS Code Extension Development
 
-The PAW Workflow extension provides a single command - "PAW: Initialize Work Item" - to streamline the creation of PAW work item directory structures.
+The PAW Workflow extension automatically installs PAW agents and provides commands to streamline work item initialization.
 
 ### Prerequisites
 
@@ -67,31 +67,26 @@ The PAW Workflow extension provides a single command - "PAW: Initialize Work Ite
 
 ### Setup for Development
 
-1. **Navigate to the extension directory:**
-   ```bash
-   cd vscode-extension
-   ```
-
-2. **Install dependencies:**
+1. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Compile TypeScript sources:**
+2. **Compile TypeScript sources:**
    ```bash
    npm run compile
    ```
 
-4. **Run automated tests (optional but recommended):**
+3. **Run automated tests (optional but recommended):**
    ```bash
    npm test
    ```
 
-5. **Package the extension:**
+4. **Package the extension:**
    ```bash
    npm run package
    ```
-   The compiled `.vsix` file will be created in the extension directory.
+   The compiled `.vsix` file will be created in the repository root.
 
 ### Installing the Packaged Extension
 
@@ -100,14 +95,14 @@ Use either the VS Code UI or the command line.
 #### Command Line
 
 ```bash
-code --install-extension paw-workflow-0.0.1.vsix
+code --install-extension paw-workflow-0.0.1-dev.vsix
 ```
 
 #### VS Code UI
 
 1. Open the Extensions view (`Ctrl+Shift+X` / `Cmd+Shift+X`).
 2. Open the overflow menu (`…`) and choose **Install from VSIX...**.
-3. Select `paw-workflow-0.0.1.vsix` from the extension directory.
+3. Select `paw-workflow-0.0.1-dev.vsix` from the extension directory.
 4. Reload VS Code when prompted.
 
 ### Development Workflow
@@ -115,6 +110,49 @@ code --install-extension paw-workflow-0.0.1.vsix
 - Launch the extension in an Extension Development Host by pressing `F5` in VS Code.
 - Use `npm run watch` to recompile on TypeScript file changes.
 - Reload the development host window (`Ctrl+R` / `Cmd+R`) after changes.
+
+### Developing PAW with PAW
+
+When developing PAW itself using PAW agents:
+
+1. **Make agent changes** in `agents/` directory
+2. **Build and install VSIX**: `npm run package && code --install-extension paw-workflow-0.0.1-dev.vsix`
+3. **Reload VS Code** to use updated agents in your PAW workflow
+4. **Important**: Local agent changes DO NOT automatically update installed agents. You must rebuild and reinstall the VSIX to test agent modifications.
+
+This workflow prevents mid-session agent changes from disrupting active PAW workflows.
+
+### Development Version Behavior
+
+Local builds use version `0.0.1-dev`, which forces agent reinstallation on every activation so agent content changes are reflected immediately. Production releases overwrite this version number during the GitHub Actions release workflow.
+
+#### Testing Agent Changes
+
+1. Modify agents in `agents/`
+2. Run `npm run package`
+3. Install the VSIX: `code --install-extension paw-workflow-0.0.1-dev.vsix`
+4. Reload VS Code and monitor the **PAW Workflow** output channel for the "Development build detected" log
+5. Validate agents inside Copilot Chat
+
+#### Testing Migration Logic
+
+Use `scripts/test-migration.sh` to build VSIX files with temporary versions:
+
+```bash
+# Build VSIX tagged as 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Return to dev version builds
+./scripts/test-migration.sh 0.0.1-dev
+```
+
+The script updates `package.json`, runs the standard VSIX build, restores the original version, and prints follow-up installation steps. After installing each VSIX, reload VS Code and verify the migration logs plus agent availability.
+
+#### Production Releases
+
+- Keep `package.json` set to `0.0.1-dev` locally
+- When tagging a release, the workflow replaces the version with the tag (e.g., `v0.2.0` -> `0.2.0`)
+- Published VSIX files therefore use their tag-based semantic version instead of `-dev`
 
 ### Uninstalling
 
@@ -150,7 +188,8 @@ The workflow triggers automatically on PRs to `main` or `feature/**` branches wh
 
 ## Project Structure
 
-- `.github/agents/` - Contains agent definitions for different PAW agents
+- `agents/` - PAW agent definitions (bundled in VS Code extension)
 - `.github/workflows/` - GitHub Actions workflows for releases and PR checks
 - `scripts/` - Development and utility scripts
-- `vscode-extension/` - VS Code extension for PAW workflow automation
+- `src/` - VS Code extension TypeScript source code
+- `out/` - Compiled JavaScript (generated by TypeScript compiler)

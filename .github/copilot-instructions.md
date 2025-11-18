@@ -4,10 +4,10 @@ This file contains instructions for GitHub Copilot when working with the Phased 
 
 ## Agent Development
 
-When creating or modifying agent files in `.github/agents/`, ALWAYS run the agent linter script:
+When creating or modifying agent files in `agents/`, ALWAYS run the agent linter script:
 
 ```bash
-./scripts/lint-agent.sh .github/agents/<filename>.agent.md
+./scripts/lint-agent.sh agents/<filename>.agent.md
 ```
 
 ## Pull Request Labels

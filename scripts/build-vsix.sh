@@ -19,8 +19,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Change to the vscode-extension directory
-cd "$(dirname "$0")/../vscode-extension"
+# Change to the repository root directory
+cd "$(dirname "$0")/.."
 
 echo "Building PAW Workflow VS Code extension..."
 
@@ -49,7 +49,7 @@ if [ -z "$VSIX_PATH" ]; then
 fi
 
 echo "✓ VSIX built successfully!"
-echo "Package location: vscode-extension/$VSIX_PATH"
+echo "Package location: $VSIX_PATH"
 
 # Install if requested
 if [ "$INSTALL" = true ]; then

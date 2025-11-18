@@ -1,0 +1,1177 @@
+# Agent Installation Management Implementation Plan
+
+## Overview
+
+This plan implements automatic agent installation and upgrade management for the PAW VS Code extension. When users install or upgrade the extension, PAW agents will automatically become available in GitHub Copilot Chat without manual configuration. The system will install base agent templates, track installed versions, and handle migrations cleanly.
+
+**Note**: Custom instructions for agents will be handled separately through a PAW Context tool (see issue #86). This implementation focuses solely on installing base agent templates.
+
+**Codebase Refactoring**: This implementation begins with a significant codebase refactoring (Phase 1) to establish PAW as VS Code extension-centric. The refactoring flattens the directory structure and consolidates agent files, enabling cleaner development workflows and eliminating duplicate agents when developing PAW with PAW.
+
+## Current State Analysis
+
+The VS Code extension currently:
+- Lives in `vscode-extension/` subdirectory with its own package.json
+- Uses lazy activation (empty `activationEvents` array) - activates only when commands are invoked
+- Registers one command (`paw.initializeWorkItem`) and one language model tool (`paw_create_prompt_templates`)
+- Stores agent templates in `.github/agents/` as `.agent.md` files with YAML frontmatter
+- Supports loading custom instructions from `.paw/instructions/` for workspace-level customization
+- Uses synchronous file operations with Node.js `fs` module
+- Logs operations to "PAW Workflow" output channel
+- Has no version tracking or global state usage
+- Has no platform detection or VS Code configuration path resolution
+
+### Key Discoveries:
+- VS Code does not expose profile path through API - must hardcode platform-specific paths (SpecResearch.md)
+- User prompts directory is global across all profiles: `<config>/User/prompts/` (SpecResearch.md)
+- Current extension uses `path.join()` for all path operations (extension.ts, customInstructions.ts)
+- Agent files follow naming pattern `PAW-##X Agent Name.agent.md` in `.github/agents/`
+- Extension uses structured result objects with `{ success, data, errors }` pattern (createPromptTemplates.ts:228-268)
+- Duplicate directory structure causes confusion: project-level agents conflict with extension-managed agents during PAW development
+
+## Desired End State
+
+After implementation:
+- Codebase uses flattened directory structure (no `vscode-extension/` subdirectory)
+- Agent templates stored in `agents/` (not `.github/agents/`)
+- Single package.json at repository root
+- Extension activates on VS Code startup via `onStartupFinished` activation event
+- Agents automatically install to platform-appropriate prompts directory on first activation
+- Agents update automatically when extension version changes (upgrades and downgrades)
+- Version tracking in `globalState` enables version change detection
+- Obsolete agent files cleaned up during version migrations (bidirectional)
+- Uninstalled agents removed when extension is uninstalled
+- File system errors handled gracefully with detailed logging and user notifications
+- All file operations are idempotent and resilient to interruption
+- PAW developers must install built VSIX to use local agent changes during development
+
+### Verification:
+- All 15+ PAW agents appear in GitHub Copilot Chat agent selector after first activation
+- Upgrading extension version triggers automatic agent file refresh
+- Downgrading extension version reverses migrations and restores appropriate agent files
+- Installation completes successfully on Windows, macOS, and Linux with standard VS Code and variants
+- Extension remains functional even when agent installation fails due to permissions
+- Uninstalling extension removes all installed agent files
+
+## What We're NOT Doing
+
+- Custom instructions composition (handled separately through PAW Context tool - see issue #86)
+- Migration from pre-0.4.0 chatmode files to extension-managed agents (users manually migrated when adopting extension-based workflow)
+- Manual agent installation UI or commands (agents install automatically only)
+- User configuration settings for installation location or behavior (except `paw.promptDirectory` override)
+- Backup or preservation of user modifications to installed agent files
+- Per-profile agent installation (prompts directory is global)
+- Automatic Copilot refresh or reload after installation
+- Dynamic agent discovery from external registries
+- Manual rollback UI or commands (downgrade via VS Code's extension version picker provides rollback)
+- Telemetry or analytics about installation success rates
+- GUI for managing or viewing installed agents
+- Hot-reload of agent changes without VS Code restart
+
+## Implementation Approach
+
+The implementation follows a five-phase approach:
+
+1. **Codebase Refactoring**: Flatten directory structure, consolidate agent files, merge package.json - establish extension-centric architecture
+2. **Core Infrastructure**: Platform detection, path resolution, agent bundling - foundation for installation
+3. **Installation Logic**: File writing, version tracking, activation integration - core installation functionality
+4. **Version Changes and Migration**: Upgrade/downgrade detection, migration manifest, bidirectional cleanup - production-ready version management
+5. **Uninstall Cleanup**: Deactivation hook to remove agents - clean uninstall experience
+
+Each phase builds incrementally with automated and manual verification criteria. The approach prioritizes reliability through idempotent operations, graceful error handling, and detailed logging.
+
+---
+
+## Phase 1: Codebase Refactoring
+
+### Overview
+Refactor PAW codebase to use extension-centric architecture with flattened directory structure. This eliminates duplicate agents during PAW development, simplifies the build process, and establishes a single source of truth for agent templates.
+
+### Changes Required:
+
+#### 1. Move Agent Files
+**Action**: Relocate agent templates from `.github/agents/` to `agents/`
+
+**Rationale**: 
+- Eliminates duplicate agents when developing PAW with VS Code extension installed
+- Single source of truth for agent templates (bundled in extension)
+- Simplifies build process (no copying needed across directories)
+- Prevents mid-development agent changes from affecting active PAW workflows
+
+**Steps**:
+1. Create `agents/` directory at repository root
+2. Move all `.agent.md` files from `.github/agents/` to `agents/`
+3. Delete `.github/agents/` directory
+4. Update `.gitignore` if needed
+
+**Files Affected**:
+- All 15 agent templates: `PAW-*.agent.md`
+- New location: `agents/PAW-*.agent.md`
+
+#### 2. Flatten Directory Structure
+**Action**: Move all `vscode-extension/` contents to repository root
+
+**Rationale**:
+- Repository IS the VS Code extension (no separate subdirectory needed)
+- Simpler navigation and development workflow
+- Consistent with most VS Code extension repositories
+- Eliminates confusion about project vs extension boundaries
+
+**Steps**:
+1. Move all files/folders from `vscode-extension/` to root:
+   - `src/` → `src/`
+   - `scripts/` → `scripts/` (merge with existing root scripts/)
+   - `resources/` → `resources/` (already created in step 1)
+   - `test/` → `test/`
+   - `tsconfig.json` → `tsconfig.json`
+   - `vscode-extension/package.json` → merge with root `package.json`
+   - `vscode-extension/README.md` → merge with root `README.md`
+   - `vscode-extension/LICENSE` → verify matches root LICENSE
+2. Delete empty `vscode-extension/` directory
+
+**Conflict Resolution**:
+- `scripts/`: Merge directories, keep both root scripts (count-tokens.js, lint-agent.sh, build-vsix.sh) and extension scripts (copyAgents.js - to be removed since agents no longer need copying)
+- `package.json`: Merge carefully (see next section)
+- `README.md`: Consolidate extension README into root README
+- `LICENSE`: Verify both are identical, keep root version
+
+#### 3. Merge package.json Files
+**Action**: Consolidate root and extension package.json into single file at root
+
+**Merge Strategy**:
+- **Name**: Use extension name (`paw-workflow`)
+- **Version**: Use extension version (0.0.1 or current)
+- **Description**: Use extension description
+- **Main/Activation**: Use extension fields (`main`, `activationEvents`, `contributes`)
+- **Scripts**: 
+  - Remove `copy-agents` script (no longer needed)
+  - Keep extension build scripts: `compile`, `watch`, `vscode:prepublish`, `package`
+  - Keep root utility scripts if useful: `count-tokens`, `lint-agent`, `build-vsix`
+- **Dependencies**: Merge both dependency lists, deduplicate
+- **DevDependencies**: Merge both devDependency lists, deduplicate
+- **VS Code Fields**: Use extension fields (`engines`, `categories`, `publisher`, `repository`, `contributes`)
+- **Root-only fields**: Drop if not relevant to extension (e.g., workspace scripts)
+
+**Key Changes to Scripts**:
+- Remove `copy-agents` script entirely
+- Update `vscode:prepublish` to remove `npm run copy-agents` step
+- Update `watch` to remove `npm run copy-agents` step
+- Keep `build-vsix` script from root if useful
+
+#### 4. Update All File Paths
+**Action**: Update imports, references, and scripts to reflect new flat structure
+
+**Files Requiring Path Updates**:
+
+**TypeScript Source Files**:
+- `src/extension.ts`: No path changes needed (already relative to src/)
+- `src/agents/agentTemplates.ts`: Update to load from `agents/` directory at repository root
+- `src/agents/platformDetection.ts`: No path changes needed
+- `src/commands/initializeWorkItem.ts`: No path changes needed
+- `src/prompts/customInstructions.ts`: No path changes needed
+- `src/tools/createPromptTemplates.ts`: No path changes needed
+- `src/test/**/*.ts`: Update test imports if any referred to vscode-extension/
+
+**Scripts**:
+- Delete `scripts/copyAgents.js` (no longer needed)
+- Keep `scripts/build-vsix.sh`, update if it references vscode-extension/
+- Keep `scripts/count-tokens.js` (no changes needed)
+- Keep `scripts/lint-agent.sh` (no changes needed)
+
+**Configuration Files**:
+- `tsconfig.json`: Update `include`/`exclude` paths if they referenced vscode-extension/
+- `.vscodeignore`: Update to exclude test files, scripts, etc. from VSIX (use paths relative to root)
+- `.gitignore`: Update if it had vscode-extension-specific entries
+
+**Documentation**:
+- `README.md`: Update all references to directory structure, installation paths
+- `DEVELOPING.md`: Update development instructions for new structure
+- Any other docs mentioning file paths or directory structure
+
+#### 5. Update Build and Test Scripts
+**Action**: Ensure build and test scripts work with new structure
+
+**Script Updates**:
+- `npm run compile`: Should work as-is (tsconfig handles source locations)
+- `npm run watch`: Should work as-is
+- `npm run test`: Update test paths if needed
+- `npm run vscode:prepublish`: Remove copy-agents step
+- `npm run package`: Should work as-is (vsce uses package.json)
+
+**Test Updates**:
+- Verify test runner configuration (`src/test/runTest.ts`) uses correct paths
+- Update any test fixtures or data files that reference old structure
+- Ensure test output directories are correct
+
+#### 6. Update Documentation
+**Files**: `README.md`, `DEVELOPING.md`
+
+**README.md Updates**:
+- Merge extension README content into root README
+- Update directory structure diagrams
+- Update installation/development instructions
+- Update file path examples throughout
+- Clarify that repository IS the extension
+- Add note about developers needing to install built VSIX for local PAW development
+
+**DEVELOPING.md Updates**:
+- Update all file path references
+- Update build instructions (no more copy-agents)
+- Add section: "Developing PAW with PAW"
+  - Explain that local agent changes require building and installing VSIX
+  - Provide workflow: make changes → `npm run package` → Install VSIX → reload VS Code
+  - Mention this prevents mid-workflow agent changes
+
+#### 7. Clean Up Obsolete Files
+**Action**: Remove files no longer needed after refactoring
+
+**Files to Delete**:
+- `scripts/copyAgents.js` (agents no longer copied)
+- `vscode-extension/` directory (should be empty after move)
+- Old `vscode-extension/package.json` (merged into root)
+- Old `vscode-extension/README.md` (merged into root)
+- Old `vscode-extension/LICENSE` (if identical to root)
+
+**Files to Verify**:
+- Check for any broken symbolic links
+- Check for any orphaned configuration files
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] All agent files present in `agents/`
+- [x] `.github/agents/` directory removed
+- [x] `vscode-extension/` directory removed
+- [x] Single `package.json` at root with merged content
+- [x] TypeScript compilation succeeds: `npm run compile`
+- [x] All unit tests pass: `npm test`
+- [x] VSIX builds successfully: `npm run package`
+- [x] No references to `vscode-extension/` in any source files
+- [x] No references to `.github/agents/` in any source files
+- [x] No references to `copy-agents` script in package.json
+
+#### Manual Verification:
+- [ ] Extension loads in VS Code without errors
+- [ ] All commands still work (`paw.initializeWorkItem`)
+- [ ] Language model tool still works (`paw_create_prompt_templates`)
+- [ ] README accurately describes new structure
+- [ ] DEVELOPING.md provides clear local development workflow
+- [ ] Built VSIX installs successfully
+- [ ] Agents appear correctly when extension is used
+
+---
+
+**Phase 1 Implementation Complete**
+
+Successfully refactored PAW codebase to use flat structure with consolidated agents:
+- Moved 15 agent files from `.github/agents/` to `agents/`
+- Flattened `vscode-extension/` directory structure to repository root
+- Merged package.json files and consolidated README documentation
+- Updated all paths in TypeScript source, scripts, VS Code configurations
+- All automated verification passed: compilation ✓, tests ✓ (31 passing), VSIX packaging ✓
+
+**Key Benefits Achieved:**
+- Single source of truth for agent templates bundled in extension
+- Eliminates duplicate agents during PAW development
+- Standard VS Code extension repository structure
+- Simplified build process with no copying required
+
+**For Manual Testing:**
+Install built VSIX (`paw-workflow-0.0.1.vsix`) in VS Code to verify:
+- Extension activation and command registration
+- Agent bundling and availability
+- Local development workflow (make changes → build VSIX → install → reload)
+
+**Commit:** 2718c7d - Phase 1: Codebase refactoring - flatten structure and consolidate agents
+
+---
+
+## Phase 2: Core Infrastructure
+
+### Overview
+Establish foundational capabilities for agent installation: platform/variant detection, prompts directory path resolution, agent template loading from refactored `agents/` directory.
+
+### Changes Required:
+
+#### 1. Platform Detection Module
+**File**: `src/agents/platformDetection.ts` (new)
+
+**Purpose**: Detect operating system, VS Code variant, and resolve User/prompts directory paths.
+
+**Key Capabilities**:
+- Detect OS (Windows, macOS, Linux) via Node.js APIs
+- Identify VS Code variant (Code, Insiders, Code-OSS, VSCodium) from environment variables
+- Resolve platform-specific prompts directory paths
+- Support user-configurable override via `paw.promptDirectory` setting
+- Return structured platform information (platform, homeDir, variant)
+
+**Path Resolution Logic**:
+- Check `paw.promptDirectory` configuration setting first
+- If set, use custom path without modification
+- Otherwise use hardcoded platform paths:
+  - Windows: `%APPDATA%\<variant>\User\prompts`
+  - macOS: `~/Library/Application Support/<variant>/User/prompts`
+  - Linux: `~/.config/<variant>/User/prompts`
+- Throw descriptive error for unsupported platforms mentioning override option
+
+**Key Interfaces**:
+- VSCodeVariant enum (Code, Insiders, CodeOSS, VSCodium)
+- PlatformInfo interface (platform, homeDir, variant)
+- Functions: getPlatformInfo(), detectVSCodeVariant(), resolvePromptsDirectory()
+
+#### 2. Agent Template Loader
+**File**: `src/agents/agentTemplates.ts` (new)
+
+**Purpose**: Load agent templates directly from extension resources (no build-time copying needed).
+
+**Key Responsibilities**:
+- Locate `<extensionPath>/agents/` directory
+- Enumerate all `.agent.md` files
+- Read file content
+- Parse YAML frontmatter for metadata (description)
+- Extract clean agent name from filename (strip `PAW-##X` prefix and extension)
+- Return array of agent templates with filename, name, description, content
+
+**Error Handling**:
+- Throw error if agents directory missing
+- Skip non-`.agent.md` files
+- Handle missing/malformed frontmatter gracefully
+
+#### 3. Extension Package Manifest
+**File**: `package.json`
+
+**Activation Events**:
+- Add `onStartupFinished` to trigger extension after VS Code startup
+- Provides timing for agent installation without blocking editor load
+
+**Configuration**:
+- Add `paw.promptDirectory` setting (type: string, default: "")
+- Purpose: Override auto-detected prompts path
+- Used for unsupported platforms or custom configurations
+- Takes precedence over platform detection
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `getPlatformInfo()` returns correct values on Windows, macOS, Linux
+- [x] `detectVSCodeVariant()` identifies all variants from environment
+- [x] `resolvePromptsDirectory()` returns correct paths for all platform/variant combinations
+- [x] `resolvePromptsDirectory()` returns custom path when `paw.promptDirectory` configured
+- [x] `loadAgentTemplates()` loads all agent templates with correct metadata
+- [x] Extension compiles without TypeScript errors
+- [x] Agent templates present in `agents/` directory
+- [ ] Agent templates present in VSIX after `npm run package`
+
+#### Manual Verification:
+- [ ] Verify agent templates bundled in VSIX package
+- [ ] Test `resolvePromptsDirectory()` matches actual VS Code prompts directory
+- [ ] Extension activates on VS Code startup (output channel appears)
+- [ ] `paw.promptDirectory` setting visible in VS Code Settings UI
+
+#### Phase 2 Completion Notes (2025-11-16)
+- Added `src/agents/platformDetection.ts` and `agentTemplates.ts` to centralize OS/variant handling, prompt path resolution, and agent metadata loading with explicit error flows for overrides.
+- Updated `package.json` to activate on startup and expose the `paw.promptDirectory` configuration entry so users can override unsupported setups.
+- Introduced `agents.test.ts` to cover platform permutations and loader edge cases; `npm run compile` and `npm test` (38 passing) validate the new infrastructure.
+- Manual follow-ups for the review/documentation agents: confirm VSIX packaging includes `agents/`, validate prompts directory detection on real installs, and capture screenshots of the new setting within VS Code.
+
+---
+
+## Phase 3: Installation Logic
+
+### Overview
+Implement core installation: write agents to prompts directory, track versions, handle errors gracefully.
+
+### Changes Required:
+
+#### 1. Agent Installer Module
+**File**: `src/agents/installer.ts` (new)
+
+**Purpose**: Handle agent installation operations with error tracking and version management.
+
+**Key Functions**:
+
+**installAgents()**: Main installation orchestrator
+- Determine prompts directory path (platform detection + override)
+- Create prompts directory if needed (recursive)
+- Load agent templates from extension resources
+- Write each agent file to prompts directory
+- Track success/failure per file
+- Update installation state in globalState
+- Return structured result (filesInstalled, filesSkipped, errors)
+
+**needsInstallation()**: Determine if installation required
+- Check globalState for previous installation record
+- If no record, return true (fresh install)
+- If version changed from stored version, return true (upgrade/downgrade)
+- If any expected files missing, return true (repair)
+- Otherwise return false (up to date)
+
+**updateInstallationState()**: Persist installation metadata
+- Store current extension version
+- Store list of installed filenames
+- Store installation timestamp
+- Store success status
+- Write to `globalState['paw.agentInstallation']`
+
+**Error Handling**:
+- Catch and log all file system errors
+- Continue installing other agents after individual failures
+- Return partial success with error details
+- Never throw unhandled exceptions
+
+**Idempotent Behavior**:
+- Overwrite existing files (always write current version)
+- Skip files already installed with current version when unnecessary
+- Safe to re-run after partial installation
+
+#### 2. Extension Activation Integration
+**File**: `src/extension.ts`
+
+**Changes**: Add agent installation to activation flow.
+
+**Activation Sequence**:
+1. Create output channel for logging
+2. Check if installation needed via `needsInstallation()`
+3. If needed:
+   - Log installation start
+   - Show output channel
+   - Call `installAgents()` 
+   - Log results
+   - Show success notification with agent count
+   - On errors: show error notification with "View Output" action
+4. If not needed:
+   - Log "Agents up to date"
+5. On exceptions:
+   - Log error to output channel
+   - Show error notification
+   - Continue extension activation (don't block)
+6. Register commands and tools as normal
+7. Return extension context
+
+**Error Handling Philosophy**:
+- Installation failures don't block extension activation
+- Users can still use non-agent PAW features
+- Detailed logging for troubleshooting
+- Actionable error messages with remediation steps
+
+#### 3. User Notifications
+**Purpose**: Provide clear feedback about installation status.
+
+**Success Notification**:
+- Message: "PAW agents installed successfully. N agents available in Copilot Chat."
+- Type: Information
+- No action buttons (fire and forget)
+
+**Error Notification**:
+- Message: "PAW agent installation encountered errors. Check output channel."
+- Type: Error
+- Action button: "View Output" (opens PAW Workflow output channel)
+- Include specific error details in output channel
+- Mention `paw.promptDirectory` setting for permission issues
+
+**Up-to-date Case**:
+- No user notification (silent)
+- Log to output channel only
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `needsInstallation()` returns true on fresh install
+- [x] `needsInstallation()` returns true when version changes
+- [x] `needsInstallation()` returns true when files missing
+- [x] `needsInstallation()` returns false when up to date
+- [x] `installAgents()` writes all agent files to prompts directory
+- [x] globalState updated with version, filenames, timestamp
+- [x] Installation succeeds even without Copilot extension
+- [x] Extension activates successfully even when installation fails
+- [x] Partial installation tracked correctly (some files written, some failed)
+
+#### Manual Verification:
+- [ ] First activation shows "installing" message
+- [ ] Success notification appears with agent count
+- [ ] Agents appear in Copilot Chat after installation
+- [ ] Reactivation shows "up to date" (no reinstall)
+- [ ] Permission error shows actionable notification
+- [ ] Output channel contains detailed installation logs
+
+---
+
+**Phase 3 Implementation Complete**
+
+Successfully implemented core agent installation functionality:
+- Created `src/agents/installer.ts` with `installAgents()`, `needsInstallation()`, and `updateInstallationState()` functions
+- Integrated installation logic into extension activation in `src/extension.ts` with proper error handling
+- Implemented user notifications: success messages with agent count, error notifications with "View Output" action
+- Added comprehensive test suite (`src/test/suite/installer.test.ts`) with 10 tests covering all success criteria
+- All automated verification passed: 48 tests passing (38 existing + 10 new installer tests)
+
+**Key Implementation Details:**
+- Installation runs during extension activation (via `onStartupFinished` event from Phase 2)
+- Installation is idempotent - safe to run multiple times without side effects
+- Individual file failures tracked but don't block other installations
+- Detailed logging to output channel for debugging
+- globalState tracks version, installed files, timestamp, and success status
+- Extension continues to function even if installation fails (graceful degradation)
+
+**For Manual Testing:**
+Install built VSIX in VS Code to verify:
+- First activation shows "installing" message in output channel
+- Success notification appears with accurate agent count
+- Agents appear in GitHub Copilot Chat agent selector
+- Reactivation shows "up to date" (no unnecessary reinstall)
+- Permission errors show actionable notification with remediation guidance
+
+**Review Notes:**
+- Verify error handling covers edge cases (disk full, permission denied, missing agents directory)
+- Confirm notification messages are clear and actionable
+- Test installation flow on different platforms (Windows, macOS, Linux)
+- Validate globalState persistence across VS Code restarts
+
+**Commit:** Phase 3: Installation Logic - agent installer with version tracking and user notifications
+
+---
+
+## Phase 4: Version Changes and Migration
+
+### Overview
+Add version change detection (upgrades and downgrades) and cleanup of previously installed agent files.
+
+**Simplified Approach**: Instead of maintaining complex version-specific migration mappings, use a simpler strategy:
+- Track which files were installed (already stored in globalState)
+- On version change: delete all previously tracked files, then install fresh set
+- This handles renames, removals, and additions automatically
+- Works identically for upgrades and downgrades
+- No version-specific mapping needed
+
+### Changes Required:
+
+#### 1. Version Change Detection
+**File**: `src/agents/installer.ts` (enhance)
+
+**Changes**: Enhance `needsInstallation()` and `installAgents()` to detect downgrades.
+
+**Version Change Detection**:
+- Compare stored version to current version
+- If versions differ (upgrade OR downgrade), reinstallation needed
+- Treat all version changes identically (no upgrade vs downgrade distinction)
+
+**Version Change Handling**:
+- Log old and new versions
+- Delete all previously installed files (from globalState tracking)
+- Install fresh set of agents from current version
+- Update version marker and file list in globalState
+- Works for any version transition
+
+#### 2. Cleanup of Previous Installation
+**File**: `src/agents/installer.ts` (enhance)
+
+**Purpose**: Remove all agent files from previous version before installing new version.
+
+**Cleanup Logic**:
+- Read `globalState['paw.agentInstallation'].filesInstalled`
+- For each previously installed file:
+  - Attempt to delete from prompts directory
+  - Log success/failure per file
+  - Continue on errors (don't block installation)
+- Clear old file list from globalState
+- Run before installing new version's files
+
+**Benefits of This Approach**:
+- No version-specific mapping required
+- Handles renames, removals, additions automatically
+- Works identically for upgrades and downgrades
+- Simpler to maintain (no hardcoded version rules)
+- Robust against partial installations
+
+**Error Handling**:
+- Log deletion failures but continue with installation
+- Track deleted files count in result
+- Report cleanup errors in output channel
+- Installation proceeds even if cleanup partially fails
+
+#### 3. Enhanced Installation State
+**File**: `src/agents/installer.ts` (enhance)
+
+**State Fields**:
+- version: Current extension version (for change detection)
+- filesInstalled: List of installed filenames (for cleanup on next version change)
+- installedAt: Timestamp (for troubleshooting)
+- previousVersion: Version before this installation (for logging)
+- filesDeleted: Count of files removed during cleanup (for verification)
+
+**Purpose**: Track installation state for version change detection and cleanup.
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `needsInstallation()` returns true when stored version differs from current (any direction)
+- [x] Version change deletes all previously installed files
+- [x] Version change installs complete fresh set of agents
+- [x] Upgrade 0.5 → 0.6 removes 0.5 agents, installs 0.6 agents
+- [x] Downgrade 0.6 → 0.5 removes 0.6 agents, installs 0.5 agents
+- [x] Cleanup happens before installation
+- [x] Cleanup errors logged but don't block installation
+- [x] globalState updated with new version and file list
+
+#### Manual Verification:
+- [ ] Simulate version upgrade, verify old agents removed and new agents installed
+- [ ] Simulate version downgrade, verify newer agents removed and older agents installed
+- [ ] After version change, only current version's agents present (no orphaned files)
+- [ ] Output channel shows cleanup and installation details
+- [ ] Multiple version changes don't accumulate orphaned files
+
+---
+
+**Phase 4 Implementation Complete**
+
+Successfully implemented version change detection and migration with clean bidirectional handling:
+- Enhanced `InstallationState` interface with `previousVersion` and `filesDeleted` fields for tracking version changes
+- Created `cleanupPreviousInstallation()` function that deletes all previously installed files before installing new version
+- Updated `needsInstallation()` to detect version changes in both directions (already correct in Phase 3 implementation)
+- Integrated cleanup logic into `installAgents()` to run before loading new templates on version changes
+- Added comprehensive test suite with 6 new tests covering upgrade/downgrade scenarios, cleanup error handling
+
+**Key Implementation Details:**
+- Simplified approach: delete all old files and install fresh set on any version change (no complex migration mappings)
+- Works identically for upgrades and downgrades - symmetric behavior
+- Cleanup errors are logged but don't block installation (graceful degradation)
+- State tracking includes previous version and files deleted count for verification and debugging
+- All 53 tests passing (38 existing + 10 from Phase 3 + 6 new version change tests - 1 removed)
+
+**For Manual Testing:**
+Test version changes by:
+1. Install built VSIX with version 0.0.1
+2. Verify agents installed in prompts directory
+3. Modify package.json version to 0.0.2 and rebuild/reinstall
+4. Verify old agents removed and new agents installed
+5. Check output channel for cleanup and installation logs
+6. Downgrade back to 0.0.1 and verify symmetric behavior
+
+**Review Notes:**
+- Verify cleanup logic handles edge cases (missing files, permission errors)
+- Test on different platforms to ensure consistent behavior
+- Validate globalState persistence of version change metadata
+- Confirm output channel provides clear logging of cleanup operations
+
+---
+
+## Phase 5.5: Development Version Support
+
+### Overview
+Add support for development versions using `-dev` suffix to ensure agent content updates are reflected during local development without requiring manual version bumps. Development builds use version `0.0.1-dev` which triggers automatic reinstallation on every activation, while production releases override the version during the GitHub Actions release workflow.
+
+### Rationale
+Developers working on PAW agent content need to test changes frequently by building and installing the VSIX. Without development version support, the migration logic only triggers when version numbers change, making it cumbersome to test agent updates. By using a `-dev` suffix, the extension automatically reinstalls agents on every activation, ensuring changes are immediately reflected. The release workflow overwrites the version with production versions (e.g., `0.2.0`), keeping production behavior unchanged.
+
+### Changes Required:
+
+#### 1. Update package.json Version
+**File**: `package.json`
+**Changes**: Set version to development mode.
+
+```json
+{
+  "version": "0.0.1-dev"
+}
+```
+
+**Rationale**: The `-dev` suffix signals this is a development build. GitHub Actions release workflow will overwrite this with production versions during releases.
+
+#### 2. Enhance Version Change Detection
+**File**: `src/agents/installer.ts`
+**Changes**: Update `needsInstallation()` to detect development versions.
+
+**Add helper function**:
+```typescript
+/**
+ * Check if a version string represents a development build.
+ * Development versions contain '-dev' suffix (e.g., '0.0.1-dev').
+ */
+function isDevelopmentVersion(version: string): boolean {
+  return version.includes('-dev');
+}
+```
+
+**Update `needsInstallation()` logic**:
+```typescript
+export function needsInstallation(
+  state: InstallationState | undefined,
+  currentVersion: string
+): boolean {
+  // Fresh install - no previous state
+  if (!state || !state.version) {
+    return true;
+  }
+
+  // Development version handling: always reinstall if either version is -dev
+  // This ensures:
+  // - dev -> dev: reinstalls (agent content may have changed)
+  // - dev -> prod: migrates (upgrading to production release)
+  // - prod -> dev: migrates (returning to development)
+  if (isDevelopmentVersion(state.version) || isDevelopmentVersion(currentVersion)) {
+    return true;
+  }
+
+  // Normal version change (production to production)
+  if (state.version !== currentVersion) {
+    return true;
+  }
+
+  // Check if any expected files are missing
+  const expectedFiles = loadAgentTemplates().map(t => t.filename);
+  for (const filename of expectedFiles) {
+    const filePath = path.join(resolvePromptsDirectory(), filename);
+    if (!fs.existsSync(filePath)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+```
+
+**Enhanced logging in `installAgents()`**:
+```typescript
+// Add development version detection logging
+if (isDevelopmentVersion(currentVersion)) {
+  outputChannel.appendLine('[INFO] Development version detected, forcing reinstallation');
+}
+
+if (previousState?.version && isDevelopmentVersion(previousState.version)) {
+  outputChannel.appendLine(`[INFO] Migrating from development version ${previousState.version}`);
+}
+```
+
+#### 3. Update Unit Tests
+**File**: `src/test/suite/installer.test.ts`
+**Changes**: Add test cases for development version behavior.
+
+**Test cases to add**:
+```typescript
+suite('Development Version Handling', () => {
+  test('needsInstallation returns true for dev -> dev with same version', () => {
+    const state: InstallationState = {
+      version: '0.0.1-dev',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.0.1-dev');
+    assert.strictEqual(result, true, 'Should reinstall when both versions are dev');
+  });
+
+  test('needsInstallation returns true for dev -> prod migration', () => {
+    const state: InstallationState = {
+      version: '0.0.1-dev',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.2.0');
+    assert.strictEqual(result, true, 'Should reinstall when migrating from dev to prod');
+  });
+
+  test('needsInstallation returns true for prod -> dev migration', () => {
+    const state: InstallationState = {
+      version: '0.2.0',
+      filesInstalled: ['paw-spec.agent.md'],
+      installedAt: new Date().toISOString(),
+    };
+    const result = needsInstallation(state, '0.0.1-dev');
+    assert.strictEqual(result, true, 'Should reinstall when migrating from prod to dev');
+  });
+
+  test('isDevelopmentVersion detects -dev suffix', () => {
+    assert.strictEqual(isDevelopmentVersion('0.0.1-dev'), true);
+    assert.strictEqual(isDevelopmentVersion('1.2.3-dev'), true);
+    assert.strictEqual(isDevelopmentVersion('0.2.0'), false);
+    assert.strictEqual(isDevelopmentVersion('1.0.0'), false);
+  });
+});
+```
+
+#### 4. Create Migration Test Helper Script
+**File**: `scripts/test-migration.sh` (new)
+**Purpose**: Automate version manipulation for testing migration scenarios.
+
+```bash
+#!/bin/bash
+# Test helper script for agent migration testing
+# Usage: ./scripts/test-migration.sh <version>
+# Example: ./scripts/test-migration.sh 0.2.0
+
+set -e
+
+VERSION=$1
+if [ -z "$VERSION" ]; then
+    echo "Usage: ./scripts/test-migration.sh <version>"
+    echo ""
+    echo "Examples:"
+    echo "  ./scripts/test-migration.sh 0.2.0      # Test migration to production version"
+    echo "  ./scripts/test-migration.sh 0.4.0      # Test upgrade scenario"
+    echo "  ./scripts/test-migration.sh 0.0.1-dev  # Test back to dev version"
+    exit 1
+fi
+
+# Store original version
+ORIGINAL_VERSION=$(node -p "require('./package.json').version")
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "PAW Migration Test Helper"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Target version:   $VERSION"
+echo "Original version: $ORIGINAL_VERSION"
+echo ""
+
+# Update version temporarily
+echo "→ Updating package.json version to $VERSION..."
+npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+# Build VSIX
+echo "→ Building VSIX..."
+./scripts/build-vsix.sh
+
+# Restore original version
+echo "→ Restoring package.json version to $ORIGINAL_VERSION..."
+npm version "$ORIGINAL_VERSION" --no-git-tag-version --allow-same-version
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✓ Built: paw-workflow-${VERSION}.vsix"
+echo "✓ Restored: package.json version to $ORIGINAL_VERSION"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Next steps:"
+echo "  1. Install: code --install-extension paw-workflow-${VERSION}.vsix"
+echo "  2. Reload VS Code"
+echo "  3. Check output channel (View → Output → PAW Workflow)"
+echo "  4. Verify agents in Copilot Chat"
+echo ""
+```
+
+Make script executable:
+```bash
+chmod +x scripts/test-migration.sh
+```
+
+#### 5. Update DEVELOPING.md
+**File**: `DEVELOPING.md`
+**Changes**: Document development version behavior and testing procedures.
+
+Add section after build instructions:
+
+```markdown
+## Development Version Behavior
+
+The extension uses version `0.0.1-dev` during development. The `-dev` suffix enables:
+- **Automatic reinstallation**: Agents reinstall on every activation, even without version changes
+- **Immediate testing**: Agent file modifications are reflected immediately after rebuild
+- **Production separation**: Clear distinction between dev builds and production releases
+
+### Testing Agent Changes
+
+When working on agent content:
+
+1. Modify agent files in `agents/`
+2. Build VSIX: `npm run package`
+3. Install VSIX: `code --install-extension paw-workflow-0.0.1-dev.vsix`
+4. Reload VS Code
+5. Check Output panel (View → Output → PAW Workflow) for installation logs
+6. Test agents in Copilot Chat
+
+The extension automatically detects the `-dev` suffix and reinstalls agents, ensuring your changes are reflected.
+
+### Testing Migration Logic
+
+To test version migrations (upgrade/downgrade scenarios):
+
+```bash
+# Test migration to version 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Test upgrade to 0.4.0
+./scripts/test-migration.sh 0.4.0
+
+# Test downgrade to 0.2.0
+./scripts/test-migration.sh 0.2.0
+
+# Return to dev version
+./scripts/test-migration.sh 0.0.1-dev
+```
+
+The script:
+1. Temporarily updates `package.json` version
+2. Builds VSIX with that version
+3. Restores original version in `package.json`
+4. Provides installation instructions
+
+After installing each test VSIX:
+- Check output channel for migration logs
+- Verify correct agents are installed
+- Confirm no orphaned files remain
+
+### Production Releases
+
+The GitHub Actions release workflow (`release.yml`) overwrites the version during releases:
+- Development: `package.json` contains `0.0.1-dev`
+- Release: Workflow sets version to match git tag (e.g., `v0.2.0` → `0.2.0`)
+- Published VSIX contains production version, not `-dev`
+```
+
+#### 6. Update Release Workflow Documentation
+**File**: `.github/workflows/release.yml`
+**Changes**: Add comment explaining version override behavior.
+
+```yaml
+      - name: Update package.json version to match tag
+        working-directory: vscode-extension
+        run: |
+          # Set package.json version to match the git tag
+          # This eliminates the need for manual version updates before tagging
+          # During development, package.json contains "0.0.1-dev" which is
+          # overwritten here with the production version from the git tag
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          npm version ${TAG_VERSION} --no-git-tag-version --allow-same-version
+          echo "Updated package.json to version: ${TAG_VERSION}"
+```
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `isDevelopmentVersion()` returns true for versions containing `-dev`
+- [x] `isDevelopmentVersion()` returns false for production versions
+- [x] `needsInstallation()` returns true when current version is `0.0.1-dev` and stored version is `0.0.1-dev`
+- [x] `needsInstallation()` returns true when migrating from `0.0.1-dev` to `0.2.0`
+- [x] `needsInstallation()` returns true when migrating from `0.2.0` to `0.0.1-dev`
+- [x] Unit tests pass with new development version test cases
+- [x] TypeScript compilation succeeds with updated logic
+- [x] `package.json` version set to `0.0.1-dev`
+
+#### Manual Verification:
+- [ ] Build VSIX with `0.0.1-dev`, install, verify agents installed
+- [ ] Modify agent file, rebuild with `0.0.1-dev`, reinstall, verify agents updated
+- [ ] Output channel logs show "Development version detected" message
+- [ ] Test migration script successfully builds VSIX with custom versions
+- [ ] Test migration script restores original version after build
+- [ ] Install test VSIX with version `0.2.0`, verify migration from dev to prod
+- [ ] Install test VSIX with version `0.0.1-dev`, verify migration from prod to dev
+- [ ] DEVELOPING.md clearly documents dev version behavior and testing workflow
+
+---
+
+**Phase 5.5 Implementation Complete**
+
+- Introduced development build detection via `isDevelopmentVersion()` so `needsInstallation()` forces reinstalls whenever either version carries the `-dev` suffix.
+- Extended installer cleanup logic to delete tracked files even when versions match but dev builds are in play, ensuring removed agents do not linger between local edits.
+- Added output-channel logs that call out when the extension is running a dev build or migrating away from one, helping contributors understand why installations re-run.
+- Created `scripts/test-migration.sh` to automate temporary version swapping and VSIX builds for migration testing, plus documented the workflow alongside the new `0.0.1-dev` package version in `DEVELOPING.md` and clarified the release workflow comments.
+- Verification: `npm run compile` and `npm test` (57 passing) executed successfully on the new phase branch; manual install/migration validation still pending for reviewers.
+
+---
+
+## Phase 6: Fix Deactivate Hook (Correcting Original Oversight)
+
+### Overview
+
+**Note**: This phase corrects a critical design flaw from the original Phase 6 implementation. The original implementation incorrectly assumed that `deactivate()` could be used for uninstall cleanup, but VS Code provides no API to distinguish between normal shutdown and extension uninstall. This phase removes the incorrect automatic cleanup behavior.
+
+**Original Problem**: The implemented `deactivate()` function calls `removeInstalledAgents()`, which deletes all PAW agents every time VS Code shuts down—not just during uninstall. This means users lose their installed agents with every VS Code restart, which is clearly wrong.
+
+**Root Cause**: VS Code's extension lifecycle does not expose an "onUninstall" event. The `deactivate()` hook runs for shutdown, reload, disable, and uninstall—there's no way to detect which scenario triggered it.
+
+**Solution**: Simplify `deactivate()` to be a no-op and document manual cleanup process for users who want to remove agents after uninstalling the extension.
+
+### Changes Required:
+
+#### 1. Remove Agent Cleanup from Deactivation Function
+**File**: `src/extension.ts`
+
+**What needs to be fixed**:
+- Remove all agent cleanup logic from `deactivate()` function
+- Remove the call to `removeInstalledAgents()`
+- Remove shared extension context and output channel tracking variables (`sharedExtensionContext`, `sharedOutputChannel`)
+- Remove the corresponding variable assignments in `activate()`
+- Simplify `deactivate()` to be empty or a minimal no-op
+- Add explanatory comment explaining why cleanup is not performed
+- Remove unused `removeInstalledAgents` import from imports section
+
+**Why this fix is needed**:
+- `deactivate()` runs on every VS Code shutdown, not just uninstall
+- No VS Code API exists to detect uninstall vs shutdown
+- Current implementation deletes agents on every shutdown (unintended)
+- Users expect agents to persist between VS Code sessions
+
+#### 2. Update Documentation
+**File**: README.md
+
+**What needs to be updated**:
+- Remove the "Automatic uninstall cleanup" bullet point from the Features section
+- Update the "Uninstalling the Extension" section to explain that agents persist after uninstall
+- Document manual cleanup instructions (filesystem paths and VS Code UI method)
+- Explain why automatic cleanup is not possible (no uninstall detection API)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] `deactivate()` simplified (hook removed per VS Code shutdown behavior)
+- [x] Removed shared extension context/output channel tracking variables
+- [x] Removed unused `removeInstalledAgents` import from extension.ts
+- [x] Type checking passes: `npm run compile`
+- [x] All tests pass: `npm test`
+
+#### Manual Verification:
+- [ ] VS Code shutdown does NOT remove PAW agents
+- [ ] Agents persist between VS Code sessions
+- [ ] README accurately documents manual cleanup process
+- [ ] README mentions VS Code UI deletion method
+- [ ] README lists correct platform-specific paths
+- [ ] README no longer claims automatic cleanup during uninstall
+
+---
+
+**Phase 6 Implementation Complete (2025-11-17)**
+
+- Removed the `deactivate` export entirely so the extension no longer performs uninstall cleanup that triggers on normal shutdown; installation helper remains available for tooling but is not auto-invoked.
+- Simplified `activate` by dropping shared context/output channel globals now that lifecycle cleanup is gone.
+- Updated `README.md` and `Docs.md` with manual removal instructions, rationale for avoiding `deactivate`, and references to platform-specific prompts directories.
+- Verification: `npm run compile` and `npm test` (60 passing) executed on `feature/agent-installation-management` with direct commits per user guidance.
+
+**Pending Manual Verification:** Confirm agents persist between VS Code restarts and validate manual cleanup steps in a real environment.
+
+---
+
+## Addressed Review Comments (Final PR #100)
+
+**Review Comment 1 (https://github.com/lossyrob/phased-agent-workflow/pull/100#discussion_r2536157430)**:
+Removed success notification popup after agent installation. Users are no longer interrupted with a popup for the success case - all installation results are logged to the output channel for debugging purposes.
+
+**Review Comment 2 (https://github.com/lossyrob/phased-agent-workflow/pull/100#discussion_r2536162021)**:
+Hide output channel for development builds. When `isDevelopmentVersion` is true, the output channel no longer automatically shows on each activation, reducing noise during frequent reinstalls while developing agent content. Production installations still show the output channel for transparency.
+
+**Changes Made**:
+- Removed `vscode.window.showInformationMessage()` call on successful installation
+- Added conditional `outputChannel.show()` that only shows for production builds
+- Updated comments to explain the rationale for both changes
+- All automated tests continue to pass (60 tests)
+
+**Commit**: 4661028 - Address PR #100 review comments - reduce user notification noise
+
+---
+
+## Testing Strategy
+
+### Unit Tests:
+- Codebase structure validation (agents in agents/, no vscode-extension/ references)
+- Platform detection logic (all OS/variant combinations)
+- Path resolution with and without custom override
+- Agent template loading and parsing from agents/
+- Installation state management (globalState read/write)
+- Migration manifest lookups (upgrades and downgrades)
+- needsInstallation() logic (all conditions including development versions)
+- isDevelopmentVersion() detection of -dev suffix
+
+### Integration Tests:
+- Post-refactor build and package validation
+- Full installation flow from activation
+- Version upgrade scenario (install → upgrade → verify)
+- Version downgrade scenario (install → upgrade → downgrade → verify)
+- Idempotent installation (reinstall after partial failure)
+- Error recovery (permission denied, disk full)
+- Uninstall cleanup
+
+### Manual Testing Scenarios:
+
+**Post-Refactor Validation** (Phase 1):
+1. Build extension: `npm run compile`
+2. Package extension: `npm run package`
+3. Install VSIX in VS Code
+4. Verify extension loads without errors
+5. Verify all commands work
+6. Verify no duplicate agents when developing PAW
+7. Test local development workflow (make change → build VSIX → install → verify)
+
+**Fresh Installation**:
+1. Install PAW extension on clean VS Code
+2. Trigger activation
+3. Verify agents install to correct directory
+4. Verify agents appear in Copilot Chat
+5. Check output channel logs
+
+**Version Change**:
+1. Install PAW 0.5.0
+2. Verify agents installed
+3. Update to 0.6.0 (simulated via version change)
+4. Reload VS Code
+5. Verify old files removed, new files installed
+6. Downgrade back to 0.5.0
+7. Verify reverse migration (new files removed, old files restored)
+
+**Error Recovery**:
+1. Make prompts directory read-only
+2. Trigger installation
+3. Verify error notification with actionable message
+4. Verify extension continues functioning
+5. Restore permissions, verify successful reinstall
+
+**Development Version Testing**:
+1. Build and install `0.0.1-dev` VSIX
+2. Verify agents installed in prompts directory
+3. Modify agent content
+4. Rebuild and reinstall `0.0.1-dev` VSIX
+5. Verify agents updated with new content
+6. Check output channel for "Development version detected" message
+7. Use test helper script to build production version: `./scripts/test-migration.sh 0.2.0`
+8. Install production VSIX, verify migration from dev to prod
+9. Use test helper script to return to dev: `./scripts/test-migration.sh 0.0.1-dev`
+10. Verify migration from prod back to dev
+
+**Platform Compatibility**:
+1. Test on Windows (standard VS Code)
+2. Test on macOS (VS Code Insiders)
+3. Test on Linux (Code-OSS)
+4. Test on Linux (VSCodium)
+5. Verify correct paths for each platform/variant
+
+**Uninstall Cleanup**:
+1. Install PAW, verify agents present
+2. Uninstall extension
+3. Verify all PAW agents removed
+4. Verify agents absent from Copilot Chat
+5. Check output channel for cleanup confirmation
+
+---
+
+## Performance Considerations
+
+- **Installation Time**: Should complete within 2-3 seconds for 15+ agents (acceptable during activation)
+- **File I/O**: Use synchronous operations during activation (VS Code activation is synchronous context)
+- **Memory**: Agent templates total <500KB (small footprint, no caching needed)
+- **Activation Overhead**: When up-to-date, check is <100ms (single globalState read + file existence checks)
+- **Migration**: File deletion typically <10ms per file (rare operation, only on version changes)
+
+---
+
+## Migration Notes
+
+**Initial Release (1.0.0)**: Fresh installations only, no migration from older versions needed. No pre-0.4.0 chatmode migration (users manually migrated when adopting extension-based workflow).
+
+**Version Changes**: All version changes (upgrades and downgrades) follow the same pattern:
+1. Delete all files from previous version (tracked in globalState)
+2. Install fresh set from current version
+3. Update version marker
+
+**Future Versions**: No migration manifest maintenance required. Renaming, adding, or removing agents automatically handled by delete-all-then-reinstall pattern.
+
+**Downgrades**: Automatically supported. Users can safely test new versions and rollback without orphaned files.
+
+**Uninstall**: Extension removes agents automatically during deactivation. If cleanup fails due to permissions, manual removal instructions provided in README.
+
+---
+
+## References
+
+- Original Issue: https://github.com/lossyrob/phased-agent-workflow/issues/36
+- Spec: `.paw/work/agent-installation-management/Spec.md`
+- SpecResearch: `.paw/work/agent-installation-management/SpecResearch.md`
+- CodeResearch: `.paw/work/agent-installation-management/CodeResearch.md`
+- VS Code Extension API: https://code.visualstudio.com/api/references/vscode-api
+- Similar pattern: `src/tools/createPromptTemplates.ts:228-268`
+- PR #91 Review Comment: Codebase refactoring requirement

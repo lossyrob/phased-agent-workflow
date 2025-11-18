@@ -1050,6 +1050,24 @@ Manual follow-ups: uninstall the packaged VSIX on each platform to confirm the o
 
 ---
 
+## Addressed Review Comments (Final PR #100)
+
+**Review Comment 1 (https://github.com/lossyrob/phased-agent-workflow/pull/100#discussion_r2536157430)**:
+Removed success notification popup after agent installation. Users are no longer interrupted with a popup for the success case - all installation results are logged to the output channel for debugging purposes.
+
+**Review Comment 2 (https://github.com/lossyrob/phased-agent-workflow/pull/100#discussion_r2536162021)**:
+Hide output channel for development builds. When `isDevelopmentVersion` is true, the output channel no longer automatically shows on each activation, reducing noise during frequent reinstalls while developing agent content. Production installations still show the output channel for transparency.
+
+**Changes Made**:
+- Removed `vscode.window.showInformationMessage()` call on successful installation
+- Added conditional `outputChannel.show()` that only shows for production builds
+- Updated comments to explain the rationale for both changes
+- All automated tests continue to pass (60 tests)
+
+**Commit**: 4661028 - Address PR #100 review comments - reduce user notification noise
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:

@@ -10,3 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Automatic agent installation management system that installs PAW agents to VS Code prompts directory on extension activation, handles version upgrades and downgrades bidirectionally with automatic cleanup of obsolete files, supports development builds with force-reinstallation for local testing, and removes agents during extension uninstall - transforms PAW into a fully integrated VS Code development companion with zero manual configuration
 
+### Changed
+- Implementation Planner agent now emphasizes strategic architectural thinking over code-level detail, adds Phase Summary sections to all plans for quick understanding, prevents documentation phases from appearing in implementation plans, and includes clear agent identification in Planning PRs
+

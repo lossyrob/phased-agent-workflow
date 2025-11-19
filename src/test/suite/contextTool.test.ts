@@ -107,14 +107,14 @@ suite('Context Tool', () => {
 
     const response = formatContextResponse({
       workspace_instructions: status('Workspace data'),
-      user_instructions: status('', 'User instructions not found'),
+      user_instructions: status('', 'Failed to read user instructions: EACCES'),
       workflow_context: status('Work Title: Demo Feature'),
     } satisfies ContextResult);
 
     assert.ok(response.includes('<workspace_instructions>'));
     assert.ok(response.includes('</workspace_instructions>'));
     assert.ok(response.includes('<user_instructions>'));
-    assert.ok(response.includes('<warning>User instructions not found</warning>'));
+    assert.ok(response.includes('<warning>Failed to read user instructions: EACCES</warning>'));
     assert.ok(response.includes('<workflow_context>'));
     assert.ok(response.includes('```markdown'));
     assert.ok(!response.includes('Follow custom instructions'));

@@ -91,6 +91,19 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 
 **Implementation**: Commit `60af76e` - Updated `resolveWorkspacePath()` to throw error when feature slug directory doesn't exist, changed return type to include both workspace path and feature directory, updated JSDoc to clarify error behavior.
 
+**Comment 3** (https://github.com/lossyrob/phased-agent-workflow/pull/102/files#diff-70003515d7c9a10431d16d7009ddadc2f27d23bfbbc9226beada2914f6777004R224):
+- Response sections now use XML-style tags (`<workspace_instructions>`, `<user_instructions>`, `<workflow_context>`) so agent-visible Markdown headers embedded in custom instructions do not conflict with wrapper headings.
+- Errors surface via `<warning>` tags inside the same wrapper to keep structure machine-readable.
+
+**Comment 4** (https://github.com/lossyrob/phased-agent-workflow/pull/102/files#diff-70003515d7c9a10431d16d7009ddadc2f27d23bfbbc9226beada2914f6777004R253):
+- Removed instructional prose (precedence reminders, guidance text) from the formatted response; the tool now returns only tagged content or `<context status="empty" />` when nothing exists.
+
+**Comment 5** (PR #102 conversation – reviewer note "Add unit tests that demonstrate the functionality under various scenarios"):
+- Added `src/test/suite/contextTool.test.ts` with coverage for successful context aggregation, tagged formatting, empty-context handling, and error pathways when feature slugs are missing.
+- Tests stub `os.homedir()` and inject temporary workspace folders to exercise the full path resolution logic without relying on the developer's environment.
+
+**Addressed Review Comments:** Formatter now emits deterministic XML-style tags without extra guidance text, and the new `contextTool.test.ts` suite locks in both the happy path and failure scenarios requested by the reviewer.
+
 ### Overview
 Create the core TypeScript implementation for the context tool, including type definitions, business logic, and file operations. This phase establishes the foundation for loading custom instructions and parsing workflow metadata.
 

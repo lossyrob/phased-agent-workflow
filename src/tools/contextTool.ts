@@ -119,22 +119,34 @@ export function loadCustomInstructions(directory: string, agentName: string): In
  * @returns Workspace folder path and feature directory path
  * @throws Error if no workspace is open or feature slug directory doesn't exist
  */
-function resolveWorkspacePath(featureSlug: string): { workspacePath: string; featureDir: string } {
+function getWorkspaceFolderPaths(): string[] {
   const folders = vscode.workspace.workspaceFolders;
-  if (!folders || folders.length === 0) {
+  const paths = folders && folders.length > 0 ? folders.map(folder => folder.uri.fsPath) : [];
+
+  const override = process.env.PAW_WORKSPACE_PATH?.trim();
+  if (override) {
+    paths.push(override);
+  }
+
+  return paths;
+}
+
+function resolveWorkspacePath(featureSlug: string): { workspacePath: string; featureDir: string } {
+  const folderPaths = getWorkspaceFolderPaths();
+  if (folderPaths.length === 0) {
     throw new Error('Unable to determine workspace path: no workspace folder is currently open.');
   }
 
   // Search for workspace containing the feature slug
-  for (const folder of folders) {
-    const featureDir = path.join(folder.uri.fsPath, '.paw', 'work', featureSlug);
+  for (const folderPath of folderPaths) {
+    const featureDir = path.join(folderPath, '.paw', 'work', featureSlug);
     if (fs.existsSync(featureDir)) {
-      return { workspacePath: folder.uri.fsPath, featureDir };
+      return { workspacePath: folderPath, featureDir };
     }
   }
 
   // Feature slug directory not found in any workspace
-  const workspacePaths = folders.map(f => f.uri.fsPath).join(', ');
+  const workspacePaths = folderPaths.join(', ');
   throw new Error(
     `Feature slug '${featureSlug}' not found in any workspace. ` +
     `Expected directory .paw/work/${featureSlug}/ to exist in one of: ${workspacePaths}. ` +
@@ -214,70 +226,74 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
 }
 
 /**
- * Formats an instruction section with title, content, and optional error message.
+ * Formats an instruction section with a distinct XML-style tag wrapper to avoid
+ * ambiguity with the content's own Markdown structure.
  * 
- * @param title - Section title (e.g., 'Workspace Custom Instructions')
+ * @param tagName - Wrapper tag name (e.g., 'workspace_instructions')
  * @param status - Instruction status containing content and optional error
- * @returns Formatted Markdown section
+ * @returns Tagged section or an empty string when no content exists
  */
-function formatInstructionSection(title: string, status: InstructionStatus): string {
-  const parts: string[] = [`## ${title}`];
+function formatInstructionSection(tagName: string, status: InstructionStatus): string {
+  if (!status.content && !status.error) {
+    return '';
+  }
+
+  const parts: string[] = [`<${tagName}>`];
 
   if (status.content) {
     parts.push(status.content);
   }
 
   if (status.error) {
-    parts.push(`Warning: ${status.error}`);
+    parts.push(`<warning>${status.error}</warning>`);
   }
 
-  return parts.join('\n\n');
+  parts.push(`</${tagName}>`);
+  return parts.join('\n');
 }
 
 /**
  * Formats a complete context result as a natural language Markdown response
  * suitable for agent consumption.
  * 
- * The formatted response includes:
- * - Precedence rules for custom instructions
- * - Workspace custom instructions (if present)
- * - User custom instructions (if present)
- * - Raw WorkflowContext.md content in a code fence (if present)
- * - Message if no content was found
- * 
- * Empty sections are omitted from the response.
+ * The formatted response is purely structural data:
+ * - Workspace custom instructions wrapped in `<workspace_instructions>`
+ * - User custom instructions wrapped in `<user_instructions>`
+ * - Workflow context wrapped in `<workflow_context>` with code fencing
+ * - `<context status="empty" />` when no sections are available
  * 
  * @param result - Context result to format
- * @returns Formatted Markdown text ready for agent consumption
+ * @returns Tagged Markdown text ready for agent consumption
  */
 export function formatContextResponse(result: ContextResult): string {
-  const sections: string[] = [
-    'Follow custom instructions in addition to your standard instructions. Custom instructions take precedence where conflicts exist.',
-    'Workspace custom instructions take precedence over user custom instructions.',
-  ];
+  const sections: string[] = [];
 
-  if (result.workspace_instructions.content || result.workspace_instructions.error) {
-    sections.push(formatInstructionSection('Workspace Custom Instructions', result.workspace_instructions));
+  const workspaceSection = formatInstructionSection('workspace_instructions', result.workspace_instructions);
+  if (workspaceSection) {
+    sections.push(workspaceSection);
   }
 
-  if (result.user_instructions.content || result.user_instructions.error) {
-    sections.push(formatInstructionSection('User Custom Instructions', result.user_instructions));
+  const userSection = formatInstructionSection('user_instructions', result.user_instructions);
+  if (userSection) {
+    sections.push(userSection);
   }
 
   if (result.workflow_context.content || result.workflow_context.error) {
-    const workflowParts: string[] = ['## Workflow Context'];
+    const workflowParts: string[] = ['<workflow_context>'];
     if (result.workflow_context.content) {
       workflowParts.push('```markdown');
       workflowParts.push(result.workflow_context.content);
       workflowParts.push('```');
-    } else if (result.workflow_context.error) {
-      workflowParts.push(`Warning: ${result.workflow_context.error}`);
     }
-    sections.push(workflowParts.join('\n\n'));
+    if (result.workflow_context.error) {
+      workflowParts.push(`<warning>${result.workflow_context.error}</warning>`);
+    }
+    workflowParts.push('</workflow_context>');
+    sections.push(workflowParts.join('\n'));
   }
 
-  if (sections.length === 2) {
-    sections.push('No custom instructions or workflow context content were found.');
+  if (sections.length === 0) {
+    return '<context status="empty" />';
   }
 
   return sections.join('\n\n');

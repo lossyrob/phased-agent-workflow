@@ -63,7 +63,7 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 
 ## Phase Summary
 
-1. **Phase 1: Implement Context Tool Core Logic** - Create TypeScript interfaces, business logic function, WorkflowContext.md reader, and custom instruction loader with error handling
+1. **Phase 1: Implement Context Tool Core Logic** (Completed) - Create TypeScript interfaces, business logic function, WorkflowContext.md reader, and custom instruction loader with error handling
 2. **Phase 2: Register Tool with VS Code Language Model API** - Implement tool registration function with VS Code API integration, add package.json declaration, and register in extension activation
 3. **Phase 3: Update Agent Templates and Generated Prompts** - Modify agent files to call context tool at startup, update prompt generation to pass feature slug instead of WorkflowContext.md path
 4. **Phase 4: Testing and Validation** - Create unit tests for core logic, integration tests for tool registration, and manual testing across platforms
@@ -71,6 +71,38 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 ---
 
 ## Phase 1: Implement Context Tool Core Logic
+
+**Status**: Complete
+
+**Notes**: Added `src/tools/contextTool.ts` with parameter/result interfaces, file loaders, validation, and response formatting. Coverage includes workspace/user instruction discovery and workflow context reading with ASCII-only warnings. `npm run compile` passes locally. No additional review callouts.
+
+### Addressed Review Comments (PR #102):
+
+**Comment 1** (https://github.com/lossyrob/phased-agent-workflow/pull/102#discussion_r2542916912):
+- Changed validation strategy from format-only to existence-based validation
+- Primary validation now checks if `.paw/work/<feature-slug>/` directory exists
+- Format validation retained as secondary check to prevent path traversal attacks
+
+**Comment 2** (https://github.com/lossyrob/phased-agent-workflow/pull/102#discussion_r2542921091):
+- Strengthened error handling for non-existent feature slugs
+- Removed fallback to first workspace folder
+- Now throws descriptive error immediately if feature slug directory doesn't exist
+- Agent receives ONLY the error (no partial context), enabling slug correction and retry
+
+**Implementation**: Commit `60af76e` - Updated `resolveWorkspacePath()` to throw error when feature slug directory doesn't exist, changed return type to include both workspace path and feature directory, updated JSDoc to clarify error behavior.
+
+**Comment 3** (https://github.com/lossyrob/phased-agent-workflow/pull/102/files#diff-70003515d7c9a10431d16d7009ddadc2f27d23bfbbc9226beada2914f6777004R224):
+- Response sections now use XML-style tags (`<workspace_instructions>`, `<user_instructions>`, `<workflow_context>`) so agent-visible Markdown headers embedded in custom instructions do not conflict with wrapper headings.
+- Errors surface via `<warning>` tags inside the same wrapper to keep structure machine-readable.
+
+**Comment 4** (https://github.com/lossyrob/phased-agent-workflow/pull/102/files#diff-70003515d7c9a10431d16d7009ddadc2f27d23bfbbc9226beada2914f6777004R253):
+- Removed instructional prose (precedence reminders, guidance text) from the formatted response; the tool now returns only tagged content or `<context status="empty" />` when nothing exists.
+
+**Comment 5** (PR #102 conversation – reviewer note "Add unit tests that demonstrate the functionality under various scenarios"):
+- Added `src/test/suite/contextTool.test.ts` with coverage for successful context aggregation, tagged formatting, empty-context handling, and error pathways when feature slugs are missing.
+- Tests stub `os.homedir()` and inject temporary workspace folders to exercise the full path resolution logic without relying on the developer's environment.
+
+**Addressed Review Comments:** Formatter now emits deterministic XML-style tags without extra guidance text, and the new `contextTool.test.ts` suite locks in both the happy path and failure scenarios requested by the reviewer.
 
 ### Overview
 Create the core TypeScript implementation for the context tool, including type definitions, business logic, and file operations. This phase establishes the foundation for loading custom instructions and parsing workflow metadata.

@@ -279,7 +279,14 @@ export function formatContextResponse(result: ContextResult): string {
 
   // Return formatted text, or minimal message if everything is empty
   const formattedText = sections.join('\n');
-  if (formattedText.trim() === '# PAW Context\n\nFollow custom instructions in addition to your standard instructions. Custom instructions take precedence where conflicts exist.\n\n**Precedence rules**: Workspace instructions take precedence over user instructions.') {
+  
+  // Check if we only have the header without any content sections
+  const hasWorkspaceContent = result.workspace_instructions.exists && result.workspace_instructions.content;
+  const hasUserContent = result.user_instructions.exists && result.user_instructions.content;
+  const hasWorkflowContent = result.workflow_context.exists && result.workflow_context.content;
+  const hasAnyErrors = result.workspace_instructions.error || result.user_instructions.error || result.workflow_context.error;
+  
+  if (!hasWorkspaceContent && !hasUserContent && !hasWorkflowContent && !hasAnyErrors) {
     return 'No custom instructions or workflow context found.';
   }
 

@@ -76,6 +76,21 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 
 **Notes**: Added `src/tools/contextTool.ts` with parameter/result interfaces, file loaders, validation, and response formatting. Coverage includes workspace/user instruction discovery and workflow context reading with ASCII-only warnings. `npm run compile` passes locally. No additional review callouts.
 
+### Addressed Review Comments (PR #102):
+
+**Comment 1** (https://github.com/lossyrob/phased-agent-workflow/pull/102#discussion_r2542916912):
+- Changed validation strategy from format-only to existence-based validation
+- Primary validation now checks if `.paw/work/<feature-slug>/` directory exists
+- Format validation retained as secondary check to prevent path traversal attacks
+
+**Comment 2** (https://github.com/lossyrob/phased-agent-workflow/pull/102#discussion_r2542921091):
+- Strengthened error handling for non-existent feature slugs
+- Removed fallback to first workspace folder
+- Now throws descriptive error immediately if feature slug directory doesn't exist
+- Agent receives ONLY the error (no partial context), enabling slug correction and retry
+
+**Implementation**: Commit `60af76e` - Updated `resolveWorkspacePath()` to throw error when feature slug directory doesn't exist, changed return type to include both workspace path and feature directory, updated JSDoc to clarify error behavior.
+
 ### Overview
 Create the core TypeScript implementation for the context tool, including type definitions, business logic, and file operations. This phase establishes the foundation for loading custom instructions and parsing workflow metadata.
 

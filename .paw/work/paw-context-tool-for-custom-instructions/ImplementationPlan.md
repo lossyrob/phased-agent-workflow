@@ -63,7 +63,7 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 
 ## Phase Summary
 
-1. **Phase 1: Implement Context Tool Core Logic** - Create TypeScript interfaces, business logic function, WorkflowContext.md reader, and custom instruction loader with error handling
+1. **Phase 1: Implement Context Tool Core Logic** (Completed) - Create TypeScript interfaces, business logic function, WorkflowContext.md reader, and custom instruction loader with error handling
 2. **Phase 2: Register Tool with VS Code Language Model API** - Implement tool registration function with VS Code API integration, add package.json declaration, and register in extension activation
 3. **Phase 3: Update Agent Templates and Generated Prompts** - Modify agent files to call context tool at startup, update prompt generation to pass feature slug instead of WorkflowContext.md path
 4. **Phase 4: Testing and Validation** - Create unit tests for core logic, integration tests for tool registration, and manual testing across platforms
@@ -71,6 +71,10 @@ Use existing modules (`customInstructions.ts`, `platformDetection.ts`) for consi
 ---
 
 ## Phase 1: Implement Context Tool Core Logic
+
+**Status**: Complete
+
+**Notes**: Added `src/tools/contextTool.ts` with parameter/result interfaces, file loaders, validation, and response formatting. Coverage includes workspace/user instruction discovery and workflow context reading with ASCII-only warnings. `npm run compile` passes locally. No additional review callouts.
 
 ### Overview
 Create the core TypeScript implementation for the context tool, including type definitions, business logic, and file operations. This phase establishes the foundation for loading custom instructions and parsing workflow metadata.

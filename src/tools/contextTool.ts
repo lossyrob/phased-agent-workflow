@@ -298,3 +298,69 @@ export function formatContextResponse(result: ContextResult): string {
 
   return sections.join('\n\n');
 }
+
+/**
+ * Registers the PAW context tool with VS Code's Language Model Tool API.
+ * This enables agents to retrieve workspace-specific custom instructions,
+ * user-level custom instructions, and workflow context at runtime.
+ * 
+ * @param context - VS Code extension context for managing subscriptions
+ */
+export function registerContextTool(context: vscode.ExtensionContext): void {
+  const tool = vscode.lm.registerTool<ContextParams>(
+    'paw_get_context',
+    {
+      async prepareInvocation(options, _token) {
+        const { feature_slug, agent_name } = options.input;
+        return {
+          invocationMessage: `Retrieving PAW context for feature: ${feature_slug} (agent: ${agent_name})`,
+          confirmationMessages: {
+            title: 'Get PAW Context',
+            message: new vscode.MarkdownString(
+              `This will retrieve custom instructions and workflow context for:\n\n` +
+              `- **Feature**: ${feature_slug}\n` +
+              `- **Agent**: ${agent_name}\n\n` +
+              `Sources:\n` +
+              `- Workspace instructions: \`.paw/instructions/\`\n` +
+              `- User instructions: \`~/.paw/instructions/\`\n` +
+              `- Workflow context: \`.paw/work/${feature_slug}/WorkflowContext.md\``
+            )
+          }
+        };
+      },
+      async invoke(options, token) {
+        try {
+          // Check for cancellation before starting
+          if (token.isCancellationRequested) {
+            return new vscode.LanguageModelToolResult([
+              new vscode.LanguageModelTextPart('Context retrieval was cancelled.')
+            ]);
+          }
+
+          const result = await getContext(options.input);
+
+          // Check for cancellation after expensive operations
+          if (token.isCancellationRequested) {
+            return new vscode.LanguageModelToolResult([
+              new vscode.LanguageModelTextPart('Context retrieval was cancelled.')
+            ]);
+          }
+
+          const formattedResponse = formatContextResponse(result);
+          return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(formattedResponse)
+          ]);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return new vscode.LanguageModelToolResult([
+            new vscode.LanguageModelTextPart(
+              `Error retrieving PAW context: ${message}`
+            )
+          ]);
+        }
+      }
+    }
+  );
+
+  context.subscriptions.push(tool);
+}

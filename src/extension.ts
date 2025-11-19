@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
+import { registerContextTool } from './tools/contextTool';
 import {
   installAgents,
   needsInstallation,
@@ -41,6 +42,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerPromptTemplatesTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_create_prompt_templates');
+
+  registerContextTool(context);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
 
   const initCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',

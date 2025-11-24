@@ -319,11 +319,7 @@ export function registerContextTool(context: vscode.ExtensionContext): void {
             message: new vscode.MarkdownString(
               `This will retrieve custom instructions and workflow context for:\n\n` +
               `- **Feature**: ${feature_slug}\n` +
-              `- **Agent**: ${agent_name}\n\n` +
-              `Sources:\n` +
-              `- Workspace instructions: \`.paw/instructions/\`\n` +
-              `- User instructions: \`~/.paw/instructions/\`\n` +
-              `- Workflow context: \`.paw/work/${feature_slug}/WorkflowContext.md\``
+              `- **Agent**: ${agent_name}`
             )
           }
         };

@@ -94,6 +94,30 @@
             "workspace_path"
           ]
         }
+      },
+      {
+        "name": "paw_get_context",
+        "displayName": "Get PAW Context",
+        "modelDescription": "Retrieve workspace-specific custom instructions, user-level custom instructions (if they exist), and workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workspace_instructions> for workspace .paw/instructions/, <user_instructions> for user ~/.paw/instructions/, and <workflow_context> for raw WorkflowContext.md content.",
+        "toolReferenceName": "pawContext",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "feature_slug": {
+              "type": "string",
+              "description": "The normalized feature slug (e.g., 'auth-system')"
+            },
+            "agent_name": {
+              "type": "string",
+              "description": "The name of the calling agent (e.g., 'PAW-02B Impl Planner')"
+            }
+          },
+          "required": [
+            "feature_slug",
+            "agent_name"
+          ]
+        }
       }
     ]
   },

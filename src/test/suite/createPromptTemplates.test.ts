@@ -196,7 +196,7 @@ suite('Prompt Template Generation', () => {
     // Verify frontmatter format
     assert.ok(content.startsWith('---\n'), 'File should start with frontmatter delimiter');
     assert.ok(content.includes('agent: PAW-01A Specification'), 'Frontmatter should include agent');
-    assert.ok(content.includes('Feature slug: test-feature'), 'Body should include feature slug parameter');
+    assert.ok(content.includes('Work ID: test-feature'), 'Body should include work ID parameter');
   });
 
   test('Status stage always included regardless of mode', async () => {

@@ -95,8 +95,8 @@ suite('Context Tool', () => {
 
     try {
       await assert.rejects(
-        () => getContext({ feature_slug: 'missing-feature-slug', agent_name: 'PAW-Any Agent' }),
-        /Feature slug 'missing-feature-slug' not found/
+        async () => getContext({ feature_slug: 'missing-feature-slug', agent_name: 'PAW-Test' }),
+        /Work ID 'missing-feature-slug' not found/
       );
     } finally {
       restoreEnv();
@@ -323,7 +323,7 @@ suite('Context Tool', () => {
       try {
         await assert.rejects(
           () => getContext({ feature_slug: '../../../etc/passwd', agent_name: 'PAW-Test Agent' }),
-          /Invalid feature_slug format/
+          /Invalid work ID format/
         );
       } finally {
         restoreEnv();

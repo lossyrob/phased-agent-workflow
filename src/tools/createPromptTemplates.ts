@@ -78,7 +78,7 @@ interface PromptTemplate {
   /** The agent to invoke (e.g., "PAW-01A Specification") */
   mode: string;
   
-  /** The instruction for the agent (e.g., "Create spec from") */
+  /** The instruction for the agent (e.g., "Create specification for this work item.") */
   instruction: string;
   
   /** The workflow stage this template belongs to */
@@ -98,61 +98,61 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     filename: "01A-spec.prompt.md",
     mode: "PAW-01A Specification",
-    instruction: "Create spec from",
+    instruction: "Create specification for this work item.",
     stage: WorkflowStage.Spec,
   },
   {
     filename: "02A-code-research.prompt.md",
     mode: "PAW-02A Code Researcher",
-    instruction: "Run code research from",
+    instruction: "Research the codebase for this work item.",
     stage: WorkflowStage.CodeResearch,
   },
   {
     filename: "02B-impl-plan.prompt.md",
     mode: "PAW-02B Impl Planner",
-    instruction: "Create implementation plan from",
+    instruction: "Create implementation plan for this work item.",
     stage: WorkflowStage.Plan,
   },
   {
     filename: "03A-implement.prompt.md",
     mode: "PAW-03A Implementer",
-    instruction: "Implement phase from",
+    instruction: "Implement the next phase for this work item.",
     stage: WorkflowStage.Implementation,
   },
   {
     filename: "03B-review.prompt.md",
     mode: "PAW-03B Impl Reviewer",
-    instruction: "Review implementation from",
+    instruction: "Review the implementation for this work item.",
     stage: WorkflowStage.ImplementationReview,
   },
   {
     filename: "03C-pr-review.prompt.md",
     mode: "PAW-03A Implementer",
-    instruction: "Address PR review comments from",
+    instruction: "Address PR review comments for this work item.",
     stage: WorkflowStage.PRReviewResponse,
   },
   {
     filename: "03D-review-pr-review.prompt.md",
     mode: "PAW-03B Impl Reviewer",
-    instruction: "Verify PR comment responses from",
+    instruction: "Verify PR comment responses for this work item.",
     stage: WorkflowStage.PRReviewResponse,
   },
   {
     filename: "04-docs.prompt.md",
     mode: "PAW-04 Documenter",
-    instruction: "Generate documentation from",
+    instruction: "Generate documentation for this work item.",
     stage: WorkflowStage.Documentation,
   },
   {
     filename: "05-pr.prompt.md",
     mode: "PAW-05 PR",
-    instruction: "Create final PR from",
+    instruction: "Create final PR for this work item.",
     stage: WorkflowStage.FinalPR,
   },
   {
     filename: "0X-status.prompt.md",
     mode: "PAW-X Status Update",
-    instruction: "Update status from",
+    instruction: "Update status for this work item.",
     stage: WorkflowStage.Status,
   },
 ];
@@ -236,7 +236,7 @@ function determineStagesFromMode(
  * custom instructions, and workflow metadata.
  * 
  * @param mode - The agent to invoke (e.g., "PAW-01A Specification")
- * @param instruction - The instruction for the agent (e.g., "Create spec from")
+ * @param instruction - The instruction for the agent (e.g., "Create specification for this work item.")
  * @param featureSlug - The feature slug to pass as a parameter
  * @returns The complete file content with frontmatter and body
  */

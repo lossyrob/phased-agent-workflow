@@ -9,7 +9,7 @@ You are tasked with implementing an approved technical implementation plan. Thes
 
 **Your Agent Name**: PAW-03A Implementer
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/PAW-03A Implementer-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/PAW-03A Implementer-instructions.md`
 - Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)

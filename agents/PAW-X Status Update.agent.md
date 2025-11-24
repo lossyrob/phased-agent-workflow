@@ -9,7 +9,7 @@ Maintain a clean, current textual surface for this feature across **Issue and PR
 
 **Your Agent Name**: PAW-X Status Update
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/PAW-X Status Update-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/PAW-X Status Update-instructions.md`
 - Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)

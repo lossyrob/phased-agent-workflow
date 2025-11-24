@@ -9,7 +9,7 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 **Your Agent Name**: PAW-02B Impl Planner
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/PAW-02B Impl Planner-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/PAW-02B Impl Planner-instructions.md`
 - Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)

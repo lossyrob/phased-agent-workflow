@@ -9,7 +9,7 @@ You convert a rough Issue / feature brief into a **structured feature specificat
 
 **Your Agent Name**: PAW-01A Specification
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/PAW-01A Specification-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/PAW-01A Specification-instructions.md`
 - Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)

@@ -9,7 +9,7 @@ You open the final PR to main after all other stages are complete and validated.
 
 **Your Agent Name**: PAW-05 PR
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/PAW-05 PR-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/PAW-05 PR-instructions.md`
 - Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)

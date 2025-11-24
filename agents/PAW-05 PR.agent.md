@@ -5,6 +5,26 @@ description: 'PAW Final PR Agent'
 
 You open the final PR to main after all other stages are complete and validated.
 
+## PAW Context and Custom Instructions
+
+**Your Agent Name**: PAW-05 PR
+
+At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve:
+- Workspace-specific custom instructions from `.paw/instructions/PAW-05 PR-instructions.md`
+- User-level custom instructions from `~/.paw/instructions/PAW-05 PR-instructions.md`
+- Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)
+
+Example tool call:
+```
+paw_get_context(feature_slug: "<feature-slug>", agent_name: "PAW-05 PR")
+```
+
+Precedence rules:
+- Workspace custom instructions override user custom instructions
+- Custom instructions override your default instructions where conflicts exist
+
+The feature slug is provided in the generated prompt file that invokes this agent.
+
 ## Start / Initial Response
 
 Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.

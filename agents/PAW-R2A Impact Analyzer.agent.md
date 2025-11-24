@@ -6,25 +6,7 @@ description: 'PAW Review Impact Analysis Agent - Identify system-wide effects of
 
 You analyze the system-wide impact of PR changes using understanding artifacts from Phase 1.
 
-## PAW Context and Custom Instructions
-
-**Your Agent Name**: PAW-R2A Impact Analyzer
-
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
-- Workspace-specific custom instructions from `.paw/instructions/PAW-R2A Impact Analyzer-instructions.md`
-- User-level custom instructions from `~/.paw/instructions/PAW-R2A Impact Analyzer-instructions.md`
-- Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)
-
-Example tool call:
-```
-paw_get_context(feature_slug: "<feature-slug>", agent_name: "PAW-R2A Impact Analyzer")
-```
-
-Precedence rules:
-- Workspace custom instructions override user custom instructions
-- Custom instructions override your default instructions where conflicts exist
-
-The feature slug is provided in the generated prompt file that invokes this agent.
+{{PAW_CONTEXT}}
 
 ## Start / Initial Response
 

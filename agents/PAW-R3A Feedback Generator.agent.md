@@ -6,25 +6,7 @@ description: 'PAW Review Feedback Generation Agent - Create review comments with
 
 You transform gap analysis findings into structured review comments with comprehensive rationale sections that cite best practices and baseline patterns.
 
-## PAW Context and Custom Instructions
-
-**Your Agent Name**: PAW-R3A Feedback Generator
-
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
-- Workspace-specific custom instructions from `.paw/instructions/PAW-R3A Feedback Generator-instructions.md`
-- User-level custom instructions from `~/.paw/instructions/PAW-R3A Feedback Generator-instructions.md`
-- Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)
-
-Example tool call:
-```
-paw_get_context(feature_slug: "<feature-slug>", agent_name: "PAW-R3A Feedback Generator")
-```
-
-Precedence rules:
-- Workspace custom instructions override user custom instructions
-- Custom instructions override your default instructions where conflicts exist
-
-The feature slug is provided in the generated prompt file that invokes this agent.
+{{PAW_CONTEXT}}
 
 ## Start / Initial Response
 

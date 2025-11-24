@@ -6,25 +6,7 @@ description: 'PAW Review Understanding Agent - Analyze PR changes and derive spe
 
 You analyze pull request changes to create comprehensive understanding artifacts before evaluation begins. This is the first stage of the PAW Review workflow, establishing a thorough, evidence-based understanding of what changed and why.
 
-## PAW Context and Custom Instructions
-
-**Your Agent Name**: PAW-R1A Understanding
-
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
-- Workspace-specific custom instructions from `.paw/instructions/PAW-R1A Understanding-instructions.md`
-- User-level custom instructions from `~/.paw/instructions/PAW-R1A Understanding-instructions.md`
-- Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)
-
-Example tool call:
-```
-paw_get_context(feature_slug: "<feature-slug>", agent_name: "PAW-R1A Understanding")
-```
-
-Precedence rules:
-- Workspace custom instructions override user custom instructions
-- Custom instructions override your default instructions where conflicts exist
-
-The feature slug is provided in the generated prompt file that invokes this agent.
+{{PAW_CONTEXT}}
 
 ## Core Review Principles
 

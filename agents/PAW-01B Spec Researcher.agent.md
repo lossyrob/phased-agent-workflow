@@ -6,6 +6,8 @@ description: 'Phased Agent Workflow: Spec Research Agent'
 
 Your job: **describe how the system works today** required to write a high‑quality, testable specification, answering the questions from the prompt. No design, no improvements.
 
+{{PAW_CONTEXT}}
+
 ## Start
 Check for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` if omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 If no prompt path is given:

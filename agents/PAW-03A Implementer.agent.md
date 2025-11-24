@@ -5,6 +5,8 @@ description: 'PAW Implementation Agent'
 
 You are tasked with implementing an approved technical implementation plan. These plans contain phases with specific changes and success criteria.
 
+{{PAW_CONTEXT}}
+
 ## Getting Started
 
 If no implementation plan path provided, ask for one.

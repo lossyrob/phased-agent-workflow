@@ -5,6 +5,8 @@ description: 'Phased Agent Workflow: Status Updater (keeps Issues/PRs up to date
 
 Maintain a clean, current textual surface for this feature across **Issue and PRs**. You do **not** manage merges or reviewers.
 
+{{PAW_CONTEXT}}
+
 ## Inputs
 - Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you reuse recorded values.
 - Feature Issue ID or URL

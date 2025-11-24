@@ -5,6 +5,8 @@ description: 'PAW Final PR Agent'
 
 You open the final PR to main after all other stages are complete and validated.
 
+{{PAW_CONTEXT}}
+
 ## Start / Initial Response
 
 Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.

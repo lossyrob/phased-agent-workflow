@@ -233,8 +233,7 @@ function determineStagesFromMode(
  * Creates a markdown file with frontmatter specifying the agent and a body
  * that provides the feature slug parameter for the agent to use with paw_get_context.
  * Agents will call paw_get_context with this feature slug to retrieve workspace context,
- * custom instructions, and workflow metadata. The WorkflowContext.md path is retained
- * for backwards compatibility.
+ * custom instructions, and workflow metadata.
  * 
  * @param mode - The agent to invoke (e.g., "PAW-01A Specification")
  * @param instruction - The instruction for the agent (e.g., "Create spec from")
@@ -246,7 +245,7 @@ function generatePromptTemplate(
   instruction: string,
   featureSlug: string
 ): string {
-  return `---\nagent: ${mode}\n---\n\n${instruction} .paw/work/${featureSlug}/WorkflowContext.md\n\nFeature slug: ${featureSlug}\n`;
+  return `---\nagent: ${mode}\n---\n\n${instruction}\n\nFeature slug: ${featureSlug}\n`;
 }
 
 /**

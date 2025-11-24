@@ -106,7 +106,7 @@
           "properties": {
             "feature_slug": {
               "type": "string",
-              "description": "The normalized work ID (also called feature slug, e.g., 'auth-system')"
+              "description": "The normalized Work ID (also called feature slug, e.g., 'auth-system')"
             },
             "agent_name": {
               "type": "string",

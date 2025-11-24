@@ -16,4 +16,4 @@ Precedence rules:
 - Workspace custom instructions override user custom instructions
 - Custom instructions override your default instructions where conflicts exist
 
-The work ID (feature slug) is provided in the generated prompt file that invokes this agent.
+The Work ID (feature slug) is provided in the generated prompt file that invokes this agent.

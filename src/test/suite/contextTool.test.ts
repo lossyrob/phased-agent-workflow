@@ -323,7 +323,7 @@ suite('Context Tool', () => {
       try {
         await assert.rejects(
           () => getContext({ feature_slug: '../../../etc/passwd', agent_name: 'PAW-Test Agent' }),
-          /Invalid work ID format/
+          /Invalid Work ID format/
         );
       } finally {
         restoreEnv();

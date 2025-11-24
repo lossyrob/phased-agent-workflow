@@ -31,7 +31,7 @@ export enum WorkflowStage {
  * Parameters for the paw_create_prompt_templates language model tool.
  */
 interface CreatePromptTemplatesParams {
-  /** The normalized work ID (also called feature slug (e.g., "auth-system") */
+  /** The normalized Work ID (also called feature slug (e.g., "auth-system") */
   feature_slug: string;
   
   /** Absolute path to the workspace root directory */
@@ -231,13 +231,13 @@ function determineStagesFromMode(
  * Generate content for a single prompt template file.
  * 
  * Creates a markdown file with frontmatter specifying the agent and a body
- * that provides the work ID (feature slug) parameter for the agent to use with paw_get_context.
- * Agents will call paw_get_context with this work ID to retrieve workspace context,
+ * that provides the Work ID (feature slug) parameter for the agent to use with paw_get_context.
+ * Agents will call paw_get_context with this Work ID to retrieve workspace context,
  * custom instructions, and workflow metadata.
  * 
  * @param mode - The agent to invoke (e.g., "PAW-01A Specification")
  * @param instruction - The instruction for the agent (e.g., "Create specification for this work item.")
- * @param featureSlug - The work ID (feature slug) to pass as a parameter
+ * @param featureSlug - The Work ID (feature slug) to pass as a parameter
  * @returns The complete file content with frontmatter and body
  */
 function generatePromptTemplate(
@@ -263,7 +263,7 @@ function generatePromptTemplate(
  * The function is designed to be idempotent - it will create the directory if it
  * doesn't exist and overwrite existing files.
  * 
- * @param params - Parameters including work ID (feature slug), workspace path, and optional workflow configuration
+ * @param params - Parameters including Work ID (feature slug), workspace path, and optional workflow configuration
  * @returns Result object with success status, created files, and any errors
  */
 export async function createPromptTemplates(

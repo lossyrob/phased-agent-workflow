@@ -1210,8 +1210,8 @@ Work IDs must meet these requirements:
 - Reserved names: cannot be ".", "..", "node_modules", ".git", ".paw"
 
 ### Conflict Resolution
-- **User-provided work ID conflict**: Agent prompts user to choose alternative
-- **Auto-generated work ID conflict**: Agent automatically appends numeric suffix (-2, -3, etc.)
+- **User-provided Work ID conflict**: Agent prompts user to choose alternative
+- **Auto-generated Work ID conflict**: Agent automatically appends numeric suffix (-2, -3, etc.)
 
 ### Examples
 | Input | Normalized Work ID |

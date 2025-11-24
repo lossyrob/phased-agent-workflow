@@ -25,26 +25,26 @@ Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
-- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
+- Check for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them.
 - **Check for existing `SpecResearch.md`**: If `WorkflowContext.md` exists, check for `SpecResearch.md` at `.paw/work/<feature-slug>/SpecResearch.md`. If found, skip research prompt generation and proceed directly to spec drafting/integration mode. Inform user: "Found existing research—proceeding with spec integration."
 - Issue link or brief: if a GitHub link is supplied, treat it as the issue; otherwise use any provided description. When reading an issue work item, ensure all comments are also retrieved. If neither exists, ask the user what they want to work on.
 - Target branch: if the user specifies one, use it; otherwise inspect the current branch. If it is not `main` (or repo default), assume that branch is the target.
-- **Work Title and Feature Slug Generation**: When creating WorkflowContext.md, generate these according to the following logic:
-  1. **Both missing (no Work Title or Feature Slug):**
+- **Work Title and Work ID Generation**: When creating WorkflowContext.md, generate these according to the following logic:
+  1. **Both missing (no Work Title or Work ID):**
      - Generate Work Title from issue title or feature brief
-     - Generate Feature Slug by normalizing the Work Title:
+     - Generate Work ID by normalizing the Work Title:
        - Apply all normalization rules (lowercase, hyphens, etc.)
        - Validate format
        - Check uniqueness and resolve conflicts (auto-append -2, -3, etc.)
        - Check similarity and auto-select distinct variant if needed
      - Write both to WorkflowContext.md
      - Inform user: "Auto-generated Work Title: '<title>' and Feature Slug: '<slug>'"
-  2. **Work Title exists, Feature Slug missing:**
-     - Generate Feature Slug from Work Title (normalize and validate)
+  2. **Work Title exists, Work ID missing:**
+     - Generate Work ID from Work Title (normalize and validate)
      - Check uniqueness and resolve conflicts automatically
-     - Write Feature Slug to WorkflowContext.md
+     - Write Work ID to WorkflowContext.md
      - Inform user: "Auto-generated Feature Slug: '<slug>' from Work Title"
-  3. **User provides explicit Feature Slug:**
+  3. **User provides explicit Work ID:**
      - Normalize the provided slug
      - Validate format (reject if invalid)
      - Check uniqueness (prompt user if conflict)
@@ -52,10 +52,10 @@ Before responding, inspect the invocation context (prompt files, prior user turn
      - Write to WorkflowContext.md
      - Use provided slug regardless of Work Title
   4. **Both provided by user:**
-     - Use provided values (validate Feature Slug as above)
+     - Use provided values (validate Work ID as above)
      - No auto-generation needed
   
-  **Alignment Requirement:** When auto-generating both Work Title and Feature Slug, derive them from the same source (issue title or brief) to ensure they align and represent the same concept.
+  **Alignment Requirement:** When auto-generating both Work Title and Work ID, derive them from the same source (issue title or brief) to ensure they align and represent the same concept.
 - Hard constraints: capture any explicit mandates (performance, security, UX, compliance). Only ask for constraints if none can be inferred.
 - Research preference: default to running research unless the user explicitly skips it.
 
@@ -68,7 +68,7 @@ If `SpecResearch.md` exists or the user explicitly says research is already done
 # WorkflowContext
 
 Work Title: <work_title>
-Feature Slug: <feature-slug>
+Work ID: <feature-slug>
 Target Branch: <target_branch>
 Issue URL: <issue_url>
 Remote: <remote_name>
@@ -76,16 +76,16 @@ Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
 - **Work Title** is a short, descriptive name (2-4 words) for the feature or work that will prefix all PR titles. Generate this from the issue or work item title or feature brief when creating WorkflowContext.md. Refine it during spec iterations if needed for clarity. Examples: "WorkflowContext", "Auth System", "API Refactor", "User Profiles".
-- **Feature Slug**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
+- **Work ID**: Normalized, filesystem-safe identifier for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). Auto-generated from Work Title when not explicitly provided by user. Stored in WorkflowContext.md and used to construct artifact paths: `.paw/work/<feature-slug>/<Artifact>.md`. Must be unique (no conflicting directories).
 - **Issue URL**: Full URL to the issue or work item. Accepts both GitHub Issue URLs (https://github.com/<owner>/<repo>/issues/<number>) and Azure DevOps Work Item URLs (https://dev.azure.com/<org>/<project>/_workitems/edit/<id>).
-- If `WorkflowContext.md` is missing or lacks a Target Branch or Feature Slug:
+- If `WorkflowContext.md` is missing or lacks a Target Branch or Work ID:
   1. Gather or derive Target Branch (from current branch if not main/default)
   2. Generate or prompt for Work Title (if missing)
-  3. Generate or prompt for Feature Slug (if missing) - apply normalization and validation:
-     - Normalize the slug using the Feature Slug Normalization rules
-     - Validate format using the Feature Slug Validation rules
-     - Check uniqueness using the Feature Slug Uniqueness Check
-     - Check similarity using the Feature Slug Similarity Warning (for user-provided slugs)
+  3. Generate or prompt for Work ID (if missing) - apply normalization and validation:
+     - Normalize the slug using the Work ID Normalization rules
+     - Validate format using the Work ID Validation rules
+     - Check uniqueness using the Work ID Uniqueness Check
+     - Check similarity using the Work ID Similarity Warning (for user-provided slugs)
   4. Gather Issue URL, Remote (default to 'origin'), Additional Inputs
   5. Write complete WorkflowContext.md to `.paw/work/<feature-slug>/WorkflowContext.md`
   6. Persist derived artifact paths as "auto-derived" so downstream agents inherit authoritative record
@@ -183,9 +183,9 @@ As the spec evolves and becomes clearer, refine the Work Title if needed:
 - Update WorkflowContext.md if the title changes
 - Inform the user when the Work Title is updated
 
-### Feature Slug Processing
+### Work ID Processing
 
-Feature Slugs are normalized identifiers for workflow artifacts stored in `.paw/work/<slug>/`. Process slugs in this order:
+Work IDs are normalized identifiers for workflow artifacts stored in `.paw/work/<slug>/`. Process slugs in this order:
 
 **1. Normalize:** Lowercase, replace spaces/special chars with hyphens, remove invalid chars (keep only a-z, 0-9, -), collapse consecutive hyphens, trim leading/trailing hyphens, truncate to 100 chars. Examples: "User Authentication System" → "user-authentication-system", "API Refactor v2" → "api-refactor-v2"
 

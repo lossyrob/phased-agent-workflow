@@ -5,6 +5,8 @@
 
 ## Overview
 
+**Terminology Note**: This specification uses "work ID" as the primary term for the normalized identifier. A work ID (also known as a "feature slug" or "slug" internally) is a filesystem-safe identifier for workflow artifacts that may represent features, bug fixes, or any other work items.
+
 When developers work across multiple projects using PAW agents, each project may have unique requirements, conventions, or preferences that should guide agent behavior. Currently, PAW agents are installed globally to the user's VS Code prompts directory and shared across all workspaces. This creates a challenge: how can project-specific customizations be applied without polluting the global agent definitions or requiring agents to be reinstalled every time a developer switches workspaces?
 
 The PAW Context Tool solves this by providing a centralized mechanism for agents to dynamically load context at runtime. When an agent begins work, it calls the `paw_get_context` tool to retrieve three categories of information: workspace-specific custom instructions stored in the project's `.paw/instructions/` directory, user-level custom instructions from the developer's home directory at `~/.paw/instructions/`, and the current workflow metadata from `WorkflowContext.md`. This approach maintains clean separation between global agent definitions and project-specific customizations.

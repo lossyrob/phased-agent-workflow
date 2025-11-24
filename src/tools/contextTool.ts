@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
- * Pattern to validate feature slug format.
- * Feature slugs must contain only lowercase letters, numbers, and hyphens.
+ * Pattern to validate work ID (feature slug) format.
+ * Work IDs must contain only lowercase letters, numbers, and hyphens.
  */
 const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 
@@ -13,7 +13,7 @@ const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
  * Parameters for retrieving PAW context information.
  */
 export interface ContextParams {
-  /** The normalized feature slug (e.g., 'auth-system') */
+  /** The normalized work ID (also called feature slug, e.g., 'auth-system') */
   feature_slug: string;
   /** The name of the calling agent (e.g., 'PAW-02B Impl Planner') */
   agent_name: string;
@@ -112,12 +112,12 @@ export function loadCustomInstructions(directory: string, agentName: string): In
 }
 
 /**
- * Resolves the workspace path for a given feature slug.
+ * Resolves the workspace path for a given work ID (feature slug).
  * Searches all workspace folders for one containing .paw/work/<featureSlug>.
  * 
- * @param featureSlug - The feature slug to search for
+ * @param featureSlug - The work ID (feature slug) to search for
  * @returns Workspace folder path and feature directory path
- * @throws Error if no workspace is open or feature slug directory doesn't exist
+ * @throws Error if no workspace is open or work ID directory doesn't exist
  */
 function getWorkspaceFolderPaths(): string[] {
   const folders = vscode.workspace.workspaceFolders;
@@ -137,7 +137,7 @@ function resolveWorkspacePath(featureSlug: string): { workspacePath: string; fea
     throw new Error('Unable to determine workspace path: no workspace folder is currently open.');
   }
 
-  // Search for workspace containing the feature slug
+  // Search for workspace containing the work ID
   for (const folderPath of folderPaths) {
     const featureDir = path.join(folderPath, '.paw', 'work', featureSlug);
     if (fs.existsSync(featureDir)) {
@@ -145,12 +145,12 @@ function resolveWorkspacePath(featureSlug: string): { workspacePath: string; fea
     }
   }
 
-  // Feature slug directory not found in any workspace
+  // Work ID directory not found in any workspace
   const workspacePaths = folderPaths.join(', ');
   throw new Error(
-    `Feature slug '${featureSlug}' not found in any workspace. ` +
+    `Work ID '${featureSlug}' not found in any workspace. ` +
     `Expected directory .paw/work/${featureSlug}/ to exist in one of: ${workspacePaths}. ` +
-    `Please verify the feature slug is correct.`
+    `Please verify the work ID is correct.`
   );
 }
 
@@ -158,8 +158,8 @@ function resolveWorkspacePath(featureSlug: string): { workspacePath: string; fea
  * Validates and normalizes context parameters.
  * 
  * @param params - Parameters to validate
- * @returns Validated and trimmed feature slug and agent name
- * @throws Error if feature slug format is invalid or agent name is empty
+ * @returns Validated and trimmed work ID and agent name
+ * @throws Error if work ID format is invalid or agent name is empty
  */
 function validateParams(params: ContextParams): { featureSlug: string; agentName: string } {
   const featureSlug = params.feature_slug?.trim();
@@ -171,8 +171,8 @@ function validateParams(params: ContextParams): { featureSlug: string; agentName
   // The primary validation (existence check) happens in resolveWorkspacePath
   if (!FEATURE_SLUG_PATTERN.test(featureSlug)) {
     throw new Error(
-      `Invalid feature_slug format: '${featureSlug}'. ` +
-      `Feature slugs must contain only lowercase letters, numbers, and hyphens.`
+      `Invalid work ID format: '${featureSlug}'. ` +
+      `Work IDs must contain only lowercase letters, numbers, and hyphens.`
     );
   }
 
@@ -186,28 +186,28 @@ function validateParams(params: ContextParams): { featureSlug: string; agentName
 
 /**
  * Retrieves complete PAW context including workspace instructions, user instructions,
- * and workflow metadata for a specific feature and agent.
+ * and workflow metadata for a specific work item and agent.
  * 
  * This function:
- * 1. Validates the feature slug format and agent name
- * 2. Verifies the feature slug directory (.paw/work/<feature-slug>/) exists
+ * 1. Validates the work ID (feature slug) format and agent name
+ * 2. Verifies the work ID directory (.paw/work/<work-id>/) exists
  * 3. Loads workspace-specific custom instructions from .paw/instructions/
  * 4. Loads user-level custom instructions from ~/.paw/instructions/
- * 5. Loads raw WorkflowContext.md content from .paw/work/<feature-slug>/
+ * 5. Loads raw WorkflowContext.md content from .paw/work/<work-id>/
  * 
  * Missing instruction files are handled gracefully and returned with exists=false.
- * However, if the feature slug directory itself doesn't exist, an error is thrown
- * immediately to allow the agent to correct the slug and retry.
+ * However, if the work ID directory itself doesn't exist, an error is thrown
+ * immediately to allow the agent to correct the work ID and retry.
  * 
- * @param params - Context parameters with feature_slug and agent_name
+ * @param params - Context parameters with feature_slug (work ID) and agent_name
  * @returns Promise resolving to ContextResult with all loaded content
- * @throws Error if feature slug format is invalid, feature slug directory doesn't exist,
+ * @throws Error if work ID format is invalid, work ID directory doesn't exist,
  *         agent name is empty, or no workspace is open
  */
 export async function getContext(params: ContextParams): Promise<ContextResult> {
   const { featureSlug, agentName } = validateParams(params);
 
-  // Validate that feature slug directory exists - throws error if not found
+  // Validate that work ID directory exists - throws error if not found
   const { workspacePath, featureDir } = resolveWorkspacePath(featureSlug);
 
   const workspaceInstructionsDir = path.join(workspacePath, '.paw', 'instructions');

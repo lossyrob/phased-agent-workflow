@@ -9,7 +9,7 @@ You open the final PR to main after all other stages are complete and validated.
 
 ## Start / Initial Response
 
-Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
+Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you rely on recorded values.
 
 If no parameters provided:
 ```
@@ -27,20 +27,20 @@ I'll perform pre-flight checks before creating the PR.
 # WorkflowContext
 
 Work Title: <work_title>
-Feature Slug: <feature-slug>
+Work ID: <feature-slug>
 Target Branch: <target_branch>
 Issue URL: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch or Feature Slug:
+- If the file is missing or lacks a Target Branch or Work ID:
   1. Derive Target Branch from current branch if necessary
-  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
      - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
      - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
      - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  3. If both missing, prompt user for either Work Title or explicit Work ID
   4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before running pre-flight checks
   5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
@@ -189,7 +189,7 @@ After all checks pass, create the PR with this format:
 - Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
 - Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
 
-Read Feature Slug from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
+Read Work ID from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
 
 ## Implementation Phases
 [List each phase with link to merged Phase PR]

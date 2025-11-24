@@ -2,10 +2,10 @@
 
 **Your Agent Name**: {{AGENT_NAME}}
 
-At the beginning of your work, call the `paw_get_context` tool with the feature slug and your agent name to retrieve (if they exist):
+At the beginning of your work, call the `paw_get_context` tool with the work ID (feature slug) and your agent name to retrieve (if they exist):
 - Workspace-specific custom instructions from `.paw/instructions/{{AGENT_NAME}}-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/{{AGENT_NAME}}-instructions.md`
-- Workflow context from `WorkflowContext.md` (feature slug, target branch, work title, etc.)
+- Workflow context from `WorkflowContext.md` (work ID, target branch, work title, etc.)
 
 Example tool call:
 ```
@@ -16,4 +16,4 @@ Precedence rules:
 - Workspace custom instructions override user custom instructions
 - Custom instructions override your default instructions where conflicts exist
 
-The feature slug is provided in the generated prompt file that invokes this agent.
+The work ID (feature slug) is provided in the generated prompt file that invokes this agent.

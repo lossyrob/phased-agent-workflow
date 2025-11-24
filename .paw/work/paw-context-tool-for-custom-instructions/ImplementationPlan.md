@@ -2,6 +2,8 @@
 
 ## Overview
 
+**Terminology Note**: This implementation uses "work ID" as the primary user-facing term instead of "feature slug". The work ID is the normalized, filesystem-safe identifier for workflow artifacts. Internal code and parameter names retain `feature_slug`/`featureSlug` for consistency, but documentation, prompts, and user-visible text use "work ID" to be more inclusive of bug fixes and other work items.
+
 This plan implements a VS Code Language Model Tool (`paw_get_context`) that enables PAW agents to dynamically retrieve workspace-specific custom instructions, user-level custom instructions, and workflow metadata at runtime. This solves the problem of workspace isolation for globally-installed agent files by providing a centralized context retrieval mechanism that prevents configuration leakage between projects.
 
 ## Current State Analysis

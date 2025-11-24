@@ -116,6 +116,8 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 
 #### Custom Instructions (Optional)
 
+##### Workflow Initialization Instructions
+
 You can tailor the initialization workflow for your project:
 
 1. Create the directory and file:
@@ -131,6 +133,24 @@ You can tailor the initialization workflow for your project:
    - Integration requirements (e.g., mandatory issue URLs)
 
 When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
+
+##### Agent Behavior Customization
+
+You can customize how PAW agents behave during workflows at both project and user levels:
+
+**Project-level (workspace) instructions** (`.paw/instructions/<agent-name>-instructions.md`):
+- Apply to all users working in the project
+- Override user-level instructions when present
+- Should be committed to version control for team-wide standards
+- Example: `.paw/instructions/PAW-02B Impl Planner-instructions.md` for project planning conventions
+
+**User-level instructions** (`~/.paw/instructions/<agent-name>-instructions.md`):
+- Apply across all PAW workflows for a specific user
+- Respected unless overridden by workspace instructions
+- Personal preferences that follow you across projects
+- Example: `~/.paw/instructions/PAW-01A Specification-instructions.md` for your spec format preferences
+
+Agents call the `paw_get_context` tool at startup to retrieve custom instructions and workflow metadata dynamically. This enables workspace-aware agent behavior while keeping agent files globally installed and unchanged.
 
 #### Requirements
 

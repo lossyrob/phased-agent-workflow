@@ -24,14 +24,12 @@ PAW workflows follow a structured progression through distinct stages, each hand
 1. **Specification (01A)** — Define feature requirements, acceptance criteria, dependencies
    - *Inputs*: Issue URL, user brief, external research
    - *Outputs*: `Spec.md`
-   - *Duration*: 15-30 min
    - *Command*: `spec` or initialize new workflow
    - *Skipped in*: Minimal mode
 
 2. **Spec Research (01B)** — Answer open questions via web/docs/reference material
    - *Inputs*: `Spec.md` with research questions
    - *Outputs*: `SpecResearch.md`
-   - *Duration*: 10-20 min
    - *Command*: `research` or `spec research`
    - *Optional*: Only if Spec has research questions
    - *Skipped in*: Minimal mode
@@ -39,21 +37,18 @@ PAW workflows follow a structured progression through distinct stages, each hand
 3. **Code Research (02A)** — Analyze existing codebase patterns, conventions, integration points
    - *Inputs*: `Spec.md` (or work brief in minimal mode)
    - *Outputs*: `CodeResearch.md`
-   - *Duration*: 20-40 min
    - *Command*: `code` or `code research`
    - *Required*: All modes
 
 4. **Implementation Planning (02B)** — Design phased implementation approach with success criteria
    - *Inputs*: `Spec.md`, `CodeResearch.md`
    - *Outputs*: `ImplementationPlan.md` with phases
-   - *Duration*: 20-40 min
    - *Command*: `plan` or `planning`
    - *Required*: All modes
 
 5. **Implementation (03A)** — Execute one phase of the plan, write code, run tests
    - *Inputs*: `ImplementationPlan.md`, phase number
    - *Outputs*: Code changes, test updates
-   - *Duration*: 30-120 min per phase
    - *Command*: `implement Phase N` or `implement`
    - *Required*: All modes
    - *Branching*: Phase branches (`<target>_phase[N]`) in prs strategy, target branch in local
@@ -61,28 +56,24 @@ PAW workflows follow a structured progression through distinct stages, each hand
 6. **Implementation Review (03B)** — Verify implementation, add docs/comments, push, create PR
    - *Inputs*: Completed phase implementation
    - *Outputs*: Phase PR (prs strategy) or pushed commits (local strategy)
-   - *Duration*: 10-20 min
    - *Command*: `review` or `implementation review`
    - *Required*: All modes
 
 7. **Documentation (04)** — Create user-facing docs, update README, write guides
    - *Inputs*: All completed implementation phases
    - *Outputs*: `Docs.md`, docs PR (prs) or pushed commits (local)
-   - *Duration*: 20-40 min
    - *Command*: `docs` or `documentation`
    - *Skipped in*: Minimal mode
 
 8. **Final PR (05)** — Create final PR merging all work to main branch
    - *Inputs*: All phases complete, `Docs.md` (full mode only)
    - *Outputs*: Final PR targeting main/base branch
-   - *Duration*: 10-15 min
    - *Command*: `pr` or `final pr`
    - *Required*: All modes
 
 9. **Status Update (0X)** — Analyze workflow state, suggest next steps, optionally post to issues
    - *Inputs*: Artifacts, git state, PR status
    - *Outputs*: Workflow dashboard
-   - *Duration*: 2-5 min
    - *Command*: `status` or "where am I?"
    - *Available*: Anytime
 

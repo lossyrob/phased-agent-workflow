@@ -5,6 +5,11 @@
  * customizable prompt files only when needed rather than pre-generating all files
  * at initialization. This reduces filesystem noise and enables inline customization.
  *
+ * Architecture Philosophy: The agent does the decision-making (determining which
+ * template to use, what filename to generate), while this tool provides the
+ * procedural operation of writing the file. The tool validates inputs but doesn't
+ * make choices about template selection or filename derivation.
+ *
  * The tool reuses template definitions from createPromptTemplates.ts to maintain
  * consistency with the standard workflow initialization process.
  *
@@ -16,33 +21,65 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import {
   PROMPT_TEMPLATES,
-  PromptTemplate,
   generatePromptTemplate,
 } from './createPromptTemplates';
 
 /** Pattern for valid Work ID format: lowercase letters, numbers, and hyphens only */
 const WORK_ID_PATTERN = /^[a-z0-9-]+$/;
 
-/** Maximum length for generated filename suffix to avoid filesystem issues */
-const MAX_SUFFIX_LENGTH = 48;
+/** Pattern for valid prompt filename format */
+const FILENAME_PATTERN = /^[\w-]+\.prompt\.md$/;
 
-/** Standard prompt file extension */
-const PROMPT_EXTENSION = '.prompt.md';
+/**
+ * Map of template keys to their definitions.
+ * Template keys are the base filename without extension (e.g., '03A-implement').
+ * Agents use these keys to specify exactly which template variant they want.
+ */
+export const TEMPLATE_KEY_MAP = new Map(
+  PROMPT_TEMPLATES.map(template => {
+    const key = template.filename.replace('.prompt.md', '');
+    return [key, template];
+  })
+);
 
-/** Unique agent names derived from prompt templates */
-const UNIQUE_AGENT_NAMES = [...new Set(PROMPT_TEMPLATES.map(template => template.mode))];
+/** List of valid template keys for validation and documentation */
+export const VALID_TEMPLATE_KEYS = Array.from(TEMPLATE_KEY_MAP.keys());
 
 /**
  * Parameters for the paw_generate_prompt language model tool.
+ *
+ * The agent is responsible for determining the appropriate template_key and filename
+ * based on user requests. This follows the PAW architecture philosophy where agents
+ * provide decision-making logic and tools provide procedural operations.
  */
 export interface PromptGenerationParams {
   /** The normalized Work ID (feature slug, e.g., 'auth-system') */
   work_id: string;
 
-  /** The PAW agent that the generated prompt will target */
-  agent_name: string;
+  /**
+   * The template key identifying which prompt template to use.
+   * This is the base filename without .prompt.md extension.
+   * Examples: '01A-spec', '03A-implement', '03C-pr-review'
+   *
+   * The agent determines this based on user intent:
+   * - "generate prompt for implementer" → '03A-implement'
+   * - "generate prompt for PR review" → '03C-pr-review'
+   * - "generate prompt for planning" → '02B-impl-plan'
+   */
+  template_key: string;
 
-  /** Optional instructions to append to the prompt (e.g., 'Phase 3', 'focus on auth logging') */
+  /**
+   * The exact filename to use for the generated prompt file.
+   * Must end with .prompt.md extension.
+   *
+   * The agent determines this based on context:
+   * - Standard prompts: use template filename (e.g., '03A-implement.prompt.md')
+   * - Phase-specific: append phase (e.g., '03A-implement-phase3.prompt.md')
+   * - Custom context: descriptive suffix (e.g., '03A-implement-auth-logging.prompt.md')
+   */
+  filename: string;
+
+  /** Optional instructions to append to the prompt (e.g., 'Focus on Phase 3', 'add rate limiting') */
   additional_content?: string;
 }
 
@@ -133,21 +170,24 @@ function sanitizeWorkId(value: string | undefined): string {
 }
 
 /**
- * Validate an agent name against known PAW agents.
+ * Validate a template key against known PAW templates.
  *
- * @param agentName - Raw agent name value from tool input
- * @returns Trimmed, validated agent name
- * @throws Error if agent name is empty or not recognized
+ * Template keys are the base filenames without .prompt.md extension.
+ * The agent is responsible for choosing the correct template key based on user intent.
+ *
+ * @param templateKey - Raw template key value from tool input
+ * @returns Trimmed, validated template key
+ * @throws Error if template key is empty or not recognized
  */
-function validateAgentName(agentName: string | undefined): string {
-  const trimmed = agentName?.trim();
+function validateTemplateKey(templateKey: string | undefined): string {
+  const trimmed = templateKey?.trim();
   if (!trimmed) {
-    throw new Error('Invalid agent_name: value must be a non-empty string.');
+    throw new Error('Invalid template_key: value must be a non-empty string.');
   }
 
-  if (!UNIQUE_AGENT_NAMES.includes(trimmed)) {
+  if (!TEMPLATE_KEY_MAP.has(trimmed)) {
     throw new Error(
-      `Unknown agent_name '${trimmed}'. Expected one of: ${UNIQUE_AGENT_NAMES.join(', ')}`
+      `Unknown template_key '${trimmed}'. Expected one of: ${VALID_TEMPLATE_KEYS.join(', ')}`
     );
   }
 
@@ -155,113 +195,42 @@ function validateAgentName(agentName: string | undefined): string {
 }
 
 /**
- * Select the appropriate prompt template for an agent.
+ * Validate a filename for prompt file creation.
  *
- * Some agents (like PAW-03A Implementer) have multiple templates for different
- * contexts (standard implementation vs PR review response). This function uses
- * hints from additional_content to select the right variant.
+ * The agent is responsible for generating appropriate filenames based on context.
+ * This function validates the filename format but doesn't derive or modify it.
  *
- * @param agentName - Validated agent name
- * @param hint - Optional additional content that may indicate context (e.g., 'PR review')
- * @returns The most appropriate PromptTemplate for the context
- * @throws Error if no template exists for the agent
+ * @param filename - Raw filename value from tool input
+ * @returns Trimmed, validated filename
+ * @throws Error if filename is empty or invalid format
  */
-function chooseTemplate(agentName: string, hint: string | undefined): PromptTemplate {
-  const matches = PROMPT_TEMPLATES.filter(template => template.mode === agentName);
-  if (matches.length === 0) {
-    throw new Error(`No prompt template registered for agent ${agentName}.`);
+function validateFilename(filename: string | undefined): string {
+  const trimmed = filename?.trim();
+  if (!trimmed) {
+    throw new Error('Invalid filename: value must be a non-empty string.');
   }
 
-  if (matches.length === 1 || !hint) {
-    return matches[0];
+  if (!FILENAME_PATTERN.test(trimmed)) {
+    throw new Error(
+      `Invalid filename format: '${trimmed}'. Filename must match pattern: alphanumeric, hyphens, underscores, ending with .prompt.md`
+    );
   }
 
-  const loweredHint = hint.toLowerCase();
-  const impliesPrReview = loweredHint.includes('pr review') ||
-    (loweredHint.includes('pr') && loweredHint.includes('review')) ||
-    loweredHint.includes('review comment');
-
-  if (impliesPrReview) {
-    const prTemplate = matches.find(template => template.filename.includes('pr-review'));
-    if (prTemplate) {
-      return prTemplate;
-    }
-  }
-
-  return matches[0];
-}
-
-/**
- * Convert additional content text into a URL-safe filename slug.
- *
- * Transforms input like "Phase 3" into "phase3" for use in filenames.
- * Handles special cases like "phase-N" → "phaseN" for cleaner naming.
- *
- * @param source - Raw additional content text
- * @returns Normalized slug suitable for filename suffix, or empty string
- */
-function buildSlug(source: string | undefined): string {
-  if (!source) {
-    return '';
-  }
-
-  const normalized = source
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!normalized) {
-    return '';
-  }
-
-  const slug = normalized
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 6)
-    .join('-')
-    .replace(/-+/g, '-')
-    .replace(/phase-(\d+)/g, 'phase$1')
-    .slice(0, MAX_SUFFIX_LENGTH)
-    .replace(/^-|-$/g, '');
-
-  return slug;
-}
-
-/**
- * Build a dynamic prompt filename with optional context suffix.
- *
- * Appends a slugified version of additional content to the base filename.
- * For example: "03A-implement.prompt.md" + "Phase 3" → "03A-implement-phase3.prompt.md"
- *
- * @param baseFilename - Original template filename (e.g., "03A-implement.prompt.md")
- * @param additionalContent - Optional context to append as suffix
- * @returns Filename with optional suffix before .prompt.md extension
- */
-export function buildDynamicPromptFilename(baseFilename: string, additionalContent?: string): string {
-  const slug = buildSlug(additionalContent);
-  if (!slug) {
-    return baseFilename;
-  }
-
-  if (!baseFilename.endsWith(PROMPT_EXTENSION)) {
-    return `${baseFilename}-${slug}${PROMPT_EXTENSION}`;
-  }
-
-  const withoutExtension = baseFilename.slice(0, -PROMPT_EXTENSION.length);
-  return `${withoutExtension}-${slug}${PROMPT_EXTENSION}`;
+  return trimmed;
 }
 
 /**
  * Generate a customizable prompt file for a PAW agent.
  *
  * This is the core function that creates on-demand prompt files. It:
- * 1. Validates the Work ID and agent name
- * 2. Selects the appropriate template based on agent and context
- * 3. Generates a filename with optional context suffix
- * 4. Writes the prompt file with frontmatter and optional additional context
+ * 1. Validates the Work ID, template key, and filename
+ * 2. Looks up the template by key
+ * 3. Writes the prompt file with frontmatter and optional additional context
  *
- * @param params - Generation parameters including work_id, agent_name, and optional additional_content
+ * Architecture: The agent determines which template to use and what filename
+ * to generate. This function simply validates and executes the write operation.
+ *
+ * @param params - Generation parameters including work_id, template_key, filename, and optional additional_content
  * @returns Result with file path and success message
  * @throws Error if validation fails or Work ID directory not found
  */
@@ -269,12 +238,12 @@ export async function generatePromptFile(
   params: PromptGenerationParams
 ): Promise<PromptGenerationResult> {
   const workId = sanitizeWorkId(params.work_id);
-  const agentName = validateAgentName(params.agent_name);
+  const templateKey = validateTemplateKey(params.template_key);
+  const filename = validateFilename(params.filename);
   const additionalContent = params.additional_content?.trim();
 
-  const template = chooseTemplate(agentName, additionalContent);
+  const template = TEMPLATE_KEY_MAP.get(templateKey)!;
   const { promptsDir } = resolvePromptsDirectory(workId);
-  const filename = buildDynamicPromptFilename(template.filename, additionalContent);
   const filePath = path.join(promptsDir, filename);
 
   let content = generatePromptTemplate(template.mode, template.instruction, workId);
@@ -286,7 +255,7 @@ export async function generatePromptFile(
 
   return {
     file_path: filePath,
-    message: `Generated prompt for ${agentName}: ${filePath}`,
+    message: `Generated prompt for ${template.mode}: ${filePath}`,
   };
 }
 
@@ -298,6 +267,10 @@ export async function generatePromptFile(
  * is needed. The tool is declared in package.json and registered here
  * at extension activation.
  *
+ * Architecture Philosophy: The agent determines which template to use and
+ * what filename to generate based on user intent. This tool validates
+ * the parameters and executes the file write operation.
+ *
  * @param context - Extension context for registering disposable resources
  */
 export function registerPromptGenerationTool(context: vscode.ExtensionContext): void {
@@ -305,14 +278,14 @@ export function registerPromptGenerationTool(context: vscode.ExtensionContext): 
     'paw_generate_prompt',
     {
       async prepareInvocation(options) {
-        const { work_id, agent_name } = options.input;
+        const { work_id, template_key, filename } = options.input;
         return {
-          invocationMessage: `Generating prompt for ${agent_name} (Work ID: ${work_id})`,
+          invocationMessage: `Generating prompt '${filename}' using template '${template_key}' (Work ID: ${work_id})`,
           confirmationMessages: {
             title: 'Generate PAW Prompt',
             message: new vscode.MarkdownString(
-              `This will create a customizable prompt file in:\n\n` +
-              `\`.paw/work/${work_id}/prompts/\``
+              `This will create a customizable prompt file:\n\n` +
+              `\`.paw/work/${work_id}/prompts/${filename}\``
             )
           }
         };

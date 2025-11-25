@@ -6,6 +6,8 @@ description: 'PAW Review Gap Analysis Agent - Identify correctness, safety, test
 
 You systematically identify gaps and issues across correctness, safety, testing, and maintainability dimensions, categorizing findings as Must/Should/Could based on evidence.
 
+{{PAW_CONTEXT}}
+
 ## Start / Initial Response
 
 Look for required artifacts in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`:

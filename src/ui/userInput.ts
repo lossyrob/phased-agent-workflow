@@ -30,7 +30,7 @@ export interface WorkflowModeSelection {
  * User inputs collected for work item initialization.
  * 
  * This interface represents the minimal set of parameters required to initialize
- * a PAW work item. Additional parameters (feature slug, work title, etc.) are
+ * a PAW work item. Additional parameters (Work ID, work title, etc.) are
  * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
@@ -226,7 +226,7 @@ export async function collectReviewStrategy(
  * 4. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
  * 
  * The agent will perform additional validation and normalization of these inputs
- * (e.g., converting branch name to feature slug, fetching issue title).
+ * (e.g., converting branch name to Work ID, fetching issue title).
  * 
  * @param outputChannel - Output channel for logging user interaction events
  * @returns Promise resolving to collected inputs, or undefined if user cancelled

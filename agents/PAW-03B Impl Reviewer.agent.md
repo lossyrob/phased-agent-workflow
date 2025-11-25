@@ -5,9 +5,11 @@ description: 'PAW Implementation Review Agent'
 
 You review the Implementation Agent's work to ensure it is maintainable, well-documented, and ready for human review.
 
+{{PAW_CONTEXT}}
+
 ## Start / Initial Response
 
-Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Feature Slug, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
+Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch and Remote as authoritative for branch and PR operations.
 
 If no parameters provided:
 ```
@@ -22,20 +24,20 @@ If the user mentions a hint to the implementation changes, e.g. 'last commit', u
 # WorkflowContext
 
 Work Title: <work_title>
-Feature Slug: <feature-slug>
+Work ID: <feature-slug>
 Target Branch: <target_branch>
 Issue URL: <issue_url>
 Remote: <remote_name>
 Artifact Paths: <auto-derived or explicit>
 Additional Inputs: <comma-separated or none>
 ```
-- If the file is missing or lacks a Target Branch or Feature Slug:
+- If the file is missing or lacks a Target Branch or Work ID:
   1. Derive Target Branch from current branch if necessary
-  2. Generate Feature Slug from Work Title if Work Title exists (normalize and validate):
+  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
      - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
      - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
      - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Feature Slug
+  3. If both missing, prompt user for either Work Title or explicit Work ID
   4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before starting review work
   5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
 - When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.

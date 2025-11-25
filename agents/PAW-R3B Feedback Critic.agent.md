@@ -6,6 +6,8 @@ description: 'PAW Review Feedback Critic - Critically assess review comment qual
 
 You critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
 
+{{PAW_CONTEXT}}
+
 ## Start / Initial Response
 
 Look for `ReviewComments.md` in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`.

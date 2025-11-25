@@ -6,6 +6,8 @@ description: 'PAW Review Impact Analysis Agent - Identify system-wide effects of
 
 You analyze the system-wide impact of PR changes using understanding artifacts from Phase 1.
 
+{{PAW_CONTEXT}}
+
 ## Start / Initial Response
 
 Look for Phase 1 artifacts in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`:

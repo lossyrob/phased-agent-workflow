@@ -404,6 +404,29 @@ interface PromptGenerationParams {
 - Manual verification of dynamic prompt workflows remains outstanding and should be exercised once agents are wired to call the new tool.
 - With lint still blocked by legacy issues, rerun `npm run lint` after those suites are cleaned up to close the final automated checkbox.
 
+### Addressed Review Comments:
+
+**Review Comment from https://github.com/lossyrob/phased-agent-workflow/pull/117#discussion_r2561060884:**
+> This should not be decided in a procedural way within the tool. Refactor the tool to include a parameter that is clear for the agent to use that will determine this and pass the information in.
+
+**Review Comment from https://github.com/lossyrob/phased-agent-workflow/pull/117#discussion_r2561065684:**
+> The name of the prompt file should be determined by the agent. The agent should have enough information about the stages and agents to determine exactly what agent and what prompt should be given. Align this better with the architecture philosophy of - the agent does the work of determining what to do, the procedural tools just do the work.
+
+**Changes Made:**
+1. **Removed `chooseTemplate()` procedural logic** - The agent now directly specifies which template to use via the new `template_key` parameter (e.g., '03A-implement', '03C-pr-review')
+2. **Agent specifies filename directly** - Removed `buildDynamicPromptFilename()` and `buildSlug()` functions. Agent provides the exact filename via new `filename` parameter
+3. **Simplified tool interface** - Parameters changed from `agent_name` to `template_key` + `filename`. The tool now only validates and writes files
+4. **Created TEMPLATE_KEY_MAP** - Exposes valid template keys for agent reference and validation
+5. **Updated package.json schema** - New parameters with enum for valid template keys
+6. **Rewrote tests** - Tests now verify the parameter-based design rather than procedural logic
+
+**Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 87 unit tests pass: `npm test`
+- ✅ No lint errors in modified files
+
+**Commit:** 4a4cf7b "refactor: make paw_generate_prompt agent-driven"
+
 ---
 
 ## Phase 4: Agent Instruction Updates

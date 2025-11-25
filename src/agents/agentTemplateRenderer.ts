@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Loads component templates from the provided directory. Matches the runtime logic used
- * when the VS Code extension installs agent prompts.
+ * Loads component templates from the provided directory.
  *
  * @param componentsDir Absolute path to the components directory (agents/components)
  * @returns Map of component placeholder names to their markdown content

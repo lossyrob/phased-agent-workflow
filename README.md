@@ -176,6 +176,67 @@ When using the VS Code extension's `PAW: New PAW Workflow` command, you'll selec
 
 For detailed information about each mode, when to use them, and how review strategies work, see the [PAW Specification](paw-specification.md#workflow-modes).
 
+## Workflow Handoffs
+
+PAW supports intelligent stage navigation through three handoff modes—**Manual**, **Semi-Auto**, and **Auto**—to adapt to your experience level and the nature of your work.
+
+### Handoff Modes
+
+**Manual Mode** (Default)
+- Full control over stage transitions
+- Agents present next-step options at completion
+- You explicitly command each transition
+- Best for learning PAW or when you want to review and decide at each step
+
+**Semi-Auto Mode**
+- Thoughtful automation at research and review transitions
+- Automatic handoffs at designated points (Spec → Research → Spec, Phase → Review)
+- Pauses at key decision points (after Planning, before Implementation)
+- Best for experienced users who want speed with control at critical moments
+
+**Auto Mode**
+- Full automation through all workflow stages
+- Agents chain automatically with only tool approval interactions
+- Requires local review strategy (incompatible with intermediate PRs)
+- Best for routine work where you trust agents to complete the workflow
+
+### Stage Transition Commands
+
+After completing a stage, agents present contextual next-step options. Use simple commands to transition:
+
+- `research` or `start research` → Move to Spec Research Agent
+- `code` or `code research` → Move to Code Research Agent
+- `plan` → Move to Implementation Plan Agent
+- `implement Phase 2` → Start Implementation Agent for Phase 2
+- `review` → Move to Implementation Review Agent
+- `docs` → Move to Documenter Agent
+- `pr` → Move to PR Agent
+- `status` → Check workflow status
+
+### Inline Instructions
+
+Customize agent behavior without creating prompt files by providing inline instructions:
+
+```
+implement Phase 2 but add rate limiting
+continue but focus on error handling
+research but skip external dependencies
+```
+
+The inline instruction is passed directly to the target agent alongside the Work ID, allowing for quick customization without filesystem management.
+
+### Dynamic Prompt Generation
+
+Generate prompt files on-demand when you need more control:
+
+```
+generate prompt for implementer Phase 3
+```
+
+Agents create customizable prompt files only when needed, reducing filesystem noise while maintaining flexibility for complex scenarios.
+
+For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
+
 ## Workflow
 
 ![full workflow](./img/full-workflow.png)

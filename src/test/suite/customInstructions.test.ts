@@ -104,6 +104,7 @@ suite('Custom Instructions Loader', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -121,6 +122,7 @@ suite('Custom Instructions Loader', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );

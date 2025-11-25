@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
 import { registerContextTool } from './tools/contextTool';
+import { registerHandoffTool } from './tools/handoffTool';
 import {
   installAgents,
   needsInstallation,
@@ -45,6 +46,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerContextTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
+
+  registerHandoffTool(context);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_call_agent');
 
   const initCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',

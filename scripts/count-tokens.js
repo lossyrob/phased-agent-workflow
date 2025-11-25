@@ -5,6 +5,7 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 const { encoding_for_model } = require('@dqbd/tiktoken');
 
 // Get command line arguments
@@ -24,9 +25,57 @@ if (!fs.existsSync(filePath)) {
   process.exit(1);
 }
 
+let rendererModule;
+
+/**
+ * Lazily loads the shared agent template renderer from the TypeScript source so that
+ * the lint script reuses the exact same logic as the VS Code extension.
+ */
+function getRendererModule() {
+  if (rendererModule) {
+    return rendererModule;
+  }
+
+  try {
+    require('ts-node').register({
+      transpileOnly: true,
+      compilerOptions: {
+        module: 'commonjs',
+        target: 'ES2020',
+        esModuleInterop: true
+      }
+    });
+  } catch (error) {
+    console.error('Error: ts-node is required to process agent templates.');
+    console.error('Please run: npm install');
+    process.exit(1);
+  }
+
+  rendererModule = require('../src/agents/agentTemplateRenderer');
+  return rendererModule;
+}
+
+/**
+ * Expands component placeholders (e.g., {{PAW_CONTEXT}}) before token counting so the
+ * script measures the true prompt size after template rendering.
+ */
+function expandAgentContent(content, absolutePath) {
+  if (!absolutePath.toLowerCase().endsWith('.agent.md')) {
+    return content;
+  }
+
+  const { loadComponentTemplatesFromDirectory, processAgentTemplate } = getRendererModule();
+  const componentsDir = path.join(path.dirname(absolutePath), 'components');
+  const components = loadComponentTemplatesFromDirectory(componentsDir);
+  const agentIdentifier = path.basename(absolutePath).replace(/\.agent\.md$/i, '');
+  return processAgentTemplate(content, agentIdentifier, components);
+}
+
 try {
   // Read file content
-  const content = fs.readFileSync(filePath, 'utf-8');
+  const absolutePath = path.resolve(filePath);
+  const rawContent = fs.readFileSync(absolutePath, 'utf-8');
+  const content = expandAgentContent(rawContent, absolutePath);
   
   // Get encoding for the model
   const encoding = encoding_for_model(model);

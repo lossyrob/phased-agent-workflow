@@ -24,12 +24,14 @@ PAW workflows follow a structured progression through distinct stages, each hand
 1. **Specification (01A)** — Define feature requirements, acceptance criteria, dependencies
    - *Inputs*: Issue URL, user brief, external research
    - *Outputs*: `Spec.md`
+   - *Duration*: 15-30 min
    - *Command*: `spec` or initialize new workflow
    - *Skipped in*: Minimal mode
 
 2. **Spec Research (01B)** — Answer open questions via web/docs/reference material
    - *Inputs*: `Spec.md` with research questions
    - *Outputs*: `SpecResearch.md`
+   - *Duration*: 10-20 min
    - *Command*: `research` or `spec research`
    - *Optional*: Only if Spec has research questions
    - *Skipped in*: Minimal mode
@@ -37,43 +39,61 @@ PAW workflows follow a structured progression through distinct stages, each hand
 3. **Code Research (02A)** — Analyze existing codebase patterns, conventions, integration points
    - *Inputs*: `Spec.md` (or work brief in minimal mode)
    - *Outputs*: `CodeResearch.md`
+   - *Duration*: 20-40 min
    - *Command*: `code` or `code research`
    - *Required*: All modes
 
 4. **Implementation Planning (02B)** — Design phased implementation approach with success criteria
    - *Inputs*: `Spec.md`, `CodeResearch.md`
-   - *Outputs*: `ImplementationPlan.md` with phases
+   - *Outputs*: `ImplementationPlan.md` with phases, Planning PR (prs) or commits (local)
+   - *Duration*: 20-40 min
    - *Command*: `plan` or `planning`
    - *Required*: All modes
+   - *Branching*: Planning branch (`<target>_plan`) in prs strategy, target branch in local
 
 5. **Implementation (03A)** — Execute one phase of the plan, write code, run tests
    - *Inputs*: `ImplementationPlan.md`, phase number
-   - *Outputs*: Code changes, test updates
+   - *Outputs*: Code changes, test updates (committed locally)
+   - *Duration*: 30-120 min per phase
    - *Command*: `implement Phase N` or `implement`
    - *Required*: All modes
    - *Branching*: Phase branches (`<target>_phase[N]`) in prs strategy, target branch in local
+   - *Note*: Makes changes and commits locally; does NOT push
 
 6. **Implementation Review (03B)** — Verify implementation, add docs/comments, push, create PR
-   - *Inputs*: Completed phase implementation
+   - *Inputs*: Completed phase implementation (local commits from 03A)
    - *Outputs*: Phase PR (prs strategy) or pushed commits (local strategy)
+   - *Duration*: 10-20 min
    - *Command*: `review` or `implementation review`
    - *Required*: All modes
+   - *Note*: Reviews 03A's work, adds documentation, pushes all commits, opens PR
 
-7. **Documentation (04)** — Create user-facing docs, update README, write guides
+7. **PR Review Response (03C/03D)** — Address review comments on Phase/Final PRs
+   - *Inputs*: PR with review comments
+   - *Outputs*: Commits addressing comments, summary comment
+   - *Duration*: Varies (10-60 min depending on feedback)
+   - *Command*: Invoke 03A to address comments, then 03B to verify and push
+   - *Workflow*: 03A addresses comments in local commits → 03B verifies, pushes, posts summary
+   - *Available*: When PR has review comments needing response
+
+8. **Documentation (04)** — Create user-facing docs, update README, write guides
    - *Inputs*: All completed implementation phases
    - *Outputs*: `Docs.md`, docs PR (prs) or pushed commits (local)
+   - *Duration*: 20-40 min
    - *Command*: `docs` or `documentation`
    - *Skipped in*: Minimal mode
 
-8. **Final PR (05)** — Create final PR merging all work to main branch
+9. **Final PR (05)** — Create final PR merging all work to main branch
    - *Inputs*: All phases complete, `Docs.md` (full mode only)
    - *Outputs*: Final PR targeting main/base branch
+   - *Duration*: 10-15 min
    - *Command*: `pr` or `final pr`
    - *Required*: All modes
 
-9. **Status Update (0X)** — Analyze workflow state, suggest next steps, optionally post to issues
+10. **Status Update (0X)** — Analyze workflow state, suggest next steps, optionally post to issues
    - *Inputs*: Artifacts, git state, PR status
    - *Outputs*: Workflow dashboard
+   - *Duration*: 2-5 min
    - *Command*: `status` or "where am I?"
    - *Available*: Anytime
 
@@ -84,6 +104,47 @@ PAW workflows follow a structured progression through distinct stages, each hand
 - **Gap Analyzer (R2B)** → identify missing considerations
 - **Feedback Generator (R3A)** → draft review feedback
 - **Feedback Critic (R3B)** → refine feedback quality
+
+### Two-Agent Implementation Pattern
+
+PAW uses a **two-agent workflow** for implementation to separate concerns:
+
+**Implementation Agent (03A)** — Forward Momentum:
+- Makes code changes and writes tests
+- Runs automated verification
+- Commits all changes locally (never pushes)
+- Signals "ready for review" when complete
+- When addressing PR review comments: groups related comments, addresses each group with focused commits, commits locally
+
+**Implementation Review Agent (03B)** — Quality Gate:
+- Reviews Implementation Agent's local commits
+- Adds docstrings, code comments, and polish
+- Commits documentation improvements
+- Pushes all commits (both agents' work) to remote
+- Opens or updates Phase PRs
+- When verifying addressed review comments: checks each change, adds improvements, pushes all commits, posts comprehensive summary comment
+
+**Initial Phase Development Flow:**
+```
+03A: Implement → Commit locally → Signal ready
+  ↓
+03B: Review → Add docs → Commit docs → Push both → Open PR
+  ↓
+Human: Review PR
+```
+
+**PR Review Comment Response Flow:**
+```
+Human: Review PR → Post comments
+  ↓
+03A: Read comments → Group related → Address each group → Commit locally (with comment links)
+  ↓
+03B: Verify changes → Add improvements → Push all commits → Post summary comment
+  ↓
+Human: Review changes → Manually resolve comments in GitHub UI
+```
+
+This separation ensures implementation velocity (03A) while maintaining code quality (03B), and prevents accidental pushes during active development.
 
 ### Workflow Mode Behavior
 
@@ -215,11 +276,19 @@ Users can invoke stages with natural language. Map requests to stages:
 - `plan`, `planning`, `planner` → PAW-02B Impl Planner
 - `implement`, `implement Phase N` → PAW-03A Implementer
 - `review`, `implementation review` → PAW-03B Impl Reviewer
+- **Address PR comments**: First invoke 03A ("address review comments on PR #N"), then 03B ("verify and push")
 - `docs`, `documentation` → PAW-04 Documenter
 - `pr`, `final pr` → PAW-05 PR
 - `status`, "where am I?", "what's my status?" → PAW-X Status Update
 
 Inline instructions (e.g., "implement Phase 2 but add logging") pass instruction to target agent without prompt file.
+
+**PR Review Workflow**: When PRs have review comments:
+1. User invokes 03A: "Address review comments on PR #123" (or "address phase 2 review comments")
+2. 03A reads comments, groups related issues, addresses each group with focused commits (local only)
+3. User invokes 03B: "Verify addressed comments and push" (or "review and push changes")
+4. 03B verifies each change, adds improvements, pushes all commits, posts summary comment linking commits to comments
+5. Human reviewer uses 03B's summary to manually resolve comments in GitHub UI
 
 ## Inputs
 - Before asking for parameters, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. Extract Target Branch, Work Title, Work ID, Issue URL, Remote (default `origin`), Artifact Paths, Additional Inputs, Workflow Mode, Review Strategy, Custom Workflow Instructions.

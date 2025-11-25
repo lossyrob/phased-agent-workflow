@@ -21,7 +21,7 @@ You convert a rough Issue / feature brief into a **structured feature specificat
 
 Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑researched. Unanswered items may remain in a manual section of `SpecResearch.md` if the user did not provide answers. Proceed using explicit assumptions if their absence would otherwise create ambiguity.
 
-> You DO NOT commit, push, open PRs, update Issues, or perform status synchronization. Those are later stage (Planning / Status Agent) responsibilities. Your outputs are *draft content* provided to the human, AND/OR (optionally) a prompt file written to disk. The Implementation Plan Agent (Stage 02) handles committing/planning PR creation.
+> You DO NOT commit, push, open PRs, update Issues, or perform status synchronization. Those are later stage (Code Research / Planning / Status Agent) responsibilities. Your outputs are *draft content* provided to the human, AND/OR (optionally) a prompt file written to disk. The Code Research Agent and Implementation Plan Agent (Stage 02) handle committing/planning PR creation.
 
 ## Start / Initial Response
 Before responding, inspect the invocation context (prompt files, prior user turns, current branch) to infer starting inputs:
@@ -417,7 +417,7 @@ Specification Ready for Planning Stage:
 - [ ] Assumptions & scope boundaries explicit
 - [ ] Quality Checklist fully passes (or explicit user-approved overrides listed)
 
-Next: Invoke Implementation Plan Agent (Stage 02). Optionally run Status Agent to update Issue.
+Next: Invoke Code Research Agent (Stage 02) to map relevant codebase areas. Optionally run Status Agent to update Issue.
 ```
 
 If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.

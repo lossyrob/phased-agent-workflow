@@ -71,7 +71,7 @@ interface CreatePromptTemplatesResult {
 /**
  * Template definition for a single prompt file.
  */
-interface PromptTemplate {
+export interface PromptTemplate {
   /** The exact filename to use (e.g., "01A-spec.prompt.md") */
   filename: string;
   
@@ -94,7 +94,7 @@ interface PromptTemplate {
  * - instruction: The action the agent should perform
  * - stage: The workflow stage this template belongs to
  */
-const PROMPT_TEMPLATES: PromptTemplate[] = [
+export const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     filename: "01A-spec.prompt.md",
     mode: "PAW-01A Specification",
@@ -240,7 +240,7 @@ function determineStagesFromMode(
  * @param featureSlug - The Work ID (feature slug) to pass as a parameter
  * @returns The complete file content with frontmatter and body
  */
-function generatePromptTemplate(
+export function generatePromptTemplate(
   mode: string,
   instruction: string,
   featureSlug: string

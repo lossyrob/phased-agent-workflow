@@ -375,10 +375,10 @@ interface PromptGenerationParams {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Unit tests pass for `promptGenerationTool.ts`: `npm test`
-- [ ] Generated prompt files have valid frontmatter and Work ID
-- [ ] Filename generation follows PAW naming conventions
-- [ ] TypeScript compilation succeeds: `npm run compile`
+- [x] Unit tests pass for `promptGenerationTool.ts`: `npm test`
+- [x] Generated prompt files have valid frontmatter and Work ID
+- [x] Filename generation follows PAW naming conventions
+- [x] TypeScript compilation succeeds: `npm run compile`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
@@ -387,6 +387,22 @@ interface PromptGenerationParams {
 - [ ] User can edit generated prompt file and execute it successfully
 - [ ] Agent includes phase number or other context in `additional_content` when user specifies
 - [ ] File path provided to user after generation
+
+### Phase 3 Complete
+
+**Implementation Summary:**
+- Added `src/tools/promptGenerationTool.ts` to encapsulate dynamic prompt creation, reuse the existing template definitions, and expose helper exports for agent use and testing. The tool validates Work IDs, derives filenames with slugged suffixes (e.g., `03A-implement-phase3.prompt.md`), appends optional context to the prompt body, and selects the correct template variant (including PR-review prompts) based on the inline hint.
+- Registered the new tool in `extension.ts` and `package.json`, and exported the template/filename helpers from `src/tools/createPromptTemplates.ts` so both tools share a single source of truth.
+- Added `src/test/suite/promptGenerationTool.test.ts` to cover validation, filename generation, and template selection; updated `src/test/suite/installer.test.ts` with a reusable workspace-configuration override helper so TypeScript compilation succeeds after the new tests pulled that file back into the build.
+
+**Automated Verification:**
+- `npm run compile`
+- `npm test`
+- `npm run lint` *(fails due to existing `@typescript-eslint/no-unused-vars`, `no-explicit-any`, and `no-var-requires` findings in `src/test/suite/createPromptTemplates.test.ts`, `customInstructions.test.ts`, and `installer.test.ts`; no new lint errors introduced in this phase)*
+
+**Notes for Next Phase:**
+- Manual verification of dynamic prompt workflows remains outstanding and should be exercised once agents are wired to call the new tool.
+- With lint still blocked by legacy issues, rerun `npm run lint` after those suites are cleaned up to close the final automated checkbox.
 
 ---
 

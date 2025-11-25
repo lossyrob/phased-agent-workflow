@@ -157,6 +157,45 @@
             "work_id"
           ]
         }
+      },
+      {
+        "name": "paw_generate_prompt",
+        "displayName": "Generate PAW Prompt",
+        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. Agents should pass the exact agent name, Work ID, and optional context (e.g., 'Phase 3', 'add logging') to generate files such as 03A-implement-phase3.prompt.md only when customization is needed.",
+        "toolReferenceName": "pawPromptGenerator",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "work_id": {
+              "type": "string",
+              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
+            },
+            "agent_name": {
+              "type": "string",
+              "description": "The PAW agent that the generated prompt will target",
+              "enum": [
+                "PAW-01A Specification",
+                "PAW-01B Spec Researcher",
+                "PAW-02A Code Researcher",
+                "PAW-02B Impl Planner",
+                "PAW-03A Implementer",
+                "PAW-03B Impl Reviewer",
+                "PAW-04 Documenter",
+                "PAW-05 PR",
+                "PAW-X Status Update"
+              ]
+            },
+            "additional_content": {
+              "type": "string",
+              "description": "Optional instructions to append to the prompt (e.g., 'Phase 3', 'focus on auth logging')."
+            }
+          },
+          "required": [
+            "work_id",
+            "agent_name"
+          ]
+        }
       }
     ]
   },

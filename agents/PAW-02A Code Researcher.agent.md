@@ -453,5 +453,5 @@ I've documented the implementation details at:
 
 Findings include file:line references for all key components.
 
-Next: Return to Implementation Plan Agent with the updated CodeResearch.md to develop the implementation plan.
+Next: Run the Implementation Plan Agent to develop the implementation plan using this CodeResearch.md
 ```

@@ -7,6 +7,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Target Branch**: {{TARGET_BRANCH}}
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
+- **Handoff Mode**: {{HANDOFF_MODE}}
 {{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
@@ -61,6 +62,7 @@ Feature Slug: <generated_feature_slug>
 Target Branch: {{TARGET_BRANCH}}
 Workflow Mode: {{WORKFLOW_MODE}}
 Review Strategy: {{REVIEW_STRATEGY}}
+Handoff Mode: {{HANDOFF_MODE}}
 {{CUSTOM_INSTRUCTIONS_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
@@ -74,6 +76,7 @@ Additional Inputs: none
 - **Target Branch** (Required): Git branch that will hold completed work
 - **Workflow Mode** (Required): Workflow mode selection ('full', 'minimal', or 'custom')
 - **Review Strategy** (Required): Review strategy ('prs' or 'local')
+- **Handoff Mode** (Required): Handoff mode ('manual', 'semi-auto', or 'auto')
 - **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"
 - **Remote** (Required): Git remote name (default: "origin")

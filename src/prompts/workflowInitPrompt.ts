@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
-import { WorkflowModeSelection, ReviewStrategy } from '../ui/userInput';
+import { WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -25,6 +25,8 @@ interface PromptVariables {
   WORKFLOW_MODE: string;
   /** Review strategy (prs or local) */
   REVIEW_STRATEGY: string;
+  /** Handoff mode (manual, semi-auto, or auto) */
+  HANDOFF_MODE: string;
   /** Custom workflow instructions section (for custom mode) */
   CUSTOM_INSTRUCTIONS_SECTION: string;
   /** Custom workflow instructions field for WorkflowContext.md */
@@ -81,6 +83,7 @@ function substituteVariables(template: string, variables: PromptVariables): stri
  * @param targetBranch - The git branch name where work will be committed
  * @param workflowMode - Workflow mode selection including optional custom instructions
  * @param reviewStrategy - Review strategy (prs or local)
+ * @param handoffMode - Handoff mode (manual, semi-auto, or auto)
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
  * @param workspacePath - Absolute path to the workspace root directory
  * @returns Complete prompt text with all variables substituted
@@ -89,6 +92,7 @@ export function constructAgentPrompt(
   targetBranch: string,
   workflowMode: WorkflowModeSelection,
   reviewStrategy: ReviewStrategy,
+  handoffMode: HandoffMode,
   issueUrl: string | undefined,
   workspacePath: string
 ): string {
@@ -130,6 +134,7 @@ export function constructAgentPrompt(
     TARGET_BRANCH: targetBranch,
     WORKFLOW_MODE: workflowMode.mode,
     REVIEW_STRATEGY: reviewStrategy,
+    HANDOFF_MODE: handoffMode,
     CUSTOM_INSTRUCTIONS_SECTION: customWorkflowInstructionsSection,
     CUSTOM_INSTRUCTIONS_FIELD: customWorkflowInstructionsField,
     ISSUE_URL: issueUrl || 'Not provided',

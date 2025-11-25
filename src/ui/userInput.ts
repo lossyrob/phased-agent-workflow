@@ -16,6 +16,14 @@ export type WorkflowMode = 'full' | 'minimal' | 'custom';
 export type ReviewStrategy = 'prs' | 'local';
 
 /**
+ * Handoff mode determines how stage transitions are handled.
+ * - manual: User explicitly commands each stage transition
+ * - semi-auto: Automatic at research/review transitions, pause at decision points
+ * - auto: Full automation through all stages with only tool approvals
+ */
+export type HandoffMode = 'manual' | 'semi-auto' | 'auto';
+
+/**
  * Workflow mode selection including optional custom instructions.
  */
 export interface WorkflowModeSelection {
@@ -42,6 +50,9 @@ export interface WorkItemInputs {
   
   /** Review strategy for how work is reviewed and merged */
   reviewStrategy: ReviewStrategy;
+  
+  /** Handoff mode for stage transition handling */
+  handoffMode: HandoffMode;
   
   /**
    * Optional issue or work item URL to associate with the work item.
@@ -217,6 +228,66 @@ export async function collectReviewStrategy(
 }
 
 /**
+ * Collect handoff mode selection from user.
+ * 
+ * Presents a Quick Pick menu with three handoff mode options:
+ * - Manual: User commands each stage transition
+ * - Semi-Auto: Automatic at research/review, pause at decisions
+ * - Auto: Full automation with only tool approvals
+ * 
+ * If auto mode is selected with prs strategy, shows error and returns undefined.
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @param reviewStrategy - The selected review strategy (affects validation)
+ * @returns Promise resolving to handoff mode, or undefined if user cancelled or validation failed
+ */
+export async function collectHandoffMode(
+  outputChannel: vscode.OutputChannel,
+  reviewStrategy: ReviewStrategy
+): Promise<HandoffMode | undefined> {
+  // Present Quick Pick menu with handoff mode options
+  const modeSelection = await vscode.window.showQuickPick([
+    {
+      label: 'Manual',
+      description: 'Full control - you command each stage transition',
+      detail: 'Best for learning PAW or when you want to review and decide at each step',
+      value: 'manual' as HandoffMode
+    },
+    {
+      label: 'Semi-Auto',
+      description: 'Thoughtful automation - automatic at research/review, pause at decisions',
+      detail: 'Best for experienced users who want speed with control at key decision points',
+      value: 'semi-auto' as HandoffMode
+    },
+    {
+      label: 'Auto',
+      description: 'Full automation - agents chain through all stages (local strategy required)',
+      detail: 'Best for routine work where you trust the agents to complete the workflow',
+      value: 'auto' as HandoffMode
+    }
+  ], {
+    placeHolder: 'Select handoff mode',
+    title: 'Handoff Mode Selection'
+  });
+
+  if (!modeSelection) {
+    outputChannel.appendLine('[INFO] Handoff mode selection cancelled');
+    return undefined;
+  }
+
+  // Validate: Auto mode requires local review strategy
+  if (modeSelection.value === 'auto' && reviewStrategy === 'prs') {
+    outputChannel.appendLine('[ERROR] Auto mode requires local review strategy');
+    await vscode.window.showErrorMessage(
+      'Auto mode requires local review strategy. PRs strategy creates intermediate branches that require human review, which conflicts with full automation. Please select Manual or Semi-Auto mode if using PRs strategy.'
+    );
+    return undefined;
+  }
+
+  return modeSelection.value;
+}
+
+/**
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
@@ -267,6 +338,12 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  // Collect handoff mode (validates auto mode + prs strategy combination)
+  const handoffMode = await collectHandoffMode(outputChannel, reviewStrategy);
+  if (!handoffMode) {
+    return undefined;
+  }
+
   const issueUrl = await vscode.window.showInputBox({
     prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
     placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
@@ -292,6 +369,7 @@ export async function collectUserInputs(
     targetBranch: targetBranch.trim(),
     workflowMode,
     reviewStrategy,
+    handoffMode,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };
 }

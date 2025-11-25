@@ -118,6 +118,45 @@
             "agent_name"
           ]
         }
+      },
+      {
+        "name": "paw_call_agent",
+        "displayName": "Call PAW Agent",
+        "modelDescription": "Invoke a PAW agent in a new chat session with Work ID context. Agents should intelligently map user requests to exact agent names (e.g., 'research' → 'PAW-01B Spec Researcher', 'implement Phase 2' → 'PAW-03A Implementer'). Supports inline instructions for customizing agent behavior without creating prompt files.",
+        "toolReferenceName": "pawHandoff",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "target_agent": {
+              "type": "string",
+              "description": "The exact name of the PAW agent to invoke",
+              "enum": [
+                "PAW-01A Specification",
+                "PAW-01B Spec Researcher",
+                "PAW-02A Code Researcher",
+                "PAW-02B Impl Planner",
+                "PAW-03A Implementer",
+                "PAW-03B Impl Reviewer",
+                "PAW-04 Documenter",
+                "PAW-05 PR",
+                "PAW-X Status Update"
+              ]
+            },
+            "work_id": {
+              "type": "string",
+              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
+            },
+            "inline_instruction": {
+              "type": "string",
+              "description": "Optional instruction to pass to the target agent (e.g., 'Phase 2', 'add rate limiting')"
+            }
+          },
+          "required": [
+            "target_agent",
+            "work_id"
+          ]
+        }
       }
     ]
   },

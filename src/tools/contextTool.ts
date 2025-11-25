@@ -120,12 +120,21 @@ export function loadCustomInstructions(directory: string, agentName: string): In
  * @throws Error if no workspace is open or Work ID directory doesn't exist
  */
 function getWorkspaceFolderPaths(): string[] {
-  const folders = vscode.workspace.workspaceFolders;
-  const paths = folders && folders.length > 0 ? folders.map(folder => folder.uri.fsPath) : [];
+  const paths: string[] = [];
 
+  // Check for test/override path first to avoid VS Code API calls in test environments
   const override = process.env.PAW_WORKSPACE_PATH?.trim();
   if (override) {
     paths.push(override);
+  }
+
+  // Only access VS Code workspace API if no override is set
+  // This prevents hanging in test environments where workspace API may not be fully initialized
+  if (paths.length === 0) {
+    const folders = vscode.workspace.workspaceFolders;
+    if (folders && folders.length > 0) {
+      paths.push(...folders.map(folder => folder.uri.fsPath));
+    }
   }
 
   return paths;

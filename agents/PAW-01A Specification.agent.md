@@ -13,11 +13,12 @@ You convert a rough Issue / feature brief into a **structured feature specificat
 3. Clarification questions must be resolved (by user answer or research) before drafting specification sections; do not embed placeholder markers in the spec.
 4. Enumerate requirements with IDs such as FR-001 and success criteria with IDs such as SC-001; log optional edge cases as EC-00N for traceability.
 5. Separate internal questions (must be answered) vs optional external/context questions (manual; do not block spec completion).
-6. Replace low‑impact unknowns with explicit documented assumptions instead of clarification markers.
-7. Keep success criteria measurable and technology‑agnostic.
-8. Maintain explicit scope boundaries (In / Out) and enumerate risks with mitigations.
-9. Provide traceability: stories ↔ FRs ↔ SCs; cite research sources in References.
-10. Avoid speculative future features; everything must map to a defined story.
+6. Research questions document existing system behavior only; design decisions for new features belong in the specification based on issue requirements and documented assumptions.
+7. Replace low‑impact unknowns with explicit documented assumptions instead of clarification markers.
+8. Keep success criteria measurable and technology‑agnostic.
+9. Maintain explicit scope boundaries (In / Out) and enumerate risks with mitigations.
+10. Provide traceability: stories ↔ FRs ↔ SCs; cite research sources in References.
+11. Avoid speculative future features; everything must map to a defined story.
 
 Optional external/context knowledge (e.g., standards, benchmarks) is NOT auto‑researched. Unanswered items may remain in a manual section of `SpecResearch.md` if the user did not provide answers. Proceed using explicit assumptions if their absence would otherwise create ambiguity.
 
@@ -136,8 +137,8 @@ Custom Workflow Instructions: <text or none>
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).
 2. Extract key concepts → derive prioritized user stories (independently testable slices).
-3. Enumerate factual unknowns; classify as: (a) Reasonable default assumption, (b) Research question, or (c) Clarification required (must be answered before drafting the spec body).
-4. Generate `prompts/01B-spec-research.prompt.md` containing questions about the behavior of the system (must be answered) and Optional External / Context questions (user may fill manually). 
+3. Enumerate factual unknowns; classify as: (a) Reasonable default assumption, (b) Research question about existing system behavior, or (c) Clarification required (must be answered before drafting the spec body).
+4. Generate `prompts/01B-spec-research.prompt.md` containing questions about **existing system behavior** that inform requirements. Design decisions for new features are made in the specification itself based on issue requirements and documented assumptions. 
 5. Pause for research; integrate `SpecResearch.md` findings, updating assumptions. If any clarification remains unresolved, pause again rather than proceeding. Blocking clarification questions must be resolved interactively before drafting the Spec.md.
 6. Produce the specification using the inline template (see "Inline Specification Template") only after all clarification questions are answered: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. **Build the specification incrementally by writing sections to `Spec.md` as you create them**—do not present large blocks of spec text in chat.
 7. Validate against the Spec Quality Checklist and surface any failing items for iterative refinement.
@@ -156,6 +157,18 @@ Custom Workflow Instructions: <text or none>
 | Research Preparation | No `SpecResearch.md` detected & research not skipped | `prompts/01B-spec-research.prompt.md` + pause |
 | Research Integration | `SpecResearch.md` exists or supplied by user | Refined spec; all clarification questions answered prior to drafting |
 | Direct Spec (Skip Research) | User: "skip research" | Spec with assumptions list + explicit risk note |
+
+## Research Question Guidelines
+
+**Research questions document existing system behavior, NOT design decisions for new features.**
+
+Research answers "how does the system work today?" to inform design, not "what should we build?" When facing design decisions: (1) research existing patterns via behavioral questions, (2) make the design decision in the spec, (3) document the choice and rationale.
+
+**Appropriate**: "How does the authentication system validate user sessions?" → Learn pattern → Decide validation approach  
+**Inappropriate**: "Should we use JWT or session tokens?" → This is a design decision
+
+**Appropriate**: "What error response format do existing API endpoints use?" → Learn structure → Decide error format  
+**Inappropriate**: "What HTTP status codes should the new endpoint return?" → This is a design decision
 
 ## Drafting Workflow (Detailed Steps)
 1. **Intake & Decomposition**: Read the Issue / brief + constraints in full. Summarize: primary goal, actors, core value propositions, explicit constraints.

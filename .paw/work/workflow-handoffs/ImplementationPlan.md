@@ -182,12 +182,12 @@ Update the Status Agent (`PAW-X Status Update.agent.md`) to provide comprehensiv
 **Changes**:
 - **Default Behavior**: Detect current workflow status and help navigate to next steps (replaces old default of posting to GitHub issue)
 - **Status Detection Logic**: Describe how agent should determine workflow state:
-  - List `.paw/work/` directories, check each for WorkflowContext.md to find active workflows
-  - For specified or inferred Work ID, read WorkflowContext.md for Target Branch, Workflow Mode, Issue URL
-  - Check artifact existence: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
-  - Parse ImplementationPlan.md to count phases: search for `## Phase \d+:` pattern
-  - Use `run_in_terminal` to check git status: `git branch --show-current`, `git status --porcelain`, `git rev-list --left-right --count <remote>/<target>...<target>`
-  - Use GitHub MCP tools to search for PRs by branch names: `<target>_plan`, `<target>_phase1`, etc.
+  - List work directories to find active workflows by checking for WorkflowContext.md
+  - Read WorkflowContext.md to extract Target Branch, Workflow Mode, Issue URL
+  - Check artifact file existence: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+  - Parse ImplementationPlan.md to count phases (search for phase heading pattern)
+  - Execute git commands to check current branch, uncommitted changes, and divergence from remote
+  - Query GitHub to find PRs for planning, phase, docs, and final branches
 - **Next-Step Suggestions**: Based on detected state, suggest actionable commands:
   - Missing Spec.md → "Start with specification"
   - Spec exists, no CodeResearch → "Continue with code research"
@@ -213,12 +213,12 @@ Update the Status Agent (`PAW-X Status Update.agent.md`) to provide comprehensiv
 #### 3. Tool Usage Patterns
 **File**: `agents/PAW-X Status Update.agent.md`
 **Changes**:
-- Document tool usage for status detection:
-  - `list_dir` for `.paw/work/` to find workflows
-  - `read_file` for WorkflowContext.md, ImplementationPlan.md, artifact files
-  - `run_in_terminal` for git commands (branch, status, divergence)
-  - GitHub MCP `search_pull_requests` or `list_pull_requests` to find PRs by branch name
-  - `grep_search` to quickly check artifact existence without full reads
+- Document approach for status detection:
+  - List directories to find active workflows
+  - Read configuration and artifact files to understand workflow state
+  - Execute git commands to check branch status and divergence
+  - Query GitHub for pull requests by branch names
+  - Use efficient search methods to check file existence without full reads
 - Emphasize agent reasoning: "Determine what information you need, use available tools to gather it, synthesize into actionable guidance"
 
 ### Success Criteria:

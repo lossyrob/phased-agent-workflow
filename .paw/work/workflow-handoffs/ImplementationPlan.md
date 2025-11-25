@@ -283,6 +283,37 @@ Update the Status Agent (`PAW-X Status Update.agent.md`) to provide comprehensiv
 - Dynamic prompt generation (Phase 3) should reuse the workflow discovery metadata captured by the Status Agent.
 - Once lint errors in the test suite are resolved globally, re-run `npm run lint` to close the remaining automated verification checkbox.
 
+### Addressed Review Comments:
+
+**Review Comment from https://github.com/lossyrob/phased-agent-workflow/pull/116#discussion_r1861804574:**
+> I think this agent needs more context about the PAW process. It should encode a set of compact information about the PAW process such that it can expertly guide a user through it. This might grow the context past the linter, but for this agent, which isn't meant to do a lot of iterative work in a chat thread, that is fine it can have a higher token count limit than the others - so make changes to the linter if necessary.
+
+**Changes Made:**
+1. **Added comprehensive PAW Process Guide section** to Status Agent (`agents/PAW-X Status Update.agent.md`):
+   - **Workflow Stages Overview**: Detailed table of all 9 standard workflow stages (Specification through Final PR, plus Status) with inputs, outputs, duration estimates, commands, and mode-specific inclusion rules
+   - **Review Workflow Stages**: Listed 6 review workflow stages (Understanding through Feedback Critic) with stage flow
+   - **Workflow Mode Behavior**: Explicit comparison of full/minimal/custom modes with stage inclusion, artifact expectations, and use cases
+   - **Review Strategy Behavior**: Detailed comparison of prs vs local strategies with branching patterns, PR creation points, and tradeoffs
+   - **Handoff Points & Automation**: Clear breakdown of manual/semi-auto/auto mode behaviors with auto-chain points and pause points
+   - **Artifact Dependencies & Detection**: State detection logic with concrete status→recommendation mappings, plus phase counting methodology
+   - **Common User Scenarios**: 4 complete scenario walkthroughs (new user starting PAW, resuming after break, mid-workflow guidance, multi-work management)
+   - **Common Errors & Resolutions**: 7 common error patterns with causes and fix instructions
+   - **Navigation Commands**: Natural language command mapping to agent names with inline instruction examples
+
+2. **Updated agent linter** (`scripts/lint-agent.sh`):
+   - Added special thresholds for Status Agent: `STATUS_AGENT_WARN_THRESHOLD=5000`, `STATUS_AGENT_ERROR_THRESHOLD=8000`
+   - Modified `lint_file()` function to detect Status Agent filename and apply higher thresholds
+   - Status Agent now has budget for 5000 tokens before warning, 8000 before error (vs 3500/6500 for other agents)
+
+**Verification:**
+- ✅ Status Agent now 4864 tokens (within special 5000-token warning threshold)
+- ✅ Agent linter passes: `./scripts/lint-agent.sh "agents/PAW-X Status Update.agent.md"`
+- ✅ All 79 unit tests pass: `npm test`
+- ✅ TypeScript compilation succeeds: `npm run compile`
+
+**Impact:**
+The Status Agent can now provide expert guidance on PAW workflows by encoding the complete process knowledge directly in the agent instructions. Users asking "where am I?", "what does Code Research do?", or "how do I start?" receive accurate, comprehensive answers without needing to consult external documentation. The PAW Process Guide section serves as an always-available reference that enables the agent to map workflow states to actionable recommendations, explain stage purposes and timing, and guide users through error resolution.
+
 ---
 
 ## Phase 3: Dynamic Prompt Generation

@@ -26,7 +26,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Outputs*: `Spec.md`
    - *Duration*: 15-30 min
    - *Command*: `spec` or initialize new workflow
-   - *Skipped in*: Minimal mode
+   - *Optional in*: Minimal mode (skipped when requirements already clear)
 
 2. **Spec Research (01B)** — Answer open questions via web/docs/reference material
    - *Inputs*: `Spec.md` with research questions
@@ -34,7 +34,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Duration*: 10-20 min
    - *Command*: `research` or `spec research`
    - *Optional*: Only if Spec has research questions
-   - *Skipped in*: Minimal mode
+   - *Not used in*: Minimal mode (no spec to research)
 
 3. **Code Research (02A)** — Analyze existing codebase patterns, conventions, integration points
    - *Inputs*: `Spec.md` (or work brief in minimal mode)
@@ -81,7 +81,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Outputs*: `Docs.md`, docs PR (prs) or pushed commits (local)
    - *Duration*: 20-40 min
    - *Command*: `docs` or `documentation`
-   - *Skipped in*: Minimal mode
+   - *Required*: All modes
 
 9. **Final PR (05)** — Create final PR merging all work to main branch
    - *Inputs*: All phases complete, `Docs.md` (full mode only)
@@ -155,9 +155,9 @@ This separation ensures implementation velocity (03A) while maintaining code qua
 - Review strategy: prs or local
 
 **Minimal Mode**:
-- Includes: Code Research → Plan → Implementation (single phase) → Final PR
-- Skips: Spec, Spec Research, Docs
-- Artifacts: CodeResearch.md, ImplementationPlan.md only
+- Includes: Code Research → Plan → Implementation (single phase) → Docs → Final PR
+- Skips: Spec, Spec Research (requirements assumed clear from issue)
+- Artifacts: CodeResearch.md, ImplementationPlan.md, Docs.md
 - Best for: Bug fixes, small refactors, clear requirements
 - Review strategy: local (enforced)
 

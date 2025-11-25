@@ -97,49 +97,18 @@ Establish the core handoff infrastructure by implementing the `paw_call_agent` t
 #### 1. Handoff Tool Implementation
 **File**: `src/tools/handoffTool.ts` (new)
 **Changes**:
-- Create `HandoffParams` interface with fields: `target_agent` (string, required), `work_id` (string, required), `inline_instruction` (string, optional)
-- Implement validation: Work ID matches `/^[a-z0-9-]+$/`, target agent non-empty, inline instruction max 500 chars
-- Implement `determineAgentFromIdentifier()` function mapping friendly names to agent strings:
-  - `research` → `PAW-01B Spec Researcher`
-  - `code` → `PAW-02A Code Researcher`
-  - `plan` → `PAW-02B Impl Planner`
-  - `implement` or `implement Phase N` → `PAW-03A Implementer`
-  - `review` → `PAW-03B Impl Reviewer`
-  - `docs` → `PAW-04 Documenter`
-  - `pr` → `PAW-05 PR`
-  - `status` → `PAW-X Status Update`
-- Implement prerequisite validation `validateHandoffPrerequisites()`:
-  - Check WorkflowContext.md exists in `.paw/work/<work_id>/`
-  - For `plan`, verify Spec.md exists
-  - For `implement`, verify ImplementationPlan.md exists
-  - For `implement Phase N`, verify `## Phase N` heading exists in ImplementationPlan.md
-  - Return actionable error messages on failure
-- Implement inline instruction parsing: extract text after "but", "with", "remember to" keywords
-- Construct prompt: frontmatter with agent name, instruction for stage, `Work ID: <work_id>`, appended inline instruction if provided
-- Use Language Model API: `vscode.commands.executeCommand('workbench.action.chat.newChat')` followed by `vscode.commands.executeCommand('workbench.action.chat.open', { query: prompt, mode: 'agent' })`
-- Return success message with target agent name and Work ID
+- Create `HandoffParams` interface with fields: `target_agent` (enum, required), `work_id` (string, required), `inline_instruction` (string, optional)
+- Implement validation: Work ID matches `/^[a-z0-9-]+$/`
+- Construct prompt message with `Work ID: <work_id>`, appended inline instruction if provided
+- Use Language Model API: Research correct parameter name for agent mode (verify if `mode` or `agent` parameter), use `vscode.commands.executeCommand('workbench.action.chat.newChat')` followed by `vscode.commands.executeCommand('workbench.action.chat.open', { query: prompt, [paramName]: target_agent })`
+- Return empty string on success (new chat interrupts conversation), return error message only on failures
 
 **Brief Example**:
 ```typescript
 interface HandoffParams {
-  target_agent: string;
+  target_agent: 'PAW-01A Specification' | 'PAW-01B Spec Researcher' | 'PAW-02A Code Researcher' | 'PAW-02B Impl Planner' | 'PAW-03A Implementer' | 'PAW-03B Impl Reviewer' | 'PAW-04 Documenter' | 'PAW-05 PR' | 'PAW-X Status Update';
   work_id: string;
   inline_instruction?: string;
-}
-
-async function validateHandoffPrerequisites(targetAgent: string, workId: string): Promise<void> {
-  const workDir = path.join(workspaceRoot, '.paw', 'work', workId);
-  
-  if (!fs.existsSync(path.join(workDir, 'WorkflowContext.md'))) {
-    throw new Error(`WorkflowContext.md not found for ${workId}`);
-  }
-  
-  if (targetAgent.includes('Implementer')) {
-    const planPath = path.join(workDir, 'ImplementationPlan.md');
-    if (!fs.existsSync(planPath)) {
-      throw new Error('Cannot start Implementation: ImplementationPlan.md not found. Run `plan` to create implementation plan first.');
-    }
-  }
 }
 ```
 
@@ -155,8 +124,8 @@ async function validateHandoffPrerequisites(targetAgent: string, workId: string)
 - Add tool definition to `contributes.languageModelTools` array:
   - `name`: `paw_call_agent`
   - `displayName`: `Call PAW Agent`
-  - `modelDescription`: Tool description explaining handoff functionality
-  - `inputSchema`: JSON schema with `target_agent`, `work_id`, `inline_instruction` properties
+  - `modelDescription`: Tool description explaining handoff functionality and that agents should intelligently map user requests to agent names
+  - `inputSchema`: JSON schema with `target_agent` (enum of exact agent names), `work_id`, `inline_instruction` properties
 
 #### 3. WorkflowContext.md Field Addition
 **File**: `src/prompts/workflowInitPrompt.ts`
@@ -187,147 +156,123 @@ async function validateHandoffPrerequisites(targetAgent: string, workId: string)
 - [ ] Unit tests pass for `handoffTool.ts`: `npm test`
 - [ ] TypeScript compilation succeeds: `npm run compile`
 - [ ] Tool registered and discoverable in Extension Development Host
-- [ ] Validation tests pass: missing ImplementationPlan.md throws error, invalid Work ID rejected
+- [ ] Invalid Work ID rejected by validation
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] Extension activates without errors
 - [ ] Handoff tool appears in tool approval UI when agent invokes
-- [ ] Manual mode: Typing `research` after Spec completion opens Spec Research Agent chat
+- [ ] Manual mode: User says "continue with research" after Spec completion, agent maps to `PAW-01B Spec Researcher` and opens new chat
 - [ ] Work ID correctly passed and `paw_get_context` succeeds in target agent
 - [ ] Inline instruction ("continue but add logging") appears in target agent's initial context
-- [ ] Prerequisite validation: `implement Phase 1` without ImplementationPlan.md shows error message
-- [ ] Agent name mapping: `implement Phase 2` resolves to `PAW-03A Implementer`
+- [ ] Agent validates prerequisites: when user asks to implement Phase 1 without ImplementationPlan.md, agent checks and responds with actionable error
+- [ ] Agent intelligently maps user requests: "research" → `PAW-01B Spec Researcher`, "implement Phase 2" → `PAW-03A Implementer`
 
 ---
 
-## Phase 2: Status Agent Core Enhancements
+## Phase 2: Status Agent Enhancements
 
 ### Overview
-Transform the Status Agent into a comprehensive workflow navigation hub by adding directory scanning for active workflows, artifact detection, git status checking, PR querying, and actionable next-step suggestions.
+Update the Status Agent (`PAW-X Status Update.agent.md`) to provide comprehensive workflow navigation, help users understand the PAW process, and support workflow resumption. The agent will use existing tools (file reads, GitHub MCP) to detect status and guide users to next steps.
 
 ### Changes Required:
 
-#### 1. Workflow Scanning Logic
-**File**: `src/tools/statusTool.ts` (new)
+#### 1. Status Agent Instruction Updates
+**File**: `agents/PAW-X Status Update.agent.md`
 **Changes**:
-- Create `StatusParams` interface with optional `work_id` field (if omitted, list all workflows)
-- Implement `scanActiveWorkflows()`: list top-level directories in `.paw/work/`, check for WorkflowContext.md, return workflow metadata (Work ID, Title, last modified)
-- Implement caching: 5-minute TTL, cache key includes workspace path
-- Sort workflows by most recent modification time (descending)
-- Return structured data: array of `{ workId, title, targetBranch, lastModified, branchExists }`
+- **Default Behavior**: Detect current workflow status and help navigate to next steps (replaces old default of posting to GitHub issue)
+- **Status Detection Logic**: Describe how agent should determine workflow state:
+  - List `.paw/work/` directories, check each for WorkflowContext.md to find active workflows
+  - For specified or inferred Work ID, read WorkflowContext.md for Target Branch, Workflow Mode, Issue URL
+  - Check artifact existence: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+  - Parse ImplementationPlan.md to count phases: search for `## Phase \d+:` pattern
+  - Use `run_in_terminal` to check git status: `git branch --show-current`, `git status --porcelain`, `git rev-list --left-right --count <remote>/<target>...<target>`
+  - Use GitHub MCP tools to search for PRs by branch names: `<target>_plan`, `<target>_phase1`, etc.
+- **Next-Step Suggestions**: Based on detected state, suggest actionable commands:
+  - Missing Spec.md → "Start with specification"
+  - Spec exists, no CodeResearch → "Continue with code research"
+  - Plan exists, no phase PRs → "Begin implementing Phase 1"
+  - Phase N merged, Phase N+1 not started → "Continue with Phase N+1"
+  - Present commands users can say to trigger handoffs
+- **Help Mode**: Answer questions about PAW workflow:
+  - "What does Code Research stage do?" → Explain purpose, inputs, outputs, timing
+  - "How do I start a new PAW workflow?" → Explain `PAW: New PAW Workflow` command, parameters
+  - "What are the PAW stages?" → Overview of Specification, Research, Planning, Implementation, Review, Documentation, PR
+- **Multi-Work-Item Support**: When user asks "What PAW work items do I have?", list all workflows sorted by recency (most recent modification first)
+- **Issue Posting (Non-Default)**: Only post status to GitHub issue when explicitly requested: "post status to issue"
 
-#### 2. Artifact Detection
-**File**: `src/tools/statusTool.ts`
+#### 2. Status Agent Examples
+**File**: `agents/PAW-X Status Update.agent.md`
 **Changes**:
-- Implement `detectArtifacts(workId: string)` checking existence of: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
-- For ImplementationPlan.md, parse phase count: search for `## Phase \d+:` pattern, count unique phase numbers
-- Return structured object: `{ spec: boolean, specResearch: boolean, codeResearch: boolean, plan: boolean, planPhaseCount: number, docs: boolean }`
+- Add example interactions:
+  - User: "where am I?" → Agent checks files, git, PRs, presents: "You're on `feature/x_phase2`. Phase 1 PR merged. ImplementationPlan.md shows 3 phases total. Next: implement Phase 2."
+  - User: "What PAW workflows do I have?" → Agent lists: "1. feature/auth-system (modified 2h ago), 2. feature/api-refactor (modified 2d ago)"
+  - User: "What does Code Research do?" → Agent explains stage purpose and when to use it
+  - User: "post status to issue" → Agent gathers status and posts comment to Issue URL from WorkflowContext.md
 
-#### 3. Git Status Checking
-**File**: `src/tools/statusTool.ts`
+#### 3. Tool Usage Patterns
+**File**: `agents/PAW-X Status Update.agent.md`
 **Changes**:
-- Implement `getGitStatus(targetBranch: string, remote: string)` using child_process patterns from `src/git/validation.ts`
-- Check branch existence: `git rev-parse --verify <branch>`
-- Check current branch: `git branch --show-current`
-- Check detached HEAD: `git symbolic-ref -q HEAD` (non-zero exit = detached)
-- Check ahead/behind: `git rev-list --left-right --count <remote>/<branch>...<branch>` (parse output "X   Y")
-- Check uncommitted changes: `git status --porcelain` (non-empty = changes exist)
-- Return object: `{ branchExists: boolean, currentBranch: string, isDetached: boolean, aheadCount: number, behindCount: number, hasUncommitted: boolean }`
-
-#### 4. PR Status Querying
-**File**: `src/tools/statusTool.ts`
-**Changes**:
-- Implement `getPRStatus(workId: string, targetBranch: string, planPhaseCount: number)` 
-- Build search query for GitHub MCP: construct OR query for all branches (`<target>_plan`, `<target>_phase1`, `<target>_phase2`, ..., `<target>_docs`, `<target>`)
-- If OR batching fails at runtime, fall back to sequential queries per branch
-- Parse results: extract PR number, state (open/merged/closed), link
-- Return structured object: `{ planningPR?, phase1PR?, phase2PR?, ..., docsPR?, finalPR? }` with each PR object containing `{ number, state, url }`
-- Implement 5-minute cache for PR query results
-
-#### 5. Next-Step Suggestions
-**File**: `src/tools/statusTool.ts`
-**Changes**:
-- Implement `suggestNextSteps(artifacts: ArtifactStatus, prStatus: PRStatus)` logic:
-  - If Spec.md missing: suggest `spec`
-  - If Spec.md exists but CodeResearch.md missing: suggest `code`
-  - If CodeResearch.md exists but ImplementationPlan.md missing: suggest `plan`
-  - If ImplementationPlan.md exists but no phase PRs: suggest `implement Phase 1`
-  - If Phase N PR merged but Phase N+1 not started: suggest `implement Phase N+1`
-  - If all phases complete but Docs.md missing: suggest `docs`
-  - If Docs.md exists but no final PR: suggest `pr`
-- Return array of command strings with descriptions
-
-#### 6. Tool Registration
-**File**: `src/extension.ts`
-**Changes**:
-- Import `registerStatusTool` from `./tools/statusTool`
-- Add tool registration in `activate()`: `registerStatusTool(context)`
-
-**File**: `package.json`
-**Changes**:
-- Add tool definition to `contributes.languageModelTools`: `paw_get_workflow_status` with optional `work_id` parameter
+- Document tool usage for status detection:
+  - `list_dir` for `.paw/work/` to find workflows
+  - `read_file` for WorkflowContext.md, ImplementationPlan.md, artifact files
+  - `run_in_terminal` for git commands (branch, status, divergence)
+  - GitHub MCP `search_pull_requests` or `list_pull_requests` to find PRs by branch name
+  - `grep_search` to quickly check artifact existence without full reads
+- Emphasize agent reasoning: "Determine what information you need, use available tools to gather it, synthesize into actionable guidance"
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Unit tests pass for `statusTool.ts`: `npm test`
-- [ ] Workflow scanning returns correct count for test workspace with 3 workflows
-- [ ] Artifact detection correctly identifies all files and counts phases (test with fixture plan)
-- [ ] Git status parsing correctly handles ahead/behind counts (test with mocked git output)
-- [ ] Next-step suggestions return expected commands for various workflow states
+- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-X\ Status\ Update.agent.md`
+- [ ] No markdown syntax errors in agent file
 - [ ] TypeScript compilation succeeds: `npm run compile`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Status Agent lists multiple work items sorted by recency
-- [ ] Selecting specific work item shows detailed status with artifacts checked
-- [ ] Git divergence correctly reported ("5 commits behind main")
-- [ ] PR status shows all phase PRs with states and links
-- [ ] Next-step suggestions contextually appropriate ("implement Phase 3" when Phase 2 merged)
-- [ ] Cache prevents repeated filesystem scans during single session (observable via logging)
-- [ ] Detached HEAD detected and reported with nearby branch suggestions
+- [ ] Status Agent responds to "where am I?" with comprehensive workflow state
+- [ ] Agent correctly identifies missing artifacts and suggests next steps
+- [ ] Agent uses `run_in_terminal` to check git status and reports divergence
+- [ ] Agent searches GitHub for PRs and reports state (open/merged/closed)
+- [ ] Multi-work-item: "What PAW work items do I have?" lists all workflows sorted by recency
+- [ ] Help mode: "What does Code Research do?" provides clear explanation
+- [ ] New user guidance: "How do I start a PAW workflow?" explains command and process
+- [ ] Issue posting: "post status to issue" creates GitHub issue comment (non-default behavior)
+- [ ] Agent reasons about incomplete information: if WorkflowContext.md missing, suggests running init command
+- [ ] Agent handles edge cases: detached HEAD, missing branches, no git repository
 
 ---
 
 ## Phase 3: Dynamic Prompt Generation
 
 ### Overview
-Implement on-demand prompt file generation capability in Status Agent, allowing users to create customizable prompt files only when needed rather than pre-generating all files at initialization.
+Implement on-demand prompt file generation capability, allowing users to create customizable prompt files only when needed rather than pre-generating all files at initialization. Uses the same logic as the existing `PAW: New PAW Workflow` command.
 
 ### Changes Required:
 
-#### 1. Prompt Generation Logic
+#### 1. Prompt Generation Tool
 **File**: `src/tools/promptGenerationTool.ts` (new)
 **Changes**:
-- Create `PromptGenerationParams` interface: `{ work_id: string, stage: string, phase_number?: number }`
-- Implement stage-to-template mapping using patterns from `src/tools/createPromptTemplates.ts`:
-  - `spec` → `01A-spec.prompt.md`, `PAW-01A Specification`
-  - `research` → `01B-spec-research.prompt.md`, `PAW-01B Spec Researcher`
-  - `code` → `02A-code-research.prompt.md`, `PAW-02A Code Researcher`
-  - `plan` → `02B-impl-plan.prompt.md`, `PAW-02B Impl Planner`
-  - `implementer` or `implement` → `03A-implement-phase<N>.prompt.md`, `PAW-03A Implementer`
-  - `reviewer` or `review` → `03B-review-phase<N>.prompt.md`, `PAW-03B Impl Reviewer`
-  - `docs` → `04-docs.prompt.md`, `PAW-04 Documenter`
-  - `pr` → `05-pr.prompt.md`, `PAW-05 PR`
-  - `status` → `0X-status.prompt.md`, `PAW-X Status Update`
-- For phases: construct filename `03A-implement-phase<N>.prompt.md`
-- Inject phase-specific context by reading ImplementationPlan.md and extracting Phase N section (from `## Phase N:` to next `## Phase` or EOF)
-- Generate frontmatter: `---\nagent: <agent_name>\n---`
-- Generate body: stage instruction, `Work ID: <work_id>`, phase context if applicable
-- Write file to `.paw/work/<work_id>/prompts/<filename>`
+- Create `PromptGenerationParams` interface: `{ work_id: string, agent_name: string, additional_content?: string }`
+- Use existing prompt template logic from `src/tools/createPromptTemplates.ts`:
+  - Call the same functions used by New PAW Workflow command
+  - Generate prompt file with frontmatter (`---\nagent: <agent_name>\n---`) and body
+  - Include Work ID in prompt body
+  - Append `additional_content` to prompt body if provided
+- Write file to `.paw/work/<work_id>/prompts/<filename>` using established naming pattern from `createPromptTemplates.ts`
 - Return file path and success message
+- Let agent determine filename pattern and any phase-specific context to include in `additional_content`
 
-#### 2. Phase Context Extraction
-**File**: `src/tools/promptGenerationTool.ts`
-**Changes**:
-- Implement `extractPhaseContext(planPath: string, phaseNumber: number)` parsing ImplementationPlan.md
-- Search for `## Phase ${phaseNumber}:` heading
-- Extract all content until next `## Phase` heading or EOF
-- Include: phase overview, changes required, success criteria
-- Return as string to append to prompt body
+**Brief Example**:
+```typescript
+interface PromptGenerationParams {
+  work_id: string;
+  agent_name: string; // e.g., 'PAW-03A Implementer'
+  additional_content?: string; // e.g., 'Focus on Phase 2'
+}
+```
 
-#### 3. Tool Registration
+#### 2. Tool Registration
 **File**: `src/extension.ts`
 **Changes**:
 - Import `registerPromptGenerationTool` from `./tools/promptGenerationTool`
@@ -335,32 +280,24 @@ Implement on-demand prompt file generation capability in Status Agent, allowing 
 
 **File**: `package.json`
 **Changes**:
-- Add tool definition: `paw_generate_prompt` with parameters `work_id`, `stage`, optional `phase_number`
-
-#### 4. Status Agent Integration
-**File**: `agents/PAW-X Status Update.agent.md`
-**Changes**:
-- Add instructions for invoking `paw_generate_prompt` tool when user requests dynamic prompt generation
-- Add examples: "generate prompt implementer Phase 3", "generate prompt code"
-- Document that generated prompts can be edited before execution
+- Add tool definition: `paw_generate_prompt` with parameters `work_id`, `agent_name`, optional `additional_content`
+- Tool description should indicate that agents should identify the stage name and any additional context based on user request
 
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] Unit tests pass for `promptGenerationTool.ts`: `npm test`
-- [ ] Phase context extraction correctly parses test ImplementationPlan.md fixture
 - [ ] Generated prompt files have valid frontmatter and Work ID
-- [ ] Filename generation follows PAW naming conventions (`03A-implement-phase2.prompt.md`)
+- [ ] Filename generation follows PAW naming conventions
 - [ ] TypeScript compilation succeeds: `npm run compile`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Status Agent invoked with "generate prompt implementer Phase 3" creates correct file
-- [ ] Generated prompt file contains Phase 3-specific context from ImplementationPlan.md
-- [ ] Frontmatter contains correct agent name (`PAW-03A Implementer`)
+- [ ] Agent invoked with "generate prompt for implementer Phase 3" creates correct file
+- [ ] Generated prompt file has correct agent name in frontmatter
 - [ ] User can edit generated prompt file and execute it successfully
-- [ ] File not created if prerequisites missing (ImplementationPlan.md for implementer prompts)
-- [ ] Status Agent provides file path after generation with edit/execute options
+- [ ] Agent includes phase number or other context in `additional_content` when user specifies
+- [ ] File path provided to user after generation
 
 ---
 
@@ -377,9 +314,11 @@ Update all PAW agent instruction files to present formatted next-step options, i
 - Create reusable component with instructions for:
   - Reading Handoff Mode from WorkflowContext.md (default to "manual" if missing)
   - Conditional behavior: manual waits for command, semi-auto auto-invokes at designated transitions, auto always auto-invokes
-  - Presenting next-step options in code-formatted style: `research`, `code`, `implement Phase N`
-  - Invoking `paw_call_agent` tool with target agent identifier, Work ID, and optional inline instruction
-  - Parsing inline instructions from user commands (text after "but", "with", "remember to")
+  - Presenting next-step options to users with clear phrasing
+  - Option to proceed directly via handoff OR generate prompt file for customization
+  - Invoking `paw_call_agent` tool with exact agent name (enum value), Work ID, and optional inline instruction
+  - Invoking `paw_generate_prompt` tool when user wants to customize prompt before execution
+  - Agent interprets user requests and maps to agent names intelligently
 
 **Brief Example**:
 ```markdown
@@ -393,17 +332,24 @@ Read the `Handoff Mode` field from WorkflowContext.md (default to "manual" if mi
 
 ### Presenting Next Steps
 
-Format options as code-formatted commands:
-- Type `research` to start Spec Research Agent
-- Type `code` to proceed to Code Research
-- Type `status` to see workflow state
+Present options clearly to users:
+- "To continue with research, say 'research' or 'start research'"
+- "To proceed to Code Research, say 'code' or 'code research'"
+- "To generate a customizable prompt file instead, say 'generate prompt for [stage]'"
+- "To check workflow status, say 'status'"
 
 ### Invoking Handoff
 
-Call `paw_call_agent` tool with:
-- `target_agent`: Identifier (e.g., "research", "implement Phase 2")
-- `work_id`: Current Work ID from WorkflowContext.md
-- `inline_instruction`: (optional) Extract from user command after "but", "with", "remember to"
+Interpret user's request and map to exact agent name:
+- User says "research" or "start research" → call `paw_call_agent` with `target_agent: 'PAW-01B Spec Researcher'`
+- User says "implement Phase 2" → call `paw_call_agent` with `target_agent: 'PAW-03A Implementer'`, `inline_instruction: 'Phase 2'`
+- User says "continue but add logging" → extract "add logging" as `inline_instruction`
+
+### Generating Prompt Files
+
+When user wants customization before executing:
+- User says "generate prompt for implementer Phase 3" → call `paw_generate_prompt` with `agent_name: 'PAW-03A Implementer'`, `additional_content: 'Phase 3'`
+- Inform user of file path and that they can edit before executing
 ```
 
 #### 2. PAW-01A Specification Agent Updates
@@ -411,12 +357,13 @@ Call `paw_call_agent` tool with:
 **Changes**:
 - Include handoff component instructions
 - Update "Hand-off" section to present next-step options:
-  - `research` (if research questions identified)
-  - `code` (skip research, go to Code Research)
-  - `status`
-  - `generate prompt research` (for customization)
-- Add Semi-Auto behavior: after finalizing Spec, check Handoff Mode; if "semi-auto" or "auto", auto-invoke `code` (Code Research stage)
+  - Proceed to research (if research questions identified)
+  - Skip research and proceed to Code Research
+  - Check workflow status
+  - Generate prompt file for customization ("generate prompt for research")
+- Add Semi-Auto behavior: after finalizing Spec, check Handoff Mode; if "semi-auto" or "auto", auto-invoke Code Research Agent
 - Add Manual behavior: present options and wait for user command
+- Agent validates prerequisites before handoff (checks if Spec.md exists when appropriate)
 
 #### 3. PAW-01B Spec Researcher Agent Updates
 **File**: `agents/PAW-01B Spec Researcher.agent.md`
@@ -513,31 +460,29 @@ Implement comprehensive unit tests, integration tests, and perform manual end-to
 #### 1. Handoff Tool Unit Tests
 **File**: `src/test/suite/handoffTool.test.ts` (new)
 **Changes**:
-- Test agent name resolution: `research` → `PAW-01B Spec Researcher`, `implement Phase 2` → `PAW-03A Implementer`
-- Test prerequisite validation: missing ImplementationPlan.md throws error, missing Phase N heading throws error
-- Test inline instruction parsing: "continue but add logging" extracts "add logging"
 - Test Work ID validation: invalid format rejected, valid format accepted
-- Mock filesystem for WorkflowContext.md and ImplementationPlan.md checks
+- Test agent name enum: only valid PAW agent names accepted
+- Test inline instruction parameter: optional string passed through correctly
 - Mock VS Code commands (`workbench.action.chat.newChat`, `workbench.action.chat.open`)
+- Verify tool returns empty string on success, error message only on failures
 
-#### 2. Status Tool Unit Tests
-**File**: `src/test/suite/statusTool.test.ts` (new)
+#### 2. Status Agent Behavior Tests
+**File**: `src/test/suite/statusAgent.test.ts` (new)
 **Changes**:
-- Test workflow scanning: returns correct count, sorts by recency, filters by WorkflowContext.md presence
-- Test artifact detection: correctly identifies files, counts phases from fixture ImplementationPlan.md
-- Test git status parsing: ahead/behind counts parsed correctly, detached HEAD detected
-- Test next-step suggestions: returns expected commands for various workflow states
-- Mock filesystem for artifact checks
-- Mock git commands with known outputs
+- Test agent instructions are well-formed and linter-compliant
+- Manual testing: verify agent uses tools correctly to detect status
+- Verify agent can list workflows, detect artifacts, check git status, query PRs
+- Test examples in agent file produce expected behavior
 
 #### 3. Prompt Generation Tool Unit Tests
 **File**: `src/test/suite/promptGenerationTool.test.ts` (new)
 **Changes**:
-- Test filename generation: follows PAW naming conventions, includes phase numbers
-- Test phase context extraction: correctly parses fixture ImplementationPlan.md
+- Test filename generation: follows PAW naming conventions
 - Test frontmatter generation: valid YAML with correct agent name
-- Test prerequisite validation: rejects invalid stage names, missing ImplementationPlan.md for implementer prompts
-- Mock filesystem for reading ImplementationPlan.md and writing prompt files
+- Test Work ID inclusion in prompt body
+- Test additional_content parameter: appended to prompt body when provided
+- Mock filesystem for writing prompt files
+- Verify reuses logic from existing createPromptTemplates.ts
 
 #### 4. Integration Tests
 **File**: `src/test/suite/integration.test.ts` (new)
@@ -595,20 +540,19 @@ Implement comprehensive unit tests, integration tests, and perform manual end-to
 
 ### Unit Tests:
 - Tool parameter validation and error handling
-- Agent name resolution logic (friendly names to full agent strings)
-- Prerequisite validation rules (artifact existence, phase heading checks)
-- Inline instruction parsing (keyword extraction)
-- Git status parsing (ahead/behind counts, detached HEAD)
-- Workflow scanning logic (directory listing, filtering, sorting)
-- Phase context extraction (ImplementationPlan.md parsing)
-- Next-step suggestion logic (workflow state → commands)
+- Work ID validation (format checking)
+- Agent name enum validation (only valid PAW agent names)
+- Inline instruction parameter handling (optional string passthrough)
+- Additional content parameter handling (appended to prompt body)
+- Prompt file generation (frontmatter, body, naming conventions)
+- VS Code command invocation (new chat, open with agent mode)
 
 ### Integration Tests:
 - Full handoff flow from initialization through multiple stages
-- Status Agent workflow state reporting with real workspace structure
+- Status Agent uses tools to determine workflow state
 - Dynamic prompt generation and file creation
 - Tool approval UI presentation (verify messages displayed)
-- Cache behavior (verify filesystem scans not repeated within TTL)
+- Agent intelligence: mapping user requests to agent names
 
 ### Manual Testing Steps:
 1. Install extension in Extension Development Host

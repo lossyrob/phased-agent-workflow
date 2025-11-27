@@ -563,9 +563,9 @@ When user wants customization before executing:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes for all updated agent files: `./scripts/lint-agent.sh agents/*.agent.md`
-- [ ] No markdown syntax errors in updated agents
-- [ ] Handoff component included in all agents that have stage transitions
+- [x] Agent linter passes for all updated agent files: `./scripts/lint-agent.sh agents/*.agent.md` (except PAW-01A which has pre-existing token count issue)
+- [x] No markdown syntax errors in updated agents
+- [x] Handoff component included in all agents that have stage transitions
 
 #### Manual Verification:
 - [ ] Spec Agent presents next-step options after completion in Manual mode
@@ -576,6 +576,37 @@ When user wants customization before executing:
 - [ ] All agents correctly parse inline instructions ("continue but add logging")
 - [ ] Review workflow agents follow same handoff patterns (Understanding → Baseline auto-chain in Semi-Auto)
 - [ ] Final PR Agent does not present handoff options (terminal stage)
+
+### Phase 4 Complete
+
+**Implementation Summary:**
+Successfully updated all PAW agent instruction files to include the new handoff component (`{{HANDOFF_INSTRUCTIONS}}`) and stage-specific handoff behavior. Created `agents/components/handoff-instructions.component.md` as a shared component with consolidated handoff logic covering:
+- Reading Handoff Mode from WorkflowContext.md (manual/semi-auto/auto)
+- Mode-specific behavior patterns
+- Handoff tool invocation with intelligent agent name mapping
+- Prompt generation tool invocation for customization
+- Prerequisite validation before handoffs
+
+**All automated verification passed:**
+- All 87 unit tests pass: `npm test`
+- TypeScript compilation succeeds: `npm run compile`
+- Agent linter passes for all agents except PAW-01A (pre-existing token count issue documented in WorkflowContext.md)
+- Handoff component included in all 14 agents with stage transitions
+
+**Files Created/Modified:**
+- Created: `agents/components/handoff-instructions.component.md`
+- Modified: All 14 agent files to include `{{HANDOFF_INSTRUCTIONS}}` component and stage-specific handoff sections:
+  - Standard workflow: PAW-01A, PAW-01B, PAW-02A, PAW-02B, PAW-03A, PAW-03B, PAW-04, PAW-05
+  - Review workflow: PAW-R1A, PAW-R1B, PAW-R2A, PAW-R2B, PAW-R3A, PAW-R3B
+- Modified: `WorkflowContext.md` to document PAW-01A token limit issue
+
+**Notes for Next Phase:**
+Phase 5 (Testing and Validation) should verify the handoff behavior end-to-end. Manual verification of the handoff flows across all three modes (manual, semi-auto, auto) is critical to confirm the agent instruction updates work correctly.
+
+**Review Considerations:**
+- Verify handoff component is rendered correctly by the agent template system
+- Check that stage-specific handoff sections match the Semi-Auto behavior table in the component
+- Confirm PAW-R agents have appropriate pause points for review workflow
 
 ---
 

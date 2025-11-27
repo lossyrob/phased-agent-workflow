@@ -425,6 +425,17 @@ Reviewer can delete unwanted comments before submission.
 All comments have complete rationale sections in ReviewComments.md (not posted to GitHub).
 
 Ready for Feedback Critic to add assessment sections.
-
-Next: Invoke PAW-R3B Feedback Critic to critically assess comment quality and usefulness.
 ```
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+After feedback generation completion:
+```
+Next options:
+- Say 'critic' or 'critique feedback' to assess comment quality
+- Say 'status' to check review workflow state
+```
+
+In Semi-Auto and Auto modes: Immediately invoke handoff to PAW-R3B Feedback Critic.

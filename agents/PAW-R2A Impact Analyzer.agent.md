@@ -445,9 +445,10 @@ Before completing this stage:
 
 ## Hand-off
 
+```
 Impact Analysis Complete
 
-`ImpactAnalysis.md` created with:
+ImpactAnalysis.md created with:
 - X integration points identified
 - Y potential breaking changes
 - Z performance implications
@@ -456,5 +457,17 @@ Impact Analysis Complete
 - Code health trend in risk assessment
 - Security assessment: [Low|Medium|High] risk
 - Deployment complexity: [Low|Medium|High]
+```
 
-Next: Invoke **PAW-R2B Gap Analyzer** to identify correctness, testing, and quality gaps.
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+After impact analysis completion:
+```
+Next options:
+- Say 'gaps' or 'gap analysis' to identify correctness, testing, and quality gaps
+- Say 'status' to check review workflow state
+```
+
+In Semi-Auto and Auto modes: Immediately invoke handoff to PAW-R2B Gap Analyzer.

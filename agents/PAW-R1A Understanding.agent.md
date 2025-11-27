@@ -583,9 +583,22 @@ Quality checks passed:
 - [x] Discrepancies flagged (if any)
 
 Artifact location: .paw/reviews/<identifier>/
-
-Next: Invoke Evaluation Stage agents (PAW-R2A Impact Analysis, PAW-R2B Gap Analysis) with these understanding artifacts.
 ```
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+After Understanding stage completion, present next-step options:
+```
+Next options:
+- Say 'impact' or 'impact analysis' to analyze change impacts
+- Say 'status' to check review workflow state
+```
+
+In Semi-Auto mode: Pause here (decision point before evaluation).
+
+In Auto mode: Immediately invoke handoff to PAW-R2A Impact Analyzer.
 
 ---
 

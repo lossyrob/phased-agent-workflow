@@ -540,37 +540,13 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 ## Hand-off
 
-### For Initial Planning:
-```
-Implementation Plan Complete - Planning PR Ready
+{{HANDOFF_INSTRUCTIONS}}
 
-I've authored the implementation plan at:
-.paw/work/<feature-slug>/ImplementationPlan.md
+### Planning Handoff
 
-Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
-
-Artifacts committed:
-- Spec.md
-- SpecResearch.md
-- CodeResearch.md
-- ImplementationPlan.md
-- Related prompt files
-
-Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md to begin Phase 1 after the Planning PR is reviewed and merged.
-```
-
-### For PR Review Response:
-```
-Planning PR Review Comments Addressed
-
-All review comments on the Planning PR have been addressed with focused commits:
-- [List of comments addressed with commit hashes]
-
-Updated artifacts:
-- [List which of Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md were modified]
-
-All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-review.
-```
+**Next stage**: PAW-03A Implementer (Phase 1)
+- All Modes: Pause after planning (human reviews Planning PR first)
+- Present options: `implement Phase 1`, `status`, `generate prompt for implementer Phase 1`
 
 ## Success Criteria Guidelines
 

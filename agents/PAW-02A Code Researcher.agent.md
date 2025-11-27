@@ -452,6 +452,12 @@ I've documented the implementation details at:
 .paw/work/<feature-slug>/CodeResearch.md
 
 Findings include file:line references for all key components.
-
-Next: Run the Implementation Plan Agent to develop the implementation plan using this CodeResearch.md
 ```
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Code Research Handoff
+
+**Next stage**: PAW-02B Impl Planner
+- Manual: Present options - `plan`, `status`, `generate prompt for planning`
+- Semi-Auto/Auto: Immediate handoff

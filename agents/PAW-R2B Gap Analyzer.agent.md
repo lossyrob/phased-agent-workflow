@@ -597,9 +597,10 @@ Before completing this stage:
 
 ## Hand-off
 
+```
 Gap Analysis Complete
 
-`GapAnalysis.md` created with:
+GapAnalysis.md created with:
 - Positive observations (good practices identified)
 - X Must-address findings (correctness/safety/security)
 - Y Should-address findings (quality/completeness, over-engineering)
@@ -611,5 +612,19 @@ Gap Analysis Complete
 - Baseline comparison: [Patterns followed | Divergences noted]
 
 All findings have evidence and appropriate categorization.
+```
 
-Next: Invoke **PAW-R3A Feedback Generation Agent** to transform findings into structured review comments with rationale sections.
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+After gap analysis completion:
+```
+Next options:
+- Say 'feedback' or 'generate feedback' to create review comments
+- Say 'status' to check review workflow state
+```
+
+In Semi-Auto mode: Pause here (decision point before feedback generation).
+
+In Auto mode: Immediately invoke handoff to PAW-R3A Feedback Generator.

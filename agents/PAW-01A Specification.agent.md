@@ -429,11 +429,18 @@ Specification Ready for Planning Stage:
 - [ ] All FRs & SCs traceable and testable
 - [ ] Assumptions & scope boundaries explicit
 - [ ] Quality Checklist fully passes (or explicit user-approved overrides listed)
-
-Next: Invoke Code Research Agent (Stage 02) to map relevant codebase areas. Optionally run Status Agent to update Issue.
 ```
 
 If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Specification Handoff
+
+**Next stage**: PAW-02A Code Researcher
+- Manual: Present options - `code`, `status`, `generate prompt for code research`
+- Semi-Auto: Pause (decision point)
+- Auto: Immediate handoff
 
 ### Working with Issues and PRs
 

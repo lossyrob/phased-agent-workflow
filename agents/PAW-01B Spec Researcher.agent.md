@@ -133,6 +133,12 @@ I've completed research and saved findings to:
 .paw/work/<feature-slug>/SpecResearch.md
 
 Optional external/context questions (if any) appear in the "User-Provided External Knowledge" section for manual completion.
-
-Next: Return to Spec Agent with the completed SpecResearch.md to refine the specification.
 ```
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Spec Research Handoff
+
+**Next stage**: PAW-01A Specification (return to integrate research)
+- Manual: Present options - `spec`, `status`
+- Semi-Auto/Auto: Immediate handoff

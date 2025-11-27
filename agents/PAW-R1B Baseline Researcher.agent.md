@@ -340,6 +340,13 @@ Baseline findings include:
 ReviewContext.md updated with artifact reference.
 
 Original branch restored: <original-branch>
-
-Next: Understanding Agent can now resume and use this baseline understanding to complete DerivedSpec.md.
 ```
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+After baseline research completion:
+- In Semi-Auto mode: Immediately invoke handoff to PAW-R1A Understanding to resume and create DerivedSpec.md.
+- In Auto mode: Immediately invoke handoff to PAW-R1A Understanding.
+- In Manual mode: Present option: "Say 'understanding' or 'resume' to return to Understanding Agent."

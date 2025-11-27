@@ -383,35 +383,12 @@ For review comment follow-up:
 
 ## Hand-off
 
-After initial review:
-```
-Phase [N] Review Complete - PR Opened
+{{HANDOFF_INSTRUCTIONS}}
 
-I've reviewed the Implementation Agent's work, added docstrings/comments, and opened the Phase PR (add actual number when known).
+### Implementation Review Handoff
 
-Changes pushed:
-- Implementation Agent's functional code commits
-- My documentation and polish commits
-
-The PR is ready for human review. When review comments are received, ask the Implementation Agent to address them, then ask me to verify the changes and reply to reviewers.
-```
-
-After review comment follow-up:
-```
-Review Comments Verified - Changes Pushed and Summary Posted
-
-I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted a comprehensive summary documenting which comments were addressed.
-
-Changes pushed:
-- Implementation Agent's commits addressing review comments
-- [My improvement commits if any]
-
-Summary comment on PR details:
-- Which review comments were addressed
-- Commits that addressed each comment
-- Any improvements made
-
-The human reviewer can now review the changes and manually resolve comments in the GitHub UI. The PR is ready for re-review.
-```
-
-Next: Human reviews PR, resolves addressed comments in GitHub UI. If approved, merge and proceed to next phase or next stage when complete.
+**After Phase Review (PR Opened)**:
+- All Modes: Pause (wait for human PR review)
+- More phases remain: Present `implement Phase [N+1]`, `status`
+- All phases complete: Present `docs`, `status`
+- Auto Mode (all complete): Immediate handoff to PAW-04 Documenter

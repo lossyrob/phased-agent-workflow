@@ -300,32 +300,12 @@ For best results, ensure:
 
 ## Hand-off
 
-```
-Final PR Created: add the actual number when known
+{{HANDOFF_INSTRUCTIONS}}
 
-The PR is ready for review and includes:
-- Links to all PAW artifacts
-- Summary of all [N] implementation phases
-- Documentation updates
-- Testing evidence
-- Acceptance criteria verification
+### Final PR Handoff
 
-Pre-flight checks passed:
-✅ All phases complete
-✅ Documentation complete
-✅ Artifacts exist
-✅ Branch up to date
-✅ Build and tests passing
+**Terminal stage**: No further handoffs - workflow ends here.
 
-Merge Guidance:
-- [Deployment considerations]
-- [Rollout recommendations]
-- [Post-merge verification steps]
-
-Next: Human reviews final PR. 
-
-If review comments are received:
-- Invoke Implementation Agent (PAW-03A) to address review comments
-- Invoke Implementation Review Agent (PAW-03B) to verify changes and reply to reviewers
-- Repeat until approved, then merge to main
-```
+If review comments received:
+- `address review comments on PR #[N]` → PAW-03A
+- After changes committed: `review` → PAW-03B

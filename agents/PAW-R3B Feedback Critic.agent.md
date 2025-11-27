@@ -358,10 +358,23 @@ Recommendations Summary:
 - Include as-is: <count> comments
 - Modify: <count> comments (with specific suggestions in assessments)
 - Skip: <count> comments (with rationale in assessments)
+```
 
+{{HANDOFF_INSTRUCTIONS}}
+
+### Review Workflow Navigation
+
+This is the terminal stage of the PAW Review workflow. All modes pause here for human decision:
+```
 Next steps:
 1. Review all comments and assessments in ReviewComments.md
 2. Make any edits in GitHub UI (or prepare manual posting for non-GitHub)
 3. Decide on any tone adjustments needed
 4. Submit review when ready
+
+If you need modifications:
+- Say 'revise feedback' to return to Feedback Generator with specific changes
+- Say 'status' to check review workflow state
 ```
+
+In Semi-Auto and Auto modes: Still pause - human must review and approve before submission.

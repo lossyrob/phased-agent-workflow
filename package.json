@@ -157,6 +157,56 @@
             "work_id"
           ]
         }
+      },
+      {
+        "name": "paw_generate_prompt",
+        "displayName": "Generate PAW Prompt",
+        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. The agent must specify: 1) template_key - the base template to use (e.g., '03A-implement', '03C-pr-review'), and 2) filename - the exact output filename (e.g., '03A-implement-phase3.prompt.md'). Valid template keys: 01A-spec, 02A-code-research, 02B-impl-plan, 02C-planning-pr-review, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 04B-docs-pr-review, 04C-docs-review-pr-review, 05-pr, 05B-final-pr-review, 05C-final-review-pr-review, 0X-status. The agent determines the appropriate template and filename based on user intent.",
+        "toolReferenceName": "pawPromptGenerator",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "work_id": {
+              "type": "string",
+              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
+            },
+            "template_key": {
+              "type": "string",
+              "description": "The template key identifying which prompt template to use. This is the base filename without .prompt.md extension.",
+              "enum": [
+                "01A-spec",
+                "02A-code-research",
+                "02B-impl-plan",
+                "02C-planning-pr-review",
+                "03A-implement",
+                "03B-review",
+                "03C-pr-review",
+                "03D-review-pr-review",
+                "04-docs",
+                "04B-docs-pr-review",
+                "04C-docs-review-pr-review",
+                "05-pr",
+                "05B-final-pr-review",
+                "05C-final-review-pr-review",
+                "0X-status"
+              ]
+            },
+            "filename": {
+              "type": "string",
+              "description": "The exact filename to use for the generated prompt file. Must end with .prompt.md extension. For standard prompts use template filename (e.g., '03A-implement.prompt.md'). For phase-specific append context (e.g., '03A-implement-phase3.prompt.md')."
+            },
+            "additional_content": {
+              "type": "string",
+              "description": "Optional instructions to append to the prompt (e.g., 'Focus on Phase 3', 'add rate limiting')."
+            }
+          },
+          "required": [
+            "work_id",
+            "template_key",
+            "filename"
+          ]
+        }
       }
     ]
   },

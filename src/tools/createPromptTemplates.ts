@@ -71,7 +71,7 @@ interface CreatePromptTemplatesResult {
 /**
  * Template definition for a single prompt file.
  */
-interface PromptTemplate {
+export interface PromptTemplate {
   /** The exact filename to use (e.g., "01A-spec.prompt.md") */
   filename: string;
   
@@ -94,7 +94,7 @@ interface PromptTemplate {
  * - instruction: The action the agent should perform
  * - stage: The workflow stage this template belongs to
  */
-const PROMPT_TEMPLATES: PromptTemplate[] = [
+export const PROMPT_TEMPLATES: PromptTemplate[] = [
   {
     filename: "01A-spec.prompt.md",
     mode: "PAW-01A Specification",
@@ -112,6 +112,12 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     mode: "PAW-02B Impl Planner",
     instruction: "Create implementation plan for this work item.",
     stage: WorkflowStage.Plan,
+  },
+  {
+    filename: "02C-planning-pr-review.prompt.md",
+    mode: "PAW-02B Impl Planner",
+    instruction: "Address PR review comments on the planning PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
   },
   {
     filename: "03A-implement.prompt.md",
@@ -144,10 +150,34 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
     stage: WorkflowStage.Documentation,
   },
   {
+    filename: "04B-docs-pr-review.prompt.md",
+    mode: "PAW-04 Documenter",
+    instruction: "Address PR review comments on the documentation PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
+    filename: "04C-docs-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify documentation PR comment responses for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
     filename: "05-pr.prompt.md",
     mode: "PAW-05 PR",
     instruction: "Create final PR for this work item.",
     stage: WorkflowStage.FinalPR,
+  },
+  {
+    filename: "05B-final-pr-review.prompt.md",
+    mode: "PAW-05 PR",
+    instruction: "Address PR review comments on the final PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
+    filename: "05C-final-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify final PR comment responses for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
   },
   {
     filename: "0X-status.prompt.md",
@@ -240,7 +270,7 @@ function determineStagesFromMode(
  * @param featureSlug - The Work ID (feature slug) to pass as a parameter
  * @returns The complete file content with frontmatter and body
  */
-function generatePromptTemplate(
+export function generatePromptTemplate(
   mode: string,
   instruction: string,
   featureSlug: string

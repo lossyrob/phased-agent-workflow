@@ -5,6 +5,26 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { installAgents, needsInstallation, isDevelopmentVersion, removeInstalledAgents } from '../../agents/installer';
 
+function mockWorkspaceConfiguration(promptsDir: string): vscode.WorkspaceConfiguration {
+  return {
+    get: () => promptsDir,
+    has: () => true,
+    inspect: () => undefined,
+    update: async () => undefined,
+  } as unknown as vscode.WorkspaceConfiguration;
+}
+
+function overridePromptDirectoryConfig(promptsDir: string): () => void {
+  const originalConfig = vscode.workspace.getConfiguration;
+  (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+    () => mockWorkspaceConfiguration(promptsDir);
+
+  return () => {
+    (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+      originalConfig;
+  };
+}
+
 suite('Agent Installation', () => {
   let testDir: string;
   let mockContext: vscode.ExtensionContext;
@@ -117,9 +137,8 @@ suite('Agent Installation', () => {
     
     // Install agents first
     const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+      () => mockWorkspaceConfiguration(promptsDir);
     
     try {
       const installResult = await installAgents(mockContext);
@@ -134,7 +153,7 @@ suite('Agent Installation', () => {
       
       assert.strictEqual(result, false, 'Should not require installation when up to date');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration = originalConfig;
     }
   });
 
@@ -143,9 +162,8 @@ suite('Agent Installation', () => {
     
     // Configure custom prompts directory
     const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+      () => mockWorkspaceConfiguration(promptsDir);
     
     try {
       const result = await installAgents(mockContext);
@@ -154,7 +172,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(result.errors.length, 0, 'Should not have errors');
       assert.ok(result.filesInstalled.length > 0, 'Should install files');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration = originalConfig;
     }
   });
 
@@ -163,9 +181,8 @@ suite('Agent Installation', () => {
     fs.mkdirSync(promptsDir, { recursive: true });
     
     const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+      () => mockWorkspaceConfiguration(promptsDir);
     
     try {
       const result = await installAgents(mockContext);
@@ -182,7 +199,7 @@ suite('Agent Installation', () => {
         assert.ok(content.length > 0, `File ${filename} should have content`);
       }
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration = originalConfig;
     }
   });
 
@@ -191,9 +208,8 @@ suite('Agent Installation', () => {
     fs.mkdirSync(promptsDir, { recursive: true });
     
     const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration =
+      () => mockWorkspaceConfiguration(promptsDir);
     
     try {
       const result = await installAgents(mockContext);
@@ -206,7 +222,7 @@ suite('Agent Installation', () => {
       assert.ok(state.installedAt, 'Should have installation timestamp');
       assert.strictEqual(state.success, true, 'Should mark as successful');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      (vscode.workspace as unknown as { getConfiguration: typeof vscode.workspace.getConfiguration }).getConfiguration = originalConfig;
     }
   });
 
@@ -214,10 +230,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // First installation
@@ -235,7 +248,7 @@ suite('Agent Installation', () => {
         assert.ok(fs.existsSync(filePath), `File ${filename} should still exist`);
       }
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -246,10 +259,7 @@ suite('Agent Installation', () => {
     // Make prompts directory read-only to cause write errors
     fs.chmodSync(promptsDir, 0o444);
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       const result = await installAgents(mockContext);
@@ -265,7 +275,7 @@ suite('Agent Installation', () => {
     } finally {
       // Restore permissions for cleanup
       fs.chmodSync(promptsDir, 0o755);
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -282,10 +292,7 @@ suite('Agent Installation', () => {
       }
     };
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       const result = await installAgents(badContext);
@@ -297,7 +304,7 @@ suite('Agent Installation', () => {
         'Should report missing agents directory'
       );
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -306,10 +313,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // Install with version 0.0.1
@@ -336,7 +340,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(state.previousVersion, '0.0.1', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -344,10 +348,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // Install with version 0.0.2
@@ -370,7 +371,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(state.previousVersion, '0.0.2', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -378,10 +379,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // Install with version 0.0.1
@@ -408,7 +406,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(newState.version, '0.0.2', 'Should update version');
       assert.ok(newState.filesDeleted !== undefined, 'Should track cleanup even with missing files');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -416,10 +414,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // Install with version 0.0.1
@@ -454,7 +449,7 @@ suite('Agent Installation', () => {
         'Should detect version downgrade'
       );
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -462,10 +457,7 @@ suite('Agent Installation', () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
     
-    const originalConfig = vscode.workspace.getConfiguration;
-    (vscode.workspace as any).getConfiguration = () => ({
-      get: () => promptsDir
-    });
+    const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
       // Install with version 0.0.1
@@ -492,7 +484,7 @@ suite('Agent Installation', () => {
       const state = mockContext.globalState.get<any>('paw.agentInstallation');
       assert.strictEqual(state.filesDeleted, installedFiles.length, 'Should have deleted all previous files');
     } finally {
-      (vscode.workspace as any).getConfiguration = originalConfig;
+      restoreConfig();
     }
   });
 
@@ -501,10 +493,7 @@ suite('Agent Installation', () => {
       const promptsDir = path.join(testDir, 'prompts-cleanup-success');
       fs.mkdirSync(promptsDir, { recursive: true });
 
-      const originalConfig = vscode.workspace.getConfiguration;
-      (vscode.workspace as any).getConfiguration = () => ({
-        get: () => promptsDir
-      });
+      const restoreConfig = overridePromptDirectoryConfig(promptsDir);
 
       try {
         const installResult = await installAgents(mockContext);
@@ -534,7 +523,7 @@ suite('Agent Installation', () => {
         const state = mockContext.globalState.get<any>('paw.agentInstallation');
         assert.strictEqual(state, undefined, 'Installation state should be cleared after cleanup');
       } finally {
-        (vscode.workspace as any).getConfiguration = originalConfig;
+        restoreConfig();
       }
     });
 
@@ -542,10 +531,7 @@ suite('Agent Installation', () => {
       const promptsDir = path.join(testDir, 'prompts-cleanup-partial');
       fs.mkdirSync(promptsDir, { recursive: true });
 
-      const originalConfig = vscode.workspace.getConfiguration;
-      (vscode.workspace as any).getConfiguration = () => ({
-        get: () => promptsDir
-      });
+      const restoreConfig = overridePromptDirectoryConfig(promptsDir);
 
       // Track whether we simulated a permission error
       let permissionErrorHit = false;
@@ -583,7 +569,7 @@ suite('Agent Installation', () => {
         assert.ok(fs.existsSync(otherFile), 'Non-PAW files should not be deleted');
       } finally {
         nativeFs.unlinkSync = originalUnlinkSync;
-        (vscode.workspace as any).getConfiguration = originalConfig;
+        restoreConfig();
       }
     });
   });
@@ -593,10 +579,7 @@ suite('Agent Installation', () => {
       const promptsDir = path.join(testDir, 'prompts-dev-dev');
       fs.mkdirSync(promptsDir, { recursive: true });
 
-      const originalConfig = vscode.workspace.getConfiguration;
-      (vscode.workspace as any).getConfiguration = () => ({
-        get: () => promptsDir
-      });
+      const restoreConfig = overridePromptDirectoryConfig(promptsDir);
 
       try {
         mockContext.extension.packageJSON.version = '0.0.1-dev';
@@ -610,7 +593,7 @@ suite('Agent Installation', () => {
 
         assert.strictEqual(result, true, 'Dev builds should always trigger reinstall');
       } finally {
-        (vscode.workspace as any).getConfiguration = originalConfig;
+        restoreConfig();
       }
     });
 
@@ -618,10 +601,7 @@ suite('Agent Installation', () => {
       const promptsDir = path.join(testDir, 'prompts-dev-prod');
       fs.mkdirSync(promptsDir, { recursive: true });
 
-      const originalConfig = vscode.workspace.getConfiguration;
-      (vscode.workspace as any).getConfiguration = () => ({
-        get: () => promptsDir
-      });
+      const restoreConfig = overridePromptDirectoryConfig(promptsDir);
 
       try {
         mockContext.extension.packageJSON.version = '0.0.1-dev';
@@ -636,7 +616,7 @@ suite('Agent Installation', () => {
 
         assert.strictEqual(result, true, 'Switching from dev to prod should reinstall');
       } finally {
-        (vscode.workspace as any).getConfiguration = originalConfig;
+        restoreConfig();
       }
     });
 
@@ -644,10 +624,7 @@ suite('Agent Installation', () => {
       const promptsDir = path.join(testDir, 'prompts-prod-dev');
       fs.mkdirSync(promptsDir, { recursive: true });
 
-      const originalConfig = vscode.workspace.getConfiguration;
-      (vscode.workspace as any).getConfiguration = () => ({
-        get: () => promptsDir
-      });
+      const restoreConfig = overridePromptDirectoryConfig(promptsDir);
 
       try {
         mockContext.extension.packageJSON.version = '0.2.0';
@@ -662,7 +639,7 @@ suite('Agent Installation', () => {
 
         assert.strictEqual(result, true, 'Switching from prod to dev should reinstall');
       } finally {
-        (vscode.workspace as any).getConfiguration = originalConfig;
+        restoreConfig();
       }
     });
 

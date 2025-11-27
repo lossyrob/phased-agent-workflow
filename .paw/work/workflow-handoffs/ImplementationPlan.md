@@ -84,6 +84,7 @@ The approach proceeds in logical phases: first establish handoff infrastructure 
 3. **Phase 3: Dynamic Prompt Generation** - Implement `paw_generate_prompt` tool with phase-specific context injection
 4. **Phase 4: Agent Instruction Updates** - Update all agents to present next-step options and invoke handoff tool based on mode
 5. **Phase 5: Testing and Validation** - Comprehensive unit tests, integration tests, manual workflow testing
+6. **Phase 6: On-Demand Prompt Generation** - Remove auto-creation of all prompt files during workflow initialization; prompts created only when requested
 
 ---
 
@@ -375,10 +376,10 @@ interface PromptGenerationParams {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Unit tests pass for `promptGenerationTool.ts`: `npm test`
-- [ ] Generated prompt files have valid frontmatter and Work ID
-- [ ] Filename generation follows PAW naming conventions
-- [ ] TypeScript compilation succeeds: `npm run compile`
+- [x] Unit tests pass for `promptGenerationTool.ts`: `npm test`
+- [x] Generated prompt files have valid frontmatter and Work ID
+- [x] Filename generation follows PAW naming conventions
+- [x] TypeScript compilation succeeds: `npm run compile`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
@@ -387,6 +388,45 @@ interface PromptGenerationParams {
 - [ ] User can edit generated prompt file and execute it successfully
 - [ ] Agent includes phase number or other context in `additional_content` when user specifies
 - [ ] File path provided to user after generation
+
+### Phase 3 Complete
+
+**Implementation Summary:**
+- Added `src/tools/promptGenerationTool.ts` to encapsulate dynamic prompt creation, reuse the existing template definitions, and expose helper exports for agent use and testing. The tool validates Work IDs, derives filenames with slugged suffixes (e.g., `03A-implement-phase3.prompt.md`), appends optional context to the prompt body, and selects the correct template variant (including PR-review prompts) based on the inline hint.
+- Registered the new tool in `extension.ts` and `package.json`, and exported the template/filename helpers from `src/tools/createPromptTemplates.ts` so both tools share a single source of truth.
+- Added `src/test/suite/promptGenerationTool.test.ts` to cover validation, filename generation, and template selection; updated `src/test/suite/installer.test.ts` with a reusable workspace-configuration override helper so TypeScript compilation succeeds after the new tests pulled that file back into the build.
+
+**Automated Verification:**
+- `npm run compile`
+- `npm test`
+- `npm run lint` *(fails due to existing `@typescript-eslint/no-unused-vars`, `no-explicit-any`, and `no-var-requires` findings in `src/test/suite/createPromptTemplates.test.ts`, `customInstructions.test.ts`, and `installer.test.ts`; no new lint errors introduced in this phase)*
+
+**Notes for Next Phase:**
+- Manual verification of dynamic prompt workflows remains outstanding and should be exercised once agents are wired to call the new tool.
+- With lint still blocked by legacy issues, rerun `npm run lint` after those suites are cleaned up to close the final automated checkbox.
+
+### Addressed Review Comments:
+
+**Review Comment from https://github.com/lossyrob/phased-agent-workflow/pull/117#discussion_r2561060884:**
+> This should not be decided in a procedural way within the tool. Refactor the tool to include a parameter that is clear for the agent to use that will determine this and pass the information in.
+
+**Review Comment from https://github.com/lossyrob/phased-agent-workflow/pull/117#discussion_r2561065684:**
+> The name of the prompt file should be determined by the agent. The agent should have enough information about the stages and agents to determine exactly what agent and what prompt should be given. Align this better with the architecture philosophy of - the agent does the work of determining what to do, the procedural tools just do the work.
+
+**Changes Made:**
+1. **Removed `chooseTemplate()` procedural logic** - The agent now directly specifies which template to use via the new `template_key` parameter (e.g., '03A-implement', '03C-pr-review')
+2. **Agent specifies filename directly** - Removed `buildDynamicPromptFilename()` and `buildSlug()` functions. Agent provides the exact filename via new `filename` parameter
+3. **Simplified tool interface** - Parameters changed from `agent_name` to `template_key` + `filename`. The tool now only validates and writes files
+4. **Created TEMPLATE_KEY_MAP** - Exposes valid template keys for agent reference and validation
+5. **Updated package.json schema** - New parameters with enum for valid template keys
+6. **Rewrote tests** - Tests now verify the parameter-based design rather than procedural logic
+
+**Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 87 unit tests pass: `npm test`
+- ✅ No lint errors in modified files
+
+**Commit:** 4a4cf7b "refactor: make paw_generate_prompt agent-driven"
 
 ---
 
@@ -622,6 +662,64 @@ Implement comprehensive unit tests, integration tests, and perform manual end-to
 - [ ] Prerequisite validation: Attempt `implement` without plan, verify error message
 - [ ] Multi-work-item: Create 3 workflows, verify Status Agent lists all, sorted by recency
 - [ ] Edge cases: Test all scenarios from manual testing checklist
+
+---
+
+## Phase 6: On-Demand Prompt Generation
+
+### Overview
+Remove the automatic creation of all prompt template files during workflow initialization. Instead, prompts will be generated on-demand only when users request customization via the `paw_generate_prompt` tool or agents need them. This reduces filesystem noise and aligns with the new handoff-based workflow where users navigate stages via commands rather than prompt files.
+
+### Changes Required:
+
+#### 1. Remove Automatic Prompt Template Creation
+**File**: `src/commands/initializeWorkItem.ts`
+**Changes**:
+- Remove the call to `paw_create_prompt_templates` (or equivalent template creation logic) during workflow initialization
+- Keep the `.paw/work/<feature-slug>/prompts/` directory creation for future on-demand prompt generation
+- Update initialization flow to only create WorkflowContext.md and any essential bootstrapping files
+
+**File**: `src/prompts/workflowInitPrompt.ts` (if applicable)
+**Changes**:
+- Remove or comment out instructions that tell agents to generate all prompt files at initialization
+- Update agent prompt to indicate prompts are generated on-demand via `paw_generate_prompt` tool
+
+#### 2. Update Agent Instructions for On-Demand Prompts
+**File**: `agents/PAW-01A Specification.agent.md`
+**Changes**:
+- Remove instructions to call `paw_create_prompt_templates` during initialization
+- Document that users can request prompt file generation via `generate prompt for <stage>` command
+- Clarify that stage transitions use handoff tool by default; prompt files are optional for customization
+
+#### 3. Update Documentation
+**File**: `README.md`
+**Changes**:
+- Update "Workflow Handoffs" section to clarify that prompts are generated on-demand
+- Add examples: "To create a customizable prompt file: say 'generate prompt for implementer Phase 3'"
+- Remove references to pre-generated prompt files in `.paw/work/<slug>/prompts/`
+
+#### 4. Preserve Backward Compatibility
+**File**: `src/tools/createPromptTemplates.ts`
+**Changes**:
+- Keep the `paw_create_prompt_templates` tool available for users who prefer pre-generated prompts
+- Add a note in the tool description that this is optional; default workflow uses on-demand generation
+- Consider adding a user setting `paw.generatePromptsOnInit` (default: false) for users who want the old behavior
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Unit tests pass: `npm test`
+- [ ] TypeScript compilation succeeds: `npm run compile`
+- [ ] Extension activates without errors
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] New workflow initialization: `PAW: New PAW Workflow` does NOT create prompt files in `.paw/work/<slug>/prompts/`
+- [ ] WorkflowContext.md is still created correctly
+- [ ] Users can still generate prompts on-demand: "generate prompt for implementer Phase 3" creates the file
+- [ ] Handoff-based navigation works: "implement Phase 2" triggers handoff without needing prompt file
+- [ ] Backward compatibility: `paw_create_prompt_templates` tool still works when explicitly invoked
+- [ ] Documentation accurately reflects the new on-demand model
 
 ---
 

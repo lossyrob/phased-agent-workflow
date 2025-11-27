@@ -161,7 +161,7 @@
       {
         "name": "paw_generate_prompt",
         "displayName": "Generate PAW Prompt",
-        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. The agent must specify: 1) template_key - the base template to use (e.g., '03A-implement', '03C-pr-review'), and 2) filename - the exact output filename (e.g., '03A-implement-phase3.prompt.md'). Valid template keys: 01A-spec, 02A-code-research, 02B-impl-plan, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 05-pr, 0X-status. The agent determines the appropriate template and filename based on user intent.",
+        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. The agent must specify: 1) template_key - the base template to use (e.g., '03A-implement', '03C-pr-review'), and 2) filename - the exact output filename (e.g., '03A-implement-phase3.prompt.md'). Valid template keys: 01A-spec, 02A-code-research, 02B-impl-plan, 02C-planning-pr-review, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 04B-docs-pr-review, 04C-docs-review-pr-review, 05-pr, 05B-final-pr-review, 05C-final-review-pr-review, 0X-status. The agent determines the appropriate template and filename based on user intent.",
         "toolReferenceName": "pawPromptGenerator",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
@@ -178,12 +178,17 @@
                 "01A-spec",
                 "02A-code-research",
                 "02B-impl-plan",
+                "02C-planning-pr-review",
                 "03A-implement",
                 "03B-review",
                 "03C-pr-review",
                 "03D-review-pr-review",
                 "04-docs",
+                "04B-docs-pr-review",
+                "04C-docs-review-pr-review",
                 "05-pr",
+                "05B-final-pr-review",
+                "05C-final-review-pr-review",
                 "0X-status"
               ]
             },

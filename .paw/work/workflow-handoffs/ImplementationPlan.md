@@ -84,6 +84,7 @@ The approach proceeds in logical phases: first establish handoff infrastructure 
 3. **Phase 3: Dynamic Prompt Generation** - Implement `paw_generate_prompt` tool with phase-specific context injection
 4. **Phase 4: Agent Instruction Updates** - Update all agents to present next-step options and invoke handoff tool based on mode
 5. **Phase 5: Testing and Validation** - Comprehensive unit tests, integration tests, manual workflow testing
+6. **Phase 6: On-Demand Prompt Generation** - Remove auto-creation of all prompt files during workflow initialization; prompts created only when requested
 
 ---
 
@@ -661,6 +662,64 @@ Implement comprehensive unit tests, integration tests, and perform manual end-to
 - [ ] Prerequisite validation: Attempt `implement` without plan, verify error message
 - [ ] Multi-work-item: Create 3 workflows, verify Status Agent lists all, sorted by recency
 - [ ] Edge cases: Test all scenarios from manual testing checklist
+
+---
+
+## Phase 6: On-Demand Prompt Generation
+
+### Overview
+Remove the automatic creation of all prompt template files during workflow initialization. Instead, prompts will be generated on-demand only when users request customization via the `paw_generate_prompt` tool or agents need them. This reduces filesystem noise and aligns with the new handoff-based workflow where users navigate stages via commands rather than prompt files.
+
+### Changes Required:
+
+#### 1. Remove Automatic Prompt Template Creation
+**File**: `src/commands/initializeWorkItem.ts`
+**Changes**:
+- Remove the call to `paw_create_prompt_templates` (or equivalent template creation logic) during workflow initialization
+- Keep the `.paw/work/<feature-slug>/prompts/` directory creation for future on-demand prompt generation
+- Update initialization flow to only create WorkflowContext.md and any essential bootstrapping files
+
+**File**: `src/prompts/workflowInitPrompt.ts` (if applicable)
+**Changes**:
+- Remove or comment out instructions that tell agents to generate all prompt files at initialization
+- Update agent prompt to indicate prompts are generated on-demand via `paw_generate_prompt` tool
+
+#### 2. Update Agent Instructions for On-Demand Prompts
+**File**: `agents/PAW-01A Specification.agent.md`
+**Changes**:
+- Remove instructions to call `paw_create_prompt_templates` during initialization
+- Document that users can request prompt file generation via `generate prompt for <stage>` command
+- Clarify that stage transitions use handoff tool by default; prompt files are optional for customization
+
+#### 3. Update Documentation
+**File**: `README.md`
+**Changes**:
+- Update "Workflow Handoffs" section to clarify that prompts are generated on-demand
+- Add examples: "To create a customizable prompt file: say 'generate prompt for implementer Phase 3'"
+- Remove references to pre-generated prompt files in `.paw/work/<slug>/prompts/`
+
+#### 4. Preserve Backward Compatibility
+**File**: `src/tools/createPromptTemplates.ts`
+**Changes**:
+- Keep the `paw_create_prompt_templates` tool available for users who prefer pre-generated prompts
+- Add a note in the tool description that this is optional; default workflow uses on-demand generation
+- Consider adding a user setting `paw.generatePromptsOnInit` (default: false) for users who want the old behavior
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Unit tests pass: `npm test`
+- [ ] TypeScript compilation succeeds: `npm run compile`
+- [ ] Extension activates without errors
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] New workflow initialization: `PAW: New PAW Workflow` does NOT create prompt files in `.paw/work/<slug>/prompts/`
+- [ ] WorkflowContext.md is still created correctly
+- [ ] Users can still generate prompts on-demand: "generate prompt for implementer Phase 3" creates the file
+- [ ] Handoff-based navigation works: "implement Phase 2" triggers handoff without needing prompt file
+- [ ] Backward compatibility: `paw_create_prompt_templates` tool still works when explicitly invoked
+- [ ] Documentation accurately reflects the new on-demand model
 
 ---
 

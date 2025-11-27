@@ -114,6 +114,12 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
     stage: WorkflowStage.Plan,
   },
   {
+    filename: "02C-planning-pr-review.prompt.md",
+    mode: "PAW-02B Impl Planner",
+    instruction: "Address PR review comments on the planning PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
     filename: "03A-implement.prompt.md",
     mode: "PAW-03A Implementer",
     instruction: "Implement the next phase for this work item.",
@@ -144,10 +150,34 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
     stage: WorkflowStage.Documentation,
   },
   {
+    filename: "04B-docs-pr-review.prompt.md",
+    mode: "PAW-04 Documenter",
+    instruction: "Address PR review comments on the documentation PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
+    filename: "04C-docs-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify documentation PR comment responses for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
     filename: "05-pr.prompt.md",
     mode: "PAW-05 PR",
     instruction: "Create final PR for this work item.",
     stage: WorkflowStage.FinalPR,
+  },
+  {
+    filename: "05B-final-pr-review.prompt.md",
+    mode: "PAW-05 PR",
+    instruction: "Address PR review comments on the final PR for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
+  },
+  {
+    filename: "05C-final-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify final PR comment responses for this work item.",
+    stage: WorkflowStage.PRReviewResponse,
   },
   {
     filename: "0X-status.prompt.md",

@@ -1,5 +1,5 @@
 ---
-description: 'Phased Agent Workflow: Status Updater (keeps Issues/PRs up to date and well-formed)'
+description: 'Check PAW workflow progress, get next-step guidance, or post status updates to Issues/PRs'
 ---
 # Status Updater Agent
 

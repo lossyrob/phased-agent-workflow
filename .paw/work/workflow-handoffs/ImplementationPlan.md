@@ -609,6 +609,42 @@ Phase 5 (Testing and Validation) should verify the handoff behavior end-to-end. 
 - Check that stage-specific handoff sections match the Semi-Auto behavior table in the component
 - Confirm PAW-R agents have appropriate pause points for review workflow
 
+### Addressed PR Review Comments:
+
+**Date**: 2025-12-02
+
+**PR Review Comments Addressed:**
+1. **#2569868767** - Add command-to-agent mapping table to handoff component
+2. **#2569885927** - Remove prerequisite validation from handoff component, let next agent check its own prerequisites
+3. **#2569886459** - Mention prompt file generation option in handoff messages
+4. **#2569888255** - Add Status Agent help guidance in handoff messages
+5. **#2569861784** - Make PAW-01A Specification handoff conditional (spec research vs code research)
+
+**Voice Notes Feedback Addressed:**
+- Command mapping table with friendly short names (`spec`, `review`, `implement`, etc.)
+- "Continue" command behavior - proceed to default next stage
+- Don't specify PR numbers in handoff - just say `review`
+- Conditional handoff logic based on workflow state (spec research generated vs complete)
+- Review strategy-specific behavior in Implementation Review Agent
+- Documenter agent review comment handling
+
+**Changes Made:**
+- `agents/components/handoff-instructions.component.md`: Complete rewrite with command mapping table, continue command, help guidance, prompt file option mention
+- `agents/PAW-01A Specification.agent.md`: Conditional next stage logic
+- `agents/PAW-02B Impl Planner.agent.md`: Local vs prs strategy options
+- `agents/PAW-03A Implementer.agent.md`: Explicit reviewer handoff
+- `agents/PAW-03B Impl Reviewer.agent.md`: Detailed prs vs local strategy handoff
+- `agents/PAW-04 Documenter.agent.md`: Review comment handling handoff
+- `agents/PAW-05 PR.agent.md`: Clarified review command
+- `agents/PAW-R1A Understanding.agent.md`: Conditional baseline research handoff
+
+**Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 87 unit tests pass: `npm test`
+- ✅ Agent linter passes for all agents except PAW-01A (7215 tokens) and PAW-02B (6519 tokens) - token limits to be addressed in follow-up work per user request
+
+**Commit:** ce191e2 "Address PR review comments and voice notes for Phase 4"
+
 ---
 
 ## Phase 5: Testing and Validation

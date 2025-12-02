@@ -304,8 +304,9 @@ For best results, ensure:
 
 ### Final PR Handoff
 
-**Terminal stage**: No further handoffs - workflow ends here.
+**Terminal stage**: No further handoffs after PR is merged - workflow ends here.
 
-If review comments received:
-- `address review comments on PR #[N]` → PAW-03A
-- After changes committed: `review` → PAW-03B
+**If Final PR receives review comments** (prs strategy):
+- Say `review` to address comments → PAW-03A Implementer (with Final PR review context)
+- After changes committed: Implementation Review Agent verifies and pushes
+

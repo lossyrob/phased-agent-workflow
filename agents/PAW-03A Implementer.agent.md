@@ -377,6 +377,7 @@ Before completing review comment responses and handing off to Implementation Rev
 
 **Next stage**: PAW-03B Impl Reviewer
 - Manual: Present options - `review`, `status`
-- Semi-Auto/Auto: Immediate handoff
+- Semi-Auto/Auto: Immediate handoff to reviewer
 
-After addressing review comments: handoff to PAW-03B to verify and push.
+After addressing review comments: handoff to PAW-03B Impl Reviewer to verify and push.
+

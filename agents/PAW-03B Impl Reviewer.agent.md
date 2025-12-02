@@ -387,8 +387,19 @@ For review comment follow-up:
 
 ### Implementation Review Handoff
 
-**After Phase Review (PR Opened)**:
-- All Modes: Pause (wait for human PR review)
-- More phases remain: Present `implement Phase [N+1]`, `status`
-- All phases complete: Present `docs`, `status`
-- Auto Mode (all complete): Immediate handoff to PAW-04 Documenter
+**After Phase Review:**
+
+**prs strategy** (Phase PR opened):
+- All Modes: Pause (wait for human PR review and merge)
+- After PR merged, more phases remain: Present `implement`, `status`
+- After PR merged, all phases complete: Present `docs`, `status`
+- Semi-Auto (more phases): Pause until PR merged, then immediate handoff to PAW-03A Implementer
+- Auto Mode (all complete, PR merged): Immediate handoff to PAW-04 Documenter
+
+**local strategy** (no Phase PRs):
+- Manual: Present `implement` (next phase) or `docs` (all complete), `status`
+- Semi-Auto/Auto (more phases): Immediate handoff to PAW-03A Implementer
+- Semi-Auto/Auto (all complete): Immediate handoff to PAW-04 Documenter
+
+Note: Don't specify phase number—the Implementer determines the current phase automatically.
+

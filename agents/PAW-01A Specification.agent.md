@@ -437,10 +437,21 @@ If research was skipped: include an Assumptions section and Risks section note s
 
 ### Specification Handoff
 
-**Next stage**: PAW-02A Code Researcher
+**Conditional next stage based on workflow state:**
+
+**If spec research prompt was generated** (research questions remain):
+- Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
+- Manual: Present options - `research` (runs spec research), `code` (skip research, go to code research), `status`
+- Semi-Auto: Immediate handoff to Spec Researcher
+- Auto: Immediate handoff to Spec Researcher
+
+**If SpecResearch.md exists or research was skipped** (spec complete):
+- Next stage: PAW-02A Code Researcher
 - Manual: Present options - `code`, `status`, `generate prompt for code research`
-- Semi-Auto: Pause (decision point)
-- Auto: Immediate handoff
+- Semi-Auto: Pause (decision point before Code Research)
+- Auto: Immediate handoff to Code Researcher
+
+In manual mode, always give users the option to skip spec research and proceed directly to code research, even when spec research is the default next stage.
 
 ### Working with Issues and PRs
 

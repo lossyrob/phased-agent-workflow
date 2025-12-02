@@ -544,41 +544,32 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 ### Planning Handoff
 
-**Next stage**: PAW-03A Implementer (Phase 1)
-- All Modes: Pause after planning (human reviews Planning PR first)
-- Present options: `implement Phase 1`, `status`, `generate prompt for implementer Phase 1`
+**Next stage**: PAW-03A Implementer
+- All Modes: Pause after planning (human reviews plan first)
+- **prs strategy**: Human reviews Planning PR, then say `implement` to begin
+- **local strategy**: Review plan inline, then say `implement` to begin or chat to make updates
+- Present options: `implement`, `status`, `generate implementation prompt`
+
+Note: Don't specify phase number—the Implementer determines the current phase automatically.
 
 ## Success Criteria Guidelines
 
-**Always separate success criteria into two categories:**
+**Separate success criteria into:**
 
-1. **Automated Verification** (can be run by execution agents):
-   - Commands that can be run: `make test`, `npm run lint`, etc.
-   - Specific files that should exist
-   - Code compilation/type checking
-   - Automated test suites
-
-2. **Manual Verification** (requires human testing):
-   - UI/UX functionality
-   - Performance under real conditions
-   - Edge cases that are hard to automate
-   - User acceptance criteria
+1. **Automated Verification** (can be run by agents): Commands (`make test`, `npm run lint`), file existence, compilation, test suites
+2. **Manual Verification** (requires human): UI/UX, performance, edge cases, acceptance criteria
 
 **Format example:**
 ```markdown
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Database migration runs successfully: `make migrate`
-- [ ] All unit tests pass: `go test ./...`
-- [ ] No linting errors: `golangci-lint run`
-- [ ] API endpoint returns 200: `curl localhost:8080/api/new-endpoint`
+- [ ] Tests pass: `go test ./...`
+- [ ] No lint errors: `golangci-lint run`
 
 #### Manual Verification:
-- [ ] New feature appears correctly in the UI
-- [ ] Performance is acceptable with 1000+ items
-- [ ] Error messages are user-friendly
-- [ ] Feature works correctly on mobile devices
+- [ ] Feature appears correctly in UI
+- [ ] Performance acceptable with 1000+ items
 ```
 
 ## Common Patterns

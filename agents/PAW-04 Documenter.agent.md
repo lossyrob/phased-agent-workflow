@@ -514,8 +514,16 @@ Before pushing:
 
 ### Documentation Handoff
 
-**Next stage**: PAW-05 PR (Final PR)
+**prs strategy** (Docs PR opened):
 - All Modes: Pause after Docs PR (wait for human review)
-- Present options: `pr`, `final pr`, `status`
-- Auto Mode: Handoff to PAW-05 after Docs PR merged
+- After PR review comments: Say `review` to address comments (handoff to self with review context)
+- After PR merged: Present `pr`, `final pr`, `status`
+- Auto Mode: Handoff to PAW-05 PR after Docs PR merged
+
+**local strategy** (no Docs PR):
+- Manual: Present `pr`, `final pr`, `status`
+- Semi-Auto/Auto: Immediate handoff to PAW-05 PR
+
+**If addressing Docs PR review comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
+
 

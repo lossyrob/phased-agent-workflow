@@ -589,17 +589,23 @@ Artifact location: .paw/reviews/<identifier>/
 
 ### Review Workflow Navigation
 
-After Understanding stage completion, present next-step options:
-```
-Next options:
-- Say 'impact' or 'impact analysis' to analyze change impacts
-- Say 'status' to check review workflow state
-```
+**Conditional next stage based on workflow state:**
 
-In Semi-Auto mode: Pause here (decision point before evaluation).
+**If baseline research prompt was generated** (research questions remain, no CodeResearch.md):
+- Next stage: PAW-R1B Baseline Researcher (which returns to Understanding after research)
+- Manual: Present options - `baseline` (runs baseline research), `impact` (skip research, go to impact), `status`
+- Semi-Auto: Immediate handoff to Baseline Researcher with prompt path: `.paw/reviews/<identifier>/prompts/01B-code-research.prompt.md`
+- Auto: Immediate handoff to Baseline Researcher
 
-In Auto mode: Immediately invoke handoff to PAW-R2A Impact Analyzer.
+**If CodeResearch.md exists** (baseline research complete):
+- Next stage: PAW-R2A Impact Analyzer
+- Manual: Present options - `impact`, `impact analysis`, `status`
+- Semi-Auto: Pause (decision point before Impact Analysis)
+- Auto: Immediate handoff to Impact Analyzer
+
+In manual mode, always give users the option to skip baseline research and proceed directly to impact analysis, even when baseline research is the default next stage.
 
 ---
 
 **Operate with rigor**: Evidence first, baseline context second, derived specification last. Never speculate—always cite sources.
+

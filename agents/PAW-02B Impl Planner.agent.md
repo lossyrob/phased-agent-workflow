@@ -451,10 +451,10 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
 ### Planning Handoff
 
 **Next stage**: PAW-03A Implementer
-- All Modes: Pause after planning (human reviews plan first)
 - **prs strategy**: Human reviews Planning PR, then say `implement` to begin
 - **local strategy**: Review plan inline, then say `implement` to begin or chat to make updates
 - Present options: `implement`, `status`, `generate implementation prompt`
+- If Auto mode: automatically proceed to PAW-03A Implementer after plan completion
 
 Note: Don't specify phase number—the Implementer determines the current phase automatically.
 

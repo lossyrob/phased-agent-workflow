@@ -75,7 +75,7 @@ When given a Planning PR with review comments:
    - Issues, research docs, related plans, data files
    - All files identified by research
    - Read completely before proceeding to research tasks
-   - When reading an issue or work item, always fetch comments as well
+   - ALWAYS fully read an issue or work item when available, including all comments. Use MCP tools to fetch complete issue data.
 
 2. **Analyze and verify**:
    - Cross-reference requirements with actual code
@@ -101,7 +101,7 @@ When given a Planning PR with review comments:
 
 ### Step 2: Research & Discovery
 
-After getting initial clarifications:
+If there were blocking questions, after getting initial clarifications:
 
 1. **If the user corrects any misunderstanding**:
    - DO NOT just accept the correction
@@ -139,26 +139,7 @@ After getting initial clarifications:
    Which approach aligns best with your vision?
    ```
 
-### Step 3: Plan Structure Development
-
-Once aligned on approach:
-
-1. **Create initial plan outline**:
-   ```
-   Here's my proposed plan structure:
-
-   ## Overview
-   [1-2 sentence summary]
-
-   ## Implementation Phases:
-   1. [Phase name] - [what it accomplishes]
-   2. [Phase name] - [what it accomplishes]
-   3. [Phase name] - [what it accomplishes]
-
-   Does this phasing make sense? Should I adjust the order or granularity?
-   ```
-
-2. **Get feedback on structure** before writing details
+   Only do this step if there are significant design choices to make. If not, proceed directly to plan writing.
 
 ### Step 4: Detailed Plan Writing
 
@@ -327,11 +308,12 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Ask "why" and "what about"
    - Don't assume - verify with code
 
-2. **Be Interactive**:
+2. **Be Interactive** (if not in Auto mode):
    - Don't write the full plan in one shot
    - Get buy-in at each major step
    - Allow course corrections
    - Work collaboratively
+   - If in Auto mode - do not be interactive, proceed through steps autonomously unless there are unresolvable blockers.
 
 3. **Be Thorough**:
    - Read all context files COMPLETELY before planning

@@ -220,10 +220,10 @@ export async function collectReviewStrategy(
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
- * 1. Target branch name (required) - basic validation ensures valid git branch characters
- * 2. Workflow mode (required) - determines which stages are included
- * 3. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
- * 4. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 1. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 2. Target branch name (required) - basic validation ensures valid git branch characters
+ * 3. Workflow mode (required) - determines which stages are included
+ * 4. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to Work ID, fetching issue title).
@@ -234,6 +234,30 @@ export async function collectReviewStrategy(
 export async function collectUserInputs(
   outputChannel: vscode.OutputChannel
 ): Promise<WorkItemInputs | undefined> {
+  // Collect issue URL first (optional)
+  // This enables future phases to customize branch input prompt based on issue URL presence
+  const issueUrl = await vscode.window.showInputBox({
+    prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
+    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
+    validateInput: (value: string) => {
+      if (!value || value.trim().length === 0) {
+        return undefined;
+      }
+
+      if (!isValidIssueUrl(value)) {
+        return 'Invalid issue URL format. Expected GitHub issue or Azure DevOps work item URL.';
+      }
+
+      return undefined;
+    }
+  });
+
+  if (issueUrl === undefined) {
+    outputChannel.appendLine('[INFO] Issue URL input cancelled');
+    return undefined;
+  }
+
+  // Collect target branch name (required)
   const targetBranch = await vscode.window.showInputBox({
     prompt: 'Enter target branch name (e.g., feature/my-feature)',
     placeHolder: 'feature/my-feature',
@@ -264,27 +288,6 @@ export async function collectUserInputs(
   // Collect review strategy (auto-selected for minimal mode)
   const reviewStrategy = await collectReviewStrategy(outputChannel, workflowMode.mode);
   if (!reviewStrategy) {
-    return undefined;
-  }
-
-  const issueUrl = await vscode.window.showInputBox({
-    prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
-    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
-    validateInput: (value: string) => {
-      if (!value || value.trim().length === 0) {
-        return undefined;
-      }
-
-      if (!isValidIssueUrl(value)) {
-        return 'Invalid issue URL format. Expected GitHub issue or Azure DevOps work item URL.';
-      }
-
-      return undefined;
-    }
-  });
-
-  if (issueUrl === undefined) {
-    outputChannel.appendLine('[INFO] Issue URL input cancelled');
     return undefined;
   }
 

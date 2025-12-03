@@ -75,11 +75,18 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 ```
 
 Rules for handoff messages:
-1. **Always present options** - Even in auto/semi-auto mode, show what's happening
-2. **Use short commands** - Match the Command Mapping table above
-3. **Include descriptions** - Brief explanation of what each command does
-4. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
-5. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+1. **Always re-check the handoff mode**: Understand whether you're in manual, semi-auto, or auto mode
+
+Rules for handoff messages **when pausing**:
+2. **Always present options**
+3. **Use short commands** - Match the Command Mapping table above
+4. **Include descriptions** - Brief explanation of what each command does
+5. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
+6. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+
+Rules when auto-proceeding:
+1. **Always indicate what step you are handing off to**
+2. **Always call `paw_call_agent` as the last step**
 
 Example handoff message after completing implementation:
 ```

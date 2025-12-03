@@ -227,8 +227,6 @@ The inline instruction is passed directly to the target agent alongside the Work
 
 ### Dynamic Prompt Generation
 
-Prompt files are generated on-demand rather than auto-created during initialization. This reduces filesystem noise while maintaining flexibility when you need customization.
-
 To generate a prompt file for editing before execution:
 ```
 generate prompt for implementer Phase 3

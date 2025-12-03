@@ -20,34 +20,6 @@ I'll create comprehensive documentation for the completed feature. Please provid
 4. Any project-specific documentation guidelines
 ```
 
-### Workflow Mode and Review Strategy Handling
-
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your documentation approach and branching behavior as follows:
-
-**Workflow Mode: full**
-- Standard comprehensive documentation workflow
-- Create detailed Docs.md with all sections
-- Review Strategy determines branching and PR:
-  - **prs**: Create docs branch `<target>_docs`, commit there, open Docs PR to target branch
-  - **local**: Work on target branch, commit there, no Docs PR
-
-**Workflow Mode: minimal**
-- Documentation stage typically skipped in minimal mode
-- If invoked anyway (user requests docs):
-  - Create streamlined Docs.md focusing on essential information only
-  - Review Strategy (enforced to local in minimal mode):
-    - **local**: Work on target branch, commit there, no Docs PR
-  - Minimal mode should never create Docs PR
-- Otherwise, exit gracefully with message: "Documentation stage is skipped in minimal workflow mode"
-
-**Workflow Mode: custom**
-- Check Custom Workflow Instructions to determine if docs stage is included
-- If instructions say "skip docs" or similar:
-  - Exit gracefully: "Documentation skipped per custom workflow instructions"
-- If docs included, adapt depth based on instructions:
-  - Look for keywords: "comprehensive", "lightweight", "essential only"
-- Review Strategy determines branching per instructions
-
 **Branching Logic by Review Strategy**
 
 **For prs strategy (full and custom modes only):**

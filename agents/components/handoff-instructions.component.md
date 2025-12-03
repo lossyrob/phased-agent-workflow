@@ -54,3 +54,6 @@ Always mention the prompt file option in handoff messages: "Say `generate prompt
 ### Getting Help
 
 Users can always ask the Status Agent for help navigating the workflow. Include in handoff messages: "Say `status` or `help` for workflow guidance."
+
+**IMPORTANT**: Always follow handoff instructions.
+**QUALITY CHECK**: Have you provided the user with a proper handoff message if applicable?

@@ -234,8 +234,6 @@ To generate a prompt file for editing before execution:
 generate prompt for implementer Phase 3
 ```
 
-Or use the `paw_create_prompt_templates` tool to generate all prompt files at once if you prefer the traditional approach with pre-generated files.
-
 For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
 
 ## Workflow

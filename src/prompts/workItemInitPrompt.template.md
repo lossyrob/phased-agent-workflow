@@ -89,8 +89,6 @@ Additional Inputs: none
 - If Workflow Mode is 'minimal', verify Review Strategy is 'local' (required constraint)
 - If mismatch detected, stop and report error to user
 
-**Note:** Prompt templates are no longer auto-generated during initialization. Users can generate prompt files on-demand using the `paw_generate_prompt` tool when they need customization. Stage transitions use the `paw_call_agent` handoff tool by default.
-
 ### 6. Create and Checkout Git Branch
 
 Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflicts (existing branch names) by prompting the user for resolution.

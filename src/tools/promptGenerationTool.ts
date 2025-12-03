@@ -10,19 +10,133 @@
  * procedural operation of writing the file. The tool validates inputs but doesn't
  * make choices about template selection or filename derivation.
  *
- * The tool reuses template definitions from createPromptTemplates.ts to maintain
- * consistency with the standard workflow initialization process.
- *
  * @module promptGenerationTool
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import {
-  PROMPT_TEMPLATES,
-  generatePromptTemplate,
-} from './createPromptTemplates';
+
+/**
+ * Template definition for a single prompt file.
+ */
+interface PromptTemplate {
+  /** The exact filename to use (e.g., "01A-spec.prompt.md") */
+  filename: string;
+  
+  /** The agent to invoke (e.g., "PAW-01A Specification") */
+  mode: string;
+  
+  /** The instruction for the agent (e.g., "Create specification for this work item.") */
+  instruction: string;
+}
+
+/**
+ * Template definitions for all PAW prompt files.
+ * 
+ * Each template includes:
+ * - filename: The exact filename to use
+ * - mode: The agent to invoke (corresponds to agents/*.agent.md)
+ * - instruction: The action the agent should perform
+ */
+const PROMPT_TEMPLATES: PromptTemplate[] = [
+  {
+    filename: "01A-spec.prompt.md",
+    mode: "PAW-01A Specification",
+    instruction: "Create specification for this work item.",
+  },
+  {
+    filename: "02A-code-research.prompt.md",
+    mode: "PAW-02A Code Researcher",
+    instruction: "Research the codebase for this work item.",
+  },
+  {
+    filename: "02B-impl-plan.prompt.md",
+    mode: "PAW-02B Impl Planner",
+    instruction: "Create implementation plan for this work item.",
+  },
+  {
+    filename: "02C-planning-pr-review.prompt.md",
+    mode: "PAW-02B Impl Planner",
+    instruction: "Address PR review comments on the planning PR for this work item.",
+  },
+  {
+    filename: "03A-implement.prompt.md",
+    mode: "PAW-03A Implementer",
+    instruction: "Implement the next phase for this work item.",
+  },
+  {
+    filename: "03B-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Review the implementation for this work item.",
+  },
+  {
+    filename: "03C-pr-review.prompt.md",
+    mode: "PAW-03A Implementer",
+    instruction: "Address PR review comments for this work item.",
+  },
+  {
+    filename: "03D-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify PR comment responses for this work item.",
+  },
+  {
+    filename: "04-docs.prompt.md",
+    mode: "PAW-04 Documenter",
+    instruction: "Generate documentation for this work item.",
+  },
+  {
+    filename: "04B-docs-pr-review.prompt.md",
+    mode: "PAW-04 Documenter",
+    instruction: "Address PR review comments on the documentation PR for this work item.",
+  },
+  {
+    filename: "04C-docs-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify documentation PR comment responses for this work item.",
+  },
+  {
+    filename: "05-pr.prompt.md",
+    mode: "PAW-05 PR",
+    instruction: "Create final PR for this work item.",
+  },
+  {
+    filename: "05B-final-pr-review.prompt.md",
+    mode: "PAW-05 PR",
+    instruction: "Address PR review comments on the final PR for this work item.",
+  },
+  {
+    filename: "05C-final-review-pr-review.prompt.md",
+    mode: "PAW-03B Impl Reviewer",
+    instruction: "Verify final PR comment responses for this work item.",
+  },
+  {
+    filename: "0X-status.prompt.md",
+    mode: "PAW-X Status Update",
+    instruction: "Update status for this work item.",
+  },
+];
+
+/**
+ * Generate content for a single prompt template file.
+ * 
+ * Creates a markdown file with frontmatter specifying the agent and a body
+ * that provides the Work ID (feature slug) parameter for the agent to use with paw_get_context.
+ * Agents will call paw_get_context with this Work ID to retrieve workspace context,
+ * custom instructions, and workflow metadata.
+ * 
+ * @param mode - The agent to invoke (e.g., "PAW-01A Specification")
+ * @param instruction - The instruction for the agent (e.g., "Create specification for this work item.")
+ * @param featureSlug - The Work ID (feature slug) to pass as a parameter
+ * @returns The complete file content with frontmatter and body
+ */
+function generatePromptTemplate(
+  mode: string,
+  instruction: string,
+  featureSlug: string
+): string {
+  return `---\nagent: ${mode}\n---\n\n${instruction}\n\nWork ID: ${featureSlug}\n`;
+}
 
 /** Pattern for valid Work ID format: lowercase letters, numbers, and hyphens only */
 const WORK_ID_PATTERN = /^[a-z0-9-]+$/;

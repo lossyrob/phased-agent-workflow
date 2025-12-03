@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
-import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
 import { registerContextTool } from './tools/contextTool';
 import { registerHandoffTool } from './tools/handoffTool';
 import { registerPromptGenerationTool } from './tools/promptGenerationTool';
@@ -41,9 +40,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Install or update PAW agents if needed
   await installAgentsIfNeeded(context, outputChannel);
-
-  registerPromptTemplatesTool(context);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_create_prompt_templates');
 
   registerContextTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');

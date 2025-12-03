@@ -93,7 +93,16 @@ Additional Inputs: none
 
 Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflicts (existing branch names) by prompting the user for resolution.
 
-### 7. Open WorkflowContext.md
+### 7. Commit WorkflowContext.md
+
+After creating the workflow structure and checking out the target branch, commit the WorkflowContext.md file:
+
+1. Stage the WorkflowContext.md file: `git add .paw/work/<feature-slug>/WorkflowContext.md`
+2. Create an initial commit with message: `Initialize PAW workflow for <Work Title>`
+
+This ensures the workflow context is tracked in version control from the start.
+
+### 8. Open WorkflowContext.md
 
 Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 

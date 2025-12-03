@@ -87,7 +87,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Required*: All modes
 
 9. **Final PR (05)** — Create final PR merging all work to main branch
-   - *Inputs*: All phases complete, `Docs.md` (full mode only)
+   - *Inputs*: All phases complete, `Docs.md`
    - *Outputs*: Final PR targeting main/base branch
    - *Duration*: 10-15 min
    - *Command*: `pr` or `final pr`

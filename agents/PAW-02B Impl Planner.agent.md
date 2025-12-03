@@ -7,18 +7,6 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 {{PAW_CONTEXT}}
 
-## Initial Response
-
-After calling `paw_get_context` (see PAW Context section above), check invocation parameters:
-
-1. **If parameters provided** (file path, issue reference, or Planning PR):
-   - Read provided files FULLY, begin research
-   - If Planning PR reference provided, switch to PR Review Response mode
-
-2. **If no parameters**, ask for: issue/work item URL or description, research file path, and any related materials (or Planning PR for review response mode).
-
-Then wait for user input.
-
 ### PAW Workflow Mode and Review Strategy Handling
 
 Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt planning and branching:

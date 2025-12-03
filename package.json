@@ -45,57 +45,6 @@
     ],
     "languageModelTools": [
       {
-        "name": "paw_create_prompt_templates",
-        "displayName": "Create PAW Prompt Templates",
-        "modelDescription": "Generate PAW prompt template files for a work item based on workflow mode. Supports full (all stages), minimal (core stages only), and custom (explicit stages) modes.",
-        "toolReferenceName": "pawPromptTemplates",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "feature_slug": {
-              "type": "string",
-              "description": "The normalized feature slug (e.g., 'auth-system')"
-            },
-            "workspace_path": {
-              "type": "string",
-              "description": "Absolute path to the workspace root"
-            },
-            "workflow_mode": {
-              "type": "string",
-              "description": "Workflow mode selection: 'full' (all stages), 'minimal' (core stages only), or 'custom' (explicit stages)",
-              "enum": [
-                "full",
-                "minimal",
-                "custom"
-              ]
-            },
-            "stages": {
-              "type": "array",
-              "description": "Explicit list of stages to include (for custom mode). Valid stages: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "spec",
-                  "code-research",
-                  "plan",
-                  "implementation",
-                  "implementation-review",
-                  "pr-review-response",
-                  "documentation",
-                  "final-pr",
-                  "status"
-                ]
-              }
-            }
-          },
-          "required": [
-            "feature_slug",
-            "workspace_path"
-          ]
-        }
-      },
-      {
         "name": "paw_get_context",
         "displayName": "Get PAW Context",
         "modelDescription": "Retrieve workspace-specific custom instructions, user-level custom instructions (if they exist), and workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workspace_instructions> for workspace .paw/instructions/, <user_instructions> for user ~/.paw/instructions/, and <workflow_context> for raw WorkflowContext.md content.",

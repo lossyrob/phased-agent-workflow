@@ -94,9 +94,9 @@ The **PAW Workflow Extension** automates PAW agent installation and work item in
 - **Automatic agent installation**: PAW agents install to VS Code prompts directory on first activation and appear in GitHub Copilot Chat
 - **New PAW Workflow command**: One command to create complete `.paw/work/<feature-slug>/` directory structure
   - Creates `.paw/work/<feature-slug>/` with WorkflowContext.md
-  - Generates all prompt template files (9 for full mode, 8 for minimal)
   - Creates and checks out git branch
   - Opens WorkflowContext.md for immediate editing
+  - Navigate stages using simple commands; prompt files generated on-demand when customization needed
 - **Custom instructions support**: Tailor the initialization workflow for your project
 
 #### Installation
@@ -129,7 +129,7 @@ You can tailor the initialization workflow for your project:
 2. Add your project-specific guidance using Markdown format:
    - Naming conventions for feature slugs and branches
    - Required metadata that must appear in `WorkflowContext.md`
-   - Additional prompt templates beyond the standard set
+   - Stage transition preferences and handoff mode defaults
    - Integration requirements (e.g., mandatory issue URLs)
 
 When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
@@ -227,13 +227,10 @@ The inline instruction is passed directly to the target agent alongside the Work
 
 ### Dynamic Prompt Generation
 
-Generate prompt files on-demand when you need more control:
-
+To generate a prompt file for editing before execution:
 ```
 generate prompt for implementer Phase 3
 ```
-
-Agents create customizable prompt files only when needed, reducing filesystem noise while maintaining flexibility for complex scenarios.
 
 For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
 

@@ -245,42 +245,45 @@ export async function collectHandoffMode(
   outputChannel: vscode.OutputChannel,
   reviewStrategy: ReviewStrategy
 ): Promise<HandoffMode | undefined> {
+  // Build handoff mode options based on review strategy
+  // Auto mode is only available with local strategy (PRs require human review)
+  const handoffOptions = [
+    {
+      label: "Manual",
+      description: "Full control - you command each stage transition",
+      detail:
+        "Best for learning PAW or when you want to review and decide at each step",
+      value: "manual" as HandoffMode,
+    },
+    {
+      label: "Semi-Auto",
+      description:
+        "Thoughtful automation - automatic at research/review, pause at decisions",
+      detail:
+        "Best for experienced users who want speed with control at key decision points",
+      value: "semi-auto" as HandoffMode,
+    },
+  ];
+
+  // Only include Auto option when using local review strategy
+  if (reviewStrategy === "local") {
+    handoffOptions.push({
+      label: "Auto",
+      description: "Full automation - agents chain through all stages",
+      detail:
+        "Best for routine work where you trust the agents to complete the workflow",
+      value: "auto" as HandoffMode,
+    });
+  }
+
   // Present Quick Pick menu with handoff mode options
-  const modeSelection = await vscode.window.showQuickPick([
-    {
-      label: 'Manual',
-      description: 'Full control - you command each stage transition',
-      detail: 'Best for learning PAW or when you want to review and decide at each step',
-      value: 'manual' as HandoffMode
-    },
-    {
-      label: 'Semi-Auto',
-      description: 'Thoughtful automation - automatic at research/review, pause at decisions',
-      detail: 'Best for experienced users who want speed with control at key decision points',
-      value: 'semi-auto' as HandoffMode
-    },
-    {
-      label: 'Auto',
-      description: 'Full automation - agents chain through all stages (local strategy required)',
-      detail: 'Best for routine work where you trust the agents to complete the workflow',
-      value: 'auto' as HandoffMode
-    }
-  ], {
-    placeHolder: 'Select handoff mode',
-    title: 'Handoff Mode Selection'
+  const modeSelection = await vscode.window.showQuickPick(handoffOptions, {
+    placeHolder: "Select handoff mode",
+    title: "Handoff Mode Selection",
   });
 
   if (!modeSelection) {
-    outputChannel.appendLine('[INFO] Handoff mode selection cancelled');
-    return undefined;
-  }
-
-  // Validate: Auto mode requires local review strategy
-  if (modeSelection.value === 'auto' && reviewStrategy === 'prs') {
-    outputChannel.appendLine('[ERROR] Auto mode requires local review strategy');
-    await vscode.window.showErrorMessage(
-      'Auto mode requires local review strategy. PRs strategy creates intermediate branches that require human review, which conflicts with full automation. Please select Manual or Semi-Auto mode if using PRs strategy.'
-    );
+    outputChannel.appendLine("[INFO] Handoff mode selection cancelled");
     return undefined;
   }
 

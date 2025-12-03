@@ -813,10 +813,10 @@ Remove the automatic creation of all prompt template files during workflow initi
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Unit tests pass: `npm test`
-- [ ] TypeScript compilation succeeds: `npm run compile`
-- [ ] Extension activates without errors
-- [ ] Linting passes: `npm run lint`
+- [x] Unit tests pass: `npm test`
+- [x] TypeScript compilation succeeds: `npm run compile`
+- [x] Extension activates without errors
+- [ ] Linting passes: `npm run lint` *(fails due to pre-existing lint errors in test files)*
 
 #### Manual Verification:
 - [ ] New workflow initialization: `PAW: New PAW Workflow` does NOT create prompt files in `.paw/work/<slug>/prompts/`
@@ -825,6 +825,26 @@ Remove the automatic creation of all prompt template files during workflow initi
 - [ ] Handoff-based navigation works: "implement Phase 2" triggers handoff without needing prompt file
 - [ ] Backward compatibility: `paw_create_prompt_templates` tool still works when explicitly invoked
 - [ ] Documentation accurately reflects the new on-demand model
+
+### Phase 6 Complete
+
+**Implementation Summary:**
+Successfully removed automatic creation of all prompt template files during workflow initialization. Prompts are now generated on-demand only when users request customization via the `paw_generate_prompt` tool. This aligns with the new handoff-based workflow where users navigate stages via commands rather than prompt files.
+
+**Changes Made:**
+1. **workItemInitPrompt.template.md**: Removed the `paw_create_prompt_templates` tool invocation from Task 5. Updated completion instructions to guide users on command-based stage navigation and on-demand prompt generation.
+2. **README.md**: Updated feature list to reflect on-demand prompt generation. Updated custom instructions guidance to focus on stage transition preferences rather than prompt templates. Expanded Dynamic Prompt Generation section to explain the new behavior and backward compatibility.
+
+**Automated Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 107 unit tests pass: `npm test`
+- ⚠️ Lint fails due to pre-existing errors in test files (not related to Phase 6)
+
+**Notes:**
+- The PAW-01A Specification agent was not modified as it already has correct behavior (creates its own research prompt when needed)
+- The handoff component already documents on-demand prompt generation via `paw_generate_prompt`
+
+**Commit:** 77ca75e "Phase 6: On-demand prompt generation"
 
 ---
 

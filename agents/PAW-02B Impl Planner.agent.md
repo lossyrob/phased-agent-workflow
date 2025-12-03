@@ -297,29 +297,11 @@ interface ComponentName {
 
 Ensure you use the appropriate build and test commands/scripts for the repository.
 
-### Review
+### Completion
 
-1. **Present the draft plan location**:
-   ```
-   I've created the initial implementation plan at:
-   `.paw/work/<feature-slug>/ImplementationPlan.md`
+After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
 
-   Please review it and let me know:
-   - Are the phases properly scoped?
-   - Are the success criteria specific enough?
-   - Any technical details that need adjustment?
-   - Missing edge cases or considerations?
-   ```
-
-3. **Iterate based on feedback** - be ready to:
-   - Add missing phases
-   - Adjust technical approach
-   - Clarify success criteria (both automated and manual)
-   - Add/remove scope items
-
-4. **Continue refining** until the user is satisfied
-
-5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (Initial Planning Only - REQUIRED):
+**DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
 
    **Read Review Strategy from WorkflowContext.md** (REQUIRED FIRST):
    - Extract Review Strategy field; if missing, log "defaulting to 'prs'" and use prs strategy

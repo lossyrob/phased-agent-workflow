@@ -360,26 +360,19 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Update todos as you complete research
    - Mark planning tasks complete when done
 
-6. **No Open Questions in Final Plan — BLOCKING REQUIREMENT**:
-   - If you encounter an unresolved question or missing decision at any point, **STOP IMMEDIATELY**
-   - DO NOT continue drafting or refining the plan until you have resolved the uncertainty
-   - Perform additional research yourself before asking for help; only escalate when research cannot answer the question
-   - If the answer requires human clarification, ask right away and WAIT for the response before proceeding
-   - DO NOT use placeholders (`TBD`, `???`, `needs clarification`) in the final plan
-   - The plan must ship with zero open questions and every technical decision explicitly made
-   - Any blockers should be communicated before moving past the relevant section or phase
+6. **No Open Questions in Final Plan**:
+   - **STOP** when you encounter unresolved questions—resolve before continuing
+   - Research first; only ask human when research cannot answer
+   - NO placeholders (`TBD`, `???`)—all decisions must be explicit
+   - Communicate blockers immediately
 
 7. **Idempotent Plan Updates**:
-   - When editing `ImplementationPlan.md`, only modify sections directly related to the current refinement
-   - Preserve completed sections and existing checkboxes unless the work actually changes
-   - Re-running the planning process with the same inputs should produce minimal diffs (no churn in unaffected sections)
-   - Track revisions explicitly in phase notes rather than rewriting large portions of the document
+   - Only modify sections related to current refinement; preserve completed sections
+   - Same inputs should produce minimal diffs
 
-8. **Selective Staging and Committing**:
-   - Use `git add <file1> <file2>` to stage ONLY files modified in this session
-   - NEVER use `git add .` or `git add -A` (stages everything, including unrelated changes)
-   - Before committing, verify staged changes: `git diff --cached`
-   - If unrelated changes appear, unstage them: `git reset <file>`
+8. **Selective Staging**:
+   - Stage only modified files: `git add <file1> <file2>` (NEVER `git add .`)
+   - Verify before commit: `git diff --cached`
    - For PR review responses: Create one commit per review comment (or small group of related comments)
 
 9. **Think Strategically, Not Tactically**:
@@ -417,18 +410,9 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - The goal is unit tests as living documentation that co-evolve with the code, not an afterthought
 
 11. **Separate Implementation from Documentation**:
-   - Do NOT create "Documentation" phases within implementation plans
-   - Documentation is handled by the **Documenter agent (PAW-04)** after all implementation phases are complete and merged
-   - Implementation plans focus on **functional code** that makes the feature work
-   - Success criteria may mention inline code comments or docstrings as part of code quality, but do not include "create Docs.md" or similar documentation artifact generation tasks
-   - If you find yourself planning documentation work, **STOP** and remove that phase - it belongs to the Documenter workflow stage
-   - Reference the PAW workflow sequence: Specification → Planning → **Implementation** → **Documentation** (separate stages)
-
-## Complete means:
-- For files: Read entirely without limit/offset
-- For plan: Zero open questions, all decisions made
-- For phases: All success criteria met and verified
-- For checklist: All items checked off
+   - Do NOT create "Documentation" phases—documentation is handled by PAW-04 Documenter after implementation
+   - Implementation plans focus on functional code only
+   - Inline code comments are acceptable; "create Docs.md" tasks are not
 
 ## Quality Checklist
 

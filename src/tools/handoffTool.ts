@@ -12,7 +12,7 @@ export type AgentName =
   | "PAW-03B Impl Reviewer"
   | "PAW-04 Documenter"
   | "PAW-05 PR"
-  | "PAW-X Status Update";
+  | "PAW-X Status";
 
 /**
  * Parameters for calling a PAW agent.

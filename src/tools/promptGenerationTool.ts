@@ -112,7 +112,7 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
   },
   {
     filename: "0X-status.prompt.md",
-    mode: "PAW-X Status Update",
+    mode: "PAW-X Status",
     instruction: "Update status for this work item.",
   },
 ];

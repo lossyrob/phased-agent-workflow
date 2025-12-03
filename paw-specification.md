@@ -176,7 +176,7 @@ Agents will log an informational message when using default values to indicate t
   PAW-03B Impl Reviewer.agent.md
   PAW-04 Documenter.agent.md
   PAW-05 PR.agent.md
-  PAW-X Status Update.agent.md
+  PAW-X Status.agent.md
 
 /.paw/work/                     # artifacts created by the PAW process
   <work-id>/                    # e.g., add-authentication or bugfix-rate-limit

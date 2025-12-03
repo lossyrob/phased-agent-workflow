@@ -41,6 +41,11 @@
         "command": "paw.initializeWorkItem",
         "title": "New PAW Workflow",
         "category": "PAW"
+      },
+      {
+        "command": "paw.getWorkStatus",
+        "title": "Get Work Status",
+        "category": "PAW"
       }
     ],
     "languageModelTools": [
@@ -89,7 +94,7 @@
                 "PAW-03B Impl Reviewer",
                 "PAW-04 Documenter",
                 "PAW-05 PR",
-                "PAW-X Status Update"
+                "PAW-X Status"
               ]
             },
             "work_id": {

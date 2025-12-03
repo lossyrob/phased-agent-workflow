@@ -14,7 +14,7 @@ When the user requests to move to another review stage, map their command to the
 | `gaps`, `gap analysis` | PAW-R2B Gap Analyzer |
 | `feedback`, `generate feedback` | PAW-R3A Feedback Generator |
 | `critique`, `review feedback` | PAW-R3B Feedback Critic |
-| `status`, `help` | PAW-X Status Update |
+| `status`, `help` | PAW-X Status |
 
 ### Stage Transitions
 

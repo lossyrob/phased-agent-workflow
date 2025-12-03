@@ -26,7 +26,7 @@ When transitioning to another stage:
 | `review`, `reviewer` | PAW-03B Impl Reviewer |
 | `docs`, `documenter`, `documentation` | PAW-04 Documenter |
 | `pr`, `final pr` | PAW-05 PR |
-| `status`, `help` | PAW-X Status Update |
+| `status`, `help` | PAW-X Status |
 
 Context-sensitive: In implementation phases, `review` means Implementation Review. Commands like `implement` don't require phase numbers—the agent determines the current phase.
 

@@ -96,7 +96,7 @@ suite('Handoff Tool', () => {
         'PAW-03B Impl Reviewer',
         'PAW-04 Documenter',
         'PAW-05 PR',
-        'PAW-X Status Update',
+        'PAW-X Status',
       ];
 
       validAgentNames.forEach(agentName => {

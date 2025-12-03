@@ -219,7 +219,7 @@ export async function getWorkStatusCommand(
     }
 
     // Construct query for Status Agent
-    const query = selection.value ? `Work ID: ${selection.value}` : '';
+    const query = selection.value ? `Work ID: ${selection.value}` : 'What is the current work status?';
 
     outputChannel.appendLine(
       `[INFO] Opening Status Agent${selection.value ? ` for ${selection.value}` : ' (auto-detect)'}`

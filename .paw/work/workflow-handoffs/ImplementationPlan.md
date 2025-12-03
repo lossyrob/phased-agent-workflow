@@ -841,7 +841,6 @@ Successfully removed automatic creation of all prompt template files during work
 - ⚠️ Lint fails due to pre-existing errors in test files (not related to Phase 6)
 
 **Notes:**
-- The `paw_create_prompt_templates` tool remains available for users who prefer pre-generated prompts
 - The PAW-01A Specification agent was not modified as it already has correct behavior (creates its own research prompt when needed)
 - The handoff component already documents on-demand prompt generation via `paw_generate_prompt`
 

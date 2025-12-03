@@ -5,8 +5,8 @@ Read `Handoff Mode` from WorkflowContext.md at startup. Values: **manual** (defa
 ### Mode Behavior
 
 - **Manual**: Present next-step options, wait for user command
-- **Semi-Auto**: Auto-chain at routine transitions, pause at decision points
-- **Auto**: Chain immediately (requires local strategy)
+- **Semi-Auto**: Auto-chain at routine transitions (automatically invoke `paw_call_agent` after presenting the handoff message), pause only at decision points requiring user input
+- **Auto**: Chain immediately - always invoke `paw_call_agent` after presenting the handoff message (requires local strategy)
 
 ### Invoking Handoffs
 
@@ -93,5 +93,9 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 
 **`continue` behavior**: Proceeds to the default next stage (what auto mode would do).
 
-**IMPORTANT**: Always present the handoff message with options at the end of your work.
-**QUALITY CHECK**: Does your final message include a "Next Steps" list and the guidance line?
+**IMPORTANT**: Always present the handoff message. Then:
+- **Manual**: STOP and wait for user command
+- **Semi-Auto**: Auto-proceed only at routine transitions (Spec↔Spec Research, Code Research→Plan, Implement→Review), otherwise wait for user command
+- **Auto**: Always add "Automatically proceeding..." and immediately call `paw_call_agent`
+
+**QUALITY CHECK**: Does your message have "Next Steps"? In auto mode (or semi-auto at routine transition), did you call `paw_call_agent`?

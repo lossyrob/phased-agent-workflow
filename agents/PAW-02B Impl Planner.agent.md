@@ -325,8 +325,9 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
 
    **IF Review Strategy = 'local'**:
    - Ensure on target branch: `git branch --show-current`, checkout if needed: `git checkout <target_branch>`
-   - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
-   - Verify: `git diff --cached`, commit, push: `git push <remote> <target_branch>`
+   - Stage ALL planning artifacts (including those from prior agents): `git add .paw/work/<feature-slug>/`
+   - Verify staged files include Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md: `git diff --cached --name-only`
+   - Commit with message summarizing planning work, push: `git push <remote> <target_branch>`
    - Skip Planning PR (no intermediate PRs in local strategy)
 
 ## Important Guidelines

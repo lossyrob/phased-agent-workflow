@@ -371,30 +371,13 @@ Before completing review comment responses and handing off to Implementation Rev
 
 ## Hand-off
 
-### After Completing a Phase
+{{HANDOFF_INSTRUCTIONS}}
 
-After completing a phase implementation (not all phases):
-```
-Phase [N] Implementation Complete - Ready for Review
+### Implementation Handoff
 
-Automated verification passed:
-- [List automated checks that passed]
+**Next stage**: PAW-03B Impl Reviewer
+- Manual: Present options - `review`, `status`
+- Semi-Auto/Auto: Immediate handoff to reviewer
 
-All changes committed locally to branch <phase_branch_name>. 
+After addressing review comments: handoff to PAW-03B Impl Reviewer to verify and push.
 
-Next: Invoke Implementation Review Agent (PAW-03B) to review my changes, add documentation, and open the Phase PR.
-```
-
-### After Addressing Review Comments
-
-After addressing all review comments:
-```
-Review Comments Addressed - Ready for Review Agent
-
-I've addressed the following review comments with focused commits:
-- [List of review comments addressed with commit hashes]
-
-All changes committed locally to <branch_name>.
-
-Next: Invoke Implementation Review Agent (PAW-03B) to verify my changes, push them, and reply to the review comments.
-```

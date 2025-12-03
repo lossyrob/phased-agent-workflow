@@ -85,6 +85,7 @@ The approach proceeds in logical phases: first establish handoff infrastructure 
 4. **Phase 4: Agent Instruction Updates** - Update all agents to present next-step options and invoke handoff tool based on mode
 5. **Phase 5: Testing and Validation** - Comprehensive unit tests, integration tests, manual workflow testing
 6. **Phase 6: On-Demand Prompt Generation** - Remove auto-creation of all prompt files during workflow initialization; prompts created only when requested
+7. **Phase 7: Status Command and Agent Rename** - Add `PAW: Get Work Status` command with work ID picker, rename Status Agent from `PAW-X Status Update` to `PAW-X Status`
 
 ---
 
@@ -563,9 +564,9 @@ When user wants customization before executing:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes for all updated agent files: `./scripts/lint-agent.sh agents/*.agent.md`
-- [ ] No markdown syntax errors in updated agents
-- [ ] Handoff component included in all agents that have stage transitions
+- [x] Agent linter passes for all updated agent files: `./scripts/lint-agent.sh agents/*.agent.md` (except PAW-01A which has pre-existing token count issue)
+- [x] No markdown syntax errors in updated agents
+- [x] Handoff component included in all agents that have stage transitions
 
 #### Manual Verification:
 - [ ] Spec Agent presents next-step options after completion in Manual mode
@@ -576,6 +577,73 @@ When user wants customization before executing:
 - [ ] All agents correctly parse inline instructions ("continue but add logging")
 - [ ] Review workflow agents follow same handoff patterns (Understanding → Baseline auto-chain in Semi-Auto)
 - [ ] Final PR Agent does not present handoff options (terminal stage)
+
+### Phase 4 Complete
+
+**Implementation Summary:**
+Successfully updated all PAW agent instruction files to include the new handoff component (`{{HANDOFF_INSTRUCTIONS}}`) and stage-specific handoff behavior. Created `agents/components/handoff-instructions.component.md` as a shared component with consolidated handoff logic covering:
+- Reading Handoff Mode from WorkflowContext.md (manual/semi-auto/auto)
+- Mode-specific behavior patterns
+- Handoff tool invocation with intelligent agent name mapping
+- Prompt generation tool invocation for customization
+- Prerequisite validation before handoffs
+
+**All automated verification passed:**
+- All 87 unit tests pass: `npm test`
+- TypeScript compilation succeeds: `npm run compile`
+- Agent linter passes for all agents except PAW-01A (pre-existing token count issue documented in WorkflowContext.md)
+- Handoff component included in all 14 agents with stage transitions
+
+**Files Created/Modified:**
+- Created: `agents/components/handoff-instructions.component.md`
+- Modified: All 14 agent files to include `{{HANDOFF_INSTRUCTIONS}}` component and stage-specific handoff sections:
+  - Standard workflow: PAW-01A, PAW-01B, PAW-02A, PAW-02B, PAW-03A, PAW-03B, PAW-04, PAW-05
+  - Review workflow: PAW-R1A, PAW-R1B, PAW-R2A, PAW-R2B, PAW-R3A, PAW-R3B
+- Modified: `WorkflowContext.md` to document PAW-01A token limit issue
+
+**Notes for Next Phase:**
+Phase 5 (Testing and Validation) should verify the handoff behavior end-to-end. Manual verification of the handoff flows across all three modes (manual, semi-auto, auto) is critical to confirm the agent instruction updates work correctly.
+
+**Review Considerations:**
+- Verify handoff component is rendered correctly by the agent template system
+- Check that stage-specific handoff sections match the Semi-Auto behavior table in the component
+- Confirm PAW-R agents have appropriate pause points for review workflow
+
+### Addressed PR Review Comments:
+
+**Date**: 2025-12-02
+
+**PR Review Comments Addressed:**
+1. **#2569868767** - Add command-to-agent mapping table to handoff component
+2. **#2569885927** - Remove prerequisite validation from handoff component, let next agent check its own prerequisites
+3. **#2569886459** - Mention prompt file generation option in handoff messages
+4. **#2569888255** - Add Status Agent help guidance in handoff messages
+5. **#2569861784** - Make PAW-01A Specification handoff conditional (spec research vs code research)
+
+**Voice Notes Feedback Addressed:**
+- Command mapping table with friendly short names (`spec`, `review`, `implement`, etc.)
+- "Continue" command behavior - proceed to default next stage
+- Don't specify PR numbers in handoff - just say `review`
+- Conditional handoff logic based on workflow state (spec research generated vs complete)
+- Review strategy-specific behavior in Implementation Review Agent
+- Documenter agent review comment handling
+
+**Changes Made:**
+- `agents/components/handoff-instructions.component.md`: Complete rewrite with command mapping table, continue command, help guidance, prompt file option mention
+- `agents/PAW-01A Specification.agent.md`: Conditional next stage logic
+- `agents/PAW-02B Impl Planner.agent.md`: Local vs prs strategy options
+- `agents/PAW-03A Implementer.agent.md`: Explicit reviewer handoff
+- `agents/PAW-03B Impl Reviewer.agent.md`: Detailed prs vs local strategy handoff
+- `agents/PAW-04 Documenter.agent.md`: Review comment handling handoff
+- `agents/PAW-05 PR.agent.md`: Clarified review command
+- `agents/PAW-R1A Understanding.agent.md`: Conditional baseline research handoff
+
+**Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 87 unit tests pass: `npm test`
+- ✅ Agent linter passes for all agents except PAW-01A (7215 tokens) and PAW-02B (6519 tokens) - token limits to be addressed in follow-up work per user request
+
+**Commit:** ce191e2 "Address PR review comments and voice notes for Phase 4"
 
 ---
 
@@ -720,6 +788,128 @@ Remove the automatic creation of all prompt template files during workflow initi
 - [ ] Handoff-based navigation works: "implement Phase 2" triggers handoff without needing prompt file
 - [ ] Backward compatibility: `paw_create_prompt_templates` tool still works when explicitly invoked
 - [ ] Documentation accurately reflects the new on-demand model
+
+---
+
+## Phase 7: Status Command and Agent Rename
+
+### Overview
+Add a new VS Code command `PAW: Get Work Status` that allows users to quickly invoke the Status Agent at any time. The command presents a QuickPick of active work items (sorted by most recently edited), defaulting to blank so the agent can determine the active work from context. Also rename the Status Agent from `PAW-X Status Update` to `PAW-X Status` for brevity.
+
+### Changes Required:
+
+#### 1. New Status Command
+**File**: `src/commands/getWorkStatus.ts` (new)
+**Changes**:
+- Create new command handler for `paw.getWorkStatus`
+- Scan `.paw/work/` directory to find all work items with `WorkflowContext.md`
+- Sort work items by most recent modification time (check `WorkflowContext.md` mtime or most recent artifact mtime)
+- Present QuickPick with:
+  - First option: "(Auto-detect from context)" with value `""`
+  - Subsequent options: Work IDs sorted by recency, showing last modified time
+- After selection, invoke the Status Agent via `workbench.action.chat.open` with `agent: 'PAW-X Status'` and query containing Work ID (if selected)
+
+**Brief Example**:
+```typescript
+interface WorkItem {
+  slug: string;
+  lastModified: Date;
+  title?: string; // from WorkflowContext.md "Work Title" field
+}
+
+async function getWorkStatus(): Promise<void> {
+  const workItems = await scanWorkItems();
+  const selection = await vscode.window.showQuickPick([
+    { label: '$(search) Auto-detect from context', value: '' },
+    ...workItems.map(w => ({
+      label: w.slug,
+      description: w.title,
+      detail: `Last modified: ${formatRelativeTime(w.lastModified)}`,
+      value: w.slug
+    }))
+  ], { placeHolder: 'Select work item or auto-detect' });
+  
+  if (selection) {
+    const query = selection.value ? `Work ID: ${selection.value}` : '';
+    await vscode.commands.executeCommand('workbench.action.chat.open', {
+      query,
+      agent: 'PAW-X Status'
+    });
+  }
+}
+```
+
+#### 2. Command Registration
+**File**: `src/extension.ts`
+**Changes**:
+- Import `registerGetWorkStatusCommand` from `./commands/getWorkStatus`
+- Add command registration in `activate()`: `registerGetWorkStatusCommand(context)`
+
+**File**: `package.json`
+**Changes**:
+- Add command definition to `contributes.commands` array:
+  - `command`: `paw.getWorkStatus`
+  - `title`: `Get Work Status`
+  - `category`: `PAW`
+
+#### 3. Rename Status Agent
+**File**: `agents/PAW-X Status Update.agent.md` → `agents/PAW-X Status.agent.md`
+**Changes**:
+- Rename file from `PAW-X Status Update.agent.md` to `PAW-X Status.agent.md`
+- Update agent name in file header/description if present
+
+**File**: `src/tools/handoffTool.ts`
+**Changes**:
+- Update `TargetAgent` type: change `'PAW-X Status Update'` to `'PAW-X Status'`
+
+**File**: `package.json`
+**Changes**:
+- Update `paw_call_agent` tool's `target_agent` enum: change `'PAW-X Status Update'` to `'PAW-X Status'`
+
+**File**: `src/tools/createPromptTemplates.ts`
+**Changes**:
+- Update status template `mode` field: change `'PAW-X Status Update'` to `'PAW-X Status'`
+
+**File**: `scripts/lint-agent.sh`
+**Changes**:
+- Update filename check: change `"PAW-X Status Update.agent.md"` to `"PAW-X Status.agent.md"`
+
+**File**: `agents/components/handoff-instructions.component.md`
+**Changes**:
+- Update any references to `PAW-X Status Update` to `PAW-X Status`
+
+**File**: All agent files (`agents/*.agent.md`)
+**Changes**:
+- Update handoff references from `PAW-X Status Update` to `PAW-X Status`
+
+#### 4. Documentation Updates
+**File**: `README.md`
+**Changes**:
+- Document the new `PAW: Get Work Status` command
+- Update any references to "PAW-X Status Update" to "PAW-X Status"
+- Add usage examples: "Use `PAW: Get Work Status` from the command palette to check workflow progress"
+
+**File**: `paw-specification.md`
+**Changes**:
+- Update agent filename reference: `PAW-X Status Update.agent.md` → `PAW-X Status.agent.md`
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Unit tests pass: `npm test`
+- [ ] TypeScript compilation succeeds: `npm run compile`
+- [ ] Agent linter passes for renamed status agent: `./scripts/lint-agent.sh "agents/PAW-X Status.agent.md"`
+- [ ] Linting passes: `npm run lint`
+- [ ] No references to old agent name `PAW-X Status Update` remain in codebase
+
+#### Manual Verification:
+- [ ] Command palette shows `PAW: Get Work Status`
+- [ ] QuickPick displays work items sorted by recency (most recent first)
+- [ ] QuickPick includes "Auto-detect from context" option at top
+- [ ] Selecting a work item opens Status Agent chat with Work ID
+- [ ] Selecting "Auto-detect" opens Status Agent chat without Work ID (agent determines context)
+- [ ] Status Agent responds correctly with both explicit Work ID and auto-detected context
+- [ ] All handoff commands still work with renamed agent (`status` → `PAW-X Status`)
 
 ---
 

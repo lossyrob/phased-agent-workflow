@@ -540,69 +540,36 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 
 ## Hand-off
 
-### For Initial Planning:
-```
-Implementation Plan Complete - Planning PR Ready
+{{HANDOFF_INSTRUCTIONS}}
 
-I've authored the implementation plan at:
-.paw/work/<feature-slug>/ImplementationPlan.md
+### Planning Handoff
 
-Planning PR opened or updated: `<target_branch>_plan` → `<target_branch>`
+**Next stage**: PAW-03A Implementer
+- All Modes: Pause after planning (human reviews plan first)
+- **prs strategy**: Human reviews Planning PR, then say `implement` to begin
+- **local strategy**: Review plan inline, then say `implement` to begin or chat to make updates
+- Present options: `implement`, `status`, `generate implementation prompt`
 
-Artifacts committed:
-- Spec.md
-- SpecResearch.md
-- CodeResearch.md
-- ImplementationPlan.md
-- Related prompt files
-
-Next: Invoke Implementation Agent (Stage 03) with ImplementationPlan.md to begin Phase 1 after the Planning PR is reviewed and merged.
-```
-
-### For PR Review Response:
-```
-Planning PR Review Comments Addressed
-
-All review comments on the Planning PR have been addressed with focused commits:
-- [List of comments addressed with commit hashes]
-
-Updated artifacts:
-- [List which of Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md were modified]
-
-All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-review.
-```
+Note: Don't specify phase number—the Implementer determines the current phase automatically.
 
 ## Success Criteria Guidelines
 
-**Always separate success criteria into two categories:**
+**Separate success criteria into:**
 
-1. **Automated Verification** (can be run by execution agents):
-   - Commands that can be run: `make test`, `npm run lint`, etc.
-   - Specific files that should exist
-   - Code compilation/type checking
-   - Automated test suites
-
-2. **Manual Verification** (requires human testing):
-   - UI/UX functionality
-   - Performance under real conditions
-   - Edge cases that are hard to automate
-   - User acceptance criteria
+1. **Automated Verification** (can be run by agents): Commands (`make test`, `npm run lint`), file existence, compilation, test suites
+2. **Manual Verification** (requires human): UI/UX, performance, edge cases, acceptance criteria
 
 **Format example:**
 ```markdown
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Database migration runs successfully: `make migrate`
-- [ ] All unit tests pass: `go test ./...`
-- [ ] No linting errors: `golangci-lint run`
-- [ ] API endpoint returns 200: `curl localhost:8080/api/new-endpoint`
+- [ ] Tests pass: `go test ./...`
+- [ ] No lint errors: `golangci-lint run`
 
 #### Manual Verification:
-- [ ] New feature appears correctly in the UI
-- [ ] Performance is acceptable with 1000+ items
-- [ ] Error messages are user-friendly
-- [ ] Feature works correctly on mobile devices
+- [ ] Feature appears correctly in UI
+- [ ] Performance acceptable with 1000+ items
 ```
 
 ## Common Patterns

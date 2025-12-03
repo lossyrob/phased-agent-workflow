@@ -383,35 +383,24 @@ For review comment follow-up:
 
 ## Hand-off
 
-After initial review:
-```
-Phase [N] Review Complete - PR Opened
+{{HANDOFF_INSTRUCTIONS}}
 
-I've reviewed the Implementation Agent's work, added docstrings/comments, and opened the Phase PR (add actual number when known).
+### Implementation Review Handoff
 
-Changes pushed:
-- Implementation Agent's functional code commits
-- My documentation and polish commits
+**After Phase Review:**
 
-The PR is ready for human review. When review comments are received, ask the Implementation Agent to address them, then ask me to verify the changes and reply to reviewers.
-```
+**prs strategy** (Phase PR opened):
+- All Modes: Pause (wait for human PR review)
+- **If PR has review comments and not merged**: Present `address comments` or `check pr` to handoff to PAW-03A Implementer
+- After PR merged, more phases remain: Present `implement`, `status`
+- After PR merged, all phases complete: Present `docs`, `status`
+- Semi-Auto (more phases): Pause until PR merged, then immediate handoff to PAW-03A Implementer
+- Auto Mode (all complete, PR merged): Immediate handoff to PAW-04 Documenter
 
-After review comment follow-up:
-```
-Review Comments Verified - Changes Pushed and Summary Posted
+**local strategy** (no Phase PRs):
+- Manual: Present `implement` (next phase) or `docs` (all complete), `status`
+- Semi-Auto/Auto (more phases): Immediate handoff to PAW-03A Implementer
+- Semi-Auto/Auto (all complete): Immediate handoff to PAW-04 Documenter
 
-I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted a comprehensive summary documenting which comments were addressed.
+Note: Don't specify phase number—the Implementer determines the current phase automatically.
 
-Changes pushed:
-- Implementation Agent's commits addressing review comments
-- [My improvement commits if any]
-
-Summary comment on PR details:
-- Which review comments were addressed
-- Commits that addressed each comment
-- Any improvements made
-
-The human reviewer can now review the changes and manually resolve comments in the GitHub UI. The PR is ready for re-review.
-```
-
-Next: Human reviews PR, resolves addressed comments in GitHub UI. If approved, merge and proceed to next phase or next stage when complete.

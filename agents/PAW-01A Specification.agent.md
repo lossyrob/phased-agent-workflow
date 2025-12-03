@@ -429,11 +429,29 @@ Specification Ready for Planning Stage:
 - [ ] All FRs & SCs traceable and testable
 - [ ] Assumptions & scope boundaries explicit
 - [ ] Quality Checklist fully passes (or explicit user-approved overrides listed)
-
-Next: Invoke Code Research Agent (Stage 02) to map relevant codebase areas. Optionally run Status Agent to update Issue.
 ```
 
 If research was skipped: include an Assumptions section and Risks section note summarizing potential ambiguity areas; user must explicitly accept before proceeding.
+
+{{HANDOFF_INSTRUCTIONS}}
+
+### Specification Handoff
+
+**Conditional next stage based on workflow state:**
+
+**If spec research prompt was generated** (research questions remain):
+- Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
+- Manual: Present options - `research` (runs spec research), `code` (skip research, go to code research), `status`
+- Semi-Auto: Immediate handoff to Spec Researcher
+- Auto: Immediate handoff to Spec Researcher
+
+**If SpecResearch.md exists or research was skipped** (spec complete):
+- Next stage: PAW-02A Code Researcher
+- Manual: Present options - `code`, `status`, `generate prompt for code research`
+- Semi-Auto: Pause (decision point before Code Research)
+- Auto: Immediate handoff to Code Researcher
+
+In manual mode, always give users the option to skip spec research and proceed directly to code research, even when spec research is the default next stage.
 
 ### Working with Issues and PRs
 

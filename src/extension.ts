@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerContextTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
 
-  registerHandoffTool(context);
+  registerHandoffTool(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_call_agent');
 
   registerPromptGenerationTool(context);

@@ -510,45 +510,20 @@ Before pushing:
 
 ## Hand-off
 
-### After Initial Documentation
+{{HANDOFF_INSTRUCTIONS}}
 
-```
-Documentation Complete - Docs PR Opened
+### Documentation Handoff
 
-I've created comprehensive documentation and opened the Docs PR (add actual number when known) at:
-`<target_branch>_docs` → `<target_branch>`
+**prs strategy** (Docs PR opened):
+- All Modes: Pause after Docs PR (wait for human review)
+- After PR review comments: Say `address comments` or `check pr` to address comments
+- After PR merged: Present `pr`, `final pr`, `status`
+- Auto Mode: Handoff to PAW-05 PR after Docs PR merged
 
-The PR includes:
-- **Docs.md** - Detailed documentation serving as the authoritative technical reference at .paw/work/<feature-slug>/Docs.md
-- [List of updated project documentation files, which are based on/derived from Docs.md]
+**local strategy** (no Docs PR):
+- Manual: Present `pr`, `final pr`, `status`
+- Semi-Auto/Auto: Immediate handoff to PAW-05 PR
 
-Key documentation highlights:
-- Complete architecture and design decisions
-- Comprehensive usage guide with examples (when applicable)
-- Full technical reference and API documentation
-- Edge cases, limitations, and testing approach documented
+**If addressing Docs PR review comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
 
-Please review Docs.md for completeness and technical accuracy. It's designed to be the go-to reference for engineers working with this implementation.
-
-Next: After Docs PR is merged, invoke PR Agent (Stage 05) to create the final PR to main.
-```
-
-### After Addressing Review Comments
-
-```
-Review Comments Addressed - Changes Pushed and Summary Posted
-
-I've addressed all review comments on the Docs PR with focused documentation improvements.
-
-Changes made:
-- [List of commits with brief descriptions]
-
-Review comments addressed:
-- [Review comment link]: [How addressed and why]
-- [Review comment link]: [How addressed and why]
-
-All commits have been pushed to the PR branch. A comprehensive summary comment has been posted to the PR explaining all changes.
-
-The documentation updates are ready for re-review.
-```
 

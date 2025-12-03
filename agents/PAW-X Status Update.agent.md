@@ -1,5 +1,5 @@
 ---
-description: 'Phased Agent Workflow: Status Updater (keeps Issues/PRs up to date and well-formed)'
+description: 'Check PAW workflow progress, get next-step guidance, or post status updates to Issues/PRs'
 ---
 # Status Updater Agent
 
@@ -339,7 +339,12 @@ Additional Inputs: <comma-separated or none>
    - For **prs** strategy: look for `<target>_plan`, `<target>_phase*`, `<target>_docs` branches plus the main target branch itself.
    - Use GitHub MCP tools (e.g., `mcp_github_search_pull_requests`) to find PRs by head branch, record URL/state, and note reviewers/CI status when relevant.
    - For **local** strategy: skip intermediate PRs and focus on the target branch plus Final PR.
-7. **Status Dashboard**: Synthesize findings into sections such as **Artifacts**, **Phases**, **Branch & Git**, **PRs**, and **Next Actions**.
+7. **PR Review Comment Analysis** (when PRs exist):
+   - Fetch inline review comments on each open PR.
+   - Fetch general PR comments.
+   - **Determine addressed vs outstanding comments**
+   - Summarize: "X review comments (Y addressed, Z outstanding)" with links to outstanding comments.
+8. **Status Dashboard**: Synthesize findings into sections such as **Artifacts**, **Phases**, **Branch & Git**, **PRs** (including review comment status), and **Next Actions**.
 
 ## Next-Step Guidance
 - Always conclude status summaries with actionable guidance using the user’s vocabulary (e.g., commands like `research`, `plan`, `implement Phase 2`, `status`).
@@ -377,24 +382,37 @@ Additional Inputs: <comma-separated or none>
 
 ## Tool Usage Patterns
 - Prefer lightweight operations before expensive ones: directory listings before recursive scans, cached metadata before repeated API calls.
-- **Filesystem**: use `list_dir` and `read_file` to inspect `.paw/work/<slug>/` artifacts.
-- **Git**: use `run_in_terminal` commands such as `git status --porcelain`, `git branch --show-current`, `git rev-list --left-right --count <upstream>...HEAD`.
-- **GitHub MCP**: use search tools to find PRs by branch; capture status, CI, reviewers, and merge state.
-- Clearly narrate why each tool is invoked so humans can follow the reasoning.
+- **Filesystem**: List directories and read files to inspect `.paw/work/<slug>/` artifacts. Check for existence of key files (Spec.md, ImplementationPlan.md, etc.) without reading full contents when only presence matters.
+- **Git state**: Retrieve current branch name, staged/unstaged changes, upstream tracking info, and commit counts ahead/behind remote. For review comment analysis, get commit history with timestamps to compare against comment creation dates.
+- **GitHub data**: 
+  - Find PRs by branch name; capture URL, state (open/merged/closed), CI status, reviewers, and merge state
+  - Retrieve PR review comments (inline code comments)
+  - Retrieve general PR discussion comments separately from review comments
+  - Get commit history for a branch to determine which commits occurred after specific timestamps
+- **Determining addressed vs outstanding comments**: Compare each review comment's commit SHA and timestamp against the PR's commit history. 
 
 ## Examples
 - **Status Query**
-  - User: “where am I?”
+  - User: "where am I?"
   - Agent: Runs artifact audit, phase detection, git + PR checks, then replies:
-    - “You are on `feature/auth-redesign_phase2`. Phase 1 PR merged, Phase 2 branch exists with 3 commits, no PR yet. ImplementationPlan.md lists 3 phases total. Next: run `implement Phase 2` to continue, or `status` anytime.”
+    - "You are on `feature/auth-redesign_phase2`. Phase 1 PR merged, Phase 2 branch exists with 3 commits, no PR yet. ImplementationPlan.md lists 3 phases total. Next: run `implement Phase 2` to continue, or `status` anytime."
+- **PR with Review Comments**
+  - User: "what's the status of my PR?"
+  - Agent: Fetches PR info, review comments, and commit history:
+    - "PR #119 is open with 5 review comments. Analyzing comment timestamps vs commits..."
+    - "Comments were made on commit `10bc53e` (Nov 27). Current HEAD is `f6799c0` (2 commits later)."
+    - "Files touched by recent commits: `agents/PAW-01A Specification.agent.md`, `agents/components/handoff-instructions.component.md`"
+    - "**Review Comment Summary**: 5 comments total - 2 likely addressed (same files modified), 3 outstanding"
+    - "Outstanding comments: [link1] (handoff-instructions.component.md:15), [link2] (handoff-instructions.component.md:29), [link3] (handoff-instructions.component.md:2)"
+    - "Next: Address outstanding review comments with `address review comments on PR #119`, or `status` for updated analysis."
 - **Multi-Work Listing**
-  - User: “What PAW work items do I have?”
-  - Agent: “1. `feature/auth-redesign` — updated 2h ago, currently before Phase 2. 2. `feature/api-hardening` — updated 2d ago, waiting for docs.”
+  - User: "What PAW work items do I have?"
+  - Agent: "1. `feature/auth-redesign` — updated 2h ago, currently before Phase 2. 2. `feature/api-hardening` — updated 2d ago, waiting for docs."
 - **Help Mode**
-  - User: “What does Code Research stage do?”
+  - User: "What does Code Research stage do?"
   - Agent: Explains goals, required inputs, outputs, typical duration, and command to trigger Code Research Agent.
 - **Issue Posting**
-  - User: “post status to issue”
+  - User: "post status to issue"
   - Agent: Builds dashboard, posts comment with emoji header, confirms action in chat.
 
 ## Guardrails

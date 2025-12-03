@@ -75,6 +75,7 @@ When given a Planning PR with review comments:
    - Issues, research docs, related plans, data files
    - All files identified by research
    - Read completely before proceeding to research tasks
+   - When reading an issue or work item, always fetch comments as well
 
 2. **Analyze and verify**:
    - Cross-reference requirements with actual code

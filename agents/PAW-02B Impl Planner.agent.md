@@ -9,33 +9,15 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ## Initial Response
 
-First, look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not re-request existing parameters.
+After calling `paw_get_context` (see PAW Context section above), check invocation parameters:
 
-When this agent is invoked:
+1. **If parameters provided** (file path, issue reference, or Planning PR):
+   - Read provided files FULLY, begin research
+   - If Planning PR reference provided, switch to PR Review Response mode
 
-1. **Check if parameters were provided**:
-   - If a file path or issue/work item reference was provided as a parameter, skip the default message
-   - Immediately read any provided files FULLY
-   - Begin the research process
-   - If a Planning PR reference is provided, switch to PR Review Response mode (see below)
+2. **If no parameters**, ask for: issue/work item URL or description, research file path, and any related materials (or Planning PR for review response mode).
 
-2. **If no parameters provided**, respond with:
-```
-I'll help you create a detailed implementation plan. Let me start by understanding what we're building.
-
-Please provide:
-1. The issue or work item URL if available, or a detailed description of the feature/task
-2. Path to the research file compiled by the research agent.
-3. Links to any other related materials (e.g. design docs, related tickets)
-
-OR
-
-Provide the Planning PR if you need me to address review comments on the planning artifacts.
-
-I'll analyze this information and work with you to create a comprehensive plan.
-```
-
-Then wait for the user's input.
+Then wait for user input.
 
 ### PAW Workflow Mode and Review Strategy Handling
 
@@ -52,13 +34,6 @@ Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt
 
 **Defaults:** Missing mode/strategy → full + prs
 
-**WorkflowContext.md fields:**
-```markdown
-Workflow Mode: <full|minimal|custom>
-Review Strategy: <prs|local>
-Custom Workflow Instructions: <text or none>
-```
-
 ## Agent Operating Modes
 
 This agent operates in two distinct modes:
@@ -69,20 +44,8 @@ Follow Steps 1-4 below to create the initial planning artifacts.
 ### Mode 2: PR Review Response (Addressing Planning PR Comments)
 When given a Planning PR with review comments:
 
-1. **Verify branch context**:
-   - Check current branch: `git branch --show-current`
-   - Should be on `<target_branch>_plan`
-   - If not, checkout the planning branch: `git checkout <target_branch>_plan`
-
-2. **Read and understand the review context**:
-   - Read the Planning PR description and ALL unresolved review comments
-   - Read the current versions of all planning artifacts:
-     - `.paw/work/<feature-slug>/Spec.md`
-     - `.paw/work/<feature-slug>/SpecResearch.md`
-     - `.paw/work/<feature-slug>/CodeResearch.md`
-     - `.paw/work/<feature-slug>/ImplementationPlan.md`
-   - Understand which artifact(s) each comment applies to
-
+1. **Verify branch**: Should be on `<target_branch>_plan`; checkout if needed
+2. **Read context**: PR description, ALL unresolved comments, current planning artifacts
 3. **Create TODOs for each review comment**:
    - For each comment, create TODOs to:
      - Identify which artifact(s) need updating (Spec, Research, or Plan)
@@ -92,7 +55,6 @@ When given a Planning PR with review comments:
      - Note to reply to the comment after addressing it
    - Group small, related comments into single TODOs
    - Keep complex comments as separate TODOs
-
 4. **Address review comments systematically**:
    - Work through TODOs one by one
    - For each comment:
@@ -109,27 +71,13 @@ When given a Planning PR with review comments:
        [What was changed and commit hash reference]
        ```
    - If a comment requires clarification, ask the human before proceeding
-
 5. **Quality check before completion**:
    - Ensure all review comments have been addressed
    - Verify all planning artifacts are internally consistent
    - Confirm no open questions remain in any artifact
    - Run final verification that the plan is still complete and actionable
+6. **Signal completion**: List addressed comments with commit hashes and updated artifacts
 
-6. **Signal completion**:
-   ```
-   Planning PR Review Comments Addressed
-
-   All review comments on the Planning PR have been addressed with focused commits:
-   - [List of comments addressed with commit hashes]
-
-   Updated artifacts:
-   - [List which of Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md were modified]
-
-   All changes pushed to `<target_branch>_plan`. The Planning PR is ready for re-review.
-   ```
-
-**Important**: Do NOT mark review comments as resolved - only reply with your changes. The reviewer will mark them resolved after verification.
 
 ## Process Steps (Initial Planning Mode)
 
@@ -547,49 +495,10 @@ Note: Don't specify phase number—the Implementer determines the current phase 
 - [ ] Performance acceptable with 1000+ items
 ```
 
-## Common Patterns
-
-### For Database Changes:
-- Start with schema/migration
-- Add store methods
-- Update business logic
-- Expose via API
-- Update clients
-
-### For New Features:
-- Research existing patterns first
-- Start with data model
-- Build backend logic
-- Add API endpoints
-- Implement UI last
-
-### For Refactoring:
-- Document current behavior
-- Plan incremental changes
-- Maintain backwards compatibility
-- Include migration strategy
-
 ## COMPREHENSIVE RESEARCH
 
-Use research steps intelligently: Code Location (find WHERE) → Code Analysis (understand HOW)
+Use research steps: **Code Location** (find WHERE) → **Code Analysis** (understand HOW)
 
-### Code Location: Find WHERE files and components live
-
-1. **Find and Categorize**: Search keywords, check common dirs (src/, lib/, pkg/), categorize by purpose (implementation, tests, config, docs, types)
-2. **Return Structured**: Group by purpose, full paths, note file clusters
-3. **Search Strategy**: Think about naming conventions, directory structures, use grep/glob/ls effectively
-
-### Code Analysis: Understand HOW code works (descriptive only, no critique)
-
-1. **Read and Trace**: Read entry points, follow code paths, document logic with file:line refs
-2. **Analyze**: Implementation details, data flow, architectural patterns, transformations
-3. **Guidelines**: Always include file:line, read thoroughly, trace actual paths, be precise
-4. **Don't**: Guess, critique, identify bugs, suggest improvements, evaluate quality/performance
-
-### Code Pattern Finder: Document existing patterns (no evaluation)
-
-Find similar implementations as templates. ONLY show what exists and where used - don't critique or suggest improvements.
-
-1. **Find**: Search for comparable features, usage examples, established patterns, test examples
-2. **Extract**: Show code structure, patterns, conventions with file:line refs and variations
-3. **Categories**: Feature patterns, structural patterns, integration patterns, testing patterns
+- **Code Location**: Search keywords, check common dirs, categorize by purpose, return structured findings with full paths
+- **Code Analysis**: Read entry points, follow code paths, document with file:line refs. Don't guess, critique, or suggest improvements.
+- **Pattern Finding**: Find similar implementations as templates, show what exists and where used

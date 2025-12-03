@@ -19,8 +19,7 @@ When transitioning to another stage:
 | Command | Agent |
 |---------|-------|
 | `spec`, `specification` | PAW-01A Specification |
-| `research`, `spec research` | PAW-01B Spec Researcher |
-| `code`, `code research` | PAW-02A Code Researcher |
+| `research` | PAW-01B Spec Researcher (from spec stage) or PAW-02A Code Researcher (from spec research/planning stages) |
 | `plan`, `planner` | PAW-02B Impl Planner |
 | `implement`, `implementer` | PAW-03A Implementer |
 | `review`, `reviewer` | PAW-03B Impl Reviewer |
@@ -28,7 +27,10 @@ When transitioning to another stage:
 | `pr`, `final pr` | PAW-05 PR |
 | `status`, `help` | PAW-X Status |
 
-Context-sensitive: In implementation phases, `review` means Implementation Review. Commands like `implement` don't require phase numbers—the agent determines the current phase.
+Context-sensitive commands:
+- `research`: Maps to Spec Researcher when coming from Spec stage, Code Researcher when coming from completed spec research or planning stages
+- `review`: Maps to Implementation Review during implementation phases
+- `implement`: Agent determines current phase automatically
 
 **Addressing PR Review Comments** (prs strategy only):
 When a Planning PR, Phase PR, Docs PR, or Final PR has review comments that need addressing:

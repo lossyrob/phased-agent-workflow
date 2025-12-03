@@ -95,7 +95,7 @@ async function invokeAgent(
       );
       await vscode.commands.executeCommand("workbench.action.chat.open", {
         query: prompt,
-        mode: "agent",
+        mode: params.target_agent,
       });
     });
 }

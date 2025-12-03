@@ -441,7 +441,7 @@ If research was skipped: include an Assumptions section and Risks section note s
 
 **If spec research prompt was generated** (research questions remain):
 - Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
-- Manual: Present options - `research` (runs spec research), `continue` (skip spec research, proceed to Code Research), `status`
+- Manual: Present options - `research` or `continue` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
 - Semi-Auto: Immediate handoff to Spec Researcher
 - Auto: Immediate handoff to Spec Researcher
 
@@ -451,7 +451,7 @@ If research was skipped: include an Assumptions section and Risks section note s
 - Semi-Auto: Pause (decision point before Code Research)
 - Auto: Immediate handoff to Code Researcher
 
-**Skipping spec research**: When the user says `continue` from the Spec stage without SpecResearch.md, the Spec Agent should hand off directly to Code Researcher (PAW-02A). The `research` command from Spec stage goes to Spec Researcher, so use `continue` to skip it.
+**Skipping spec research**: If the user wants to skip spec research entirely (not recommended), they can say `plan` to proceed directly to Code Research. The `continue` command follows the default next stage, which is Spec Researcher when research questions exist.
 
 ### Working with Issues and PRs
 

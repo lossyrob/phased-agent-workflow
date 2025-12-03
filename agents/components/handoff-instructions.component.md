@@ -39,6 +39,11 @@ When a Planning PR, Phase PR, Docs PR, or Final PR has review comments that need
   - Final PR → PAW-03A Implementer (makes changes) → PAW-03B Impl Reviewer (verifies and pushes)
 - `check pr` - Alternative command for addressing PR review comments
 
+**Providing Local Feedback** (local strategy only):
+When using local strategy without PRs, the user provides feedback directly:
+- `feedback: <user's feedback>` - Hand off to PAW-03A Implementer with feedback as inline instruction
+- Example: User says `feedback: add error handling for edge cases` → call `paw_call_agent` with `target_agent: 'PAW-03A Implementer'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
+
 **Inline instructions**: "implement but add logging" → pass "add logging" as `inline_instruction`
 
 **Continue command**: When user says `continue`, proceed to the default next stage as if in semi-auto/auto mode.

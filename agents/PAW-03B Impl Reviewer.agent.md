@@ -387,20 +387,63 @@ For review comment follow-up:
 
 ### Implementation Review Handoff
 
-**After Phase Review:**
+**After Phase Review - Handoff Message Rules:**
+
+Determine N = current phase just completed, M = total phases from ImplementationPlan.md.
 
 **prs strategy** (Phase PR opened):
-- All Modes: Pause (wait for human PR review)
-- **If PR has review comments and not merged**: Present `address comments` or `check pr` to handoff to PAW-03A Implementer
-- After PR merged, more phases remain: Present `implement`, `status`
-- After PR merged, all phases complete: Present `docs`, `status`
-- Semi-Auto (more phases): Pause until PR merged, then immediate handoff to PAW-03A Implementer
-- Auto Mode (all complete, PR merged): Immediate handoff to PAW-04 Documenter
+
+Present exactly TWO next steps after opening the Phase PR:
+1. `address comments` - Address feedback from the Phase PR (include PR link)
+2. `implement` - Continue to Phase N+1 (only if N < M) OR `docs` - Continue to documentation (if N = M)
+
+Example handoff message (prs strategy, more phases remain):
+```
+**Phase 2 review complete. Phase PR opened: https://github.com/owner/repo/pull/123**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Phase PR](https://github.com/owner/repo/pull/123)
+- `implement` - Continue to Phase 3
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+Example handoff message (prs strategy, all phases complete):
+```
+**Phase 3 review complete. Phase PR opened: https://github.com/owner/repo/pull/125**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Phase PR](https://github.com/owner/repo/pull/125)
+- `docs` - Continue to documentation
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
 
 **local strategy** (no Phase PRs):
-- Manual: Present `implement` (next phase) or `docs` (all complete), `status`
-- Semi-Auto/Auto (more phases): Immediate handoff to PAW-03A Implementer
-- Semi-Auto/Auto (all complete): Immediate handoff to PAW-04 Documenter
 
-Note: Don't specify phase number—the Implementer determines the current phase automatically.
+Present exactly TWO next steps after pushing changes:
+1. `feedback: <your feedback>` - Provide feedback for the Implementer to address (user types feedback inline)
+2. `implement` - Continue to Phase N+1 (only if N < M) OR `docs` - Continue to documentation (if N = M)
+
+Example handoff message (local strategy, more phases remain):
+```
+**Phase 2 review complete. Changes pushed to feature/auth-system.**
+
+**Next Steps:**
+- `feedback: <your feedback>` - Provide feedback for the Implementer to address
+- `implement` - Continue to Phase 3
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+**Handoff Mode Behavior:**
+- **Manual**: Present options, wait for user command
+- **Semi-Auto**: Pause after Phase PR opened (prs) or after push (local); user must explicitly continue
+- **Auto**: After push/PR, immediate handoff to next stage (PAW-03A for next phase, PAW-04 for docs)
+
+**IMPORTANT**: 
+- Only show ONE next phase (the immediate next one), not multiple future phases
+- Use `implement` command without phase number - the Implementer determines current phase
+- For prs strategy: Always include the PR link in the `address comments` description
+- For local strategy: User types `feedback: <their feedback>` which passes to Implementer as inline instruction
 

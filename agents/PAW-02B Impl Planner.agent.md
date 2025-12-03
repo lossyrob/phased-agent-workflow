@@ -230,6 +230,11 @@ After structure approval:
 - Integrate with existing `DependencyName` at `path/to/dependency.ext`
 - Follow the [convention/pattern] documented in `path/to/docs`
 
+**Tests**:
+- Unit tests for `ComponentName` in `path/to/component.test.ext`
+- Test cases: [key scenarios to cover]
+- Follow test patterns in `path/to/existing.test.ext`
+
 **Brief Example** (if architecturally significant):
 ```[language]
 // Only include brief illustrative code (3-10 lines) for critical concepts
@@ -261,19 +266,18 @@ interface ComponentName {
 
 ---
 
-## Testing Strategy
-
-### Unit Tests:
-- [What to test]
-- [Key edge cases]
+## Cross-Phase Testing Strategy
 
 ### Integration Tests:
-- [End-to-end scenarios]
+- [End-to-end scenarios that span multiple phases]
+- [System-level test scenarios]
 
 ### Manual Testing Steps:
 1. [Specific step to verify feature]
 2. [Another verification step]
 3. [Edge case to test manually]
+
+*Note: Unit tests are specified within each phase alongside the code they test.*
 
 ## Performance Considerations
 
@@ -412,6 +416,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - ❌ Specifying exact library/framework choices without trade-off analysis
    - ❌ Optimizing or micro-tuning implementations before functional requirements are proven
    - ❌ Writing tutorial-style code examples that teach implementation rather than describe architecture
+   - ❌ Deferring **unit tests** to a later phase—unit tests belong with the code they test
    
    **Good examples**:
    - ✅ "Implement `UserRepository` interface with methods for CRUD operations, following the repository pattern established in `models/repositories/`"
@@ -419,7 +424,17 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
    - ✅ "Create migration for `users` table with columns: id, email, created_at, following the schema conventions in `migrations/README.md`"
    - ✅ Brief code snippet showing an interface definition or key type signature (3-5 lines)
 
-10. **Separate Implementation from Documentation**:
+10. **Co-Develop Unit Tests with Code**:
+   - **Unit tests** MUST be specified in the same phase as the code they test
+   - Each component/file group in a phase should include a "Tests" subsection specifying:
+     - Test file location (following project conventions)
+     - Key test cases and scenarios to cover
+     - Reference to existing test patterns to follow
+   - **Integration tests** that verify interactions across components or end-to-end flows may be planned in a dedicated phase after the components exist
+   - Success criteria should include test passage as part of automated verification
+   - The goal is unit tests as living documentation that co-evolve with the code, not an afterthought
+
+11. **Separate Implementation from Documentation**:
    - Do NOT create "Documentation" phases within implementation plans
    - Documentation is handled by the **Documenter agent (PAW-04)** after all implementation phases are complete and merged
    - Implementation plans focus on **functional code** that makes the feature work
@@ -443,6 +458,7 @@ Ensure you use the appropriate build and test commands/scripts for the repositor
 - [ ] All references trace back to Spec.md, SpecResearch.md, and CodeResearch.md
 - [ ] Success criteria clearly separate automated versus manual verification
 - [ ] "What We're NOT Doing" section prevents scope creep and out-of-scope work
+- [ ] Unit tests are specified alongside the code they test within each phase
 - [ ] Phase Summary section exists, positioned after "Implementation Approach" and before detailed phases
 - [ ] Phase Summary includes all phases with format: numbered list, bold phase name, one-sentence objective
 - [ ] Code blocks in phases are absent or limited to brief examples (<10 lines) illustrating architectural concepts

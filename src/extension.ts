@@ -74,6 +74,9 @@ export async function activate(context: vscode.ExtensionContext) {
  * Installation failures do not block extension activation - the extension continues
  * to function, and users can still use non-agent features.
  * 
+ * Note: Agent installation is skipped when running in test mode to prevent test runs
+ * from overwriting agents in the user's real prompts directory.
+ * 
  * @param context - Extension context for version tracking and state storage
  * @param outputChannel - Output channel for detailed logging
  */
@@ -81,6 +84,14 @@ async function installAgentsIfNeeded(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
+  // Skip agent installation in test mode to prevent test runs from overwriting
+  // agents in the user's real prompts directory (important when working on
+  // multiple PAW branches simultaneously)
+  if (context.extensionMode === vscode.ExtensionMode.Test) {
+    outputChannel.appendLine('[INFO] Running in test mode - skipping agent installation');
+    return;
+  }
+
   try {
     // Determine prompts directory path
     const customPath = vscode.workspace.getConfiguration('paw').get<string>('promptDirectory');

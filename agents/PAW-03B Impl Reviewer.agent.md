@@ -18,31 +18,6 @@ I'll review the implementation changes. Please provide information to identify t
 
 If the user mentions a hint to the implementation changes, e.g. 'last commit', use that to identify the implementation changes.
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before starting review work
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.
-- Update the file whenever you discover new parameter values (e.g., PR number, artifact overrides, remote changes) so the workflow continues to share a single source of truth. Capture derived artifact paths if you rely on conventional locations.
-
 ### Workflow Mode and Review Strategy Handling
 
 Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your review and PR handling behavior as follows:

@@ -284,27 +284,6 @@ When users request stage transitions, follow the handoff instructions above. Sta
 - Artifacts on disk (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md, etc.)
 - Git state and GitHub PR information for the target branch and any phase branches.
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from the current branch when possible.
-  2. Generate Work ID from Work Title (normalize to lowercase kebab-case, enforce uniqueness, max 100 chars).
-  3. If both missing, prompt the user for Work Title or Work ID.
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` **before** producing a status summary.
-  5. Treat missing `Remote` as `origin` without extra prompts.
-- Update WorkflowContext.md whenever you learn new canonical facts (new PR URLs, artifact overrides, etc.).
-
 ### Workflow Mode and Review Strategy Handling
 - Read `Workflow Mode`, `Review Strategy`, and any `Custom Workflow Instructions` at startup and adapt all reports.
 - Defaults: if either field is missing, assume **full** mode with **prs** strategy until proven otherwise.

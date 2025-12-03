@@ -22,3 +22,22 @@ paw_get_context(feature_slug: "<feature-slug>", agent_name: "{{AGENT_NAME}}")
 **If custom instructions conflict with defaults**: Follow the custom instructions. They represent project-specific or user-specific requirements that take precedence.
 
 The Work ID (feature slug) is provided in the generated prompt file that invokes this agent.
+
+### WorkflowContext.md Fields
+
+The `paw_get_context` tool returns raw WorkflowContext.md content. Parse these fields:
+
+| Field | Description |
+|-------|-------------|
+| **Work Title** | Short name (2-4 words) for PR titles, e.g., "Auth System" |
+| **Work ID** | Normalized slug for artifact paths, e.g., "auth-system" |
+| **Target Branch** | Branch where implementation merges |
+| **Issue URL** | GitHub Issue or Azure DevOps Work Item URL (or "none") |
+| **Remote** | Git remote name (default: "origin") |
+| **Workflow Mode** | `full` (standard), `minimal` (streamlined), or `custom` |
+| **Review Strategy** | `prs` (intermediate PRs) or `local` (direct commits) |
+| **Custom Workflow Instructions** | Free-form text for custom mode (or "none") |
+| **Artifact Paths** | Usually "auto-derived" → `.paw/work/<Work ID>/` |
+| **Additional Inputs** | Comma-separated extra parameters (or "none") |
+
+**Updating WorkflowContext.md**: If you learn new information during your work (e.g., PR URL, Issue URL discovered), update the file so downstream agents inherit the values.

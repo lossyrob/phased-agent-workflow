@@ -31,48 +31,19 @@ After calling `paw_get_context` (see PAW Context section above), check for exist
 
 Confirm the workflow context and ask only for missing details before moving on to **Intake & Decomposition**.
 
-### WorkflowContext.md
-WorkflowContext.md is created by the "PAW: New PAW Workflow" VS Code command. The Spec agent reads it but does not create it.
-
-**Updating WorkflowContext.md**: If you learn new information during spec work (e.g., Issue URL was missing but user provides it), update WorkflowContext.md so downstream agents inherit the values.
-
 ### Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt behavior as follows:
+Adapt behavior based on Workflow Mode and Review Strategy from workflow context:
 
-**Workflow Mode: full**
-- Standard spec creation with Spec.md and SpecResearch.md
-- Generate comprehensive specifications covering all aspects
-- Follow complete research workflow with internal and optional external questions
+**Workflow Mode: full** - Standard spec with Spec.md and SpecResearch.md, comprehensive coverage.
 
-**Workflow Mode: minimal**
-- Spec stage is typically skipped in minimal mode
-- If invoked anyway, create lightweight spec focusing on core requirements
-- Reduce ceremony: fewer sections, focus on essential FRs and acceptance criteria
-- Research questions should focus on implementation-critical unknowns only
+**Workflow Mode: minimal** - Spec stage typically skipped. If invoked, create lightweight spec focusing on core FRs and acceptance criteria.
 
-**Workflow Mode: custom**
-- Check Custom Workflow Instructions to determine if spec stage is included
-- If instructions mention "skip spec" or similar, inform user and exit gracefully
-- If spec stage is included, adapt depth based on custom instructions
-- Look for keywords like "lightweight", "detailed", "comprehensive" to guide detail level
+**Workflow Mode: custom** - Check Custom Workflow Instructions. If "skip spec", exit gracefully. Otherwise adapt depth per instructions.
 
-**Review Strategy (prs or local)**
-- Review strategy doesn't affect spec creation behavior
-- Both strategies produce the same spec artifacts
-- Note: Branching happens in later stages (Planning, Implementation)
+**Review Strategy** - Doesn't affect spec creation (branching happens in later stages).
 
-**Defaults**
-  - Default to full mode with prs strategy
-  - if Workflow Mode or Review Strategy fields missing from WorkflowContext.md, use defaults
-
-**Mode Field Format in WorkflowContext.md**
-When creating or updating WorkflowContext.md, include these fields:
-```markdown
-Workflow Mode: <full|minimal|custom>
-Review Strategy: <prs|local>
-Custom Workflow Instructions: <text or none>
-```
+**Defaults** - Missing fields → full mode with prs strategy.
 
 ## High-Level Responsibilities
 1. Collect feature intent & constraints (Issue / brief / non-functional mandates).

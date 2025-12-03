@@ -38,32 +38,7 @@ This research assumes behavioral understanding from SpecResearch.md and adds imp
 
 ## Initial Setup:
 
-Before responding, look for `WorkflowContext.md` in the chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. When found, extract the Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs so you do not ask for parameters already recorded there.
-
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding with research
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- Explicitly mention any missing required parameters, gather or infer them, and persist the update for later stages. Treat missing `Remote` entries as `origin` without prompting the user.
-- Update the file whenever you learn a new parameter (e.g., artifact overrides, remote name, additional inputs) so downstream agents inherit an authoritative record. Record derived artifact paths when you rely on conventional locations.
+After calling `paw_get_context` (see PAW Context section above), you have the workflow context including Target Branch, Work ID, Issue URL, and Workflow Mode.
 
 ### Workflow Mode and Review Strategy Handling
 

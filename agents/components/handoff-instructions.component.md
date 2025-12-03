@@ -1,4 +1,3 @@
-````markdown
 ## Handoff Mode and Stage Navigation
 
 Read `Handoff Mode` from WorkflowContext.md at startup. Values: **manual** (default), **semi-auto**, or **auto**.
@@ -31,6 +30,15 @@ When transitioning to another stage:
 
 Context-sensitive: In implementation phases, `review` means Implementation Review. Commands like `implement` don't require phase numbers—the agent determines the current phase.
 
+**Addressing PR Review Comments** (prs strategy only):
+When a Planning PR, Phase PR, Docs PR, or Final PR has review comments that need addressing:
+- `address comments` - Hand off to the appropriate agent to address PR review comments
+  - Planning PR → PAW-02B Impl Planner
+  - Phase PR → PAW-03A Implementer (makes changes) → PAW-03B Impl Reviewer (verifies and pushes)
+  - Docs PR → PAW-04 Documenter
+  - Final PR → PAW-03A Implementer (makes changes) → PAW-03B Impl Reviewer (verifies and pushes)
+- `check pr` - Alternative command for addressing PR review comments
+
 **Inline instructions**: "implement but add logging" → pass "add logging" as `inline_instruction`
 
 **Continue command**: When user says `continue`, proceed to the default next stage as if in semi-auto/auto mode.
@@ -46,4 +54,3 @@ Always mention the prompt file option in handoff messages: "Say `generate prompt
 ### Getting Help
 
 Users can always ask the Status Agent for help navigating the workflow. Include in handoff messages: "Say `status` or `help` for workflow guidance."
-````

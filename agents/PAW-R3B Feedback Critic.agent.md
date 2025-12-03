@@ -6,8 +6,6 @@ description: 'PAW Review Feedback Critic - Critically assess review comment qual
 
 You critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
 
-{{PAW_CONTEXT}}
-
 ## Start / Initial Response
 
 Look for `ReviewComments.md` in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`.
@@ -360,11 +358,9 @@ Recommendations Summary:
 - Skip: <count> comments (with rationale in assessments)
 ```
 
-{{HANDOFF_INSTRUCTIONS}}
-
 ### Review Workflow Navigation
 
-This is the terminal stage of the PAW Review workflow. All modes pause here for human decision:
+This is the terminal stage of the PAW Review workflow:
 ```
 Next steps:
 1. Review all comments and assessments in ReviewComments.md
@@ -374,7 +370,5 @@ Next steps:
 
 If you need modifications:
 - Say 'revise feedback' to return to Feedback Generator with specific changes
-- Say 'status' to check review workflow state
+- Say 'status' for help
 ```
-
-In Semi-Auto and Auto modes: Still pause - human must review and approve before submission.

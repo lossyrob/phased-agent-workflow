@@ -516,7 +516,7 @@ Before pushing:
 
 **prs strategy** (Docs PR opened):
 - All Modes: Pause after Docs PR (wait for human review)
-- After PR review comments: Say `review` to address comments (handoff to self with review context)
+- After PR review comments: Say `address comments` or `check pr` to address comments
 - After PR merged: Present `pr`, `final pr`, `status`
 - Auto Mode: Handoff to PAW-05 PR after Docs PR merged
 

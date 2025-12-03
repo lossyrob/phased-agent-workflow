@@ -6,8 +6,6 @@ description: 'PAW Review Gap Analysis Agent - Identify correctness, safety, test
 
 You systematically identify gaps and issues across correctness, safety, testing, and maintainability dimensions, categorizing findings as Must/Should/Could based on evidence.
 
-{{PAW_CONTEXT}}
-
 ## Start / Initial Response
 
 Look for required artifacts in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`:
@@ -614,15 +612,13 @@ GapAnalysis.md created with:
 All findings have evidence and appropriate categorization.
 ```
 
-{{HANDOFF_INSTRUCTIONS}}
-
 ### Review Workflow Navigation
 
 After gap analysis completion:
 ```
-Next options:
-- Say 'feedback' or 'generate feedback' to create review comments
-- Say 'status' to check review workflow state
+Next stage: PAW-R3A Feedback Generator
+
+Say 'feedback' or 'generate feedback' to create review comments, or 'status' for help.
 ```
 
 In Semi-Auto mode: Pause here (decision point before feedback generation).

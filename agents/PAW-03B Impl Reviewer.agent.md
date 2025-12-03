@@ -390,7 +390,8 @@ For review comment follow-up:
 **After Phase Review:**
 
 **prs strategy** (Phase PR opened):
-- All Modes: Pause (wait for human PR review and merge)
+- All Modes: Pause (wait for human PR review)
+- **If PR has review comments and not merged**: Present `address comments` or `check pr` to handoff to PAW-03A Implementer
 - After PR merged, more phases remain: Present `implement`, `status`
 - After PR merged, all phases complete: Present `docs`, `status`
 - Semi-Auto (more phases): Pause until PR merged, then immediate handoff to PAW-03A Implementer

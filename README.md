@@ -114,6 +114,15 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 5. Optionally enter issue or work item URL (GitHub Issues or Azure DevOps Work Items supported)
 6. Watch as your workflow structure is created automatically
 
+#### Getting Workflow Status
+
+At any time during a PAW workflow, you can check your progress and get guidance on next steps:
+
+1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+2. Type "PAW: Get Work Status"
+3. Select a work item from the list (sorted by most recently modified) or choose "Auto-detect from context"
+4. The Status Agent will analyze your workflow state and provide actionable next-step recommendations
+
 #### Custom Instructions (Optional)
 
 ##### Workflow Initialization Instructions

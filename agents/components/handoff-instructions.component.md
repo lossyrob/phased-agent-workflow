@@ -5,8 +5,8 @@ Read `Handoff Mode` from WorkflowContext.md at startup. Values: **manual** (defa
 ### Mode Behavior
 
 - **Manual**: Present next-step options, wait for user command
-- **Semi-Auto**: Auto-chain at routine transitions, pause at decision points
-- **Auto**: Chain immediately (requires local strategy)
+- **Semi-Auto**: Auto-chain at routine transitions (automatically invoke `paw_call_agent` after presenting the handoff message), pause only at decision points requiring user input
+- **Auto**: Chain immediately - always invoke `paw_call_agent` after presenting the handoff message (requires local strategy)
 
 ### Invoking Handoffs
 
@@ -19,16 +19,18 @@ When transitioning to another stage:
 | Command | Agent |
 |---------|-------|
 | `spec`, `specification` | PAW-01A Specification |
-| `research`, `spec research` | PAW-01B Spec Researcher |
-| `code`, `code research` | PAW-02A Code Researcher |
+| `research` | PAW-01B Spec Researcher (from spec stage) or PAW-02A Code Researcher (from spec research/planning stages) |
 | `plan`, `planner` | PAW-02B Impl Planner |
 | `implement`, `implementer` | PAW-03A Implementer |
 | `review`, `reviewer` | PAW-03B Impl Reviewer |
 | `docs`, `documenter`, `documentation` | PAW-04 Documenter |
 | `pr`, `final pr` | PAW-05 PR |
-| `status`, `help` | PAW-X Status Update |
+| `status`, `help` | PAW-X Status |
 
-Context-sensitive: In implementation phases, `review` means Implementation Review. Commands like `implement` don't require phase numbers—the agent determines the current phase.
+Context-sensitive commands:
+- `research`: Maps to Spec Researcher when coming from Spec stage, Code Researcher when coming from completed spec research or planning stages
+- `review`: Maps to Implementation Review during implementation phases
+- `implement`: Agent determines current phase automatically
 
 **Addressing PR Review Comments** (prs strategy only):
 When a Planning PR, Phase PR, Docs PR, or Final PR has review comments that need addressing:
@@ -73,11 +75,18 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 ```
 
 Rules for handoff messages:
-1. **Always present options** - Even in auto/semi-auto mode, show what's happening
-2. **Use short commands** - Match the Command Mapping table above
-3. **Include descriptions** - Brief explanation of what each command does
-4. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
-5. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+1. **Always re-check the handoff mode**: Understand whether you're in manual, semi-auto, or auto mode
+
+Rules for handoff messages **when pausing**:
+2. **Always present options**
+3. **Use short commands** - Match the Command Mapping table above
+4. **Include descriptions** - Brief explanation of what each command does
+5. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
+6. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+
+Rules when auto-proceeding:
+1. **Always indicate what step you are handing off to**
+2. **Always call `paw_call_agent` as the last step**
 
 Example handoff message after completing implementation:
 ```
@@ -91,5 +100,9 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 
 **`continue` behavior**: Proceeds to the default next stage (what auto mode would do).
 
-**IMPORTANT**: Always present the handoff message with options at the end of your work.
-**QUALITY CHECK**: Does your final message include a "Next Steps" list and the guidance line?
+**IMPORTANT**: Always present the handoff message. Then:
+- **Manual**: STOP and wait for user command
+- **Semi-Auto**: Auto-proceed only at routine transitions (Spec↔Spec Research, Code Research→Plan, Implement→Review), otherwise wait for user command
+- **Auto**: Always add "Automatically proceeding..." and immediately call `paw_call_agent`
+
+**QUALITY CHECK**: Does your message have "Next Steps"? In auto mode (or semi-auto at routine transition), did you call `paw_call_agent`?

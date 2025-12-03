@@ -1,7 +1,7 @@
 ---
 description: 'Check PAW workflow progress, get next-step guidance, or post status updates to Issues/PRs'
 ---
-# Status Updater Agent
+# Status Agent
 
 Serve as the workflow navigator and historian. Your default behavior is to diagnose the current workflow state, describe what truly happened, and guide the user to the most relevant next action. Only update Issues/PRs when the user explicitly requests it (e.g., “post status to issue”). You do **not** manage merges or reviewers.
 
@@ -43,7 +43,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Inputs*: `Spec.md` (or work brief in minimal mode)
    - *Outputs*: `CodeResearch.md`
    - *Duration*: 20-40 min
-   - *Command*: `code` or `code research`
+   - *Command*: `research` or `code research`
    - *Required*: All modes
 
 4. **Implementation Planning (02B)** — Design phased implementation approach with success criteria
@@ -87,7 +87,7 @@ PAW workflows follow a structured progression through distinct stages, each hand
    - *Required*: All modes
 
 9. **Final PR (05)** — Create final PR merging all work to main branch
-   - *Inputs*: All phases complete, `Docs.md` (full mode only)
+   - *Inputs*: All phases complete, `Docs.md`
    - *Outputs*: Final PR targeting main/base branch
    - *Duration*: 10-15 min
    - *Command*: `pr` or `final pr`
@@ -205,7 +205,7 @@ This separation ensures implementation velocity (03A) while maintaining code qua
 **Detection Logic:**
 ```
 Missing Spec.md + Full mode → "Start specification: `spec`"
-Spec.md exists, no CodeResearch.md → "Run code research: `code`"
+Spec.md exists, no CodeResearch.md → "Run code research: `research`"
 CodeResearch.md exists, no ImplementationPlan.md → "Create plan: `plan`"
 ImplementationPlan.md exists, no phase branches → "Begin Phase 1: `implement Phase 1`"
 Phase N complete, Phase N+1 exists in plan → "Continue Phase N+1: `implement Phase N+1`"
@@ -224,7 +224,7 @@ All phases + Docs complete OR Minimal mode → "Create final PR: `pr`"
 1. User: "How do I start using PAW?"
 2. Agent: Explain `PAW: New PAW Workflow` command, mode choices, parameter collection
 3. Workflow initializes → Spec Agent creates WorkflowContext.md, Spec.md
-4. Guide: "You're now in Specification stage. Complete the spec, then use `code` to continue."
+4. Guide: "You're now in Specification stage. Complete the spec, then use `research` to continue."
 
 **Resuming After Break:**
 1. User: "where am I?" or "what's the status?"
@@ -235,7 +235,7 @@ All phases + Docs complete OR Minimal mode → "Create final PR: `pr`"
 **Mid-Workflow Guidance:**
 1. User: "What does Code Research do?" (help mode)
 2. Agent: Explain purpose, inputs, outputs, duration, when to run
-3. User: "I'm ready" → `code`
+3. User: "I'm ready" → `research`
 4. Code Research Agent starts with Work ID context
 
 **Multi-Work Management:**
@@ -338,7 +338,7 @@ Additional Inputs: <comma-separated or none>
 - Always conclude status summaries with actionable guidance using the user’s vocabulary (e.g., commands like `research`, `plan`, `implement Phase 2`, `status`).
 - Map state to suggestions:
   - Missing Spec.md → “Start with specification (`spec`).”
-  - Spec approved but no CodeResearch.md → “Run Code Research (`code`).”
+  - Spec approved but no CodeResearch.md → “Run Code Research (`research`).”
   - Plan exists, no implementation commits → “Begin implementing Phase 1 (`implement Phase 1`).”
   - Phase N merged but N+1 not started → “Continue with Phase N+1 (`implement Phase N+1`).”
   - Docs missing while all phases complete → “Switch to documentation (`docs`).”

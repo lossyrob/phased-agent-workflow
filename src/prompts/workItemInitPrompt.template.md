@@ -114,7 +114,14 @@ Begin initialization now. After completion, inform the user:
 3. **Prompt files available on-demand**: Use `paw_generate_prompt` to create customizable prompt files when needed
 4. **Next step**: Based on workflow mode, tell the user what command or action to take:
    - **Full mode**: Say `spec` to start the specification stage with the Spec Agent
-   - **Minimal mode**: Say `code` to start code research with the Code Research Agent
+   - **Minimal mode**: Say `research` to start code research with the Code Research Agent
    - **Custom mode**: Describe the appropriate first step based on custom instructions
 
-Tell the user they can navigate stages using simple commands (`spec`, `research`, `code`, `plan`, `implement`, `review`, `docs`, `pr`, `status`) and can generate prompt files on-demand when they need customization: `generate prompt for <stage>`.
+Tell the user they can say `continue` to immediately start the first stage, or use the specific command shown above. Mention that `status` or `help` is available at any time, and `generate prompt for <stage>` creates a customizable prompt file if needed.
+
+When the user says `continue`, use the `paw_call_agent` tool to invoke the handoff:
+- **Full mode**: Hand off to PAW-01A Specification
+- **Minimal mode**: Hand off to PAW-02A Code Researcher
+- **Custom mode**: Hand off to the appropriate first agent based on custom instructions
+
+Pass the generated feature slug as the work_id.

@@ -49,7 +49,7 @@ lint_file() {
     # Use special thresholds for Status Agent
     local warn_threshold=$WARN_THRESHOLD
     local error_threshold=$ERROR_THRESHOLD
-    if [[ "$filename" == "PAW-X Status Update.agent.md" ]]; then
+    if [[ "$filename" == "PAW-X Status.agent.md" ]]; then
         warn_threshold=$STATUS_AGENT_WARN_THRESHOLD
         error_threshold=$STATUS_AGENT_ERROR_THRESHOLD
     fi

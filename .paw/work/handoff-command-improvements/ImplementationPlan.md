@@ -156,9 +156,9 @@ Before modifying any file, check:
 - [x] Extension tests pass: `npm test`
 
 #### Manual Verification:
-- [ ] Command Recognition section appears near top of handoff-instructions.component.md
-- [ ] Handoff message examples include explicit continue targets
-- [ ] Impl Reviewer has clear scope boundary documentation
+- [x] Command Recognition section appears near top of handoff-instructions.component.md
+- [x] Handoff message examples include explicit continue targets
+- [x] Impl Reviewer has clear scope boundary documentation
 - [ ] Agent renders correctly when used in VS Code Chat
 
 ---

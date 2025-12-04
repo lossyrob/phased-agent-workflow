@@ -4,6 +4,20 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
+ * Resolves the path to a handoff template file.
+ * In production, templates are in the extension's prompts directory.
+ * In tests, PAW_EXTENSION_PATH can override this location.
+ * 
+ * @param templateName - Template filename (e.g., 'handoffManual.template.md')
+ * @returns Absolute path to the template file
+ */
+function getHandoffTemplatePath(templateName: string): string {
+  // Allow tests to override the extension path
+  const extensionPath = process.env.PAW_EXTENSION_PATH || path.join(__dirname, '..');
+  return path.join(extensionPath, 'prompts', templateName);
+}
+
+/**
  * Pattern to validate Work ID (feature slug) format.
  * Work IDs must contain only lowercase letters, numbers, and hyphens.
  */
@@ -87,7 +101,16 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
 }
 
 /**
- * Returns mode-specific handoff behavior instructions.
+ * Template filename for each handoff mode.
+ */
+const HANDOFF_TEMPLATE_FILES: Record<HandoffMode, string> = {
+  'manual': 'handoffManual.template.md',
+  'semi-auto': 'handoffSemiAuto.template.md',
+  'auto': 'handoffAuto.template.md',
+};
+
+/**
+ * Returns mode-specific handoff behavior instructions by loading from template files.
  * These instructions tell the agent exactly how to behave when completing work,
  * based on the handoff mode configured in WorkflowContext.md.
  * 
@@ -95,57 +118,23 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
  * @returns Markdown instructions for the agent
  */
 export function getHandoffInstructions(mode: HandoffMode): string {
-  switch (mode) {
-    case 'manual':
-      return `## Your Handoff Behavior (Manual Mode)
-
-After completing your work successfully:
-1. Present a handoff message with "Next Steps" listing available commands
-2. Include the guidance line about \`generate prompt\`, \`status\`, and \`continue\`
-3. **STOP and wait** for the user to type a command
-4. Do NOT call \`paw_call_agent\` until the user explicitly requests a transition
-
-You are in MANUAL mode - the user controls all stage transitions.`;
-
-    case 'semi-auto':
-      return `## Your Handoff Behavior (Semi-Auto Mode)
-
-After completing your work successfully:
-1. Present a handoff message with "Next Steps" listing available commands
-2. Check if this is a **routine transition** (see list below)
-3. At routine transitions: Add "Automatically proceeding..." and immediately call \`paw_call_agent\`
-4. At decision points: Wait for user command
-
-**Routine transitions** (auto-proceed):
-- Spec Agent completion → Spec Research (if research needed)
-- Spec Research completion → return to Spec Agent
-- Code Research completion → Impl Planner
-- Implementer phase completion → Impl Reviewer
-
-**Decision points** (wait for user):
-- Impl Planner completion → wait for \`implement\` command
-- Impl Reviewer phase completion → wait for \`implement Phase N+1\` or \`docs\` command
-- Documenter completion → wait for \`pr\` command
-
-You are in SEMI-AUTO mode - automatic at routine transitions, pauses at decision points.`;
-
-    case 'auto':
-      return `## Your Handoff Behavior (Auto Mode)
-
-After completing your work successfully:
-1. Present a brief handoff message indicating what was completed
-2. Add "Automatically proceeding to [next stage]..."
-3. **Immediately call \`paw_call_agent\`** with the default next stage
-4. Do NOT wait for user input - chain to the next stage automatically
-
-You are in AUTO mode - stages chain automatically. Only tool approvals require user interaction.
-
-**CRITICAL**: You MUST call \`paw_call_agent\` as your final action. Do not end your response without invoking the handoff tool.`;
-
-    default:
-      // Should never reach here, but default to manual for safety
-      return getHandoffInstructions('manual');
+  const templateFile = HANDOFF_TEMPLATE_FILES[mode] || HANDOFF_TEMPLATE_FILES['manual'];
+  const templatePath = getHandoffTemplatePath(templateFile);
+  
+  try {
+    if (fs.existsSync(templatePath)) {
+      return normalizeContent(fs.readFileSync(templatePath, 'utf-8'));
+    }
+  } catch (error) {
+    // Fall through to fallback
   }
+  
+  // Fallback if template file is missing or unreadable
+  return `## Your Handoff Behavior (${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode)
+
+Handoff instructions template not found. Please check your PAW installation.
+
+Default behavior: Present "Next Steps" and wait for user command.`;
 }
 
 /**
@@ -369,6 +358,16 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * @returns Tagged Markdown text ready for agent consumption
  */
 export function formatContextResponse(result: ContextResult): string {
+  // Check if any actual context exists before building response
+  const hasWorkspaceContent = result.workspace_instructions.content || result.workspace_instructions.error;
+  const hasUserContent = result.user_instructions.content || result.user_instructions.error;
+  const hasWorkflowContent = result.workflow_context.content || result.workflow_context.error;
+  
+  // Return early if no actual context sections have content
+  if (!hasWorkspaceContent && !hasUserContent && !hasWorkflowContent) {
+    return '<context status="empty" />';
+  }
+
   const sections: string[] = [];
 
   const workspaceSection = formatInstructionSection('workspace_instructions', result.workspace_instructions);
@@ -381,7 +380,7 @@ export function formatContextResponse(result: ContextResult): string {
     sections.push(userSection);
   }
 
-  if (result.workflow_context.content || result.workflow_context.error) {
+  if (hasWorkflowContent) {
     const workflowParts: string[] = ['<workflow_context>'];
     if (result.workflow_context.content) {
       workflowParts.push('```markdown');
@@ -399,11 +398,6 @@ export function formatContextResponse(result: ContextResult): string {
   const handoffMode = parseHandoffMode(result.workflow_context.content || '');
   const handoffInstructions = getHandoffInstructions(handoffMode);
   sections.push(`<handoff_instructions>\n${handoffInstructions}\n</handoff_instructions>`);
-
-  if (sections.length === 1 && sections[0].includes('<handoff_instructions>')) {
-    // Only handoff instructions present means no actual context was found
-    return '<context status="empty" />';
-  }
 
   return sections.join('\n\n');
 }

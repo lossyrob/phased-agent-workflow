@@ -18,6 +18,25 @@ function createTempDir(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
 
+/**
+ * Sets up the PAW_EXTENSION_PATH environment variable to point to the src/ directory
+ * so that template files can be loaded during tests. Returns a cleanup function.
+ */
+function setupExtensionPath(): () => void {
+  const previous = process.env.PAW_EXTENSION_PATH;
+  // Tests run from out/test/suite/, template files are in src/prompts/
+  // Use the workspace root and point to src/
+  const workspaceRoot = path.resolve(__dirname, '..', '..', '..');
+  process.env.PAW_EXTENSION_PATH = path.join(workspaceRoot, 'src');
+  return () => {
+    if (previous === undefined) {
+      delete process.env.PAW_EXTENSION_PATH;
+    } else {
+      process.env.PAW_EXTENSION_PATH = previous;
+    }
+  };
+}
+
 function writeFileRecursive(targetPath: string, content: string): void {
   fs.mkdirSync(path.dirname(targetPath), { recursive: true });
   fs.writeFileSync(targetPath, content, 'utf-8');
@@ -527,6 +546,16 @@ Remote: origin`;
   });
 
   suite('getHandoffInstructions', () => {
+    let restoreExtensionPath: () => void;
+
+    suiteSetup(() => {
+      restoreExtensionPath = setupExtensionPath();
+    });
+
+    suiteTeardown(() => {
+      restoreExtensionPath();
+    });
+
     test('returns manual mode instructions', () => {
       const instructions = getHandoffInstructions('manual');
       assert.ok(instructions.includes('Manual Mode'));
@@ -562,9 +591,32 @@ Remote: origin`;
       assert.ok(instructions.includes('Immediately'));
       assert.ok(instructions.includes('MUST call'));
     });
+
+    test('all modes include failure mode exception', () => {
+      const manualInstructions = getHandoffInstructions('manual');
+      const semiAutoInstructions = getHandoffInstructions('semi-auto');
+      const autoInstructions = getHandoffInstructions('auto');
+      
+      assert.ok(manualInstructions.includes('Failure Mode Exception'));
+      assert.ok(manualInstructions.includes('blocked'));
+      assert.ok(semiAutoInstructions.includes('Failure Mode Exception'));
+      assert.ok(semiAutoInstructions.includes('blocked'));
+      assert.ok(autoInstructions.includes('Failure Mode Exception'));
+      assert.ok(autoInstructions.includes('blocked'));
+    });
   });
 
   suite('formatContextResponse with handoff instructions', () => {
+    let restoreExtensionPath: () => void;
+
+    suiteSetup(() => {
+      restoreExtensionPath = setupExtensionPath();
+    });
+
+    suiteTeardown(() => {
+      restoreExtensionPath();
+    });
+
     test('includes handoff_instructions section in response', () => {
       const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 

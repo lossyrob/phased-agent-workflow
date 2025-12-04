@@ -52,20 +52,55 @@ interface PromptVariables {
 }
 
 /**
- * Load the prompt template file.
+ * Load a template file from either compiled (dist) or source locations.
+ * 
+ * This function handles both production (compiled JavaScript) and development
+ * (TypeScript source) environments by checking both locations.
+ * 
+ * @param filename - The template filename (e.g., 'workItemInitPrompt.template.md')
+ * @returns The template content as a string
+ * @throws Error if template not found in either location
  */
-function loadPromptTemplate(): string {
-  const compiledPath = path.join(__dirname, 'workItemInitPrompt.template.md');
+function loadTemplate(filename: string): string {
+  const compiledPath = path.join(__dirname, filename);
   if (fs.existsSync(compiledPath)) {
     return fs.readFileSync(compiledPath, 'utf-8');
   }
 
-  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', 'workItemInitPrompt.template.md');
+  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', filename);
   if (fs.existsSync(sourcePath)) {
     return fs.readFileSync(sourcePath, 'utf-8');
   }
 
-  throw new Error('workItemInitPrompt.template.md not found in compiled or source locations');
+  throw new Error(`${filename} not found in compiled or source locations`);
+}
+
+/**
+ * Load the main workflow initialization prompt template.
+ */
+function loadPromptTemplate(): string {
+  return loadTemplate('workItemInitPrompt.template.md');
+}
+
+/**
+ * Load the branch auto-derivation template for when an issue URL is provided.
+ */
+function loadBranchAutoDeriveWithIssueTemplate(): string {
+  return loadTemplate('branchAutoDeriveWithIssue.template.md');
+}
+
+/**
+ * Load the branch auto-derivation template for when no issue URL is provided.
+ */
+function loadBranchAutoDeriveWithDescriptionTemplate(): string {
+  return loadTemplate('branchAutoDeriveWithDescription.template.md');
+}
+
+/**
+ * Load the work description collection template.
+ */
+function loadWorkDescriptionTemplate(): string {
+  return loadTemplate('workDescription.template.md');
 }
 
 /**
@@ -95,55 +130,11 @@ function substituteVariables(template: string, variables: PromptVariables): stri
 function buildBranchAutoDeriveSection(issueUrl: string | undefined): string {
   if (issueUrl) {
     // Issue URL provided - derive branch from issue title
-    return `1. **Check Current Branch First:**
-   - Run \`git branch --show-current\` to see current branch
-   - If already on a feature/fix branch (not main/master/develop), offer to use it
-   - Ask user: "You're on branch '<current>'. Use this branch or derive a new one from the issue?"
-
-2. **Derive From Issue Title:**
-   - Fetch the issue title from ${issueUrl}
-   - Extract the issue number from the URL
-   - Generate branch name: \`feature/<issue-number>-<slugified-title>\`
-   - Slugify: lowercase, replace spaces with hyphens, remove special characters
-   - Keep title portion to 3-5 words
-   - Example: Issue #42 "Add User Authentication Flow" → \`feature/42-add-user-authentication\`
-
-3. **Check Remote Branch Conventions:**
-   - Run \`git branch -r\` to list remote branches
-   - Analyze existing branch naming patterns
-   - Common prefixes: feature/, bugfix/, fix/, hotfix/, feat/
-   - Use detected convention or fall back to \`feature/\` for features, \`fix/\` for bugs
-
-4. **Check for Conflicts:**
-   - Compare derived name against remote branches
-   - If conflict exists, append suffix (-2, -3, etc.) until unique
-   - Inform user of the derived branch name before creating`;
+    const template = loadBranchAutoDeriveWithIssueTemplate();
+    return template.replace(/\{\{ISSUE_URL\}\}/g, issueUrl);
   } else {
     // No issue URL - derive branch from work description
-    return `1. **Check Current Branch First:**
-   - Run \`git branch --show-current\` to see current branch
-   - If already on a feature/fix branch (not main/master/develop), offer to use it
-   - Ask user: "You're on branch '<current>'. Use this branch or derive a new one?"
-
-2. **Derive From Work Description:**
-   - Use the Initial Prompt (work description) provided by the user
-   - Slugify: lowercase, replace spaces with hyphens, remove special characters
-   - Keep reasonably short (3-5 words worth)
-   - Determine appropriate prefix based on description content:
-     - Bug/fix descriptions → \`fix/\`
-     - Feature/add/implement descriptions → \`feature/\`
-   - Example: "Add rate limiting to API" → \`feature/api-rate-limiting\`
-
-3. **Check Remote Branch Conventions:**
-   - Run \`git branch -r\` to list remote branches
-   - Analyze existing branch naming patterns
-   - Common prefixes: feature/, bugfix/, fix/, hotfix/, feat/
-   - Use detected convention or fall back to \`feature/\` for features, \`fix/\` for bugs
-
-4. **Check for Conflicts:**
-   - Compare derived name against remote branches
-   - If conflict exists, append suffix (-2, -3, etc.) until unique
-   - Inform user of the derived branch name before creating`;
+    return loadBranchAutoDeriveWithDescriptionTemplate();
   }
 }
 
@@ -159,26 +150,7 @@ function buildBranchAutoDeriveSection(issueUrl: string | undefined): string {
  * @returns Markdown content with work description collection instructions
  */
 function buildWorkDescriptionSection(): string {
-  return `Since no issue URL was provided, ask the user to describe their work:
-
-1. **Pause and Ask:**
-   - Ask: "What would you like to work on? Please describe the feature, bug fix, or task."
-   - Wait for the user's response in the chat
-
-2. **Capture the Response:**
-   - Store the user's description as the Initial Prompt
-   - This will be saved to WorkflowContext.md for downstream agents
-
-3. **Use the Description For:**
-   - Deriving the branch name (if branch was skipped)
-   - Deriving the Work Title (extract key concepts, 2-4 words)
-   - Providing context to downstream agents via the Initial Prompt field
-
-4. **Example Flow:**
-   - User says: "I want to add rate limiting to the API endpoints to prevent abuse"
-   - Initial Prompt: "I want to add rate limiting to the API endpoints to prevent abuse"
-   - Derived Work Title: "API Rate Limiting"
-   - Derived Branch: \`feature/api-rate-limiting\``;
+  return loadWorkDescriptionTemplate();
 }
 
 /**

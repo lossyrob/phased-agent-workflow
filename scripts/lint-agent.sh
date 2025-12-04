@@ -9,6 +9,10 @@ set -euo pipefail
 WARN_THRESHOLD=3500
 ERROR_THRESHOLD=6500
 
+# Special threshold for Status Agent (needs more context to guide users)
+STATUS_AGENT_WARN_THRESHOLD=5000
+STATUS_AGENT_ERROR_THRESHOLD=8000
+
 # Colors for output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -42,12 +46,20 @@ lint_file() {
     # Count tokens using Node.js script
     local token_count=$(node scripts/count-tokens.js "$file" 2>/dev/null || echo "0")
     
+    # Use special thresholds for Status Agent
+    local warn_threshold=$WARN_THRESHOLD
+    local error_threshold=$ERROR_THRESHOLD
+    if [[ "$filename" == "PAW-X Status.agent.md" ]]; then
+        warn_threshold=$STATUS_AGENT_WARN_THRESHOLD
+        error_threshold=$STATUS_AGENT_ERROR_THRESHOLD
+    fi
+    
     # Check thresholds
-    if (( token_count >= ERROR_THRESHOLD )); then
-        echo -e "${RED}✗ ERROR${NC} $filename: ${RED}${token_count} tokens${NC} (exceeds ${ERROR_THRESHOLD} token limit)"
+    if (( token_count >= error_threshold )); then
+        echo -e "${RED}✗ ERROR${NC} $filename: ${RED}${token_count} tokens${NC} (exceeds ${error_threshold} token limit)"
         return 1
-    elif (( token_count >= WARN_THRESHOLD )); then
-        echo -e "${YELLOW}⚠ WARN${NC}  $filename: ${YELLOW}${token_count} tokens${NC} (exceeds ${WARN_THRESHOLD} token warning threshold)"
+    elif (( token_count >= warn_threshold )); then
+        echo -e "${YELLOW}⚠ WARN${NC}  $filename: ${YELLOW}${token_count} tokens${NC} (exceeds ${warn_threshold} token warning threshold)"
         return 0
     else
         echo -e "${GREEN}✓ OK${NC}    $filename: ${token_count} tokens"

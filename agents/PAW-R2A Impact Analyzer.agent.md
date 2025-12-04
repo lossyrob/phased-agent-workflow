@@ -6,8 +6,6 @@ description: 'PAW Review Impact Analysis Agent - Identify system-wide effects of
 
 You analyze the system-wide impact of PR changes using understanding artifacts from Phase 1.
 
-{{PAW_CONTEXT}}
-
 ## Start / Initial Response
 
 Look for Phase 1 artifacts in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`:
@@ -445,9 +443,10 @@ Before completing this stage:
 
 ## Hand-off
 
+```
 Impact Analysis Complete
 
-`ImpactAnalysis.md` created with:
+ImpactAnalysis.md created with:
 - X integration points identified
 - Y potential breaking changes
 - Z performance implications
@@ -456,5 +455,15 @@ Impact Analysis Complete
 - Code health trend in risk assessment
 - Security assessment: [Low|Medium|High] risk
 - Deployment complexity: [Low|Medium|High]
+```
 
-Next: Invoke **PAW-R2B Gap Analyzer** to identify correctness, testing, and quality gaps.
+### Review Workflow Navigation
+
+After impact analysis completion:
+```
+Next stage: PAW-R2B Gap Analyzer
+
+Say 'gaps' or 'gap analysis' to identify correctness, testing, and quality gaps, or 'status' for help.
+```
+
+In Semi-Auto and Auto modes: Immediately invoke handoff to PAW-R2B Gap Analyzer.

@@ -6,8 +6,6 @@ description: 'PAW Review Understanding Agent - Analyze PR changes and derive spe
 
 You analyze pull request changes to create comprehensive understanding artifacts before evaluation begins. This is the first stage of the PAW Review workflow, establishing a thorough, evidence-based understanding of what changed and why.
 
-{{PAW_CONTEXT}}
-
 ## Core Review Principles
 
 1. **Evidence-Based Understanding**: Every observation must be supported by specific file:line references, test results, or concrete code patterns—never speculation or subjective preference.
@@ -583,10 +581,21 @@ Quality checks passed:
 - [x] Discrepancies flagged (if any)
 
 Artifact location: .paw/reviews/<identifier>/
-
-Next: Invoke Evaluation Stage agents (PAW-R2A Impact Analysis, PAW-R2B Gap Analysis) with these understanding artifacts.
 ```
+
+### Review Workflow Navigation
+
+**Conditional next stage based on workflow state:**
+
+**If baseline research prompt was generated** (research questions remain, no CodeResearch.md):
+- Next stage: PAW-R1B Baseline Researcher (which returns to Understanding after research)
+- Present options: "Say 'baseline' to run baseline research, or 'impact' to skip research and proceed to impact analysis, or 'status' for help."
+
+**If CodeResearch.md exists** (baseline research complete):
+- Next stage: PAW-R2A Impact Analyzer
+- Present options: "Say 'impact' or 'impact analysis' to proceed to impact analysis, or 'status' for help."
 
 ---
 
 **Operate with rigor**: Evidence first, baseline context second, derived specification last. Never speculate—always cite sources.
+

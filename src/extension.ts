@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
-import { registerPromptTemplatesTool } from './tools/createPromptTemplates';
+import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerContextTool } from './tools/contextTool';
+import { registerHandoffTool } from './tools/handoffTool';
+import { registerPromptGenerationTool } from './tools/promptGenerationTool';
 import {
   installAgents,
   needsInstallation,
@@ -40,11 +42,14 @@ export async function activate(context: vscode.ExtensionContext) {
   // Install or update PAW agents if needed
   await installAgentsIfNeeded(context, outputChannel);
 
-  registerPromptTemplatesTool(context);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_create_prompt_templates');
-
   registerContextTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
+
+  registerHandoffTool(context, outputChannel);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_call_agent');
+
+  registerPromptGenerationTool(context);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_generate_prompt');
 
   const initCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',
@@ -52,6 +57,9 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(initCommand);
   outputChannel.appendLine('[INFO] Registered command: paw.initializeWorkItem');
+
+  registerGetWorkStatusCommand(context, outputChannel);
+  outputChannel.appendLine('[INFO] Registered command: paw.getWorkStatus');
 
   outputChannel.appendLine('[INFO] PAW Workflow extension ready');
 }
@@ -66,6 +74,9 @@ export async function activate(context: vscode.ExtensionContext) {
  * Installation failures do not block extension activation - the extension continues
  * to function, and users can still use non-agent features.
  * 
+ * Note: Agent installation is skipped when running in test mode to prevent test runs
+ * from overwriting agents in the user's real prompts directory.
+ * 
  * @param context - Extension context for version tracking and state storage
  * @param outputChannel - Output channel for detailed logging
  */
@@ -73,6 +84,14 @@ async function installAgentsIfNeeded(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
+  // Skip agent installation in test mode to prevent test runs from overwriting
+  // agents in the user's real prompts directory (important when working on
+  // multiple PAW branches simultaneously)
+  if (context.extensionMode === vscode.ExtensionMode.Test) {
+    outputChannel.appendLine('[INFO] Running in test mode - skipping agent installation');
+    return;
+  }
+
   try {
     // Determine prompts directory path
     const customPath = vscode.workspace.getConfiguration('paw').get<string>('promptDirectory');

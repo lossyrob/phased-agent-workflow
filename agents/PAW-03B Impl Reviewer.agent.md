@@ -18,31 +18,6 @@ I'll review the implementation changes. Please provide information to identify t
 
 If the user mentions a hint to the implementation changes, e.g. 'last commit', use that to identify the implementation changes.
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before starting review work
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so later stages inherit the authoritative values. Treat missing `Remote` entries as `origin` without additional prompts.
-- Update the file whenever you discover new parameter values (e.g., PR number, artifact overrides, remote changes) so the workflow continues to share a single source of truth. Capture derived artifact paths if you rely on conventional locations.
-
 ### Workflow Mode and Review Strategy Handling
 
 Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your review and PR handling behavior as follows:
@@ -383,35 +358,67 @@ For review comment follow-up:
 
 ## Hand-off
 
-After initial review:
+{{HANDOFF_INSTRUCTIONS}}
+
+### Implementation Review Handoff
+
+**After Phase Review - Handoff Message Rules:**
+
+Determine N = current phase just completed, M = total phases from ImplementationPlan.md.
+
+**prs strategy** (Phase PR opened):
+
+Present exactly TWO next steps after opening the Phase PR:
+1. `address comments` - Address feedback from the Phase PR (include PR link)
+2. `implement` - Continue to Phase N+1 (only if N < M) OR `docs` - Continue to documentation (if N = M)
+
+Example handoff message (prs strategy, more phases remain):
 ```
-Phase [N] Review Complete - PR Opened
+**Phase 2 review complete. Phase PR opened: https://github.com/owner/repo/pull/123**
 
-I've reviewed the Implementation Agent's work, added docstrings/comments, and opened the Phase PR (add actual number when known).
+**Next Steps:**
+- `address comments` - Address feedback from the [Phase PR](https://github.com/owner/repo/pull/123)
+- `implement` - Continue to Phase 3
 
-Changes pushed:
-- Implementation Agent's functional code commits
-- My documentation and polish commits
-
-The PR is ready for human review. When review comments are received, ask the Implementation Agent to address them, then ask me to verify the changes and reply to reviewers.
-```
-
-After review comment follow-up:
-```
-Review Comments Verified - Changes Pushed and Summary Posted
-
-I've verified the Implementation Agent's response to all review comments, pushed all commits to the PR branch, and posted a comprehensive summary documenting which comments were addressed.
-
-Changes pushed:
-- Implementation Agent's commits addressing review comments
-- [My improvement commits if any]
-
-Summary comment on PR details:
-- Which review comments were addressed
-- Commits that addressed each comment
-- Any improvements made
-
-The human reviewer can now review the changes and manually resolve comments in the GitHub UI. The PR is ready for re-review.
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
 ```
 
-Next: Human reviews PR, resolves addressed comments in GitHub UI. If approved, merge and proceed to next phase or next stage when complete.
+Example handoff message (prs strategy, all phases complete):
+```
+**Phase 3 review complete. Phase PR opened: https://github.com/owner/repo/pull/125**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Phase PR](https://github.com/owner/repo/pull/125)
+- `docs` - Continue to documentation
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+**local strategy** (no Phase PRs):
+
+Present exactly TWO next steps after pushing changes:
+1. `feedback: <your feedback>` - Provide feedback for the Implementer to address (user types feedback inline)
+2. `implement` - Continue to Phase N+1 (only if N < M) OR `docs` - Continue to documentation (if N = M)
+
+Example handoff message (local strategy, more phases remain):
+```
+**Phase 2 review complete. Changes pushed to feature/auth-system.**
+
+**Next Steps:**
+- `feedback: <your feedback>` - Provide feedback for the Implementer to address
+- `implement` - Continue to Phase 3
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+**Handoff Mode Behavior:**
+- **Manual**: Present options, wait for user command
+- **Semi-Auto**: Pause after Phase PR opened (prs) or after push (local); user must explicitly continue
+- **Auto**: After push/PR, immediate handoff to next stage (PAW-03A for next phase, PAW-04 for docs)
+
+**IMPORTANT**: 
+- Only show ONE next phase (the immediate next one), not multiple future phases
+- Use `implement` command without phase number - the Implementer determines current phase
+- For prs strategy: Always include the PR link in the `address comments` description
+- For local strategy: User types `feedback: <their feedback>` which passes to Implementer as inline instruction
+

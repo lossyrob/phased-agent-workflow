@@ -8,6 +8,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Branch Mode**: {{BRANCH_MODE}}
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
+- **Handoff Mode**: {{HANDOFF_MODE}}
 {{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
@@ -66,6 +67,7 @@ Feature Slug: <generated_feature_slug>
 Target Branch: {{TARGET_BRANCH}}
 Workflow Mode: {{WORKFLOW_MODE}}
 Review Strategy: {{REVIEW_STRATEGY}}
+Handoff Mode: {{HANDOFF_MODE}}
 {{CUSTOM_INSTRUCTIONS_FIELD}}{{INITIAL_PROMPT_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
@@ -79,6 +81,7 @@ Additional Inputs: none
 - **Target Branch** (Required): Git branch that will hold completed work
 - **Workflow Mode** (Required): Workflow mode selection ('full', 'minimal', or 'custom')
 - **Review Strategy** (Required): Review strategy ('prs' or 'local')
+- **Handoff Mode** (Required): Handoff mode ('manual', 'semi-auto', or 'auto')
 - **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
 - **Initial Prompt** (Optional): User's work description when no issue URL provided
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"
@@ -86,38 +89,11 @@ Additional Inputs: none
 - **Artifact Paths** (Required): Location hint for artifacts (default: "auto-derived")
 - **Additional Inputs** (Optional): Comma-separated extra inputs, or "none"
 
-### 5. Call Tool to Generate Prompt Templates
-
-Determine which stages to include based on the workflow mode:
-
-**Workflow Mode: full**
-- All stages: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status
-- Generate all 10 prompt files
-
-**Workflow Mode: minimal**
-- Core stages only: code-research, plan, implementation, implementation-review, final-pr, status
-- Generate 6 prompt files (skip spec and documentation stages)
-
-**Workflow Mode: custom**
-- Interpret the Custom Workflow Instructions to determine which stages to include
-- Parse the instructions and generate only the required prompt files
+### 5. Review Strategy Validation
 
 **Review Strategy Validation:**
 - If Workflow Mode is 'minimal', verify Review Strategy is 'local' (required constraint)
 - If mismatch detected, stop and report error to user
-
-Invoke the language model tool to create prompt template files:
-
-```
-paw_create_prompt_templates(
-  feature_slug: "<generated_feature_slug>",
-  workspace_path: "{{WORKSPACE_PATH}}",
-  workflow_mode: "{{WORKFLOW_MODE}}",
-  review_strategy: "{{REVIEW_STRATEGY}}"
-)
-```
-
-If the tool reports errors, surface them to the user and stop.
 
 ### 6. Create and Checkout Git Branch
 
@@ -127,7 +103,17 @@ Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflic
 **If Branch Mode is "auto-derive":**
 Use the branch name derived from the steps above. Create and checkout the derived branch. If conflicts exist with existing branches, append a suffix (-2, -3, etc.) or prompt user for resolution.
 
-### 7. Open WorkflowContext.md
+### 7. Commit WorkflowContext.md
+
+After creating the workflow structure and checking out the target branch, commit the WorkflowContext.md file:
+
+1. Stage the WorkflowContext.md file: `git add .paw/work/<feature-slug>/WorkflowContext.md`
+2. Create an initial commit with message: `Initialize PAW workflow for <Work Title>`
+
+This ensures the workflow context is tracked in version control from the start.
+
+### 8. Open WorkflowContext.md
+
 
 Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 
@@ -141,8 +127,21 @@ Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 
 ---
 
-Begin initialization now. After completion, instruct the user on the next step based on workflow mode:
+Begin initialization now. After completion, inform the user:
 
-- **Full mode**: Run the `01A-spec.prompt.md` to create the specification
-- **Minimal mode**: Run the `02A-code-research.prompt.md` to begin code research
-- **Custom mode**: Run the appropriate first prompt file based on custom instructions
+1. **Workflow structure created** at `.paw/work/<feature-slug>/`
+2. **WorkflowContext.md ready** for review and editing
+3. **Prompt files available on-demand**: Use `paw_generate_prompt` to create customizable prompt files when needed
+4. **Next step**: Based on workflow mode, tell the user what command or action to take:
+   - **Full mode**: Say `spec` to start the specification stage with the Spec Agent
+   - **Minimal mode**: Say `research` to start code research with the Code Research Agent
+   - **Custom mode**: Describe the appropriate first step based on custom instructions
+
+Tell the user they can say `continue` to immediately start the first stage, or use the specific command shown above. Mention that `status` or `help` is available at any time, and `generate prompt for <stage>` creates a customizable prompt file if needed.
+
+When the user says `continue`, use the `paw_call_agent` tool to invoke the handoff:
+- **Full mode**: Hand off to PAW-01A Specification
+- **Minimal mode**: Hand off to PAW-02A Code Researcher
+- **Custom mode**: Hand off to the appropriate first agent based on custom instructions
+
+Pass the generated feature slug as the work_id.

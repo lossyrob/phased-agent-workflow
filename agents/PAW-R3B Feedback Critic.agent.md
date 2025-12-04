@@ -6,8 +6,6 @@ description: 'PAW Review Feedback Critic - Critically assess review comment qual
 
 You critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
 
-{{PAW_CONTEXT}}
-
 ## Start / Initial Response
 
 Look for `ReviewComments.md` in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`.
@@ -358,10 +356,19 @@ Recommendations Summary:
 - Include as-is: <count> comments
 - Modify: <count> comments (with specific suggestions in assessments)
 - Skip: <count> comments (with rationale in assessments)
+```
 
+### Review Workflow Navigation
+
+This is the terminal stage of the PAW Review workflow:
+```
 Next steps:
 1. Review all comments and assessments in ReviewComments.md
 2. Make any edits in GitHub UI (or prepare manual posting for non-GitHub)
 3. Decide on any tone adjustments needed
 4. Submit review when ready
+
+If you need modifications:
+- Say 'revise feedback' to return to Feedback Generator with specific changes
+- Say 'status' for help
 ```

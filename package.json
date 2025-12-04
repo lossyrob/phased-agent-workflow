@@ -41,60 +41,14 @@
         "command": "paw.initializeWorkItem",
         "title": "New PAW Workflow",
         "category": "PAW"
+      },
+      {
+        "command": "paw.getWorkStatus",
+        "title": "Get Work Status",
+        "category": "PAW"
       }
     ],
     "languageModelTools": [
-      {
-        "name": "paw_create_prompt_templates",
-        "displayName": "Create PAW Prompt Templates",
-        "modelDescription": "Generate PAW prompt template files for a work item based on workflow mode. Supports full (all stages), minimal (core stages only), and custom (explicit stages) modes.",
-        "toolReferenceName": "pawPromptTemplates",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "feature_slug": {
-              "type": "string",
-              "description": "The normalized feature slug (e.g., 'auth-system')"
-            },
-            "workspace_path": {
-              "type": "string",
-              "description": "Absolute path to the workspace root"
-            },
-            "workflow_mode": {
-              "type": "string",
-              "description": "Workflow mode selection: 'full' (all stages), 'minimal' (core stages only), or 'custom' (explicit stages)",
-              "enum": [
-                "full",
-                "minimal",
-                "custom"
-              ]
-            },
-            "stages": {
-              "type": "array",
-              "description": "Explicit list of stages to include (for custom mode). Valid stages: spec, code-research, plan, implementation, implementation-review, pr-review-response, documentation, final-pr, status",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "spec",
-                  "code-research",
-                  "plan",
-                  "implementation",
-                  "implementation-review",
-                  "pr-review-response",
-                  "documentation",
-                  "final-pr",
-                  "status"
-                ]
-              }
-            }
-          },
-          "required": [
-            "feature_slug",
-            "workspace_path"
-          ]
-        }
-      },
       {
         "name": "paw_get_context",
         "displayName": "Get PAW Context",
@@ -116,6 +70,95 @@
           "required": [
             "feature_slug",
             "agent_name"
+          ]
+        }
+      },
+      {
+        "name": "paw_call_agent",
+        "displayName": "Call PAW Agent",
+        "modelDescription": "Invoke a PAW agent in a new chat session with Work ID context. Agents should intelligently map user requests to exact agent names (e.g., 'research' → 'PAW-01B Spec Researcher', 'implement Phase 2' → 'PAW-03A Implementer'). Supports inline instructions for customizing agent behavior without creating prompt files.",
+        "toolReferenceName": "pawHandoff",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "target_agent": {
+              "type": "string",
+              "description": "The exact name of the PAW agent to invoke",
+              "enum": [
+                "PAW-01A Specification",
+                "PAW-01B Spec Researcher",
+                "PAW-02A Code Researcher",
+                "PAW-02B Impl Planner",
+                "PAW-03A Implementer",
+                "PAW-03B Impl Reviewer",
+                "PAW-04 Documenter",
+                "PAW-05 PR",
+                "PAW-X Status"
+              ]
+            },
+            "work_id": {
+              "type": "string",
+              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
+            },
+            "inline_instruction": {
+              "type": "string",
+              "description": "Optional instruction to pass to the target agent (e.g., 'Phase 2', 'add rate limiting')"
+            }
+          },
+          "required": [
+            "target_agent",
+            "work_id"
+          ]
+        }
+      },
+      {
+        "name": "paw_generate_prompt",
+        "displayName": "Generate PAW Prompt",
+        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. The agent must specify: 1) template_key - the base template to use (e.g., '03A-implement', '03C-pr-review'), and 2) filename - the exact output filename (e.g., '03A-implement-phase3.prompt.md'). Valid template keys: 01A-spec, 02A-code-research, 02B-impl-plan, 02C-planning-pr-review, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 04B-docs-pr-review, 04C-docs-review-pr-review, 05-pr, 05B-final-pr-review, 05C-final-review-pr-review, 0X-status. The agent determines the appropriate template and filename based on user intent.",
+        "toolReferenceName": "pawPromptGenerator",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "work_id": {
+              "type": "string",
+              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
+            },
+            "template_key": {
+              "type": "string",
+              "description": "The template key identifying which prompt template to use. This is the base filename without .prompt.md extension.",
+              "enum": [
+                "01A-spec",
+                "02A-code-research",
+                "02B-impl-plan",
+                "02C-planning-pr-review",
+                "03A-implement",
+                "03B-review",
+                "03C-pr-review",
+                "03D-review-pr-review",
+                "04-docs",
+                "04B-docs-pr-review",
+                "04C-docs-review-pr-review",
+                "05-pr",
+                "05B-final-pr-review",
+                "05C-final-review-pr-review",
+                "0X-status"
+              ]
+            },
+            "filename": {
+              "type": "string",
+              "description": "The exact filename to use for the generated prompt file. Must end with .prompt.md extension. For standard prompts use template filename (e.g., '03A-implement.prompt.md'). For phase-specific append context (e.g., '03A-implement-phase3.prompt.md')."
+            },
+            "additional_content": {
+              "type": "string",
+              "description": "Optional instructions to append to the prompt (e.g., 'Focus on Phase 3', 'add rate limiting')."
+            }
+          },
+          "required": [
+            "work_id",
+            "template_key",
+            "filename"
           ]
         }
       }
@@ -147,6 +190,7 @@
     "eslint": "^8.56.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
 }

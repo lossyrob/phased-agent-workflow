@@ -21,31 +21,6 @@ I'll create the final PR to main. Please provide:
 I'll perform pre-flight checks before creating the PR.
 ```
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before running pre-flight checks
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- When required parameters are absent, explicitly note the missing field, gather or confirm it, and persist the update so the workflow maintains a single source of truth. Treat missing `Remote` entries as `origin` without additional prompts.
-- Update the file whenever you learn new parameter values (e.g., final PR number, documentation overrides, additional inputs) so downstream review steps rely on accurate data. Record derived artifact paths when you use conventional locations.
-
 ### Workflow Mode and Review Strategy Handling
 
 Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your PR creation and description based on the workflow configuration:
@@ -300,32 +275,45 @@ For best results, ensure:
 
 ## Hand-off
 
+{{HANDOFF_INSTRUCTIONS}}
+
+### Final PR Handoff
+
+**After Final PR opened - Handoff Message Rules:**
+
+Present exactly TWO next steps after opening the Final PR:
+1. `address comments` - Address feedback from the Final PR (include PR link)
+2. Provide feedback for the Implementer to address
+3. Merge the PR to complete the workflow 🎉
+
+Example handoff message (prs strategy):
 ```
-Final PR Created: add the actual number when known
+**Final PR opened: https://github.com/owner/repo/pull/150**
 
-The PR is ready for review and includes:
-- Links to all PAW artifacts
-- Summary of all [N] implementation phases
-- Documentation updates
-- Testing evidence
-- Acceptance criteria verification
+**Next Steps:**
+- `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
+- Provide feedback for the Implementer to address
+- Merge the PR to complete the workflow 🎉
 
-Pre-flight checks passed:
-✅ All phases complete
-✅ Documentation complete
-✅ Artifacts exist
-✅ Branch up to date
-✅ Build and tests passing
-
-Merge Guidance:
-- [Deployment considerations]
-- [Rollout recommendations]
-- [Post-merge verification steps]
-
-Next: Human reviews final PR. 
-
-If review comments are received:
-- Invoke Implementation Agent (PAW-03A) to address review comments
-- Invoke Implementation Review Agent (PAW-03B) to verify changes and reply to reviewers
-- Repeat until approved, then merge to main
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
 ```
+
+Example handoff message (local strategy):
+```
+**Final PR opened: https://github.com/owner/repo/pull/150**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
+- Provide feedback for the Implementer to address
+- Merge the PR to complete the workflow 🎉
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+**Addressing Review Comments Flow:**
+- Say `address comments` or `check pr` → PAW-03A Implementer (with Final PR review context)
+- After changes committed: Implementation Review Agent verifies, pushes, and responds to PR comments
+- Return to this agent to update PR status or merge
+
+**Terminal stage**: Workflow ends when the Final PR is merged.
+

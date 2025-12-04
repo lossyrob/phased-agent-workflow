@@ -5,8 +5,6 @@ description: 'PAW Review Baseline Researcher - Analyze pre-change codebase'
 
 You analyze the codebase **at the base commit** (before PR changes) to document how the system worked, what patterns existed, and what context is relevant for understanding the changes. This provides baseline understanding that informs the derived specification and later evaluation.
 
-{{PAW_CONTEXT}}
-
 ## CRITICAL: YOUR ONLY JOB IS TO DOCUMENT THE PRE-CHANGE CODEBASE AS IT EXISTED
 - DO NOT analyze the PR changes or compare before/after
 - DO NOT suggest improvements or identify issues
@@ -340,6 +338,9 @@ Baseline findings include:
 ReviewContext.md updated with artifact reference.
 
 Original branch restored: <original-branch>
-
-Next: Understanding Agent can now resume and use this baseline understanding to complete DerivedSpec.md.
 ```
+
+### Review Workflow Navigation
+
+After baseline research completion, return control to PAW-R1A Understanding Agent to complete the derived specification:
+- Present option: "Say 'understanding' or 'resume' to return to Understanding Agent and complete DerivedSpec.md."

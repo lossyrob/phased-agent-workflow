@@ -20,59 +20,6 @@ I'll create comprehensive documentation for the completed feature. Please provid
 4. Any project-specific documentation guidelines
 ```
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before producing documentation
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- When required parameters are absent, explicitly note the missing field, gather or confirm the value, and persist it so subsequent stages inherit the authoritative record. Treat missing `Remote` entries as `origin` without additional prompts.
-- Update the file whenever you learn new parameter values (e.g., docs branch name, artifact overrides, additional inputs) so the workflow continues to rely on a single source of truth. Record derived artifact paths when using conventional locations.
-
-### Workflow Mode and Review Strategy Handling
-
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your documentation approach and branching behavior as follows:
-
-**Workflow Mode: full**
-- Standard comprehensive documentation workflow
-- Create detailed Docs.md with all sections
-- Review Strategy determines branching and PR:
-  - **prs**: Create docs branch `<target>_docs`, commit there, open Docs PR to target branch
-  - **local**: Work on target branch, commit there, no Docs PR
-
-**Workflow Mode: minimal**
-- Documentation stage typically skipped in minimal mode
-- If invoked anyway (user requests docs):
-  - Create streamlined Docs.md focusing on essential information only
-  - Review Strategy (enforced to local in minimal mode):
-    - **local**: Work on target branch, commit there, no Docs PR
-  - Minimal mode should never create Docs PR
-- Otherwise, exit gracefully with message: "Documentation stage is skipped in minimal workflow mode"
-
-**Workflow Mode: custom**
-- Check Custom Workflow Instructions to determine if docs stage is included
-- If instructions say "skip docs" or similar:
-  - Exit gracefully: "Documentation skipped per custom workflow instructions"
-- If docs included, adapt depth based on instructions:
-  - Look for keywords: "comprehensive", "lightweight", "essential only"
-- Review Strategy determines branching per instructions
-
 **Branching Logic by Review Strategy**
 
 **For prs strategy (full and custom modes only):**
@@ -510,45 +457,20 @@ Before pushing:
 
 ## Hand-off
 
-### After Initial Documentation
+{{HANDOFF_INSTRUCTIONS}}
 
-```
-Documentation Complete - Docs PR Opened
+### Documentation Handoff
 
-I've created comprehensive documentation and opened the Docs PR (add actual number when known) at:
-`<target_branch>_docs` → `<target_branch>`
+**prs strategy** (Docs PR opened):
+- All Modes: Pause after Docs PR (wait for human review)
+- After PR review comments: Say `address comments` or `check pr` to address comments
+- After PR merged: Present `pr`, `final pr`, `status`
+- Auto Mode: Handoff to PAW-05 PR after Docs PR merged
 
-The PR includes:
-- **Docs.md** - Detailed documentation serving as the authoritative technical reference at .paw/work/<feature-slug>/Docs.md
-- [List of updated project documentation files, which are based on/derived from Docs.md]
+**local strategy** (no Docs PR):
+- Manual: Present `pr`, `final pr`, `status`
+- Semi-Auto/Auto: Immediate handoff to PAW-05 PR
 
-Key documentation highlights:
-- Complete architecture and design decisions
-- Comprehensive usage guide with examples (when applicable)
-- Full technical reference and API documentation
-- Edge cases, limitations, and testing approach documented
+**If addressing Docs PR review comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
 
-Please review Docs.md for completeness and technical accuracy. It's designed to be the go-to reference for engineers working with this implementation.
-
-Next: After Docs PR is merged, invoke PR Agent (Stage 05) to create the final PR to main.
-```
-
-### After Addressing Review Comments
-
-```
-Review Comments Addressed - Changes Pushed and Summary Posted
-
-I've addressed all review comments on the Docs PR with focused documentation improvements.
-
-Changes made:
-- [List of commits with brief descriptions]
-
-Review comments addressed:
-- [Review comment link]: [How addressed and why]
-- [Review comment link]: [How addressed and why]
-
-All commits have been pushed to the PR branch. A comprehensive summary comment has been posted to the PR explaining all changes.
-
-The documentation updates are ready for re-review.
-```
 

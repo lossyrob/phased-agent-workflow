@@ -24,31 +24,6 @@ Before reading other files or taking action:
 5. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
 6. Verify you're on the correct phase branch: `git branch --show-current`
 
-### WorkflowContext.md Parameters
-- Minimal format to create or update:
-```markdown
-# WorkflowContext
-
-Work Title: <work_title>
-Work ID: <feature-slug>
-Target Branch: <target_branch>
-Issue URL: <issue_url>
-Remote: <remote_name>
-Artifact Paths: <auto-derived or explicit>
-Additional Inputs: <comma-separated or none>
-```
-- If the file is missing or lacks a Target Branch or Work ID:
-  1. Derive Target Branch from current branch if necessary
-  2. Generate Work ID from Work Title if Work Title exists (normalize and validate):
-     - Apply normalization rules: lowercase, replace spaces/special chars with hyphens, remove invalid characters, collapse consecutive hyphens, trim leading/trailing hyphens, enforce 100 char max
-     - Validate format: only lowercase letters, numbers, hyphens; no leading/trailing hyphens; no consecutive hyphens; not reserved names
-     - Check uniqueness: verify `.paw/work/<slug>/` doesn't exist; if conflict, auto-append -2, -3, etc.
-  3. If both missing, prompt user for either Work Title or explicit Work ID
-  4. Write `.paw/work/<feature-slug>/WorkflowContext.md` before proceeding with implementation
-  5. Note: Primary slug generation logic is in PAW-01A; this is defensive fallback
-- When required parameters are absent, state explicitly which field is missing, gather or infer the value, and persist the update so later phases inherit it. Treat missing `Remote` entries as `origin` without prompting.
-- Update the file whenever you discover new parameter values (e.g., remote adjustments, artifact path overrides, additional inputs) so future stages rely on the same authoritative record. Record derived artifact paths when you depend on conventional locations.
-
 ### Workflow Mode and Review Strategy Handling
 
 Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your implementation approach and branching behavior as follows:
@@ -59,7 +34,7 @@ Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt
 - Follow implementation plan phases as designed
 - Review Strategy determines branching:
   - **prs**: Create phase branches `<target>_phase[N]`, implement on phase branch, commit there
-  - **local**: Work directly on target branch for all phases, no phase branches
+  - **local**: Work directly on target branch (no phase branches), but still implement one phase at a time with review after each
 
 **Workflow Mode: minimal**
 - Simplified single-phase implementation
@@ -91,9 +66,10 @@ Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt
 2. If not on target branch:
    - Checkout target branch: `git checkout <target_branch>`
 3. Verify: `git branch --show-current`
-4. Implement all phases on target branch
+4. Implement the current phase on target branch (one phase at a time for full mode)
 5. Commit changes to target branch
 6. DO NOT push (Implementation Review Agent handles that)
+7. Hand off to implementation Review Agent (for auto/semi-auto modes, proceed automatically)
 
 **Phase Approach by Mode**
 - **full**: Implement one phase at a time, each with focused scope
@@ -371,30 +347,13 @@ Before completing review comment responses and handing off to Implementation Rev
 
 ## Hand-off
 
-### After Completing a Phase
+{{HANDOFF_INSTRUCTIONS}}
 
-After completing a phase implementation (not all phases):
-```
-Phase [N] Implementation Complete - Ready for Review
+### Implementation Handoff
 
-Automated verification passed:
-- [List automated checks that passed]
+**Next stage**: PAW-03B Impl Reviewer
+- Manual: Present options - `review`, `status`
+- Semi-Auto/Auto: Use `paw_call_agent` to immediately handoff to PAW-03B Impl Reviewer
 
-All changes committed locally to branch <phase_branch_name>. 
+After addressing review comments: handoff to PAW-03B Impl Reviewer to verify and push.
 
-Next: Invoke Implementation Review Agent (PAW-03B) to review my changes, add documentation, and open the Phase PR.
-```
-
-### After Addressing Review Comments
-
-After addressing all review comments:
-```
-Review Comments Addressed - Ready for Review Agent
-
-I've addressed the following review comments with focused commits:
-- [List of review comments addressed with commit hashes]
-
-All changes committed locally to <branch_name>.
-
-Next: Invoke Implementation Review Agent (PAW-03B) to verify my changes, push them, and reply to the review comments.
-```

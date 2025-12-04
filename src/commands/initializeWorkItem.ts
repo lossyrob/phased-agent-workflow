@@ -89,6 +89,7 @@ export async function initializeWorkItemCommand(
       outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
     }
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
+    outputChannel.appendLine(`[INFO] Handoff mode: ${inputs.handoffMode}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
@@ -98,6 +99,7 @@ export async function initializeWorkItemCommand(
       inputs.targetBranch,
       inputs.workflowMode,
       inputs.reviewStrategy,
+      inputs.handoffMode,
       inputs.issueUrl,
       workspaceFolder.uri.fsPath
     );
@@ -112,7 +114,7 @@ export async function initializeWorkItemCommand(
       await vscode.commands.executeCommand('workbench.action.chat.open', {
         query: prompt,
         mode: 'agent'
-      })
+      });
     });
 
     outputChannel.appendLine('[INFO] Agent invoked - check chat panel for progress');

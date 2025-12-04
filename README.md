@@ -4,6 +4,16 @@
     <h3>A Coding Agent Development Workflow</h3>
 </div>
 
+## Quickstart
+
+1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
+2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette ([detailed instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix))
+3. **Open** the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `PAW` to see available commands
+4. **Start new work** with `PAW: New PAW Workflow`
+5. **Get help** anytime with `PAW: Get Work Status`
+
+---
+
 **Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. Built on GitHub Copilot Agent Mode in VS Code, PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts. PAW empowers engineers to deliver fast, high-quality contributions by focusing human attention on high-leverage decision points—refining specifications, reviewing implementation plans, and guiding code at critical junctures—while AI agents handle the systematic execution.
 
 PAW is a system of *collaborating AI chat modes* that emulate the human software development lifecycle — each agent produces durable artifacts (specs, research docs, plans, PRs, and documentation).
@@ -94,9 +104,9 @@ The **PAW Workflow Extension** automates PAW agent installation and work item in
 - **Automatic agent installation**: PAW agents install to VS Code prompts directory on first activation and appear in GitHub Copilot Chat
 - **New PAW Workflow command**: One command to create complete `.paw/work/<feature-slug>/` directory structure
   - Creates `.paw/work/<feature-slug>/` with WorkflowContext.md
-  - Generates all prompt template files (9 for full mode, 8 for minimal)
   - Creates and checks out git branch
   - Opens WorkflowContext.md for immediate editing
+  - Navigate stages using simple commands; prompt files generated on-demand when customization needed
 - **Custom instructions support**: Tailor the initialization workflow for your project
 
 #### Installation
@@ -114,6 +124,15 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 5. Enter branch name (optional - press Enter to auto-derive from issue or description)
 6. Watch as your workflow structure is created automatically
 
+#### Getting Workflow Status
+
+At any time during a PAW workflow, you can check your progress and get guidance on next steps:
+
+1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+2. Type "PAW: Get Work Status"
+3. Select a work item from the list (sorted by most recently modified) or choose "Auto-detect from context"
+4. The Status Agent will analyze your workflow state and provide actionable next-step recommendations
+
 #### Custom Instructions (Optional)
 
 ##### Workflow Initialization Instructions
@@ -129,7 +148,7 @@ You can tailor the initialization workflow for your project:
 2. Add your project-specific guidance using Markdown format:
    - Naming conventions for feature slugs and branches
    - Required metadata that must appear in `WorkflowContext.md`
-   - Additional prompt templates beyond the standard set
+   - Stage transition preferences and handoff mode defaults
    - Integration requirements (e.g., mandatory issue URLs)
 
 When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
@@ -175,6 +194,64 @@ PAW supports three workflow modes—**Full**, **Minimal**, and **Custom**—to m
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll select your workflow mode and review strategy during initialization. Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.
 
 For detailed information about each mode, when to use them, and how review strategies work, see the [PAW Specification](paw-specification.md#workflow-modes).
+
+## Workflow Handoffs
+
+PAW supports intelligent stage navigation through three handoff modes—**Manual**, **Semi-Auto**, and **Auto**—to adapt to your experience level and the nature of your work.
+
+### Handoff Modes
+
+**Manual Mode** (Default)
+- Full control over stage transitions
+- Agents present next-step options at completion
+- You explicitly command each transition
+- Best for learning PAW or when you want to review and decide at each step
+
+**Semi-Auto Mode**
+- Thoughtful automation at research and review transitions
+- Automatic handoffs at designated points (Spec → Research → Spec, Phase → Review)
+- Pauses at key decision points (after Planning, before Implementation)
+- Best for experienced users who want speed with control at critical moments
+
+**Auto Mode**
+- Full automation through all workflow stages
+- Agents chain automatically with only tool approval interactions
+- Requires local review strategy (incompatible with intermediate PRs)
+- Best for routine work where you trust agents to complete the workflow
+
+### Stage Transition Commands
+
+After completing a stage, agents present contextual next-step options. Use simple commands to transition:
+
+- `research` or `start research` → Move to Spec Research Agent
+- `code` or `code research` → Move to Code Research Agent
+- `plan` → Move to Implementation Plan Agent
+- `implement Phase 2` → Start Implementation Agent for Phase 2
+- `review` → Move to Implementation Review Agent
+- `docs` → Move to Documenter Agent
+- `pr` → Move to PR Agent
+- `status` → Check workflow status
+
+### Inline Instructions
+
+Customize agent behavior without creating prompt files by providing inline instructions:
+
+```
+implement Phase 2 but add rate limiting
+continue but focus on error handling
+research but skip external dependencies
+```
+
+The inline instruction is passed directly to the target agent alongside the Work ID, allowing for quick customization without filesystem management.
+
+### Dynamic Prompt Generation
+
+To generate a prompt file for editing before execution:
+```
+generate prompt for implementer Phase 3
+```
+
+For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
 
 ## Workflow
 

@@ -17,3 +17,5 @@ All pull requests to `main` must be labeled with one of the following labels:
 - `bug` - For bug fixes
 - `documentation` - For documentation changes
 - `maintenance` - For maintenance, refactoring, or chores
+
+IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.

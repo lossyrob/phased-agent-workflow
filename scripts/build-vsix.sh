@@ -41,7 +41,8 @@ echo "$PACKAGE_OUTPUT"
 
 # Extract the VSIX filename from the package output
 # The output contains a line like: "Packaged: /path/to/paw-workflow-X.Y.Z.vsix (N files, SIZE)"
-VSIX_PATH=$(echo "$PACKAGE_OUTPUT" | grep -oP 'Packaged: .*/\K[^/]+\.vsix' | head -1)
+# Use sed for cross-platform compatibility (macOS grep doesn't support -P)
+VSIX_PATH=$(echo "$PACKAGE_OUTPUT" | grep "Packaged:" | sed 's/.*Packaged: //' | sed 's/ .*//')
 
 if [ -z "$VSIX_PATH" ]; then
     echo "Error: Could not determine VSIX filename from package output"

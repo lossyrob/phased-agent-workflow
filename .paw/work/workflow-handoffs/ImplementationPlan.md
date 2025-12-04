@@ -1252,6 +1252,41 @@ Successfully implemented mode-specific handoff instructions delivered via the `p
 - Manual testing needed to verify agents properly reference `<handoff_instructions>` in auto/semi-auto modes
 - The handoff component is now incomplete without the tool result, which forces agents to pay attention to it
 
+### Addressed PR Review Comments:
+
+**Date**: 2025-12-03
+
+**PR Review Comments Addressed from https://github.com/lossyrob/phased-agent-workflow/pull/126:**
+
+1. **Comment on getHandoffInstructions**: Moved handoff instructions from embedded strings in contextTool.ts to template files in src/prompts/ directory.
+   - Created: `src/prompts/handoffManual.template.md`
+   - Created: `src/prompts/handoffSemiAuto.template.md`
+   - Created: `src/prompts/handoffAuto.template.md`
+   - Modified `getHandoffInstructions()` to load from template files
+   - Added `getHandoffTemplatePath()` helper with `PAW_EXTENSION_PATH` test override
+   - Added fallback message if template file is missing
+
+2. **Comment on auto mode CRITICAL section**: Added Failure Mode Exception to all three mode templates.
+   - All templates now include: "**Failure Mode Exception**: If you are blocked (merge conflicts, missing prerequisites, errors requiring user input, or any situation preventing successful completion), present the blocker clearly and STOP. Do NOT present 'Next Steps', auto-proceed, or invoke handoff tools until the blocker is resolved."
+   - References similar guidance already in handoff-instructions.component.md
+
+3. **Comment on formatContextResponse empty check**: Refactored brittle string check.
+   - Old: `if (sections.length === 1 && sections[0].includes('<handoff_instructions>'))`
+   - New: Early return at function start when no actual context sections have content
+   - Checks `hasWorkspaceContent`, `hasUserContent`, `hasWorkflowContent` before building response
+   - Returns `<context status="empty" />` immediately if none have content
+
+**Test Updates:**
+- Added `setupExtensionPath()` helper to point tests at src/prompts/ for template loading
+- Added test: "all modes include failure mode exception" verifying blocker text in all templates
+
+**Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 129 unit tests pass: `npm test`
+- ✅ Agent linter passes: `./scripts/lint-agent.sh agents/components/handoff-instructions.component.md`
+
+**Commit:** 543f64b "Address Phase 8 PR review comments for contextTool.ts"
+
 ---
 
 ## Testing Strategy

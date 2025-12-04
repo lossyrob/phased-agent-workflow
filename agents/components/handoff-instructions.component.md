@@ -58,7 +58,7 @@ When user says "generate prompt for [stage]":
 
 ### Required Handoff Message Format
 
-**CRITICAL**: At the end of your work, you MUST present a handoff message with next-step options. This is required regardless of handoff mode.
+**CRITICAL**: At the end of your completed work, you MUST present a handoff message with next-step options. Handoff messages are for **successful completion only**. If you are blocked (e.g., merge conflicts, missing info, errors needing user input), present the blocker clearly and STOP - do NOT add "Next Steps" until the blocker is resolved and work is complete.
 
 Format your handoff message as:
 1. A brief status line (what was completed)

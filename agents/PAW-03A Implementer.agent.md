@@ -34,7 +34,7 @@ Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt
 - Follow implementation plan phases as designed
 - Review Strategy determines branching:
   - **prs**: Create phase branches `<target>_phase[N]`, implement on phase branch, commit there
-  - **local**: Work directly on target branch for all phases, no phase branches
+  - **local**: Work directly on target branch (no phase branches), but still implement one phase at a time with review after each
 
 **Workflow Mode: minimal**
 - Simplified single-phase implementation
@@ -66,9 +66,10 @@ Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt
 2. If not on target branch:
    - Checkout target branch: `git checkout <target_branch>`
 3. Verify: `git branch --show-current`
-4. Implement all phases on target branch
+4. Implement the current phase on target branch (one phase at a time for full mode)
 5. Commit changes to target branch
 6. DO NOT push (Implementation Review Agent handles that)
+7. Hand off to implementation Review Agent (for auto/semi-auto modes, proceed automatically)
 
 **Phase Approach by Mode**
 - **full**: Implement one phase at a time, each with focused scope
@@ -352,7 +353,7 @@ Before completing review comment responses and handing off to Implementation Rev
 
 **Next stage**: PAW-03B Impl Reviewer
 - Manual: Present options - `review`, `status`
-- Semi-Auto/Auto: Immediate handoff to reviewer
+- Semi-Auto/Auto: Use `paw_call_agent` to immediately handoff to PAW-03B Impl Reviewer
 
 After addressing review comments: handoff to PAW-03B Impl Reviewer to verify and push.
 

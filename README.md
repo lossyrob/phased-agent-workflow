@@ -110,8 +110,8 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 1. Open a git repository in VS Code
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
 3. Type "PAW: New PAW Workflow"
-4. Enter target branch name (e.g., `feature/my-feature`)
-5. Optionally enter issue or work item URL (GitHub Issues or Azure DevOps Work Items supported)
+4. Enter issue or work item URL (optional - press Enter to skip)
+5. Enter branch name (optional - press Enter to auto-derive from issue or description)
 6. Watch as your workflow structure is created automatically
 
 #### Custom Instructions (Optional)

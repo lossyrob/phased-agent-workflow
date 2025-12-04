@@ -34,7 +34,13 @@ export interface WorkflowModeSelection {
  * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
-  /** Git branch name for the work item (e.g., "feature/my-feature") */
+  /**
+   * Git branch name for the work item (e.g., "feature/my-feature").
+   * 
+   * When empty string, the agent will auto-derive the branch name from:
+   * - The issue title (if issue URL was provided)
+   * - A work description prompt (if no issue URL was provided)
+   */
   targetBranch: string;
   
   /** Workflow mode selection including optional custom instructions */
@@ -220,10 +226,10 @@ export async function collectReviewStrategy(
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
- * 1. Target branch name (required) - basic validation ensures valid git branch characters
- * 2. Workflow mode (required) - determines which stages are included
- * 3. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
- * 4. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 1. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 2. Target branch name (required) - basic validation ensures valid git branch characters
+ * 3. Workflow mode (required) - determines which stages are included
+ * 4. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to Work ID, fetching issue title).
@@ -234,39 +240,8 @@ export async function collectReviewStrategy(
 export async function collectUserInputs(
   outputChannel: vscode.OutputChannel
 ): Promise<WorkItemInputs | undefined> {
-  const targetBranch = await vscode.window.showInputBox({
-    prompt: 'Enter target branch name (e.g., feature/my-feature)',
-    placeHolder: 'feature/my-feature',
-    validateInput: (value: string) => {
-      if (!value || value.trim().length === 0) {
-        return 'Branch name is required';
-      }
-
-      if (!isValidBranchName(value)) {
-        return 'Branch name contains invalid characters';
-      }
-
-      return undefined;
-    }
-  });
-
-  if (!targetBranch) {
-    outputChannel.appendLine('[INFO] Branch name input cancelled');
-    return undefined;
-  }
-
-  // Collect workflow mode
-  const workflowMode = await collectWorkflowMode(outputChannel);
-  if (!workflowMode) {
-    return undefined;
-  }
-
-  // Collect review strategy (auto-selected for minimal mode)
-  const reviewStrategy = await collectReviewStrategy(outputChannel, workflowMode.mode);
-  if (!reviewStrategy) {
-    return undefined;
-  }
-
+  // Collect issue URL first (optional)
+  // This enables future phases to customize branch input prompt based on issue URL presence
   const issueUrl = await vscode.window.showInputBox({
     prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
     placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
@@ -285,6 +260,48 @@ export async function collectUserInputs(
 
   if (issueUrl === undefined) {
     outputChannel.appendLine('[INFO] Issue URL input cancelled');
+    return undefined;
+  }
+
+  // Collect target branch name (optional - empty triggers auto-derivation by agent)
+  // Customize prompt text based on whether issue URL was provided
+  const branchPrompt = issueUrl && issueUrl.trim().length > 0
+    ? 'Enter branch name (or press Enter to auto-derive from issue)'
+    : 'Enter branch name (or press Enter to auto-derive)';
+
+  const targetBranch = await vscode.window.showInputBox({
+    prompt: branchPrompt,
+    placeHolder: 'feature/my-feature',
+    validateInput: (value: string) => {
+      // Empty is valid - triggers auto-derivation by agent
+      if (!value || value.trim().length === 0) {
+        return undefined;
+      }
+
+      if (!isValidBranchName(value)) {
+        return 'Branch name contains invalid characters';
+      }
+
+      return undefined;
+    }
+  });
+
+  // targetBranch can be undefined (cancelled) or empty string (auto-derive)
+  // Only undefined indicates cancellation - empty string is valid (triggers auto-derive)
+  if (targetBranch === undefined) {
+    outputChannel.appendLine('[INFO] Branch name input cancelled');
+    return undefined;
+  }
+
+  // Collect workflow mode
+  const workflowMode = await collectWorkflowMode(outputChannel);
+  if (!workflowMode) {
+    return undefined;
+  }
+
+  // Collect review strategy (auto-selected for minimal mode)
+  const reviewStrategy = await collectReviewStrategy(outputChannel, workflowMode.mode);
+  if (!reviewStrategy) {
     return undefined;
   }
 

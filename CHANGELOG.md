@@ -13,4 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Implementation Planner agent now emphasizes strategic architectural thinking over code-level detail, adds Phase Summary sections to all plans for quick understanding, prevents documentation phases from appearing in implementation plans, and includes clear agent identification in Planning PRs
+- Workflow initialization now collects issue URL first (enabling context-aware branch prompts), makes branch name optional with auto-derivation from issue title or freeform work description, and stores user descriptions as "Initial Prompt" in WorkflowContext.md for downstream agent context
 

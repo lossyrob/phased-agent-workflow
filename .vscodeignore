@@ -1,7 +1,7 @@
 .vscode/**
 .vscode-test/**
 src/**
-!src/prompts/workItemInitPrompt.template.md
+!src/prompts/*.template.md
 .gitignore
 .eslintrc.json
 **/*.map

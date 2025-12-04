@@ -41,13 +41,18 @@ suite('User Input Validation', () => {
       'feature/my feature',
       'feature/my@feature',
       ' feature/leading-space',
-      '',
       'feature/with%percent'
     ];
 
     invalidNames.forEach(name => {
       assert.ok(!isValidBranchName(name), `${name} should be invalid`);
     });
+  });
+
+  test('Empty branch name fails validation (auto-derive handled separately)', () => {
+    // Empty string is invalid for isValidBranchName - the auto-derive logic
+    // in collectUserInputs allows empty input by checking before validation
+    assert.ok(!isValidBranchName(''), 'Empty string should be invalid for isValidBranchName');
   });
 
   test('Valid issue URLs pass validation (GitHub and Azure DevOps)', () => {

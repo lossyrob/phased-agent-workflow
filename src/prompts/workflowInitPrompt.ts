@@ -19,8 +19,10 @@ const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
  * for the specific workflow being initialized.
  */
 interface PromptVariables {
-  /** Git branch name for the workflow */
+  /** Git branch name for the workflow, or "auto" for agent-derived branch */
   TARGET_BRANCH: string;
+  /** Branch derivation mode: "explicit" (user provided) or "auto-derive" (agent derives) */
+  BRANCH_MODE: string;
   /** Workflow mode (full, minimal, or custom) */
   WORKFLOW_MODE: string;
   /** Review strategy (prs or local) */
@@ -124,10 +126,16 @@ export function constructAgentPrompt(
   
   // Add fallback indicator when issue URL is provided to clarify branch-based generation is fallback
   const workTitleFallbackIndicator = issueUrl ? ' (Fallback)' : '';
+
+  // Determine branch mode based on whether a branch was provided
+  // Empty branch triggers auto-derivation by the agent
+  const branchMode = targetBranch.trim() === '' ? 'auto-derive' : 'explicit';
+  const resolvedBranch = targetBranch.trim() === '' ? 'auto' : targetBranch;
   
   // Prepare template variables for substitution
   const variables: PromptVariables = {
-    TARGET_BRANCH: targetBranch,
+    TARGET_BRANCH: resolvedBranch,
+    BRANCH_MODE: branchMode,
     WORKFLOW_MODE: workflowMode.mode,
     REVIEW_STRATEGY: reviewStrategy,
     CUSTOM_INSTRUCTIONS_SECTION: customWorkflowInstructionsSection,

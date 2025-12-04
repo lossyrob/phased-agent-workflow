@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { loadCustomInstructions, formatCustomInstructions } from '../../prompts/customInstructions';
 import { constructAgentPrompt } from '../../prompts/workflowInitPrompt';
 
@@ -126,6 +125,80 @@ suite('Custom Instructions Loader', () => {
       );
       assert.ok(!prompt.includes('## Custom Instructions'));
       assert.ok(!prompt.includes('{{CUSTOM_INSTRUCTIONS}}'));
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+});
+
+/**
+ * Branch mode tests.
+ * 
+ * Verify that the prompt construction correctly handles explicit branch names
+ * and empty branch names (auto-derive mode).
+ */
+suite('Branch Mode Handling', () => {
+  test('explicit branch name is passed through to template', () => {
+    const workspace = createWorkspaceRoot();
+    try {
+      const prompt = constructAgentPrompt(
+        'feature/my-feature',
+        { mode: 'full' },
+        'prs',
+        undefined,
+        workspace
+      );
+      assert.ok(prompt.includes('feature/my-feature'), 'Explicit branch name should appear in prompt');
+      assert.ok(!prompt.includes('Target Branch: auto'), 'auto sentinel should not appear when branch is explicit');
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  test('empty branch name triggers auto-derive mode with "auto" sentinel', () => {
+    const workspace = createWorkspaceRoot();
+    try {
+      const prompt = constructAgentPrompt(
+        '',
+        { mode: 'full' },
+        'prs',
+        undefined,
+        workspace
+      );
+      assert.ok(prompt.includes('Target Branch: auto'), 'Empty branch should result in "auto" sentinel in WorkflowContext');
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  test('whitespace-only branch name triggers auto-derive mode', () => {
+    const workspace = createWorkspaceRoot();
+    try {
+      const prompt = constructAgentPrompt(
+        '   ',
+        { mode: 'full' },
+        'prs',
+        undefined,
+        workspace
+      );
+      assert.ok(prompt.includes('Target Branch: auto'), 'Whitespace-only branch should result in "auto" sentinel');
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  test('auto branch mode works with issue URL provided', () => {
+    const workspace = createWorkspaceRoot();
+    try {
+      const prompt = constructAgentPrompt(
+        '',
+        { mode: 'full' },
+        'prs',
+        'https://github.com/owner/repo/issues/123',
+        workspace
+      );
+      assert.ok(prompt.includes('Target Branch: auto'), 'Auto branch should work with issue URL');
+      assert.ok(prompt.includes('https://github.com/owner/repo/issues/123'), 'Issue URL should appear in prompt');
     } finally {
       fs.rmSync(workspace, { recursive: true, force: true });
     }

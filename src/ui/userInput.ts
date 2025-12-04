@@ -34,7 +34,13 @@ export interface WorkflowModeSelection {
  * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
-  /** Git branch name for the work item (e.g., "feature/my-feature") */
+  /**
+   * Git branch name for the work item (e.g., "feature/my-feature").
+   * 
+   * When empty string, the agent will auto-derive the branch name from:
+   * - The issue title (if issue URL was provided)
+   * - A work description prompt (if no issue URL was provided)
+   */
   targetBranch: string;
   
   /** Workflow mode selection including optional custom instructions */
@@ -257,13 +263,19 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  // Collect target branch name (required)
+  // Collect target branch name (optional - empty triggers auto-derivation by agent)
+  // Customize prompt text based on whether issue URL was provided
+  const branchPrompt = issueUrl && issueUrl.trim().length > 0
+    ? 'Enter branch name (or press Enter to auto-derive from issue)'
+    : 'Enter branch name (or press Enter to auto-derive)';
+
   const targetBranch = await vscode.window.showInputBox({
-    prompt: 'Enter target branch name (e.g., feature/my-feature)',
+    prompt: branchPrompt,
     placeHolder: 'feature/my-feature',
     validateInput: (value: string) => {
+      // Empty is valid - triggers auto-derivation by agent
       if (!value || value.trim().length === 0) {
-        return 'Branch name is required';
+        return undefined;
       }
 
       if (!isValidBranchName(value)) {
@@ -274,7 +286,9 @@ export async function collectUserInputs(
     }
   });
 
-  if (!targetBranch) {
+  // targetBranch can be undefined (cancelled) or empty string (auto-derive)
+  // Only undefined indicates cancellation - empty string is valid (triggers auto-derive)
+  if (targetBranch === undefined) {
     outputChannel.appendLine('[INFO] Branch name input cancelled');
     return undefined;
   }

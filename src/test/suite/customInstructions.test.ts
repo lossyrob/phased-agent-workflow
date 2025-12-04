@@ -147,6 +147,7 @@ suite('Branch Mode Handling', () => {
         'feature/my-feature',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -164,6 +165,7 @@ suite('Branch Mode Handling', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -180,6 +182,7 @@ suite('Branch Mode Handling', () => {
         '   ',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -196,6 +199,7 @@ suite('Branch Mode Handling', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         'https://github.com/owner/repo/issues/123',
         workspace
       );
@@ -221,6 +225,7 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -239,6 +244,7 @@ suite('Branch Auto-Derivation Section', () => {
         'feature/my-branch',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -256,6 +262,7 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         'https://github.com/owner/repo/issues/42',
         workspace
       );
@@ -274,6 +281,7 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -299,6 +307,7 @@ suite('Work Description Section', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -317,6 +326,7 @@ suite('Work Description Section', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         'https://github.com/owner/repo/issues/123',
         workspace
       );
@@ -342,6 +352,7 @@ suite('Initial Prompt Field', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );
@@ -358,6 +369,7 @@ suite('Initial Prompt Field', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
+        'manual',
         'https://github.com/owner/repo/issues/123',
         workspace
       );
@@ -374,6 +386,7 @@ suite('Initial Prompt Field', () => {
         '',
         { mode: 'full' },
         'prs',
+        'manual',
         undefined,
         workspace
       );

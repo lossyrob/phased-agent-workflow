@@ -86,6 +86,7 @@ The approach proceeds in logical phases: first establish handoff infrastructure 
 5. **Phase 5: Testing and Validation** - Comprehensive unit tests, integration tests, manual workflow testing
 6. **Phase 6: On-Demand Prompt Generation** - Remove auto-creation of all prompt files during workflow initialization; prompts created only when requested
 7. **Phase 7: Status Command and Agent Rename** - Add `PAW: Get Work Status` command with work ID picker, rename Status Agent from `PAW-X Status Update` to `PAW-X Status`
+8. **Phase 8: Mode-Specific Handoff Instructions via paw_get_context** - Parse Handoff Mode from WorkflowContext.md and return mode-specific handoff behavior in tool result, reducing agent confusion between modes
 
 ---
 
@@ -1014,6 +1015,245 @@ Successfully added the `PAW: Get Work Status` command and renamed the Status Age
 
 ---
 
+---
+
+## Phase 8: Mode-Specific Handoff Instructions via paw_get_context
+
+### Overview
+Refactor handoff instructions so that mode-specific behavior (manual/semi-auto/auto) is delivered through the `paw_get_context` tool result rather than being embedded in agent prompts. This addresses the observed problem where agents in auto mode consistently fail to auto-proceed because they're confused by competing instructions for multiple modes in their system prompt. By delivering only the relevant handoff instructions based on the parsed Handoff Mode, agents receive unambiguous guidance.
+
+### Problem Statement
+Agents in auto mode are constantly pausing and presenting manual-style "Next Steps" options instead of auto-invoking `paw_call_agent`. When asked to inspect their instructions, agents report that the correct behavior is "buried in the documentation." Multiple iterations of updating handoff instructions have not resolved this, even with Claude Opus 4.5. The root cause is cognitive overload: agents see instructions for ALL modes and make the wrong choice.
+
+### Solution Design
+**Hybrid approach**:
+1. **Keep in agent prompts** (handoff-instructions.component.md): General handoff structure, command mapping table, tool invocation patterns, stage-specific next stages
+2. **Move to paw_get_context result**: Mode-specific behavior instructions (what to do in manual vs semi-auto vs auto mode)
+
+**Key insight**: The handoff component will be incomplete without the `paw_get_context` result. Agents MUST reference the tool result to know how to behave, forcing them to pay attention to it.
+
+### Changes Required:
+
+#### 1. Parse Handoff Mode from WorkflowContext.md
+**File**: `src/tools/contextTool.ts`
+**Changes**:
+- Add `parseHandoffMode()` function that extracts `Handoff Mode:` field from WorkflowContext.md content
+- Use safe regex parsing: `/^Handoff Mode:\s*(manual|semi-auto|auto)/im`
+- Default to `'manual'` if field is missing or unparseable
+- Log to output channel if mode cannot be determined (for debugging)
+- Add `handoff_mode` field to `ContextResult` interface
+
+**Brief Example**:
+```typescript
+type HandoffMode = 'manual' | 'semi-auto' | 'auto';
+
+function parseHandoffMode(workflowContent: string): HandoffMode {
+  const match = workflowContent.match(/^Handoff Mode:\s*(manual|semi-auto|auto)/im);
+  if (match) {
+    return match[1].toLowerCase() as HandoffMode;
+  }
+  // Log warning to output channel
+  return 'manual'; // Safe default
+}
+```
+
+#### 2. Add Mode-Specific Handoff Instructions
+**File**: `src/tools/contextTool.ts`
+**Changes**:
+- Add `getHandoffInstructions(mode: HandoffMode): string` function
+- Return mode-specific instructions as markdown text:
+
+**Manual Mode Instructions**:
+```markdown
+## Your Handoff Behavior (Manual Mode)
+
+After completing your work successfully:
+1. Present a handoff message with "Next Steps" listing available commands
+2. Include the guidance line about `generate prompt`, `status`, and `continue`
+3. **STOP and wait** for the user to type a command
+4. Do NOT call `paw_call_agent` until the user explicitly requests a transition
+
+You are in MANUAL mode - the user controls all stage transitions.
+```
+
+**Semi-Auto Mode Instructions**:
+```markdown
+## Your Handoff Behavior (Semi-Auto Mode)
+
+After completing your work successfully:
+1. Present a handoff message with "Next Steps" listing available commands
+2. Check if this is a **routine transition** (Spec↔Spec Research, Code Research→Plan, Implement→Review)
+3. At routine transitions: Add "Automatically proceeding..." and immediately call `paw_call_agent`
+4. At decision points (Plan→Implement, Review→Next Phase, Docs→PR): Wait for user command
+
+Routine transitions (auto-proceed):
+- Spec Agent completion → Spec Research (if research needed)
+- Spec Research completion → return to Spec Agent
+- Code Research completion → Impl Planner
+- Implementer phase completion → Impl Reviewer
+
+Decision points (wait for user):
+- Impl Planner completion → wait for `implement` command
+- Impl Reviewer phase completion → wait for `implement Phase N+1` or `docs` command
+- Documenter completion → wait for `pr` command
+```
+
+**Auto Mode Instructions**:
+```markdown
+## Your Handoff Behavior (Auto Mode)
+
+After completing your work successfully:
+1. Present a brief handoff message indicating what was completed
+2. Add "Automatically proceeding to [next stage]..."
+3. **Immediately call `paw_call_agent`** with the default next stage
+4. Do NOT wait for user input - chain to the next stage automatically
+
+You are in AUTO mode - stages chain automatically. Only tool approvals require user interaction.
+
+CRITICAL: You MUST call `paw_call_agent` as your final action. Do not end your response without invoking the handoff tool.
+```
+
+#### 3. Include Handoff Instructions in formatContextResponse
+**File**: `src/tools/contextTool.ts`
+**Changes**:
+- Modify `formatContextResponse()` to include a new `<handoff_instructions>` section
+- Parse handoff mode from workflow_context.content before formatting
+- Call `getHandoffInstructions(mode)` and include result in response
+- Position handoff instructions section at the END of the response for recency
+
+**Brief Example**:
+```typescript
+export function formatContextResponse(result: ContextResult): string {
+  const sections: string[] = [];
+  
+  // ... existing sections ...
+  
+  // Parse mode and add handoff instructions at the END for recency
+  const handoffMode = result.workflow_context.content 
+    ? parseHandoffMode(result.workflow_context.content)
+    : 'manual';
+  sections.push(`<handoff_instructions>\n${getHandoffInstructions(handoffMode)}\n</handoff_instructions>`);
+  
+  return sections.join('\n\n');
+}
+```
+
+#### 4. Simplify Handoff Component
+**File**: `agents/components/handoff-instructions.component.md`
+**Changes**:
+- Remove mode-specific behavior descriptions (manual/semi-auto/auto sections)
+- Keep: Command mapping table, tool invocation patterns, inline instructions, prompt generation
+- Add prominent notice: "**CRITICAL**: Your handoff behavior is determined by the `<handoff_instructions>` section returned by `paw_get_context`. You MUST reference that section to know whether to wait for user input or auto-proceed."
+- Keep the "Required Handoff Message Format" section as it applies to all modes
+- Remove the "IMPORTANT" section at the end that describes mode-specific behavior (this now comes from tool result)
+
+#### 5. Update PAW Context Component
+**File**: `agents/components/paw-context.component.md`
+**Changes**:
+- Add to the list of what `paw_get_context` retrieves: "Mode-specific handoff instructions (manual/semi-auto/auto behavior)"
+- Update the table to include: `| **Handoff Mode** | Workflow mode for stage transitions: manual, semi-auto, or auto |`
+- Add note: "The `<handoff_instructions>` section in the tool result contains your specific behavior for handoffs. Follow those instructions when ready to transition to the next stage."
+
+#### 6. Update Tests
+**File**: `src/test/suite/contextTool.test.ts`
+**Changes**:
+- Add tests for `parseHandoffMode()`:
+  - Returns 'manual' when field is missing
+  - Returns 'manual' when field value is invalid
+  - Returns correct mode for valid values (case-insensitive)
+  - Handles multiline WorkflowContext content
+- Add tests for handoff instructions in `formatContextResponse()`:
+  - Includes `<handoff_instructions>` section in response
+  - Correct instructions for each mode
+  - Handoff instructions appear at end of response
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] Unit tests pass for `parseHandoffMode()`: `npm test`
+- [x] Unit tests pass for handoff instructions in `formatContextResponse()`: `npm test`
+- [x] TypeScript compilation succeeds: `npm run compile`
+- [x] Agent linter passes for updated handoff component: `./scripts/lint-agent.sh agents/components/handoff-instructions.component.md`
+
+#### Manual Verification:
+- [ ] Auto mode: Agent completes phase, immediately calls `paw_call_agent` without waiting
+- [ ] Semi-auto mode: Agent auto-proceeds at routine transitions, pauses at decision points
+- [ ] Manual mode: Agent presents options and waits for user command
+- [ ] paw_get_context response includes `<handoff_instructions>` section
+- [ ] Handoff instructions section is at end of response (for recency)
+- [ ] Agent explicitly references handoff instructions when making transition decision
+
+### Design Rationale
+
+**Why parse in the tool rather than let agents parse?**
+- Reduces cognitive load on agents - they receive pre-parsed, mode-specific instructions
+- Ensures consistent interpretation of mode values
+- Allows logging of parse failures for debugging
+- Keeps agent prompts cleaner and focused on their primary task
+
+**Why keep some instructions in the handoff component?**
+- Command mapping table is reference material that doesn't vary by mode
+- Tool invocation patterns are structural, not behavioral
+- Stage-specific next stages are agent-specific context
+- Reduces duplication if we had to include all this in each mode's instructions
+
+**Why position handoff instructions at the END of paw_get_context result?**
+- LLMs exhibit recency bias - more attention to recent context
+- Handoff decisions happen at the END of agent work, so instructions should be fresh
+- Workflow context (work ID, branch, etc.) is needed throughout, so it should come first
+
+**Why default to manual mode?**
+- Safest behavior - user maintains control
+- Prevents runaway automation if parsing fails
+- Matches existing behavior for workflows without Handoff Mode field
+
+### Migration Notes
+
+Existing agents with the current handoff component will continue to work:
+- The tool result adds instructions; it doesn't remove agent prompt instructions
+- Mode-specific sections in handoff component become redundant but not harmful
+- After this phase, the redundant sections can be removed from the component
+
+### References
+
+- Voice Notes: `.paw/work/workflow-handoffs/context/refactor-voice-notes.md`
+- Current handoff component: `agents/components/handoff-instructions.component.md`
+- Context tool: `src/tools/contextTool.ts`
+
+### Phase 8 Complete
+
+**Implementation Summary:**
+Successfully implemented mode-specific handoff instructions delivered via the `paw_get_context` tool result. This addresses the problem where agents in auto mode consistently failed to auto-proceed because they were confused by competing instructions for multiple modes in their system prompt.
+
+**Changes Made:**
+1. **contextTool.ts**: Added `parseHandoffMode()` to extract Handoff Mode from WorkflowContext.md using safe regex parsing with manual default. Added `getHandoffInstructions(mode)` returning mode-specific behavior instructions. Updated `formatContextResponse()` to include `<handoff_instructions>` section at END of response for recency bias.
+
+2. **handoff-instructions.component.md**: Removed mode-specific behavior sections (manual/semi-auto/auto). Added CRITICAL notice directing agents to reference the `<handoff_instructions>` section from `paw_get_context`. Kept command mapping table, tool invocation patterns, and handoff message format.
+
+3. **paw-context.component.md**: Documented that `paw_get_context` returns mode-specific handoff instructions. Added Handoff Mode to the WorkflowContext.md fields table. Added note about `<handoff_instructions>` section for stage transitions.
+
+4. **contextTool.test.ts**: Added 21 new tests for `parseHandoffMode()` (valid modes, invalid modes, missing field, case insensitivity, Windows line endings, whitespace handling) and `getHandoffInstructions()` (correct instructions per mode, positioning in response).
+
+**Automated Verification:**
+- ✅ TypeScript compilation succeeds: `npm run compile`
+- ✅ All 128 unit tests pass: `npm test`
+- ✅ Agent linter passes: `./scripts/lint-agent.sh agents/components/handoff-instructions.component.md`
+- ✅ Agent linter passes: `./scripts/lint-agent.sh agents/components/paw-context.component.md`
+
+**Commit:** f377153 "Phase 8: Mode-specific handoff instructions via paw_get_context"
+
+**Design Rationale:**
+- Pre-parsed mode-specific instructions reduce agent cognitive load
+- Handoff instructions at END of response leverage LLM recency bias
+- Safe default to manual mode prevents runaway automation if parsing fails
+- Command mapping and tool patterns remain in component for reference
+
+**Notes for Review:**
+- Manual testing needed to verify agents properly reference `<handoff_instructions>` in auto/semi-auto modes
+- The handoff component is now incomplete without the tool result, which forces agents to pay attention to it
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:
@@ -1024,6 +1264,8 @@ Successfully added the `PAW: Get Work Status` command and renamed the Status Age
 - Additional content parameter handling (appended to prompt body)
 - Prompt file generation (frontmatter, body, naming conventions)
 - VS Code command invocation (new chat, open with agent mode)
+- **Handoff mode parsing** (Phase 8): valid modes, invalid modes, missing field, case insensitivity
+- **Handoff instructions generation** (Phase 8): correct instructions per mode, positioning in response
 
 ### Integration Tests:
 - Full handoff flow from initialization through multiple stages

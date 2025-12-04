@@ -2,6 +2,19 @@
 
 **CRITICAL**: Your handoff behavior is determined by the `<handoff_instructions>` section returned by `paw_get_context`. You MUST reference that section to know whether to wait for user input or auto-proceed. The instructions below provide the structure; the tool result tells you HOW to behave.
 
+### Command Recognition (CRITICAL)
+
+When the user's message starts with one of these patterns, it is a **COMMAND** that triggers a handoff—do NOT perform the work yourself:
+
+| Pattern | Action |
+|---------|---------|
+| `feedback: <text>` | Hand off to PAW-03A Implementer (local strategy) |
+| `address comments`, `check pr` | Hand off to appropriate agent for PR comments |
+| `implement`, `review`, `docs`, `pr` | Hand off per Command Mapping table below |
+| `spec`, `research`, `plan`, `status` | Hand off per Command Mapping table below |
+
+**IMPORTANT**: Even if the command content seems within your current scope (e.g., `feedback: add clarifying comments` for a Reviewer), the command prefix means the user wants the designated agent to handle it. Recognize the command and hand off.
+
 ### Invoking Handoffs
 
 When transitioning to another stage:
@@ -65,7 +78,7 @@ Format your handoff message as:
 **Next Steps:**
 - `[command]` - [description of what this does]
 
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to [NEXT_STAGE_DESCRIPTION].
 ```
 
 Rules for handoff messages:
@@ -73,6 +86,7 @@ Rules for handoff messages:
 2. **Include descriptions** - Brief explanation of what each command does
 3. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
 4. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+5. **Make continue explicit** - The guidance line must specify what `continue` does, e.g., `say 'continue' to proceed to review`
 
 Example handoff message after completing implementation:
 ```
@@ -81,7 +95,7 @@ Example handoff message after completing implementation:
 **Next Steps:**
 - `review` - Hand off to Implementation Review Agent to verify and open Phase PR
 
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to review.
 ```
 
 **`continue` behavior**: Proceeds to the default next stage (what auto mode would do).

@@ -5,6 +5,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 ## Parameters Provided
 
 - **Target Branch**: {{TARGET_BRANCH}}
+- **Branch Mode**: {{BRANCH_MODE}}
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
 - **Handoff Mode**: {{HANDOFF_MODE}}
@@ -14,6 +15,10 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 {{CUSTOM_INSTRUCTIONS}}
 
 ## Your Tasks
+
+{{WORK_DESCRIPTION_SECTION}}
+
+{{BRANCH_AUTO_DERIVE_SECTION}}
 
 ### 1. Generate Work Title
 
@@ -63,7 +68,7 @@ Target Branch: {{TARGET_BRANCH}}
 Workflow Mode: {{WORKFLOW_MODE}}
 Review Strategy: {{REVIEW_STRATEGY}}
 Handoff Mode: {{HANDOFF_MODE}}
-{{CUSTOM_INSTRUCTIONS_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
+{{CUSTOM_INSTRUCTIONS_FIELD}}{{INITIAL_PROMPT_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
 Additional Inputs: none
@@ -78,6 +83,7 @@ Additional Inputs: none
 - **Review Strategy** (Required): Review strategy ('prs' or 'local')
 - **Handoff Mode** (Required): Handoff mode ('manual', 'semi-auto', or 'auto')
 - **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
+- **Initial Prompt** (Optional): User's work description when no issue URL provided
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"
 - **Remote** (Required): Git remote name (default: "origin")
 - **Artifact Paths** (Required): Location hint for artifacts (default: "auto-derived")
@@ -91,7 +97,11 @@ Additional Inputs: none
 
 ### 6. Create and Checkout Git Branch
 
+**If Branch Mode is "explicit":**
 Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflicts (existing branch names) by prompting the user for resolution.
+
+**If Branch Mode is "auto-derive":**
+Use the branch name derived from the steps above. Create and checkout the derived branch. If conflicts exist with existing branches, append a suffix (-2, -3, etc.) or prompt user for resolution.
 
 ### 7. Commit WorkflowContext.md
 
@@ -103,6 +113,7 @@ After creating the workflow structure and checking out the target branch, commit
 This ensures the workflow context is tracked in version control from the start.
 
 ### 8. Open WorkflowContext.md
+
 
 Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 

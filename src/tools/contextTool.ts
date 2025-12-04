@@ -10,6 +10,17 @@ import * as vscode from 'vscode';
 const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 
 /**
+ * Valid handoff mode values for stage navigation.
+ */
+export type HandoffMode = 'manual' | 'semi-auto' | 'auto';
+
+/**
+ * Pattern to extract Handoff Mode from WorkflowContext.md content.
+ * Matches "Handoff Mode: <mode>" on its own line, case-insensitive.
+ */
+const HANDOFF_MODE_PATTERN = /^Handoff Mode:\s*(manual|semi-auto|auto)\s*$/im;
+
+/**
  * Parameters for retrieving PAW context information.
  */
 export interface ContextParams {
@@ -53,6 +64,88 @@ export interface ContextResult {
  */
 function normalizeContent(content: string): string {
   return content.replace(/\r\n/g, '\n').trim();
+}
+
+/**
+ * Parses the Handoff Mode from WorkflowContext.md content.
+ * Looks for "Handoff Mode: <mode>" line and extracts the mode value.
+ * 
+ * @param workflowContent - Raw WorkflowContext.md content
+ * @returns Parsed handoff mode or 'manual' as default
+ */
+export function parseHandoffMode(workflowContent: string): HandoffMode {
+  if (!workflowContent) {
+    return 'manual';
+  }
+
+  const match = workflowContent.match(HANDOFF_MODE_PATTERN);
+  if (match) {
+    return match[1].toLowerCase() as HandoffMode;
+  }
+
+  return 'manual';
+}
+
+/**
+ * Returns mode-specific handoff behavior instructions.
+ * These instructions tell the agent exactly how to behave when completing work,
+ * based on the handoff mode configured in WorkflowContext.md.
+ * 
+ * @param mode - The handoff mode (manual, semi-auto, or auto)
+ * @returns Markdown instructions for the agent
+ */
+export function getHandoffInstructions(mode: HandoffMode): string {
+  switch (mode) {
+    case 'manual':
+      return `## Your Handoff Behavior (Manual Mode)
+
+After completing your work successfully:
+1. Present a handoff message with "Next Steps" listing available commands
+2. Include the guidance line about \`generate prompt\`, \`status\`, and \`continue\`
+3. **STOP and wait** for the user to type a command
+4. Do NOT call \`paw_call_agent\` until the user explicitly requests a transition
+
+You are in MANUAL mode - the user controls all stage transitions.`;
+
+    case 'semi-auto':
+      return `## Your Handoff Behavior (Semi-Auto Mode)
+
+After completing your work successfully:
+1. Present a handoff message with "Next Steps" listing available commands
+2. Check if this is a **routine transition** (see list below)
+3. At routine transitions: Add "Automatically proceeding..." and immediately call \`paw_call_agent\`
+4. At decision points: Wait for user command
+
+**Routine transitions** (auto-proceed):
+- Spec Agent completion → Spec Research (if research needed)
+- Spec Research completion → return to Spec Agent
+- Code Research completion → Impl Planner
+- Implementer phase completion → Impl Reviewer
+
+**Decision points** (wait for user):
+- Impl Planner completion → wait for \`implement\` command
+- Impl Reviewer phase completion → wait for \`implement Phase N+1\` or \`docs\` command
+- Documenter completion → wait for \`pr\` command
+
+You are in SEMI-AUTO mode - automatic at routine transitions, pauses at decision points.`;
+
+    case 'auto':
+      return `## Your Handoff Behavior (Auto Mode)
+
+After completing your work successfully:
+1. Present a brief handoff message indicating what was completed
+2. Add "Automatically proceeding to [next stage]..."
+3. **Immediately call \`paw_call_agent\`** with the default next stage
+4. Do NOT wait for user input - chain to the next stage automatically
+
+You are in AUTO mode - stages chain automatically. Only tool approvals require user interaction.
+
+**CRITICAL**: You MUST call \`paw_call_agent\` as your final action. Do not end your response without invoking the handoff tool.`;
+
+    default:
+      // Should never reach here, but default to manual for safety
+      return getHandoffInstructions('manual');
+  }
 }
 
 /**
@@ -269,6 +362,7 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * - Workspace custom instructions wrapped in `<workspace_instructions>`
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
+ * - Mode-specific handoff instructions wrapped in `<handoff_instructions>` (at END for recency)
  * - `<context status="empty" />` when no sections are available
  * 
  * @param result - Context result to format
@@ -301,7 +395,13 @@ export function formatContextResponse(result: ContextResult): string {
     sections.push(workflowParts.join('\n'));
   }
 
-  if (sections.length === 0) {
+  // Parse handoff mode and add instructions at END for recency bias
+  const handoffMode = parseHandoffMode(result.workflow_context.content || '');
+  const handoffInstructions = getHandoffInstructions(handoffMode);
+  sections.push(`<handoff_instructions>\n${handoffInstructions}\n</handoff_instructions>`);
+
+  if (sections.length === 1 && sections[0].includes('<handoff_instructions>')) {
+    // Only handoff instructions present means no actual context was found
     return '<context status="empty" />';
   }
 

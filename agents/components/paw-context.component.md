@@ -6,8 +6,11 @@
 - Workspace-specific custom instructions from `.paw/instructions/{{AGENT_NAME}}-instructions.md`
 - User-level custom instructions from `~/.paw/instructions/{{AGENT_NAME}}-instructions.md`
 - Workflow context from `WorkflowContext.md` (work ID, target branch, work title, etc.)
+- **Mode-specific handoff instructions** (manual/semi-auto/auto behavior) in `<handoff_instructions>` section
 
 **Why this matters**: Custom instructions may contain project-specific requirements, quality standards, or guardrails that override your default behavior. Skipping this step can result in work that violates project policies or misses critical verification steps.
+
+**Handoff behavior**: The `<handoff_instructions>` section in the tool result contains your specific behavior for stage transitions. Follow those instructions when ready to hand off to the next stage - they tell you whether to wait for user input or auto-proceed.
 
 Example tool call:
 ```
@@ -36,6 +39,7 @@ The `paw_get_context` tool returns raw WorkflowContext.md content. Parse these f
 | **Remote** | Git remote name (default: "origin") |
 | **Workflow Mode** | `full` (standard), `minimal` (streamlined), or `custom` |
 | **Review Strategy** | `prs` (intermediate PRs) or `local` (direct commits) |
+| **Handoff Mode** | `manual` (user controls), `semi-auto` (auto at routine transitions), or `auto` (always auto-proceed) |
 | **Custom Workflow Instructions** | Free-form text for custom mode (or "none") |
 | **Artifact Paths** | Usually "auto-derived" → `.paw/work/<Work ID>/` |
 | **Additional Inputs** | Comma-separated extra parameters (or "none") |

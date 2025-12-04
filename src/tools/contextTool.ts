@@ -4,10 +4,35 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
+ * Resolves the path to a handoff template file.
+ * In production, templates are in the extension's prompts directory.
+ * In tests, PAW_EXTENSION_PATH can override this location.
+ * 
+ * @param templateName - Template filename (e.g., 'handoffManual.template.md')
+ * @returns Absolute path to the template file
+ */
+function getHandoffTemplatePath(templateName: string): string {
+  // Allow tests to override the extension path
+  const extensionPath = process.env.PAW_EXTENSION_PATH || path.join(__dirname, '..');
+  return path.join(extensionPath, 'prompts', templateName);
+}
+
+/**
  * Pattern to validate Work ID (feature slug) format.
  * Work IDs must contain only lowercase letters, numbers, and hyphens.
  */
 const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
+
+/**
+ * Valid handoff mode values for stage navigation.
+ */
+export type HandoffMode = 'manual' | 'semi-auto' | 'auto';
+
+/**
+ * Pattern to extract Handoff Mode from WorkflowContext.md content.
+ * Matches "Handoff Mode: <mode>" on its own line, case-insensitive.
+ */
+const HANDOFF_MODE_PATTERN = /^Handoff Mode:\s*(manual|semi-auto|auto)\s*$/im;
 
 /**
  * Parameters for retrieving PAW context information.
@@ -53,6 +78,63 @@ export interface ContextResult {
  */
 function normalizeContent(content: string): string {
   return content.replace(/\r\n/g, '\n').trim();
+}
+
+/**
+ * Parses the Handoff Mode from WorkflowContext.md content.
+ * Looks for "Handoff Mode: <mode>" line and extracts the mode value.
+ * 
+ * @param workflowContent - Raw WorkflowContext.md content
+ * @returns Parsed handoff mode or 'manual' as default
+ */
+export function parseHandoffMode(workflowContent: string): HandoffMode {
+  if (!workflowContent) {
+    return 'manual';
+  }
+
+  const match = workflowContent.match(HANDOFF_MODE_PATTERN);
+  if (match) {
+    return match[1].toLowerCase() as HandoffMode;
+  }
+
+  return 'manual';
+}
+
+/**
+ * Template filename for each handoff mode.
+ */
+const HANDOFF_TEMPLATE_FILES: Record<HandoffMode, string> = {
+  'manual': 'handoffManual.template.md',
+  'semi-auto': 'handoffSemiAuto.template.md',
+  'auto': 'handoffAuto.template.md',
+};
+
+/**
+ * Returns mode-specific handoff behavior instructions by loading from template files.
+ * These instructions tell the agent exactly how to behave when completing work,
+ * based on the handoff mode configured in WorkflowContext.md.
+ * 
+ * @param mode - The handoff mode (manual, semi-auto, or auto)
+ * @returns Markdown instructions for the agent
+ */
+export function getHandoffInstructions(mode: HandoffMode): string {
+  const templateFile = HANDOFF_TEMPLATE_FILES[mode] || HANDOFF_TEMPLATE_FILES['manual'];
+  const templatePath = getHandoffTemplatePath(templateFile);
+  
+  try {
+    if (fs.existsSync(templatePath)) {
+      return normalizeContent(fs.readFileSync(templatePath, 'utf-8'));
+    }
+  } catch (error) {
+    // Fall through to fallback
+  }
+  
+  // Fallback if template file is missing or unreadable
+  return `## Your Handoff Behavior (${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode)
+
+Handoff instructions template not found. Please check your PAW installation.
+
+Default behavior: Present "Next Steps" and wait for user command.`;
 }
 
 /**
@@ -269,12 +351,23 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * - Workspace custom instructions wrapped in `<workspace_instructions>`
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
+ * - Mode-specific handoff instructions wrapped in `<handoff_instructions>` (at END for recency)
  * - `<context status="empty" />` when no sections are available
  * 
  * @param result - Context result to format
  * @returns Tagged Markdown text ready for agent consumption
  */
 export function formatContextResponse(result: ContextResult): string {
+  // Check if any actual context exists before building response
+  const hasWorkspaceContent = result.workspace_instructions.content || result.workspace_instructions.error;
+  const hasUserContent = result.user_instructions.content || result.user_instructions.error;
+  const hasWorkflowContent = result.workflow_context.content || result.workflow_context.error;
+  
+  // Return early if no actual context sections have content
+  if (!hasWorkspaceContent && !hasUserContent && !hasWorkflowContent) {
+    return '<context status="empty" />';
+  }
+
   const sections: string[] = [];
 
   const workspaceSection = formatInstructionSection('workspace_instructions', result.workspace_instructions);
@@ -287,7 +380,7 @@ export function formatContextResponse(result: ContextResult): string {
     sections.push(userSection);
   }
 
-  if (result.workflow_context.content || result.workflow_context.error) {
+  if (hasWorkflowContent) {
     const workflowParts: string[] = ['<workflow_context>'];
     if (result.workflow_context.content) {
       workflowParts.push('```markdown');
@@ -301,9 +394,10 @@ export function formatContextResponse(result: ContextResult): string {
     sections.push(workflowParts.join('\n'));
   }
 
-  if (sections.length === 0) {
-    return '<context status="empty" />';
-  }
+  // Parse handoff mode and add instructions at END for recency bias
+  const handoffMode = parseHandoffMode(result.workflow_context.content || '');
+  const handoffInstructions = getHandoffInstructions(handoffMode);
+  sections.push(`<handoff_instructions>\n${handoffInstructions}\n</handoff_instructions>`);
 
   return sections.join('\n\n');
 }

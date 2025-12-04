@@ -19,8 +19,10 @@ const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
  * for the specific workflow being initialized.
  */
 interface PromptVariables {
-  /** Git branch name for the workflow */
+  /** Git branch name for the workflow, or "auto" for agent-derived branch */
   TARGET_BRANCH: string;
+  /** Branch derivation mode: "explicit" (user provided) or "auto-derive" (agent derives) */
+  BRANCH_MODE: string;
   /** Workflow mode (full, minimal, or custom) */
   WORKFLOW_MODE: string;
   /** Review strategy (prs or local) */
@@ -43,23 +45,64 @@ interface PromptVariables {
   WORK_TITLE_FALLBACK_INDICATOR: string;
   /** Formatted custom instructions section from .paw/instructions/init-instructions.md */
   CUSTOM_INSTRUCTIONS: string;
+  /** Branch auto-derivation instructions (conditional, included when branch is 'auto') */
+  BRANCH_AUTO_DERIVE_SECTION: string;
+  /** Work description collection instructions (conditional, included when no issue URL) */
+  WORK_DESCRIPTION_SECTION: string;
+  /** Initial Prompt field for WorkflowContext.md (conditional) */
+  INITIAL_PROMPT_FIELD: string;
 }
 
 /**
- * Load the prompt template file.
+ * Load a template file from either compiled (dist) or source locations.
+ * 
+ * This function handles both production (compiled JavaScript) and development
+ * (TypeScript source) environments by checking both locations.
+ * 
+ * @param filename - The template filename (e.g., 'workItemInitPrompt.template.md')
+ * @returns The template content as a string
+ * @throws Error if template not found in either location
  */
-function loadPromptTemplate(): string {
-  const compiledPath = path.join(__dirname, 'workItemInitPrompt.template.md');
+function loadTemplate(filename: string): string {
+  const compiledPath = path.join(__dirname, filename);
   if (fs.existsSync(compiledPath)) {
     return fs.readFileSync(compiledPath, 'utf-8');
   }
 
-  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', 'workItemInitPrompt.template.md');
+  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', filename);
   if (fs.existsSync(sourcePath)) {
     return fs.readFileSync(sourcePath, 'utf-8');
   }
 
-  throw new Error('workItemInitPrompt.template.md not found in compiled or source locations');
+  throw new Error(`${filename} not found in compiled or source locations`);
+}
+
+/**
+ * Load the main workflow initialization prompt template.
+ */
+function loadPromptTemplate(): string {
+  return loadTemplate('workItemInitPrompt.template.md');
+}
+
+/**
+ * Load the branch auto-derivation template for when an issue URL is provided.
+ */
+function loadBranchAutoDeriveWithIssueTemplate(): string {
+  return loadTemplate('branchAutoDeriveWithIssue.template.md');
+}
+
+/**
+ * Load the branch auto-derivation template for when no issue URL is provided.
+ */
+function loadBranchAutoDeriveWithDescriptionTemplate(): string {
+  return loadTemplate('branchAutoDeriveWithDescription.template.md');
+}
+
+/**
+ * Load the work description collection template.
+ */
+function loadWorkDescriptionTemplate(): string {
+  return loadTemplate('workDescription.template.md');
 }
 
 /**
@@ -75,6 +118,41 @@ function substituteVariables(template: string, variables: PromptVariables): stri
   }
   
   return result;
+}
+
+/**
+ * Build branch auto-derivation instructions for the agent.
+ * 
+ * When the user skips providing a branch name, the agent needs instructions
+ * on how to derive an appropriate branch name from context.
+ * 
+ * @param issueUrl - Optional issue URL that can provide context for branch derivation
+ * @returns Markdown content with branch derivation instructions
+ */
+function buildBranchAutoDeriveSection(issueUrl: string | undefined): string {
+  if (issueUrl) {
+    // Issue URL provided - derive branch from issue title
+    const template = loadBranchAutoDeriveWithIssueTemplate();
+    return template.replace(/\{\{ISSUE_URL\}\}/g, issueUrl);
+  } else {
+    // No issue URL - derive branch from work description
+    return loadBranchAutoDeriveWithDescriptionTemplate();
+  }
+}
+
+/**
+ * Build work description collection instructions for the agent.
+ * 
+ * When no issue URL is provided, the agent should ask the user to describe
+ * what they want to work on. This description is used for:
+ * - Deriving the branch name (if branch was also skipped)
+ * - Deriving the Work Title
+ * - Storing as Initial Prompt in WorkflowContext.md
+ * 
+ * @returns Markdown content with work description collection instructions
+ */
+function buildWorkDescriptionSection(): string {
+  return loadWorkDescriptionTemplate();
 }
 
 /**
@@ -128,10 +206,35 @@ export function constructAgentPrompt(
   
   // Add fallback indicator when issue URL is provided to clarify branch-based generation is fallback
   const workTitleFallbackIndicator = issueUrl ? ' (Fallback)' : '';
+
+  // Determine branch mode based on whether a branch was provided
+  // Empty branch triggers auto-derivation by the agent
+  const branchMode = targetBranch.trim() === '' ? 'auto-derive' : 'explicit';
+  const resolvedBranch = targetBranch.trim() === '' ? 'auto' : targetBranch;
+
+  // Build branch auto-derivation section when branch mode is "auto-derive"
+  // This section instructs the agent how to derive the branch name
+  const branchAutoDeriveSectionContent = branchMode === 'auto-derive'
+    ? buildBranchAutoDeriveSection(issueUrl)
+    : '';
+
+  // Build work description section when no issue URL is provided
+  // This section instructs the agent to ask the user what they want to work on
+  const workDescriptionSectionContent = !issueUrl
+    ? buildWorkDescriptionSection()
+    : '';
+
+  // Build Initial Prompt field placeholder for WorkflowContext.md
+  // When no issue URL is provided, the agent captures user's work description
+  // and stores it in the Initial Prompt field
+  const initialPromptFieldContent = !issueUrl
+    ? 'Initial Prompt: <user_work_description>\n'
+    : '';
   
   // Prepare template variables for substitution
   const variables: PromptVariables = {
-    TARGET_BRANCH: targetBranch,
+    TARGET_BRANCH: resolvedBranch,
+    BRANCH_MODE: branchMode,
     WORKFLOW_MODE: workflowMode.mode,
     REVIEW_STRATEGY: reviewStrategy,
     HANDOFF_MODE: handoffMode,
@@ -142,7 +245,10 @@ export function constructAgentPrompt(
     WORKSPACE_PATH: workspacePath,
     WORK_TITLE_STRATEGY: workTitleStrategy,
     WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator,
-    CUSTOM_INSTRUCTIONS: customInstructionsSection
+    CUSTOM_INSTRUCTIONS: customInstructionsSection,
+    BRANCH_AUTO_DERIVE_SECTION: branchAutoDeriveSectionContent,
+    WORK_DESCRIPTION_SECTION: workDescriptionSectionContent,
+    INITIAL_PROMPT_FIELD: initialPromptFieldContent
   };
   
   // Load template and substitute variables

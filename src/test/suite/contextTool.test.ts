@@ -9,10 +9,32 @@ import {
   getContext,
   loadWorkflowContext,
   loadCustomInstructions,
+  parseHandoffMode,
+  getHandoffInstructions,
+  HandoffMode,
 } from '../../tools/contextTool';
 
 function createTempDir(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+}
+
+/**
+ * Sets up the PAW_EXTENSION_PATH environment variable to point to the src/ directory
+ * so that template files can be loaded during tests. Returns a cleanup function.
+ */
+function setupExtensionPath(): () => void {
+  const previous = process.env.PAW_EXTENSION_PATH;
+  // Tests run from out/test/suite/, template files are in src/prompts/
+  // Use the workspace root and point to src/
+  const workspaceRoot = path.resolve(__dirname, '..', '..', '..');
+  process.env.PAW_EXTENSION_PATH = path.join(workspaceRoot, 'src');
+  return () => {
+    if (previous === undefined) {
+      delete process.env.PAW_EXTENSION_PATH;
+    } else {
+      process.env.PAW_EXTENSION_PATH = previous;
+    }
+  };
 }
 
 function writeFileRecursive(targetPath: string, content: string): void {
@@ -436,6 +458,245 @@ suite('Context Tool', () => {
         fs.rmSync(workspaceRoot, { recursive: true, force: true });
         fs.rmSync(tempHome, { recursive: true, force: true });
       }
+    });
+  });
+
+  suite('parseHandoffMode', () => {
+    test('returns manual when content is empty', () => {
+      assert.strictEqual(parseHandoffMode(''), 'manual');
+    });
+
+    test('returns manual when field is missing', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Target Branch: feature/demo
+Workflow Mode: full
+Review Strategy: prs`;
+      assert.strictEqual(parseHandoffMode(content), 'manual');
+    });
+
+    test('returns manual for valid content', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Handoff Mode: manual
+Target Branch: feature/demo`;
+      assert.strictEqual(parseHandoffMode(content), 'manual');
+    });
+
+    test('returns semi-auto for valid content', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Handoff Mode: semi-auto
+Target Branch: feature/demo`;
+      assert.strictEqual(parseHandoffMode(content), 'semi-auto');
+    });
+
+    test('returns auto for valid content', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Handoff Mode: auto
+Target Branch: feature/demo`;
+      assert.strictEqual(parseHandoffMode(content), 'auto');
+    });
+
+    test('is case-insensitive for mode values', () => {
+      assert.strictEqual(parseHandoffMode('Handoff Mode: MANUAL'), 'manual');
+      assert.strictEqual(parseHandoffMode('Handoff Mode: Semi-Auto'), 'semi-auto');
+      assert.strictEqual(parseHandoffMode('Handoff Mode: AUTO'), 'auto');
+    });
+
+    test('is case-insensitive for field label', () => {
+      assert.strictEqual(parseHandoffMode('handoff mode: auto'), 'auto');
+      assert.strictEqual(parseHandoffMode('HANDOFF MODE: semi-auto'), 'semi-auto');
+    });
+
+    test('returns manual for invalid mode values', () => {
+      assert.strictEqual(parseHandoffMode('Handoff Mode: invalid'), 'manual');
+      assert.strictEqual(parseHandoffMode('Handoff Mode: automatic'), 'manual');
+      assert.strictEqual(parseHandoffMode('Handoff Mode: '), 'manual');
+    });
+
+    test('handles multiline content correctly', () => {
+      const content = `# WorkflowContext
+
+Work Title: Test Feature
+Work ID: test-feature
+Target Branch: feature/test
+Workflow Mode: full
+Review Strategy: prs
+Handoff Mode: auto
+Issue URL: https://github.com/owner/repo/issues/1
+Remote: origin`;
+      assert.strictEqual(parseHandoffMode(content), 'auto');
+    });
+
+    test('handles Windows line endings', () => {
+      const content = 'Work Title: Test\r\nHandoff Mode: semi-auto\r\nTarget Branch: main';
+      assert.strictEqual(parseHandoffMode(content), 'semi-auto');
+    });
+
+    test('handles extra whitespace around mode value', () => {
+      assert.strictEqual(parseHandoffMode('Handoff Mode:   auto   '), 'auto');
+      assert.strictEqual(parseHandoffMode('Handoff Mode:\tmanual'), 'manual');
+    });
+  });
+
+  suite('getHandoffInstructions', () => {
+    let restoreExtensionPath: () => void;
+
+    suiteSetup(() => {
+      restoreExtensionPath = setupExtensionPath();
+    });
+
+    suiteTeardown(() => {
+      restoreExtensionPath();
+    });
+
+    test('returns manual mode instructions', () => {
+      const instructions = getHandoffInstructions('manual');
+      assert.ok(instructions.includes('Manual Mode'));
+      assert.ok(instructions.includes('STOP and wait'));
+      assert.ok(instructions.includes('Do NOT call `paw_call_agent`'));
+      assert.ok(instructions.includes('user controls all stage transitions'));
+    });
+
+    test('returns semi-auto mode instructions', () => {
+      const instructions = getHandoffInstructions('semi-auto');
+      assert.ok(instructions.includes('Semi-Auto Mode'));
+      assert.ok(instructions.includes('routine transition'));
+      assert.ok(instructions.includes('Decision points'));
+      assert.ok(instructions.includes('auto-proceed'));
+    });
+
+    test('returns auto mode instructions', () => {
+      const instructions = getHandoffInstructions('auto');
+      assert.ok(instructions.includes('Auto Mode'));
+      assert.ok(instructions.includes('Immediately call `paw_call_agent`'));
+      assert.ok(instructions.includes('Do NOT wait for user input'));
+      assert.ok(instructions.includes('CRITICAL'));
+    });
+
+    test('manual instructions mention waiting for user command', () => {
+      const instructions = getHandoffInstructions('manual');
+      assert.ok(instructions.includes('wait'));
+      assert.ok(!instructions.includes('auto-proceed'));
+    });
+
+    test('auto instructions emphasize immediate action', () => {
+      const instructions = getHandoffInstructions('auto');
+      assert.ok(instructions.includes('Immediately'));
+      assert.ok(instructions.includes('MUST call'));
+    });
+
+    test('all modes include failure mode exception', () => {
+      const manualInstructions = getHandoffInstructions('manual');
+      const semiAutoInstructions = getHandoffInstructions('semi-auto');
+      const autoInstructions = getHandoffInstructions('auto');
+      
+      assert.ok(manualInstructions.includes('Failure Mode Exception'));
+      assert.ok(manualInstructions.includes('blocked'));
+      assert.ok(semiAutoInstructions.includes('Failure Mode Exception'));
+      assert.ok(semiAutoInstructions.includes('blocked'));
+      assert.ok(autoInstructions.includes('Failure Mode Exception'));
+      assert.ok(autoInstructions.includes('blocked'));
+    });
+  });
+
+  suite('formatContextResponse with handoff instructions', () => {
+    let restoreExtensionPath: () => void;
+
+    suiteSetup(() => {
+      restoreExtensionPath = setupExtensionPath();
+    });
+
+    suiteTeardown(() => {
+      restoreExtensionPath();
+    });
+
+    test('includes handoff_instructions section in response', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const response = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+      } satisfies ContextResult);
+
+      assert.ok(response.includes('<handoff_instructions>'));
+      assert.ok(response.includes('</handoff_instructions>'));
+    });
+
+    test('includes correct instructions based on parsed mode', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const autoResponse = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Handoff Mode: auto'),
+      } satisfies ContextResult);
+      assert.ok(autoResponse.includes('Auto Mode'));
+
+      const manualResponse = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Handoff Mode: manual'),
+      } satisfies ContextResult);
+      assert.ok(manualResponse.includes('Manual Mode'));
+
+      const semiAutoResponse = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Handoff Mode: semi-auto'),
+      } satisfies ContextResult);
+      assert.ok(semiAutoResponse.includes('Semi-Auto Mode'));
+    });
+
+    test('defaults to manual mode when handoff mode is missing', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const response = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Work Title: Demo\nTarget Branch: main'),
+      } satisfies ContextResult);
+
+      assert.ok(response.includes('Manual Mode'));
+      assert.ok(response.includes('STOP and wait'));
+    });
+
+    test('handoff_instructions appears at end of response for recency', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const response = formatContextResponse({
+        workspace_instructions: status('Workspace instructions content'),
+        user_instructions: status('User instructions content'),
+        workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+      } satisfies ContextResult);
+
+      const workspaceIndex = response.indexOf('<workspace_instructions>');
+      const userIndex = response.indexOf('<user_instructions>');
+      const workflowIndex = response.indexOf('<workflow_context>');
+      const handoffIndex = response.indexOf('<handoff_instructions>');
+
+      // Handoff should be after all other sections
+      assert.ok(handoffIndex > workspaceIndex, 'handoff_instructions should be after workspace_instructions');
+      assert.ok(handoffIndex > userIndex, 'handoff_instructions should be after user_instructions');
+      assert.ok(handoffIndex > workflowIndex, 'handoff_instructions should be after workflow_context');
+    });
+
+    test('returns empty context when only handoff instructions present', () => {
+      const empty: InstructionStatus = { exists: false, content: '' };
+      const response = formatContextResponse({
+        workspace_instructions: empty,
+        user_instructions: empty,
+        workflow_context: empty,
+      });
+
+      assert.strictEqual(response, '<context status="empty" />');
     });
   });
 });

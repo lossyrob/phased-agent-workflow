@@ -279,9 +279,41 @@ For best results, ensure:
 
 ### Final PR Handoff
 
-**Terminal stage**: No further handoffs after PR is merged - workflow ends here.
+**After Final PR opened - Handoff Message Rules:**
 
-**If Final PR receives review comments** (prs strategy):
-- Say `review` to address comments → PAW-03A Implementer (with Final PR review context)
-- After changes committed: Implementation Review Agent verifies and pushes
+Present exactly TWO next steps after opening the Final PR:
+1. `address comments` - Address feedback from the Final PR (include PR link)
+2. Provide feedback for the Implementer to address
+3. Merge the PR to complete the workflow 🎉
+
+Example handoff message (prs strategy):
+```
+**Final PR opened: https://github.com/owner/repo/pull/150**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
+- Provide feedback for the Implementer to address
+- Merge the PR to complete the workflow 🎉
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+Example handoff message (local strategy):
+```
+**Final PR opened: https://github.com/owner/repo/pull/150**
+
+**Next Steps:**
+- `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
+- Provide feedback for the Implementer to address
+- Merge the PR to complete the workflow 🎉
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+```
+
+**Addressing Review Comments Flow:**
+- Say `address comments` or `check pr` → PAW-03A Implementer (with Final PR review context)
+- After changes committed: Implementation Review Agent verifies, pushes, and responds to PR comments
+- Return to this agent to update PR status or merge
+
+**Terminal stage**: Workflow ends when the Final PR is merged.
 

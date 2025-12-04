@@ -363,10 +363,10 @@ The template should instruct the agent to:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Unit tests pass: `npm test`
-- [ ] Linting passes: `npm run lint`
-- [ ] Template loads without errors
+- [x] TypeScript compiles: `npm run compile`
+- [x] Unit tests pass: `npm test`
+- [x] Linting passes: `npm run lint`
+- [x] Template loads without errors
 
 #### Manual Verification:
 - [ ] With issue URL + skip branch: Agent derives branch from issue title
@@ -376,6 +376,44 @@ The template should instruct the agent to:
 - [ ] Agent checks remote branches for naming conventions
 - [ ] Agent handles branch naming conflicts with suffixes
 - [ ] All existing scenarios continue to work (explicit branch, explicit issue URL)
+
+### Phase 3 Completion Notes (2025-12-03)
+
+**Status**: Complete
+
+**Changes Made**:
+- Added three new template variables to `PromptVariables` interface in `src/prompts/workflowInitPrompt.ts`:
+  - `BRANCH_AUTO_DERIVE_SECTION`: Branch derivation instructions (issue-based or description-based)
+  - `WORK_DESCRIPTION_SECTION`: Work description collection instructions
+  - `INITIAL_PROMPT_FIELD`: Initial Prompt field placeholder for WorkflowContext.md
+- Implemented `buildBranchAutoDeriveSection()` helper function:
+  - When issue URL provided: Instructions to derive branch from issue title with issue number prefix
+  - When no issue URL: Instructions to derive branch from work description
+  - Both paths include current branch checking and remote convention detection
+- Implemented `buildWorkDescriptionSection()` helper function:
+  - Instructions to pause and ask "What would you like to work on?"
+  - Capture user response as Initial Prompt
+  - Use description for branch, Work Title, and WorkflowContext.md
+- Updated `src/prompts/workItemInitPrompt.template.md`:
+  - Added Branch Mode to Parameters Provided section
+  - Added `{{WORK_DESCRIPTION_SECTION}}` and `{{BRANCH_AUTO_DERIVE_SECTION}}` placeholders in Your Tasks
+  - Added `{{INITIAL_PROMPT_FIELD}}` to WorkflowContext.md template
+  - Added Initial Prompt field definition
+  - Updated git branch creation section to handle explicit vs auto-derive modes
+- Added comprehensive unit tests in `src/test/suite/customInstructions.test.ts`:
+  - Branch Auto-Derivation Section tests (4 tests)
+  - Work Description Section tests (2 tests)
+  - Initial Prompt Field tests (3 tests)
+
+**Commit**: `910857e` - "feat: add branch auto-derivation and work description template sections"
+
+**Automated Verification**: All checks pass (compile, 93 tests, lint on modified files)
+
+**Ready for Review**: Phase 3 completes the template updates. The agent now receives comprehensive instructions for:
+- Deriving branch names from issue titles or work descriptions
+- Checking current branch and remote conventions
+- Asking users for work descriptions when no issue URL provided
+- Storing Initial Prompt in WorkflowContext.md for downstream agents
 
 ---
 

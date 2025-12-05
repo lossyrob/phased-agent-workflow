@@ -361,14 +361,17 @@ Recommendations Summary:
 ### Review Workflow Navigation
 
 This is the terminal stage of the PAW Review workflow:
-```
-Next steps:
-1. Review all comments and assessments in ReviewComments.md
-2. Make any edits in GitHub UI (or prepare manual posting for non-GitHub)
-3. Decide on any tone adjustments needed
-4. Submit review when ready
+- Present options: `revise feedback` (return to Feedback Generator), `status`
 
-If you need modifications:
-- Say 'revise feedback' to return to Feedback Generator with specific changes
-- Say 'status' for help
+Example handoff message:
 ```
+**Feedback assessment complete. All comments have assessments in ReviewComments.md.**
+
+**Next Steps:**
+- `revise feedback` - Return to Feedback Generator for modifications
+- Review comments in GitHub UI and submit when ready
+
+You can ask for `status` or `help`, or say `continue` to revise feedback if needed.
+```
+
+**Terminal stage behavior**: If user says `continue`, return to PAW-R3A Feedback Generator for modifications. The primary action is for the human to review and submit the pending review.

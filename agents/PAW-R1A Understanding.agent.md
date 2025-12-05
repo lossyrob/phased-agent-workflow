@@ -589,11 +589,32 @@ Artifact location: .paw/reviews/<identifier>/
 
 **If baseline research prompt was generated** (research questions remain, no CodeResearch.md):
 - Next stage: PAW-R1B Baseline Researcher (which returns to Understanding after research)
-- Present options: "Say 'baseline' to run baseline research, or 'impact' to skip research and proceed to impact analysis, or 'status' for help."
+- Present options: `baseline` (run baseline research), `impact` (skip research and proceed to impact analysis), `status`
+
+Example handoff message:
+```
+**Understanding stage partially complete. Baseline research needed.**
+
+**Next Steps:**
+- `baseline` - Run baseline research to understand pre-change behavior
+- `impact` - Skip research and proceed to impact analysis
+
+You can ask for `status` or `help`, or say `continue` to proceed to baseline research.
+```
 
 **If CodeResearch.md exists** (baseline research complete):
 - Next stage: PAW-R2A Impact Analyzer
-- Present options: "Say 'impact' or 'impact analysis' to proceed to impact analysis, or 'status' for help."
+- Present options: `impact` (proceed to impact analysis), `status`
+
+Example handoff message:
+```
+**Understanding stage complete. DerivedSpec.md and CodeResearch.md ready.**
+
+**Next Steps:**
+- `impact` - Proceed to impact analysis
+
+You can ask for `status` or `help`, or say `continue` to proceed to impact analysis.
+```
 
 ---
 

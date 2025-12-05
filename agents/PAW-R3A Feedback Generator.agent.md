@@ -428,10 +428,17 @@ Ready for Feedback Critic to add assessment sections.
 ### Review Workflow Navigation
 
 After feedback generation completion:
-```
-Next stage: PAW-R3B Feedback Critic
+- Next stage: PAW-R3B Feedback Critic
+- Present options: `critic` (proceed to critique feedback), `status`
 
-Say 'critic' or 'critique feedback' to assess comment quality, or 'status' for help.
+Example handoff message:
+```
+**Feedback generation complete. ReviewComments.md created with pending review.**
+
+**Next Steps:**
+- `critic` - Proceed to assess comment quality
+
+You can ask for `status` or `help`, or say `continue` to proceed to feedback critique.
 ```
 
 In Semi-Auto and Auto modes: Immediately invoke handoff to PAW-R3B Feedback Critic.

@@ -22,7 +22,7 @@ export interface HandoffParams {
   target_agent: AgentName;
   /** The normalized Work ID (feature slug) */
   work_id: string;
-  /** Optional inline instruction to pass to the target agent */
+  /** Optional inline instruction to pass to the target agent (e.g., user feedback, prompt file paths, or agent-to-agent context) */
   inline_instruction?: string;
 }
 

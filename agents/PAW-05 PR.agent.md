@@ -281,33 +281,19 @@ For best results, ensure:
 
 **After Final PR opened - Handoff Message Rules:**
 
-Present exactly TWO next steps after opening the Final PR:
+Present next steps after opening the Final PR:
 1. `address comments` - Address feedback from the Final PR (include PR link)
-2. Provide feedback for the Implementer to address
-3. Merge the PR to complete the workflow 🎉
+2. Merge the PR to complete the workflow 🎉
 
-Example handoff message (prs strategy):
+Example handoff message:
 ```
 **Final PR opened: https://github.com/owner/repo/pull/150**
 
 **Next Steps:**
 - `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
-- Provide feedback for the Implementer to address
 - Merge the PR to complete the workflow 🎉
 
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
-```
-
-Example handoff message (local strategy):
-```
-**Final PR opened: https://github.com/owner/repo/pull/150**
-
-**Next Steps:**
-- `address comments` - Address feedback from the [Final PR](https://github.com/owner/repo/pull/150)
-- Provide feedback for the Implementer to address
-- Merge the PR to complete the workflow 🎉
-
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue`.
+You can ask me to generate a prompt file for addressing comments, ask for `status` or `help`, or say `continue` to address PR comments.
 ```
 
 **Addressing Review Comments Flow:**

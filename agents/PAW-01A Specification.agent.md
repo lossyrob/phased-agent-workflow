@@ -51,7 +51,7 @@ Adapt behavior based on Workflow Mode and Review Strategy from workflow context:
 3. Enumerate factual unknowns; classify as: (a) Reasonable default assumption, (b) Research question about existing system behavior, or (c) Clarification required (must be answered before drafting the spec body).
 4. Generate `prompts/01B-spec-research.prompt.md` containing questions about **existing system behavior** that inform requirements. Design decisions for new features are made in the specification itself based on issue requirements and documented assumptions. 
 5. Pause for research; integrate `SpecResearch.md` findings, updating assumptions. If any clarification remains unresolved, pause again rather than proceeding. Blocking clarification questions must be resolved interactively before drafting the Spec.md.
-6. Produce the specification using the inline template (see "Inline Specification Template") only after all clarification questions are answered: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. **Build the specification incrementally by writing sections to `Spec.md` as you create them**—do not present large blocks of spec text in chat.
+6. Produce the specification using the inline template (see "Inline Specification Template") **only after research integration (step 6 of Drafting Workflow) or explicit research skip**: prioritized stories, enumerated FRs, measurable SCs, documented assumptions, edge cases, risks, dependencies, scope boundaries. **Build the specification incrementally by writing sections to `Spec.md` as you create them**—do not present large blocks of spec text in chat.
 7. Validate against the Spec Quality Checklist and surface any failing items for iterative refinement.
 8. Output final readiness checklist (spec should already be written to disk; do NOT commit / push / open PRs).
 
@@ -89,8 +89,8 @@ Research answers "how does the system work today?" to inform design, not "what s
    - High‑impact uncertainties (scope, security/privacy, user experience, compliance) that lack a defensible default become explicit clarification questions; resolve them via user dialogue before proceeding.
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
    - **Design decisions** (file names, structure, conventions) informed by research should be made directly without asking the user—document the choice and rationale.
-4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation.
-5. **Pause & Instruct**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent. (Skip if `SpecResearch.md` already exists.)
+4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation. **Include any accumulated notes or context from intake/decomposition in a dedicated "Agent Notes" section**—these notes help the researcher understand your thought process and constraints. **DO NOT write Spec.md yet**—spec assembly only happens after research integration (step 6) or explicit research skip.
+5. **Handoff**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent. (Skip if `SpecResearch.md` already exists.) **If research is needed, handoff here without writing Spec.md**—the spec is assembled after research.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting. (If returning after research, start here.)
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Start with narrative sections (Overview and Objectives) to establish context, then enumerate detailed requirements.
    - **Overview**: Write 2-4 paragraphs (3-5 sentences each) describing the feature as a cohesive user journey. Create a vivid, realistic scenario showing how users will experience the feature from start to finish. Structure the narrative to flow logically: describe the user's problem or need, walk through their interaction with the feature step-by-step, and explain the value delivered. Focus on behavioral outcomes and user experience, not technical implementation. Use insights from issue, research, and clarifications to paint a coherent picture. Write in flowing prose that tells a story - avoid bullet fragments or disjointed statements. The narrative should set the stage for the structured sections that follow.
@@ -112,6 +112,9 @@ Target Branch: <target_branch>
 Issue URL: <issue_url or 'none'>
 Additional Inputs: <comma-separated list or 'none'>
 
+## Agent Notes (if any)
+<Context and notes from the Spec Agent's intake/decomposition process that may be valuable for understanding constraints, assumptions, or thought process. Omit this section if no notes exist.>
+
 ## Questions
 1. ...
 
@@ -122,6 +125,7 @@ Additional Inputs: <comma-separated list or 'none'>
 Constraints:
 - Keep only unresolved high‑value questions (avoid noise).
 - Do not include implementation suggestions.
+- Include any accumulated notes or context in "Agent Notes" section (omit section if no notes).
 - Write file immediately; pause for research.
 
 ## Inline Specification Template
@@ -324,17 +328,37 @@ If research was skipped: include an Assumptions section and Risks section note s
 
 **If spec research prompt was generated** (research questions remain):
 - Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
-- Manual: Present options - `research` or `continue` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
-- Semi-Auto: Immediate handoff to Spec Researcher
-- Auto: Immediate handoff to Spec Researcher
+- Present options: `research` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
+- Semi-Auto/Auto: Immediate handoff to Spec Researcher with inline instruction including prompt path: `Research prompt at: .paw/work/<feature-slug>/prompts/01B-spec-research.prompt.md`
+
+Example handoff message:
+```
+**Specification draft complete. Research questions generated.**
+
+**Next Steps:**
+- `research` - Run spec research to answer open questions
+- `plan` - Skip research and proceed directly to Code Research
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to research.
+```
 
 **If SpecResearch.md exists** (spec research complete):
 - Next stage: PAW-02A Code Researcher
-- Manual: Present options - `continue` (proceed to Code Research), `status`
+- Present options: `plan` (proceed to Code Research), `status`
 - Semi-Auto: Pause (decision point before Code Research)
 - Auto: Immediate handoff to Code Researcher
 
-**Skipping spec research**: If the user wants to skip spec research entirely (not recommended), they can say `plan` to proceed directly to Code Research. The `continue` command follows the default next stage, which is Spec Researcher when research questions exist.
+Example handoff message:
+```
+**Specification complete. Research integrated.**
+
+**Next Steps:**
+- `plan` - Proceed to Code Research and implementation planning
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to planning.
+```
+
+**Skipping spec research**: If the user wants to skip spec research entirely (not recommended), they can say `plan` to proceed directly to Code Research.
 
 ### Working with Issues and PRs
 

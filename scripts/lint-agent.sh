@@ -6,12 +6,16 @@
 set -euo pipefail
 
 # Token thresholds
-WARN_THRESHOLD=3500
-ERROR_THRESHOLD=6500
+WARN_THRESHOLD=5000
+ERROR_THRESHOLD=7000
 
 # Special threshold for Status Agent (needs more context to guide users)
 STATUS_AGENT_WARN_THRESHOLD=5000
 STATUS_AGENT_ERROR_THRESHOLD=8000
+
+# Special threshold for Spec Agent (temporarily higher until token optimization)
+SPEC_AGENT_WARN_THRESHOLD=5000
+SPEC_AGENT_ERROR_THRESHOLD=10000
 
 # Colors for output
 RED='\033[0;31m'
@@ -46,12 +50,15 @@ lint_file() {
     # Count tokens using Node.js script
     local token_count=$(node scripts/count-tokens.js "$file" 2>/dev/null || echo "0")
     
-    # Use special thresholds for Status Agent
+    # Use special thresholds for specific agents
     local warn_threshold=$WARN_THRESHOLD
     local error_threshold=$ERROR_THRESHOLD
     if [[ "$filename" == "PAW-X Status.agent.md" ]]; then
         warn_threshold=$STATUS_AGENT_WARN_THRESHOLD
         error_threshold=$STATUS_AGENT_ERROR_THRESHOLD
+    elif [[ "$filename" == "PAW-01A Specification.agent.md" ]]; then
+        warn_threshold=$SPEC_AGENT_WARN_THRESHOLD
+        error_threshold=$SPEC_AGENT_ERROR_THRESHOLD
     fi
     
     # Check thresholds

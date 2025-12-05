@@ -434,5 +434,15 @@ Findings include file:line references for all key components.
 ### Code Research Handoff
 
 **Next stage**: PAW-02B Impl Planner
-- Manual: Present options - `plan`, `status`, `generate prompt for planning`
+- Present options: `plan`, `status`, `generate prompt for planning`
 - Semi-Auto/Auto: Immediate handoff
+
+Example handoff message:
+```
+**Code research complete. CodeResearch.md saved.**
+
+**Next Steps:**
+- `plan` - Proceed to implementation planning
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to planning.
+```

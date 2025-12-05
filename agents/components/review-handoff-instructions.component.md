@@ -42,3 +42,9 @@ When the user requests to move to another review stage, map their command to the
 ### Getting Help
 
 Users can always ask the Status Agent for help navigating the workflow. Include in handoff messages: "Say `status` or `help` for workflow guidance."
+
+### Continue Behavior
+
+When user says `continue`, proceed to the **first command** in your presented "Next Steps" list. Place your recommended default action first—this becomes the `continue` target. The guidance line must explicitly state what `continue` does (e.g., `say 'continue' to proceed to impact analysis`).
+
+**Terminal stage** (PAW-R3B Feedback Critic): Workflow ends with human reviewer action. If the user says `continue`, offer to revise feedback or clarify next steps.

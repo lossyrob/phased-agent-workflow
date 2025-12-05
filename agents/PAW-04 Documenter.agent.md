@@ -468,9 +468,9 @@ Before pushing:
 - Auto Mode: Handoff to PAW-05 PR after Docs PR merged
 
 **local strategy** (no Docs PR):
-- Manual: Present `pr`, `final pr`, `status`
+- Manual: Present `pr`, `status`
 - Semi-Auto/Auto: Immediate handoff to PAW-05 PR
 
-**If addressing Docs PR review comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
+**Addressing Docs PR comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
 
 

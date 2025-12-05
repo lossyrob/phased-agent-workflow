@@ -456,6 +456,71 @@ Fix the Spec Agent workflow so it does NOT create Spec.md before handing off to 
 ### Overview
 When the Spec Agent generates the research prompt, it may have accumulated notes and context during intake/decomposition that are valuable for the researcher. These notes should be included in the research prompt file so the Spec Researcher has full context. Additionally, the Spec Researcher should preserve these notes in a dedicated section of SpecResearch.md so they return to the Spec Agent after research.
 
+### Changes Required:
+
+#### 1. Update PAW-01A Specification Agent - Research Prompt Generation
+**File**: `agents/PAW-01A Specification.agent.md`
+**Changes**:
+- Update step 4 of Drafting Workflow to instruct including accumulated notes in research prompt
+- Update "Research Prompt Minimal Format" template to include "Agent Notes" section
+- Add constraint to include notes (omit section if no notes exist)
+
+**Location**: Lines ~92 (step 4) and ~108-125 (template format)
+
+#### 2. Update PAW-01B Spec Researcher Agent - SpecResearch.md Structure
+**File**: `agents/PAW-01B Spec Researcher.agent.md`
+**Changes**:
+- Add "Agent Notes" as section 2 in Document format structure (after Summary, before Research Findings)
+- Update Output instructions to include preserving agent notes if present
+- Notes should be preserved verbatim from research prompt
+
+**Location**: Lines ~50-62 (Document format and Output sections)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
+- [x] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01B\ Spec\ Researcher.agent.md`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Extension tests pass: `npm test`
+
+#### Manual Verification:
+- [ ] Spec Agent includes "Agent Notes" section in generated research prompts when notes exist
+- [ ] Spec Researcher preserves Agent Notes in SpecResearch.md section 2
+- [ ] Notes flow correctly: Spec Agent → research prompt → SpecResearch.md → back to Spec Agent
+
+---
+
+### Phase 4 Completion Summary (2025-12-05)
+
+**Changes implemented:**
+1. Updated `agents/PAW-01A Specification.agent.md`:
+   - Modified step 4 of Drafting Workflow to include instruction: "Include any accumulated notes or context from intake/decomposition in a dedicated 'Agent Notes' section"
+   - Updated "Research Prompt Minimal Format" template to add "Agent Notes" section after metadata and before Questions
+   - Added constraint: "Include any accumulated notes or context in 'Agent Notes' section (omit section if no notes)"
+
+2. Updated `agents/PAW-01B Spec Researcher.agent.md`:
+   - Added "Agent Notes" as section 2 in Document format structure (after Summary, before Research Findings)
+   - Instruction: "Preserve notes from Spec Agent verbatim. Omit this section if no notes exist in the prompt."
+   - Updated Output section to include: "preserve agent notes if present" in build sequence
+
+**Rationale:**
+- Enables Spec Agent to carry context (assumptions, constraints, thought process) through to research
+- Researcher preserves these notes in SpecResearch.md so they're available when Spec Agent integrates research
+- Notes flow bidirectionally: Agent → prompt → research document → back to Agent
+- Maintains clean separation: notes are optional and can be omitted if not needed
+
+**Verification:**
+- PAW-01A linter passes (6952 tokens, expected warning for large agent)
+- PAW-01B linter passes (3546 tokens, no warnings)
+- TypeScript compiles without errors
+- All 143 tests pass
+
+**Review notes:**
+- Changes are surgical and focused - only added Agent Notes section handling
+- No impact on existing workflows that don't include notes
+- Section is optional (can be omitted) to avoid creating empty placeholder sections
+
 
 ## Phase 5: Include Prompt Path in Handoff Instructions
 

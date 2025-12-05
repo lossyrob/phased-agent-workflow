@@ -391,178 +391,17 @@ Each PAW-R* agent needs its handoff section updated to:
 ### Overview
 Fix the Spec Agent workflow so it does NOT create Spec.md before handing off to the Spec Researcher. Currently the spec agent can create a specification with open research questions and then hand off to research—this is backwards. The agent should generate the research prompt, hand off to the researcher, and only create Spec.md AFTER research is integrated.
 
-### Changes Required:
-
-#### 1. Update Spec Agent Workflow to Defer Spec Creation
-**File**: `agents/PAW-01A Specification.agent.md`
-**Changes**:
-- Modify the "Drafting Workflow" section to clarify that Spec.md is NOT created until after research integration
-- The workflow should be: Intake → Story Drafting → Unknown Classification → Research Prompt Generation → PAUSE (hand off to researcher) → Integrate Research → THEN Specification Assembly
-- Add explicit guardrail: "Do NOT write Spec.md until SpecResearch.md exists and is integrated"
-- Update Step 5 (Pause & Instruct) to clarify the agent pauses for research BEFORE writing the spec
-- Update Step 7 (Specification Assembly) to emphasize this is post-research
-
-**Location**: Lines 113-135 (Drafting Workflow section) and throughout as needed
-
-#### 2. Update Working Modes Table
-**File**: `agents/PAW-01A Specification.agent.md`
-**Changes**:
-- Update the "Working Modes" table to clarify Research Preparation mode produces ONLY the research prompt, not a draft spec
-- Clarify Research Integration mode is when the actual Spec.md is created
-
-**Location**: Around lines 89-93 (Working Modes table)
-
-#### 3. Update Hand-off Checklist
-**File**: `agents/PAW-01A Specification.agent.md`
-**Changes**:
-- The checklist should have two variants:
-  1. Pre-research handoff: Research prompt generated, no Spec.md yet
-  2. Post-research handoff: Spec.md complete, ready for planning
-
-**Location**: Around lines 299-312 (Hand-off Checklist section)
-
-**Tests**:
-- Run `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
-- Verify TypeScript compiles
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Extension tests pass: `npm test`
-
-#### Manual Verification:
-- [ ] Drafting Workflow clearly shows spec creation happens AFTER research
-- [ ] Hand-off checklist has pre-research and post-research variants
-- [ ] Agent instructions now explicitly block Spec.md creation before research (behavioral enforcement in production)
-
 ## Phase 4: Carry Agent Notes Through Research
 
 ### Overview
 When the Spec Agent generates the research prompt, it may have accumulated notes and context during intake/decomposition that are valuable for the researcher. These notes should be included in the research prompt file so the Spec Researcher has full context. Additionally, the Spec Researcher should preserve these notes in a dedicated section of SpecResearch.md so they return to the Spec Agent after research.
 
-### Changes Required:
-
-#### 1. Update Research Prompt Format to Include Notes
-**File**: `agents/PAW-01A Specification.agent.md`
-**Changes**:
-- Add optional "## Notes from Spec Agent" section to the Research Prompt Minimal Format
-- Instruct the agent to include any relevant observations, constraints, or context gathered during intake that would help the researcher understand the feature better
-- These are observations about the feature/issue, NOT design decisions
-
-**Location**: Around lines 163-180 (Research Prompt Minimal Format section)
-
-**New section to add**:
-```markdown
-## Notes from Spec Agent (Optional)
-<Any relevant observations, constraints, or context gathered during intake.
-Include issue insights, clarified requirements, or domain context that helps the researcher.
-These are factual notes, NOT design decisions or implementation suggestions.>
-```
-
-#### 2. Update Spec Researcher to Preserve Notes
-**File**: `agents/PAW-01B Spec Researcher.agent.md`
-**Changes**:
-- Update the Document format section to include a "Notes Carried Forward" section
-- Instruct the researcher to copy the "Notes from Spec Agent" section (if present in the prompt) into SpecResearch.md
-- This ensures context is not lost when returning to the Spec Agent
-
-**Location**: Around lines 50-70 (Document format section)
-
-**New section for SpecResearch.md format**:
-```markdown
-5. **Notes Carried Forward** (if present in prompt): Copy verbatim from research prompt - these are context notes from the Spec Agent to preserve for spec drafting
-```
-
-**Tests**:
-- Run `./scripts/lint-agent.sh` on both agent files
-- Verify TypeScript compiles
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01B\ Spec\ Researcher.agent.md`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Extension tests pass: `npm test`
-
-#### Manual Verification:
-- [ ] Research prompt format includes optional notes section
-- [ ] Spec Researcher copies notes to SpecResearch.md
-- [ ] Notes are available when Spec Agent resumes after research
-
----
 
 ## Phase 5: Include Prompt Path in Handoff Instructions
 
 ### Overview
 Currently when the Spec Agent hands off to the Spec Researcher, it doesn't include the path to the generated research prompt file in the handoff. The Spec Researcher has to find it, which wastes time. The handoff should include the prompt file path as part of the inline instructions. Also update the `inline_instruction` parameter description to clarify it's for both user instructions AND agent-to-agent context.
 
-### Changes Required:
-
-#### 1. Update Spec Agent Handoff to Include Prompt Path
-**File**: `agents/PAW-01A Specification.agent.md`
-**Changes**:
-- Update the "Specification Handoff" section to include the research prompt path in the inline instruction
-- When handing off to Spec Researcher, the inline instruction should include: "Research prompt: .paw/work/<feature-slug>/prompts/01B-spec-research.prompt.md"
-- Update the example handoff to show this pattern
-
-**Location**: Around lines 330-360 (Specification Handoff section)
-
-#### 2. Update Handoff Tool Parameter Description in package.json
-**File**: `package.json`
-**Changes**:
-- Update the `inline_instruction` parameter description to clarify its dual purpose:
-  - User-provided instructions to customize agent behavior
-  - Agent-to-agent context (e.g., prompt file paths, phase numbers, prior agent notes)
-- Keep description concise but clear
-
-**Location**: Around lines 104-106 (paw_call_agent tool parameters)
-
-**Updated description**:
-```json
-"inline_instruction": {
-  "type": "string",
-  "description": "Optional instruction to pass to the target agent. Includes user customizations AND agent context (e.g., 'Phase 2', prompt file paths, or brief notes for the next agent)."
-}
-```
-
-#### 3. Update TypeScript Interface Comment (Secondary)
-**File**: `src/tools/handoffTool.ts`
-**Changes**:
-- Update the JSDoc comment on `inline_instruction` to match the package.json description
-- This is for developer documentation consistency
-
-**Location**: Around lines 24-25 (HandoffParams interface)
-
-#### 4. Update handoff-instructions Component for Clarity
-**File**: `agents/components/handoff-instructions.component.md`
-**Changes**:
-- In the "Invoking Handoffs" section, add guidance that when a prompt file was generated, include its path in inline_instruction
-- This is a general pattern: if you generated a file the next agent needs, tell them where it is
-
-**Location**: Around lines 20-30 (Invoking Handoffs section)
-
-**Tests**:
-- Run `./scripts/lint-agent.sh` on modified agent files
-- Verify TypeScript compiles
-- Run extension tests
-
-### Success Criteria:
-
-#### Automated Verification:
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/components/handoff-instructions.component.md`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Extension tests pass: `npm test`
-
-#### Manual Verification:
-- [ ] Spec Agent handoff includes research prompt path
-- [ ] `inline_instruction` parameter description is clear about dual purpose
-- [ ] Handoff instructions mention including prompt file paths
-
----
 
 ## Cross-Phase Testing Strategy
 

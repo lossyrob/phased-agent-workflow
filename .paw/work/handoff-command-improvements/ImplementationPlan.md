@@ -391,6 +391,66 @@ Each PAW-R* agent needs its handoff section updated to:
 ### Overview
 Fix the Spec Agent workflow so it does NOT create Spec.md before handing off to the Spec Researcher. Currently the spec agent can create a specification with open research questions and then hand off to research—this is backwards. The agent should generate the research prompt, hand off to the researcher, and only create Spec.md AFTER research is integrated.
 
+### Changes Required:
+
+#### 1. Update High-Level Responsibilities (item 6)
+**File**: `agents/PAW-01A Specification.agent.md`
+**Location**: Line ~54
+**Change**: Add qualifier "**only after research integration (step 6 of Drafting Workflow) or explicit research skip**" to clarify timing
+
+#### 2. Update Drafting Workflow Step 4
+**File**: `agents/PAW-01A Specification.agent.md`
+**Location**: Line ~92
+**Change**: Add note "**DO NOT write Spec.md yet**—spec assembly only happens after research integration (step 6) or explicit research skip."
+
+#### 3. Update Drafting Workflow Step 5
+**File**: `agents/PAW-01A Specification.agent.md`
+**Location**: Line ~93
+**Change**: Add note "**Pause here without writing Spec.md**—the spec is assembled after research."
+
+#### 4. Update Drafting Workflow Step 7 Header
+**File**: `agents/PAW-01A Specification.agent.md`
+**Location**: Line ~95
+**Change**: Change header from "**Specification Assembly**:" to "**Specification Assembly** (**Only after step 6 completes or research explicitly skipped**):"
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-01A\ Specification.agent.md`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Extension tests pass: `npm test`
+
+#### Manual Verification:
+- [x] Three explicit notes added to prevent premature Spec.md creation
+- [x] Workflow clearly states: research prompt → handoff → research → THEN Spec.md
+- [ ] Agent behaves correctly in VS Code Chat (deferred to user testing)
+
+---
+
+### Phase 3 Completion Summary (2025-12-05)
+
+**Changes implemented:**
+1. Updated High-Level Responsibilities item 6 to clarify Spec.md is only written after research integration or explicit skip
+2. Added "DO NOT write Spec.md yet" note to Drafting Workflow step 4 (Research Prompt Generation)
+3. Added "Pause here without writing Spec.md" note to Drafting Workflow step 5 (Pause & Instruct)
+4. Updated Drafting Workflow step 7 header to include "Only after step 6 completes or research explicitly skipped" qualifier
+
+**Rationale for changes:**
+- Minimal guidance additions to enforce correct workflow sequence
+- Three strategic checkpoints prevent premature spec creation
+- No workflow restructuring needed - just explicit timing clarifications
+- Agent linter shows 6863 tokens (within acceptable range for large agent)
+
+**Verification:**
+- Agent linter passes (expected warning for large agent)
+- TypeScript compiles without errors
+- All 143 tests pass
+
+**Review notes:**
+- The Spec Agent workflow now has clear guardrails preventing Spec.md creation before research
+- Changes are minimal and surgical - only added timing clarifications, no restructuring
+- The correct flow is now: generate research prompt → pause → hand off to researcher → integrate findings → create Spec.md
+
 ## Phase 4: Carry Agent Notes Through Research
 
 ### Overview

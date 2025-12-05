@@ -51,7 +51,7 @@ const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 /**
  * Valid handoff mode values for stage navigation.
  */
-export type HandoffMode = 'manual' | 'semi-auto' | 'auto';
+export type HandoffMode = "manual" | "semi-auto" | "auto";
 
 /**
  * Pattern to extract Handoff Mode from WorkflowContext.md content.
@@ -97,24 +97,24 @@ export interface ContextResult {
 /**
  * Normalizes file content by converting Windows line endings to Unix format
  * and trimming leading/trailing whitespace.
- * 
+ *
  * @param content - The file content to normalize
  * @returns Normalized content with consistent line endings
  */
 function normalizeContent(content: string): string {
-  return content.replace(/\r\n/g, '\n').trim();
+  return content.replace(/\r\n/g, "\n").trim();
 }
 
 /**
  * Parses the Handoff Mode from WorkflowContext.md content.
  * Looks for "Handoff Mode: <mode>" line and extracts the mode value.
- * 
+ *
  * @param workflowContent - Raw WorkflowContext.md content
  * @returns Parsed handoff mode or 'manual' as default
  */
 export function parseHandoffMode(workflowContent: string): HandoffMode {
   if (!workflowContent) {
-    return 'manual';
+    return "manual";
   }
 
   const match = workflowContent.match(HANDOFF_MODE_PATTERN);
@@ -122,30 +122,31 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
     return match[1].toLowerCase() as HandoffMode;
   }
 
-  return 'manual';
+  return "manual";
 }
 
 /**
  * Template filename for each handoff mode.
  */
 const HANDOFF_TEMPLATE_FILES: Record<HandoffMode, string> = {
-  'manual': 'handoffManual.template.md',
-  'semi-auto': 'handoffSemiAuto.template.md',
-  'auto': 'handoffAuto.template.md',
+  manual: "handoffManual.template.md",
+  "semi-auto": "handoffSemiAuto.template.md",
+  auto: "handoffAuto.template.md",
 };
 
 /**
  * Returns mode-specific handoff behavior instructions by loading from template files.
  * These instructions tell the agent exactly how to behave when completing work,
  * based on the handoff mode configured in WorkflowContext.md.
- * 
+ *
  * @param mode - The handoff mode (manual, semi-auto, or auto)
  * @returns Markdown instructions for the agent
  */
 export function getHandoffInstructions(mode: HandoffMode): string {
-  const templateFile = HANDOFF_TEMPLATE_FILES[mode] || HANDOFF_TEMPLATE_FILES['manual'];
+  const templateFile =
+    HANDOFF_TEMPLATE_FILES[mode] || HANDOFF_TEMPLATE_FILES["manual"];
   const templatePath = getHandoffTemplatePath(templateFile);
-  
+
   try {
     if (templatePath && fs.existsSync(templatePath)) {
       return normalizeContent(fs.readFileSync(templatePath, "utf-8"));
@@ -153,9 +154,11 @@ export function getHandoffInstructions(mode: HandoffMode): string {
   } catch (error) {
     // Fall through to fallback
   }
-  
+
   // Fallback if template file is missing or unreadable
-  return `## Your Handoff Behavior (${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode)
+  return `## Your Handoff Behavior (${
+    mode.charAt(0).toUpperCase() + mode.slice(1)
+  } Mode)
 
 Handoff instructions template not found. Please check your PAW installation.
 

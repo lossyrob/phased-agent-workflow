@@ -53,7 +53,10 @@ When using local strategy without PRs, the user provides feedback directly:
 - `feedback: <user's feedback>` - Hand off to PAW-03A Implementer with feedback as inline instruction
 - Example: User says `feedback: add error handling for edge cases` → call `paw_call_agent` with `target_agent: 'PAW-03A Implementer'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
 
-**Inline instructions**: "implement but add logging" → pass "add logging" as `inline_instruction`
+**Inline instructions**: Use `inline_instruction` parameter to pass context to the next agent. Common uses:
+- User feedback: `"Address feedback: add error handling"`
+- Prompt file paths: `"Research prompt at: .paw/work/<feature-slug>/prompts/01B-spec-research.prompt.md"`
+- Additional context: `"implement but add logging"`
 
 **Continue command**: When user says `continue`, proceed to the **first command** in your presented "Next Steps" list (the default next stage). Agents must order their options with the recommended default action first—this becomes the `continue` target.
 

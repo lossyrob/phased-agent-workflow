@@ -329,7 +329,7 @@ If research was skipped: include an Assumptions section and Risks section note s
 **If spec research prompt was generated** (research questions remain):
 - Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
 - Present options: `research` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
-- Semi-Auto/Auto: Immediate handoff to Spec Researcher
+- Semi-Auto/Auto: Immediate handoff to Spec Researcher with inline instruction including prompt path: `Research prompt at: .paw/work/<feature-slug>/prompts/01B-spec-research.prompt.md`
 
 Example handoff message:
 ```

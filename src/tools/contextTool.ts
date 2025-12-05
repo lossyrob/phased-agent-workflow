@@ -5,16 +5,41 @@ import * as vscode from 'vscode';
 
 /**
  * Resolves the path to a handoff template file.
- * In production, templates are in the extension's prompts directory.
+ * Checks both compiled (out/prompts) and source (src/prompts) locations
+ * to work in both production and development environments.
  * In tests, PAW_EXTENSION_PATH can override this location.
  * 
  * @param templateName - Template filename (e.g., 'handoffManual.template.md')
- * @returns Absolute path to the template file
+ * @returns Absolute path to the template file, or empty string if not found
  */
 function getHandoffTemplatePath(templateName: string): string {
   // Allow tests to override the extension path
-  const extensionPath = process.env.PAW_EXTENSION_PATH || path.join(__dirname, '..');
-  return path.join(extensionPath, 'prompts', templateName);
+  if (process.env.PAW_EXTENSION_PATH) {
+    return path.join(process.env.PAW_EXTENSION_PATH, "prompts", templateName);
+  }
+
+  // Check compiled location first (out/prompts/) - for when templates are copied
+  const compiledPath = path.join(__dirname, "..", "prompts", templateName);
+  if (fs.existsSync(compiledPath)) {
+    return compiledPath;
+  }
+
+  // Fallback to source location (src/prompts/) - for development and VSIX packages
+  // that include src/prompts but not out/prompts templates
+  const sourcePath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "src",
+    "prompts",
+    templateName
+  );
+  if (fs.existsSync(sourcePath)) {
+    return sourcePath;
+  }
+
+  // Return empty string to signal not found (caller will handle fallback)
+  return "";
 }
 
 /**
@@ -122,8 +147,8 @@ export function getHandoffInstructions(mode: HandoffMode): string {
   const templatePath = getHandoffTemplatePath(templateFile);
   
   try {
-    if (fs.existsSync(templatePath)) {
-      return normalizeContent(fs.readFileSync(templatePath, 'utf-8'));
+    if (templatePath && fs.existsSync(templatePath)) {
+      return normalizeContent(fs.readFileSync(templatePath, "utf-8"));
     }
   } catch (error) {
     // Fall through to fallback

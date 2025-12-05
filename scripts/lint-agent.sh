@@ -6,8 +6,8 @@
 set -euo pipefail
 
 # Token thresholds
-WARN_THRESHOLD=3500
-ERROR_THRESHOLD=6500
+WARN_THRESHOLD=5000
+ERROR_THRESHOLD=7000
 
 # Special threshold for Status Agent (needs more context to guide users)
 STATUS_AGENT_WARN_THRESHOLD=5000

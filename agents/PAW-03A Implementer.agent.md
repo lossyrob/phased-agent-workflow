@@ -355,5 +355,3 @@ Before completing review comment responses and handing off to Implementation Rev
 - Manual: Present options - `review`, `status`
 - Semi-Auto/Auto: Use `paw_call_agent` to immediately handoff to PAW-03B Impl Reviewer
 
-After addressing review comments: handoff to PAW-03B Impl Reviewer to verify and push.
-

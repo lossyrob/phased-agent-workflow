@@ -331,10 +331,10 @@ Each PAW-R* agent needs its handoff section updated to:
 - [x] Extension tests pass: `npm test`
 
 #### Manual Verification:
-- [ ] No agent contains hard-coded "When user says continue" lines
-- [ ] All agent handoff sections follow consistent format with guidance line
-- [ ] PAW-R* agents use review-handoff-instructions.component.md consistently
-- [ ] Terminal stages (PAW-05, PAW-R3B) clarify that continue is not applicable or clarify what it does
+- [x] No agent contains hard-coded "When user says continue" lines
+- [x] All agent handoff sections follow consistent format with guidance line
+- [x] PAW-R* agents use review-handoff-instructions.component.md consistently
+- [x] Terminal stages (PAW-05, PAW-R3B) clarify that continue is not applicable or clarify what it does
 
 ---
 

@@ -395,8 +395,9 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 
 **Handoff Mode Behavior:**
 - **Manual**: Present options, wait for user command
-- **Semi-Auto**: Pause after Phase PR opened (prs) or after push (local); user must explicitly continue
-- **Auto**: After push/PR, immediate handoff to next stage (PAW-03A for next phase, PAW-04 for docs)
+- **Semi-Auto**: Pause after PR opened/push; user must explicitly continue
+- **Auto**: Immediate handoff to next stage (PAW-03A or PAW-04)
+- When user says `continue`: proceed to PAW-03A (next phase) or PAW-04 (if all phases complete)
 
 **IMPORTANT**: 
 - Only show ONE next phase (the immediate next one), not multiple future phases

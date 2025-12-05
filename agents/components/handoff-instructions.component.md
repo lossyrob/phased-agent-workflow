@@ -55,7 +55,7 @@ When using local strategy without PRs, the user provides feedback directly:
 
 **Inline instructions**: "implement but add logging" → pass "add logging" as `inline_instruction`
 
-**Continue command**: When user says `continue`, proceed to the default next stage as if in semi-auto/auto mode.
+**Continue command**: When user says `continue`, proceed to the **first command** in your presented "Next Steps" list (the default next stage). Agents must order their options with the recommended default action first—this becomes the `continue` target.
 
 ### Generating Prompt Files
 
@@ -87,6 +87,7 @@ Rules for handoff messages:
 3. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
 4. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
 5. **Make continue explicit** - The guidance line must specify what `continue` does, e.g., `say 'continue' to proceed to review`
+6. **Order options by recommendation** - Place the default/recommended next step first in "Next Steps"; this becomes the `continue` target
 
 Example handoff message after completing implementation:
 ```
@@ -98,7 +99,7 @@ Example handoff message after completing implementation:
 You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to review.
 ```
 
-**`continue` behavior**: Proceeds to the default next stage (what auto mode would do).
+**`continue` behavior**: Proceeds to the first command in "Next Steps" (your default next stage). Do NOT include hard-coded "When user says continue" lines in agent-specific handoff sections—the behavior is derived from your presented options.
 
 **AFTER presenting your handoff message, IMMEDIATELY check handoff mode and act:**
 - **Manual mode** → STOP and wait for user command

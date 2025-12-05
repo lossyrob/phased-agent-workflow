@@ -615,10 +615,17 @@ All findings have evidence and appropriate categorization.
 ### Review Workflow Navigation
 
 After gap analysis completion:
-```
-Next stage: PAW-R3A Feedback Generator
+- Next stage: PAW-R3A Feedback Generator
+- Present options: `feedback` (proceed to feedback generation), `status`
 
-Say 'feedback' or 'generate feedback' to create review comments, or 'status' for help.
+Example handoff message:
+```
+**Gap analysis complete. GapAnalysis.md created.**
+
+**Next Steps:**
+- `feedback` - Proceed to generate review comments
+
+You can ask for `status` or `help`, or say `continue` to proceed to feedback generation.
 ```
 
 In Semi-Auto mode: Pause here (decision point before feedback generation).

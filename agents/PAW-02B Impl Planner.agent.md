@@ -426,7 +426,6 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
 - **local strategy**: Review plan inline, then say `implement` to begin or chat to make updates
 - Present options: `implement`, `status`, `generate implementation prompt`
 - If Auto mode: automatically proceed to PAW-03A Implementer after plan completion
-- When user says `continue`: proceed to PAW-03A Implementer
 
 Note: Don't specify phase number—the Implementer determines the current phase automatically.
 

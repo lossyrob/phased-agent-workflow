@@ -326,9 +326,9 @@ Each PAW-R* agent needs its handoff section updated to:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes on all modified agents: `./scripts/lint-agent.sh`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Extension tests pass: `npm test`
+- [x] Agent linter passes on all modified agents: `./scripts/lint-agent.sh`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Extension tests pass: `npm test`
 
 #### Manual Verification:
 - [ ] No agent contains hard-coded "When user says continue" lines
@@ -337,6 +337,49 @@ Each PAW-R* agent needs its handoff section updated to:
 - [ ] Terminal stages (PAW-05, PAW-R3B) clarify that continue is not applicable or clarify what it does
 
 ---
+
+### Phase 2 Completion Summary (2025-12-04)
+
+**Changes implemented:**
+
+1. Updated `agents/components/handoff-instructions.component.md`:
+   - Modified "Continue command" section to explain continue target derivation from first item in "Next Steps"
+   - Added rule #6 about ordering options by recommendation (default first)
+   - Updated "`continue` behavior" section to explicitly state not to use hard-coded "When user says continue" lines
+
+2. Removed hard-coded "When user says continue" lines from:
+   - `agents/PAW-02B Impl Planner.agent.md`
+   - `agents/PAW-03A Implementer.agent.md`
+   - `agents/PAW-03B Impl Reviewer.agent.md`
+   - `agents/PAW-04 Documenter.agent.md`
+
+3. Updated handoff sections with explicit continue behavior and example handoff messages:
+   - `agents/PAW-01A Specification.agent.md` - conditional continue based on research state
+   - `agents/PAW-01B Spec Researcher.agent.md` - continue returns to Specification Agent
+   - `agents/PAW-02A Code Researcher.agent.md` - continue proceeds to planning
+   - `agents/PAW-05 PR.agent.md` - terminal stage, continue addresses PR comments
+
+4. Updated `agents/components/review-handoff-instructions.component.md`:
+   - Added "Continue Behavior" section explaining continue target derivation for PAW-R* agents
+   - Added terminal stage guidance for PAW-R3B
+
+5. Updated PAW-R* agent handoff sections with explicit continue behavior and example messages:
+   - `agents/PAW-R1A Understanding.agent.md` - conditional continue based on research state
+   - `agents/PAW-R1B Baseline Researcher.agent.md` - continue returns to Understanding Agent
+   - `agents/PAW-R2A Impact Analyzer.agent.md` - continue proceeds to gap analysis
+   - `agents/PAW-R2B Gap Analyzer.agent.md` - continue proceeds to feedback generation
+   - `agents/PAW-R3A Feedback Generator.agent.md` - continue proceeds to feedback critique
+   - `agents/PAW-R3B Feedback Critic.agent.md` - terminal stage, continue revises feedback
+
+**Verification:**
+- All agent linters pass (with expected warnings for larger agents)
+- TypeScript compiles without errors
+- All 143 tests pass
+
+**Review notes:**
+- The handoff message format is now consistent across all agents
+- Continue targets are dynamically determined by the first item in Next Steps
+- Terminal stages (PAW-05 PR, PAW-R3B Feedback Critic) have clarified behavior for `continue`
 
 ## Cross-Phase Testing Strategy
 

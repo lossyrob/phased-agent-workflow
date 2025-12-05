@@ -111,5 +111,15 @@ Optional external/context questions (if any) appear in the "User-Provided Extern
 ### Spec Research Handoff
 
 **Next stage**: PAW-01A Specification (return to integrate research)
-- Manual: Present options - `spec`, `status`
+- Present options: `spec`, `status`
 - Semi-Auto/Auto: Immediate handoff
+
+Example handoff message:
+```
+**Spec research complete. SpecResearch.md saved.**
+
+**Next Steps:**
+- `spec` - Return to Specification Agent to integrate research findings
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to specification.
+```

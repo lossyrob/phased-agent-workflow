@@ -324,17 +324,37 @@ If research was skipped: include an Assumptions section and Risks section note s
 
 **If spec research prompt was generated** (research questions remain):
 - Next stage: PAW-01B Spec Researcher (which returns to Spec after research)
-- Manual: Present options - `research` or `continue` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
-- Semi-Auto: Immediate handoff to Spec Researcher
-- Auto: Immediate handoff to Spec Researcher
+- Present options: `research` (runs spec research), `plan` (skip research, go directly to Code Research), `status`
+- Semi-Auto/Auto: Immediate handoff to Spec Researcher
+
+Example handoff message:
+```
+**Specification draft complete. Research questions generated.**
+
+**Next Steps:**
+- `research` - Run spec research to answer open questions
+- `plan` - Skip research and proceed directly to Code Research
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to research.
+```
 
 **If SpecResearch.md exists** (spec research complete):
 - Next stage: PAW-02A Code Researcher
-- Manual: Present options - `continue` (proceed to Code Research), `status`
+- Present options: `plan` (proceed to Code Research), `status`
 - Semi-Auto: Pause (decision point before Code Research)
 - Auto: Immediate handoff to Code Researcher
 
-**Skipping spec research**: If the user wants to skip spec research entirely (not recommended), they can say `plan` to proceed directly to Code Research. The `continue` command follows the default next stage, which is Spec Researcher when research questions exist.
+Example handoff message:
+```
+**Specification complete. Research integrated.**
+
+**Next Steps:**
+- `plan` - Proceed to Code Research and implementation planning
+
+You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to planning.
+```
+
+**Skipping spec research**: If the user wants to skip spec research entirely (not recommended), they can say `plan` to proceed directly to Code Research.
 
 ### Working with Issues and PRs
 

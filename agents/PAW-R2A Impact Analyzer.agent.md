@@ -460,10 +460,17 @@ ImpactAnalysis.md created with:
 ### Review Workflow Navigation
 
 After impact analysis completion:
-```
-Next stage: PAW-R2B Gap Analyzer
+- Next stage: PAW-R2B Gap Analyzer
+- Present options: `gaps` (proceed to gap analysis), `status`
 
-Say 'gaps' or 'gap analysis' to identify correctness, testing, and quality gaps, or 'status' for help.
+Example handoff message:
+```
+**Impact analysis complete. ImpactAnalysis.md created.**
+
+**Next Steps:**
+- `gaps` - Proceed to gap analysis to identify correctness, testing, and quality gaps
+
+You can ask for `status` or `help`, or say `continue` to proceed to gap analysis.
 ```
 
 In Semi-Auto and Auto modes: Immediately invoke handoff to PAW-R2B Gap Analyzer.

@@ -470,7 +470,6 @@ Before pushing:
 **local strategy** (no Docs PR):
 - Manual: Present `pr`, `status`
 - Semi-Auto/Auto: Immediate handoff to PAW-05 PR
-- When user says `continue`: proceed to PAW-05 PR
 
 **Addressing Docs PR comments**: Handoff to PAW-04 Documenter with inline instruction "address PR review comments"
 

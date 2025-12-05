@@ -343,4 +343,14 @@ Original branch restored: <original-branch>
 ### Review Workflow Navigation
 
 After baseline research completion, return control to PAW-R1A Understanding Agent to complete the derived specification:
-- Present option: "Say 'understanding' or 'resume' to return to Understanding Agent and complete DerivedSpec.md."
+- Present options: `understanding` or `resume` (return to Understanding Agent)
+
+Example handoff message:
+```
+**Baseline research complete. CodeResearch.md saved.**
+
+**Next Steps:**
+- `understanding` - Return to Understanding Agent to complete DerivedSpec.md
+
+You can ask for `status` or `help`, or say `continue` to return to understanding.
+```

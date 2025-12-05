@@ -100,4 +100,9 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 
 **`continue` behavior**: Proceeds to the default next stage (what auto mode would do).
 
-**QUALITY CHECK**: After presenting "Next Steps", check the `<handoff_instructions>` from `paw_get_context` to determine if you should STOP and wait (manual mode), auto-proceed at routine transitions (semi-auto mode), or always auto-proceed (auto mode).
+**AFTER presenting your handoff message, IMMEDIATELY check handoff mode and act:**
+- **Manual mode** → STOP and wait for user command
+- **Semi-Auto mode at routine transition** → call `paw_call_agent` now
+- **Auto mode** → call `paw_call_agent` now
+
+Reference `<handoff_instructions>` from `paw_get_context` to determine your mode and whether this is a routine transition.

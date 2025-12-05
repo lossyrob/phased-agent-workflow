@@ -34,11 +34,12 @@ The handoff mechanism in `agents/components/handoff-instructions.component.md` d
 
 ## Implementation Approach
 
-This is a documentation-focused change to agent prompt files. The changes are small and focused, affecting primarily the shared handoff-instructions component and one agent file.
+This is a documentation-focused change to agent prompt files. The changes are small and focused, affecting primarily the shared handoff-instructions component and agent files.
 
 ## Phase Summary
 
 1. **Phase 1: Command Recognition and Handoff Message Updates** - Add decision gate for command recognition and update handoff message format to include explicit continue targets
+2. **Phase 2: Dynamic Continue Target and Missing Agent Coverage** - Replace hard-coded continue lines with dynamic derivation and extend continue guidance to all agents
 
 ---
 
@@ -184,6 +185,159 @@ Before modifying any file, check:
 
 ---
 
+## Phase 2: Dynamic Continue Target and Missing Agent Coverage
+
+### Overview
+Address two issues: (1) Extend explicit continue guidance to all agents missing it (PAW-01A, PAW-01B, PAW-02A, PAW-05, and all PAW-R* agents), and (2) Replace hard-coded "When user says continue" lines with dynamic derivation from presented next steps.
+
+### Changes Required:
+
+#### 1. Update handoff-instructions.component.md for Dynamic Continue Behavior
+**File**: `agents/components/handoff-instructions.component.md`
+**Changes**:
+- Update the "`continue` behavior" section to explicitly state that the continue target is derived from the first/default option in "Next Steps"
+- Add a rule that agents must order their "Next Steps" with the default/recommended action first
+- Clarify that the guidance line's continue target must match the first presented option
+
+**Location**: Update the section after "Required Handoff Message Format" (around lines 68-85)
+
+**Changes to make**:
+1. Update the "`continue` behavior" line to explain derivation:
+   ```
+   **`continue` behavior**: Proceeds to the **first command** in the "Next Steps" list (the default next stage). Agents must order options with the recommended default first.
+   ```
+
+2. Add a new rule #6 about ordering:
+   ```
+   6. **Order options by recommendation** - Place the default/recommended next step first in "Next Steps"; this becomes the `continue` target
+   ```
+
+3. Add guidance that agent-specific handoff sections should NOT include hard-coded "When user says continue" lines since the behavior is derived from the presented options
+
+#### 2. Remove Hard-Coded Continue Lines from PAW-02B Impl Planner
+**File**: `agents/PAW-02B Impl Planner.agent.md`
+**Changes**:
+- Remove the line `- When user says 'continue': proceed to PAW-03A Implementer` from the "Planning Handoff" section
+- The behavior is now derived from the first option in Next Steps
+
+**Location**: Around line 429
+
+#### 3. Remove Hard-Coded Continue Lines from PAW-03A Implementer
+**File**: `agents/PAW-03A Implementer.agent.md`
+**Changes**:
+- Remove the line `- When user says 'continue': proceed to PAW-03B Impl Reviewer` from the "Implementation Handoff" section
+- The behavior is now derived from the first option in Next Steps
+
+**Location**: Around line 357
+
+#### 4. Remove Hard-Coded Continue Lines from PAW-03B Impl Reviewer  
+**File**: `agents/PAW-03B Impl Reviewer.agent.md`
+**Changes**:
+- Remove the line `- When user says 'continue': proceed to PAW-03A (next phase) or PAW-04 (if all phases complete)` from the handoff section
+- The behavior is now derived from the first option in Next Steps (which the agent dynamically determines based on whether more phases remain)
+
+**Location**: Around line 400
+
+#### 5. Remove Hard-Coded Continue Lines from PAW-04 Documenter
+**File**: `agents/PAW-04 Documenter.agent.md`
+**Changes**:
+- Remove the line `- When user says 'continue': proceed to PAW-05 PR` from the "Documentation Handoff" section
+- The behavior is now derived from the first option in Next Steps
+
+**Location**: Around line 473
+
+#### 6. Update PAW-01A Specification Agent Handoff Section
+**File**: `agents/PAW-01A Specification.agent.md`
+**Changes**:
+- Update the "Specification Handoff" section to include explicit guidance on continue behavior
+- The continue target is dynamically determined: if spec research is needed, continue → Spec Researcher; if spec is complete, continue → Code Researcher
+- Ensure example handoff message shows the continue target in guidance line
+
+**Location**: Around lines 315-335 (Specification Handoff section)
+
+**Update to include**: Dynamic continue target based on workflow state is already correctly described, just need to ensure the guidance line format is explicit in examples
+
+#### 7. Update PAW-01B Spec Researcher Agent Handoff Section
+**File**: `agents/PAW-01B Spec Researcher.agent.md`
+**Changes**:
+- Add explicit continue guidance to the "Spec Research Handoff" section
+- Continue target: PAW-01A Specification (return to integrate research)
+- Update example handoff message to include continue target in guidance line
+
+**Location**: Around lines 130-140 (Spec Research Handoff section)
+
+#### 8. Update PAW-02A Code Researcher Agent Handoff Section
+**File**: `agents/PAW-02A Code Researcher.agent.md`
+**Changes**:
+- Add explicit continue guidance to the "Code Research Handoff" section
+- Continue target: PAW-02B Impl Planner
+- Update example handoff message to include continue target in guidance line
+
+**Location**: Around lines 430-439 (Code Research Handoff section)
+
+#### 9. Update PAW-05 PR Agent Handoff Section
+**File**: `agents/PAW-05 PR.agent.md`
+**Changes**:
+- The Final PR Handoff section already exists but the guidance line should be updated
+- This is a terminal stage - continue is not applicable as there's no default next stage
+- Update guidance line to clarify: "say `continue` to address comments" or remove continue from guidance since it's terminal
+
+**Location**: Around lines 275-310 (Final PR Handoff section)
+
+#### 10. Update PAW-R* Review Agents Handoff Sections
+**Files**: All PAW-R* agents in `agents/` directory
+
+Each PAW-R* agent needs its handoff section updated to:
+- Follow the consistent handoff message format from handoff-instructions.component.md
+- Include the guidance line with continue target
+- Order Next Steps with the default option first
+
+**Specific changes**:
+
+**PAW-R1A Understanding** (lines 563-602):
+- Update handoff message to include guidance line with continue target
+- Continue target: PAW-R1B Baseline Researcher (if research needed) or PAW-R2A Impact Analyzer (if research complete)
+
+**PAW-R1B Baseline Researcher** (lines 322-350):
+- Update handoff message to include guidance line with continue target
+- Continue target: PAW-R1A Understanding (return to complete derived spec)
+
+**PAW-R2A Impact Analyzer** (lines 444-469):
+- Update handoff message to include guidance line with continue target
+- Continue target: PAW-R2B Gap Analyzer
+
+**PAW-R2B Gap Analyzer** (lines 596-630):
+- Update handoff message to include guidance line with continue target
+- Continue target: PAW-R3A Feedback Generator
+
+**PAW-R3A Feedback Generator** (lines 405-440):
+- Update handoff message to include guidance line with continue target
+- Continue target: PAW-R3B Feedback Critic
+
+**PAW-R3B Feedback Critic** (lines 335-375):
+- Terminal stage - update guidance line to clarify continue is not applicable
+- User takes manual action (posts feedback, makes edits)
+
+**Tests**:
+- Run `./scripts/lint-agent.sh` on all modified agent files to ensure token limits not exceeded
+- Verify TypeScript compiles
+- Run extension tests
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Agent linter passes on all modified agents: `./scripts/lint-agent.sh`
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] Extension tests pass: `npm test`
+
+#### Manual Verification:
+- [ ] No agent contains hard-coded "When user says continue" lines
+- [ ] All agent handoff sections follow consistent format with guidance line
+- [ ] PAW-R* agents use review-handoff-instructions.component.md consistently
+- [ ] Terminal stages (PAW-05, PAW-R3B) clarify that continue is not applicable or clarify what it does
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Manual Testing Steps:
@@ -191,6 +345,8 @@ Before modifying any file, check:
 2. After Impl Reviewer completes, type `feedback: add comments`
 3. Verify Impl Reviewer recognizes this as a handoff command to Implementer
 4. Verify handoff message includes explicit continue target
+5. After Phase 2: Test that saying "continue" at each stage invokes the first listed option
+6. After Phase 2: Verify that all agents present consistent handoff message format
 
 ## References
 

@@ -485,9 +485,9 @@ When the Spec Agent generates the research prompt, it may have accumulated notes
 - [x] Extension tests pass: `npm test`
 
 #### Manual Verification:
-- [ ] Spec Agent includes "Agent Notes" section in generated research prompts when notes exist
-- [ ] Spec Researcher preserves Agent Notes in SpecResearch.md section 2
-- [ ] Notes flow correctly: Spec Agent → research prompt → SpecResearch.md → back to Spec Agent
+- [x] Spec Agent includes "Agent Notes" section in generated research prompts when notes exist
+- [x] Spec Researcher preserves Agent Notes in SpecResearch.md section 2
+- [x] Notes flow correctly: Spec Agent → research prompt → SpecResearch.md → back to Spec Agent
 
 ---
 

@@ -89,7 +89,7 @@ Research answers "how does the system work today?" to inform design, not "what s
    - High‑impact uncertainties (scope, security/privacy, user experience, compliance) that lack a defensible default become explicit clarification questions; resolve them via user dialogue before proceeding.
    - Remaining fact gaps become research questions (internal/external) unless downgraded to an assumption.
    - **Design decisions** (file names, structure, conventions) informed by research should be made directly without asking the user—document the choice and rationale.
-4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation. **DO NOT write Spec.md yet**—spec assembly only happens after research integration (step 6) or explicit research skip.
+4. **Research Prompt Generation**: Create `prompts/01B-spec-research.prompt.md` using minimal format (unchanged from PAW) containing only unresolved research questions (exclude those replaced by assumptions). Keep internal vs external separation. **Include any accumulated notes or context from intake/decomposition in a dedicated "Agent Notes" section**—these notes help the researcher understand your thought process and constraints. **DO NOT write Spec.md yet**—spec assembly only happens after research integration (step 6) or explicit research skip.
 5. **Handoff**: Instruct user to run Spec Research Agent. Provide counts: assumptions and research questions (clarification questions must already be resolved or explicitly listed awaiting user input—do not proceed until resolved). You will not be doing the research - the user has to run the Spec Research Agent. (Skip if `SpecResearch.md` already exists.) **If research is needed, handoff here without writing Spec.md**—the spec is assembled after research.
 6. **Integrate Research**: Map each research question → answer. Optional external/context questions may remain unanswered (manual section). Resolve any new clarifications before drafting. (If returning after research, start here.)
 7. **Specification Assembly**: Iteratively build the full spec with section order below. Start with narrative sections (Overview and Objectives) to establish context, then enumerate detailed requirements.
@@ -112,6 +112,9 @@ Target Branch: <target_branch>
 Issue URL: <issue_url or 'none'>
 Additional Inputs: <comma-separated list or 'none'>
 
+## Agent Notes (if any)
+<Context and notes from the Spec Agent's intake/decomposition process that may be valuable for understanding constraints, assumptions, or thought process. Omit this section if no notes exist.>
+
 ## Questions
 1. ...
 
@@ -122,6 +125,7 @@ Additional Inputs: <comma-separated list or 'none'>
 Constraints:
 - Keep only unresolved high‑value questions (avoid noise).
 - Do not include implementation suggestions.
+- Include any accumulated notes or context in "Agent Notes" section (omit section if no notes).
 - Write file immediately; pause for research.
 
 ## Inline Specification Template

@@ -49,17 +49,18 @@ This agent focuses on **how the system behaves today** at a conceptual level:
 
 Structure:
 1. **Summary** (1-2 paragraphs): Key findings overview
-2. **Research Findings**: One section per question
+2. **Agent Notes** (if present in research prompt): Preserve notes from Spec Agent verbatim. Omit this section if no notes exist in the prompt.
+3. **Research Findings**: One section per question
    - **Question**: From the prompt
    - **Answer**: Factual behavior (what system does, not how)
    - **Evidence**: Source of info (e.g., "API docs", "config behavior"). No file:line references.
    - **Implications**: (When relevant) How this impacts spec requirements or scope
-3. **Open Unknowns**: Unanswered internal questions with rationale. Note: "The Spec Agent will review these with you. You may provide answers here if possible."
-4. **User-Provided External Knowledge (Manual Fill)**: Unchecked list of optional external/context questions for manual completion
+4. **Open Unknowns**: Unanswered internal questions with rationale. Note: "The Spec Agent will review these with you. You may provide answers here if possible."
+5. **User-Provided External Knowledge (Manual Fill)**: Unchecked list of optional external/context questions for manual completion
 
 ## Output
 - Save at: `.paw/work/<feature-slug>/SpecResearch.md` (canonical path)
-- Build incrementally: summary placeholder → answer questions one at a time → finalize summary → add open unknowns and external knowledge list
+- Build incrementally: summary placeholder → preserve agent notes if present → answer questions one at a time → finalize summary → add open unknowns and external knowledge list
 
 ## Guardrails
 - No proposals, refactors, “shoulds”.

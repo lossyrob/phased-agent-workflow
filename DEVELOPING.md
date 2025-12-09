@@ -162,9 +162,72 @@ code --uninstall-extension paw-workflow.paw-workflow
 
 Or uninstall from the Extensions view inside VS Code.
 
+## Documentation Development
+
+PAW documentation is built with MkDocs and the Material theme, publishing to GitHub Pages at https://lossyrob.github.io/phased-agent-workflow.
+
+### Prerequisites
+
+- Python 3.x
+- Virtual environment with `mkdocs-material` installed
+
+### Setup
+
+```bash
+# Create and activate virtual environment (if not already done)
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install MkDocs and Material theme
+pip install mkdocs-material
+```
+
+### Local Development
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Build the site (validates config and links)
+mkdocs build
+
+# Serve locally with live reload
+mkdocs serve
+# Visit http://localhost:8000
+```
+
+### Documentation Structure
+
+```
+docs/
+├── index.md                    # Landing page
+├── guide/                      # User guides
+│   ├── index.md               # Getting Started
+│   ├── vscode-extension.md    # Extension commands and config
+│   ├── workflow-modes.md      # Full/Minimal/Custom modes
+│   └── ...
+├── specification/              # Technical specifications
+│   ├── index.md               # Overview
+│   ├── implementation.md      # Implementation workflow
+│   └── review.md              # Review workflow
+└── reference/                  # Reference documentation
+    ├── agents.md              # All PAW agents
+    └── artifacts.md           # Artifact descriptions
+```
+
+### Adding New Pages
+
+1. Create a new Markdown file in the appropriate `docs/` subdirectory
+2. Add the page to navigation in `mkdocs.yml` under the `nav:` section
+3. Run `mkdocs build --strict` to validate links before committing
+
+### Deployment
+
+Documentation deploys automatically when changes to `docs/**` or `mkdocs.yml` are merged to `main`. The GitHub Actions workflow handles building and publishing to the `gh-pages` branch.
+
 ## GitHub Actions Workflows
 
-PAW includes two automated workflows for the VS Code extension:
+PAW includes automated workflows for the VS Code extension and documentation:
 
 ### Release Workflow
 
@@ -185,6 +248,18 @@ Runs automated quality checks on pull requests before merging.
 - Agent file linting (token limits)
 
 The workflow triggers automatically on PRs to `main` or `feature/**` branches when relevant files change. Failed checks prevent merge when branch protection is enabled.
+
+### Documentation Workflow
+
+Builds and deploys documentation to GitHub Pages when changes are merged to main.
+
+**Triggers**: Pushes to `main` that modify `docs/**`, `mkdocs.yml`, or `.github/workflows/docs.yml`
+
+**Process**:
+1. Sets up Python and caches Material theme assets
+2. Installs `mkdocs-material`
+3. Runs `mkdocs gh-deploy --force` to build and push to `gh-pages` branch
+4. Site updates at https://lossyrob.github.io/phased-agent-workflow
 
 ## Project Structure
 

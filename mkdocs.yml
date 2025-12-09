@@ -61,7 +61,10 @@ nav:
   - Home: index.md
   - User Guide:
     - Getting Started: guide/index.md
+    - VS Code Extension: guide/vscode-extension.md
     - Workflow Modes: guide/workflow-modes.md
+    - Stage Transitions: guide/stage-transitions.md
+    - Custom Instructions: guide/custom-instructions.md
     - Two Workflows: guide/two-workflows.md
   - Specification:
     - Overview: specification/index.md

@@ -1,0 +1,55 @@
+# MkDocs configuration for Phased Agent Workflow documentation
+# See https://www.mkdocs.org/user-guide/configuration/ for options
+
+site_name: Phased Agent Workflow (PAW)
+site_url: https://lossyrob.github.io/phased-agent-workflow
+site_description: VS Code extension for coordinating multi-stage AI agent workflows
+site_author: PAW Contributors
+
+repo_url: https://github.com/lossyrob/phased-agent-workflow
+repo_name: lossyrob/phased-agent-workflow
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md

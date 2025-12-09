@@ -10,9 +10,6 @@ When creating or modifying agent files in `agents/`, ALWAYS run the agent linter
 ./scripts/lint-agent.sh agents/<filename>.agent.md
 ```
 
-## Docs development
-
-When working with documentation, ensure the virtual environment is activated to run mkdocs commands.
 
 ### Documentation Updates
 

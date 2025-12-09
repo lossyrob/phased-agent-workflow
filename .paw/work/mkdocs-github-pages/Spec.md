@@ -91,20 +91,23 @@ Acceptance Scenarios:
 - MkDocs with Material theme will be used as the documentation build system (per issue specification)
 - GitHub Pages will serve from the `gh-pages` branch, which is the standard pattern for automated deployments
 - Latest stable versions of MkDocs and mkdocs-material are appropriate for this implementation
-- Initial documentation structure will be minimal but extensible; comprehensive content migration is a future enhancement
 - The repository owner can enable GitHub Pages for the repository (required GitHub permissions assumed)
+- Existing root-level documentation files (README.md, specifications) will remain in place; the docs site will contain organized versions of this content
 
 ## Scope
 
 In Scope:
-- Creation of `/docs` folder with initial documentation structure
+- Creation of `/docs` folder with organized documentation structure
 - MkDocs configuration file (`mkdocs.yml`) with Material theme settings
 - GitHub Actions workflow for automated build and deployment
-- Basic navigation structure for initial documentation
+- Navigation structure organized into User Guide, Specifications, and Reference sections
 - Instructions for enabling GitHub Pages on the `gh-pages` branch
+- Migration of content from README.md, paw-specification.md, and paw-review-specification.md into organized documentation
+- Review and integration of relevant Docs.md content from completed work items
 
 Out of Scope:
-- Migration of all existing documentation content (README, specifications) into the new structure
+- Removing existing root-level documentation files (README.md, specifications remain as source of truth)
+- Migration of DEVELOPING.md (developer-focused, not user documentation)
 - Custom theme development beyond Material theme configuration
 - Documentation hosting on platforms other than GitHub Pages
 - Multi-language documentation support

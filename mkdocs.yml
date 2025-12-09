@@ -59,3 +59,14 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - User Guide:
+    - Getting Started: guide/index.md
+    - Workflow Modes: guide/workflow-modes.md
+    - Two Workflows: guide/two-workflows.md
+  - Specification:
+    - Overview: specification/index.md
+    - Implementation Workflow: specification/implementation.md
+    - Review Workflow: specification/review.md
+  - Reference:
+    - Agents: reference/agents.md
+    - Artifacts: reference/artifacts.md

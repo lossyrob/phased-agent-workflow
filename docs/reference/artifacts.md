@@ -1,0 +1,279 @@
+# PAW Artifacts Reference
+
+PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. All artifacts are committed to Git and version-controlled.
+
+## Directory Structure
+
+```
+.paw/
+  work/                         # Implementation workflow
+    <work-id>/
+      WorkflowContext.md        # Required: workflow parameters
+      prompts/
+        spec-research.prompt.md # Research questions
+        code-research.prompt.md # Code research guidance
+      Spec.md                   # Feature specification
+      SpecResearch.md           # Spec research findings
+      CodeResearch.md           # Code research findings
+      ImplementationPlan.md     # Implementation plan
+      Docs.md                   # Documentation
+  
+  reviews/                      # Review workflow
+    PR-<number>/
+      ReviewContext.md          # Review parameters
+      prompts/
+        code-research.prompt.md # Baseline research questions
+      CodeResearch.md           # Pre-change baseline
+      DerivedSpec.md           # Reverse-engineered spec
+      ImpactAnalysis.md        # Impact analysis
+      GapAnalysis.md           # Gap analysis
+      ReviewComments.md        # Review comments
+```
+
+---
+
+## Implementation Workflow Artifacts
+
+### WorkflowContext.md
+
+**Purpose:** Centralized parameter file that all agents read at startup.
+
+**Contents:**
+
+| Field | Description |
+|-------|-------------|
+| Work Title | Short name for PR titles |
+| Work ID | Normalized slug for artifact paths |
+| Target Branch | Branch where implementation merges |
+| Workflow Mode | `full`, `minimal`, or `custom` |
+| Review Strategy | `prs` or `local` |
+| Handoff Mode | `manual`, `semi-auto`, or `auto` |
+| Issue URL | GitHub Issue or Azure DevOps Work Item |
+| Remote | Git remote name (default: "origin") |
+| Artifact Paths | Usually "auto-derived" |
+| Additional Inputs | Extra parameters |
+
+### Spec.md
+
+**Purpose:** Testable requirements document defining what the feature must do.
+
+**Created by:** PAW-01A Specification
+
+**Contents:**
+
+- **Overview** — Brief summary of feature purpose
+- **Functional Requirements** — What the feature must do
+- **Non-Functional Requirements** — Performance, security, usability constraints
+- **Data Requirements** — New entities, validation rules
+- **Acceptance Criteria** — Measurable conditions that define "done"
+- **Out of Scope** — What this feature will NOT do
+
+**Quality Standard:** Every requirement must be testable—measurable, observable, unambiguous.
+
+### SpecResearch.md
+
+**Purpose:** Factual documentation of how the current system works.
+
+**Created by:** PAW-01B Spec Researcher
+
+**Contents:**
+
+- Answers to questions from `spec-research.prompt.md`
+- Current system behavior (conceptual, not code-level)
+- Component interactions and data flows
+- User-facing workflows and business rules
+
+**Key Distinction:** Behavioral view for specification writing, not implementation details.
+
+### CodeResearch.md
+
+**Purpose:** Technical mapping of where and how relevant code works.
+
+**Created by:** PAW-02A Code Researcher
+
+**Contents:**
+
+- File paths and code locations
+- Patterns and conventions
+- Integration points and dependencies
+- Architecture documentation references
+
+**Key Distinction:** Implementation view for planning with specific file paths.
+
+### ImplementationPlan.md
+
+**Purpose:** Detailed plan with discrete phases that can be reviewed and merged independently.
+
+**Created by:** PAW-02B Impl Planner
+
+**Contents:**
+
+- **Overview** — What the plan accomplishes
+- **Current State Analysis** — Relevant findings from research
+- **Phase Summary** — High-level overview of all phases
+- **Phase Details** — For each phase:
+    - Changes required (files, components)
+    - Success criteria (automated and manual)
+    - Implementation notes (after completion)
+
+**Checkboxes:** Implementer marks items complete as work progresses.
+
+### Docs.md
+
+**Purpose:** Authoritative technical reference for the implemented work.
+
+**Created by:** PAW-04 Documenter
+
+**Contents:**
+
+- What was built and why
+- Architecture and design decisions
+- How to use and test the feature
+- Integration points and dependencies
+
+**Note:** Focuses on concepts and user-facing behavior, not code reproduction.
+
+---
+
+## Review Workflow Artifacts
+
+### ReviewContext.md
+
+**Purpose:** Authoritative parameter source for review workflow.
+
+**Created by:** PAW-R1A Understanding
+
+**Contents:**
+
+| Field | Description |
+|-------|-------------|
+| PR Number | GitHub PR number (or branch for non-GitHub) |
+| Base/Head Branch | Before and after branches |
+| Base/Head Commit | Specific commit SHAs |
+| Changed Files | Count, additions, deletions |
+| CI Status | Passing, failing, pending |
+| Flags | CI failures, breaking changes suspected |
+
+### DerivedSpec.md
+
+**Purpose:** Reverse-engineered specification inferred from implementation.
+
+**Created by:** PAW-R1A Understanding
+
+**Contents:**
+
+- **Intent Summary** — What problem this appears to solve
+- **Scope** — What's in and out of scope
+- **Assumptions** — Inferences from the code
+- **Measurable Outcomes** — Before/after behavior
+- **Changed Interfaces** — APIs, routes, schemas
+- **Risks & Invariants** — Properties that must hold
+- **Open Questions** — Ambiguities about intent
+
+### ImpactAnalysis.md
+
+**Purpose:** System-wide effects, integration analysis, and risk assessment.
+
+**Created by:** PAW-R2A Impact Analyzer
+
+**Contents:**
+
+- **Integration Points** — Dependencies and downstream consumers
+- **Breaking Changes** — API changes, incompatibilities
+- **Performance Implications** — Hot paths, resource usage
+- **Security Changes** — Auth, validation modifications
+- **Design Assessment** — Architecture fit, timing appropriateness
+- **User Impact** — End-user and developer-user effects
+- **Risk Assessment** — Overall risk with rationale
+
+### GapAnalysis.md
+
+**Purpose:** Categorized findings with evidence and suggestions.
+
+**Created by:** PAW-R2B Gap Analyzer
+
+**Structure:**
+
+```markdown
+## Must
+[Correctness, safety, security issues]
+
+## Should
+[Quality, testing, completeness gaps]
+
+## Could
+[Optional enhancements]
+
+## Positive Observations
+[Good practices to commend]
+```
+
+**Each finding includes:**
+
+- File and line reference
+- Description of issue
+- Impact explanation
+- Suggested fix
+
+### ReviewComments.md
+
+**Purpose:** Complete feedback with rationale and assessment.
+
+**Created by:** PAW-R3A Feedback Generator, PAW-R3B Feedback Critic
+
+**For each comment:**
+
+- **Comment text** — What gets posted
+- **Rationale** — Evidence, baseline pattern, impact, best practice
+- **Assessment** — Usefulness, accuracy, trade-offs (never posted)
+
+---
+
+## Prompt Files
+
+### spec-research.prompt.md
+
+**Purpose:** Guide Spec Research Agent on what to investigate.
+
+**Created by:** PAW-01A Specification
+
+**Contents:**
+
+- Questions about current system behavior
+- Areas needing clarification
+- Optional external/context questions
+
+### code-research.prompt.md
+
+**Purpose:** Guide Code Research Agent on what to map.
+
+**Created by:** PAW-02B Impl Planner (implementation) or PAW-R1A Understanding (review)
+
+**Contents:**
+
+- Specific areas to investigate
+- Questions about code structure
+- Integration points to document
+
+---
+
+## Best Practices
+
+### Artifact Quality
+
+- **Testable** — Requirements can be verified objectively
+- **Complete** — All relevant information included
+- **Clear** — Precise language without ambiguity
+- **Scoped** — Explicit boundaries on what's included
+
+### Version Control
+
+- All artifacts committed to Git
+- Changes tracked through PRs
+- History preserved for traceability
+
+### Rewindability
+
+- Any artifact can be updated to fix errors
+- Downstream artifacts regenerated as needed
+- Clear chain of dependencies between artifacts

@@ -1,0 +1,66 @@
+# Builds and deploys documentation to GitHub Pages when changes are merged to main.
+# Uses MkDocs with Material theme for static site generation.
+# Publishes to https://lossyrob.github.io/phased-agent-workflow
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+
+permissions:
+  contents: write  # Required to push to gh-pages branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure Git credentials
+        run: |
+          # Configure git for github-actions bot to push to gh-pages branch
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      
+      - name: Set cache ID
+        run: |
+          # Use week number for weekly cache refresh
+          # This balances freshness with build speed
+          echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      
+      - name: Cache MkDocs Material assets
+        uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+      
+      - name: Install MkDocs Material
+        run: pip install mkdocs-material
+      
+      - name: Deploy to GitHub Pages
+        run: |
+          # Build and deploy documentation to gh-pages branch
+          # --force overwrites history to keep gh-pages clean
+          mkdocs gh-deploy --force
+      
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "✅ Documentation deployed successfully!"
+          echo "- Site URL: https://lossyrob.github.io/phased-agent-workflow"
+          echo "- Source: docs/ and mkdocs.yml"
+          echo "- Branch: gh-pages"

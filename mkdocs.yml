@@ -1,5 +1,11 @@
 # MkDocs configuration for Phased Agent Workflow documentation
+#
+# Build locally:   mkdocs build
+# Serve locally:   mkdocs serve (then visit http://localhost:8000)
+# Deploy to GH Pages: mkdocs gh-deploy --force
+#
 # See https://www.mkdocs.org/user-guide/configuration/ for options
+# See https://squidfunk.github.io/mkdocs-material/ for Material theme docs
 
 site_name: Phased Agent Workflow (PAW)
 site_url: https://lossyrob.github.io/phased-agent-workflow

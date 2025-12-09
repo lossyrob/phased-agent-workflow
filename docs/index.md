@@ -64,33 +64,10 @@ PR → Understanding → Evaluation → Feedback Generation
 
 ## Documentation
 
-<div class="grid cards" markdown>
-
--   :material-rocket-launch: **[Getting Started](guide/index.md)**
-
-    ---
-
-    Install PAW and start your first workflow
-
--   :material-cog: **[Workflow Modes](guide/workflow-modes.md)**
-
-    ---
-
-    Configure Full, Minimal, or Custom modes
-
--   :material-book-open: **[Specification](specification/index.md)**
-
-    ---
-
-    Deep dive into PAW's workflow design
-
--   :material-robot: **[Agents Reference](reference/agents.md)**
-
-    ---
-
-    All PAW agents and their purposes
-
-</div>
+- **[Getting Started](guide/index.md)** — Install PAW and start your first workflow
+- **[Workflow Modes](guide/workflow-modes.md)** — Configure Full, Minimal, or Custom modes
+- **[Specification](specification/index.md)** — Deep dive into PAW's workflow design
+- **[Agents Reference](reference/agents.md)** — All PAW agents and their purposes
 
 ## Requirements
 

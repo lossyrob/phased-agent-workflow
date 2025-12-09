@@ -366,14 +366,34 @@ Review existing Docs.md files from completed work items and integrate relevant c
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `mkdocs build` completes without errors
-- [ ] No broken internal links
+- [x] `mkdocs build` completes without errors
+- [x] No broken internal links
 
 #### Manual Verification:
 - [ ] Integrated content is coherent with existing documentation
 - [ ] No unnecessary duplication between pages
 - [ ] Navigation remains logical and not overwhelming
 - [ ] Search indexes new content appropriately
+
+### Phase 4 Implementation Notes
+
+**Completed**: 2025-12-09
+
+**Summary**: Reviewed 12 existing Docs.md files from completed work items and integrated relevant user-facing content into three new User Guide pages:
+
+**Files created:**
+- `docs/guide/vscode-extension.md` - Extension commands, configuration, agent installation, troubleshooting (from vscode-extension-init/Docs.md, agent-installation-management/Docs.md)
+- `docs/guide/stage-transitions.md` - Handoff commands, workflow navigation, handoff modes, inline instructions, PR review comments (from workflow-handoffs/Docs.md)
+- `docs/guide/custom-instructions.md` - Workspace and user-level customization, precedence rules, examples (from paw-context-tool-for-custom-instructions/Docs.md)
+
+**Docs.md files reviewed but NOT integrated** (content already covered in Phase 3):
+- `paw-review/Docs.md` - Review workflow already in `specification/review.md`
+- `simplified-workflow/Docs.md` - Workflow modes already in `guide/workflow-modes.md`
+- `move-chatmodes-to-agents/Docs.md` - Internal refactoring, not user-facing
+
+**Navigation updates**: Added three new pages to User Guide section in `mkdocs.yml`, organized logically after Getting Started.
+
+**Notes for reviewers**: Run `mkdocs serve` locally to verify the new pages integrate well with existing content. Check that handoff commands and custom instructions documentation is accurate and matches current agent behavior.
 
 ---
 

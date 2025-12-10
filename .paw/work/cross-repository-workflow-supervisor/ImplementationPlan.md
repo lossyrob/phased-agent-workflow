@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan implements a cross-repository workflow coordination system that enables PAW to orchestrate feature development across multiple git repositories in a VS Code multi-root workspace. Users will select "Cross-Repository" workflow type during initialization, and cross-repository agents (PAW-M## series) will create holistic specifications, generate execution plans with repository sequencing, and initialize standard PAW child workflows in each affected repository with scoped context. The supervisor artifacts live in `.paw/multi-work/<work-id>/` at workspace root (not in any git repository), while child workflows maintain standard `.paw/work/<work-id>/` structure and function independently.
+This plan implements a cross-repository workflow coordination system that enables PAW to orchestrate feature development across multiple git repositories in a VS Code multi-root workspace. Users will select "Cross-Repository" workflow type during initialization, and cross-repository agents (PAW-M## series) will create holistic specifications, generate execution plans with repository sequencing, and initialize standard PAW child workflows in each affected repository with scoped context. The cross-repo artifacts live in `.paw/multi-work/<work-id>/` at workspace root (not in any git repository), while child workflows maintain standard `.paw/work/<work-id>/` structure and function independently.
 
 ## Current State Analysis
 
@@ -19,7 +19,6 @@ PAW currently supports single-repository workflows with:
 - `src/tools/contextTool.ts:229-266`: `getWorkspaceFolderPaths()` and `resolveWorkspacePath()` already iterate all workspace folders
 - `src/git/validation.ts:10-16`: `validateGitRepository()` uses `git rev-parse --git-dir` for reliable detection
 - Review agents follow PAW-R## naming pattern (PAW-R1A, PAW-R1B, PAW-R2A, etc.) established in `agents/` directory
-- No existing code references "Supervisor" or "SupervisorContext" (clean slate for cross-repo terminology)
 
 ## Desired End State
 
@@ -27,14 +26,14 @@ After implementation:
 - Users can select "Cross-Repository" workflow type from a dropdown during initialization
 - System detects all git repositories in multi-root workspace and prompts for affected repository selection
 - Cross-repository agents (PAW-M01A Cross-Repo Spec, PAW-M01B Cross-Repo Spec Researcher, PAW-M02A Cross-Repo Code Researcher, PAW-M02B Cross-Repo Impl Planner, PAW-M03 Cross-Repo Validator) coordinate multi-repository features
-- Supervisor artifacts stored in `.paw/multi-work/<work-id>/` with `SupervisorContext.md`, `CrossRepoSpec.md`, `CrossRepoPlan.md`
+- Cross-repo artifacts stored in `.paw/multi-work/<work-id>/` with `CrossRepoContext.md`, `CrossRepoSpec.md`, `CrossRepoPlan.md`
 - Child workflows initialized with repository-specific context excerpts, functioning as standard PAW workflows
 - Execution plan provides numbered repository sequence with dependency rationale
 - Validation phase performs consistency checks and integration test guidance
 
 ### Verification:
 - User can complete end-to-end cross-repository workflow from initialization to validation
-- Child workflows operate independently if supervisor artifacts are deleted
+- Child workflows operate independently if cross-repo artifacts are deleted
 - All five PAW-M## agents can be invoked via `paw_call_agent` tool
 - Context tool resolves `.paw/multi-work/` locations correctly
 - Standard PAW workflows remain unaffected (backward compatible)
@@ -60,8 +59,8 @@ The implementation follows PAW's existing extension architecture by adding workf
 1. **Phase 1: Workflow Type Selection** - Add workflow type dropdown (Implementation/Cross-Repository/Review) to initialization flow before workflow mode collection
 2. **Phase 2: Multi-Repository Detection** - Implement repository detection across multi-root workspace with git validation for each folder
 3. **Phase 3: Cross-Repository Agent Definitions** - Create five PAW-M## agent files with instructions, components, and handoff logic
-4. **Phase 4: Supervisor Artifact Management** - Implement `.paw/multi-work/` directory structure, SupervisorContext.md format, and initialization prompt templates
-5. **Phase 5: Context Tool Extensions** - Extend `paw_get_context` to resolve cross-repository contexts and load SupervisorContext.md
+4. **Phase 4: Cross-Repo Artifact Management** - Implement `.paw/multi-work/` directory structure, CrossRepoContext.md format, and initialization prompt templates
+5. **Phase 5: Context Tool Extensions** - Extend `paw_get_context` to resolve cross-repository contexts and load CrossRepoContext.md
 6. **Phase 6: Child Workflow Initialization** - Implement mechanism for initializing standard PAW workflows in individual repositories with scoped context
 
 ---
@@ -145,6 +144,37 @@ Add workflow type selection as the first step in PAW initialization, presenting 
 - [ ] Selecting "Cross-Repository" in single-folder workspace shows error message
 - [ ] Selecting "Cross-Repository" in multi-root workspace proceeds to workflow mode collection
 - [ ] Selecting "Review" proceeds to review workflow initialization (when Review agents exist)
+
+### Phase 1 Implementation Complete
+
+**Status**: Phase 1 implementation complete. All automated verification passing (TypeScript compilation, unit tests, linting).
+
+**Changes Completed**:
+- Added `WorkflowType` enum with three values: 'implementation', 'cross-repository', 'review'
+- Implemented `collectWorkflowType()` function with Quick Pick UI showing all three workflow type options
+- Added `workflowType` field to `WorkItemInputs` interface
+- Updated `collectUserInputs()` to call `collectWorkflowType()` as first step
+- Added multi-root workspace validation in `initializeWorkItem.ts` - shows error if cross-repository selected with single folder
+- Updated `constructAgentPrompt()` signature to accept `workflowType` as first parameter
+- Added `WORKFLOW_TYPE` template variable to `PromptVariables` interface
+- Updated prompt template to display workflow type and provide conditional handoff instructions based on workflow type
+- Updated all 15 test calls to `constructAgentPrompt()` to include workflow type parameter (all using 'implementation' for backward compatibility)
+
+**Verification Results**:
+- ✅ TypeScript compilation: Success (no errors)
+- ✅ Unit tests: 143 passing (925ms)
+- ✅ Linting: No new errors in changed files (pre-existing errors in other test files unaffected)
+- ✅ Git commit: a81c645
+
+**Commit**: Phase 1 changes committed to target branch `feature/142-cross-repository-workflow-supervisor` (local strategy)
+
+**Manual Testing**: Deferred to user - requires VS Code Extension Host environment to test UI interactions.
+
+**Review Notes for Implementation Review Agent**:
+- Verify workflow type selection UI provides clear descriptions for each workflow type
+- Check that multi-root workspace validation error message is helpful and actionable
+- Confirm prompt template conditional logic correctly maps workflow types to appropriate first-stage agents
+- Ensure backward compatibility: existing single-repository workflows use 'implementation' type seamlessly
 
 ---
 
@@ -327,7 +357,7 @@ Create five cross-repository agents (PAW-M01A, PAW-M01B, PAW-M02A, PAW-M02B, PAW
 - Create reusable component for cross-repository context instructions
 - Content includes:
   - How to call `paw_get_context` with work ID
-  - SupervisorContext.md structure explanation
+  - CrossRepoContext.md structure explanation
   - Affected repositories list format
   - Repository-specific context scoping guidelines
 - Component can be included in all PAW-M## agents via `{{CROSS_REPO_CONTEXT}}` placeholder
@@ -369,19 +399,19 @@ Create five cross-repository agents (PAW-M01A, PAW-M01B, PAW-M02A, PAW-M02B, PAW
 
 ---
 
-## Phase 4: Supervisor Artifact Management
+## Phase 4: Cross-Repo Artifact Management
 
 ### Overview
-Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext.md format for storing cross-repository workflow metadata. Create initialization prompt templates for cross-repository workflows.
+Implement `.paw/multi-work/<work-id>/` directory structure and CrossRepoContext.md format for storing cross-repository workflow metadata. Create initialization prompt templates for cross-repository workflows.
 
 ### Changes Required:
 
-#### 1. SupervisorContext.md Structure Definition
+#### 1. CrossRepoContext.md Structure Definition
 **File**: `src/prompts/crossRepoWorkflowContext.template.md` (new file)
 **Changes**:
-- Create template defining SupervisorContext.md format:
+- Create template defining CrossRepoContext.md format:
   ```markdown
-  # SupervisorContext
+  # CrossRepoContext
   
   Work Title: {{WORK_TITLE}}
   Work ID: {{WORK_ID}}
@@ -400,7 +430,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
 
 **Tests**:
 - Template loads correctly from both compiled and source locations
-- Variable substitution produces valid SupervisorContext.md
+- Variable substitution produces valid CrossRepoContext.md
 
 #### 2. Cross-Repository Initialization Prompt Template
 **File**: `src/prompts/crossRepoInit.template.md` (new file)
@@ -411,7 +441,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
   - Affected repositories list: `{{AFFECTED_REPOSITORIES}}`
   - Issue URL or work description: `{{ISSUE_CONTEXT}}`
   - Instructions to create `.paw/multi-work/{{WORK_ID}}/` directory
-  - Instructions to write SupervisorContext.md
+  - Instructions to write CrossRepoContext.md
   - Instructions to begin specification phase
 - Follow structure from `workItemInitPrompt.template.md`
 
@@ -441,7 +471,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
 **Changes**:
 - Add initialization section instructing agent to:
   - Create `.paw/multi-work/<work-id>/` directory at workspace root
-  - Write SupervisorContext.md using provided template variables
+  - Write CrossRepoContext.md using provided template variables
   - Create `prompts/` subdirectory for research prompts
   - Verify directory is NOT inside any git repository
 - Include error handling if `.paw/multi-work/<work-id>/` already exists
@@ -449,7 +479,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
 
 **Tests**:
 - Manual test: agent creates directory structure at correct location
-- Manual test: SupervisorContext.md contains all required fields
+- Manual test: CrossRepoContext.md contains all required fields
 
 ### Success Criteria:
 
@@ -460,7 +490,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
 
 #### Manual Verification:
 - [ ] PAW-M01A agent creates `.paw/multi-work/<work-id>/` at workspace root
-- [ ] SupervisorContext.md file contains all fields with correct values
+- [ ] CrossRepoContext.md file contains all fields with correct values
 - [ ] Directory is not created inside any git repository
 - [ ] Multiple cross-repository workflows can coexist (different work IDs)
 - [ ] Artifacts directory structure matches `.paw/work/` structure conventions
@@ -470,7 +500,7 @@ Implement `.paw/multi-work/<work-id>/` directory structure and SupervisorContext
 ## Phase 5: Context Tool Extensions
 
 ### Overview
-Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/multi-work/` (cross-repository) locations, load SupervisorContext.md alongside WorkflowContext.md, and maintain backward compatibility with existing workflows.
+Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/multi-work/` (cross-repository) locations, load CrossRepoContext.md alongside WorkflowContext.md, and maintain backward compatibility with existing workflows.
 
 ### Changes Required:
 
@@ -493,14 +523,14 @@ Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/
 **Changes**:
 - Update `getContext()` function at lines 320-341:
   - After resolving workspace path, check `workflowType`
-  - If `workflowType === 'cross-repository'`, load `SupervisorContext.md` instead of `WorkflowContext.md`
+  - If `workflowType === 'cross-repository'`, load `CrossRepoContext.md` instead of `WorkflowContext.md`
   - Use same loading logic (`loadWorkflowContext()` function) but with different filename
   - Return context with workflow type indicator
 - Maintain existing behavior for standard workflows
 
 **Tests**:
 - Unit tests for context loading from both file types
-- Test cases: load WorkflowContext.md, load SupervisorContext.md, missing context file
+- Test cases: load WorkflowContext.md, load CrossRepoContext.md, missing context file
 
 #### 3. Context Result Extension
 **File**: `src/tools/contextTool.ts`
@@ -538,7 +568,7 @@ Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/
 
 #### Manual Verification:
 - [ ] Standard PAW workflow agents can load context (backward compatibility verified)
-- [ ] PAW-M## agents can load SupervisorContext.md via `paw_get_context`
+- [ ] PAW-M## agents can load CrossRepoContext.md via `paw_get_context`
 - [ ] Cross-repository custom instructions load correctly
 - [ ] Workflow type appears in context tool response
 - [ ] Error messages are clear when Work ID not found in either location
@@ -638,7 +668,7 @@ Implement mechanism for initializing standard PAW workflows in individual reposi
 - [ ] CrossRepoPlan.md contains clear context excerpts for each repository
 - [ ] Following initialization instructions creates working child workflow
 - [ ] Child workflow functions independently as standard PAW workflow
-- [ ] Same Work ID used across supervisor and all child workflows
+- [ ] Same Work ID used across cross-repo and all child workflows
 - [ ] Child workflow artifacts are git-committed in their respective repositories
 - [ ] Validator successfully reads and compares artifacts across repositories
 - [ ] Deleting `.paw/multi-work/` does not break child workflows
@@ -653,7 +683,7 @@ Implement mechanism for initializing standard PAW workflows in individual reposi
 - **Workflow type switching**: Start implementation workflow, then start cross-repository workflow in same workspace
 - **Context tool resolution**: Access both standard and cross-repository contexts in same workspace
 - **Agent handoffs**: Verify all PAW-M## agents can hand off to each other correctly
-- **Child workflow independence**: Complete child workflow without supervisor coordination
+- **Child workflow independence**: Complete child workflow without cross-repo agent coordination
 
 ### Manual Testing Steps:
 1. Create VS Code multi-root workspace with 2+ git repositories

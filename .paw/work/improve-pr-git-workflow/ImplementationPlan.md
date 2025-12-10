@@ -715,15 +715,27 @@ Add explicit prohibitions against using GitHub MCP direct-push tools (`mcp_githu
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes for all modified agent files
-- [ ] Grep search for prohibited tools in workflow file context returns no matches: `grep -r "mcp_github_push_files\|mcp_github_create_or_update_file" agents/ | grep -v "NEVER use" | grep -v "Do not use"`
-- [ ] All committing agents (PAW-02B, PAW-03A, PAW-03B, PAW-04) include git commands guardrail
+- [x] Agent linter passes for all modified agent files
+- [x] Grep search for prohibited tools in workflow file context returns no matches: `grep -r "mcp_github_push_files\|mcp_github_create_or_update_file" agents/ | grep -v "NEVER use" | grep -v "Do not use"`
+- [x] All committing agents (PAW-02B, PAW-03A, PAW-03B, PAW-04) include git commands guardrail
 
 #### Manual Verification:
 - [ ] Review all agent instructions, verify explicit prohibition language present in relevant agents
 - [ ] Review rationale statement, verify emphasizes "preserves git history" and "enables version control"
 - [ ] Check that guardrail scopes correctly (workflow files only, not all GitHub operations)
 - [ ] Verify GitHub MCP tools still documented for reading issues, creating PRs, platform queries
+
+**Phase 5 Implementation Complete - 2025-12-10**
+
+Added explicit git workflow guardrails across all four committing agents:
+- PAW-02B Impl Planner: Added Important Guidelines section 11 prohibiting direct-push MCP tools for workflow files
+- PAW-03A Implementer: Added "Git Commands Only" note in Committing and Pushing section
+- PAW-03B Impl Reviewer: Added guardrail note in push instructions (Step 7.2a)
+- PAW-04 Documenter: Added guardrail notes in both prs and local strategy sections
+
+All agents now explicitly prohibit `mcp_github_push_files` and `mcp_github_create_or_update_file` for PAW workflow files with rationale about preserving git history and enabling proper code review. GitHub MCP tools remain available for reading issues, creating PRs, and non-workflow operations.
+
+Agent linter passed for all four agents. Grep verification confirms no prohibited tool usage outside of prohibition statements.
 
 ---
 

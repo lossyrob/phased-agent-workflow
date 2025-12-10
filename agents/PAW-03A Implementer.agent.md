@@ -327,6 +327,12 @@ Work-ID: improve-pr-git-workflow
 
 ## Committing and Pushing
 
+**Git Commands Only**:
+- Use git commands exclusively for all file operations: `git add`, `git commit`
+- Do NOT use GitHub MCP direct-push tools (`mcp_github_push_files`, `mcp_github_create_or_update_file`) for workflow files
+- Rationale: Preserves git history and enables proper version control workflow
+- See PAW-02B Impl Planner Important Guidelines section 11 for detailed rationale
+
 **Pre-Commit Verification**:
 - Before EVERY commit, verify you're on the correct branch: `git branch --show-current`
 - For phase work: Branch name MUST end with `_phase[N]` or `_phase[M-N]`

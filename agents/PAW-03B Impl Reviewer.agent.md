@@ -211,6 +211,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Set strategy variable: `<prs or local>`
 
    **Step 7.2a: IF Review Strategy = 'prs' - Push Phase Branch and Create Phase PR**:
+   - **Git Commands Only**: Use `git push` exclusively - do NOT use GitHub MCP direct-push tools (preserves git history)
    - Verify on phase branch: `git branch --show-current` should show `<target>_phase[N]`
    - Push phase branch: `git push -u <remote> <target>_phase[N]`
 - **REQUIRED**: Create Phase PR:

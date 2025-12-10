@@ -406,7 +406,10 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Success criteria should include test passage as part of automated verification
    - The goal is unit tests as living documentation that co-evolve with the code, not an afterthought
 
-11. **Separate Implementation from Documentation**:
+11. **Use Git Commands for Workflow Files**:
+   - Use `git add/commit/push` for PAW files - NEVER `mcp_github_push_files`/`mcp_github_create_or_update_file` (bypasses git history)
+
+12. **Separate Implementation from Documentation**:
    - Do NOT create "Documentation" phases—documentation is handled by PAW-04 Documenter after implementation
    - Implementation plans focus on functional code only
    - Inline code comments are acceptable; "create Docs.md" tasks are not

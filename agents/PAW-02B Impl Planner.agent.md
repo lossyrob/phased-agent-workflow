@@ -287,10 +287,9 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Verify: `git diff --cached`
    - Commit following structured Commit Message Format:
      - Extract Work Title and Work ID from WorkflowContext.md
-     - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
-     - Use type `docs:` or `chore:` for planning artifacts
-     - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
-     - Example: `[Auth System] docs: create implementation plan with 3 phases`
+     - Format: `[<Work Title>] planning: <description>`
+     - Add PAW footer: `Work-ID: <feature-slug>`
+     - Example: `[Auth System] planning: create implementation plan with 3 phases`
    - Push: `git push -u <remote> <target_branch>_plan`
    - Create Planning PR (`<target_branch>_plan` → `<target_branch>`):
      - Title: `[<Work Title>] Planning: <brief description>`
@@ -305,11 +304,7 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
        ---
        🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
        ```
-     - Extract issue number from WorkflowContext.md's Issue URL field:
-       - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
-       - If Issue URL provided: Extract number from GitHub URL format `https://github.com/<owner>/<repo>/issues/<N>` → use `#<N>`
-       - Examples: `https://github.com/lossyrob/phased-agent-workflow/issues/59` → `#59`
-     - This creates bidirectional link between PR and issue in GitHub timeline
+     - Extract issue number from WorkflowContext.md's Issue URL field (use "No associated issue" if Issue URL is "none")
    - Pause for review
 
    **IF Review Strategy = 'local'**:
@@ -318,10 +313,9 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Verify staged files include Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md: `git diff --cached --name-only`
    - Commit following structured Commit Message Format:
      - Extract Work Title and Work ID from WorkflowContext.md
-     - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
-     - Use type `docs:` or `chore:` for planning artifacts
-     - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
-     - Example: `[Auth System] docs: create implementation plan with 3 phases`
+     - Format: `[<Work Title>] planning: <description>`
+     - Add PAW footer: `Work-ID: <feature-slug>`
+     - Example: `[Auth System] planning: create implementation plan with 3 phases`
    - Push: `git push <remote> <target_branch>`
    - Skip Planning PR (no intermediate PRs in local strategy)
 

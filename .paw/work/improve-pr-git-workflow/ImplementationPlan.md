@@ -602,8 +602,8 @@ Before starting a new phase, the Implementer automatically transitions git state
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-03A*.agent.md`
-- [ ] Housekeeping logic documented with safety checks and error handling
+- [x] Agent linter passes: `./scripts/lint-agent.sh agents/PAW-03A*.agent.md`
+- [x] Housekeeping logic documented with safety checks and error handling
 
 #### Manual Verification:
 - [ ] Complete Phase 1 (prs strategy), merge PR, say "implement Phase 2", verify Implementer automatically checks out target and pulls
@@ -612,6 +612,24 @@ Before starting a new phase, the Implementer automatically transitions git state
 - [ ] Already on target branch, start Phase 2, verify housekeeping skipped gracefully
 - [ ] Simulate merge conflict during pull, verify error reports conflict and suggests manual resolution
 - [ ] Complete Phase 1 (local strategy), start Phase 2, verify housekeeping detects completion and transitions
+
+**Phase 4 Implementation Complete - 2025-12-10**
+
+Added automated git housekeeping to PAW-03A Implementer agent:
+- Added "Automated Git Housekeeping" subsection in Getting Started with detection logic and housekeeping steps
+- Housekeeping automatically transitions git state (checkout target, pull) when starting new phase after previous phase completion
+- Safety checks prevent data loss (uncommitted changes detection)
+- Error handling provides specific recovery guidance for checkout/pull failures
+- Condensed format to stay within 7000 token limit while preserving critical functionality
+
+When user says "implement Phase 2" after Phase 1 complete, agent now automatically:
+1. Detects on phase1 branch
+2. Verifies no uncommitted changes
+3. Checks out target branch
+4. Pulls latest changes
+5. Proceeds to create phase2 branch
+
+Agent linter passed. Manual testing will verify automated transitions work correctly.
 
 ---
 

@@ -11,18 +11,34 @@ You are tasked with implementing an approved technical implementation plan. Thes
 
 If no implementation plan path provided, ask for one.
 
-Before reading other files or taking action:
-0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
-1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
-2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
+### Automated Git Housekeeping
+
+When starting a new phase after previous phase completion, automatically transition git state:
+
+**Apply when**: Starting Phase N after Phase N-1 complete (user says "implement Phase 2" after Phase 1 merged/done)
+**Skip when**: Phase 1, already on target branch, resuming existing phase
+
+**Steps**:
+1. Check branch: `git branch --show-current` - if on `<target>_phase[N-1]`:
+2. Safety: `git status --porcelain` empty or STOP ("Cannot transition: uncommitted changes")
+3. Checkout: `git checkout <target_branch>` (stop if fails)
+4. Pull: `git pull <remote> <target_branch>` (stop if fails)
+
+**Recovery**: Uncommitted → `git commit`/`git stash`; failures → `git fetch`, resolve conflicts with `git merge --abort`
+
+Before reading other files:
+0. **Git Housekeeping** (see above): If transitioning from completed phase, auto-checkout target and pull
+1. Look for `WorkflowContext.md` at `.paw/work/<feature-slug>/WorkflowContext.md` - extract Target Branch, Work Title, Work ID, Issue URL, Remote (default: `origin`)
+2. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
+3. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
    - How existing patterns and conventions work
    - Integration points and dependencies
    - Code examples and existing implementations to reference
-3. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
-4. Check current branch: `git branch --show-current`
-5. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
-6. Verify you're on the correct phase branch: `git branch --show-current`
+4. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
+5. Check current branch: `git branch --show-current`
+6. If you're not already on the correct phase branch name determined in step 4, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
+7. Verify you're on the correct phase branch: `git branch --show-current`
 
 ### Workflow Mode and Review Strategy Handling
 

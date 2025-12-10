@@ -895,3 +895,38 @@ All six commits pushed to remote target branch `feature/59-improve-pr-git-workfl
 **Review Strategy: local** - No Phase PR created (changes pushed directly to target branch per local strategy).
 
 **Ready for**: Final PR creation by PAW-05 PR Agent to close issue #59
+
+---
+
+## Addressed Review Comments - 2025-12-10
+
+**PR**: #146 (Final PR targeting main)
+**Reviewer**: lossyrob
+**Theme**: Reduce verbosity, save tokens. Remove procedural details, let agent reason from desired end state.
+
+**9 Line-Specific Comments Addressed:**
+
+All review comments addressed in 3 focused commits:
+
+**Commit 1: Remove agent tags from PR body templates** (`57f3d0e`)
+- PAW-04 Documenter.agent.md:165 - Removed "🐾 Documenter 🤖:" tag from Docs PR body
+- PAW-03B Impl Reviewer.agent.md:223 - Removed "🐾 Implementation Review Agent 🤖:" tag from Phase PR body
+
+**Commit 2: Simplify PAW-02B commit format and issue extraction** (`7079b0e`)
+- PAW-02B Impl Planner.agent.md:292 - Removed "PAW-Phase: none" footer (agents can infer from context)
+- PAW-02B Impl Planner.agent.md:291 - Changed commit type from "docs:/chore:" to "planning" for clarity
+- PAW-02B Impl Planner.agent.md:308-312 - Condensed issue number extraction to single line
+
+**Commit 3: Remove verbose/duplicate guidance** (`3b88039`)
+- PAW-04 Documenter.agent.md:188 - Removed duplicate "Git Commands Only" guidance from local strategy section
+- PAW-05 PR.agent.md:160 - Removed line explaining where to extract issue numbers
+- src/prompts/workItemInitPrompt.template.md:115 - Condensed "Push Target Branch" section to one-liner
+- PAW-03A Implementer.agent.md:14 - Condensed "Automated Git Housekeeping" to single numbered list entry
+
+**Verification:**
+- ✅ All agent linters pass (5 modified agent files)
+- ✅ All 135 tests pass
+- ✅ TypeScript compilation successful
+- ✅ All commits follow structured format with PAW footer
+
+**Result**: Token usage reduced by removing procedural explanations. Agents can reason from desired end state without step-by-step guidance. All changes maintain functional equivalence while reducing instruction verbosity.

@@ -162,8 +162,6 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
   - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
   - Body format:
     ```
-    **🐾 Documenter 🤖:**
-    
     Related to #<N>
     
     [Summary of Docs.md (detailed feature reference) and project documentation updates]

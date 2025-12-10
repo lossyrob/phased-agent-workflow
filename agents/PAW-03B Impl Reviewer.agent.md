@@ -220,8 +220,6 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
   - Title: `[<Work Title>] Phase <N>: <brief description>` (emphasize "Phase N" to clearly distinguish from final PR)
   - Body format:
     ```
-    **🐾 Implementation Review Agent 🤖:**
-    
     Related to #<N>
     
     **This is Phase <N> of a phased implementation approach.** This PR represents an intermediate checkpoint in the implementation process, not the final deliverable.

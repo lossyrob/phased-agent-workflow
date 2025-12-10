@@ -10,25 +10,58 @@ Issue URL: https://github.com/lossyrob/phased-agent-workflow/issues/142
 Additional Inputs: none
 
 ## Agent Notes
-The Cross-Repository Workflow Supervisor introduces a new workflow type that coordinates feature work across multiple git repositories in a VS Code multi-root workspace. Key constraints include:
-- Supervisor artifacts live in workspace root `.paw/multi-work/` (not in any git repo)
-- Child workflows in each repo must function independently as standard PAW workflows
-- Context must flow from supervisor to children (scoped excerpts recommended)
-- Repository-level sequencing for v1 (not phase-level)
-- Integration with existing PAW initialization, agent system, and tooling
 
-The research focuses on understanding current PAW implementation patterns to inform how the supervisor workflow will extend and integrate with the existing system.
+**Feature Context**: Cross-repository workflow coordination allowing PAW to manage features spanning multiple git repositories through a supervisor workflow with child PAW workflows in each repository.
+
+**Key Design Decisions**:
+- Use "Cross-Repository" terminology (not "Supervisor") throughout
+- Agent naming: PAW-M## pattern (M01A, M01B, M02A, M02B, M03)
+- Artifact location: `.paw/multi-work/<work-id>/` at workspace root
+- Context scoping: Scoped excerpts to child workflows
+- Sequencing: Repository-level for v1
+- Validation focus: Consistency checking, drift detection, course correction
+
+**Validation Agent Role** (PAW-M03):
+Checks consistency across repositories after independent child workflow execution. Validates that changes align with each other and with the cross-repo plan, checks documentation consistency, detects unsynchronized drift, and suggests course corrections (including adding phases to child implementation plans).
+
+**Constraints**:
+- Must work with VS Code multi-root workspaces
+- Must detect git repositories in workspace folders
+- Child workflows remain independently functional
+- Supervisor artifacts outside individual git repositories
 
 ## Questions
 
-1. How does the current PAW initialization flow work in `initializeWorkItem` command? What prompts are presented and how is context gathered?
-2. What is the structure of existing workflow context storage (`WorkflowContext.md`)? What fields are required vs. optional?
-3. How do current PAW agents access workspace and work context? What tools/APIs are available?
-4. How does VS Code's multi-root workspace API work? How can we detect git repositories in workspace folders?
-5. What is the current agent template rendering system? How are agent prompts generated with context?
-6. How does the `paw_call_agent` tool work? Can it target child workflows in subdirectories?
-7. What is the existing file structure convention in `.paw/work/<feature-slug>/`? What artifacts are standard across workflows?
-8. How does the current workflow mode system work? Is it extensible for new workflow types?
+### Current PAW Initialization and Context
+1. How does the current `initializeWorkItem` command structure its initialization flow? What prompts are shown, what information is collected, and in what order?
+2. What is the exact structure and required fields of WorkflowContext.md files? What optional fields exist?
+3. How does the initialization flow determine artifact paths? What is the "auto-derived" path pattern?
+4. How does `paw_get_context` discover and load custom instructions from `.paw/instructions/`? What file naming pattern is used?
+5. How do agents parse WorkflowContext.md to extract field values?
+
+### Workspace and Repository Detection
+6. How does the VS Code extension detect multi-root workspaces? What APIs are available for enumerating workspace folders?
+7. What is the pattern for determining which workspace folders are git repositories?
+8. How does the codebase differentiate between workspace root and individual repository roots?
+
+### Agent System and Handoff
+9. How does `paw_call_agent` resolve agent names to agent files? What is the agent discovery mechanism?
+10. What is the structure and usage pattern of the `inline_instruction` parameter in agent handoffs?
+11. How are agent prompt templates stored, named, and loaded?
+12. Can `paw_call_agent` target workflows in subdirectories or only workspace-root workflows?
+
+### Artifact Organization and Workflow Modes
+13. What is the standard artifact directory structure in `.paw/work/<work-id>/`? What files are created during spec, planning, and implementation?
+14. How does the current workflow mode system (`full`, `minimal`, `custom`) work? Is it extensible for new workflow types?
+15. Are there existing patterns for hierarchical or nested workflow artifacts?
+
+### Validation and Consistency Patterns
+16. How do existing PAW agents (particularly review agents PAW-R##) perform consistency checking?
+17. What patterns exist for comparing implementation against plans or specifications?
+
+### Optional External / Context
+1. What are common patterns in multi-repository workflow tools (e.g., meta, lerna, rush) for artifact organization and context passing?
+2. What approaches exist for validating consistency across multiple codebases in coordinated changes?
 
 ### Optional External / Context
 1. What are common patterns for coordinating multi-repository features in software development?

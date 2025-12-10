@@ -286,11 +286,18 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
        ```
        **🐾 Implementation Planner 🤖:**
        
+       Related to #<N>
+       
        [Summary of deliverables, links to artifacts]
        
        ---
        🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
        ```
+     - Extract issue number from WorkflowContext.md's Issue URL field:
+       - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
+       - If Issue URL provided: Extract number from GitHub URL format `https://github.com/<owner>/<repo>/issues/<N>` → use `#<N>`
+       - Examples: `https://github.com/lossyrob/phased-agent-workflow/issues/59` → `#59`
+     - This creates bidirectional link between PR and issue in GitHub timeline
    - Pause for review
 
    **IF Review Strategy = 'local'**:

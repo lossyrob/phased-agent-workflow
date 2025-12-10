@@ -209,14 +209,39 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    **Step 7.2a: IF Review Strategy = 'prs' - Push Phase Branch and Create Phase PR**:
    - Verify on phase branch: `git branch --show-current` should show `<target>_phase[N]`
    - Push phase branch: `git push -u <remote> <target>_phase[N]`
-   - **REQUIRED**: Create Phase PR:
-     - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
-     - Source: `<target>_phase[N]` → Target: `<target_branch>`
-     - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
-     - Include phase objectives, changes made, testing performed
-     - Link to Issue URL from WorkflowContext.md
-     - Artifact links: Implementation Plan at `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+- **REQUIRED**: Create Phase PR:
+  - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
+  - Source: `<target>_phase[N]` → Target: `<target_branch>`
+  - Title: `[<Work Title>] Phase <N>: <brief description>` (emphasize "Phase N" to clearly distinguish from final PR)
+  - Body format:
+    ```
+    **🐾 Implementation Review Agent 🤖:**
+    
+    Related to #<N>
+    
+    **This is Phase <N> of a phased implementation approach.** This PR represents an intermediate checkpoint in the implementation process, not the final deliverable.
+    
+    ### Phase Objectives
+    [What this phase accomplishes]
+    
+    ### Changes Made
+    [Summary of implementation]
+    
+    ### Testing Performed
+    [Verification results]
+    
+    ### Artifacts
+    - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+    
+    ---
+    🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+    ```
+  - Extract issue number from WorkflowContext.md's Issue URL field (same pattern as Planning PR):
+    - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
+    - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
+  - Extract phase number from ImplementationPlan.md or current work context
+  - If total phase count available, include "Phase N of M" instead of just "Phase N"
+  - Opening statement emphasizes partial implementation to set reviewer expectations
    - Pause for human review
    - Post PR timeline comment starting with `**🐾 Implementation Reviewer 🤖:**` summarizing review and commits
 

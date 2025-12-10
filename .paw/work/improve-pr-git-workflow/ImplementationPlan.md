@@ -308,8 +308,8 @@ Fixes #<N>
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes for all modified agent files: `./scripts/lint-agent.sh agents/PAW-02B*.agent.md agents/PAW-03B*.agent.md agents/PAW-04*.agent.md agents/PAW-05*.agent.md`
-- [ ] All PR body formats include issue reference syntax or "No associated issue" conditional
+- [x] Agent linter passes for all modified agent files: `./scripts/lint-agent.sh agents/PAW-02B*.agent.md agents/PAW-03B*.agent.md agents/PAW-04*.agent.md agents/PAW-05*.agent.md`
+- [x] All PR body formats include issue reference syntax or "No associated issue" conditional
 
 #### Manual Verification:
 - [ ] Create full PAW workflow (prs strategy) with Issue URL, verify all four PRs include appropriate issue reference
@@ -317,6 +317,18 @@ Fixes #<N>
 - [ ] Read Phase PR title and first paragraph, immediately understand it's partial implementation not ready for final review
 - [ ] Merge Final PR, verify issue auto-closes without manual intervention
 - [ ] Create workflow with Issue URL = "none", verify all PRs note "No associated issue" without errors
+
+**Phase 2 Implementation Complete - 2025-12-10**
+
+Updated all four PR-creating agents with issue linking and PR differentiation:
+- PAW-02B Impl Planner: Added "Related to #N" syntax to Planning PR with issue number extraction pattern
+- PAW-03B Impl Reviewer: Enhanced Phase PR with "Related to #N" and opening statement emphasizing partial implementation, explicit "Phase N:" in title
+- PAW-04 Documenter: Added "Related to #N" syntax to Docs PR  
+- PAW-05 PR Agent: Changed Final PR from generic "Closes issue at URL" to GitHub auto-close syntax "Fixes #N"
+
+All agents now extract issue number from WorkflowContext.md Issue URL field with graceful handling for "none" value. Phase PRs clearly communicate intermediate checkpoint status to set appropriate reviewer expectations.
+
+Agent linter passed for all four modified agents.
 
 ---
 

@@ -223,7 +223,7 @@ After implementing a phase:
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. After completing a phase and before the next step, write a new summary and status update to the plan file at the end of the Phase [N] section. Note that the phase is completed and any notes that can inform agents working on future phases. Also note any review tasks for any specific code reviewers should take a close look at and why.
 - Check off completed items in the plan file itself using Edit
-- Commit all changes to the local branch with a detailed commit message
+- Commit all changes to the local branch following the Commit Message Format (extract work title and phase number, use appropriate type like feat/fix/refactor)
 - **DO NOT push or open PRs** - the Implementation Review Agent handles that
 - **Pause for Implementation Review Agent**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for review. Use this format:
   ```
@@ -241,7 +241,7 @@ After addressing PR review comments:
 - Run the success criteria checks
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. Append a new summary that starts with "Addressed Review Comments:" to the end of the Phase [N] section. Note any review tasks for any specific code reviewers should take a close look at and why.
-- Commit each addressed group of review comments with a detailed commit message that includes links to the review comment(s) addressed
+- Commit each addressed group of review comments following the Commit Message Format (use work title, phase number if applicable, and include links to review comment URLs in the description or body)
 - **DO NOT push commits** - the Implementation Review Agent will verify and push after review
 - **DO NOT reply to PR comments or make summary comments** - the Implementation Review Agent handles that
 - Pause and let the human know the changes are ready for the Review Agent. Use this format:
@@ -259,6 +259,55 @@ If instructed to execute multiple phases consecutively, skip the pause until the
 Otherwise, assume you are just doing one phase.
 
 Do not check off items in the manual testing steps until confirmed by the user.
+
+## Commit Message Format
+
+All PAW commits must follow this structured format for traceability and git history navigation:
+
+**Format**:
+```
+[<Work Title>] Phase <N>: <type>: <description>
+
+[Optional body with details, rationale, or context]
+
+PAW-Phase: <N>
+Work-ID: <feature-slug>
+```
+
+**Field Definitions**:
+- **Work Title**: From WorkflowContext.md (2-4 word identifier for the work)
+- **Phase N**: Current phase number from ImplementationPlan.md (omit for non-phase work)
+- **type** (optional): Conventional commit type - feat, fix, docs, refactor, test, chore
+- **description**: Brief summary of changes (50 chars or less recommended)
+- **body** (optional): Additional context, reasoning, or implementation notes
+- **PAW-Phase footer**: Enables filtering commits by phase with `git log --grep="PAW-Phase: N"`
+- **Work-ID footer**: Enables filtering commits by work item with `git log --grep="Work-ID: <slug>"`
+
+**Examples**:
+```
+[Auth System] Phase 2: feat: add JWT validation middleware
+
+Implements token verification following the pattern in services/auth/.
+Integrates with existing auth service at services/auth/index.ts.
+
+PAW-Phase: 2
+Work-ID: auth-system
+```
+
+```
+[Improve PR Workflow] docs: add docstrings to git workflow functions
+
+PAW-Phase: none
+Work-ID: improve-pr-git-workflow
+```
+
+**When to Apply**:
+- Extract Work Title and Work ID from WorkflowContext.md before committing
+- Determine current phase number from ImplementationPlan.md or work context
+- Use appropriate conventional commit type (feat for new features, fix for bugs, refactor for restructuring, docs for documentation, test for tests, chore for maintenance)
+- For non-phase work (e.g., addressing Planning PR comments), use "PAW-Phase: none"
+
+**Rationale**: Structured format provides context without reading diffs, enables powerful git log filtering, and creates navigable git history for understanding project evolution.
 
 ## Committing and Pushing
 

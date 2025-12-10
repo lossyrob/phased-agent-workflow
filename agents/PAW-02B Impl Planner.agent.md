@@ -50,7 +50,12 @@ When given a Planning PR with review comments:
      - Update the affected artifact(s) to address the concern
      - Stage ONLY the changed files: `git add .paw/work/<feature-slug>/<file>`
      - Verify staged changes: `git diff --cached`
-     - Commit with a message referencing the review comment
+     - Commit following structured Commit Message Format:
+       - Extract Work Title and Work ID from WorkflowContext.md
+       - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
+       - Include reference to review comment in description or body
+       - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
+       - Example: `[Auth System] docs: clarify JWT token expiry in spec (addresses review comment #3)`
      - Use `github mcp` tools to push the commit
      - Use `github mcp` tools to reply to the review comment with format:
        ```
@@ -279,7 +284,14 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    **IF Review Strategy = 'prs'**:
    - Ensure on planning branch: `git branch --show-current`, create if needed: `git checkout -b <target_branch>_plan`
    - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
-   - Verify: `git diff --cached`, commit, push: `git push -u <remote> <target_branch>_plan`
+   - Verify: `git diff --cached`
+   - Commit following structured Commit Message Format:
+     - Extract Work Title and Work ID from WorkflowContext.md
+     - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
+     - Use type `docs:` or `chore:` for planning artifacts
+     - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
+     - Example: `[Auth System] docs: create implementation plan with 3 phases`
+   - Push: `git push -u <remote> <target_branch>_plan`
    - Create Planning PR (`<target_branch>_plan` → `<target_branch>`):
      - Title: `[<Work Title>] Planning: <brief description>`
      - Body format:
@@ -304,7 +316,13 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Ensure on target branch: `git branch --show-current`, checkout if needed: `git checkout <target_branch>`
    - Stage ALL planning artifacts (including those from prior agents): `git add .paw/work/<feature-slug>/`
    - Verify staged files include Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md: `git diff --cached --name-only`
-   - Commit with message summarizing planning work, push: `git push <remote> <target_branch>`
+   - Commit following structured Commit Message Format:
+     - Extract Work Title and Work ID from WorkflowContext.md
+     - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
+     - Use type `docs:` or `chore:` for planning artifacts
+     - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
+     - Example: `[Auth System] docs: create implementation plan with 3 phases`
+   - Push: `git push <remote> <target_branch>`
    - Skip Planning PR (no intermediate PRs in local strategy)
 
 ## Important Guidelines

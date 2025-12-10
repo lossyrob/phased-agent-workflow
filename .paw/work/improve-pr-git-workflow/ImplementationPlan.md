@@ -470,9 +470,9 @@ Work-ID: improve-pr-git-workflow
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linter passes for all modified agent files
-- [ ] Commit message format documented consistently across three agents
-- [ ] All commit examples show structured format with work title and PAW footer
+- [x] Agent linter passes for all modified agent files
+- [x] Commit message format documented consistently across three agents
+- [x] All commit examples show structured format with work title and PAW footer
 
 #### Manual Verification:
 - [ ] Implement Phase 2, verify commits include "[<Work Title>] Phase 2:" prefix and PAW footer
@@ -481,6 +481,17 @@ Work-ID: improve-pr-git-workflow
 - [ ] Filter commits by phase: `git log --grep="PAW-Phase: 2"` returns only Phase 2 commits
 - [ ] Address Planning PR comment, verify commit omits phase number but includes work title
 - [ ] Review Phase 1, add docs, verify commit uses "docs:" type
+
+**Phase 3 Implementation Complete - 2025-12-10**
+
+Added structured commit message format across all three committing agents:
+- PAW-03A Implementer: Added "Commit Message Format" section with full format specification, examples, and rationale. Updated commit guidance in verification sections to reference the format.
+- PAW-03B Impl Reviewer: Updated commit improvements section to reference structured format with emphasis on docs/refactor types common for reviewers.
+- PAW-02B Impl Planner: Updated commit guidance in both PR review response mode and Planning PR creation (prs and local strategies) to use structured format with PAW-Phase: none for planning work.
+
+Format: `[<Work Title>] Phase <N>: <type>: <description>` with PAW footer enabling git log filtering by phase and work ID.
+
+Agent linter passed for all three modified agents. Commit messages in this implementation already demonstrate the format.
 
 ---
 

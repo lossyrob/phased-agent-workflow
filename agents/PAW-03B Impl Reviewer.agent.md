@@ -194,9 +194,13 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **Small refactors are encouraged**: Removing unused parameters, dead code, or unnecessary complexity
    - **Large refactors require coordination**: If major changes needed, request Implementation Agent redo the work
    - If no documentation or polish updates are needed, prefer making **no commits** (leave the code untouched rather than introducing no-op edits)
-   - Use clear commit messages:
-     - `docs: add docstrings for <context>` for documentation
-     - `refactor: remove unused <parameter/code>` for small refactors
+   - Follow structured Commit Message Format (same as Implementation Agent):
+     - Extract Work Title and Work ID from WorkflowContext.md
+     - Use current phase number from review context
+     - Format: `[<Work Title>] Phase <N>: <type>: <description>`
+     - Common types for reviewer: `docs:` for documentation, `refactor:` for small refactors
+     - Add PAW footer: `PAW-Phase: <N>` and `Work-ID: <feature-slug>`
+     - Example: `[Auth System] Phase 2: docs: add docstrings for JWT validation`
    - **Selective staging**: Use `git add <file>` for each file; verify with `git diff --cached` before committing
 
 7. **DETERMINE REVIEW STRATEGY AND PUSH/PR** (REQUIRED):

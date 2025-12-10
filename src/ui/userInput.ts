@@ -1,6 +1,14 @@
 import * as vscode from 'vscode';
 
 /**
+ * Workflow type determines the overall workflow pattern.
+ * - implementation: Standard single-repository workflow
+ * - cross-repository: Multi-repository coordination workflow
+ * - review: Code review workflow for existing changes
+ */
+export type WorkflowType = 'implementation' | 'cross-repository' | 'review';
+
+/**
  * Workflow mode determines which stages are included in the workflow.
  * - full: All stages (spec, code research, planning, implementation, docs, PR, status)
  * - minimal: Core stages only (code research, planning, implementation, PR, status)
@@ -42,6 +50,9 @@ export interface WorkflowModeSelection {
  * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
+  /** Workflow type (implementation, cross-repository, or review) */
+  workflowType: WorkflowType;
+  
   /**
    * Git branch name for the work item (e.g., "feature/my-feature").
    * 
@@ -103,6 +114,53 @@ export function isValidIssueUrl(value: string): boolean {
   const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;
   const azureDevOpsPattern = /^https:\/\/dev\.azure\.com\/[^/]+\/[^/]+\/_workitems\/edit\/\d+$/;
   return githubPattern.test(value) || azureDevOpsPattern.test(value);
+}
+
+/**
+ * Collect workflow type selection from user.
+ * 
+ * Presents a Quick Pick menu with three workflow type options:
+ * - Implementation: Standard single-repository workflow
+ * - Cross-Repository: Multi-repository coordination workflow
+ * - Review: Code review workflow for existing changes
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to workflow type, or undefined if user cancelled
+ */
+export async function collectWorkflowType(
+  outputChannel: vscode.OutputChannel
+): Promise<WorkflowType | undefined> {
+  // Present Quick Pick menu with workflow type options
+  const typeSelection = await vscode.window.showQuickPick([
+    {
+      label: 'Implementation',
+      description: 'Standard single-repository workflow',
+      detail: 'Work within one git repository',
+      value: 'implementation' as WorkflowType
+    },
+    {
+      label: 'Cross-Repository',
+      description: 'Multi-repository coordination workflow',
+      detail: 'Coordinate feature development across multiple repositories',
+      value: 'cross-repository' as WorkflowType
+    },
+    {
+      label: 'Review',
+      description: 'Code review workflow',
+      detail: 'Structured review of existing code changes',
+      value: 'review' as WorkflowType
+    }
+  ], {
+    placeHolder: 'Select workflow type',
+    title: 'Workflow Type Selection'
+  });
+
+  if (!typeSelection) {
+    outputChannel.appendLine('[INFO] Workflow type selection cancelled');
+    return undefined;
+  }
+
+  return typeSelection.value;
 }
 
 /**
@@ -300,10 +358,12 @@ export async function collectHandoffMode(
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
- * 1. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
- * 2. Target branch name (required) - basic validation ensures valid git branch characters
- * 3. Workflow mode (required) - determines which stages are included
- * 4. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
+ * 1. Workflow type (required) - determines the overall workflow pattern
+ * 2. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 3. Target branch name (required) - basic validation ensures valid git branch characters
+ * 4. Workflow mode (required) - determines which stages are included
+ * 5. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
+ * 6. Handoff mode (required) - determines stage transition behavior
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to Work ID, fetching issue title).
@@ -314,7 +374,13 @@ export async function collectHandoffMode(
 export async function collectUserInputs(
   outputChannel: vscode.OutputChannel
 ): Promise<WorkItemInputs | undefined> {
-  // Collect issue URL first (optional)
+  // Collect workflow type first (required)
+  const workflowType = await collectWorkflowType(outputChannel);
+  if (!workflowType) {
+    return undefined;
+  }
+
+  // Collect issue URL (optional)
   // This enables future phases to customize branch input prompt based on issue URL presence
   const issueUrl = await vscode.window.showInputBox({
     prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
@@ -386,6 +452,7 @@ export async function collectUserInputs(
   }
 
   return {
+    workflowType,
     targetBranch: targetBranch.trim(),
     workflowMode,
     reviewStrategy,

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
-import { WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
+import { WorkflowType, WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -19,6 +19,8 @@ const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
  * for the specific workflow being initialized.
  */
 interface PromptVariables {
+  /** Workflow type (implementation, cross-repository, or review) */
+  WORKFLOW_TYPE: string;
   /** Git branch name for the workflow, or "auto" for agent-derived branch */
   TARGET_BRANCH: string;
   /** Branch derivation mode: "explicit" (user provided) or "auto-derive" (agent derives) */
@@ -158,6 +160,7 @@ function buildWorkDescriptionSection(): string {
 /**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
+ * @param workflowType - The workflow type (implementation, cross-repository, or review)
  * @param targetBranch - The git branch name where work will be committed
  * @param workflowMode - Workflow mode selection including optional custom instructions
  * @param reviewStrategy - Review strategy (prs or local)
@@ -167,6 +170,7 @@ function buildWorkDescriptionSection(): string {
  * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
+  workflowType: WorkflowType,
   targetBranch: string,
   workflowMode: WorkflowModeSelection,
   reviewStrategy: ReviewStrategy,
@@ -233,6 +237,7 @@ export function constructAgentPrompt(
   
   // Prepare template variables for substitution
   const variables: PromptVariables = {
+    WORKFLOW_TYPE: workflowType,
     TARGET_BRANCH: resolvedBranch,
     BRANCH_MODE: branchMode,
     WORKFLOW_MODE: workflowMode.mode,

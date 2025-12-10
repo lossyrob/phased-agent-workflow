@@ -4,6 +4,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 
 ## Parameters Provided
 
+- **Workflow Type**: {{WORKFLOW_TYPE}}
 - **Target Branch**: {{TARGET_BRANCH}}
 - **Branch Mode**: {{BRANCH_MODE}}
 - **Workflow Mode**: {{WORKFLOW_MODE}}
@@ -132,16 +133,20 @@ Begin initialization now. After completion, inform the user:
 1. **Workflow structure created** at `.paw/work/<feature-slug>/`
 2. **WorkflowContext.md ready** for review and editing
 3. **Prompt files available on-demand**: Use `paw_generate_prompt` to create customizable prompt files when needed
-4. **Next step**: Based on workflow mode, tell the user what command or action to take:
-   - **Full mode**: Say `spec` to start the specification stage with the Spec Agent
-   - **Minimal mode**: Say `research` to start code research with the Code Research Agent
-   - **Custom mode**: Describe the appropriate first step based on custom instructions
+4. **Next step**: Based on workflow type and mode, tell the user what command or action to take:
+   - **Implementation workflow (Full mode)**: Say `spec` to start the specification stage with the Spec Agent
+   - **Implementation workflow (Minimal mode)**: Say `research` to start code research with the Code Research Agent
+   - **Implementation workflow (Custom mode)**: Describe the appropriate first step based on custom instructions
+   - **Cross-Repository workflow**: Say `spec` to start with the Cross-Repo Spec Agent
+   - **Review workflow**: Say `review` to start the review process
 
 Tell the user they can say `continue` to immediately start the first stage, or use the specific command shown above. Mention that `status` or `help` is available at any time, and `generate prompt for <stage>` creates a customizable prompt file if needed.
 
 When the user says `continue`, use the `paw_call_agent` tool to invoke the handoff:
-- **Full mode**: Hand off to PAW-01A Specification
-- **Minimal mode**: Hand off to PAW-02A Code Researcher
-- **Custom mode**: Hand off to the appropriate first agent based on custom instructions
+- **Implementation workflow (Full mode)**: Hand off to PAW-01A Specification
+- **Implementation workflow (Minimal mode)**: Hand off to PAW-02A Code Researcher
+- **Implementation workflow (Custom mode)**: Hand off to the appropriate first agent based on custom instructions
+- **Cross-Repository workflow**: Hand off to PAW-M01A Cross-Repo Spec
+- **Review workflow**: Hand off to PAW-R1A Understanding
 
 Pass the generated feature slug as the work_id.

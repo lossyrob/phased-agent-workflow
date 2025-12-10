@@ -83,6 +83,21 @@ export async function initializeWorkItemCommand(
       return;
     }
 
+    outputChannel.appendLine(`[INFO] Workflow type: ${inputs.workflowType}`);
+
+    // Validate multi-root workspace requirement for cross-repository workflows
+    if (inputs.workflowType === 'cross-repository') {
+      const workspaceFolderCount = vscode.workspace.workspaceFolders?.length || 0;
+      if (workspaceFolderCount <= 1) {
+        vscode.window.showErrorMessage(
+          'Cross-Repository workflow requires a multi-root workspace. Please add multiple folders to your workspace.'
+        );
+        outputChannel.appendLine('[ERROR] Cross-Repository workflow requires multiple workspace folders');
+        return;
+      }
+      outputChannel.appendLine(`[INFO] Multi-root workspace validated (${workspaceFolderCount} folders)`);
+    }
+
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
     outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
     if (inputs.workflowMode.customInstructions) {
@@ -96,6 +111,7 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine('[INFO] Constructing agent prompt...');
     const prompt = constructAgentPrompt(
+      inputs.workflowType,
       inputs.targetBranch,
       inputs.workflowMode,
       inputs.reviewStrategy,

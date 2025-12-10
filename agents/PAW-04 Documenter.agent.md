@@ -183,7 +183,6 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - If not on target branch:
      - Checkout target branch: `git checkout <target_branch>`
    - Verify: `git branch --show-current`
-   - **Git Commands Only**: Use `git add`, `git commit`, `git push` exclusively - do NOT use GitHub MCP direct-push tools (preserves git history)
    - Stage ONLY documentation files modified: `git add <file1> <file2>`
    - Verify staged changes: `git diff --cached`
    - Commit documentation changes with descriptive message

@@ -157,8 +157,6 @@ After all checks pass, create the PR with this format:
 ## Related Issues
 Fixes #<N>
 
-[Extract issue number from WorkflowContext.md's Issue URL field. If Issue URL is "none", use: "No associated issue"]
-
 ## Artifacts
 - Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
 - Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)

@@ -114,13 +114,7 @@ This ensures the workflow context is tracked in version control from the start.
 
 ### 8. Push Target Branch to Remote
 
-After committing WorkflowContext.md, push the target branch to remote to ensure it exists for PR creation:
-
-1. Push target branch: `git push -u origin {{TARGET_BRANCH}}`
-2. If push fails because branch already exists on remote, this is acceptable (branch was already initialized previously)
-3. If push fails for other reasons (network errors, permission issues), report the specific error but continue with workflow initialization
-
-**Rationale**: When using the `prs` review strategy, Planning PRs and Phase PRs require the target branch to exist on the remote repository. Pushing the target branch now ensures PR creation succeeds on first attempt without manual git operations.
+Push target branch: `git push -u origin {{TARGET_BRANCH}}` (ensures target exists for PRs; acceptable if already exists)
 
 **Error Handling**:
 - Branch already exists remotely → No error (expected for resumed workflows)

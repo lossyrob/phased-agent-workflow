@@ -10,7 +10,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
 - **Handoff Mode**: {{HANDOFF_MODE}}
-{{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
+{{CUSTOM_INSTRUCTIONS_SECTION}}{{AFFECTED_REPOSITORIES}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
 {{CUSTOM_INSTRUCTIONS}}

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { GitRepository } from '../git/validation';
 
 /**
  * Workflow type determines the overall workflow pattern.
@@ -7,6 +8,16 @@ import * as vscode from 'vscode';
  * - review: Code review workflow for existing changes
  */
 export type WorkflowType = 'implementation' | 'cross-repository' | 'review';
+
+/**
+ * Represents a user-selected repository for cross-repository workflows.
+ */
+export interface RepositorySelection {
+  /** Absolute path to the repository */
+  path: string;
+  /** Human-readable repository name (from workspace folder) */
+  name: string;
+}
 
 /**
  * Workflow mode determines which stages are included in the workflow.
@@ -83,6 +94,15 @@ export interface WorkItemInputs {
    * - Azure DevOps: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
    */
   issueUrl?: string;
+
+  /**
+   * Selected repositories for cross-repository workflows.
+   * 
+   * Only present when workflowType is 'cross-repository'. Contains the list
+   * of repositories the user selected to participate in the cross-repository
+   * workflow.
+   */
+  affectedRepositories?: RepositorySelection[];
 }
 
 /**
@@ -183,6 +203,53 @@ export async function collectWorkflowType(
   }
 
   return typeSelection.value;
+}
+
+/**
+ * Collect affected repositories for cross-repository workflow.
+ * 
+ * Presents a multi-select Quick Pick menu showing all valid git repositories
+ * detected in the workspace. Users must select at least one repository.
+ * 
+ * Each Quick Pick item shows:
+ * - Label: Repository name (from workspace folder name)
+ * - Description: Absolute path to repository
+ * 
+ * @param repositories - Array of detected git repositories (must have isValid=true)
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to selected repositories, or undefined if user cancelled or no selection
+ */
+export async function collectAffectedRepositories(
+  repositories: GitRepository[],
+  outputChannel: vscode.OutputChannel
+): Promise<RepositorySelection[] | undefined> {
+  // Build Quick Pick items for each valid repository
+  const repoItems = repositories.map(repo => ({
+    label: repo.name,
+    description: repo.path,
+    picked: true, // Pre-select all repositories by default
+    repository: repo
+  }));
+
+  // Present multi-select Quick Pick menu
+  const selection = await vscode.window.showQuickPick(repoItems, {
+    canPickMany: true,
+    placeHolder: 'Select repositories affected by this cross-repository workflow',
+    title: 'Affected Repositories Selection'
+  });
+
+  if (!selection || selection.length === 0) {
+    outputChannel.appendLine('[INFO] Repository selection cancelled or empty');
+    return undefined;
+  }
+
+  outputChannel.appendLine(`[INFO] Selected ${selection.length} repositories for cross-repository workflow`);
+
+  // Map selection to RepositorySelection interface
+  return selection.map(item => ({
+    path: item.repository.path,
+    name: item.repository.name
+  }));
 }
 
 /**
@@ -394,12 +461,33 @@ export async function collectHandoffMode(
  * @returns Promise resolving to collected inputs, or undefined if user cancelled
  */
 export async function collectUserInputs(
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  detectedRepositories?: GitRepository[]
 ): Promise<WorkItemInputs | undefined> {
   // Collect workflow type first (required)
   const workflowType = await collectWorkflowType(outputChannel);
   if (!workflowType) {
     return undefined;
+  }
+
+  // For cross-repository workflows, collect affected repositories
+  let affectedRepositories: RepositorySelection[] | undefined;
+  if (workflowType === 'cross-repository' && detectedRepositories) {
+    // Filter to only valid git repositories
+    const validRepos = detectedRepositories.filter(r => r.isValid);
+    
+    if (validRepos.length === 0) {
+      vscode.window.showErrorMessage(
+        'No git repositories detected in workspace. Cross-repository workflow requires at least one git repository.'
+      );
+      outputChannel.appendLine('[ERROR] No valid git repositories found for cross-repository workflow');
+      return undefined;
+    }
+
+    affectedRepositories = await collectAffectedRepositories(validRepos, outputChannel);
+    if (!affectedRepositories) {
+      return undefined;
+    }
   }
 
   // Collect issue URL (optional)
@@ -479,6 +567,7 @@ export async function collectUserInputs(
     workflowMode,
     reviewStrategy,
     handoffMode,
-    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
+    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim(),
+    affectedRepositories
   };
 }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { collectUserInputs } from '../ui/userInput';
-import { validateGitRepository } from '../git/validation';
+import { validateGitRepository, detectGitRepositories, GitRepository } from '../git/validation';
 import { constructAgentPrompt } from '../prompts/workflowInitPrompt';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -61,6 +61,19 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine('[INFO] Git repository validated');
 
+    // Detect repositories across all workspace folders for cross-repository workflows
+    // This is done before collecting user inputs because cross-repository workflow
+    // type selection requires knowing if there are multiple repositories available
+    let detectedRepositories: GitRepository[] | undefined;
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    
+    if (workspaceFolders && workspaceFolders.length > 1) {
+      outputChannel.appendLine('[INFO] Multi-root workspace detected, scanning for git repositories...');
+      detectedRepositories = await detectGitRepositories(workspaceFolders);
+      const validRepoCount = detectedRepositories.filter(r => r.isValid).length;
+      outputChannel.appendLine(`[INFO] Found ${validRepoCount} valid git repositories out of ${workspaceFolders.length} workspace folders`);
+    }
+
     // Check for custom instructions
     outputChannel.appendLine('[INFO] Checking for custom instructions...');
     const customInstructionsPath = path.join(
@@ -77,13 +90,16 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
-    const inputs = await collectUserInputs(outputChannel);
+    const inputs = await collectUserInputs(outputChannel, detectedRepositories);
     if (!inputs) {
       outputChannel.appendLine('[INFO] User cancelled initialization');
       return;
     }
 
     outputChannel.appendLine(`[INFO] Workflow type: ${inputs.workflowType}`);
+    if (inputs.affectedRepositories) {
+      outputChannel.appendLine(`[INFO] Affected repositories: ${inputs.affectedRepositories.map(r => r.name).join(', ')}`);
+    }
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
     outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
@@ -104,7 +120,8 @@ export async function initializeWorkItemCommand(
       inputs.reviewStrategy,
       inputs.handoffMode,
       inputs.issueUrl,
-      workspaceFolder.uri.fsPath
+      workspaceFolder.uri.fsPath,
+      inputs.affectedRepositories
     );
 
     outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');

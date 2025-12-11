@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
-import { WorkflowType, WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
+import { WorkflowType, WorkflowModeSelection, ReviewStrategy, HandoffMode, RepositorySelection } from '../ui/userInput';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -53,6 +53,8 @@ interface PromptVariables {
   WORK_DESCRIPTION_SECTION: string;
   /** Initial Prompt field for WorkflowContext.md (conditional) */
   INITIAL_PROMPT_FIELD: string;
+  /** Affected repositories list for cross-repository workflows (formatted markdown) */
+  AFFECTED_REPOSITORIES: string;
 }
 
 /**
@@ -158,6 +160,21 @@ function buildWorkDescriptionSection(): string {
 }
 
 /**
+ * Format affected repositories list as markdown for prompt.
+ * 
+ * @param repositories - Array of selected repositories, or undefined
+ * @returns Formatted markdown string with repository list, or empty string if none
+ */
+function formatAffectedRepositories(repositories: RepositorySelection[] | undefined): string {
+  if (!repositories || repositories.length === 0) {
+    return '';
+  }
+
+  const repoLines = repositories.map(r => `  - ${r.name} (path: ${r.path})`);
+  return `- **Affected Repositories**:\n${repoLines.join('\n')}\n`;
+}
+
+/**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
  * @param workflowType - The workflow type (implementation, cross-repository, or review)
@@ -167,6 +184,7 @@ function buildWorkDescriptionSection(): string {
  * @param handoffMode - Handoff mode (manual, semi-auto, or auto)
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
  * @param workspacePath - Absolute path to the workspace root directory
+ * @param affectedRepositories - Optional array of selected repositories for cross-repository workflows
  * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
@@ -176,7 +194,8 @@ export function constructAgentPrompt(
   reviewStrategy: ReviewStrategy,
   handoffMode: HandoffMode,
   issueUrl: string | undefined,
-  workspacePath: string
+  workspacePath: string,
+  affectedRepositories?: RepositorySelection[]
 ): string {
   const customInstructions = loadCustomInstructions(
     workspacePath,
@@ -253,7 +272,8 @@ export function constructAgentPrompt(
     CUSTOM_INSTRUCTIONS: customInstructionsSection,
     BRANCH_AUTO_DERIVE_SECTION: branchAutoDeriveSectionContent,
     WORK_DESCRIPTION_SECTION: workDescriptionSectionContent,
-    INITIAL_PROMPT_FIELD: initialPromptFieldContent
+    INITIAL_PROMPT_FIELD: initialPromptFieldContent,
+    AFFECTED_REPOSITORIES: formatAffectedRepositories(affectedRepositories)
   };
   
   // Load template and substitute variables

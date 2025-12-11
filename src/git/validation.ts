@@ -1,7 +1,20 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as vscode from 'vscode';
 
 const execAsync = promisify(exec);
+
+/**
+ * Represents a detected git repository in a workspace folder.
+ */
+export interface GitRepository {
+  /** Absolute path to the repository root */
+  path: string;
+  /** Human-readable name (from workspace folder name) */
+  name: string;
+  /** Whether the folder is a valid git repository */
+  isValid: boolean;
+}
 
 /**
  * Check if the workspace path points to a git repository.
@@ -44,4 +57,46 @@ export async function hasUncommittedChanges(workspacePath: string): Promise<bool
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to check git status: ${message}`);
   }
+}
+
+/**
+ * Detect all git repositories across workspace folders.
+ * 
+ * Iterates through all provided workspace folders and validates each as a git
+ * repository using the existing validateGitRepository() function. Returns a list
+ * of GitRepository objects with path, name, and validity status for each folder.
+ * 
+ * This function is used during cross-repository workflow initialization to identify
+ * which workspace folders contain git repositories that can participate in the
+ * multi-repository workflow.
+ * 
+ * @param workspaceFolders - Array of VS Code workspace folders to check
+ * @returns Promise resolving to array of GitRepository objects (one per folder)
+ * 
+ * @example
+ * const folders = vscode.workspace.workspaceFolders;
+ * if (folders) {
+ *   const repos = await detectGitRepositories(folders);
+ *   const validRepos = repos.filter(r => r.isValid);
+ * }
+ */
+export async function detectGitRepositories(
+  workspaceFolders: readonly vscode.WorkspaceFolder[]
+): Promise<GitRepository[]> {
+  const results: GitRepository[] = [];
+
+  // Process all folders in parallel for better performance
+  const validationPromises = workspaceFolders.map(async (folder) => {
+    const isValid = await validateGitRepository(folder.uri.fsPath);
+    return {
+      path: folder.uri.fsPath,
+      name: folder.name,
+      isValid
+    };
+  });
+
+  const validationResults = await Promise.all(validationPromises);
+  results.push(...validationResults);
+
+  return results;
 }

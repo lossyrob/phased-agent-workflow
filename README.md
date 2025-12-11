@@ -45,6 +45,7 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 * **Rewindable** — any phase can restart cleanly if an upstream document is wrong or incomplete.
 * **Transparent** — every output is text-based and version-controlled in Git.
 * **Collaborative** — humans guide, agents execute and record progress.
+* **Traceable** — all PRs link to originating issues; structured commit messages enable git history navigation.
 * **Toolchain** — Git (GitHub or Azure DevOps), VS Code, GitHub Copilot Agent Mode, markdown artifacts.
 
 ## Two Workflows: Implementation and Review

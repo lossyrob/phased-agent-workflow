@@ -155,7 +155,7 @@ After all checks pass, create the PR with this format:
 [1-2 paragraph overview from Spec.md]
 
 ## Related Issues
-- Closes issue at <Issue URL>
+Fixes #<N>
 
 ## Artifacts
 - Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)

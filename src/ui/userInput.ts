@@ -119,10 +119,12 @@ export function isValidIssueUrl(value: string): boolean {
 /**
  * Collect workflow type selection from user.
  * 
- * Presents a Quick Pick menu with three workflow type options:
+ * Presents a Quick Pick menu with workflow type options:
  * - Implementation: Standard single-repository workflow
- * - Cross-Repository: Multi-repository coordination workflow
+ * - Cross-Repository: Multi-repository coordination workflow (only available in multi-root workspaces)
  * - Review: Code review workflow for existing changes
+ * 
+ * The Cross-Repository option only appears when multiple workspace folders are open.
  * 
  * @param outputChannel - Output channel for logging user interaction events
  * @returns Promise resolving to workflow type, or undefined if user cancelled
@@ -130,33 +132,53 @@ export function isValidIssueUrl(value: string): boolean {
 export async function collectWorkflowType(
   outputChannel: vscode.OutputChannel
 ): Promise<WorkflowType | undefined> {
-  // Present Quick Pick menu with workflow type options
-  const typeSelection = await vscode.window.showQuickPick([
+  // Check if multi-root workspace is available for cross-repository option
+  const workspaceFolderCount = vscode.workspace.workspaceFolders?.length || 0;
+  const isMultiRootWorkspace = workspaceFolderCount > 1;
+
+  // Build workflow type options - Cross-Repository only shown in multi-root workspaces
+  const workflowTypeOptions: { label: string; description: string; detail: string; value: WorkflowType }[] = [
     {
       label: 'Implementation',
       description: 'Standard single-repository workflow',
       detail: 'Work within one git repository',
       value: 'implementation' as WorkflowType
-    },
-    {
+    }
+  ];
+
+  if (isMultiRootWorkspace) {
+    workflowTypeOptions.push({
       label: 'Cross-Repository',
       description: 'Multi-repository coordination workflow',
       detail: 'Coordinate feature development across multiple repositories',
       value: 'cross-repository' as WorkflowType
-    },
-    {
-      label: 'Review',
-      description: 'Code review workflow',
-      detail: 'Structured review of existing code changes',
-      value: 'review' as WorkflowType
-    }
-  ], {
+    });
+  }
+
+  workflowTypeOptions.push({
+    label: 'Review (Coming Soon)',
+    description: 'Code review workflow',
+    detail: 'Structured review of existing code changes',
+    value: 'review' as WorkflowType
+  });
+
+  // Present Quick Pick menu with workflow type options
+  const typeSelection = await vscode.window.showQuickPick(workflowTypeOptions, {
     placeHolder: 'Select workflow type',
     title: 'Workflow Type Selection'
   });
 
   if (!typeSelection) {
     outputChannel.appendLine('[INFO] Workflow type selection cancelled');
+    return undefined;
+  }
+
+  // Handle selection of coming soon Review option
+  if (typeSelection.value === 'review') {
+    outputChannel.appendLine('[INFO] Review workflow selected but not yet available');
+    vscode.window.showWarningMessage(
+      'Review workflows through the extension are coming soon.'
+    );
     return undefined;
   }
 

@@ -28,7 +28,7 @@ Follow the established PAW naming pattern where:
 ### File and Directory Naming
 
 - Artifact directory: `.paw/multi-work/<work-id>/` (at workspace root, NOT in git repos)
-- Context file: `SupervisorContext.md` (keep this name for backward compatibility with existing code patterns)
+- Context file: `CrossRepoContext.md`
 - Agent files: `agents/PAW-M01A Cross-Repo Spec.agent.md`, etc.
 - Component file (if created): `agents/components/cross-repo-context.component.md`
 - Custom instructions: `.paw/instructions/PAW-M01A Cross-Repo Spec-instructions.md`, etc.
@@ -53,7 +53,7 @@ When creating the implementation plan:
 1. **Consistently use cross-repo terminology** in all descriptions, comments, and documentation
 2. **Agent references** must use full PAW-M## names (e.g., "PAW-M01A Cross-Repo Spec agent")
 3. **File paths** should reflect cross-repo naming where appropriate
-4. **TypeScript types and interfaces** should use CrossRepo* naming (e.g., `CrossRepoContext`, not `SupervisorContext` - except where maintaining backward compatibility)
+4. **TypeScript types and interfaces** should use CrossRepo* naming (e.g., `CrossRepoContext`)
 5. **Success criteria** should validate cross-repo agent functionality, not "supervisor" functionality
 6. **All five PAW-M## agents** must be included in the plan (M01A, M01B, M02A, M02B, M03)
 

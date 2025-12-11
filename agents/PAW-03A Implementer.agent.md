@@ -264,7 +264,7 @@ Do not check off items in the manual testing steps until confirmed by the user.
 ## Commit Message Format
 
 Use descriptive, structured commits for traceability:
-- Format: `[<Work Title>] Phase <N>: <type>: <description>`
+- Format: `[<Work Title>] Phase <N>: <type>: <description>`. For non-phase work, omit "Phase <N>".
 - Footers: `PAW-Phase: <N>` (omit for non-phase work) and `Work-ID: <feature-slug>`
 - Work Title/Work ID: load from workflow context via paw_get_context; Phase N comes from ImplementationPlan.md or current review context
 - Body with details about the changes made, especially for review comment responses (include links to review comments addressed)

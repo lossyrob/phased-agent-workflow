@@ -116,11 +116,6 @@ This ensures the workflow context is tracked in version control from the start.
 
 Push target branch: `git push -u origin {{TARGET_BRANCH}}` (ensures target exists for PRs; acceptable if already exists)
 
-**Error Handling**:
-- Branch already exists remotely → No error (expected for resumed workflows)
-- Network/connectivity issues → Report error details but continue (user can manually push later if needed)
-- Permission denied → Report error and suggest checking repository access
-
 ### 9. Open WorkflowContext.md
 
 

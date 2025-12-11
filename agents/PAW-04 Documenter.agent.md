@@ -173,9 +173,9 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
     ---
     🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
     ```
-  - Extract issue number from WorkflowContext.md's Issue URL field (same pattern as Planning PR):
-    - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
-    - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
+    - Extract issue number from workflow context Issue URL (paw_get_context):
+       - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
+       - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
    - Pause for human review of Docs PR
 
    **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:

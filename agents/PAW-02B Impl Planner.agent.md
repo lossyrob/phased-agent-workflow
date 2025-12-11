@@ -9,7 +9,7 @@ You are tasked with creating detailed implementation plans through an interactiv
 
 ### PAW Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt planning and branching:
+Read Workflow Mode and Review Strategy from the workflow context (paw_get_context, persisted in WorkflowContext.md) at startup. Adapt planning and branching:
 
 **Modes:**
 - **full**: Multi-phase plan; prs→planning branch+PR, local→target branch only
@@ -45,19 +45,14 @@ When given a Planning PR with review comments:
    - Keep complex comments as separate TODOs
 4. **Address review comments systematically**:
    - Work through TODOs one by one
-   - For each comment:
-     - Perform any needed additional research
-     - Update the affected artifact(s) to address the concern
-     - Stage ONLY the changed files: `git add .paw/work/<feature-slug>/<file>`
-     - Verify staged changes: `git diff --cached`
-     - Commit following structured Commit Message Format:
-       - Extract Work Title and Work ID from WorkflowContext.md
-       - Format: `[<Work Title>] <type>: <description>` (omit Phase N for planning work)
-       - Include reference to review comment in description or body
-       - Add PAW footer: `PAW-Phase: none` and `Work-ID: <feature-slug>`
-       - Example: `[Auth System] docs: clarify JWT token expiry in spec (addresses review comment #3)`
-     - Use `github mcp` tools to push the commit
-     - Use `github mcp` tools to reply to the review comment with format:
+      - For each comment:
+         - Perform any needed additional research
+         - Update the affected artifact(s) to address the concern
+         - Stage ONLY the changed files: `git add .paw/work/<feature-slug>/<file>`
+         - Verify staged changes: `git diff --cached`
+         - Commit using the Commit Structure (see section below); reference the review comment ID/URL in the message body
+         - Push with git (no MCP direct-push tools)
+         - Reply to the review comment with format:
        ```
        **🐾 Implementation Planner 🤖:**
        
@@ -278,19 +273,15 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
 
 **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
 
-   **Read Review Strategy from WorkflowContext.md** (REQUIRED FIRST):
+   **Read Review Strategy from workflow context (paw_get_context)** (REQUIRED FIRST):
    - Extract Review Strategy field; if missing, log "defaulting to 'prs'" and use prs strategy
 
    **IF Review Strategy = 'prs'**:
    - Ensure on planning branch: `git branch --show-current`, create if needed: `git checkout -b <target_branch>_plan`
-   - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
-   - Verify: `git diff --cached`
-   - Commit following structured Commit Message Format:
-     - Extract Work Title and Work ID from WorkflowContext.md
-     - Format: `[<Work Title>] planning: <description>`
-     - Add PAW footer: `Work-ID: <feature-slug>`
-     - Example: `[Auth System] planning: create implementation plan with 3 phases`
-   - Push: `git push -u <remote> <target_branch>_plan`
+      - Stage artifacts: `git add .paw/work/<feature-slug>/{Spec.md,SpecResearch.md,CodeResearch.md,ImplementationPlan.md}` and prompt files
+      - Verify: `git diff --cached`
+      - Commit using the Commit Structure (see section below)
+      - Push: `git push -u <remote> <target_branch>_plan`
    - Create Planning PR (`<target_branch>_plan` → `<target_branch>`):
      - Title: `[<Work Title>] Planning: <brief description>`
      - Body format:
@@ -304,20 +295,23 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
        ---
        🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
        ```
-     - Extract issue number from WorkflowContext.md's Issue URL field (use "No associated issue" if Issue URL is "none")
+         - Extract issue number from workflow context Issue URL (paw_get_context); use "No associated issue" if Issue URL is "none"
    - Pause for review
 
    **IF Review Strategy = 'local'**:
    - Ensure on target branch: `git branch --show-current`, checkout if needed: `git checkout <target_branch>`
-   - Stage ALL planning artifacts (including those from prior agents): `git add .paw/work/<feature-slug>/`
-   - Verify staged files include Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md: `git diff --cached --name-only`
-   - Commit following structured Commit Message Format:
-     - Extract Work Title and Work ID from WorkflowContext.md
-     - Format: `[<Work Title>] planning: <description>`
-     - Add PAW footer: `Work-ID: <feature-slug>`
-     - Example: `[Auth System] planning: create implementation plan with 3 phases`
-   - Push: `git push <remote> <target_branch>`
+      - Stage ALL planning artifacts (including those from prior agents): `git add .paw/work/<feature-slug>/`
+      - Verify staged files include Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md: `git diff --cached --name-only`
+      - Commit using the Commit Structure (see section below)
+      - Push: `git push <remote> <target_branch>`
    - Skip Planning PR (no intermediate PRs in local strategy)
+
+## Commit Structure
+
+- Format: `[<Work Title>] planning: <description>`
+- Footer: `Work-ID: <feature-slug>`
+- Work Title and Work ID: read from workflow context (paw_get_context)
+- For review comment follow-up, mention the comment ID/URL in the message body
 
 ## Important Guidelines
 
@@ -400,8 +394,7 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Success criteria should include test passage as part of automated verification
    - The goal is unit tests as living documentation that co-evolve with the code, not an afterthought
 
-11. **Use Git Commands for Workflow Files**:
-   - Use `git add/commit/push` for PAW files - NEVER `mcp_github_push_files`/`mcp_github_create_or_update_file` (bypasses git history)
+11. **Use Git Commands for Workflow Files**: Use `git add/commit/push` for PAW files; never `mcp_github_push_files` or `mcp_github_create_or_update_file`.
 
 12. **Separate Implementation from Documentation**:
    - Do NOT create "Documentation" phases—documentation is handled by PAW-04 Documenter after implementation

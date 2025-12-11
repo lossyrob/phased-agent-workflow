@@ -13,7 +13,7 @@ If no implementation plan path provided, ask for one.
 
 Before reading other files:
 0. **Git Housekeeping**: If transitioning from completed phase N-1 to phase N (already on `<target>_phase[N-1]`), checkout target branch and pull latest: `git checkout <target_branch> && git pull <remote> <target_branch>` (skip for Phase 1 or if already on target)
-1. Look for `WorkflowContext.md` at `.paw/work/<feature-slug>/WorkflowContext.md` - extract Target Branch, Work Title, Work ID, Issue URL, Remote (default: `origin`)
+1. Load workflow context via paw_get_context (Target Branch, Work Title, Work ID, Issue URL, Remote; default remote `origin`)
 2. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
 3. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
@@ -27,7 +27,7 @@ Before reading other files:
 
 ### Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your implementation approach and branching behavior as follows:
+Read Workflow Mode and Review Strategy from the workflow context via paw_get_context (persisted in WorkflowContext.md) at startup. Adapt your implementation approach and branching behavior as follows:
 
 **Workflow Mode: full**
 - Standard multi-phase implementation approach
@@ -263,60 +263,15 @@ Do not check off items in the manual testing steps until confirmed by the user.
 
 ## Commit Message Format
 
-All PAW commits must follow this structured format for traceability and git history navigation:
-
-**Format**:
-```
-[<Work Title>] Phase <N>: <type>: <description>
-
-[Optional body with details, rationale, or context]
-
-PAW-Phase: <N>
-Work-ID: <feature-slug>
-```
-
-**Field Definitions**:
-- **Work Title**: From WorkflowContext.md (2-4 word identifier for the work)
-- **Phase N**: Current phase number from ImplementationPlan.md (omit for non-phase work)
-- **type** (optional): Conventional commit type - feat, fix, docs, refactor, test, chore
-- **description**: Brief summary of changes (50 chars or less recommended)
-- **body** (optional): Additional context, reasoning, or implementation notes
-- **PAW-Phase footer**: Enables filtering commits by phase with `git log --grep="PAW-Phase: N"`
-- **Work-ID footer**: Enables filtering commits by work item with `git log --grep="Work-ID: <slug>"`
-
-**Examples**:
-```
-[Auth System] Phase 2: feat: add JWT validation middleware
-
-Implements token verification following the pattern in services/auth/.
-Integrates with existing auth service at services/auth/index.ts.
-
-PAW-Phase: 2
-Work-ID: auth-system
-```
-
-```
-[Improve PR Workflow] docs: add docstrings to git workflow functions
-
-PAW-Phase: none
-Work-ID: improve-pr-git-workflow
-```
-
-**When to Apply**:
-- Extract Work Title and Work ID from WorkflowContext.md before committing
-- Determine current phase number from ImplementationPlan.md or work context
-- Use appropriate conventional commit type (feat for new features, fix for bugs, refactor for restructuring, docs for documentation, test for tests, chore for maintenance)
-- For non-phase work (e.g., addressing Planning PR comments), use "PAW-Phase: none"
-
-**Rationale**: Structured format provides context without reading diffs, enables powerful git log filtering, and creates navigable git history for understanding project evolution.
+Use descriptive, structured commits for traceability:
+- Format: `[<Work Title>] Phase <N>: <type>: <description>`
+- Footers: `PAW-Phase: <N>` (omit for non-phase work) and `Work-ID: <feature-slug>`
+- Work Title/Work ID: load from workflow context via paw_get_context; Phase N comes from ImplementationPlan.md or current review context
+- Body with details about the changes made, especially for review comment responses (include links to review comments addressed)
 
 ## Committing and Pushing
 
-**Git Commands Only**:
-- Use git commands exclusively for all file operations: `git add`, `git commit`
-- Do NOT use GitHub MCP direct-push tools (`mcp_github_push_files`, `mcp_github_create_or_update_file`) for workflow files
-- Rationale: Preserves git history and enables proper version control workflow
-- See PAW-02B Impl Planner Important Guidelines section 11 for detailed rationale
+**Git Commands Only**: Use git add/commit; never GitHub MCP direct-push tools for workflow files (keeps git history)
 
 **Pre-Commit Verification**:
 - Before EVERY commit, verify you're on the correct branch: `git branch --show-current`

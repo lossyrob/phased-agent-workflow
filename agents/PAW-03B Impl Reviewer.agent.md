@@ -194,19 +194,12 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **Small refactors are encouraged**: Removing unused parameters, dead code, or unnecessary complexity
    - **Large refactors require coordination**: If major changes needed, request Implementation Agent redo the work
    - If no documentation or polish updates are needed, prefer making **no commits** (leave the code untouched rather than introducing no-op edits)
-   - Follow structured Commit Message Format (same as Implementation Agent):
-     - Extract Work Title and Work ID from WorkflowContext.md
-     - Use current phase number from review context
-     - Format: `[<Work Title>] Phase <N>: <type>: <description>`
-     - Common types for reviewer: `docs:` for documentation, `refactor:` for small refactors
-     - Add PAW footer: `PAW-Phase: <N>` and `Work-ID: <feature-slug>`
-     - Example: `[Auth System] Phase 2: docs: add docstrings for JWT validation`
-   - **Selective staging**: Use `git add <file>` for each file; verify with `git diff --cached` before committing
+   - Commit format: `[<Work Title>] Phase <N>: <type>: <description>` with footers `PAW-Phase: <N>` and `Work-ID: <feature-slug>`; Work Title/ID come from paw_get_context. Common types: docs, refactor. Use `git add <file>` per file and verify with `git diff --cached` before committing. Add details in body about changes made.
 
 7. **DETERMINE REVIEW STRATEGY AND PUSH/PR** (REQUIRED):
 
    **Step 7.1: Read Review Strategy** (REQUIRED FIRST):
-   - Read WorkflowContext.md to extract Review Strategy field
+   - Read workflow context via paw_get_context to extract Review Strategy field
    - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
    - Set strategy variable: `<prs or local>`
 
@@ -239,9 +232,9 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
     ---
     🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
     ```
-  - Extract issue number from WorkflowContext.md's Issue URL field (same pattern as Planning PR):
-    - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
-    - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
+   - Extract issue number from workflow context Issue URL (paw_get_context):
+      - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
+      - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
   - Extract phase number from ImplementationPlan.md or current work context
   - If total phase count available, include "Phase N of M" instead of just "Phase N"
   - Opening statement emphasizes partial implementation to set reviewer expectations

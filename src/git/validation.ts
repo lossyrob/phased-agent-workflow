@@ -83,20 +83,15 @@ export async function hasUncommittedChanges(workspacePath: string): Promise<bool
 export async function detectGitRepositories(
   workspaceFolders: readonly vscode.WorkspaceFolder[]
 ): Promise<GitRepository[]> {
-  const results: GitRepository[] = [];
-
   // Process all folders in parallel for better performance
-  const validationPromises = workspaceFolders.map(async (folder) => {
-    const isValid = await validateGitRepository(folder.uri.fsPath);
-    return {
-      path: folder.uri.fsPath,
-      name: folder.name,
-      isValid
-    };
-  });
-
-  const validationResults = await Promise.all(validationPromises);
-  results.push(...validationResults);
-
-  return results;
+  return Promise.all(
+    workspaceFolders.map(async (folder) => {
+      const isValid = await validateGitRepository(folder.uri.fsPath);
+      return {
+        path: folder.uri.fsPath,
+        name: folder.name,
+        isValid
+      };
+    })
+  );
 }

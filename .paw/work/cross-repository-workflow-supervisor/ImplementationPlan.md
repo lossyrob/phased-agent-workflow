@@ -376,6 +376,21 @@ Key requirement: **The storage root does not need to be a git repository.** This
 - Cross-repo initialization stores coordinator artifacts under the selected storage root (git not required)
 - Existing single-repo initialization remains unchanged
 
+### Phase 2.5 Implementation Complete
+
+**Status**: Phase 2.5 implementation complete.
+
+**Changes Completed**:
+- Added storage root selection UI for cross-repository workflows (`collectStorageRoot()` + `WorkItemInputs.storageRoot`)
+- Updated initialization flow so cross-repository workflows no longer require `workspaceFolders[0]` to be a git repository
+- Added `STORAGE_ROOT` prompt variable and included explicit cross-repo storage root guidance in the initialization prompt
+
+**Verification Results**:
+- ✅ TypeScript compilation: `npm run compile`
+- ✅ Extension tests: `npm test`
+
+**Manual Testing**: Deferred to user (VS Code UI prompts).
+
 ---
 
 ## Phase 3: Cross-Repository Agent Definitions

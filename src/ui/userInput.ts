@@ -20,6 +20,18 @@ export interface RepositorySelection {
 }
 
 /**
+ * Represents a user-selected storage root folder for cross-repository workflows.
+ *
+ * The storage root does not need to be a git repository.
+ */
+export interface StorageRootSelection {
+  /** Absolute path to the selected storage root folder */
+  path: string;
+  /** Human-readable folder name (from workspace folder) */
+  name: string;
+}
+
+/**
  * Workflow mode determines which stages are included in the workflow.
  * - full: All stages (spec, code research, planning, implementation, docs, PR, status)
  * - minimal: Core stages only (code research, planning, implementation, PR, status)
@@ -103,6 +115,14 @@ export interface WorkItemInputs {
    * workflow.
    */
   affectedRepositories?: RepositorySelection[];
+
+  /**
+   * Storage root folder for cross-repository workflows.
+   *
+   * Only present when workflowType is 'cross-repository'. The selected folder
+   * does not need to be a git repository.
+   */
+  storageRoot?: StorageRootSelection;
 }
 
 /**
@@ -250,6 +270,50 @@ export async function collectAffectedRepositories(
     path: item.repository.path,
     name: item.repository.name
   }));
+}
+
+/**
+ * Collect storage root folder selection for cross-repository workflows.
+ *
+ * Presents a Quick Pick menu showing all workspace folders (git or non-git).
+ * The selected folder will be used as the base path for cross-repo coordinator
+ * artifacts under `.paw/multi-work/<work-id>/`.
+ *
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to selected storage root, or undefined if user cancelled
+ */
+export async function collectStorageRoot(
+  outputChannel: vscode.OutputChannel
+): Promise<StorageRootSelection | undefined> {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders || workspaceFolders.length === 0) {
+    vscode.window.showErrorMessage('No workspace folders found. Please open a workspace folder.');
+    outputChannel.appendLine('[ERROR] No workspace folders available for storage root selection');
+    return undefined;
+  }
+
+  const items = workspaceFolders.map(folder => ({
+    label: folder.name,
+    description: folder.uri.fsPath,
+    folder
+  }));
+
+  const selection = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Select a storage root folder for cross-repository coordinator artifacts',
+    title: 'Cross-Repository Storage Root Selection'
+  });
+
+  if (!selection) {
+    outputChannel.appendLine('[INFO] Storage root selection cancelled');
+    return undefined;
+  }
+
+  outputChannel.appendLine(`[INFO] Selected storage root: ${selection.folder.name} (${selection.folder.uri.fsPath})`);
+
+  return {
+    name: selection.folder.name,
+    path: selection.folder.uri.fsPath
+  };
 }
 
 /**
@@ -470,6 +534,15 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  // For cross-repository workflows, collect storage root (git not required)
+  let storageRoot: StorageRootSelection | undefined;
+  if (workflowType === 'cross-repository') {
+    storageRoot = await collectStorageRoot(outputChannel);
+    if (!storageRoot) {
+      return undefined;
+    }
+  }
+
   // For cross-repository workflows, collect affected repositories
   let affectedRepositories: RepositorySelection[] | undefined;
   if (workflowType === 'cross-repository' && detectedRepositories) {
@@ -568,6 +641,7 @@ export async function collectUserInputs(
     reviewStrategy,
     handoffMode,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim(),
-    affectedRepositories
+    affectedRepositories,
+    storageRoot
   };
 }

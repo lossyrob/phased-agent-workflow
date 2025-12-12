@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
-import { WorkflowType, WorkflowModeSelection, ReviewStrategy, HandoffMode, RepositorySelection } from '../ui/userInput';
+import { WorkflowType, WorkflowModeSelection, ReviewStrategy, HandoffMode, RepositorySelection, StorageRootSelection } from '../ui/userInput';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -41,6 +41,8 @@ interface PromptVariables {
   ISSUE_URL_FIELD: string;
   /** Absolute path to the workspace root directory */
   WORKSPACE_PATH: string;
+  /** Storage root folder for cross-repository workflows, or "Not applicable" */
+  STORAGE_ROOT: string;
   /** Optional work title strategy section when issue URL is provided */
   WORK_TITLE_STRATEGY: string;
   /** Fallback indicator text for branch-based work title generation */
@@ -175,6 +177,21 @@ function formatAffectedRepositories(repositories: RepositorySelection[] | undefi
 }
 
 /**
+ * Format storage root selection for prompt display.
+ */
+function formatStorageRoot(workflowType: WorkflowType, storageRoot: StorageRootSelection | undefined): string {
+  if (workflowType !== 'cross-repository') {
+    return 'Not applicable';
+  }
+
+  if (!storageRoot) {
+    return 'Not provided';
+  }
+
+  return `${storageRoot.name} (path: ${storageRoot.path})`;
+}
+
+/**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
  * @param workflowType - The workflow type (implementation, cross-repository, or review)
@@ -195,7 +212,8 @@ export function constructAgentPrompt(
   handoffMode: HandoffMode,
   issueUrl: string | undefined,
   workspacePath: string,
-  affectedRepositories?: RepositorySelection[]
+  affectedRepositories?: RepositorySelection[],
+  storageRoot?: StorageRootSelection
 ): string {
   const customInstructions = loadCustomInstructions(
     workspacePath,
@@ -267,6 +285,7 @@ export function constructAgentPrompt(
     ISSUE_URL: issueUrl || 'Not provided',
     ISSUE_URL_FIELD: issueUrl || 'none',
     WORKSPACE_PATH: workspacePath,
+    STORAGE_ROOT: formatStorageRoot(workflowType, storageRoot),
     WORK_TITLE_STRATEGY: workTitleStrategy,
     WORK_TITLE_FALLBACK_INDICATOR: workTitleFallbackIndicator,
     CUSTOM_INSTRUCTIONS: customInstructionsSection,

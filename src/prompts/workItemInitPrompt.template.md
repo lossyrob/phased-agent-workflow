@@ -10,7 +10,8 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
 - **Handoff Mode**: {{HANDOFF_MODE}}
-{{CUSTOM_INSTRUCTIONS_SECTION}}{{AFFECTED_REPOSITORIES}}- **Issue URL**: {{ISSUE_URL}}
+{{CUSTOM_INSTRUCTIONS_SECTION}}{{AFFECTED_REPOSITORIES}}- **Storage Root**: {{STORAGE_ROOT}}
+- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
 {{CUSTOM_INSTRUCTIONS}}
@@ -47,6 +48,12 @@ Generate a normalized slug from the Work Title:
 - If conflict, append -2, -3, etc. until unique
 
 ### 3. Create Directory Structure
+
+If **Workflow Type** is **cross-repository**:
+
+- Use the selected **Storage Root** as the base folder for coordinator artifacts.
+- Coordinator artifacts should live under: `<Storage Root>/.paw/multi-work/<feature-slug>/`.
+- Child workflows (per repository) continue to use each repository's `.paw/work/<feature-slug>/`.
 
 Create the following structure:
 

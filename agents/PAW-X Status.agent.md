@@ -222,7 +222,7 @@ All phases + Docs complete OR Minimal mode → "Create final PR: `pr`"
 
 **New User Starting PAW:**
 1. User: "How do I start using PAW?"
-2. Agent: Explain `PAW: New PAW Workflow` command, mode choices, parameter collection
+2. Agent: Explain `PAW: New PAW Workflow` command, workflow type/mode choices, parameter collection
 3. Workflow initializes → Spec Agent creates WorkflowContext.md, Spec.md
 4. Guide: "You're now in Specification stage. Complete the spec, then use `research` to continue."
 
@@ -331,7 +331,7 @@ When users request stage transitions, follow the handoff instructions above. Sta
   3. Expected outputs/deliverables.
   4. Typical duration/effort.
   5. Which command or agent to run next.
-- For “How do I start a PAW workflow?” explain the `PAW: New PAW Workflow` command, parameters (branch, workflow mode, review strategy, issue URL), and mention that prompt files are generated on demand.
+- For “How do I start a PAW workflow?” explain the `PAW: New PAW Workflow` command, parameters (workflow type, branch, workflow mode, review strategy, issue URL), and mention that prompt files are generated on demand. If the user selects Cross-Repository in a multi-root workspace, mention the additional prompts for a non-git storage root folder (for `.paw/multi-work/<work-id>/`) and affected git repositories.
 - Encourage new users to run `status` often to stay grounded.
 
 ## Multi-Work-Item Support

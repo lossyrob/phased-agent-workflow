@@ -2,7 +2,9 @@
 
 ## Overview
 
-This plan implements a cross-repository workflow coordination system that enables PAW to orchestrate feature development across multiple git repositories in a VS Code multi-root workspace. Users will select "Cross-Repository" workflow type during initialization, and cross-repository agents (PAW-M## series) will create holistic specifications, generate execution plans with repository sequencing, and initialize standard PAW child workflows in each affected repository with scoped context. The cross-repo artifacts live in `.paw/multi-work/<work-id>/` at workspace root (not in any git repository), while child workflows maintain standard `.paw/work/<work-id>/` structure and function independently.
+This plan implements a cross-repository workflow coordination system that enables PAW to orchestrate feature development across multiple git repositories in a VS Code multi-root workspace. Users will select "Cross-Repository" workflow type during initialization, and cross-repository agents (PAW-M## series) will create holistic specifications, generate execution plans with repository sequencing, and initialize standard PAW child workflows in each affected repository with scoped context.
+
+Cross-repo artifacts live in `.paw/multi-work/<work-id>/` under a **user-selected storage root folder** (one of the workspace folders). The storage root **does not need to be a git repository** and is intended to support “notes / coordination” folders. Child workflows maintain the standard `.paw/work/<work-id>/` structure inside each selected git repository and function independently.
 
 ## Current State Analysis
 
@@ -24,6 +26,7 @@ PAW currently supports single-repository workflows with:
 
 After implementation:
 - Users can select "Cross-Repository" workflow type from a dropdown during initialization
+- Users can select a **storage root folder** (any workspace folder, git not required) for cross-repo artifacts
 - System detects all git repositories in multi-root workspace and prompts for affected repository selection
 - Cross-repository agents (PAW-M01A Cross-Repo Spec, PAW-M01B Cross-Repo Spec Researcher, PAW-M02A Cross-Repo Code Researcher, PAW-M02B Cross-Repo Impl Planner, PAW-M03 Cross-Repo Validator) coordinate multi-repository features
 - Cross-repo artifacts stored in `.paw/multi-work/<work-id>/` with `CrossRepoContext.md`, `CrossRepoSpec.md`, `CrossRepoPlan.md`
@@ -33,6 +36,7 @@ After implementation:
 
 ### Verification:
 - User can complete end-to-end cross-repository workflow from initialization to validation
+- Cross-repo workflow works when the storage root folder is non-git (e.g., notes folder)
 - Child workflows operate independently if cross-repo artifacts are deleted
 - All five PAW-M## agents can be invoked via `paw_call_agent` tool
 - Context tool resolves `.paw/multi-work/` locations correctly
@@ -58,6 +62,7 @@ The implementation follows PAW's existing extension architecture by adding workf
 
 1. **Phase 1: Workflow Type Selection** - Add workflow type dropdown (Implementation/Cross-Repository/Review) to initialization flow before workflow mode collection
 2. **Phase 2: Multi-Repository Detection** - Implement repository detection across multi-root workspace with git validation for each folder
+2.5. **Phase 2.5: Cross-Repo Storage Root Selection** - Prompt for a workspace folder to store `.paw/multi-work/<work-id>/` artifacts (git not required)
 3. **Phase 3: Cross-Repository Agent Definitions** - Create five PAW-M## agent files with instructions, components, and handoff logic
 4. **Phase 4: Cross-Repo Artifact Management** - Implement `.paw/multi-work/` directory structure, CrossRepoContext.md format, and initialization prompt templates
 5. **Phase 5: Context Tool Extensions** - Extend `paw_get_context` to resolve cross-repository contexts and load CrossRepoContext.md
@@ -326,6 +331,50 @@ Phase 2 implementation reviewed and approved. Code is well-structured with clear
 - Backward compatibility maintained - single-repo workflows unaffected
 
 **Pushed**: Changes pushed to `origin/feature/142-cross-repository-workflow-supervisor`
+
+---
+
+## Phase 2.5: Cross-Repo Storage Root Selection
+
+### Overview
+Add an explicit **storage root folder** selection when initializing a cross-repository workflow. This folder is where cross-repo coordinator artifacts will be stored under `.paw/multi-work/<work-id>/`.
+
+Key requirement: **The storage root does not need to be a git repository.** This supports workspaces that include non-git folders for notes and coordination.
+
+### Changes Required
+
+#### 1. Storage Root Selection UI
+**File**: `src/ui/userInput.ts`
+**Changes**:
+- Add a new input field to `WorkItemInputs`, e.g. `storageRoot?: { name: string; path: string }` (present only for cross-repository workflows)
+- Implement `collectStorageRoot()` that presents a Quick Pick of all workspace folders (label: folder name, description: folder path)
+- Call `collectStorageRoot()` when `workflowType === 'cross-repository'` before collecting affected repositories
+
+**Tests**:
+- Unit tests for `collectStorageRoot()` selection and cancel
+
+#### 2. Cross-Repo Validation Logic (Drop Git Requirement For Storage Root)
+**File**: `src/commands/initializeWorkItem.ts`
+**Changes**:
+- For cross-repository workflows, stop assuming `workspaceFolders?.[0]` is the git repo to validate
+- Instead, validate:
+  - Workspace is multi-root (already implemented)
+  - At least one affected repository is a valid git repository (from the existing selection flow)
+  - The selected storage root folder exists (no git requirement)
+
+**Tests**:
+- Integration tests for cross-repo init when the first workspace folder is non-git but other folders are git repos
+
+#### 3. Prompt / Context Plumbing
+**File**: `src/prompts/workflowInitPrompt.ts` and `src/prompts/workItemInitPrompt.template.md`
+**Changes**:
+- Add a template variable (e.g. `STORAGE_ROOT`) and include it in the “Parameters Provided” section
+- Ensure the generated instructions for cross-repo agents make it explicit that `.paw/multi-work/<work-id>/` lives under the selected storage root
+
+### Success Criteria
+- Cross-repo initialization works even if the “notes” folder is first in the workspace folder order
+- Cross-repo initialization stores coordinator artifacts under the selected storage root (git not required)
+- Existing single-repo initialization remains unchanged
 
 ---
 

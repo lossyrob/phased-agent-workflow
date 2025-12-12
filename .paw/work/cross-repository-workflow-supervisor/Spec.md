@@ -13,7 +13,7 @@ Development teams frequently encounter features that require coordinated changes
 - Maintain independence of child repository workflows so each can function as a standard PAW workflow (Rationale: Preserves existing PAW guarantees and allows work to proceed even if supervisor artifacts are unavailable)
 - Provide explicit execution sequencing to guide users through multi-repository implementation (Rationale: Reduces cognitive load by eliminating manual coordination decisions)
 - Pass repository-specific context excerpts to child workflows to avoid overwhelming them with unrelated details
-- Store supervisor artifacts outside any git repository to keep coordination metadata separate from implementation history
+- Store supervisor artifacts under a user-selected **storage root workspace folder** that does not need to be git-tracked (supports notes/coordination folders and keeps metadata separate from implementation history)
 - Support standard PAW workflow modes (full/minimal/custom) within each child repository
 - Deliver clear validation guidance for testing integrated changes across repositories
 
@@ -26,7 +26,7 @@ Development teams frequently encounter features that require coordinated changes
 **Independent Test**: User selects "Cross-Repository" workflow type, provides feature description, and supervisor successfully creates a multi-repository specification identifying all affected repositories.
 
 **Acceptance Scenarios**:
-1. Given a VS Code multi-root workspace with multiple git repositories, When the user invokes "PAW: New PAW Workflow" and selects "Cross-Repository" workflow type, Then the system detects all git repositories and prompts for feature description.
+1. Given a VS Code multi-root workspace with multiple folders, When the user invokes "PAW: New PAW Workflow" and selects "Cross-Repository" workflow type, Then the system prompts for a **storage root folder** (any workspace folder; git not required), detects git repositories, prompts for affected repository selection, and prompts for feature description.
 2. Given a user has described their multi-repository feature, When supervisor specification phase completes, Then a holistic spec exists in `.paw/multi-work/<work-id>/` identifying which repositories need changes and how they interact.
 3. Given a single-folder workspace with no multi-root setup, When user attempts to select "Cross-Repository" workflow, Then the system provides clear guidance that multi-root workspace is required.
 
@@ -67,7 +67,7 @@ Development teams frequently encounter features that require coordinated changes
 - **Child workflow already exists**: If user attempts to initialize a child workflow but `.paw/work/<work-id>/` already exists in that repository, detect the collision and prompt user to either use a different work ID or confirm overwriting.
 - **Supervisor artifacts lost**: If supervisor artifacts are deleted but child workflows remain, child workflows continue functioning as independent PAW workflows (degraded mode: no supervisor coordination).
 - **Mixed workflow types**: If a repository in the workspace already has an active PAW workflow, prevent supervisor from initializing a conflicting child workflow in that repository.
-- **Non-git folders in workspace**: If workspace includes folders that are not git repositories, exclude them from repository detection without errors.
+- **Non-git folders in workspace**: If workspace includes folders that are not git repositories, exclude them from repository detection without errors. The user must still be able to select a non-git folder as the storage root.
 - **Empty feature description**: If user provides insufficient detail about the multi-repository feature during initialization, prompt for clarification before proceeding to specification phase.
 
 ## Requirements
@@ -77,7 +77,8 @@ Development teams frequently encounter features that require coordinated changes
 - **FR-001**: System shall detect git repositories in VS Code multi-root workspace by iterating `vscode.workspace.workspaceFolders` and validating each folder with `git rev-parse --git-dir` (Stories: P1)
 - **FR-002**: System shall provide "Workflow Type" selection UI presenting "Implementation", "Cross-Repository", and "Review" options before collecting other workflow parameters (Stories: P1)
 - **FR-003**: When "Cross-Repository" is selected in a non-multi-root workspace, system shall display error message with guidance to create multi-root workspace (Stories: P1)
-- **FR-004**: System shall store supervisor artifacts in `.paw/multi-work/<work-id>/` directory at workspace root, not inside any git repository (Stories: P1, P3)
+- **FR-004**: System shall prompt the user to select a **storage root folder** (one of the workspace folders) for cross-repository workflows, and store supervisor artifacts under `<storage-root>/.paw/multi-work/<work-id>/` (Stories: P1, P3)
+- **FR-004a**: System shall not require the selected storage root folder to be a git repository (Stories: P1)
 - **FR-005**: Supervisor specification phase shall create `CrossRepoSpec.md` artifact identifying affected repositories, their interaction points, and per-repository requirements (Stories: P1, P3)
 - **FR-006**: Supervisor planning phase shall create `CrossRepoPlan.md` artifact with numbered "Execution Sequence" listing repositories in dependency order with rationale (Stories: P2, P3)
 - **FR-007**: System shall support initializing child PAW workflows with repository-specific context excerpts from cross-repository spec (Stories: P3)
@@ -86,6 +87,7 @@ Development teams frequently encounter features that require coordinated changes
 - **FR-010**: Supervisor validation phase shall perform consistency checks comparing child workflow artifacts against original cross-repository spec (Stories: P4)
 - **FR-011**: System shall detect when a repository already has an active PAW workflow and prevent supervisor from creating conflicting child workflow in that repository (Edge case: Mixed workflow types)
 - **FR-012**: System shall exclude non-git folders from repository detection without error (Edge case: Non-git folders)
+- **FR-012a**: System shall allow non-git workspace folders to exist alongside git repositories, and still allow cross-repository workflow initialization to proceed (Edge case: Non-git folders)
 - **FR-013**: Supervisor planning phase shall detect when plan references a repository not in the workspace and provide actionable error guidance (Edge case: Repository not in workspace)
 
 ### Key Entities
@@ -113,6 +115,7 @@ Development teams frequently encounter features that require coordinated changes
 - **SC-006**: Validation phase detects inconsistencies between child workflow implementations and cross-repository spec (measured by comparison of artifact content) (FR-010)
 - **SC-007**: System prevents conflicting workflow initialization when repository already has active PAW workflow (measured by error detection before file creation) (FR-011)
 - **SC-008**: Repository detection excludes non-git folders and only presents valid git repositories to user (measured by 0% false positives in repository list) (FR-001, FR-012)
+- **SC-009**: Cross-repository initialization succeeds when the selected storage root folder is non-git (measured by successful creation of `<storage-root>/.paw/multi-work/<work-id>/` artifacts) (FR-004, FR-004a)
 
 ## Assumptions
 
@@ -153,7 +156,7 @@ Development teams frequently encounter features that require coordinated changes
 - **VS Code Multi-Root Workspace API**: `vscode.workspace.workspaceFolders` must be available to detect workspace folders
 - **Git CLI**: `git rev-parse --git-dir` command must be available in system PATH for repository validation
 - **Existing PAW Agent System**: Supervisor agents will use existing `paw_call_agent` tool to initialize child workflows and existing agent template rendering system
-- **WorkflowContext.md Format**: Child workflows use existing WorkflowContext.md structure; supervisor introduces new `SupervisorContext.md` format
+- **WorkflowContext.md Format**: Child workflows use existing WorkflowContext.md structure; supervisor introduces new `CrossRepoContext.md` format
 - **Existing Initialization Flow**: Cross-repository workflow extends existing `initializeWorkItem` command with new workflow type branch
 
 ## Risks & Mitigations

@@ -142,14 +142,9 @@ PAW supports two review strategies that determine how work is reviewed and integ
 
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:
 
-1. **Select workflow type** (Implementation, Cross-Repository, or Review)
-2. **Select workflow mode** (Full, Minimal, or Custom)
-3. **Select review strategy** (PRs or Local) - automatically set to Local for Minimal mode
-4. **Provide custom instructions** (if Custom mode selected) - describe which stages to include and review approach
-
-If you select **Cross-Repository** workflow type in a multi-root workspace, PAW may additionally prompt for:
-- A **storage root folder** (one of the workspace folders) where cross-repository coordinator artifacts will be stored under `.paw/multi-work/<work-id>/`. This folder does **not** need to be a git repository.
-- The set of **affected repositories** (workspace folders that are valid git repositories) that will receive child workflows.
+1. **Select workflow mode** (Full, Minimal, or Custom)
+2. **Select review strategy** (PRs or Local) - automatically set to Local for Minimal mode
+3. **Provide custom instructions** (if Custom mode selected) - describe which stages to include and review approach
 
 Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow. All agents read the workflow mode and review strategy at startup and adapt their behavior accordingly.
 
@@ -195,21 +190,6 @@ Agents will log an informational message when using default values to indicate t
     ImplementationPlan.md
     Docs.md
 ```
-
-## Cross-Repository Coordinator Artifacts (Multi-Root)
-
-When using a cross-repository workflow in a VS Code multi-root workspace, coordinator artifacts are stored under a **user-selected storage root folder** (any workspace folder; git not required):
-
-```
-.paw/multi-work/
-  <work-id>/
-    CrossRepoContext.md
-    CrossRepoSpec.md
-    CrossRepoPlan.md
-    ValidationReport.md
-```
-
-Child workflows remain standard PAW workflows created inside each selected git repository under `.paw/work/<work-id>/`.
 
 **Work ID**: Normalized, filesystem-safe identifier (also called a "slug" or "feature slug" internally) for workflow artifacts (e.g., "auth-system", "api-refactor-v2"). 
 Auto-generated from Work Title or issue title when not explicitly provided. Remains consistent across branch renames.

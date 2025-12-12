@@ -517,9 +517,9 @@ Create five cross-repository agents (PAW-M01A, PAW-M01B, PAW-M02A, PAW-M02B, PAW
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All agent files pass linting: `./scripts/lint-agent.sh agents/PAW-M*.agent.md`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Handoff tool unit tests pass
+- [x] All agent files pass linting: `./scripts/lint-agent.sh agents/PAW-M*.agent.md`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Handoff tool unit tests pass
 
 #### Manual Verification:
 - [ ] Each PAW-M## agent can be invoked via chat with agent mode
@@ -527,6 +527,42 @@ Create five cross-repository agents (PAW-M01A, PAW-M01B, PAW-M02A, PAW-M02B, PAW
 - [ ] Agent handoffs work correctly (M01A → M01B → M01A → M02A → M02B → M03)
 - [ ] Agents display context instructions when invoked
 - [ ] Cross-repository terminology used consistently throughout agent instructions
+
+### Phase 3 Implementation Complete
+
+**Status**: Phase 3 implementation complete. All automated verification passing.
+
+**Changes Completed**:
+- Created `agents/PAW-M01A Cross-Repo Spec.agent.md` (5091 tokens) - holistic specification agent for multi-repository features with CrossRepoSpec.md template
+- Created `agents/PAW-M01B Cross-Repo Spec Researcher.agent.md` (3465 tokens) - behavioral research across multiple repositories with CrossRepoSpecResearch.md artifact
+- Created `agents/PAW-M02A Cross-Repo Code Researcher.agent.md` (3964 tokens) - implementation research with file:line references across repositories, CrossRepoCodeResearch.md artifact
+- Created `agents/PAW-M02B Cross-Repo Impl Planner.agent.md` (4297 tokens) - execution sequencing with CrossRepoPlan.md including repository dependencies, context excerpts for child workflows, and initialization instructions
+- Created `agents/PAW-M03 Cross-Repo Validator.agent.md` (4797 tokens) - consistency checks, integration test guidance, merge order recommendations with ValidationReport.md artifact
+- Updated `src/tools/handoffTool.ts` AgentName type union to include all five PAW-M## agents
+
+**Agent Design Notes**:
+- All agents include `{{PAW_CONTEXT}}` and `{{HANDOFF_INSTRUCTIONS}}` component placeholders for consistency with standard PAW agents
+- Agents document CrossRepoContext.md fields specific to cross-repository workflows (Affected Repositories, Storage Root)
+- Each agent has clear artifact paths under `.paw/multi-work/<work-id>/`
+- PAW-M02B Impl Planner includes detailed context excerpt templates for child workflow initialization
+- PAW-M03 Validator provides structured validation report with Critical Issues vs Warnings distinction
+
+**Verification Results**:
+- ✅ Agent linting: All 5 agent files pass (`./scripts/lint-agent.sh`)
+  - PAW-M01A: 5091 tokens (warning threshold 5000, but acceptable)
+  - PAW-M01B: 3465 tokens
+  - PAW-M02A: 3964 tokens
+  - PAW-M02B: 4297 tokens
+  - PAW-M03: 4797 tokens
+- ✅ TypeScript compilation: Success (no errors)
+- ✅ Unit tests: 143 passing
+
+**Review Notes for Implementation Review Agent**:
+- Verify cross-repo agent naming convention (PAW-M##) is consistent
+- Check that artifact naming (CrossRepoSpec.md, CrossRepoPlan.md, etc.) is clear and discoverable
+- Review context excerpt template in PAW-M02B for completeness
+- Confirm handoff flow between cross-repo agents is documented clearly
+- Note: Cross-Repository Context Component (item 6) was marked optional in plan - functionality is embedded directly in each agent rather than as a separate component. This keeps agents self-contained.
 
 ---
 

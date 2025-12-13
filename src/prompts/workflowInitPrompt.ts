@@ -93,13 +93,6 @@ function loadPromptTemplate(): string {
 }
 
 /**
- * Load the cross-repository workflow context template.
- */
-function loadCrossRepoContextTemplate(): string {
-  return loadTemplate('crossRepoWorkflowContext.template.md');
-}
-
-/**
  * Load the branch auto-derivation template for when an issue URL is provided.
  */
 function loadBranchAutoDeriveWithIssueTemplate(): string {

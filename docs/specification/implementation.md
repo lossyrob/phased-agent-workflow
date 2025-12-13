@@ -127,8 +127,8 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 
 **Process:**
 
-1. PR Agent verifies all prerequisites are complete
-2. PR Agent crafts comprehensive PR description
+1. PR Agent verifies all prerequisites are complete (including open questions resolution)
+2. PR Agent crafts comprehensive PR description with decision audit trail
 3. PR Agent opens final PR
 4. Address any review comments (using Implementation Agents)
 5. Merge when approved

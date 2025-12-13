@@ -11,7 +11,6 @@ import {
   loadCustomInstructions,
   parseHandoffMode,
   getHandoffInstructions,
-  HandoffMode,
 } from '../../tools/contextTool';
 
 function createTempDir(prefix: string): string {
@@ -126,6 +125,118 @@ suite('Context Tool', () => {
     }
   });
 
+  suite('Cross-Repository Workflow Support', () => {
+    test('getContext loads CrossRepoContext.md from .paw/multi-work/', async () => {
+      const featureSlug = 'cross-repo-test';
+      const agentName = 'PAW-M01A Cross-Repo Spec';
+      const workspaceRoot = createTempDir('paw-multi-work-');
+      const tempHome = createTempDir('paw-ctx-home-');
+
+      try {
+        // Create cross-repository workflow structure
+        const crossRepoContextPath = path.join(workspaceRoot, '.paw', 'multi-work', featureSlug, 'CrossRepoContext.md');
+        writeFileRecursive(crossRepoContextPath, 'Work Title: Cross-Repo Feature\nWorkflow Type: Cross-Repository');
+
+        const restoreEnv = overrideEnv({
+          HOME: tempHome,
+          USERPROFILE: tempHome,
+          PAW_WORKSPACE_PATH: workspaceRoot,
+        });
+
+        try {
+          const result = await getContext({ feature_slug: featureSlug, agent_name: agentName });
+          assert.strictEqual(result.workflow_type, 'cross-repository');
+          assert.ok(result.workflow_context.content.includes('Cross-Repo Feature'));
+        } finally {
+          restoreEnv();
+        }
+      } finally {
+        fs.rmSync(workspaceRoot, { recursive: true, force: true });
+        fs.rmSync(tempHome, { recursive: true, force: true });
+      }
+    });
+
+    test('getContext prefers .paw/work/ over .paw/multi-work/ when both exist', async () => {
+      const featureSlug = 'dual-existence';
+      const agentName = 'PAW-Test Agent';
+      const workspaceRoot = createTempDir('paw-dual-');
+      const tempHome = createTempDir('paw-ctx-home-');
+
+      try {
+        // Create both directory structures
+        const standardPath = path.join(workspaceRoot, '.paw', 'work', featureSlug, 'WorkflowContext.md');
+        writeFileRecursive(standardPath, 'Work Title: Standard Workflow');
+
+        const crossRepoPath = path.join(workspaceRoot, '.paw', 'multi-work', featureSlug, 'CrossRepoContext.md');
+        writeFileRecursive(crossRepoPath, 'Work Title: Cross-Repo Workflow');
+
+        const restoreEnv = overrideEnv({
+          HOME: tempHome,
+          USERPROFILE: tempHome,
+          PAW_WORKSPACE_PATH: workspaceRoot,
+        });
+
+        try {
+          const result = await getContext({ feature_slug: featureSlug, agent_name: agentName });
+          // Should prefer standard workflow (.paw/work/)
+          assert.strictEqual(result.workflow_type, 'implementation');
+          assert.ok(result.workflow_context.content.includes('Standard Workflow'));
+        } finally {
+          restoreEnv();
+        }
+      } finally {
+        fs.rmSync(workspaceRoot, { recursive: true, force: true });
+        fs.rmSync(tempHome, { recursive: true, force: true });
+      }
+    });
+
+    test('error message mentions both .paw/work/ and .paw/multi-work/', async () => {
+      const workspaceRoot = createTempDir('paw-ctx-no-match-');
+      const restoreEnv = overrideEnv({ PAW_WORKSPACE_PATH: workspaceRoot });
+
+      try {
+        await assert.rejects(
+          async () => getContext({ feature_slug: 'non-existent-work', agent_name: 'PAW-Test' }),
+          /\.paw\/work\/non-existent-work\/.*\.paw\/multi-work\/non-existent-work\//
+        );
+      } finally {
+        restoreEnv();
+        fs.rmSync(workspaceRoot, { recursive: true, force: true });
+      }
+    });
+
+    test('formatContextResponse includes workflow_type tag', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const response = formatContextResponse({
+        workspace_instructions: status(''),
+        user_instructions: status(''),
+        workflow_context: status('Work Title: Test'),
+        workflow_type: 'cross-repository',
+      } satisfies ContextResult);
+
+      assert.ok(response.includes('<workflow_type>cross-repository</workflow_type>'));
+    });
+
+    test('workflow_type appears at beginning of response', () => {
+      const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+      const response = formatContextResponse({
+        workspace_instructions: status('Workspace content'),
+        user_instructions: status('User content'),
+        workflow_context: status('Work Title: Test'),
+        workflow_type: 'implementation',
+      } satisfies ContextResult);
+
+      const typeIndex = response.indexOf('<workflow_type>');
+      const workspaceIndex = response.indexOf('<workspace_instructions>');
+      const workflowIndex = response.indexOf('<workflow_context>');
+
+      assert.ok(typeIndex < workspaceIndex, 'workflow_type should come before workspace_instructions');
+      assert.ok(typeIndex < workflowIndex, 'workflow_type should come before workflow_context');
+    });
+  });
+
   test('formatContextResponse uses tagged sections and warning metadata', () => {
     const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
@@ -133,6 +244,7 @@ suite('Context Tool', () => {
       workspace_instructions: status('Workspace data'),
       user_instructions: status('', 'Failed to read user instructions: EACCES'),
       workflow_context: status('Work Title: Demo Feature'),
+      workflow_type: 'implementation',
     } satisfies ContextResult);
 
     assert.ok(response.includes('<workspace_instructions>'));
@@ -150,6 +262,7 @@ suite('Context Tool', () => {
       workspace_instructions: empty,
       user_instructions: empty,
       workflow_context: empty,
+      workflow_type: 'implementation',
     });
 
     assert.strictEqual(response, '<context status="empty" />');
@@ -624,6 +737,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
 
       assert.ok(response.includes('<handoff_instructions>'));
@@ -637,6 +751,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: auto'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
       assert.ok(autoResponse.includes('Auto Mode'));
 
@@ -644,6 +759,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: manual'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
       assert.ok(manualResponse.includes('Manual Mode'));
 
@@ -651,6 +767,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: semi-auto'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
       assert.ok(semiAutoResponse.includes('Semi-Auto Mode'));
     });
@@ -662,6 +779,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nTarget Branch: main'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
 
       assert.ok(response.includes('Manual Mode'));
@@ -675,6 +793,7 @@ Remote: origin`;
         workspace_instructions: status('Workspace instructions content'),
         user_instructions: status('User instructions content'),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        workflow_type: 'implementation',
       } satisfies ContextResult);
 
       const workspaceIndex = response.indexOf('<workspace_instructions>');
@@ -694,6 +813,7 @@ Remote: origin`;
         workspace_instructions: empty,
         user_instructions: empty,
         workflow_context: empty,
+        workflow_type: 'implementation',
       });
 
       assert.strictEqual(response, '<context status="empty" />');

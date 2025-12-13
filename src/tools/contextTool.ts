@@ -54,6 +54,11 @@ const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 export type HandoffMode = "manual" | "semi-auto" | "auto";
 
 /**
+ * Workflow type indicating whether this is a standard single-repo or cross-repo workflow.
+ */
+export type WorkflowType = "implementation" | "cross-repository";
+
+/**
  * Pattern to extract Handoff Mode from WorkflowContext.md content.
  * Matches "Handoff Mode: <mode>" on its own line, case-insensitive.
  */
@@ -90,8 +95,10 @@ export interface ContextResult {
   workspace_instructions: InstructionStatus;
   /** User-level custom instructions from ~/.paw/instructions/ */
   user_instructions: InstructionStatus;
-  /** Raw WorkflowContext.md content from .paw/work/<feature-slug>/ */
+  /** Raw WorkflowContext.md or CrossRepoContext.md content */
   workflow_context: InstructionStatus;
+  /** Type of workflow: 'implementation' for .paw/work/, 'cross-repository' for .paw/multi-work/ */
+  workflow_type: WorkflowType;
 }
 
 /**
@@ -222,11 +229,28 @@ export function loadCustomInstructions(directory: string, agentName: string): In
 }
 
 /**
+ * Result from resolving a workspace path for a Work ID.
+ */
+interface ResolvedWorkspacePath {
+  /** Absolute path to the workspace folder containing the Work ID */
+  workspacePath: string;
+  /** Absolute path to the feature directory (.paw/work/ or .paw/multi-work/) */
+  featureDir: string;
+  /** Type of workflow determined by which directory structure was found */
+  workflowType: WorkflowType;
+  /** Name of the context file to load (WorkflowContext.md or CrossRepoContext.md) */
+  contextFileName: string;
+}
+
+/**
  * Resolves the workspace path for a given Work ID (feature slug).
- * Searches all workspace folders for one containing .paw/work/<featureSlug>.
+ * Searches all workspace folders for one containing .paw/work/<featureSlug>
+ * (standard workflows) or .paw/multi-work/<featureSlug> (cross-repository workflows).
+ * 
+ * Standard workflows (.paw/work/) are checked first, then cross-repository workflows.
  * 
  * @param featureSlug - The Work ID (feature slug) to search for
- * @returns Workspace folder path and feature directory path
+ * @returns Workspace folder path, feature directory path, workflow type, and context file name
  * @throws Error if no workspace is open or Work ID directory doesn't exist
  */
 function getWorkspaceFolderPaths(): string[] {
@@ -250,17 +274,35 @@ function getWorkspaceFolderPaths(): string[] {
   return paths;
 }
 
-function resolveWorkspacePath(featureSlug: string): { workspacePath: string; featureDir: string } {
+function resolveWorkspacePath(featureSlug: string): ResolvedWorkspacePath {
   const folderPaths = getWorkspaceFolderPaths();
   if (folderPaths.length === 0) {
     throw new Error('Unable to determine workspace path: no workspace folder is currently open.');
   }
 
-  // Search for workspace containing the Work ID
+  // Search for workspace containing the Work ID - check standard workflows first
   for (const folderPath of folderPaths) {
-    const featureDir = path.join(folderPath, '.paw', 'work', featureSlug);
-    if (fs.existsSync(featureDir)) {
-      return { workspacePath: folderPath, featureDir };
+    const standardFeatureDir = path.join(folderPath, '.paw', 'work', featureSlug);
+    if (fs.existsSync(standardFeatureDir)) {
+      return {
+        workspacePath: folderPath,
+        featureDir: standardFeatureDir,
+        workflowType: 'implementation',
+        contextFileName: 'WorkflowContext.md',
+      };
+    }
+  }
+
+  // Check cross-repository workflows (.paw/multi-work/)
+  for (const folderPath of folderPaths) {
+    const crossRepoFeatureDir = path.join(folderPath, '.paw', 'multi-work', featureSlug);
+    if (fs.existsSync(crossRepoFeatureDir)) {
+      return {
+        workspacePath: folderPath,
+        featureDir: crossRepoFeatureDir,
+        workflowType: 'cross-repository',
+        contextFileName: 'CrossRepoContext.md',
+      };
     }
   }
 
@@ -268,7 +310,7 @@ function resolveWorkspacePath(featureSlug: string): { workspacePath: string; fea
   const workspacePaths = folderPaths.join(', ');
   throw new Error(
     `Work ID '${featureSlug}' not found in any workspace. ` +
-    `Expected directory .paw/work/${featureSlug}/ to exist in one of: ${workspacePaths}. ` +
+    `Expected directory .paw/work/${featureSlug}/ or .paw/multi-work/${featureSlug}/ to exist in one of: ${workspacePaths}. ` +
     `Please verify the Work ID is correct.`
   );
 }
@@ -309,10 +351,13 @@ function validateParams(params: ContextParams): { featureSlug: string; agentName
  * 
  * This function:
  * 1. Validates the Work ID (feature slug) format and agent name
- * 2. Verifies the Work ID directory (.paw/work/<work-id>/) exists
+ * 2. Verifies the Work ID directory exists (.paw/work/<work-id>/ or .paw/multi-work/<work-id>/)
  * 3. Loads workspace-specific custom instructions from .paw/instructions/
  * 4. Loads user-level custom instructions from ~/.paw/instructions/
- * 5. Loads raw WorkflowContext.md content from .paw/work/<work-id>/
+ * 5. Loads raw context file (WorkflowContext.md or CrossRepoContext.md)
+ * 
+ * Standard workflows are searched first (.paw/work/), then cross-repository workflows
+ * (.paw/multi-work/). The workflow type is determined by which directory exists.
  * 
  * Missing instruction files are handled gracefully and returned with exists=false.
  * However, if the Work ID directory itself doesn't exist, an error is thrown
@@ -327,11 +372,12 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
   const { featureSlug, agentName } = validateParams(params);
 
   // Validate that Work ID directory exists - throws error if not found
-  const { workspacePath, featureDir } = resolveWorkspacePath(featureSlug);
+  // Checks .paw/work/ first (standard), then .paw/multi-work/ (cross-repository)
+  const { workspacePath, featureDir, workflowType, contextFileName } = resolveWorkspacePath(featureSlug);
 
   const workspaceInstructionsDir = path.join(workspacePath, '.paw', 'instructions');
   const userInstructionsDir = path.join(os.homedir(), '.paw', 'instructions');
-  const workflowContextPath = path.join(featureDir, 'WorkflowContext.md');
+  const workflowContextPath = path.join(featureDir, contextFileName);
 
   const workspaceInstructions = loadCustomInstructions(workspaceInstructionsDir, agentName);
   const userInstructions = loadCustomInstructions(userInstructionsDir, agentName);
@@ -341,6 +387,7 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
     workspace_instructions: workspaceInstructions,
     user_instructions: userInstructions,
     workflow_context: workflowContext,
+    workflow_type: workflowType,
   };
 }
 
@@ -376,6 +423,7 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * suitable for agent consumption.
  * 
  * The formatted response is purely structural data:
+ * - Workflow type wrapped in `<workflow_type>` (implementation or cross-repository)
  * - Workspace custom instructions wrapped in `<workspace_instructions>`
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
@@ -397,6 +445,9 @@ export function formatContextResponse(result: ContextResult): string {
   }
 
   const sections: string[] = [];
+
+  // Add workflow type at the beginning for agent awareness
+  sections.push(`<workflow_type>${result.workflow_type}</workflow_type>`);
 
   const workspaceSection = formatInstructionSection('workspace_instructions', result.workspace_instructions);
   if (workspaceSection) {

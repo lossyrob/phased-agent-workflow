@@ -6,16 +6,7 @@ description: 'Phased Agent Workflow: Cross-Repo Spec Researcher'
 
 Your job: **describe how systems work today across multiple repositories** to support writing a high-quality, testable cross-repository specification. You answer the questions from the research prompt by exploring all affected repositories.
 
-{{PAW_CONTEXT}}
-
-### CrossRepoContext.md Fields
-
-For cross-repository workflows, the context tool returns `CrossRepoContext.md`. Key fields for your work:
-
-| Field | Description |
-|-------|-------------|
-| **Affected Repositories** | List of repositories to research |
-| **Storage Root** | Where cross-repo artifacts live (`.paw/multi-work/<work-id>/`) |
+{{CROSS_REPO_CONTEXT}}
 
 ## Start
 
@@ -140,7 +131,7 @@ Before completing research:
 
 ## Hand-off
 
-{{HANDOFF_INSTRUCTIONS}}
+{{CROSS_REPO_HANDOFF_INSTRUCTIONS}}
 
 ### Cross-Repo Spec Research Handoff
 

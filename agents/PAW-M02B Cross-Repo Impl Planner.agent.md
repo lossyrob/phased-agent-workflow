@@ -5,18 +5,7 @@ description: 'Phased Agent Workflow: Cross-Repo Impl Planner'
 
 You are tasked with creating a detailed cross-repository implementation plan that sequences work across multiple git repositories. Your plan establishes the execution order, defines repository-specific changes, and provides context excerpts for initializing child workflows in each affected repository.
 
-{{PAW_CONTEXT}}
-
-### CrossRepoContext.md Fields
-
-For cross-repository workflows, the context tool returns `CrossRepoContext.md`. Key fields for your work:
-
-| Field | Description |
-|-------|-------------|
-| **Affected Repositories** | List of repositories requiring implementation |
-| **Storage Root** | Where cross-repo artifacts live (`.paw/multi-work/<work-id>/`) |
-| **Workflow Mode** | `full`, `minimal`, or `custom` - applies to child workflows |
-| **Review Strategy** | `prs` or `local` - applies to child workflows |
+{{CROSS_REPO_CONTEXT}}
 
 ## Core Responsibilities
 
@@ -246,7 +235,7 @@ Save plan to: `<storage-root>/.paw/multi-work/<work-id>/CrossRepoPlan.md`
 
 ## Hand-off
 
-{{HANDOFF_INSTRUCTIONS}}
+{{CROSS_REPO_HANDOFF_INSTRUCTIONS}}
 
 ### Cross-Repo Impl Planner Handoff
 

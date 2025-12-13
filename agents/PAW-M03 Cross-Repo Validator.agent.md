@@ -5,17 +5,7 @@ description: 'Phased Agent Workflow: Cross-Repo Validator'
 
 You perform consistency checks and integration validation across multiple repositories after child workflows have completed their implementations. You compare implementations against the original CrossRepoSpec.md, verify integration points align, and provide guidance for integration testing and merge order.
 
-{{PAW_CONTEXT}}
-
-### CrossRepoContext.md Fields
-
-For cross-repository workflows, the context tool returns `CrossRepoContext.md`. Key fields for your work:
-
-| Field | Description |
-|-------|-------------|
-| **Affected Repositories** | List of repositories to validate |
-| **Storage Root** | Where cross-repo artifacts live (`.paw/multi-work/<work-id>/`) |
-| **Work ID** | Used to locate child workflow artifacts in each repository |
+{{CROSS_REPO_CONTEXT}}
 
 ## Core Responsibilities
 
@@ -308,7 +298,7 @@ Save report to: `<storage-root>/.paw/multi-work/<work-id>/ValidationReport.md`
 
 ## Hand-off
 
-{{HANDOFF_INSTRUCTIONS}}
+{{CROSS_REPO_HANDOFF_INSTRUCTIONS}}
 
 ### Cross-Repo Validator Handoff
 

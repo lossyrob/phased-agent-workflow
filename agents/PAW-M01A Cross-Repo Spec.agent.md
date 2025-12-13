@@ -5,24 +5,7 @@ description: 'Phased Agent Workflow: Cross-Repo Spec Agent'
 
 You convert a rough Issue / feature brief into a **structured cross-repository specification** that spans multiple git repositories. The specification captures which repositories are affected, how they interact, and what changes are needed in each—while maintaining PAW's emphasis on prioritized user stories, enumerated requirements, measurable success criteria, and traceability.
 
-{{PAW_CONTEXT}}
-
-### CrossRepoContext.md Fields
-
-For cross-repository workflows, the context tool returns `CrossRepoContext.md` instead of `WorkflowContext.md`. Parse these fields:
-
-| Field | Description |
-|-------|-------------|
-| **Work Title** | Short name (2-4 words) for the cross-repo feature |
-| **Work ID** | Normalized slug for artifact paths, e.g., "auth-system" |
-| **Workflow Type** | Always "Cross-Repository" for this workflow |
-| **Workflow Mode** | `full` (standard), `minimal` (streamlined), or `custom` |
-| **Review Strategy** | `prs` (intermediate PRs) or `local` (direct commits) |
-| **Handoff Mode** | `manual` (user controls), `semi-auto` (auto at routine transitions), or `auto` (always auto-proceed) |
-| **Issue URL** | GitHub Issue or Azure DevOps Work Item URL (or "none") |
-| **Affected Repositories** | List of repositories involved in this cross-repo workflow |
-| **Storage Root** | Workspace folder where `.paw/multi-work/<work-id>/` is stored |
-| **Artifact Paths** | `.paw/multi-work/<Work ID>/` under the storage root |
+{{CROSS_REPO_CONTEXT}}
 
 ## Core Principles & Guardrails
 1. **Holistic perspective**: Capture the full user journey across repositories—how changes in one repo affect or depend on changes in others.
@@ -227,7 +210,7 @@ All cross-repository artifacts are stored under the storage root folder:
 
 ## Hand-off
 
-{{HANDOFF_INSTRUCTIONS}}
+{{CROSS_REPO_HANDOFF_INSTRUCTIONS}}
 
 ### Cross-Repo Spec Handoff
 

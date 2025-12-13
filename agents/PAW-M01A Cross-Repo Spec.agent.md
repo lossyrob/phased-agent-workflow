@@ -19,6 +19,33 @@ You convert a rough Issue / feature brief into a **structured cross-repository s
 
 > You DO NOT commit, push, open PRs, update Issues, or perform status synchronization. Your outputs are *draft content* provided to the human, AND/OR a prompt file written to disk. The Cross-Repo Impl Planner (PAW-M02B) handles execution sequencing.
 
+## Directory Structure Verification
+
+Before starting work, verify the cross-repository workflow directory structure exists:
+
+**Expected Structure** (at the Storage Root from CrossRepoContext.md):
+```
+<Storage Root>/.paw/multi-work/<work-id>/
+├── CrossRepoContext.md
+└── prompts/
+```
+
+**Verification Steps**:
+1. Call `paw_get_context` to load CrossRepoContext.md
+2. Parse the Storage Root field from the context
+3. Verify `.paw/multi-work/<work-id>/` exists at the storage root
+
+**If directory doesn't exist**:
+- The workflow was not properly initialized
+- Inform the user: "Cross-repository workflow directory not found. Please run PAW initialization first to create the workflow structure."
+- Do NOT create the directory yourself (initialization handles this)
+
+**If CrossRepoContext.md is missing required fields**:
+- Required fields: Work ID, Storage Root, Affected Repositories, Workflow Mode, Review Strategy, Handoff Mode
+- Stop and ask user to verify the workflow was initialized correctly
+
+**Important**: The storage root folder does NOT need to be a git repository. Cross-repo coordinator artifacts are stored separately from individual repository `.paw/work/` directories.
+
 ## Start / Initial Response
 
 After calling `paw_get_context` (see PAW Context section above), check for existing artifacts and gather inputs:

@@ -49,43 +49,44 @@ Generate a normalized slug from the Work Title:
 
 ### 3. Create Directory Structure
 
-If **Workflow Type** is **cross-repository**:
+**For implementation or review workflows:**
 
-- Use the selected **Storage Root** as the base folder for coordinator artifacts.
-- Coordinator artifacts should live under: `<Storage Root>/.paw/multi-work/<feature-slug>/`.
-- Child workflows (per repository) continue to use each repository's `.paw/work/<feature-slug>/`.
-
-Create the following structure:
-
+Create the following structure at workspace root:
 ```
 .paw/work/<feature-slug>/
 ├── WorkflowContext.md
 └── prompts/
 ```
 
-### 4. Generate WorkflowContext.md
+**For cross-repository workflows:**
 
-Create `.paw/work/<feature-slug>/WorkflowContext.md`:
-
-```markdown
-# WorkflowContext
-
-Work Title: <generated_work_title>
-Feature Slug: <generated_feature_slug>
-Target Branch: {{TARGET_BRANCH}}
-Workflow Mode: {{WORKFLOW_MODE}}
-Review Strategy: {{REVIEW_STRATEGY}}
-Handoff Mode: {{HANDOFF_MODE}}
-{{CUSTOM_INSTRUCTIONS_FIELD}}{{INITIAL_PROMPT_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
-Remote: origin
-Artifact Paths: auto-derived
-Additional Inputs: none
+Use the selected **Storage Root** as the base folder for coordinator artifacts:
 ```
+<Storage Root>/.paw/multi-work/<feature-slug>/
+├── CrossRepoContext.md
+└── prompts/
+```
+
+**Important for cross-repository**: The coordinator artifacts live in `.paw/multi-work/` (not `.paw/work/`). Child workflows (per repository) will use each repository's `.paw/work/<feature-slug>/` directories later.
+
+**Uniqueness Check:**
+- For standard workflows: Verify `.paw/work/<slug>/` doesn't exist
+- For cross-repository: Verify `<Storage Root>/.paw/multi-work/<slug>/` doesn't exist
+- If conflict, append -2, -3, etc. until unique
+
+### 4. Generate Context File
+
+**For implementation or review workflows**, create `.paw/work/<feature-slug>/WorkflowContext.md`:
+
+**For cross-repository workflows**, create `<Storage Root>/.paw/multi-work/<feature-slug>/CrossRepoContext.md`:
+
+{{CONTEXT_FILE_TEMPLATE}}
 
 **Field Definitions:**
 
 - **Work Title** (Required): 2-4 word human-readable name for PR titles
-- **Feature Slug** (Required): Normalized identifier for artifact directory
+- **Feature Slug** / **Work ID** (Required): Normalized identifier for artifact directory
+- **Workflow Type** (Cross-repository only): Always "Cross-Repository" for cross-repo workflows
 - **Target Branch** (Required): Git branch that will hold completed work
 - **Workflow Mode** (Required): Workflow mode selection ('full', 'minimal', or 'custom')
 - **Review Strategy** (Required): Review strategy ('prs' or 'local')
@@ -93,6 +94,8 @@ Additional Inputs: none
 - **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
 - **Initial Prompt** (Optional): User's work description when no issue URL provided
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"
+- **Storage Root** (Cross-repository only): Workspace folder containing `.paw/multi-work/`
+- **Affected Repositories** (Cross-repository only): List of repositories involved in cross-repo workflow
 - **Remote** (Required): Git remote name (default: "origin")
 - **Artifact Paths** (Required): Location hint for artifacts (default: "auto-derived")
 - **Additional Inputs** (Optional): Comma-separated extra inputs, or "none"
@@ -111,19 +114,29 @@ Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflic
 **If Branch Mode is "auto-derive":**
 Use the branch name derived from the steps above. Create and checkout the derived branch. If conflicts exist with existing branches, append a suffix (-2, -3, etc.) or prompt user for resolution.
 
-### 7. Commit WorkflowContext.md
+### 7. Commit Context File
 
-After creating the workflow structure and checking out the target branch, commit the WorkflowContext.md file:
+After creating the workflow structure and checking out the target branch, commit the context file:
 
-1. Stage the WorkflowContext.md file: `git add .paw/work/<feature-slug>/WorkflowContext.md`
+**For implementation or review workflows:**
+1. Stage the file: `git add .paw/work/<feature-slug>/WorkflowContext.md`
 2. Create an initial commit with message: `Initialize PAW workflow for <Work Title>`
 
-This ensures the workflow context is tracked in version control from the start.
+**For cross-repository workflows:**
+- Note: The storage root folder may not be a git repository. Only commit if the storage root is inside a git repository.
+- If in a git repo, stage: `git add .paw/multi-work/<feature-slug>/CrossRepoContext.md`
+- Create an initial commit with message: `Initialize PAW cross-repo workflow for <Work Title>`
+- If not in a git repo, skip the commit step and inform the user that CrossRepoContext.md is created but not version controlled.
 
-### 8. Open WorkflowContext.md
+This ensures the workflow context is tracked in version control from the start (when applicable).
 
+### 8. Open Context File
 
+**For implementation or review workflows:**
 Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
+
+**For cross-repository workflows:**
+Open `<Storage Root>/.paw/multi-work/<feature-slug>/CrossRepoContext.md` in the editor for review.
 
 ## Error Handling
 
@@ -137,15 +150,23 @@ Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.
 
 Begin initialization now. After completion, inform the user:
 
+**For implementation or review workflows:**
 1. **Workflow structure created** at `.paw/work/<feature-slug>/`
 2. **WorkflowContext.md ready** for review and editing
-3. **Prompt files available on-demand**: Use `paw_generate_prompt` to create customizable prompt files when needed
-4. **Next step**: Based on workflow type and mode, tell the user what command or action to take:
-   - **Implementation workflow (Full mode)**: Say `spec` to start the specification stage with the Spec Agent
-   - **Implementation workflow (Minimal mode)**: Say `research` to start code research with the Code Research Agent
-   - **Implementation workflow (Custom mode)**: Describe the appropriate first step based on custom instructions
-   - **Cross-Repository workflow**: Say `spec` to start with the Cross-Repo Spec Agent
-   - **Review workflow**: Say `review` to start the review process
+
+**For cross-repository workflows:**
+1. **Workflow structure created** at `<Storage Root>/.paw/multi-work/<feature-slug>/`
+2. **CrossRepoContext.md ready** for review and editing
+3. **Affected repositories**: List the selected repositories
+
+**For all workflows:**
+- **Prompt files available on-demand**: Use `paw_generate_prompt` to create customizable prompt files when needed
+- **Next step**: Based on workflow type and mode, tell the user what command or action to take:
+  - **Implementation workflow (Full mode)**: Say `spec` to start the specification stage with the Spec Agent
+  - **Implementation workflow (Minimal mode)**: Say `research` to start code research with the Code Research Agent
+  - **Implementation workflow (Custom mode)**: Describe the appropriate first step based on custom instructions
+  - **Cross-Repository workflow**: Say `spec` to start with the Cross-Repo Spec Agent
+  - **Review workflow**: Say `review` to start the review process
 
 Tell the user they can say `continue` to immediately start the first stage, or use the specific command shown above. Mention that `status` or `help` is available at any time, and `generate prompt for <stage>` creates a customizable prompt file if needed.
 

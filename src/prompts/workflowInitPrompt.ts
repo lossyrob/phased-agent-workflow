@@ -57,6 +57,8 @@ interface PromptVariables {
   INITIAL_PROMPT_FIELD: string;
   /** Affected repositories list for cross-repository workflows (formatted markdown) */
   AFFECTED_REPOSITORIES: string;
+  /** Context file template content (WorkflowContext.md or CrossRepoContext.md based on workflow type) */
+  CONTEXT_FILE_TEMPLATE: string;
 }
 
 /**
@@ -88,6 +90,13 @@ function loadTemplate(filename: string): string {
  */
 function loadPromptTemplate(): string {
   return loadTemplate('workItemInitPrompt.template.md');
+}
+
+/**
+ * Load the cross-repository workflow context template.
+ */
+function loadCrossRepoContextTemplate(): string {
+  return loadTemplate('crossRepoWorkflowContext.template.md');
 }
 
 /**
@@ -192,6 +201,94 @@ function formatStorageRoot(workflowType: WorkflowType, storageRoot: StorageRootS
 }
 
 /**
+ * Format affected repositories for context file content.
+ * 
+ * @param repositories - Array of selected repositories, or undefined
+ * @returns Formatted repository list for CrossRepoContext.md
+ */
+function formatAffectedRepositoriesForContext(repositories: RepositorySelection[] | undefined): string {
+  if (!repositories || repositories.length === 0) {
+    return '';
+  }
+
+  return repositories.map(r => `  - ${r.name} (${r.path})`).join('\n');
+}
+
+/**
+ * Build the context file template content based on workflow type.
+ * 
+ * For standard workflows (implementation/review), returns WorkflowContext.md template.
+ * For cross-repository workflows, returns CrossRepoContext.md template.
+ * 
+ * @param workflowType - The workflow type
+ * @param targetBranch - The git branch name
+ * @param workflowMode - Workflow mode selection
+ * @param reviewStrategy - Review strategy
+ * @param handoffMode - Handoff mode
+ * @param issueUrl - Optional issue URL
+ * @param customInstructionsField - Custom workflow instructions field
+ * @param initialPromptField - Initial prompt field
+ * @param affectedRepositories - Optional repositories for cross-repo workflows
+ * @param storageRoot - Optional storage root for cross-repo workflows
+ * @returns Markdown template for the context file
+ */
+function buildContextFileTemplate(
+  workflowType: WorkflowType,
+  targetBranch: string,
+  workflowMode: WorkflowModeSelection,
+  reviewStrategy: ReviewStrategy,
+  handoffMode: HandoffMode,
+  issueUrl: string | undefined,
+  customInstructionsField: string,
+  initialPromptField: string,
+  affectedRepositories?: RepositorySelection[],
+  storageRoot?: StorageRootSelection
+): string {
+  const issueUrlField = issueUrl || 'none';
+  // Use 'auto' for empty branch to match the TARGET_BRANCH variable in the main prompt
+  const resolvedBranch = targetBranch.trim() === '' ? 'auto' : targetBranch;
+
+  if (workflowType === 'cross-repository') {
+    // Build CrossRepoContext.md template
+    const storageRootDisplay = storageRoot ? storageRoot.path : '<storage-root>';
+    const reposForContext = formatAffectedRepositoriesForContext(affectedRepositories);
+    
+    return `\`\`\`markdown
+# CrossRepoContext
+
+Work Title: <generated_work_title>
+Work ID: <generated_feature_slug>
+Workflow Type: Cross-Repository
+Workflow Mode: ${workflowMode.mode}
+Review Strategy: ${reviewStrategy}
+Handoff Mode: ${handoffMode}
+Issue URL: ${issueUrlField}
+Storage Root: ${storageRootDisplay}
+Affected Repositories:
+${reposForContext}
+Artifact Paths: .paw/multi-work/<feature-slug>/
+Additional Inputs: none
+\`\`\``;
+  }
+
+  // Build WorkflowContext.md template for implementation/review workflows
+  return `\`\`\`markdown
+# WorkflowContext
+
+Work Title: <generated_work_title>
+Feature Slug: <generated_feature_slug>
+Target Branch: ${resolvedBranch}
+Workflow Mode: ${workflowMode.mode}
+Review Strategy: ${reviewStrategy}
+Handoff Mode: ${handoffMode}
+${customInstructionsField}${initialPromptField}Issue URL: ${issueUrlField}
+Remote: origin
+Artifact Paths: auto-derived
+Additional Inputs: none
+\`\`\``;
+}
+
+/**
  * Construct the agent prompt that instructs the Copilot agent how to initialize the workflow.
  * 
  * @param workflowType - The workflow type (implementation, cross-repository, or review)
@@ -271,6 +368,21 @@ export function constructAgentPrompt(
   const initialPromptFieldContent = !issueUrl
     ? 'Initial Prompt: <user_work_description>\n'
     : '';
+
+  // Build context file template based on workflow type
+  // Cross-repository workflows use CrossRepoContext.md, others use WorkflowContext.md
+  const contextFileTemplateContent = buildContextFileTemplate(
+    workflowType,
+    targetBranch,
+    workflowMode,
+    reviewStrategy,
+    handoffMode,
+    issueUrl,
+    customWorkflowInstructionsField,
+    initialPromptFieldContent,
+    affectedRepositories,
+    storageRoot
+  );
   
   // Prepare template variables for substitution
   const variables: PromptVariables = {
@@ -292,7 +404,8 @@ export function constructAgentPrompt(
     BRANCH_AUTO_DERIVE_SECTION: branchAutoDeriveSectionContent,
     WORK_DESCRIPTION_SECTION: workDescriptionSectionContent,
     INITIAL_PROMPT_FIELD: initialPromptFieldContent,
-    AFFECTED_REPOSITORIES: formatAffectedRepositories(affectedRepositories)
+    AFFECTED_REPOSITORIES: formatAffectedRepositories(affectedRepositories),
+    CONTEXT_FILE_TEMPLATE: contextFileTemplateContent
   };
   
   // Load template and substitute variables

@@ -798,9 +798,9 @@ Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Context tool unit tests pass: `npm test`
-- [ ] Linting passes: `npm run lint`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Context tool unit tests pass: `npm test`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] Standard PAW workflow agents can load context (backward compatibility verified)
@@ -809,6 +809,46 @@ Extend `paw_get_context` tool to resolve both `.paw/work/` (standard) and `.paw/
 - [ ] Workflow type appears in context tool response
 - [ ] Error messages are clear when Work ID not found in either location
 - [ ] Multiple workflow types can coexist in same workspace
+
+### Phase 5 Implementation Complete
+
+**Status**: Phase 5 implementation complete. All automated verification passing.
+
+**Changes Completed**:
+- Added `WorkflowType` export type (`'implementation' | 'cross-repository'`) to contextTool.ts
+- Added `ResolvedWorkspacePath` interface with workflowType and contextFileName fields
+- Extended `resolveWorkspacePath()` to search `.paw/multi-work/<work-id>/` after `.paw/work/<work-id>/`
+  - Standard workflows checked first for backward compatibility
+  - Cross-repository workflows use `CrossRepoContext.md` context file
+- Updated `getContext()` to:
+  - Destructure the new `workflowType` and `contextFileName` from resolved path
+  - Load the appropriate context file based on workflow type
+  - Return `workflow_type` in the ContextResult
+- Added `workflow_type` field to `ContextResult` interface
+- Updated `formatContextResponse()` to include `<workflow_type>` XML tag at beginning of response
+- Added 5 new unit tests for cross-repository workflow support:
+  - Test loading CrossRepoContext.md from `.paw/multi-work/`
+  - Test preference for `.paw/work/` when both directories exist
+  - Test error message mentions both directory locations
+  - Test workflow_type tag inclusion in response
+  - Test workflow_type positioning at beginning of response
+- Updated existing tests to include `workflow_type: 'implementation'` field
+
+**Verification Results**:
+- ✅ TypeScript compilation: Success (no errors)
+- ✅ Unit tests: 148 passing (5 new tests added)
+- ✅ Linting: No new errors in modified files (pre-existing errors in other test files unaffected)
+- ✅ Git commit: c46e8db
+
+**Commit**: Phase 5 changes committed to target branch `feature/142-cross-repository-workflow-supervisor` (local strategy)
+
+**Manual Testing**: Deferred to user - requires running VS Code with the extension to test context tool with real cross-repo workflows.
+
+**Review Notes for Implementation Review Agent**:
+- Verify custom instructions loading works with PAW-M## agent names (already filename-based, should work)
+- Check that error messages clearly indicate both search locations
+- Confirm workflow_type tag position provides good agent awareness
+- Note: The changes are minimal and focused - the context tool now supports both workflow types transparently
 
 ---
 

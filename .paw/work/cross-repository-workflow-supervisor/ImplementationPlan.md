@@ -683,9 +683,9 @@ Implement `.paw/multi-work/<work-id>/` directory structure and CrossRepoContext.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Template files load correctly: verify in unit tests
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Prompt construction unit tests pass
+- [x] Template files load correctly: verify in unit tests
+- [x] TypeScript compiles: `npm run compile`
+- [x] Prompt construction unit tests pass
 
 #### Manual Verification:
 - [ ] PAW-M01A agent creates `.paw/multi-work/<work-id>/` at workspace root
@@ -693,6 +693,43 @@ Implement `.paw/multi-work/<work-id>/` directory structure and CrossRepoContext.
 - [ ] Directory is not created inside any git repository
 - [ ] Multiple cross-repository workflows can coexist (different work IDs)
 - [ ] Artifacts directory structure matches `.paw/work/` structure conventions
+
+### Phase 4 Implementation Complete
+
+**Status**: Phase 4 implementation complete. All automated verification passing.
+
+**Changes Completed**:
+- Created `src/prompts/crossRepoWorkflowContext.template.md` - Template for CrossRepoContext.md with all required fields (Work Title, Work ID, Workflow Type, Workflow Mode, Review Strategy, Handoff Mode, Issue URL, Storage Root, Affected Repositories, Artifact Paths)
+- Updated `src/prompts/workItemInitPrompt.template.md`:
+  - Added conditional directory structure instructions for cross-repository vs standard workflows
+  - Added `{{CONTEXT_FILE_TEMPLATE}}` variable for dynamic context file content
+  - Updated commit instructions to handle non-git storage root scenarios
+  - Enhanced completion messages with cross-repo specific information
+- Updated `src/prompts/workflowInitPrompt.ts`:
+  - Added `CONTEXT_FILE_TEMPLATE` to `PromptVariables` interface
+  - Added `loadCrossRepoContextTemplate()` function following existing template loading pattern
+  - Added `formatAffectedRepositoriesForContext()` helper for formatting repos in context file
+  - Added `buildContextFileTemplate()` function that generates WorkflowContext.md or CrossRepoContext.md content based on workflow type
+  - Updated variable construction to include the context file template
+- Updated `agents/PAW-M01A Cross-Repo Spec.agent.md`:
+  - Added "Directory Structure Verification" section with expected structure, verification steps, and error handling
+  - Clarified that storage root does NOT need to be a git repository
+
+**Verification Results**:
+- ✅ TypeScript compilation: Success (no errors)
+- ✅ Unit tests: 143 passing
+- ✅ Agent linting: PAW-M01A passes (4847 tokens)
+- ✅ Git commit: 673cb7d
+
+**Commit**: Phase 4 changes committed to target branch `feature/142-cross-repository-workflow-supervisor` (local strategy)
+
+**Manual Testing**: Deferred to user - requires VS Code Extension Host environment to test cross-repository initialization flow.
+
+**Review Notes for Implementation Review Agent**:
+- Verify CrossRepoContext.md template includes all fields documented in cross-repo context component
+- Check that buildContextFileTemplate() correctly generates both WorkflowContext.md and CrossRepoContext.md variants
+- Confirm initialization prompt properly guides agent to create correct directory structure based on workflow type
+- Note: The crossRepoWorkflowContext.template.md file is loaded but currently serves as documentation - the actual template content is built dynamically in buildContextFileTemplate() for flexibility
 
 ---
 

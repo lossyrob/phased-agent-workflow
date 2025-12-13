@@ -142,6 +142,34 @@ Before creating the PR, verify the following and report status:
 - [ ] Latest build passes on target branch
 - [ ] All tests passing
 
+### 6. Open Questions Resolved
+- [ ] SpecResearch.md `## Open Unknowns` reviewed and resolutions identified
+- [ ] CodeResearch.md `## Open Questions` reviewed and resolutions identified
+- [ ] Spec.md `## Assumptions` documented (assumptions are resolved decisions)
+- [ ] ImplementationPlan.md `## Open Questions` is empty or "None" (Guideline 6 compliance)
+- [ ] All questions mapped to resolution or flagged for user input
+
+**Extraction Instructions:**
+For each existing artifact, find the relevant section header and extract content until the next `##` heading:
+- SpecResearch.md: `## Open Unknowns` — unanswered internal questions
+- CodeResearch.md: `## Open Questions` — technical implementation questions
+- Spec.md: `## Assumptions` — documented design decisions (these ARE the resolutions)
+- ImplementationPlan.md: `## Open Questions` — should be empty/None per Guideline 6
+
+**Resolution Mapping:**
+- Questions from SpecResearch should be resolved in Spec.md Assumptions or via explicit clarification
+- Questions from CodeResearch should be resolved in ImplementationPlan decisions or implementation (file:line)
+- If ImplementationPlan has open questions, flag as incomplete plan
+
+**Unresolved Questions Handling:**
+If a question cannot be mapped to a resolution:
+1. Report the unresolved question with source artifact and full context
+2. Provide a recommendation (suggest resolution approach or explicit deferral)
+3. Block PR creation until user provides resolution or deferral explanation
+4. Include user-provided explanation in the Open Questions Resolution section
+
+**Note:** Out-of-scope items (`## Scope` → `Out of Scope:`, `## What We're NOT Doing`) are resolved decisions, NOT uncertainties. Do not include them as open questions.
+
 If checks fail, report status and recommendations. If the user explicitly confirms to proceed, continue with PR creation.
 
 ## PR Description Template
@@ -194,6 +222,22 @@ Read Work ID from WorkflowContext.md and substitute into <feature-slug> placehol
 [List Spec.md acceptance criteria with completion status]
 - [ ] AC-001: [criterion] - ✅ Complete
 - [ ] AC-002: [criterion] - ✅ Complete
+
+## Open Questions Resolution
+[Document how uncertainties raised during the workflow were resolved]
+
+### From SpecResearch.md (Open Unknowns)
+- **[Question summary]**: [Resolution] — [Implementation reference or "Documented in Spec.md Assumptions"]
+
+### From CodeResearch.md (Open Questions)
+- **[Question summary]**: [Resolution] — [Implementation reference file:line]
+
+### From Spec.md (Assumptions)
+[List key assumptions that represent design decisions]
+- [Assumption]: [Rationale summary]
+
+*If no open questions were raised in any artifact, state: "No open questions were raised during the workflow."*
+*If questions remain unresolved, document the deferral explanation provided during pre-flight checks.*
 
 ## Deployment Considerations
 [Any deployment notes, migration steps, rollout considerations]
@@ -263,6 +307,9 @@ Before creating PR:
 - [ ] All phase PR links included
 - [ ] Acceptance criteria mapped to completion
 - [ ] Breaking changes documented (or "None" stated)
+- [ ] Open Questions Resolution section included in PR description
+- [ ] All questions from research artifacts have documented resolutions
+- [ ] Any unresolved questions have user-provided deferral explanations
 
 ## Recommended Conditions
 

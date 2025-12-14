@@ -66,4 +66,5 @@ Each phase produces durable artifacts that feed the next, ensuring nothing falls
 
 - [Workflow Modes](workflow-modes.md) — Learn about Full, Minimal, and Custom modes
 - [Two Workflows](two-workflows.md) — Understand Implementation vs Review workflows
+- [Documentation Survey](documenter-survey.md) — How the Documenter integrates with your docs
 - [Specification](../specification/index.md) — Deep dive into the PAW specification

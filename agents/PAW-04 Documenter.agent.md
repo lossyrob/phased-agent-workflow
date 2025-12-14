@@ -111,7 +111,14 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Understand feature architecture and design decisions
    - Identify user-facing and technical aspects to document
 
-3. **Create comprehensive Docs.md**:
+3. **Survey documentation structure**:
+   - Check repo root for framework configs: `mkdocs.yml` (MkDocs), `docusaurus.config.js` (Docusaurus), `.vuepress/` (VuePress), `conf.py` (Sphinx), `_config.yml` (Jekyll)
+   - If framework found: identify docs directory, explore subdirectories (guide/, reference/), check nav config
+   - If no framework: check for plain `docs/` with .md files; empty = no structured docs
+   - Record findings: Framework, Docs directory, Organization, Guide directory, Navigation config
+   - Findings inform step 4 (Docs.md) and step 5 (project updates)
+
+4. **Create comprehensive Docs.md**:
    - Write detailed documentation covering:
      - Overview of what was implemented and why
      - Architecture and design decisions
@@ -124,7 +131,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Include working code examples and usage patterns
    - Document edge cases and limitations
 
-4. **Update project documentation**:
+5. **Update project documentation**:
    - Update README for new features (summarized from Docs.md)
    - Add CHANGELOG entries
    - Refresh API documentation (based on Docs.md)
@@ -140,14 +147,14 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - **API docs**: Follow existing API documentation format and level of detail exactly.
    - When in doubt, be MORE concise in project docs - Docs.md is where detail lives
 
-5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
+6. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
 
-   **Step 5.1: Read Review Strategy** (REQUIRED FIRST):
+   **Step 6.1: Read Review Strategy** (REQUIRED FIRST):
    - Read WorkflowContext.md to extract Review Strategy field
    - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
    - Set strategy variable: `<prs or local>`
 
-   **Step 5.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
+   **Step 6.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
    - Check current branch: `git branch --show-current`
    - If not on docs branch `<target>_docs`:
      - Create and checkout: `git checkout -b <target>_docs`
@@ -164,7 +171,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
      - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review of Docs PR
 
-   **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
+   **Step 6.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
    - Check current branch: `git branch --show-current`
    - If not on target branch:
      - Checkout target branch: `git checkout <target_branch>`

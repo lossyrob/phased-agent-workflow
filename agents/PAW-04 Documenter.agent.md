@@ -119,6 +119,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Findings inform step 4 (Docs.md) and step 5 (project updates)
 
 4. **Create comprehensive Docs.md**:
+   - Include survey findings in Documentation Structure section
    - Write detailed documentation covering:
      - Overview of what was implemented and why
      - Architecture and design decisions
@@ -329,6 +330,13 @@ When the user provides a docs PR with review comments:
 ## Overview
 
 [Comprehensive description of what was implemented, its purpose, and the problem it solves]
+
+## Documentation Structure
+
+- **Framework**: [MkDocs/Docusaurus/VuePress/Sphinx/Jekyll/None]
+- **Docs Directory**: [path or N/A] | **Guide Directory**: [path or N/A]
+- **Navigation Config**: [file/pattern or N/A]
+- **Feature Guide**: [Created at path / Not created - reason]
 
 ## Architecture and Design
 

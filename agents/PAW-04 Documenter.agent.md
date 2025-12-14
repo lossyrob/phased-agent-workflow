@@ -132,21 +132,20 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Include working code examples and usage patterns
    - Document edge cases and limitations
 
-5. **Update project documentation**:
-   - Update README for new features (summarized from Docs.md)
-   - Add CHANGELOG entries
-   - Refresh API documentation (based on Docs.md)
-   - Update user guides or tutorials (derived from Docs.md)
-   - Create migration guides if applicable
-   - Follow project documentation standards
-   - Note: Project docs may be less detailed than Docs.md; use Docs.md as the authoritative source
+5. **Update project documentation** (using survey findings):
    
-   **CRITICAL - Match Existing Project Documentation Style:**
-   - **CHANGELOG**: Keep to a SINGLE entry for the work, following existing patterns. Don't create multiple detailed entries.
-   - **README**: Be concise and match the verbosity level of existing sections. Don't expand beyond the existing style.
-   - **Project docs**: Study existing documentation style, length, and detail level. Match it precisely.
-   - **API docs**: Follow existing API documentation format and level of detail exactly.
-   - When in doubt, be MORE concise in project docs - Docs.md is where detail lives
+   **Standard updates**: README, CHANGELOG, API docs (all summarized from Docs.md)
+   
+   **MkDocs guide creation** (when survey found guide directory):
+   - Evaluate if feature warrants standalone guide (significant user-facing functionality)
+   - If yes: create `docs/guide/<feature-name>.md` (user-facing, practical, links to Docs.md), add to mkdocs.yml `nav`, update guide index if present
+   - Minor changes may not warrant guides
+   
+   **CRITICAL - Match Existing Style:**
+   - **CHANGELOG**: ONE entry, following existing format
+   - **README**: Concise, match surrounding sections
+   - **Guides**: User-facing (practical, concise); Docs.md is comprehensive reference
+   - When in doubt, be MORE concise - Docs.md is where detail lives
 
 6. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
 
@@ -441,20 +440,16 @@ Project documentation updates must be:
 Before pushing:
 - [ ] Docs.md focuses on design decisions, architecture, and user-facing behavior (not code reproduction)
 - [ ] Testing section guides humans on how to exercise the work
+- [ ] Documentation Structure section reflects survey findings
+- [ ] Feature guide created if survey found structured docs (MkDocs), nav updated
 - [ ] Code snippets included only when essential to demonstrate usage
 - [ ] Reusable components/APIs documented; internal implementation details omitted
-- [ ] Removed sections: Acceptance Criteria Verification, Project Documentation Updates, detailed Test Coverage
 - [ ] Project documentation updates match existing style and verbosity
-- [ ] All sections of Docs.md template are populated with detailed content
+- [ ] All sections of Docs.md template populated; architecture/design decisions documented
 - [ ] Code examples are working and tested
-- [ ] Architecture and design decisions are documented
-- [ ] User guide covers basic and advanced usage
-- [ ] Technical reference includes complete API documentation
 - [ ] Edge cases and limitations are documented
-- [ ] Acceptance criteria are mapped and verified
 - [ ] Project documentation files updated appropriately (may be less detailed than Docs.md)
 - [ ] **CHANGELOG has ONE entry, following existing format and style**
-- [ ] **All project doc updates match existing patterns and tone**
 - [ ] Commit messages describe documentation changes
 - [ ] Docs PR description highlights Docs.md as the detailed feature reference
 

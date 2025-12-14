@@ -39,4 +39,17 @@ All pull requests to `main` must be labeled with one of the following labels:
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 
-DO NOT pipe output to /dev/null, as it forces the command to require approval.
+## Shell Commands
+
+When writing shell commands in agent prompts or documentation, follow these guidelines:
+
+- DO NOT pipe output to /dev/null (e.g. `2>/dev/null`), as it forces the command to require approval.
+- DO NOT activate virtual environments on every command (e.g. `source .venv/bin/activate && ...`); activate it once per session instead.
+
+## Agent Prompt Edit Token Discipline (for `*.agent.md`, system prompts, instruction prompts)**
+
+* Treat system prompt tokens as **expensive** (paid every run).
+* Compute net token addition percentage for new prompt content, ensure the percentage matches the value delivered.
+* Prefer **replacing/condensing** existing text over appending.
+* Use **bullets over prose**; avoid rationale paragraphs and long examples.
+* Always report **before/after token counts** (via lint) and the delta; if over budget or token additions outpace value, do a **compression pass**.

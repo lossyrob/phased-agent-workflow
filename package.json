@@ -52,7 +52,7 @@
       {
         "name": "paw_get_context",
         "displayName": "Get PAW Context",
-        "modelDescription": "Retrieve workspace-specific custom instructions, user-level custom instructions (if they exist), and workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workspace_instructions> for workspace .paw/instructions/, <user_instructions> for user ~/.paw/instructions/, and <workflow_context> for raw WorkflowContext.md content.",
+        "modelDescription": "Retrieve workspace-specific custom instructions, user-level custom instructions (if they exist), and workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workspace_instructions> for workspace .paw/instructions/, <user_instructions> for user ~/.paw/instructions/, <workflow_context> for raw context file content, plus <workflow_type> and <handoff_instructions>.",
         "toolReferenceName": "pawContext",
         "canBeReferencedInPrompt": true,
         "inputSchema": {

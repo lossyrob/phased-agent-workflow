@@ -328,6 +328,7 @@ suite('Context Tool', () => {
         assert.strictEqual(result.exists, true);
         assert.strictEqual(result.content, '');
         assert.ok(result.error?.includes('Failed to read WorkflowContext.md'));
+        assert.ok(result.error?.includes(filePath));
       } finally {
         // Restore permissions before cleanup
         try {

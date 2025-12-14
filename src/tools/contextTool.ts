@@ -189,10 +189,11 @@ export function loadWorkflowContext(filePath: string): InstructionStatus {
     return { exists: true, content: fileContent };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+    const fileName = path.basename(filePath);
     return {
       exists: true,
       content: '',
-      error: `Failed to read WorkflowContext.md: ${message}`,
+      error: `Failed to read ${fileName} (${filePath}): ${message}`,
     };
   }
 }

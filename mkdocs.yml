@@ -66,6 +66,7 @@ nav:
     - Workflow Modes: guide/workflow-modes.md
     - Stage Transitions: guide/stage-transitions.md
     - Custom Instructions: guide/custom-instructions.md
+    - Documentation Survey: guide/documenter-survey.md
     - Two Workflows: guide/two-workflows.md
   - Specification:
     - Overview: specification/index.md

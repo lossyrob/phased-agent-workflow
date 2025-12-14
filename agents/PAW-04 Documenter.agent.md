@@ -111,7 +111,15 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Understand feature architecture and design decisions
    - Identify user-facing and technical aspects to document
 
-3. **Create comprehensive Docs.md**:
+3. **Survey documentation structure**:
+   - Check repo root for framework configs: `mkdocs.yml` (MkDocs), `docusaurus.config.js` (Docusaurus), `.vuepress/` (VuePress), `conf.py` (Sphinx), `_config.yml` (Jekyll)
+   - If framework found: identify docs directory, explore subdirectories (guide/, reference/), check nav config
+   - If no framework: check for plain `docs/` with .md files; empty = no structured docs
+   - Record findings: Framework, Docs directory, Organization, Guide directory, Navigation config
+   - Findings inform step 4 (Docs.md) and step 5 (project updates)
+
+4. **Create comprehensive Docs.md**:
+   - Include survey findings in Documentation Structure section
    - Write detailed documentation covering:
      - Overview of what was implemented and why
      - Architecture and design decisions
@@ -124,30 +132,29 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - Include working code examples and usage patterns
    - Document edge cases and limitations
 
-4. **Update project documentation**:
-   - Update README for new features (summarized from Docs.md)
-   - Add CHANGELOG entries
-   - Refresh API documentation (based on Docs.md)
-   - Update user guides or tutorials (derived from Docs.md)
-   - Create migration guides if applicable
-   - Follow project documentation standards
-   - Note: Project docs may be less detailed than Docs.md; use Docs.md as the authoritative source
+5. **Update project documentation** (using survey findings):
    
-   **CRITICAL - Match Existing Project Documentation Style:**
-   - **CHANGELOG**: Keep to a SINGLE entry for the work, following existing patterns. Don't create multiple detailed entries.
-   - **README**: Be concise and match the verbosity level of existing sections. Don't expand beyond the existing style.
-   - **Project docs**: Study existing documentation style, length, and detail level. Match it precisely.
-   - **API docs**: Follow existing API documentation format and level of detail exactly.
-   - When in doubt, be MORE concise in project docs - Docs.md is where detail lives
+   **Standard updates**: README, CHANGELOG, API docs (all summarized from Docs.md)
+   
+   **MkDocs guide creation** (when survey found guide directory):
+   - Evaluate if feature warrants standalone guide (significant user-facing functionality)
+   - If yes: create `docs/guide/<feature-name>.md` (user-facing, practical, links to Docs.md), add to mkdocs.yml `nav`, update guide index if present
+   - Minor changes may not warrant guides
+   
+   **CRITICAL - Match Existing Style:**
+   - **CHANGELOG**: ONE entry, following existing format
+   - **README**: Concise, match surrounding sections
+   - **Guides**: User-facing (practical, concise); Docs.md is comprehensive reference
+   - When in doubt, be MORE concise - Docs.md is where detail lives
 
-5. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
+6. **DETERMINE REVIEW STRATEGY AND COMMIT/PUSH** (REQUIRED):
 
-   **Step 5.1: Read Review Strategy** (REQUIRED FIRST):
+   **Step 6.1: Read Review Strategy** (REQUIRED FIRST):
    - Read WorkflowContext.md to extract Review Strategy field
    - If Review Strategy missing: Log "Review Strategy not specified, defaulting to 'prs'" and proceed with prs strategy
    - Set strategy variable: `<prs or local>`
 
-   **Step 5.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
+   **Step 6.2a: IF Review Strategy = 'prs' - Create Docs Branch and PR**:
    - Check current branch: `git branch --show-current`
    - If not on docs branch `<target>_docs`:
      - Create and checkout: `git checkout -b <target>_docs`
@@ -164,7 +171,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
      - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review of Docs PR
 
-   **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
+   **Step 6.2b: IF Review Strategy = 'local' - Commit to Target Branch**:
    - Check current branch: `git branch --show-current`
    - If not on target branch:
      - Checkout target branch: `git checkout <target_branch>`
@@ -323,6 +330,13 @@ When the user provides a docs PR with review comments:
 
 [Comprehensive description of what was implemented, its purpose, and the problem it solves]
 
+## Documentation Structure
+
+- **Framework**: [MkDocs/Docusaurus/VuePress/Sphinx/Jekyll/None]
+- **Docs Directory**: [path or N/A] | **Guide Directory**: [path or N/A]
+- **Navigation Config**: [file/pattern or N/A]
+- **Feature Guide**: [Created at path / Not created - reason]
+
 ## Architecture and Design
 
 ### High-Level Architecture
@@ -426,20 +440,16 @@ Project documentation updates must be:
 Before pushing:
 - [ ] Docs.md focuses on design decisions, architecture, and user-facing behavior (not code reproduction)
 - [ ] Testing section guides humans on how to exercise the work
+- [ ] Documentation Structure section reflects survey findings
+- [ ] Feature guide created if survey found structured docs (MkDocs), nav updated
 - [ ] Code snippets included only when essential to demonstrate usage
 - [ ] Reusable components/APIs documented; internal implementation details omitted
-- [ ] Removed sections: Acceptance Criteria Verification, Project Documentation Updates, detailed Test Coverage
 - [ ] Project documentation updates match existing style and verbosity
-- [ ] All sections of Docs.md template are populated with detailed content
+- [ ] All sections of Docs.md template populated; architecture/design decisions documented
 - [ ] Code examples are working and tested
-- [ ] Architecture and design decisions are documented
-- [ ] User guide covers basic and advanced usage
-- [ ] Technical reference includes complete API documentation
 - [ ] Edge cases and limitations are documented
-- [ ] Acceptance criteria are mapped and verified
 - [ ] Project documentation files updated appropriately (may be less detailed than Docs.md)
 - [ ] **CHANGELOG has ONE entry, following existing format and style**
-- [ ] **All project doc updates match existing patterns and tone**
 - [ ] Commit messages describe documentation changes
 - [ ] Docs PR description highlights Docs.md as the detailed feature reference
 

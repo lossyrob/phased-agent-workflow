@@ -11,7 +11,8 @@
       "label": "npm: compile",
       "detail": "tsc -p ./",
       "presentation": {
-        "reveal": "silent"
+        "reveal": "silent",
+        "close": true
       }
     },
     {

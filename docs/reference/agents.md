@@ -12,6 +12,7 @@ Agents follow the `PAW-XX` naming scheme:
 - **PAW-04** — Documentation agent
 - **PAW-05** — PR agent
 - **PAW-Rx** — Review workflow agents
+- **PAW-Mx** — Cross-repository workflow agents
 - **PAW-X** — Utility agents
 
 ---
@@ -184,6 +185,53 @@ Agents follow the `PAW-XX` naming scheme:
 - Usefulness, accuracy, and trade-off analysis
 
 **Note:** Assessments are never posted—for reviewer reference only.
+
+---
+
+## Cross-Repository Workflow Agents
+
+Cross-repository agents coordinate multi-repo work and produce coordinator artifacts under `.paw/multi-work/<work-id>/`.
+
+### PAW-M01A Cross-Repo Spec
+
+**Purpose:** Draft a cross-repository feature spec spanning multiple repositories.
+
+**Produces:**
+
+- `CrossRepoSpec.md` — Cross-repo requirements and success criteria
+- `prompts/M01B-cross-repo-spec-research.prompt.md` — Research questions (when needed)
+
+### PAW-M01B Cross-Repo Spec Researcher
+
+**Purpose:** Answer factual questions about current behavior across repositories.
+
+**Produces:**
+
+- `CrossRepoSpecResearch.md` — Cross-repo research findings
+
+### PAW-M02A Cross-Repo Code Researcher
+
+**Purpose:** Map relevant code, file locations, and integration points across repositories.
+
+**Produces:**
+
+- `CrossRepoCodeResearch.md` — Cross-repo technical mapping
+
+### PAW-M02B Cross-Repo Impl Planner
+
+**Purpose:** Sequence work across repositories and provide child workflow initialization guidance.
+
+**Produces:**
+
+- `CrossRepoPlan.md` — Cross-repo execution plan, per-repo context excerpts, merge order, testing strategy
+
+### PAW-M03 Cross-Repo Validator
+
+**Purpose:** Validate cross-repository consistency and provide integration test guidance.
+
+**Produces:**
+
+- `ValidationReport.md` — Cross-repo validation report
 
 ---
 

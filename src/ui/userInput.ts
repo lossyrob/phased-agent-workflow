@@ -1,4 +1,35 @@
 import * as vscode from 'vscode';
+import { GitRepository } from '../git/validation';
+
+/**
+ * Workflow type determines the overall workflow pattern.
+ * - implementation: Standard single-repository workflow
+ * - cross-repository: Multi-repository coordination workflow
+ * - review: Code review workflow for existing changes
+ */
+export type WorkflowType = 'implementation' | 'cross-repository' | 'review';
+
+/**
+ * Represents a user-selected repository for cross-repository workflows.
+ */
+export interface RepositorySelection {
+  /** Absolute path to the repository */
+  path: string;
+  /** Human-readable repository name (from workspace folder) */
+  name: string;
+}
+
+/**
+ * Represents a user-selected storage root folder for cross-repository workflows.
+ *
+ * The storage root does not need to be a git repository.
+ */
+export interface StorageRootSelection {
+  /** Absolute path to the selected storage root folder */
+  path: string;
+  /** Human-readable folder name (from workspace folder) */
+  name: string;
+}
 
 /**
  * Workflow mode determines which stages are included in the workflow.
@@ -42,6 +73,9 @@ export interface WorkflowModeSelection {
  * derived by the agent during initialization.
  */
 export interface WorkItemInputs {
+  /** Workflow type (implementation, cross-repository, or review) */
+  workflowType: WorkflowType;
+  
   /**
    * Git branch name for the work item (e.g., "feature/my-feature").
    * 
@@ -72,6 +106,23 @@ export interface WorkItemInputs {
    * - Azure DevOps: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
    */
   issueUrl?: string;
+
+  /**
+   * Selected repositories for cross-repository workflows.
+   * 
+   * Only present when workflowType is 'cross-repository'. Contains the list
+   * of repositories the user selected to participate in the cross-repository
+   * workflow.
+   */
+  affectedRepositories?: RepositorySelection[];
+
+  /**
+   * Storage root folder for cross-repository workflows.
+   *
+   * Only present when workflowType is 'cross-repository'. The selected folder
+   * does not need to be a git repository.
+   */
+  storageRoot?: StorageRootSelection;
 }
 
 /**
@@ -103,6 +154,166 @@ export function isValidIssueUrl(value: string): boolean {
   const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;
   const azureDevOpsPattern = /^https:\/\/dev\.azure\.com\/[^/]+\/[^/]+\/_workitems\/edit\/\d+$/;
   return githubPattern.test(value) || azureDevOpsPattern.test(value);
+}
+
+/**
+ * Collect workflow type selection from user.
+ * 
+ * Presents a Quick Pick menu with workflow type options:
+ * - Implementation: Standard single-repository workflow
+ * - Cross-Repository: Multi-repository coordination workflow (only available in multi-root workspaces)
+ * - Review: Code review workflow for existing changes
+ * 
+ * The Cross-Repository option only appears when multiple workspace folders are open.
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to workflow type, or undefined if user cancelled
+ */
+export async function collectWorkflowType(
+  outputChannel: vscode.OutputChannel
+): Promise<WorkflowType | undefined> {
+  // Check if multi-root workspace is available for cross-repository option
+  const workspaceFolderCount = vscode.workspace.workspaceFolders?.length || 0;
+  const isMultiRootWorkspace = workspaceFolderCount > 1;
+
+  // Build workflow type options - Cross-Repository only shown in multi-root workspaces
+  const workflowTypeOptions: { label: string; description: string; detail: string; value: WorkflowType }[] = [
+    {
+      label: 'Implementation',
+      description: 'Standard single-repository workflow',
+      detail: 'Work within one git repository',
+      value: 'implementation' as WorkflowType
+    }
+  ];
+
+  if (isMultiRootWorkspace) {
+    workflowTypeOptions.push({
+      label: 'Cross-Repository',
+      description: 'Multi-repository coordination workflow',
+      detail: 'Coordinate feature development across multiple repositories',
+      value: 'cross-repository' as WorkflowType
+    });
+  }
+
+  workflowTypeOptions.push({
+    label: 'Review (Coming Soon)',
+    description: 'Code review workflow',
+    detail: 'Structured review of existing code changes',
+    value: 'review' as WorkflowType
+  });
+
+  // Present Quick Pick menu with workflow type options
+  const typeSelection = await vscode.window.showQuickPick(workflowTypeOptions, {
+    placeHolder: 'Select workflow type',
+    title: 'Workflow Type Selection'
+  });
+
+  if (!typeSelection) {
+    outputChannel.appendLine('[INFO] Workflow type selection cancelled');
+    return undefined;
+  }
+
+  // Handle selection of coming soon Review option
+  if (typeSelection.value === 'review') {
+    outputChannel.appendLine('[INFO] Review workflow selected but not yet available');
+    vscode.window.showWarningMessage(
+      'Review workflows through the extension are coming soon.'
+    );
+    return undefined;
+  }
+
+  return typeSelection.value;
+}
+
+/**
+ * Collect affected repositories for cross-repository workflow.
+ * 
+ * Presents a multi-select Quick Pick menu showing all valid git repositories
+ * detected in the workspace. Users must select at least one repository.
+ * 
+ * Each Quick Pick item shows:
+ * - Label: Repository name (from workspace folder name)
+ * - Description: Absolute path to repository
+ * 
+ * @param repositories - Array of detected git repositories (must have isValid=true)
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to selected repositories, or undefined if user cancelled or no selection
+ */
+export async function collectAffectedRepositories(
+  repositories: GitRepository[],
+  outputChannel: vscode.OutputChannel
+): Promise<RepositorySelection[] | undefined> {
+  // Build Quick Pick items for each valid repository
+  const repoItems = repositories.map(repo => ({
+    label: repo.name,
+    description: repo.path,
+    picked: true, // Pre-select all repositories by default
+    repository: repo
+  }));
+
+  // Present multi-select Quick Pick menu
+  const selection = await vscode.window.showQuickPick(repoItems, {
+    canPickMany: true,
+    placeHolder: 'Select repositories affected by this cross-repository workflow',
+    title: 'Affected Repositories Selection'
+  });
+
+  if (!selection || selection.length === 0) {
+    outputChannel.appendLine('[INFO] Repository selection cancelled or empty');
+    return undefined;
+  }
+
+  outputChannel.appendLine(`[INFO] Selected ${selection.length} repositories for cross-repository workflow`);
+
+  // Map selection to RepositorySelection interface
+  return selection.map(item => ({
+    path: item.repository.path,
+    name: item.repository.name
+  }));
+}
+
+/**
+ * Collect storage root folder selection for cross-repository workflows.
+ *
+ * Presents a Quick Pick menu showing all workspace folders (git or non-git).
+ * The selected folder will be used as the base path for cross-repo coordinator
+ * artifacts under `.paw/multi-work/<work-id>/`.
+ *
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to selected storage root, or undefined if user cancelled
+ */
+export async function collectStorageRoot(
+  outputChannel: vscode.OutputChannel
+): Promise<StorageRootSelection | undefined> {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders || workspaceFolders.length === 0) {
+    vscode.window.showErrorMessage('No workspace folders found. Please open a workspace folder.');
+    outputChannel.appendLine('[ERROR] No workspace folders available for storage root selection');
+    return undefined;
+  }
+
+  const items = workspaceFolders.map(folder => ({
+    label: folder.name,
+    description: folder.uri.fsPath,
+    folder
+  }));
+
+  const selection = await vscode.window.showQuickPick(items, {
+    placeHolder: 'Select a storage root folder for cross-repository coordinator artifacts',
+    title: 'Cross-Repository Storage Root Selection'
+  });
+
+  if (!selection) {
+    outputChannel.appendLine('[INFO] Storage root selection cancelled');
+    return undefined;
+  }
+
+  outputChannel.appendLine(`[INFO] Selected storage root: ${selection.folder.name} (${selection.folder.uri.fsPath})`);
+
+  return {
+    name: selection.folder.name,
+    path: selection.folder.uri.fsPath
+  };
 }
 
 /**
@@ -300,10 +511,12 @@ export async function collectHandoffMode(
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
- * 1. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
- * 2. Target branch name (required) - basic validation ensures valid git branch characters
- * 3. Workflow mode (required) - determines which stages are included
- * 4. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
+ * 1. Workflow type (required) - determines the overall workflow pattern
+ * 2. Issue or work item URL (optional) - validates GitHub issue or Azure DevOps work item formats if provided
+ * 3. Target branch name (required) - basic validation ensures valid git branch characters
+ * 4. Workflow mode (required) - determines which stages are included
+ * 5. Review strategy (required) - determines how work is reviewed (auto-selected for minimal mode)
+ * 6. Handoff mode (required) - determines stage transition behavior
  * 
  * The agent will perform additional validation and normalization of these inputs
  * (e.g., converting branch name to Work ID, fetching issue title).
@@ -312,9 +525,45 @@ export async function collectHandoffMode(
  * @returns Promise resolving to collected inputs, or undefined if user cancelled
  */
 export async function collectUserInputs(
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  detectedRepositories?: GitRepository[]
 ): Promise<WorkItemInputs | undefined> {
-  // Collect issue URL first (optional)
+  // Collect workflow type first (required)
+  const workflowType = await collectWorkflowType(outputChannel);
+  if (!workflowType) {
+    return undefined;
+  }
+
+  // For cross-repository workflows, collect storage root (git not required)
+  let storageRoot: StorageRootSelection | undefined;
+  if (workflowType === 'cross-repository') {
+    storageRoot = await collectStorageRoot(outputChannel);
+    if (!storageRoot) {
+      return undefined;
+    }
+  }
+
+  // For cross-repository workflows, collect affected repositories
+  let affectedRepositories: RepositorySelection[] | undefined;
+  if (workflowType === 'cross-repository' && detectedRepositories) {
+    // Filter to only valid git repositories
+    const validRepos = detectedRepositories.filter(r => r.isValid);
+    
+    if (validRepos.length === 0) {
+      vscode.window.showErrorMessage(
+        'No git repositories detected in workspace. Cross-repository workflow requires at least one git repository.'
+      );
+      outputChannel.appendLine('[ERROR] No valid git repositories found for cross-repository workflow');
+      return undefined;
+    }
+
+    affectedRepositories = await collectAffectedRepositories(validRepos, outputChannel);
+    if (!affectedRepositories) {
+      return undefined;
+    }
+  }
+
+  // Collect issue URL (optional)
   // This enables future phases to customize branch input prompt based on issue URL presence
   const issueUrl = await vscode.window.showInputBox({
     prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
@@ -386,10 +635,13 @@ export async function collectUserInputs(
   }
 
   return {
+    workflowType,
     targetBranch: targetBranch.trim(),
     workflowMode,
     reviewStrategy,
     handoffMode,
-    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
+    issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim(),
+    affectedRepositories,
+    storageRoot
   };
 }

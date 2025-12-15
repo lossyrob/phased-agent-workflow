@@ -12,7 +12,13 @@ export type AgentName =
   | "PAW-03B Impl Reviewer"
   | "PAW-04 Documenter"
   | "PAW-05 PR"
-  | "PAW-X Status";
+  | "PAW-X Status"
+  // Cross-repository workflow agents
+  | "PAW-M01A Cross-Repo Spec"
+  | "PAW-M01B Cross-Repo Spec Researcher"
+  | "PAW-M02A Cross-Repo Code Researcher"
+  | "PAW-M02B Cross-Repo Impl Planner"
+  | "PAW-M03 Cross-Repo Validator";
 
 /**
  * Parameters for calling a PAW agent.

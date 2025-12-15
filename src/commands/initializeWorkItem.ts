@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { collectUserInputs } from '../ui/userInput';
-import { validateGitRepository } from '../git/validation';
+import { validateGitRepository, detectGitRepositories, GitRepository } from '../git/validation';
 import { constructAgentPrompt } from '../prompts/workflowInitPrompt';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -38,8 +38,9 @@ export async function initializeWorkItemCommand(
   outputChannel.appendLine('[INFO] Starting PAW workflow initialization...');
 
   try {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    const firstWorkspaceFolder = workspaceFolders?.[0];
+    if (!firstWorkspaceFolder) {
       vscode.window.showErrorMessage(
         'No workspace folder open. Please open a workspace to initialize a PAW workflow.'
       );
@@ -47,40 +48,34 @@ export async function initializeWorkItemCommand(
       return;
     }
 
-    outputChannel.appendLine(`[INFO] Workspace: ${workspaceFolder.uri.fsPath}`);
-    outputChannel.appendLine('[INFO] Validating git repository...');
+    outputChannel.appendLine(`[INFO] Workspace (first folder): ${firstWorkspaceFolder.uri.fsPath}`);
 
-    const isGitRepo = await validateGitRepository(workspaceFolder.uri.fsPath);
-    if (!isGitRepo) {
-      vscode.window.showErrorMessage(
-        'PAW requires a Git repository. Please initialize Git with: git init'
-      );
-      outputChannel.appendLine('[ERROR] Not a git repository');
-      return;
-    }
-
-    outputChannel.appendLine('[INFO] Git repository validated');
-
-    // Check for custom instructions
-    outputChannel.appendLine('[INFO] Checking for custom instructions...');
-    const customInstructionsPath = path.join(
-      workspaceFolder.uri.fsPath,
-      WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
-    );
-    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
+    // Detect repositories across all workspace folders for cross-repository workflows
+    // This is done before collecting user inputs because cross-repository workflow
+    // type selection requires knowing if there are multiple repositories available
+    let detectedRepositories: GitRepository[] | undefined;
     
-    if (hasCustomInstructions) {
-      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
-    } else {
-      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
+    if (workspaceFolders && workspaceFolders.length > 1) {
+      outputChannel.appendLine('[INFO] Multi-root workspace detected, scanning for git repositories...');
+      detectedRepositories = await detectGitRepositories(workspaceFolders);
+      const validRepoCount = detectedRepositories.filter(r => r.isValid).length;
+      outputChannel.appendLine(`[INFO] Found ${validRepoCount} valid git repositories out of ${workspaceFolders.length} workspace folders`);
     }
 
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
-    const inputs = await collectUserInputs(outputChannel);
+    const inputs = await collectUserInputs(outputChannel, detectedRepositories);
     if (!inputs) {
       outputChannel.appendLine('[INFO] User cancelled initialization');
       return;
+    }
+
+    outputChannel.appendLine(`[INFO] Workflow type: ${inputs.workflowType}`);
+    if (inputs.storageRoot) {
+      outputChannel.appendLine(`[INFO] Storage root: ${inputs.storageRoot.name} (${inputs.storageRoot.path})`);
+    }
+    if (inputs.affectedRepositories) {
+      outputChannel.appendLine(`[INFO] Affected repositories: ${inputs.affectedRepositories.map(r => r.name).join(', ')}`);
     }
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
@@ -94,14 +89,85 @@ export async function initializeWorkItemCommand(
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
 
+    // Determine the primary workspace path for prompt generation.
+    // For cross-repository workflows we use the first selected git repository as
+    // the primary path (for custom instructions lookup and any git operations).
+    // The storage root can be non-git and is provided separately.
+    let promptWorkspacePath = firstWorkspaceFolder.uri.fsPath;
+    if (inputs.workflowType === 'cross-repository') {
+      if (!workspaceFolders || workspaceFolders.length <= 1) {
+        vscode.window.showErrorMessage(
+          'Cross-Repository workflow requires a multi-root workspace. Please add multiple folders to your workspace.'
+        );
+        outputChannel.appendLine('[ERROR] Cross-repository selected but workspace is not multi-root');
+        return;
+      }
+
+      if (!inputs.storageRoot) {
+        vscode.window.showErrorMessage('Storage root selection is required for cross-repository workflows.');
+        outputChannel.appendLine('[ERROR] Missing storage root for cross-repository workflow');
+        return;
+      }
+
+      if (!fs.existsSync(inputs.storageRoot.path)) {
+        vscode.window.showErrorMessage(
+          `Selected storage root folder does not exist: ${inputs.storageRoot.path}`
+        );
+        outputChannel.appendLine('[ERROR] Storage root folder does not exist');
+        return;
+      }
+
+      if (!inputs.affectedRepositories || inputs.affectedRepositories.length === 0) {
+        vscode.window.showErrorMessage(
+          'No affected repositories selected. Cross-repository workflow requires at least one git repository.'
+        );
+        outputChannel.appendLine('[ERROR] Missing affected repositories for cross-repository workflow');
+        return;
+      }
+
+      promptWorkspacePath = inputs.affectedRepositories[0].path;
+    }
+
+    // Validate git repository only for standard implementation workflows.
+    // Cross-repository workflows do not require the first workspace folder to be a git repository.
+    if (inputs.workflowType === 'implementation') {
+      outputChannel.appendLine('[INFO] Validating git repository...');
+      const isGitRepo = await validateGitRepository(promptWorkspacePath);
+      if (!isGitRepo) {
+        vscode.window.showErrorMessage(
+          'PAW requires a Git repository. Please open a git repository folder or initialize Git with: git init'
+        );
+        outputChannel.appendLine('[ERROR] Not a git repository');
+        return;
+      }
+      outputChannel.appendLine('[INFO] Git repository validated');
+    }
+
+    // Check for custom instructions (relative to prompt workspace path)
+    outputChannel.appendLine('[INFO] Checking for custom instructions...');
+    const customInstructionsPath = path.join(
+      promptWorkspacePath,
+      WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
+    );
+    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
+    
+    if (hasCustomInstructions) {
+      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
+    } else {
+      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
+    }
+
     outputChannel.appendLine('[INFO] Constructing agent prompt...');
     const prompt = constructAgentPrompt(
+      inputs.workflowType,
       inputs.targetBranch,
       inputs.workflowMode,
       inputs.reviewStrategy,
       inputs.handoffMode,
       inputs.issueUrl,
-      workspaceFolder.uri.fsPath
+      promptWorkspacePath,
+      inputs.affectedRepositories,
+      inputs.storageRoot
     );
 
     outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');

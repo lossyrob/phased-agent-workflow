@@ -1,9 +1,10 @@
-# Two Workflows: Implementation and Review
+# Workflows: Implementation, Cross-Repository, and Review
 
-PAW provides two complementary workflows for different development scenarios:
+PAW provides multiple workflows for different development scenarios:
 
-1. **Implementation Workflow** — Building new features from scratch
-2. **Review Workflow** — Thoroughly reviewing existing pull requests
+1. **Implementation Workflow** — Building new features in a single git repository
+2. **Cross-Repository Workflow** — Coordinating a feature across multiple repositories
+3. **Review Workflow** — Thoroughly reviewing existing pull requests
 
 ## PAW Implementation Workflow
 
@@ -43,6 +44,31 @@ The Implementation Workflow transforms feature ideas into production-ready code 
 - **Rewindable** — Any stage can restart if upstream documents need fixes
 - **Transparent** — All outputs are text-based and version-controlled
 - **Collaborative** — Humans guide, agents execute and record progress
+
+## PAW Cross-Repository Workflow
+
+The coordination workflow for multi-repository work: create a coordinator work item in a storage root folder, then initialize standard PAW child workflows inside each affected repository.
+
+```mermaid
+graph LR
+    A[Coordinator Work Item] --> B[Coordinator Spec]
+    B --> C[Coordinator Research]
+    C --> D[Coordinator Plan]
+    D --> E[Initialize Child Workflows]
+    E --> F[Implement in Each Repo]
+    F --> G[Cross-Repo Validate]
+```
+
+### When to Use It
+
+- A single feature requires coordinated changes across 2+ repositories
+- You want repo-local PAW workflows, but a shared top-level plan and validation
+
+### Key Benefits
+
+- **Independent child workflows** — Each repository keeps a normal `.paw/work/<work-id>/` workflow
+- **Central coordination** — The coordinator workflow lives under `.paw/multi-work/<work-id>/`
+- **Flexible storage** — The storage root folder can be non-git (e.g., a coordination/notes folder)
 
 ## PAW Review Workflow
 
@@ -84,13 +110,14 @@ The Review Workflow helps you thoroughly review any pull request through three s
 | Building a new feature | Implementation |
 | Fixing a bug | Implementation |
 | Refactoring code | Implementation |
+| Building a feature across multiple repos | Cross-Repository |
 | Reviewing someone else's PR | Review |
 | Doing a thorough code review | Review |
 | Understanding complex changes | Review |
 
 ## Workflow Characteristics
 
-Both workflows share PAW's core principles:
+All workflows share PAW's core principles:
 
 | Characteristic | Description |
 |----------------|-------------|

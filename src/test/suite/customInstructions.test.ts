@@ -100,6 +100,7 @@ suite('Custom Instructions Loader', () => {
       writeCustomInstructions(workspace, '## Custom Section\n- Follow additional rules');
 
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -118,6 +119,7 @@ suite('Custom Instructions Loader', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -144,6 +146,7 @@ suite('Branch Mode Handling', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/my-feature',
         { mode: 'full' },
         'prs',
@@ -162,6 +165,7 @@ suite('Branch Mode Handling', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',
@@ -179,6 +183,7 @@ suite('Branch Mode Handling', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '   ',
         { mode: 'full' },
         'prs',
@@ -196,6 +201,7 @@ suite('Branch Mode Handling', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',
@@ -222,6 +228,7 @@ suite('Branch Auto-Derivation Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',
@@ -241,6 +248,7 @@ suite('Branch Auto-Derivation Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/my-branch',
         { mode: 'full' },
         'prs',
@@ -259,6 +267,7 @@ suite('Branch Auto-Derivation Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',
@@ -278,6 +287,7 @@ suite('Branch Auto-Derivation Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',
@@ -304,6 +314,7 @@ suite('Work Description Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -323,6 +334,7 @@ suite('Work Description Section', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -349,6 +361,7 @@ suite('Initial Prompt Field', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -366,6 +379,7 @@ suite('Initial Prompt Field', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         'feature/test',
         { mode: 'full' },
         'prs',
@@ -383,6 +397,7 @@ suite('Initial Prompt Field', () => {
     const workspace = createWorkspaceRoot();
     try {
       const prompt = constructAgentPrompt(
+        'implementation',
         '',
         { mode: 'full' },
         'prs',

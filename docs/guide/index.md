@@ -28,15 +28,25 @@ Before you begin, ensure you have:
 
 1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 2. Type **"PAW: New PAW Workflow"**
-3. Enter the issue or work item URL (optional—press Enter to skip)
-4. Enter a branch name (optional—press Enter to auto-derive from issue or description)
-5. Select your workflow mode and review strategy
+3. Select the **workflow type** (Implementation or Cross-Repository)
+4. (Cross-Repository only) Select a **storage root folder** for `.paw/multi-work/` artifacts
+5. (Cross-Repository only) Select affected repositories from the detected git repos
+6. Enter the issue or work item URL (optional—press Enter to skip)
+7. Enter a branch name (optional—press Enter to auto-derive from issue or description)
+8. Select your workflow mode, review strategy, and handoff mode
 
 PAW will create your workflow structure automatically:
 
 ```
 .paw/work/<feature-slug>/
   WorkflowContext.md    # Your workflow parameters
+```
+
+For Cross-Repository workflows, the coordinator structure is created under your selected storage root:
+
+```
+<storage-root>/.paw/multi-work/<feature-slug>/
+  CrossRepoContext.md   # Cross-repo workflow parameters
 ```
 
 ### Check Workflow Status
@@ -65,5 +75,5 @@ Each phase produces durable artifacts that feed the next, ensuring nothing falls
 ## Next Steps
 
 - [Workflow Modes](workflow-modes.md) — Learn about Full, Minimal, and Custom modes
-- [Two Workflows](two-workflows.md) — Understand Implementation vs Review workflows
+- [Workflows](two-workflows.md) — Understand Implementation vs Cross-Repository vs Review workflows
 - [Specification](../specification/index.md) — Deep dive into the PAW specification

@@ -178,11 +178,11 @@ To initialize the child workflow for each repository, follow these steps:
 2. Run: "PAW: New PAW Workflow" command
 3. Select Workflow Type: **Implementation**
 4. Ensure Work ID: `<work-id>` (use a matching feature slug / branch-derived work id so artifacts land in `.paw/work/<work-id>/`)
-4. Target Branch: `<suggested-branch-name>`
-5. Workflow Mode: `<full|minimal>` (matches cross-repo workflow)
-6. Review Strategy: `<prs|local>` (matches cross-repo workflow)
-7. When prompted for issue/description, use the **Context Excerpt** above
-8. Proceed with standard PAW workflow (Spec → Research → Plan → Implement → Docs → PR)
+5. Target Branch: `<suggested-branch-name>`
+6. Workflow Mode: `<full|minimal>` (matches cross-repo workflow)
+7. Review Strategy: `<prs|local>` (matches cross-repo workflow)
+8. When prompted for issue/description, use the **Context Excerpt** above
+9. Proceed with standard PAW workflow (Spec → Research → Plan → Implement → Docs → PR)
 
 ### <Repository-2>
 ...

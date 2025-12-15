@@ -48,7 +48,8 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 
 - `CodeResearch.md` — Technical mapping of relevant code
 - `ImplementationPlan.md` — Detailed plan with phases
-- Planning PR opened (`<target>_plan` → `<target>`)
+- If Review Strategy is `prs`: Planning PR opened (`<target>_plan` → `<target>`)
+- If Review Strategy is `local`: Plan is committed directly on the target branch
 
 **Process:**
 
@@ -70,7 +71,8 @@ Execute plan phases with automated verification, peer review, and quality gates.
 
 **Outputs:**
 
-- Phase PRs opened (`<target>_phase<N>` → `<target>`)
+- If Review Strategy is `prs`: Phase PRs opened (`<target>_phase<N>` → `<target>`)
+- If Review Strategy is `local`: No intermediate phase PRs (commits land directly on the target branch)
 - Implemented code changes
 - Updated plan with phase completion status
 
@@ -101,7 +103,8 @@ Produce comprehensive documentation that serves as the authoritative technical r
 **Outputs:**
 
 - `Docs.md` — Comprehensive technical documentation
-- Docs PR opened (`<target>_docs` → `<target>`)
+- If Review Strategy is `prs`: Docs PR opened (`<target>_docs` → `<target>`)
+- If Review Strategy is `local`: Documentation committed directly on the target branch
 
 **Process:**
 
@@ -119,7 +122,8 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 **Inputs:**
 
 - All artifacts from previous stages
-- All merged PRs (planning, phases, docs)
+- If Review Strategy is `prs`: All merged PRs (planning, phases, docs)
+- If Review Strategy is `local`: No intermediate PRs are required
 
 **Outputs:**
 

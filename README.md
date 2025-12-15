@@ -47,9 +47,9 @@ The process emphasizes **clarity, traceability, and recoverability**, letting de
 * **Collaborative** — humans guide, agents execute and record progress.
 * **Toolchain** — Git (GitHub or Azure DevOps), VS Code, GitHub Copilot Agent Mode, markdown artifacts.
 
-## Two Workflows: Implementation and Review
+## Workflows: Implementation, Cross-Repository, and Review
 
-PAW provides two complementary workflows:
+PAW provides multiple workflows:
 
 ### PAW Implementation Workflow
 
@@ -73,6 +73,16 @@ A structured three-stage process for thorough code review: systematically unders
 - Comprehensive findings - generate all issues, human filters based on context
 - Evidence-based feedback - every finding includes file:line references and rationale
 - Full human control - nothing posted automatically, edit/delete comments before submitting
+
+### PAW Cross-Repository Workflow
+
+The coordination workflow for features that span multiple git repositories in a VS Code multi-root workspace.
+
+**Use for**: Coordinated changes across 2+ repositories.
+
+**Key idea**: coordinator artifacts live under `.paw/multi-work/<work-id>/` (in a storage root folder), while each repository uses a standard `.paw/work/<work-id>/` child workflow.
+
+See [.paw/work/cross-repository-workflow-supervisor/Docs.md](.paw/work/cross-repository-workflow-supervisor/Docs.md) for the detailed technical reference.
 
 See [PAW Review Workflow Documentation](.paw/work/paw-review/Docs.md) for detailed usage guide.
 
@@ -121,9 +131,11 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 1. Open a git repository in VS Code
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
 3. Type "PAW: New PAW Workflow"
-4. Enter issue or work item URL (optional - press Enter to skip)
-5. Enter branch name (optional - press Enter to auto-derive from issue or description)
-6. Watch as your workflow structure is created automatically
+4. Select a workflow type (Implementation or Cross-Repository)
+5. (Cross-Repository only) Select a storage root folder and affected repositories
+6. Enter issue or work item URL (optional - press Enter to skip)
+7. Enter branch name (optional - press Enter to auto-derive from issue or description)
+8. Watch as your workflow structure is created automatically
 
 #### Getting Workflow Status
 

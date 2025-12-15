@@ -143,10 +143,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
        - **Likely intentional drift (signals):** cohesive commits; commit messages explicitly describing the change intent (e.g., "refactor", "rename", "simplify", "align plan"); changes concentrated in a narrow area matching the narrative
        - **Ambiguous intent (signals):** broad or mixed commits; unclear messages; sweeping diffs without narrative; multiple unrelated changes bundled together
 
-    - **Evidence commands (use as needed):**
-       - `git status --porcelain`
-       - `git log --oneline -n 20`
-       - `git diff <base>...HEAD` (or equivalent for your workflow)
+   - **Evidence commands (use as needed):** `git status --porcelain`, `git log --oneline -n 20`, `git diff <base>...HEAD`
 
 3. **Review for quality and necessity**:
    - Code clarity and readability
@@ -199,7 +196,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **REQUIRED**: Create Phase PR:
      - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
      - Source: `<target>_phase[N]` → Target: `<target_branch>`
-     - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
+       - Title: `[<Work Title>] Phase <N>: <brief description>`
      - Include phase objectives, changes made, testing performed
      - Link to Issue URL from WorkflowContext.md
      - Artifact links: Implementation Plan at `.paw/work/<feature-slug>/ImplementationPlan.md`
@@ -225,7 +222,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
     **Local strategy drift handling policy (REQUIRED):**
     - If drift is **minor + likely intentional**:
-       - Update `.paw/work/<work-id>/ImplementationPlan.md` to match the implemented reality
+       - Update `.paw/work/<feature-slug>/ImplementationPlan.md` to match the implemented reality
        - Preserve history: do not delete prior intent; append a note titled `Plan alignment note (YYYY-MM-DD): ...`
        - Include 1–2 sentences of rationale and the relevant commit SHA(s)
        - Commit the plan update as a narrowly-scoped docs commit (do not bundle unrelated changes)
@@ -304,7 +301,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 ## Outputs
 
 - Commits with docstrings and comments
-- Phase PR opened or updated
+- Phase PR opened or updated (prs strategy)
 - Single comprehensive summary comment on PR (for review comment follow-up) with detailed comment tracking and overall summary
 - A dedicated **"Plan alignment"** subsection in review outputs (timeline comment, overall summary section, or local-strategy final message)
 
@@ -317,7 +314,9 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - **Large refactors require coordination**: Major restructuring, architecture changes - request Implementer redo
 - DO NOT revert Implementer's core logic changes or address review comments yourself (verify Implementer did)
 - DO NOT approve or merge PRs (human responsibility)
-- For initial phase review: ALWAYS push and open the PR
+- For initial phase review:
+   - prs strategy: ALWAYS push and open the Phase PR
+   - local strategy: ALWAYS push the target branch (no Phase PR)
 - For review comment follow-up: ALWAYS push all commits after verification; post ONE comprehensive summary comment
 - NEVER create standalone review artifacts (e.g., `Phase1-Review.md`)
 - Prefer no commits over cosmetic or no-op changes

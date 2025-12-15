@@ -35,7 +35,7 @@ After calling `paw_get_context` (see PAW Context section above), load all necess
 
 2. **Load child workflow artifacts** from each affected repository:
    - `.paw/work/<work-id>/WorkflowContext.md` - Child workflow status
-   - `.paw/work/<work-id>/ImplementationPlan.md` - Implementation phases and completion
+   - `.paw/work/<work-id>/ImplementationPlan.md` - Implementation phases and completion evidence
    - `.paw/work/<work-id>/Docs.md` - Documentation (if exists)
 
 3. **Assess overall status**:
@@ -87,6 +87,8 @@ Compare each repository's implementation against CrossRepoSpec.md:
 - Map functional requirements (FR-xxx) to implemented changes
 - Verify success criteria (SC-xxx) are addressed
 - Check that integration points (IP-xxx) are implemented
+
+For evidence, prefer child workflow artifacts first (ImplementationPlan/Docs), then confirm by spot-checking code locations in the repositories when needed.
 
 Report findings:
 ```

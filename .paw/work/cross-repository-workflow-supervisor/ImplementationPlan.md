@@ -937,8 +937,8 @@ Implement mechanism for initializing standard PAW workflows in individual reposi
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Agent linting passes: `./scripts/lint-agent.sh agents/PAW-M02B*.agent.md agents/PAW-M03*.agent.md`
-- [ ] TypeScript compiles: `npm run compile`
+- [x] Agent linting passes: `./scripts/lint-agent.sh agents/PAW-M02B*.agent.md agents/PAW-M03*.agent.md`
+- [x] TypeScript compiles: `npm run compile`
 
 #### Manual Verification:
 - [ ] CrossRepoPlan.md contains clear context excerpts for each repository
@@ -948,6 +948,22 @@ Implement mechanism for initializing standard PAW workflows in individual reposi
 - [ ] Child workflow artifacts are git-committed in their respective repositories
 - [ ] Validator successfully reads and compares artifacts across repositories
 - [ ] Deleting `.paw/multi-work/` does not break child workflows
+
+### Phase 6 Implementation Complete
+
+**Status**: Phase 6 implementation complete.
+
+**Changes Completed**:
+- Updated PAW-M02B Cross-Repo Impl Planner agent instructions to require per-repository context excerpt format and to include explicit child workflow initialization guidance.
+- Added explicit child workflow independence guidance to CrossRepoPlan.md template (child workflows remain functional if cross-repo artifacts are removed).
+- Updated PAW-M03 Cross-Repo Validator guidance to emphasize using child workflow artifacts (ImplementationPlan/Docs) as primary validation evidence.
+
+**Verification Results**:
+- ✅ Agent linting: Passed (`./scripts/lint-agent.sh`)
+- ✅ Unit tests: Passed (`npm test`)
+- ✅ TypeScript compilation: Passed (`npm run compile`, executed as part of `npm test` pretest)
+
+**Manual Testing**: Deferred to user - requires a multi-root VS Code workspace with 2+ repositories to exercise end-to-end child workflow initialization and validation.
 
 ---
 

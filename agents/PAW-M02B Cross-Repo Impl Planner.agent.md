@@ -101,29 +101,29 @@ The following repositories should be implemented in this order based on dependen
 ...
 
 ## Repository Implementation Details
+ 
+## Repository: <Repository-1>
 
-### <Repository-1>
-
-#### Changes Required
+### Changes Required
 | ID | Change | Requirement | Priority |
 |----|--------|-------------|----------|
 | <repo>-001 | <change description> | FR-001 | P1 |
 
-#### Integration Points
+### Integration Points
 | Interface | Type | Connects To | Notes |
 |-----------|------|-------------|-------|
 | <interface> | <API/Event/Data> | <target repo> | <notes> |
 
-#### Key Considerations
+### Key Considerations
 - <consideration 1>
 - <consideration 2>
 
-#### Success Criteria (Repository-Specific)
+### Success Criteria (Repository-Specific)
 - [ ] <criterion from CrossRepoSpec.md applicable to this repo>
 
 ---
 
-#### Context Excerpt for Child Workflow
+### Context Excerpt for Child Workflow
 
 ```markdown
 # Child Workflow Context: <Feature Name> - <Repository-1>
@@ -152,7 +152,7 @@ The following repositories should be implemented in this order based on dependen
 
 ---
 
-### <Repository-2>
+## Repository: <Repository-2>
 ...
 
 ## Integration Testing Strategy
@@ -177,6 +177,7 @@ To initialize the child workflow for each repository, follow these steps:
 1. Navigate to repository: `cd <path-to-repo-1>`
 2. Run: "PAW: New PAW Workflow" command
 3. Select Workflow Type: **Implementation**
+4. Ensure Work ID: `<work-id>` (use a matching feature slug / branch-derived work id so artifacts land in `.paw/work/<work-id>/`)
 4. Target Branch: `<suggested-branch-name>`
 5. Workflow Mode: `<full|minimal>` (matches cross-repo workflow)
 6. Review Strategy: `<prs|local>` (matches cross-repo workflow)
@@ -187,6 +188,13 @@ To initialize the child workflow for each repository, follow these steps:
 ...
 
 ## Coordination Notes
+
+## Child Workflow Independence
+
+Child workflows operate as standard PAW workflows inside each git repository:
+- Child workflow artifacts live in `<repo>/.paw/work/<work-id>/` and are version-controlled in that repository.
+- Cross-repo coordination artifacts live in `<storage-root>/.paw/multi-work/<work-id>/` and are not required for child workflow operation.
+- If `<storage-root>/.paw/multi-work/<work-id>/` is deleted, child workflows should continue functioning normally.
 
 ### Breaking Changes
 <Document any breaking changes and coordination requirements>

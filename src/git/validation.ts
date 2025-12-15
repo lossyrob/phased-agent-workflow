@@ -29,9 +29,6 @@ export async function validateGitRepository(workspacePath: string): Promise<bool
  * This is useful for warning users before performing operations that may affect
  * the working tree.
  * 
- * Note: This function is implemented but not currently used in Phase 2. It will be
- * integrated when the agent prompt includes uncommitted changes warnings.
- * 
  * @param workspacePath - Absolute path to the workspace root directory
  * @returns Promise resolving to true if there are uncommitted changes, false otherwise
  * @throws Error if git command fails (e.g., not a git repository)

@@ -102,6 +102,8 @@ suite('Context Tool', () => {
         assert.strictEqual(result.workspace_instructions.content, 'Workspace instructions line');
         assert.strictEqual(result.user_instructions.content, 'User instructions line');
         assert.ok(result.workflow_context.content.includes('Work Title: Demo'));
+        // Temp workspaces used in tests are not git repositories
+        assert.strictEqual(result.git_context.is_git_repo, false);
       } finally {
         restoreEnv();
       }
@@ -133,6 +135,7 @@ suite('Context Tool', () => {
       workspace_instructions: status('Workspace data'),
       user_instructions: status('', 'Failed to read user instructions: EACCES'),
       workflow_context: status('Work Title: Demo Feature'),
+      git_context: { is_git_repo: true, has_uncommitted_changes: false },
     } satisfies ContextResult);
 
     assert.ok(response.includes('<workspace_instructions>'));
@@ -142,17 +145,22 @@ suite('Context Tool', () => {
     assert.ok(response.includes('<workflow_context>'));
     assert.ok(response.includes('```markdown'));
     assert.ok(!response.includes('Follow custom instructions'));
+    assert.ok(response.includes('<git_context>'));
+    assert.ok(response.includes('is_git_repo: true'));
   });
 
-  test('formatContextResponse reports empty context when no sections exist', () => {
+  test('formatContextResponse includes git and handoff context when no instruction sections exist', () => {
     const empty: InstructionStatus = { exists: false, content: '' };
     const response = formatContextResponse({
       workspace_instructions: empty,
       user_instructions: empty,
       workflow_context: empty,
+      git_context: { is_git_repo: false },
     });
 
-    assert.strictEqual(response, '<context status="empty" />');
+    assert.ok(response.includes('<git_context>'));
+    assert.ok(response.includes('is_git_repo: false'));
+    assert.ok(response.includes('<handoff_instructions>'));
   });
 
   suite('loadWorkflowContext', () => {
@@ -624,6 +632,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        git_context: { is_git_repo: false },
       } satisfies ContextResult);
 
       assert.ok(response.includes('<handoff_instructions>'));
@@ -637,6 +646,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: auto'),
+        git_context: { is_git_repo: false },
       } satisfies ContextResult);
       assert.ok(autoResponse.includes('Auto Mode'));
 
@@ -644,6 +654,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: manual'),
+        git_context: { is_git_repo: false },
       } satisfies ContextResult);
       assert.ok(manualResponse.includes('Manual Mode'));
 
@@ -651,6 +662,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: semi-auto'),
+        git_context: { is_git_repo: false },
       } satisfies ContextResult);
       assert.ok(semiAutoResponse.includes('Semi-Auto Mode'));
     });
@@ -662,6 +674,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nTarget Branch: main'),
+        git_context: { is_git_repo: false },
       } satisfies ContextResult);
 
       assert.ok(response.includes('Manual Mode'));
@@ -675,6 +688,7 @@ Remote: origin`;
         workspace_instructions: status('Workspace instructions content'),
         user_instructions: status('User instructions content'),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        git_context: { is_git_repo: true, has_uncommitted_changes: false },
       } satisfies ContextResult);
 
       const workspaceIndex = response.indexOf('<workspace_instructions>');
@@ -688,15 +702,17 @@ Remote: origin`;
       assert.ok(handoffIndex > workflowIndex, 'handoff_instructions should be after workflow_context');
     });
 
-    test('returns empty context when only handoff instructions present', () => {
+    test('includes git context even when instruction sections are missing', () => {
       const empty: InstructionStatus = { exists: false, content: '' };
       const response = formatContextResponse({
         workspace_instructions: empty,
         user_instructions: empty,
         workflow_context: empty,
+        git_context: { is_git_repo: false },
       });
 
-      assert.strictEqual(response, '<context status="empty" />');
+      assert.ok(response.includes('<git_context>'));
+      assert.ok(response.includes('<handoff_instructions>'));
     });
   });
 });

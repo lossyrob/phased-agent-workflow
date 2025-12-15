@@ -9,8 +9,21 @@ When a PAW agent starts, it calls the `paw_get_context` tool to retrieve:
 1. **Workspace instructions**: From `.paw/instructions/<agent-name>-instructions.md`
 2. **User instructions**: From `~/.paw/instructions/<agent-name>-instructions.md`
 3. **Workflow context**: From `.paw/work/<feature-slug>/WorkflowContext.md`
+4. **Git context**: Best-effort git workspace state (repo detection + dirty working tree)
 
 Agents then apply these instructions alongside their default behavior.
+
+### Git Context
+
+`paw_get_context` also returns a `<git_context>` section that helps agents make safer, commit-aware decisions.
+
+**Fields:**
+
+- `is_git_repo`: Whether the current workspace is a valid git repository
+- `has_uncommitted_changes`: Present only when `is_git_repo` is true
+- `recommended_commands`: A short list of commands agents can run to gather commit/diff context
+
+If git inspection fails, the tool will include a `<warning>` inside `<git_context>` and still return the rest of the context.
 
 ## Precedence Rules
 

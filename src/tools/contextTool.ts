@@ -3,6 +3,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import { hasUncommittedChanges, validateGitRepository } from '../git/validation';
+
 /**
  * Resolves the path to a handoff template file.
  * Checks both compiled (out/prompts) and source (src/prompts) locations
@@ -92,6 +94,17 @@ export interface ContextResult {
   user_instructions: InstructionStatus;
   /** Raw WorkflowContext.md content from .paw/work/<feature-slug>/ */
   workflow_context: InstructionStatus;
+  /** Minimal git workspace context for commit-aware reasoning */
+  git_context: GitContext;
+}
+
+export interface GitContext {
+  /** Whether workspacePath appears to be a git repository */
+  is_git_repo: boolean;
+  /** Whether there are staged/unstaged changes (only when is_git_repo is true) */
+  has_uncommitted_changes?: boolean;
+  /** Optional warning message when git detection fails unexpectedly */
+  warning?: string;
 }
 
 /**
@@ -337,10 +350,31 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
   const userInstructions = loadCustomInstructions(userInstructionsDir, agentName);
   const workflowContext = loadWorkflowContext(workflowContextPath);
 
+  // Determine minimal git workspace context. This is best-effort and must not
+  // fail context retrieval.
+  let gitContext: GitContext = { is_git_repo: false };
+  try {
+    const isGitRepo = await validateGitRepository(workspacePath);
+    gitContext.is_git_repo = isGitRepo;
+
+    if (isGitRepo) {
+      try {
+        gitContext.has_uncommitted_changes = await hasUncommittedChanges(workspacePath);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        gitContext.warning = message;
+      }
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    gitContext = { is_git_repo: false, warning: message };
+  }
+
   return {
     workspace_instructions: workspaceInstructions,
     user_instructions: userInstructions,
     workflow_context: workflowContext,
+    git_context: gitContext,
   };
 }
 
@@ -379,22 +413,14 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * - Workspace custom instructions wrapped in `<workspace_instructions>`
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
+ * - Git workspace context wrapped in `<git_context>`
  * - Mode-specific handoff instructions wrapped in `<handoff_instructions>` (at END for recency)
- * - `<context status="empty" />` when no sections are available
  * 
  * @param result - Context result to format
  * @returns Tagged Markdown text ready for agent consumption
  */
 export function formatContextResponse(result: ContextResult): string {
-  // Check if any actual context exists before building response
-  const hasWorkspaceContent = result.workspace_instructions.content || result.workspace_instructions.error;
-  const hasUserContent = result.user_instructions.content || result.user_instructions.error;
   const hasWorkflowContent = result.workflow_context.content || result.workflow_context.error;
-  
-  // Return early if no actual context sections have content
-  if (!hasWorkspaceContent && !hasUserContent && !hasWorkflowContent) {
-    return '<context status="empty" />';
-  }
 
   const sections: string[] = [];
 
@@ -421,6 +447,19 @@ export function formatContextResponse(result: ContextResult): string {
     workflowParts.push('</workflow_context>');
     sections.push(workflowParts.join('\n'));
   }
+
+  // Add git context (kept near the workflow context so agents see it before handoff instructions)
+  const gitParts: string[] = ['<git_context>'];
+  gitParts.push(`is_git_repo: ${String(result.git_context.is_git_repo)}`);
+  if (result.git_context.is_git_repo && typeof result.git_context.has_uncommitted_changes === 'boolean') {
+    gitParts.push(`has_uncommitted_changes: ${String(result.git_context.has_uncommitted_changes)}`);
+    gitParts.push('recommended_commands: git status --porcelain; git log --oneline -n 20');
+  }
+  if (result.git_context.warning) {
+    gitParts.push(`<warning>${result.git_context.warning}</warning>`);
+  }
+  gitParts.push('</git_context>');
+  sections.push(gitParts.join('\n'));
 
   // Parse handoff mode and add instructions at END for recency bias
   const handoffMode = parseHandoffMode(result.workflow_context.content || '');

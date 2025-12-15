@@ -158,11 +158,13 @@ This aligns with the feature’s “commit-aware intent support” while reusing
 ### Success Criteria
 
 #### Automated Verification
-- [ ] Unit tests pass: `npm test`
-- [ ] TypeScript compile passes: `npm run compile`
+- [x] Unit tests pass: `npm test`
+- [x] TypeScript compile passes: `npm run compile`
 
 #### Manual Verification
 - [ ] Calling `paw_get_context` shows a `<git_context>` section indicating repo validity and dirty/clean status.
+
+**Phase 2 Status (2025-12-15):** Implemented `<git_context>` output in `paw_get_context` using `src/git/validation.ts` (repo detection + uncommitted change detection) with best-effort warnings; updated `Context Tool` unit tests accordingly. Automated verification passed via `npm test` (includes compile).
 
 ---
 

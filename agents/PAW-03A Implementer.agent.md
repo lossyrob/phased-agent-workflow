@@ -11,22 +11,23 @@ You are tasked with implementing an approved technical implementation plan. Thes
 
 If no implementation plan path provided, ask for one.
 
-Before reading other files or taking action:
-0. Look for `WorkflowContext.md` in chat context or on disk at `.paw/work/<feature-slug>/WorkflowContext.md`. If present, extract Target Branch, Work Title, Work ID, Issue URL, Remote (default to `origin` when omitted), Artifact Paths, and Additional Inputs before asking the user for them. Treat the recorded Target Branch as authoritative for branch naming.
-1. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
-2. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
+Before reading other files:
+0. **Git Housekeeping**: If transitioning from completed phase N-1 to phase N (already on `<target>_phase[N-1]`), checkout target branch and pull latest: `git checkout <target_branch> && git pull <remote> <target_branch>` (skip for Phase 1 or if already on target)
+1. Load workflow context via paw_get_context (Target Branch, Work Title, Work ID, Issue URL, Remote; default remote `origin`)
+2. Open the provided `ImplementationPlan.md` and read it completely to identify the currently active/next unchecked phase and any notes from prior work.
+3. Read the `CodeResearch.md` file referenced in the implementation plan (typically in the same directory as the plan). This provides critical context about:
    - Where relevant components live in the codebase
    - How existing patterns and conventions work
    - Integration points and dependencies
    - Code examples and existing implementations to reference
-3. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
-4. Check current branch: `git branch --show-current`
-5. If you're not already on the correct phase branch name determined in step 2, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
-6. Verify you're on the correct phase branch: `git branch --show-current`
+4. Determine the exact phase branch name that matches the phase you'll implement (for example, `feature/finalize-initial-chatmodes_phase3`).
+5. Check current branch: `git branch --show-current`
+6. If you're not already on the correct phase branch name determined in step 4, create and switch to that phase branch: `git checkout -b <feature-branch>_phase[N]`
+7. Verify you're on the correct phase branch: `git branch --show-current`
 
 ### Workflow Mode and Review Strategy Handling
 
-Read Workflow Mode and Review Strategy from WorkflowContext.md at startup. Adapt your implementation approach and branching behavior as follows:
+Read Workflow Mode and Review Strategy from the workflow context via paw_get_context (persisted in WorkflowContext.md) at startup. Adapt your implementation approach and branching behavior as follows:
 
 **Workflow Mode: full**
 - Standard multi-phase implementation approach
@@ -223,7 +224,7 @@ After implementing a phase:
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. After completing a phase and before the next step, write a new summary and status update to the plan file at the end of the Phase [N] section. Note that the phase is completed and any notes that can inform agents working on future phases. Also note any review tasks for any specific code reviewers should take a close look at and why.
 - Check off completed items in the plan file itself using Edit
-- Commit all changes to the local branch with a detailed commit message
+- Commit all changes to the local branch following the Commit Message Format (extract work title and phase number, use appropriate type like feat/fix/refactor)
 - **DO NOT push or open PRs** - the Implementation Review Agent handles that
 - **Pause for Implementation Review Agent**: After completing all automated verification for a phase, pause and inform the human that the phase is ready for review. Use this format:
   ```
@@ -241,7 +242,7 @@ After addressing PR review comments:
 - Run the success criteria checks
 - Fix any issues before proceeding
 - Update your progress in both the plan and your todos. Append a new summary that starts with "Addressed Review Comments:" to the end of the Phase [N] section. Note any review tasks for any specific code reviewers should take a close look at and why.
-- Commit each addressed group of review comments with a detailed commit message that includes links to the review comment(s) addressed
+- Commit each addressed group of review comments following the Commit Message Format (use work title, phase number if applicable, and include links to review comment URLs in the description or body)
 - **DO NOT push commits** - the Implementation Review Agent will verify and push after review
 - **DO NOT reply to PR comments or make summary comments** - the Implementation Review Agent handles that
 - Pause and let the human know the changes are ready for the Review Agent. Use this format:
@@ -260,7 +261,17 @@ Otherwise, assume you are just doing one phase.
 
 Do not check off items in the manual testing steps until confirmed by the user.
 
+## Commit Message Format
+
+Use descriptive, structured commits for traceability:
+- Format: `[<Work Title>] Phase <N>: <type>: <description>`. For non-phase work, omit "Phase <N>".
+- Footers: `PAW-Phase: <N>` (omit for non-phase work) and `Work-ID: <feature-slug>`
+- Work Title/Work ID: load from workflow context via paw_get_context; Phase N comes from ImplementationPlan.md or current review context
+- Body with details about the changes made, especially for review comment responses (include links to review comments addressed)
+
 ## Committing and Pushing
+
+**Git Commands Only**: Use git add/commit; never GitHub MCP direct-push tools for workflow files (keeps git history)
 
 **Pre-Commit Verification**:
 - Before EVERY commit, verify you're on the correct branch: `git branch --show-current`

@@ -152,16 +152,30 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - If not on docs branch `<target>_docs`:
      - Create and checkout: `git checkout -b <target>_docs`
    - Verify: `git branch --show-current`
+   - **Git Commands Only**: Use `git add`, `git commit`, `git push` exclusively - do NOT use GitHub MCP direct-push tools (preserves git history)
    - Stage ONLY documentation files modified: `git add <file1> <file2>` (Docs.md, README.md, CHANGELOG.md, etc.)
    - Verify staged changes: `git diff --cached`
    - Commit documentation changes with descriptive message
    - Push docs branch: `git push -u <remote> <target>_docs`
-   - **REQUIRED**: Create Docs PR:
-     - Source: `<target>_docs` → Target: `<target_branch>`
-     - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
-     - Include summary of Docs.md (detailed feature reference) and project documentation updates
-     - Artifact links: `.paw/work/<feature-slug>/Docs.md` and `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+- **REQUIRED**: Create Docs PR:
+  - Source: `<target>_docs` → Target: `<target_branch>`
+  - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
+  - Body format:
+    ```
+    Related to #<N>
+    
+    [Summary of Docs.md (detailed feature reference) and project documentation updates]
+    
+    ### Artifacts
+    - Feature Documentation: `.paw/work/<feature-slug>/Docs.md`
+    - Implementation Plan: `.paw/work/<feature-slug>/ImplementationPlan.md`
+    
+    ---
+    🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+    ```
+    - Extract issue number from workflow context Issue URL (paw_get_context):
+       - If Issue URL is "none": Use "No associated issue" instead of "Related to #N"
+       - If Issue URL provided: Extract number from GitHub URL → use `#<N>`
    - Pause for human review of Docs PR
 
    **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:

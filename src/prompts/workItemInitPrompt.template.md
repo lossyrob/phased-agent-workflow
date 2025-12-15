@@ -112,7 +112,11 @@ After creating the workflow structure and checking out the target branch, commit
 
 This ensures the workflow context is tracked in version control from the start.
 
-### 8. Open WorkflowContext.md
+### 8. Push Target Branch to Remote
+
+Push target branch: `git push -u origin {{TARGET_BRANCH}}` (ensures target exists for PRs; acceptable if already exists)
+
+### 9. Open WorkflowContext.md
 
 
 Open `.paw/work/<feature-slug>/WorkflowContext.md` in the editor for review.

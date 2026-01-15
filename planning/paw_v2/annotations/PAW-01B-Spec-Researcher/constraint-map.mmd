@@ -1,0 +1,59 @@
+flowchart LR
+    subgraph Global["Global Guardrails (Reusable)"]
+        g1[No speculation]
+        g2[No proposals/refactors]
+        g3[Read files fully]
+        g4[Keep answers concise]
+        g5[Anti-evaluation:<br/>describe only]
+        g6[Idempotent updates]
+    end
+
+    subgraph Phase["Phase-Specific (Spec Research)"]
+        p1[Behavioral focus only]
+        p2[No file:line references]
+        p3[Distinguish internal<br/>from external questions]
+    end
+
+    subgraph Workflow["Workflow Control"]
+        w1[No commits/posts]
+        w2[Handoff to 01A only]
+    end
+
+    subgraph Steps["Workflow Steps"]
+        s1[Question-by-question<br/>research]
+        s2[Build SpecResearch.md]
+        s3[Quality checklist]
+        s4[Handoff]
+    end
+
+    %% Global guardrails apply to all steps
+    g1 --> s1
+    g1 --> s2
+    g2 --> s1
+    g2 --> s2
+    g3 --> s1
+    g4 --> s2
+    g5 --> s1
+    g5 --> s2
+    g6 --> s2
+
+    %% Phase-specific apply to artifact creation
+    p1 --> s1
+    p1 --> s2
+    p2 --> s1
+    p2 --> s2
+    p3 --> s2
+
+    %% Workflow constraints
+    w1 --> s4
+    w2 --> s4
+
+    classDef global fill:#e3f2fd,stroke:#1565c0
+    classDef phase fill:#fce4ec,stroke:#c2185b
+    classDef workflow fill:#fff3e0,stroke:#ef6c00
+    classDef step fill:#f5f5f5,stroke:#616161
+
+    class g1,g2,g3,g4,g5,g6 global
+    class p1,p2,p3 phase
+    class w1,w2 workflow
+    class s1,s2,s3,s4 step

@@ -25,13 +25,15 @@ Future consideration (not designed here):
 
 | Component | Delivery | User Action |
 |-----------|----------|-------------|
-| PAW Agent | Extension installs to VS Code user prompts dir | Install extension |
+| PAW Agent | **V2 target:** extension installs a single `PAW.agent.md` to the VS Code **user prompts directory** (platform + VS Code variant specific; overridable via `paw.promptDirectory`) | Install extension |
 | PAW Tools | Extension registers MCP tools | Install extension |
 | Built-in Skills | Bundled in extension; served via `paw_get_skill` | None (automatic) |
 | User Skills | User creates in `~/.paw/skills/` | Optional customization |
 | Work-Item Skills | Created in `.paw/work/<id>/skills/` | Per-project customization |
-| Prompt Commands | Extension installs to VS Code user prompts dir | Install extension |
+| Prompt Commands | **V2 target:** extension installs `paw-*.prompt.md` files to the VS Code **user prompts directory** (alongside the PAW agent) | Install extension |
 | Custom Instructions | User creates in `.paw/instructions/` or `~/.paw/instructions/` | Optional customization |
+
+**Note (v1 behavior, for validation/reference):** Today the extension installs multiple `PAW-*.agent.md` files into the prompts directory, and prompt files are generated on-demand into `.paw/work/<id>/prompts/` via `paw_generate_prompt`.
 
 ---
 
@@ -39,18 +41,31 @@ Future consideration (not designed here):
 
 ### Extension-Installed (User Level)
 
+The extension installs the single PAW agent and prompt-command prompt files into the **VS Code user prompts directory**.
+
+Default prompts-directory roots are platform- and VS Code-variant-specific (and can be overridden by the `paw.promptDirectory` setting):
+
+- macOS (Stable): `~/Library/Application Support/Code/User/prompts/`
+- Linux (Stable): `~/.config/Code/User/prompts/`
+- Windows (Stable): `%APPDATA%\Code\User\prompts\`
+- WSL: `/mnt/c/Users/<username>/AppData/Roaming/<variant>/User/prompts/`
+
+Variants use the same layout with `<variant>` substituted (e.g., `Code - Insiders`, `Code - OSS`, `VSCodium`).
+
+Example (Linux, Stable):
 ```
-~/.vscode/
-└── prompts/                              # VS Code user prompts directory
-    ├── PAW.agent.md                      # Single PAW agent
-    ├── paw-spec.prompt.md                # Prompt command: create spec
-    ├── paw-plan.prompt.md                # Prompt command: create plan
-    ├── paw-implement.prompt.md           # Prompt command: implement
-    ├── paw-docs.prompt.md                # Prompt command: documentation
-    ├── paw-pr.prompt.md                  # Prompt command: final PR
-    ├── paw-review.prompt.md              # Prompt command: PR review
-    └── paw-status.prompt.md              # Prompt command: status check
+~/.config/Code/User/prompts/
+├── PAW.agent.md                      # Single PAW agent
+├── paw-spec.prompt.md                # Prompt command: create spec
+├── paw-plan.prompt.md                # Prompt command: create plan
+├── paw-implement.prompt.md           # Prompt command: implement
+├── paw-docs.prompt.md                # Prompt command: documentation
+├── paw-pr.prompt.md                  # Prompt command: final PR
+├── paw-review.prompt.md              # Prompt command: PR review
+└── paw-status.prompt.md              # Prompt command: status check
 ```
+
+**Note:** The file list above is the v2 target. In v1, agents are installed as multiple `paw-*.agent.md` files, and prompt files are generated per-work-item under `.paw/work/<id>/prompts/`.
 
 ### User Customization (User Level)
 
@@ -137,15 +152,21 @@ If `paw-code-research` exists in multiple locations:
 
 ## Custom Instructions Precedence
 
-Unchanged from v1; documented here for completeness.
+In PAW v1 (current repo implementation), custom instruction files are **per-agent** and named `<agentName>-instructions.md` inside the instructions directory.
+
+In PAW v2 (single-agent model), this can be simplified to a single file (e.g., `PAW-instructions.md`) while keeping the same directory precedence.
 
 | Priority | Source | Location |
 |----------|--------|----------|
-| 1 | Workspace | `.paw/instructions/PAW-instructions.md` |
-| 2 | User | `~/.paw/instructions/PAW-instructions.md` |
+| 1 | Workspace | `.paw/instructions/<agentName>-instructions.md` (v1) / `.paw/instructions/PAW-instructions.md` (v2 proposal) |
+| 2 | User | `~/.paw/instructions/<agentName>-instructions.md` (v1) / `~/.paw/instructions/PAW-instructions.md` (v2 proposal) |
 | 3 | Default | Built into PAW agent instructions |
 
 **Merge behavior:** Custom instructions are *appended* to defaults (unlike skills which replace).
+
+**Clarification (implementation detail):** The `paw_get_context` tool returns workspace and user instruction content as separate sections; the “append to defaults” behavior is performed by the agent prompt composition, not by the tool.
+
+**Related (v1 behavior):** Workflow initialization also supports a separate init-specific instructions file at `.paw/instructions/init-instructions.md` (this is independent of the per-agent/per-PAW instruction file convention).
 
 ---
 
@@ -201,6 +222,8 @@ Unchanged from v1; documented here for completeness.
 
 Returns skill catalog from all sources with precedence applied.
 
+**Status:** v2 proposed tool (does not exist in v1).
+
 **Output Format:** TBD — could be JSON, YAML, or markdown table. Decision will be based on clarity for the agent + minimizing token count.
 
 **Output Schema (illustrative):**
@@ -252,6 +275,8 @@ Retrieves full skill content by ID.
 **Output:** Full SKILL.md content (YAML frontmatter + instructions body)
 
 **Resolution:** Uses `paw_list_skills` precedence to find the active skill definition.
+
+**Status:** v2 proposed tool (does not exist in v1).
 
 ### `paw_get_context`
 
@@ -338,11 +363,14 @@ Reuse existing platform detection from v1:
 
 | Platform | VS Code Prompts Directory |
 |----------|--------------------------|
-| macOS | `~/Library/Application Support/Code/User/prompts/` |
-| Linux | `~/.config/Code/User/prompts/` |
-| Windows | `%APPDATA%\Code\User\prompts\` |
+| macOS | `~/Library/Application Support/<variant>/User/prompts/` |
+| Linux | `~/.config/<variant>/User/prompts/` |
+| Windows | `%APPDATA%\<variant>\User\prompts\` |
+| WSL | `/mnt/c/Users/<username>/AppData/Roaming/<variant>/User/prompts/` |
 
-**Insider builds:** Replace `Code` with `Code - Insiders`
+**Variants:** `Code` (Stable), `Code - Insiders`, `Code - OSS`, `VSCodium`.
+
+**Override:** Users can set `paw.promptDirectory` to force a custom prompts directory path (useful for unsupported setups or permission issues).
 
 ---
 

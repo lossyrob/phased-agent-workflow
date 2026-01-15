@@ -1,0 +1,50 @@
+```mermaid
+flowchart TD
+    step1["After calling `paw_get_context` (see PAW"]
+    step2["1. Collect feature intent & constraints "]
+    step3["2. Extract key concepts → derive priorit"]
+    step4["3. Enumerate factual unknowns; classify "]
+    step5["4. Generate `prompts/01B-spec-research.p"]
+    step6["5. Pause for research; integrate..."]
+    step7["6. Produce the specification using the i"]
+    step8["7. Validate against the Spec Quality Che"]
+    step9["8. Output final readiness checklist (spe"]
+    step10["1. Intake & Decomposition: Read the Issu"]
+    step11["2. User Story Drafting: Derive initial.."]
+    step12["3. Unknown Classification:"]
+    step13["4. Research Prompt Generation: Create..."]
+    step14["5. Handoff: Instruct user to run Spec Re"]
+    step15["6. Integrate Research: Map each research"]
+    step16["7. Specification Assembly: Iteratively b"]
+    step17["8. Quality Checklist Pass: Evaluate spec"]
+    step18["9. Finalize & Hand‑Off: Present final re"]
+    handoff1(["Handoff 1"]):::handoff
+    handoff2(["Conditional next stage based on workflow"]):::handoff
+
+    %% Sequential flow - refine with decision points
+    step1 --> step2
+    step2 --> step3
+    step3 --> step4
+    step4 --> step5
+    step5 --> step6
+    step6 --> step7
+    step7 --> step8
+    step8 --> step9
+    step9 --> step10
+    step10 --> step11
+    step11 --> step12
+    step12 --> step13
+    step13 --> step14
+    step14 --> step15
+    step15 --> step16
+    step16 --> step17
+    step17 --> step18
+
+    %% Handoffs - add conditions as needed
+    step18 --> handoff1
+    step18 --> handoff2
+
+    %% Styling
+    classDef phasebound fill:#f9f,stroke:#333,stroke-width:2px
+    classDef handoff fill:#bbf,stroke:#333,stroke-width:2px
+```

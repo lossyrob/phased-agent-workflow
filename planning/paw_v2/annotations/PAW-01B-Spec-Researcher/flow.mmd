@@ -1,0 +1,51 @@
+flowchart TD
+    subgraph Start
+        A[Check PAW Context] --> B{Prompt path<br/>provided?}
+        B -->|No| C[Request prompt path<br/>or pasted questions]
+        B -->|Yes| D[Load research prompt]
+        C --> D
+    end
+
+    subgraph Research["Research Method"]
+        D --> E[Read first question]
+        E --> F[Explore repo:<br/>code, docs, config]
+        F --> G{Can answer<br/>factually?}
+        G -->|Yes| H[Document behavioral answer]
+        G -->|No| I{Consulted all<br/>sources?}
+        I -->|No| F
+        I -->|Yes| J[Add to Open Unknowns<br/>with rationale]
+        H --> K[Add Evidence source]
+        K --> L[Add Implications<br/>if relevant]
+        J --> L
+        L --> M{More questions?}
+        M -->|Yes| E
+        M -->|No| N[Finalize Summary]
+    end
+
+    subgraph Output["Output & Quality"]
+        N --> O[Add External Knowledge<br/>section if questions exist]
+        O --> P{Quality Checklist<br/>passes?}
+        P -->|No| Q[Address gaps]
+        Q --> P
+        P -->|Yes| R[Save SpecResearch.md<br/>to canonical path]
+    end
+
+    subgraph Handoff
+        R --> S[Present handoff message]
+        S --> T{User choice}
+        T -->|spec| U[Handoff to PAW-01A<br/>Specification]
+        T -->|status| V[Show status]
+        T -->|continue| U
+    end
+
+    classDef start fill:#e1f5fe,stroke:#01579b
+    classDef research fill:#f3e5f5,stroke:#4a148c
+    classDef output fill:#e8f5e9,stroke:#1b5e20
+    classDef handoff fill:#fff3e0,stroke:#e65100
+    classDef decision fill:#fff9c4,stroke:#f57f17
+
+    class A,B,C,D start
+    class E,F,G,H,I,J,K,L,M,N research
+    class O,P,Q,R output
+    class S,T,U,V handoff
+    class B,G,I,M,P,T decision

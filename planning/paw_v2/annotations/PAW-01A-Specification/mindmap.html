@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<title>Markmap</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+html {
+  font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+#mindmap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+.markmap-dark {
+  background: #27272a;
+  color: white;
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script><script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script><script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/index.js"></script><script>((r) => {
+          setTimeout(r);
+        })(() => {
+  const { markmap, mm } = window;
+  const toolbar = new markmap.Toolbar();
+  toolbar.attach(mm);
+  const el = toolbar.render();
+  el.setAttribute("style", "position:absolute;bottom:20px;right:20px");
+  document.body.append(el);
+})</script><script>((getMarkmap, getOptions, root2, jsonOptions) => {
+              const markmap = getMarkmap();
+              window.mm = markmap.Markmap.create(
+                "svg#mindmap",
+                (getOptions || markmap.deriveOptions)(jsonOptions),
+                root2
+              );
+              if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.classList.add("markmap-dark");
+              }
+            })(() => window.markmap,null,{"content":"PAW-01A Specification","children":[{"content":"agent-identity","children":[{"content":"mission-statement","children":[{"content":"Convert brief &#x2192; spec + research prompt","children":[],"payload":{"tag":"li","lines":"4,5"}}],"payload":{"tag":"h3","lines":"3,4"}},{"content":"operating-principle","children":[{"content":"Behavioral clarity first","children":[],"payload":{"tag":"li","lines":"6,8"}}],"payload":{"tag":"h3","lines":"5,6"}}],"payload":{"tag":"h2","lines":"2,3"}},{"content":"core-principles","children":[{"content":"guardrails","children":[{"content":"User value focus <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"10,11"}},{"content":"Testable stories <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"11,12"}},{"content":"Resolve before drafting <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"12,13"}},{"content":"Enumerated traceability <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"13,14"}},{"content":"Research vs design <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"14,15"}},{"content":"Explicit assumptions <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"15,16"}},{"content":"Measurable tech-agnostic <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"16,17"}},{"content":"Scope &amp; risk <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"17,18"}},{"content":"No speculation <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"18,19"}},{"content":"No fabrication <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"19,20"}},{"content":"Pause after research <code>[workflow]</code>","children":[],"payload":{"tag":"li","lines":"20,21"}},{"content":"User autonomy <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"21,22"}},{"content":"Minimal diffs <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"22,23"}}],"payload":{"tag":"h3","lines":"9,10"}},{"content":"decision-frameworks","children":[{"content":"External questions handling <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"24,25"}},{"content":"Implementation detail handling <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"25,27"}}],"payload":{"tag":"h3","lines":"23,24"}}],"payload":{"tag":"h2","lines":"8,9"}},{"content":"workflow","children":[{"content":"start","children":[{"content":"Check SpecResearch.md","children":[],"payload":{"tag":"li","lines":"29,30"}},{"content":"Read Issue","children":[],"payload":{"tag":"li","lines":"30,31"}},{"content":"Hard constraints","children":[],"payload":{"tag":"li","lines":"31,32"}},{"content":"Research preference","children":[],"payload":{"tag":"li","lines":"32,33"}}],"payload":{"tag":"h3","lines":"28,29"}},{"content":"mode-handling","children":[{"content":"full mode","children":[],"payload":{"tag":"li","lines":"34,35"}},{"content":"minimal mode","children":[],"payload":{"tag":"li","lines":"35,36"}},{"content":"custom mode","children":[],"payload":{"tag":"li","lines":"36,37"}}],"payload":{"tag":"h3","lines":"33,34"}},{"content":"high-level-responsibilities","children":[{"content":"1 Collect intent","children":[],"payload":{"tag":"li","lines":"38,39"}},{"content":"2 Extract stories","children":[],"payload":{"tag":"li","lines":"39,40"}},{"content":"3 Classify unknowns","children":[],"payload":{"tag":"li","lines":"40,41"}},{"content":"4 Generate research prompt","children":[],"payload":{"tag":"li","lines":"41,42"}},{"content":"5 Pause for research","children":[],"payload":{"tag":"li","lines":"42,43"}},{"content":"6 Produce spec","children":[],"payload":{"tag":"li","lines":"43,44"}},{"content":"7 Validate quality","children":[],"payload":{"tag":"li","lines":"44,45"}},{"content":"8 Output checklist","children":[],"payload":{"tag":"li","lines":"45,46"}}],"payload":{"tag":"h3","lines":"37,38"}},{"content":"drafting-workflow","children":[{"content":"1 Intake &amp; Decomposition","children":[],"payload":{"tag":"li","lines":"47,48"}},{"content":"2 User Story Drafting","children":[],"payload":{"tag":"li","lines":"48,49"}},{"content":"3 Unknown Classification","children":[],"payload":{"tag":"li","lines":"49,50"}},{"content":"4 Research Prompt Generation","children":[],"payload":{"tag":"li","lines":"50,51"}},{"content":"5 Handoff to Researcher","children":[],"payload":{"tag":"li","lines":"51,52"}},{"content":"6 Integrate Research","children":[],"payload":{"tag":"li","lines":"52,53"}},{"content":"7 Specification Assembly","children":[],"payload":{"tag":"li","lines":"53,54"}},{"content":"8 Quality Checklist Pass","children":[],"payload":{"tag":"li","lines":"54,55"}},{"content":"9 Finalize &amp; Hand-Off","children":[],"payload":{"tag":"li","lines":"55,57"}}],"payload":{"tag":"h3","lines":"46,47"}}],"payload":{"tag":"h2","lines":"27,28"}},{"content":"artifact-formats","children":[{"content":"research-prompt-format <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"58,59"}},{"content":"specification-template <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"59,60"}},{"content":"handoff-checklist <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"60,62"}}],"payload":{"tag":"h2","lines":"57,58"}},{"content":"quality-gates","children":[{"content":"spec-quality-checklist <code>[phase-bound]</code>","children":[{"content":"Content Quality","children":[],"payload":{"tag":"li","lines":"64,65"}},{"content":"Narrative Quality","children":[],"payload":{"tag":"li","lines":"65,66"}},{"content":"Requirement Completeness","children":[],"payload":{"tag":"li","lines":"66,67"}},{"content":"Ambiguity Control","children":[],"payload":{"tag":"li","lines":"67,68"}},{"content":"Scope &amp; Risk","children":[],"payload":{"tag":"li","lines":"68,69"}},{"content":"Research Integration","children":[],"payload":{"tag":"li","lines":"69,70"}}],"payload":{"tag":"h3","lines":"63,64"}},{"content":"quality-bar <code>[phase-bound]</code>","children":[],"payload":{"tag":"h3","lines":"70,71"}}],"payload":{"tag":"h2","lines":"62,63"}},{"content":"classification-logic","children":[{"content":"working-modes <code>[phase-bound]</code>","children":[],"payload":{"tag":"li","lines":"73,74"}},{"content":"unknown-classification <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"74,75"}},{"content":"handoff-conditions <code>[workflow]</code>","children":[],"payload":{"tag":"li","lines":"75,77"}}],"payload":{"tag":"h2","lines":"72,73"}},{"content":"handoff-instructions","children":[{"content":"spec-ready-checklist <code>[phase-bound]</code>","children":[],"payload":{"tag":"h3","lines":"78,79"}},{"content":"conditional-handoff <code>[workflow]</code>","children":[{"content":"To PAW-01B Spec Researcher","children":[],"payload":{"tag":"li","lines":"80,81"}},{"content":"To PAW-02A Code Researcher","children":[],"payload":{"tag":"li","lines":"81,83"}}],"payload":{"tag":"h3","lines":"79,80"}}],"payload":{"tag":"h2","lines":"77,78"}},{"content":"communication-patterns","children":[{"content":"Incremental writing <code>[reusable]</code>","children":[],"payload":{"tag":"li","lines":"84,85"}},{"content":"Warning prefixes","children":[],"payload":{"tag":"li","lines":"85,86"}},{"content":"Implementation transformation","children":[],"payload":{"tag":"li","lines":"86,87"}}],"payload":{"tag":"h2","lines":"83,84"}}],"payload":{"tag":"h1","lines":"0,1"}},null)</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+# Structure Summary: PAW 01A Specification.annotated
+
+counts:
+  guardrails: 23
+  workflow_steps: 18
+  decision_frameworks: 5
+  artifacts: 4
+  quality_gates: 2
+  handoffs: 2
+
+scope_breakdown:
+  reusable: 14
+  phase_bound: 17
+  workflow: 5
+  unspecified: 18
+
+guardrails:
+  - "1. User value focus: Describe WHAT & WHY" [phase-bound] @Core Principles & Guardra...
+  - "2. Independently testable stories: Prior" [phase-bound] @Core Principles & Guardra...
+  - "3. Resolve before drafting: Clarificatio" [reusable] @Core Principles & Guardra...
+  - "4. Enumerated traceability: Use IDs (FR-" [phase-bound] @Core Principles & Guardra...
+  - "5. Research vs design: Research document" [phase-bound] @Core Principles & Guardra...
+  - "6. Explicit assumptions: Replace low-imp" [reusable] @Core Principles & Guardra...
+  - "7. Measurable & tech-agnostic: Success c" [phase-bound] @Core Principles & Guardra...
+  - "8. Scope & risk: Maintain explicit In/Ou" [phase-bound] @Core Principles & Guardra...
+  - "9. No speculation: Every feature must ma" [reusable] @Core Principles & Guardra...
+  - "> You DO NOT commit, push, open PRs, upd" [workflow] @Core Principles & Guardra...
+  - "- Git add/commit/push operations. - No P" [workflow] @High-Level Responsibiliti...
+  - "- ALWAYS: Check for existing `SpecResear" [reusable] @Error / Edge Handling
+  - "- NEVER: Fabricate answers not supported" [reusable] @Guardrails (Enforced)
+  - "- NEVER: Silently assume critical extern" [reusable] @Guardrails (Enforced)
+  - "- NEVER: Reintroduce removed prompt sect" [phase-bound] @Guardrails (Enforced)
+  - "- ALWAYS: Differentiate *requirements* (" [reusable] @Guardrails (Enforced)
+  - "- ALWAYS: Pause after writing research p" [workflow] @Guardrails (Enforced)
+  - "- ALWAYS: Surface if external research w" [reusable] @Guardrails (Enforced)
+  - "- ALWAYS: Ensure minimal format header l" [phase-bound] @Guardrails (Enforced)
+  - "- ALWAYS: Use implementation discussions" [reusable] @Guardrails (Enforced)
+  - "- ALWAYS: Respect user autonomy—if user " [reusable] @Guardrails (Enforced)
+  - "- When updating artifacts, modify only i" [reusable] @Guardrails (Enforced)
+  - "- For GitHub: ALWAYS use the github mcp " [reusable] @Hand-off Checklist (Outpu...
+
+workflow_steps:
+  - "After calling `paw_get_context` (see PAW" @Start / Initial Response
+  - "1. Collect feature intent & constraints " @High-Level Responsibiliti...
+  - "2. Extract key concepts → derive priorit" @High-Level Responsibiliti...
+  - "3. Enumerate factual unknowns; classify " @High-Level Responsibiliti...
+  - "4. Generate `prompts/01B-spec-research.p" @High-Level Responsibiliti...
+  - "5. Pause for research; integrate..." @High-Level Responsibiliti...
+  - "6. Produce the specification using the i" @High-Level Responsibiliti...
+  - "7. Validate against the Spec Quality Che" @High-Level Responsibiliti...
+  - "8. Output final readiness checklist (spe" @High-Level Responsibiliti...
+  - "1. Intake & Decomposition: Read the Issu" @Drafting Workflow (Detail...
+  - "2. User Story Drafting: Derive initial.." @Drafting Workflow (Detail...
+  - "3. Unknown Classification:" @Drafting Workflow (Detail...
+  - "4. Research Prompt Generation: Create..." @Drafting Workflow (Detail...
+  - "5. Handoff: Instruct user to run Spec Re" @Drafting Workflow (Detail...
+  - "6. Integrate Research: Map each research" @Drafting Workflow (Detail...
+  - "7. Specification Assembly: Iteratively b" @Drafting Workflow (Detail...
+  - "8. Quality Checklist Pass: Evaluate spec" @Drafting Workflow (Detail...
+  - "9. Finalize & Hand‑Off: Present final re" @Drafting Workflow (Detail...
+
+handoffs:
+  - "(no content)" [phase-bound] @Guardrails (Enforced)
+  - "Conditional next stage based on workflow" [workflow] @Hand-off Checklist (Outpu...
+
+artifacts:
+  - "- Overview: Write 2-4 paragraphs (3-5 se" [phase-bound] @Drafting Workflow (Detail...
+  - "Required header & format: ``` --- agent:" [phase-bound] @Drafting Workflow (Detail...
+  - "Use this exact minimal structure; remove" [phase-bound] @Questions
+  - "``` Specification Ready for Planning Sta" [phase-bound] @Hand-off Checklist (Outpu...
+
+quality_gates:
+  - "Use this during validation (auto-generat" [phase-bound] @Glossary (omit if not nee...
+  - "- No unresolved clarification questions." [phase-bound] @Spec Quality Checklist
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  guardrail: # appears in 5 sections
+    - "Core Principles & Guardrails" (10x)
+    - "High-Level Responsibilities" (1x)
+    - "Error / Edge Handling" (1x)
+    - "Guardrails (Enforced)" (10x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+  decision-framework: # appears in 4 sections
+    - "Core Principles & Guardrails" (1x)
+    - "Start / Initial Response" (1x)
+    - "Working Modes" (1x)
+    - "Communication Patterns" (2x)
+  classification-logic: # appears in 4 sections
+    - "Start / Initial Response" (1x)
+    - "Explicit Non‑Responsibilities" (1x)
+    - "Drafting Workflow (Detailed Steps)" (1x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+  workflow: # appears in 3 sections
+    - "Core Principles & Guardrails" (1x)
+    - "Start / Initial Response" (1x)
+    - "Research Question Guidelines" (1x)
+  workflow-step: # appears in 3 sections
+    - "Start / Initial Response" (1x)
+    - "High-Level Responsibilities" (8x)
+    - "Drafting Workflow (Detailed Steps)" (9x)
+  example: # appears in 3 sections
+    - "Research Question Guidelines" (1x)
+    - "Error / Edge Handling" (1x)
+    - "Hand-off Checklist (Output When Finished)" (2x)
+  artifact-format: # appears in 3 sections
+    - "Drafting Workflow (Detailed Steps)" (2x)
+    - "Questions" (1x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+  agent-identity: # appears in 2 sections
+    - "(preamble)" (1x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+  context-requirement: # appears in 2 sections
+    - "Spec Agent" (1x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+  quality-gate: # appears in 2 sections
+    - "Glossary (omit if not needed)" (1x)
+    - "Spec Quality Checklist" (1x)
+  handoff-instruction: # appears in 2 sections
+    - "Guardrails (Enforced)" (1x)
+    - "Hand-off Checklist (Output When Finished)" (1x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+  "Agent Notes (if any)":
+    Context: 1
+  "Communication Patterns":
+    decision-framework: 2
+  "Core Principles & Guardrails":
+    decision-framework: 1
+    guardrail: 10
+    workflow: 1
+  "Drafting Workflow (Detailed Steps)":
+    artifact-format: 2
+    classification-logic: 1
+    workflow-step: 9
+  "Error / Edge Handling":
+    example: 1
+    guardrail: 1
+  "Explicit Non‑Responsibilities":
+    classification-logic: 1
+  "Glossary (omit if not needed)":
+    quality-gate: 1
+  "Guardrails (Enforced)":
+    guardrail: 10
+    handoff-instruction: 1
+  "Hand-off Checklist (Output When Finished)":
+    agent-identity: 1
+    artifact-format: 1
+    classification-logic: 1
+    context-requirement: 1
+    example: 2
+    guardrail: 1
+    handoff-instruction: 1
+  "High-Level Responsibilities":
+    guardrail: 1
+    workflow-step: 8
+  "Quality Bar for "Final" Spec (Pass Criteria)":
+    communication-pattern: 1
+  "Questions":
+    artifact-format: 1
+  "Research Question Guidelines":
+    example: 1
+    workflow: 1
+  "Spec Agent":
+    context-requirement: 1
+    core-principles: 1
+    mission-statement: 1
+  "Spec Quality Checklist":
+    quality-gate: 1
+  "Start / Initial Response":
+    classification-logic: 1
+    decision-framework: 1
+    workflow: 1
+    workflow-step: 1
+  "Working Modes":
+    decision-framework: 1
+
+# Gap Detection
+potential_gaps:
+  - NOTE: <guardrail> spread across 5 sections - consider consolidation
+  - NOTE: <decision-framework> spread across 4 sections - consider consolidation
+  - NOTE: <workflow-step> spread across 3 sections - consider consolidation

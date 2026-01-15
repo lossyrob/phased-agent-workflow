@@ -1,0 +1,89 @@
+```mermaid
+flowchart LR
+    subgraph Global["Global Guardrails (reusable)"]
+        G1[No fabrication]
+        G2[Explicit assumptions]
+        G3[No speculation]
+        G4[User autonomy]
+        G5[Minimal diffs]
+        G6[Resolve before drafting]
+    end
+
+    subgraph PhaseSpecific["Phase-Specific Guardrails"]
+        P1[User value focus - WHAT/WHY only]
+        P2[Testable stories]
+        P3[Enumerated traceability]
+        P4[Research vs design distinction]
+        P5[Measurable tech-agnostic criteria]
+        P6[Scope & risk boundaries]
+    end
+
+    subgraph WorkflowControl["Workflow Guardrails"]
+        W1[No git operations]
+        W2[No PR creation]
+        W3[No status posting]
+        W4[Pause after research prompt]
+    end
+
+    subgraph WorkflowSteps["Workflow Areas"]
+        S1[Intake & Decomposition]
+        S2[User Story Drafting]
+        S3[Unknown Classification]
+        S4[Research Prompt Gen]
+        S5[Research Integration]
+        S6[Spec Assembly]
+        S7[Quality Validation]
+        S8[Hand-off]
+    end
+
+    %% Global guardrails apply everywhere
+    G1 --> S1
+    G1 --> S2
+    G1 --> S3
+    G1 --> S5
+    G1 --> S6
+    
+    G2 --> S3
+    G2 --> S6
+    
+    G3 --> S2
+    G3 --> S6
+    
+    G6 --> S2
+    G6 --> S5
+    G6 --> S6
+
+    %% Phase-specific constraints
+    P1 --> S6
+    P1 --> S7
+    
+    P2 --> S2
+    P2 --> S7
+    
+    P3 --> S6
+    
+    P4 --> S3
+    P4 --> S4
+    
+    P5 --> S6
+    P5 --> S7
+    
+    P6 --> S6
+    P6 --> S7
+
+    %% Workflow controls
+    W1 --> S8
+    W2 --> S8
+    W3 --> S8
+    W4 --> S4
+
+    classDef global fill:#cfc,stroke:#363
+    classDef phase fill:#fcf,stroke:#636
+    classDef workflow fill:#ccf,stroke:#336
+    classDef step fill:#ffc,stroke:#663
+
+    class G1,G2,G3,G4,G5,G6 global
+    class P1,P2,P3,P4,P5,P6 phase
+    class W1,W2,W3,W4 workflow
+    class S1,S2,S3,S4,S5,S6,S7,S8 step
+```

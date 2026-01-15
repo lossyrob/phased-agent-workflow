@@ -1,0 +1,95 @@
+```mermaid
+flowchart TD
+    subgraph Start["Initial Response"]
+        A[Call paw_get_context] --> B{SpecResearch.md exists?}
+        B -->|Yes| INTEGRATE
+        B -->|No| C[Read Issue/Brief]
+        C --> D[Capture Hard Constraints]
+        D --> E{Research preference?}
+    end
+
+    subgraph Intake["Intake & Decomposition"]
+        E -->|Default: Research| F[Summarize: goal, actors, value, constraints]
+        E -->|Skip Research| SKIPRES
+        F --> G[Draft Prioritized User Stories]
+        G --> H{Story ambiguity?}
+        H -->|Yes| CLARIFY
+        H -->|No| I[Classify Unknowns]
+    end
+
+    subgraph Classification["Unknown Classification"]
+        I --> J{Impact level?}
+        J -->|Low| K[Document as Assumption]
+        J -->|High - No Default| CLARIFY
+        J -->|Fact Gap| L[Add to Research Questions]
+        K --> M{More unknowns?}
+        L --> M
+        M -->|Yes| I
+        M -->|No| N{Any research questions?}
+    end
+
+    subgraph Research["Research Phase"]
+        N -->|Yes| O[Generate 01B-spec-research.prompt.md]
+        O --> P[Write prompt to disk]
+        P --> PAUSE1([PAUSE: Await Research])
+        PAUSE1 --> INTEGRATE
+    end
+
+    subgraph Integration["Research Integration"]
+        INTEGRATE[Integrate SpecResearch.md] --> Q[Map questions → answers]
+        Q --> R{New clarifications needed?}
+        R -->|Yes| CLARIFY
+        R -->|No| ASSEMBLE
+    end
+
+    subgraph Assembly["Specification Assembly"]
+        ASSEMBLE[Build Spec Incrementally] --> S1[Write Overview 2-4 paragraphs]
+        S1 --> S2[Write Objectives bullets]
+        S2 --> S3[Write User Stories with priorities]
+        S3 --> S4[Write Edge Cases]
+        S4 --> S5[Write Functional Requirements FR-00N]
+        S5 --> S6[Write Success Criteria SC-00N]
+        S6 --> S7[Write Assumptions, Scope, Dependencies]
+        S7 --> S8[Write Risks & Mitigations]
+        S8 --> QUALITY
+    end
+
+    subgraph Validation["Quality Validation"]
+        QUALITY[Run Quality Checklist] --> T{All checks pass?}
+        T -->|No| U[Surface failing items]
+        U --> V{User accepts override?}
+        V -->|Yes| HANDOFF
+        V -->|No| W[Iterate on spec]
+        W --> QUALITY
+        T -->|Yes| HANDOFF
+    end
+
+    subgraph Handoff["Hand-off"]
+        HANDOFF[Present Readiness Checklist] --> X{Research was done?}
+        X -->|Yes| Y([To PAW-02A Code Researcher])
+        X -->|No - Prompt Generated| Z([To PAW-01B Spec Researcher])
+    end
+
+    subgraph SkipResearch["Skip Research Path"]
+        SKIPRES[Skip Research Mode] --> SK1[Document Assumptions heavily]
+        SK1 --> SK2[Add Risk Note for unknowns]
+        SK2 --> ASSEMBLE
+    end
+
+    subgraph Clarification["Clarification Loop"]
+        CLARIFY([PAUSE: Clarification Needed]) --> CL1[User provides answer]
+        CL1 --> CL2[Resume from pause point]
+    end
+
+    N -->|No| ASSEMBLE
+
+    classDef pause fill:#ff9,stroke:#333,stroke-width:2px
+    classDef handoff fill:#9f9,stroke:#333,stroke-width:2px
+    classDef decision fill:#f9f,stroke:#333
+    classDef artifact fill:#9ff,stroke:#333
+    
+    class PAUSE1,CLARIFY pause
+    class Y,Z handoff
+    class B,E,H,J,M,N,R,T,V,X decision
+    class O,ASSEMBLE artifact
+```

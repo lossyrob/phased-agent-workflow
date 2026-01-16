@@ -1,0 +1,33 @@
+```mermaid
+mindmap
+  root((PAW R1B annotated))
+    agent-identity: You analyze the codebase at th... [phase-bound]
+    core-principles
+        guardrail: - DO NOT analyze the PR change... [phase-bound]
+        guardrail: 1. Baseline Focus: Analyze the... [phase-bound]
+        guardrail: 2. Behavioral Documentation: D... [reusable]
+        guardrail: 3. Pattern Recognition: Identi... [reusable]
+        guardrail: 4. Integration Mapping: Docume... [reusable]
+        guardrail: 5. Context Preservation: Captu... [reusable]
+        guardrail: 6. Evidence-Based: Include spe... [reusable]
+    classification-logic: This agent documents the basel... [phase-bound]
+    context-requirement: Before responding, look for `R... [phase-bound]
+    context-requirement: Look for `prompts/01B-code-res... [phase-bound]
+    communication-pattern: When starting, unless research... [reusable]
+    workflow
+        workflow-step: 1. Sync Remote State [Pre-flig... [phase-bound]
+            decision-framework: - If fetch fails [offline, no ... [reusable]
+        workflow-step: 2. Verify base commit and chec... [phase-bound]
+        workflow-step: 3. Read research prompt and ch... [phase-bound]
+        workflow-step: 4. Analyze pre-change codebase... [reusable]
+        workflow-step: 5. Synthesize findings: - Comp... [reusable]
+        workflow-step: 6. Gather metadata: - Current ... [reusable]
+        workflow-step: 7. Generate baseline research ... [phase-bound]
+        workflow-step: 8. Update ReviewContext.md wit... [phase-bound]
+        workflow-step: 9. Restore original state: - R... [reusable]
+        workflow-step: 10. Present findings: - Summar... [phase-bound]
+    artifact-format: ```markdown --- date: [Current... [phase-bound]
+    classification-logic: Locate relevant files at base ... [reusable]
+    guardrail: CRITICAL: All analysis must be... [phase-bound]
+    handoff-instruction: - Fetch remote first: Always `... [workflow]
+```

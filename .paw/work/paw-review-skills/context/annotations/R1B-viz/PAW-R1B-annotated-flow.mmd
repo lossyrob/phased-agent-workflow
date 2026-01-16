@@ -1,0 +1,32 @@
+```mermaid
+flowchart TD
+    step1["1. Sync Remote State (Pre-flight) - Extr"]:::phasebound
+    step2["2. Verify base commit and checkout: - Ex"]:::phasebound
+    step3["3. Read research prompt and changed file"]:::phasebound
+    step4["4. Analyze pre-change codebase: - Follow"]
+    step5["5. Synthesize findings: - Compile all re"]
+    step6["6. Gather metadata: - Current date/time "]
+    step7["7. Generate baseline research document: "]:::phasebound
+    step8["8. Update ReviewContext.md with artifact"]:::phasebound
+    step9["9. Restore original state: - Return to o"]
+    step10["10. Present findings: - Summarize what w"]:::phasebound
+    handoff1(["- Fetch remote first: Always `git fetch "]):::handoff
+
+    %% Sequential flow - refine with decision points
+    step1 --> step2
+    step2 --> step3
+    step3 --> step4
+    step4 --> step5
+    step5 --> step6
+    step6 --> step7
+    step7 --> step8
+    step8 --> step9
+    step9 --> step10
+
+    %% Handoffs - add conditions as needed
+    step10 --> handoff1
+
+    %% Styling
+    classDef phasebound fill:#f9f,stroke:#333,stroke-width:2px
+    classDef handoff fill:#bbf,stroke:#333,stroke-width:2px
+```

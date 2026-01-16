@@ -1,0 +1,32 @@
+```mermaid
+flowchart TD
+    step1["Identify what code depends on the change"]
+    step2["Compare before/after to identify incompa"]
+    step3["Evaluate algorithmic and resource usage "]
+    step4["Assess security-relevant changes:"]
+    step5["Evaluate whether the change fits well wi"]
+    step6["Assess impact on both end-users and..."]
+    step7["Evaluate whether changes improve or degr"]
+    step8["Document what's needed for safe rollout:"]
+    step9["Create comprehensive impact analysis doc"]:::phasebound
+    handoff1(["``` Impact Analysis Complete ImpactAnaly"]):::handoff
+    handoff2(["In Semi-Auto and Auto modes: Immediately"]):::handoff
+
+    %% Sequential flow - refine with decision points
+    step1 --> step2
+    step2 --> step3
+    step3 --> step4
+    step4 --> step5
+    step5 --> step6
+    step6 --> step7
+    step7 --> step8
+    step8 --> step9
+
+    %% Handoffs - add conditions as needed
+    step9 --> handoff1
+    step9 --> handoff2
+
+    %% Styling
+    classDef phasebound fill:#f9f,stroke:#333,stroke-width:2px
+    classDef handoff fill:#bbf,stroke:#333,stroke-width:2px
+```

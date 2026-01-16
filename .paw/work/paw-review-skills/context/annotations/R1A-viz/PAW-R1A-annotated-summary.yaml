@@ -1,0 +1,128 @@
+# Structure Summary: PAW R1A annotated
+
+counts:
+  guardrails: 13
+  workflow_steps: 4
+  decision_frameworks: 3
+  artifacts: 3
+  quality_gates: 4
+  handoffs: 1
+
+scope_breakdown:
+  reusable: 10
+  phase_bound: 14
+  workflow: 4
+  unspecified: 0
+
+guardrails:
+  - "1. Evidence-Based Understanding: Every.." [reusable] @Core Review Principles
+  - "2. Baseline Context First: Understand ho" [phase-bound] @Core Review Principles
+  - "3. Document, Don't Critique: Understandi" [phase-bound] @Core Review Principles
+  - "4. Zero Open Questions: Block progressio" [reusable] @Core Review Principles
+  - "5. Explicit vs Inferred Goals: Clearly.." [reusable] @Core Review Principles
+  - "6. Artifact Completeness: Each artifact " [reusable] @Core Review Principles
+  - "> You DO NOT evaluate quality, suggest.." [phase-bound] @Core Review Principles
+  - "- Quality evaluation or gap identificati" [phase-bound] @Explicit Non-Responsibili...
+  - "NEVER: - Fabricate answers not supported" [reusable] @Guardrails (Enforced)
+  - "- Use local branch for base commit when " [phase-bound] @Guardrails (Enforced)
+  - "ALWAYS: - Check for ReviewContext.md fir" [reusable] @Guardrails (Enforced)
+  - "- Prefer remote branch references (e.g.," [phase-bound] @Guardrails (Enforced)
+  - "Operate with rigor: Evidence first, base" [reusable] @Hand-off Checklist
+
+workflow_steps:
+  - "1. Determine Remote Name: - Check..." [phase-bound] @Process Steps (Detailed W...
+  - "1. Identify Research Needs: - For each c" [phase-bound] @Process Steps (Detailed W...
+  - "1. Signal Human for Research:" [workflow] @Process Steps (Detailed W...
+  - "1. Read All Source Material: - ReviewCon" [phase-bound] @Process Steps (Detailed W...
+
+handoffs:
+  - "When all artifacts complete and validate" [workflow] @Hand-off Checklist
+
+artifacts:
+  - "```markdown --- date: <YYYY-MM-DD HH:MM:" [phase-bound] @Inline Artifact Templates
+  - "When creating..." [phase-bound] @Metadata
+  - "```markdown --- date: <YYYY-MM-DD HH:MM:" [phase-bound] @Metadata
+
+quality_gates:
+  - "3. Quality Check Research Prompt: - Ques" [reusable] @Process Steps (Detailed W...
+  - "After creating all artifacts, validate a" [phase-bound] @Process Steps (Detailed W...
+  - "- Files: Read entirely without limit/off" [reusable] @Complete Means
+  - "``` Understanding Stage Complete - Ready" [phase-bound] @Hand-off Checklist
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  guardrail: # appears in 4 sections
+    - "Core Review Principles" (7x)
+    - "Explicit Non-Responsibilities" (1x)
+    - "Guardrails (Enforced)" (4x)
+    - "Hand-off Checklist" (1x)
+  communication-pattern: # appears in 4 sections
+    - "Start / Initial Response" (1x)
+    - "Process Steps (Detailed Workflow)" (1x)
+    - "Error / Edge Handling" (1x)
+    - "Hand-off Checklist" (2x)
+  decision-framework: # appears in 3 sections
+    - "Start / Initial Response" (1x)
+    - "Error / Edge Handling" (1x)
+    - "Hand-off Checklist" (1x)
+  classification-logic: # appears in 3 sections
+    - "Start / Initial Response" (1x)
+    - "Process Steps (Detailed Workflow)" (1x)
+    - "Artifact Directory Structure" (1x)
+  quality-gate: # appears in 3 sections
+    - "Process Steps (Detailed Workflow)" (2x)
+    - "Complete Means" (1x)
+    - "Hand-off Checklist" (1x)
+  artifact-format: # appears in 2 sections
+    - "Inline Artifact Templates" (1x)
+    - "Metadata" (2x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+  "Artifact Directory Structure":
+    classification-logic: 1
+  "Complete Means":
+    quality-gate: 1
+  "Core Review Principles":
+    core-principles: 1
+    guardrail: 7
+  "Description":
+    PR: 1
+  "Error / Edge Handling":
+    communication-pattern: 1
+    decision-framework: 1
+  "Explicit Non-Responsibilities":
+    guardrail: 1
+  "Guardrails (Enforced)":
+    guardrail: 4
+  "Hand-off Checklist":
+    communication-pattern: 2
+    decision-framework: 1
+    guardrail: 1
+    handoff-instruction: 1
+    quality-gate: 1
+  "High-Level Responsibilities":
+    context-requirement: 1
+  "Inline Artifact Templates":
+    artifact-format: 1
+  "Metadata":
+    artifact-format: 2
+  "Process Steps (Detailed Workflow)":
+    classification-logic: 1
+    communication-pattern: 1
+    quality-gate: 2
+    workflow: 1
+    workflow-step: 4
+  "Start / Initial Response":
+    classification-logic: 1
+    communication-pattern: 1
+    decision-framework: 1
+
+# Gap Detection
+potential_gaps:
+  - NOTE: <guardrail> spread across 4 sections - consider consolidation
+  - NOTE: <decision-framework> spread across 3 sections - consider consolidation

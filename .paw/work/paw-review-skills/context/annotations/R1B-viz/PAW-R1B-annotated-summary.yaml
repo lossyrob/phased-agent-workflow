@@ -1,0 +1,91 @@
+# Structure Summary: PAW R1B annotated
+
+counts:
+  guardrails: 8
+  workflow_steps: 10
+  decision_frameworks: 1
+  artifacts: 1
+  quality_gates: 0
+  handoffs: 1
+
+scope_breakdown:
+  reusable: 10
+  phase_bound: 10
+  workflow: 1
+  unspecified: 0
+
+guardrails:
+  - "- DO NOT analyze the PR changes or compa" [phase-bound] @CRITICAL: YOUR ONLY JOB I...
+  - "1. Baseline Focus: Analyze the system at" [phase-bound] @Core Principles
+  - "2. Behavioral Documentation: Document ho" [reusable] @Core Principles
+  - "3. Pattern Recognition: Identify establi" [reusable] @Core Principles
+  - "4. Integration Mapping: Document how com" [reusable] @Core Principles
+  - "5. Context Preservation: Capture enough " [reusable] @Core Principles
+  - "6. Evidence-Based: Include specific file" [reusable] @Core Principles
+  - "CRITICAL: All analysis must be at the ba" [phase-bound] @COMPREHENSIVE RESEARCH
+
+workflow_steps:
+  - "1. Sync Remote State (Pre-flight) - Extr" [phase-bound] @Steps to Follow
+  - "2. Verify base commit and checkout: - Ex" [phase-bound] @Steps to Follow
+  - "3. Read research prompt and changed file" [phase-bound] @Steps to Follow
+  - "4. Analyze pre-change codebase: - Follow" [reusable] @Steps to Follow
+  - "5. Synthesize findings: - Compile all re" [reusable] @Steps to Follow
+  - "6. Gather metadata: - Current date/time " [reusable] @Steps to Follow
+  - "7. Generate baseline research document: " [phase-bound] @Steps to Follow
+  - "8. Update ReviewContext.md with artifact" [phase-bound] @Steps to Follow
+  - "9. Restore original state: - Return to o" [reusable] @Steps to Follow
+  - "10. Present findings: - Summarize what w" [phase-bound] @Steps to Follow
+
+handoffs:
+  - "- Fetch remote first: Always `git fetch " [workflow] @COMPREHENSIVE RESEARCH
+
+artifacts:
+  - "```markdown --- date: [Current date and " [phase-bound] @Steps to Follow
+
+quality_gates: []
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  guardrail: # appears in 3 sections
+    - "CRITICAL: YOUR ONLY JOB IS TO DOCUMENT THE PRE-CHANGE CODEBASE AS IT EXISTED" (1x)
+    - "Core Principles" (6x)
+    - "COMPREHENSIVE RESEARCH" (1x)
+  classification-logic: # appears in 2 sections
+    - "Core Principles" (1x)
+    - "Open Questions" (1x)
+  context-requirement: # appears in 2 sections
+    - "Scope: Pre-Change System Understanding" (1x)
+    - "Initial Setup" (1x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+    core-principles: 1
+  "COMPREHENSIVE RESEARCH":
+    guardrail: 1
+    handoff-instruction: 1
+  "CRITICAL: YOUR ONLY JOB IS TO DOCUMENT THE PRE-CHANGE CODEBASE AS IT EXISTED":
+    guardrail: 1
+  "Core Principles":
+    classification-logic: 1
+    guardrail: 6
+  "Initial Setup":
+    communication-pattern: 1
+    context-requirement: 1
+    workflow: 1
+  "Open Questions":
+    classification-logic: 1
+  "Scope: Pre-Change System Understanding":
+    context-requirement: 1
+  "Steps to Follow":
+    artifact-format: 1
+    decision-framework: 1
+    workflow-step: 10
+
+# Gap Detection
+potential_gaps:
+  - NOTE: No quality gates found (may be intentional)
+  - NOTE: <guardrail> spread across 3 sections - consider consolidation

@@ -1,0 +1,79 @@
+# Structure Summary: PAW R3B annotated
+
+counts:
+  guardrails: 7
+  workflow_steps: 3
+  decision_frameworks: 8
+  artifacts: 1
+  quality_gates: 1
+  handoffs: 1
+
+scope_breakdown:
+  reusable: 13
+  phase_bound: 7
+  workflow: 1
+  unspecified: 0
+
+guardrails:
+  - "CRITICAL - Where Assessments Go: Add to." [phase-bound] @Process Steps
+  - "Advisory Only: - Assessments help review" [reusable] @Guardrails
+  - "Critical Thinking: - Question assumption" [reusable] @Guardrails
+  - "Local Only: - NEVER post assessments to " [phase-bound] @Guardrails
+  - "Respectful Tone: - Assessment is about c" [reusable] @Guardrails
+  - "Context-Aware: - Reference all available" [reusable] @Guardrails
+  - "Balanced Perspective: - Don't be reflexi" [reusable] @Guardrails
+
+workflow_steps:
+  - "Understand the complete feedback landsca" [phase-bound] @Process Steps
+  - "For each review comment, evaluate multip" [phase-bound] @Process Steps
+  - "Append assessment after each comment's r" [phase-bound] @Process Steps
+
+handoffs:
+  - "After completing critical assessment:" [workflow] @Hand-off to Human Reviewe...
+
+artifacts:
+  - "Assessment Structure: ```markdown Assess" [phase-bound] @Process Steps
+
+quality_gates:
+  - "Before completing, verify: - [ ] Assessm" [phase-bound] @Quality Checklist
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  decision-framework: # appears in 2 sections
+    - "Process Steps" (4x)
+    - "Assessment Guidelines" (4x)
+  guardrail: # appears in 2 sections
+    - "Process Steps" (1x)
+    - "Guardrails" (6x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+  "Assessment Guidelines":
+    decision-framework: 4
+  "Core Responsibilities":
+    workflow: 1
+  "Guardrails":
+    guardrail: 6
+  "Hand-off to Human Reviewer":
+    communication-pattern: 2
+    handoff-instruction: 1
+  "Process Steps":
+    artifact-format: 1
+    classification-logic: 2
+    decision-framework: 4
+    example: 1
+    guardrail: 1
+    workflow-step: 3
+  "Quality Checklist":
+    quality-gate: 1
+  "Start / Initial Response":
+    context-requirement: 1
+
+# Gap Detection
+potential_gaps:
+  - NOTE: <decision-framework> spread across 2 sections - consider consolidation
+  - NOTE: <guardrail> spread across 2 sections - consider consolidation

@@ -1,0 +1,99 @@
+# Structure Summary: PAW R2B annotated
+
+counts:
+  guardrails: 4
+  workflow_steps: 9
+  decision_frameworks: 3
+  artifacts: 1
+  quality_gates: 1
+  handoffs: 2
+
+scope_breakdown:
+  reusable: 9
+  phase_bound: 9
+  workflow: 2
+  unspecified: 0
+
+guardrails:
+  - "- Identify correctness issues (logic err" [phase-bound] @Core Responsibilities
+  - "Categorization Rules: - Don't inflate: S" [reusable] @Process Steps
+  - "Evidence-Based Categorization: - Every f" [reusable] @Guardrails
+  - "Coverage Context: - Always note when cov" [phase-bound] @Guardrails
+
+workflow_steps:
+  - "Identify logic and implementation errors" [phase-bound] @Process Steps
+  - "Find security vulnerabilities and risks:" [phase-bound] @Process Steps
+  - "Assess test coverage and quality: Quanti" [reusable] @Process Steps
+  - "Evaluate code quality and long-term main" [reusable] @Process Steps
+  - "Identify inefficient code patterns: Algo" [phase-bound] @Process Steps
+  - "Apply Must/Should/Could categorization:" [phase-bound] @Process Steps
+  - "Recognize what the developer did well (m" [reusable] @Process Steps
+  - "Evaluate adherence to style guidelines: " [reusable] @Process Steps
+  - "Create comprehensive gap analysis docume" [phase-bound] @Process Steps
+
+handoffs:
+  - "``` Gap Analysis Complete GapAnalysis.md" [workflow] @Hand-off
+  - "In Semi-Auto mode: Pause here (decision " [workflow] @Hand-off
+
+artifacts:
+  - "```markdown --- date: <timestamp> git_co" [phase-bound] @Process Steps
+
+quality_gates:
+  - "Before completing this stage: - [ ] All " [phase-bound] @Quality Checklist
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  guardrail: # appears in 3 sections
+    - "Core Responsibilities" (1x)
+    - "Process Steps" (1x)
+    - "Guardrails" (2x)
+  decision-framework: # appears in 2 sections
+    - "Process Steps" (2x)
+    - "Heuristics" (1x)
+  classification-logic: # appears in 2 sections
+    - "Process Steps" (2x)
+    - "Heuristics" (1x)
+  List: # appears in 2 sections
+    - "Positive Observations" (1x)
+    - "Test Coverage Assessment" (1x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+  "Core Responsibilities":
+    guardrail: 1
+  "Guardrails":
+    guardrail: 2
+  "Hand-off":
+    communication-pattern: 1
+    example: 1
+    handoff-instruction: 2
+  "Heuristics":
+    classification-logic: 1
+    decision-framework: 1
+  "Positive Observations":
+    List: 1
+  "Process Steps":
+    artifact-format: 1
+    classification-logic: 2
+    decision-framework: 2
+    guardrail: 1
+    workflow-step: 9
+  "Quality Checklist":
+    quality-gate: 1
+  "Start / Initial Response":
+    context-requirement: 1
+  "Summary":
+    Brief: 1
+  "Test Coverage Assessment":
+    Do: 3
+    If: 2
+    List: 1
+
+# Gap Detection
+potential_gaps:
+  - NOTE: <guardrail> spread across 3 sections - consider consolidation
+  - NOTE: <decision-framework> spread across 2 sections - consider consolidation

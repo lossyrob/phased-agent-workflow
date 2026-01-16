@@ -1,0 +1,20 @@
+```mermaid
+flowchart TD
+    step1["1. Determine Remote Name: - Check..."]:::phasebound
+    step2["1. Identify Research Needs: - For each c"]:::phasebound
+    step3["1. Signal Human for Research:"]
+    step4["1. Read All Source Material: - ReviewCon"]:::phasebound
+    handoff1(["When all artifacts complete and validate"]):::handoff
+
+    %% Sequential flow - refine with decision points
+    step1 --> step2
+    step2 --> step3
+    step3 --> step4
+
+    %% Handoffs - add conditions as needed
+    step4 --> handoff1
+
+    %% Styling
+    classDef phasebound fill:#f9f,stroke:#333,stroke-width:2px
+    classDef handoff fill:#bbf,stroke:#333,stroke-width:2px
+```

@@ -1,0 +1,110 @@
+# Structure Summary: PAW R3A annotated
+
+counts:
+  guardrails: 8
+  workflow_steps: 6
+  decision_frameworks: 2
+  artifacts: 3
+  quality_gates: 1
+  handoffs: 1
+
+scope_breakdown:
+  reusable: 9
+  phase_bound: 11
+  workflow: 1
+  unspecified: 0
+
+guardrails:
+  - "- Batch related findings into coherent c" [reusable] @Core Responsibilities
+  - "No PAW Artifact References in Posted Com" [phase-bound] @Guardrails
+  - "No Automatic Submission: - NEVER submit " [reusable] @Guardrails
+  - "Rationale Required: - EVERY comment must" [reusable] @Guardrails
+  - "Evidence-Based: - All recommendations in" [reusable] @Guardrails
+  - "Human Control: - Reviewer edits comments" [reusable] @Guardrails
+  - "Comprehensive Coverage: - ALL findings f" [reusable] @Guardrails
+  - "One Issue, One Comment: - Related findin" [reusable] @Guardrails
+
+workflow_steps:
+  - "(no content)" [phase-bound] @Process Steps
+  - "For each finding or batched group of fin" [phase-bound] @Process Steps
+  - "For EVERY comment, create comprehensive " [phase-bound] @Process Steps
+  - "Generate comprehensive markdown document" [phase-bound] @Process Steps
+  - "For GitHub PRs, create pending review us" [phase-bound] @Questions for Author
+  - "For non-GitHub workflows (using git diff" [phase-bound] @Questions for Author
+
+handoffs:
+  - "After completing feedback generation: ``" [workflow] @Hand-off to Feedback Crit...
+
+artifacts:
+  - "Required Fields: - Type: `inline` (line-" [phase-bound] @Process Steps
+  - "Evidence: - File:line references from..." [reusable] @Process Steps
+  - "Document Structure: ```markdown --- date" [phase-bound] @Process Steps
+
+quality_gates:
+  - "Before completing, verify: - [ ] All..." [phase-bound] @Quality Checklist
+
+# Fragmentation Analysis
+# Tags appearing in multiple sections may indicate scattered/duplicated content
+
+fragmented_tags:
+  example: # appears in 3 sections
+    - "Process Steps" (2x)
+    - "Q&A Support" (1x)
+    - "Tone Adjustment" (1x)
+  guardrail: # appears in 2 sections
+    - "Core Responsibilities" (1x)
+    - "Guardrails" (7x)
+  workflow-step: # appears in 2 sections
+    - "Process Steps" (4x)
+    - "Questions for Author" (2x)
+  decision-framework: # appears in 2 sections
+    - "Process Steps" (1x)
+    - "Questions for Author" (1x)
+  communication-pattern: # appears in 2 sections
+    - "Q&A Support" (1x)
+    - "Tone Adjustment" (1x)
+
+# Section Overview
+sections:
+  "(preamble)":
+    agent-identity: 1
+  "Core Responsibilities":
+    guardrail: 1
+  "Guardrails":
+    guardrail: 7
+  "Hand-off to Feedback Critic":
+    handoff-instruction: 1
+  "Inline Comments":
+    Clear: 1
+    Suggestion: 1
+  "Process Steps":
+    artifact-format: 3
+    classification-logic: 1
+    decision-framework: 1
+    example: 2
+    workflow: 1
+    workflow-step: 4
+  "Q&A Support":
+    communication-pattern: 1
+    example: 1
+  "Quality Checklist":
+    quality-gate: 1
+  "Questions for Author":
+    decision-framework: 1
+    workflow-step: 2
+  "Start / Initial Response":
+    context-requirement: 1
+  "Summary Comment":
+    Brief: 1
+    Overview: 1
+  "Thread Comments":
+    Discussion: 1
+  "Tone Adjustment":
+    communication-pattern: 1
+    example: 1
+
+# Gap Detection
+potential_gaps:
+  - NOTE: <guardrail> spread across 2 sections - consider consolidation
+  - NOTE: <workflow-step> spread across 2 sections - consider consolidation
+  - NOTE: <decision-framework> spread across 2 sections - consider consolidation

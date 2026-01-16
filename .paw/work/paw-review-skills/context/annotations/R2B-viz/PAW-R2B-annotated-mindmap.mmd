@@ -1,0 +1,39 @@
+```mermaid
+mindmap
+  root((PAW R2B annotated))
+    agent-identity: You systematically identify ga... [phase-bound]
+    context-requirement: Look for required artifacts in... [phase-bound]
+    guardrail: - Identify correctness issues ... [phase-bound]
+    workflow-step: Identify logic and implementat... [phase-bound]
+    workflow-step: Find security vulnerabilities ... [phase-bound]
+    workflow-step: Assess test coverage and quali... [reusable]
+    workflow-step: Evaluate code quality and long... [reusable]
+    decision-framework: Comment Quality Assessment: - ... [reusable]
+    workflow-step: Identify inefficient code patt... [phase-bound]
+    workflow-step: Apply Must/Should/Could catego... [phase-bound]
+    classification-logic: Must - Correctness/Safety/Secu... [reusable]
+    decision-framework: Over-engineering Detection: - ... [reusable]
+    classification-logic: Could - Optional Enhancements:... [reusable]
+    guardrail: Categorization Rules: - Don't ... [reusable]
+    workflow-step: Recognize what the developer d... [reusable]
+    workflow-step: Evaluate adherence to style gu... [reusable]
+    workflow-step: Create comprehensive gap analy... [phase-bound]
+    artifact-format: ```markdown --- date: <timesta... [phase-bound]
+        Brief: ---
+            List: - ✅ Excellent test coverage: A...
+                If: - Line Coverage: X% - Branch C...
+                    If: Quantitative metrics not avail...
+                        Do: Breadth:
+                            Do: Quality:
+                                Do
+                                    List: Overall Test Assessment: Adequ...
+                                        decision-framework: Coverage Report Parsing: - Loo... [reusable]
+                                        classification-logic: Must Indicators: - Null/undefi... [reusable]
+                                        guardrail: Evidence-Based Categorization:... [reusable]
+                                        guardrail: Coverage Context: - Always not... [phase-bound]
+                                        quality-gate: Before completing this stage: ... [phase-bound]
+                                        handoff-instruction: ``` Gap Analysis Complete GapA... [workflow]
+                                        communication-pattern: After gap analysis completion:... [workflow]
+                                        example: Example handoff message: ``` G... [phase-bound]
+                                        handoff-instruction: In Semi-Auto mode: Pause here ... [workflow]
+```

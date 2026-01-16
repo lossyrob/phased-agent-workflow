@@ -41,17 +41,35 @@ After implementation:
 
 ## Implementation Approach
 
-The implementation follows a layered strategy:
+The implementation follows a layered strategy with **incremental content migration** to ensure careful, validated transitions:
 1. **Infrastructure first**: Create skill loader utilities and tool implementations
-2. **Content migration**: Convert agent content to skill format
-3. **Integration**: Wire tools into extension, update installer, create entry points
-4. **Cleanup**: Remove old agents, update documentation
+2. **Shared foundations**: Extract reusable patterns before creating individual skills
+3. **Staged content migration**: Convert agents in natural groupings (Understanding → Evaluation → Output)
+4. **Integration**: Wire tools into extension, update installer, create entry points
+5. **Cleanup**: Remove old agents, update documentation
+
+### Content Migration Strategy
+
+The annotation analysis in [context/agent-annotations.md](context/agent-annotations.md) reveals:
+- **~35% Reusable**: Evidence-based principles, Must/Should/Could framework, Rationale structure
+- **~50% Phase-bound**: Artifact templates, validation criteria, phase-specific heuristics
+- **~15% Workflow**: Handoffs, stage gates, orchestration logic
+
+To preserve content and avoid loss during migration:
+1. Extract shared content to workflow skill **before** creating activity skills
+2. Migrate agents in paired groupings matching their workflow stage
+3. Validate each sub-phase before proceeding
+4. Use content preservation checklists
 
 ## Phase Summary
 
 1. **Phase 1: Skill Infrastructure** - Implement `paw_get_skills` and `paw_get_skill` tools with skill loading utilities
-2. **Phase 2: Activity Skills Creation** - Convert 6 PAW-R* agents to activity skill SKILL.md files
-3. **Phase 3: Workflow Skill & Review Agent** - Create orchestrating workflow skill and single PAW Review agent
+2. **Phase 2: Skills Content Migration** (split into sub-phases for careful transition)
+   - **Phase 2A: Shared Foundations** - Extract reusable patterns to workflow skill core
+   - **Phase 2B: Understanding Stage** - R1A + R1B skills (handle pause-resume complexity)
+   - **Phase 2C: Evaluation Stage** - R2A + R2B skills (analysis phase)
+   - **Phase 2D: Output Stage** - R3A + R3B skills (feedback generation)
+3. **Phase 3: Review Agent & Workflow Completion** - Create PAW Review agent, complete workflow skill orchestration
 4. **Phase 4: Extension Integration** - Register tools, extend installer for prompt files, add entry point
 5. **Phase 5: Cleanup & Validation** - Remove old agents, update documentation, end-to-end testing
 
@@ -144,134 +162,440 @@ interface SkillContent {
 
 ---
 
-## Phase 2: Activity Skills Creation
+## Phase 2: Skills Content Migration
+
+This phase is split into four sub-phases to ensure careful, validated content migration. Each sub-phase builds on the previous, with validation gates between them.
+
+### Content Preservation Checklist (Apply to Each Sub-Phase)
+
+For each agent migration, verify:
+- [ ] All artifact templates preserved exactly (diff against source)
+- [ ] All guardrails either in activity skill or explicitly referenced from workflow skill Core Principles
+- [ ] All decision frameworks present with complete logic
+- [ ] All classification criteria preserved verbatim
+- [ ] Quality gates translated to success criteria
+- [ ] No orphaned content (everything has a home in workflow or activity skill)
+
+### High-Value Content for Verbatim Preservation
+
+These proven patterns should be migrated with minimal editing:
+
+| Content | Source Agent | Target Skill | Est. Tokens |
+|---------|--------------|--------------|-------------|
+| Evidence-based documentation principles | R1A, R1B | paw-review-workflow (Core Principles) | ~500 |
+| Must/Should/Could categorization framework | R2B | paw-review-gap | ~800 |
+| Rationale structure template | R3A | paw-review-feedback | ~300 |
+| Usefulness evaluation framework | R3B | paw-review-critic | ~600 |
+| Breaking change detection patterns | R2A | paw-review-impact | ~400 |
+
+---
+
+## Phase 2A: Shared Foundations
 
 ### Overview
-Convert the content of 6 PAW-R* agents into SKILL.md files following the Agent Skills specification. Each activity skill encapsulates the artifact production logic from its source agent.
+Extract reusable content shared across multiple agents into the workflow skill's Core Review Principles section. This ensures activity skills can reference shared guidelines without duplication.
 
 ### Changes Required:
 
 #### 1. Skills Directory Structure
 **Directory**: `skills/` (new at repository root)
 **Changes**:
-- Create directory structure with subdirectory for each skill
-- Each skill directory contains single `SKILL.md` file
+- Create `skills/` directory
+- Create `skills/paw-review-workflow/` subdirectory
 
-#### 2. paw-review-understanding Skill
-**File**: `skills/paw-review-understanding/SKILL.md`
+#### 2. Workflow Skill Foundation
+**File**: `skills/paw-review-workflow/SKILL.md`
 **Changes**:
-- Migrate from [agents/PAW-R1A Understanding.agent.md](agents/PAW-R1A%20Understanding.agent.md)
-- YAML frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: ReviewContext.md, DerivedSpec.md`
-- Body: Artifact templates, PR analysis instructions, DerivedSpec creation logic
-- Remove orchestration content (handoffs, stage gates) - these move to workflow skill
-- Include resumption detection logic (check for CodeResearch.md to know if creating DerivedSpec vs initial analysis)
+- Create initial workflow skill with frontmatter:
+  ```yaml
+  name: paw-review-workflow
+  description: Orchestrates the PAW Review workflow, coordinating activity skills to analyze PRs and generate comprehensive review feedback.
+  metadata:
+    type: workflow
+    version: "1.0"
+  ```
+- **Core Review Principles** section (extracted from R1A, R1B fragmentation):
+  - Evidence-based documentation requirement
+  - File:line reference requirement for all claims
+  - No fabrication guardrail
+  - "Document don't critique" principle (for early stages)
+  - Human control principle
+- **Subagent Contract** section:
+  - Expected response format for activity completion
+  - Artifact path confirmation pattern
+  - Error reporting format
+- **Artifact Directory** section:
+  - `.paw/reviews/<identifier>/` structure definition
+  - Identifier derivation from PR context
+- Placeholder sections for orchestration (completed in Phase 3)
+
+**Source content to extract:**
+- R1A: "Evidence-based" guardrails, file:line reference requirement
+- R1B: "Document don't critique", no fabrication
+- R3A/R3B: Human control principle
 
 **Tests**:
-- Verify frontmatter parses correctly via unit test
-- Verify skill loads via `paw_get_skill` in integration test
-
-#### 3. paw-review-baseline Skill
-**File**: `skills/paw-review-baseline/SKILL.md`
-**Changes**:
-- Migrate from [agents/PAW-R1B Baseline Researcher.agent.md](agents/PAW-R1B%20Baseline%20Researcher.agent.md)
-- Frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: CodeResearch.md`
-- Body: Base commit checkout, codebase analysis, evidence-based documentation patterns
-- Include comprehensive research methodology from source agent
-
-**Tests**:
-- Verify frontmatter parses correctly
-- Verify skill loads via `paw_get_skill`
-
-#### 4. paw-review-impact Skill
-**File**: `skills/paw-review-impact/SKILL.md`
-**Changes**:
-- Migrate from [agents/PAW-R2A Impact Analyzer.agent.md](agents/PAW-R2A%20Impact%20Analyzer.agent.md)
-- Frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: ImpactAnalysis.md`
-- Body: Ripple effect analysis, system integration assessment, callers/callees tracing
-
-**Tests**:
-- Verify frontmatter parses correctly
-- Verify skill loads via `paw_get_skill`
-
-#### 5. paw-review-gap Skill
-**File**: `skills/paw-review-gap/SKILL.md`
-**Changes**:
-- Migrate from [agents/PAW-R2B Gap Analyzer.agent.md](agents/PAW-R2B%20Gap%20Analyzer.agent.md)
-- Frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: GapAnalysis.md`
-- Body: Must/Should/Could categorization framework (complete from source), gap detection heuristics, coverage analysis
-
-**Tests**:
-- Verify frontmatter parses correctly
-- Verify skill loads via `paw_get_skill`
-
-#### 6. paw-review-feedback Skill
-**File**: `skills/paw-review-feedback/SKILL.md`
-**Changes**:
-- Migrate from [agents/PAW-R3A Feedback Generator.agent.md](agents/PAW-R3A%20Feedback%20Generator.agent.md)
-- Frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: ReviewComments.md`
-- Body: Comment generation, rationale structure template, GitHub MCP integration for pending review
-- Include GitHub tool usage patterns: `mcp_github_pull_request_review_write`, `mcp_github_add_comment_to_pending_review`
-
-**Tests**:
-- Verify frontmatter parses correctly
-- Verify skill loads via `paw_get_skill`
-
-#### 7. paw-review-critic Skill
-**File**: `skills/paw-review-critic/SKILL.md`
-**Changes**:
-- Migrate from [agents/PAW-R3B Feedback Critic.agent.md](agents/PAW-R3B%20Feedback%20Critic.agent.md)
-- Frontmatter: `name`, `description`, `metadata.type: activity`, `metadata.artifacts: none (updates ReviewComments.md)`
-- Body: Usefulness assessment framework, accuracy validation, trade-off analysis
-
-**Tests**:
-- Verify frontmatter parses correctly
-- Verify skill loads via `paw_get_skill`
+- Skill parses correctly: `npm test` with skill loader
+- Frontmatter contains `type: workflow`
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All 6 SKILL.md files exist with valid frontmatter: `npm test` (skill loader tests)
-- [ ] `paw_get_skills` catalog includes all 6 activity skills with `type: activity`
-- [ ] Each skill loads without parse errors via `paw_get_skill`
-- [ ] Each skill is under 5000 tokens (check via `node scripts/count-tokens.js`)
+- [ ] `skills/paw-review-workflow/SKILL.md` exists with valid frontmatter
+- [ ] Skill loads via `paw_get_skill('paw-review-workflow')`
+- [ ] TypeScript compiles: `npm run compile`
 
 #### Manual Verification:
-- [ ] Skill content preserves essential logic from source agents
-- [ ] Artifact templates match current agent templates
-- [ ] No orchestration content in activity skills (handoffs, stage gates)
+- [ ] Core Review Principles section contains all shared guardrails
+- [ ] No duplication - each principle appears once
+- [ ] Principles are self-contained (activity skills can reference without copying)
 
 ---
 
-## Phase 3: Workflow Skill & Review Agent
+## Phase 2B: Understanding Stage (R1A + R1B)
 
 ### Overview
-Create the orchestrating workflow skill and single PAW Review agent. The workflow skill encodes the review sequence and subagent invocation patterns. The agent dynamically loads skills rather than having hardcoded logic.
+Migrate the Understanding stage agents that handle PR analysis and baseline research. This stage has the unique pause-and-resume pattern requiring careful orchestration.
 
 ### Changes Required:
 
-#### 1. paw-review-workflow Skill
-**File**: `skills/paw-review-workflow/SKILL.md`
+#### 1. paw-review-understanding Skill
+**File**: `skills/paw-review-understanding/SKILL.md`
 **Changes**:
-- Frontmatter: `name: paw-review-workflow`, `description`, `metadata.type: workflow`, `metadata.activities: paw-review-understanding, paw-review-baseline, paw-review-impact, paw-review-gap, paw-review-feedback, paw-review-critic`
-- Body structure:
-  - **Core Review Principles**: Extracted common guardrails (evidence-based, file:line references, no fabrication)
-  - **Workflow Sequence**: Detailed orchestration steps
-  - **Subagent Contract**: Expected response format for activity completion
-  - **Artifact Directory**: `.paw/reviews/<identifier>/` structure
-  - **Error Handling**: Guidance for subagent failures
-- Orchestration logic handling R1A pause-and-resume pattern:
-  1. Run understanding activity → creates ReviewContext.md, research prompt
-  2. Run baseline activity → creates CodeResearch.md
-  3. Run understanding activity again (detects CodeResearch.md) → creates DerivedSpec.md
-  4. Linear flow: impact → gap → feedback → critic
-- Include human control point at end (pending review submission decision)
+- Migrate from [agents/PAW-R1A Understanding.agent.md](agents/PAW-R1A%20Understanding.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-understanding
+  description: Analyzes PR changes to create ReviewContext.md and DerivedSpec.md artifacts. Handles both initial analysis and resumption after baseline research.
+  metadata:
+    type: activity
+    artifacts: ReviewContext.md, DerivedSpec.md
+    stage: understanding
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - Context detection (GitHub PR vs local diff)
+  - ReviewContext.md template (verbatim from source)
+  - Research prompt generation logic
+  - DerivedSpec.md template (verbatim from source)
+  - Resumption detection (check for CodeResearch.md existence)
+  - Artifact validation criteria
+- **Content to EXCLUDE (moves to workflow skill):**
+  - Handoff instructions to R1B
+  - Stage gate blocking logic
+  - Conditional branching for next stage
+- **Reference to workflow skill:**
+  - Note: "Follow Core Review Principles from paw-review-workflow skill"
+
+**Content preservation check:**
+- [ ] ReviewContext.md template matches source exactly
+- [ ] DerivedSpec.md template matches source exactly
+- [ ] All classification logic for context type detection preserved
+- [ ] Quality gate criteria translated to validation section
 
 **Tests**:
-- Verify frontmatter parses correctly with `type: workflow`
-- Verify skill loads via `paw_get_skill`
-- Verify orchestration sequence is documented in testable format
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 4000 (target for understanding skill)
 
-#### 2. PAW Review Agent
+#### 2. paw-review-baseline Skill
+**File**: `skills/paw-review-baseline/SKILL.md`
+**Changes**:
+- Migrate from [agents/PAW-R1B Baseline Researcher.agent.md](agents/PAW-R1B%20Baseline%20Researcher.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-baseline
+  description: Analyzes the codebase at the PR's base commit to establish baseline understanding for review comparison.
+  metadata:
+    type: activity
+    artifacts: CodeResearch.md
+    stage: understanding
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - Git operations (fetch, checkout base commit)
+  - Research methodology (comprehensive research pattern)
+  - CodeResearch.md template (verbatim from source)
+  - Restore working state after analysis
+- **Content to EXCLUDE:**
+  - Handoff to R1A
+- **Reference to workflow skill:**
+  - "Follow Core Review Principles from paw-review-workflow skill"
+
+**Content preservation check:**
+- [ ] CodeResearch.md template matches source exactly
+- [ ] Git checkout/restore pattern preserved
+- [ ] Research methodology steps preserved
+
+**Tests**:
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 2500 (simpler skill)
+
+#### 3. Update Workflow Skill with Understanding Stage Orchestration
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Add **Understanding Stage** section to orchestration:
+  1. Run `paw-review-understanding` subagent → creates ReviewContext.md, research prompt
+  2. Run `paw-review-baseline` subagent → creates CodeResearch.md
+  3. Run `paw-review-understanding` subagent again → detects CodeResearch.md, creates DerivedSpec.md
+- Document the pause-resume pattern explicitly
+- Add stage gate: "Verify ReviewContext.md, CodeResearch.md, DerivedSpec.md exist before proceeding"
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Both SKILL.md files exist with valid frontmatter
+- [ ] Both skills load via `paw_get_skill`
+- [ ] `paw_get_skills` catalog includes both with `type: activity`
+- [ ] Token counts within targets
+
+#### Manual Verification:
+- [ ] Understanding skill handles both initial and resumption modes
+- [ ] Baseline skill git operations are safe (checkout + restore)
+- [ ] Workflow skill clearly documents R1A-R1B-R1A pattern
+- [ ] Artifact templates exactly match source agents
+- [ ] All content from R1A/R1B accounted for (workflow or activity)
+
+---
+
+## Phase 2C: Evaluation Stage (R2A + R2B)
+
+### Overview
+Migrate the Evaluation stage agents that perform impact and gap analysis. These skills contain high-value reusable heuristics and the Must/Should/Could framework.
+
+### Changes Required:
+
+#### 1. paw-review-impact Skill
+**File**: `skills/paw-review-impact/SKILL.md`
+**Changes**:
+- Migrate from [agents/PAW-R2A Impact Analyzer.agent.md](agents/PAW-R2A%20Impact%20Analyzer.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-impact
+  description: Analyzes system-wide impact of PR changes including integration effects, breaking changes, performance, and security implications.
+  metadata:
+    type: activity
+    artifacts: ImpactAnalysis.md
+    stage: evaluation
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - Integration graph building methodology
+  - Breaking change detection patterns (HIGH VALUE - preserve verbatim)
+  - Performance assessment heuristics
+  - Security review checklist
+  - Design & architecture assessment
+  - User impact evaluation
+  - Code health trend assessment
+  - ImpactAnalysis.md template (verbatim from source)
+- **Content to EXCLUDE:**
+  - Handoff to R2B
+
+**Content preservation check:**
+- [ ] ImpactAnalysis.md template matches source exactly
+- [ ] All 8+ heuristic categories preserved
+- [ ] Breaking change patterns preserved verbatim
+- [ ] Security checklist complete
+
+**Tests**:
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 3500
+
+#### 2. paw-review-gap Skill
+**File**: `skills/paw-review-gap/SKILL.md`
+**Changes**:
+- Migrate from [agents/PAW-R2B Gap Analyzer.agent.md](agents/PAW-R2B%20Gap%20Analyzer.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-gap
+  description: Systematically identifies gaps in correctness, safety, testing, and maintainability, categorizing findings by severity.
+  metadata:
+    type: activity
+    artifacts: GapAnalysis.md
+    stage: evaluation
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - **Must/Should/Could categorization framework** (HIGH VALUE - preserve VERBATIM)
+    - Full classification rules
+    - Concrete impact requirements
+    - Non-inflation guidelines
+  - Correctness analysis heuristics
+  - Safety & security analysis checklist
+  - Test coverage assessment (quantitative + qualitative)
+  - Maintainability analysis patterns
+  - Over-engineering detection framework
+  - Comment quality assessment (WHY vs WHAT)
+  - Positive observation recognition
+  - Style vs preference distinction
+  - GapAnalysis.md template (verbatim from source)
+- **Content to EXCLUDE:**
+  - Handoff to R3A
+  - Batching preview (workflow concern)
+
+**Content preservation check:**
+- [ ] GapAnalysis.md template matches source exactly
+- [ ] Must/Should/Could framework COMPLETE and VERBATIM
+- [ ] All gap detection heuristics preserved
+- [ ] Quality gate criteria preserved
+
+**Tests**:
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 4500 (largest activity skill)
+
+#### 3. Update Workflow Skill with Evaluation Stage Orchestration
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Add **Evaluation Stage** section:
+  1. Run `paw-review-impact` subagent → creates ImpactAnalysis.md
+  2. Run `paw-review-gap` subagent → creates GapAnalysis.md
+- Add stage gate: "Verify ImpactAnalysis.md, GapAnalysis.md exist before proceeding"
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Both SKILL.md files exist with valid frontmatter
+- [ ] Both skills load via `paw_get_skill`
+- [ ] `paw_get_skills` catalog includes both with `type: activity`
+- [ ] Token counts within targets
+
+#### Manual Verification:
+- [ ] Must/Should/Could framework is COMPLETE and matches source verbatim
+- [ ] All heuristic patterns preserved from both agents
+- [ ] Artifact templates exactly match source agents
+- [ ] All content from R2A/R2B accounted for
+
+---
+
+## Phase 2D: Output Stage (R3A + R3B)
+
+### Overview
+Migrate the Output stage agents that generate review comments and perform quality assessment. These skills handle GitHub integration and final output.
+
+### Changes Required:
+
+#### 1. paw-review-feedback Skill
+**File**: `skills/paw-review-feedback/SKILL.md`
+**Changes**:
+- Migrate from [agents/PAW-R3A Feedback Generator.agent.md](agents/PAW-R3A%20Feedback%20Generator.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-feedback
+  description: Transforms gap analysis findings into structured review comments with comprehensive rationale, creating GitHub pending review.
+  metadata:
+    type: activity
+    artifacts: ReviewComments.md
+    stage: output
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - Finding batching criteria
+  - **Rationale structure template** (HIGH VALUE - preserve verbatim)
+    - Evidence → Baseline Pattern → Impact → Best Practice
+  - One Issue One Comment principle
+  - Inline vs Thread determination logic
+  - Tone adjustment framework
+  - ReviewComments.md template (verbatim from source)
+  - **GitHub MCP integration** (localized to this skill):
+    - `mcp_github_pull_request_review_write` usage
+    - `mcp_github_add_comment_to_pending_review` patterns
+    - Posted status tracking
+- **Content to EXCLUDE:**
+  - Handoff to R3B
+  - Human control guardrail (moves to workflow)
+
+**Content preservation check:**
+- [ ] ReviewComments.md template matches source exactly
+- [ ] Rationale structure template COMPLETE and VERBATIM
+- [ ] GitHub MCP integration patterns preserved
+- [ ] All comment formatting rules preserved
+
+**Tests**:
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 3000
+
+#### 2. paw-review-critic Skill
+**File**: `skills/paw-review-critic/SKILL.md`
+**Changes**:
+- Migrate from [agents/PAW-R3B Feedback Critic.agent.md](agents/PAW-R3B%20Feedback%20Critic.agent.md)
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-critic
+  description: Critically assesses generated review comments for usefulness, accuracy, and appropriateness, adding assessment sections.
+  metadata:
+    type: activity
+    artifacts: none
+    updates: ReviewComments.md
+    stage: output
+  ```
+- **Body sections to include:**
+  - Agent identity and purpose
+  - **Usefulness evaluation framework** (HIGH VALUE - preserve verbatim)
+    - High/Medium/Low calibration
+    - Include/Modify/Skip recommendation logic
+  - Accuracy validation checklist
+  - Alternative perspective exploration pattern
+  - Trade-off analysis framework
+  - Assessment section template (verbatim from source)
+  - Advisory-only principle
+- **Content to EXCLUDE:**
+  - Return to R3A handoff (workflow concern)
+  - Terminal stage behavior (workflow concern)
+
+**Content preservation check:**
+- [ ] Assessment section template matches source exactly
+- [ ] Usefulness framework COMPLETE and VERBATIM
+- [ ] All evaluation criteria preserved
+
+**Tests**:
+- Frontmatter parses correctly
+- Skill loads via `paw_get_skill`
+- Token count under 2500
+
+#### 3. Complete Workflow Skill Orchestration
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Add **Output Stage** section:
+  1. Run `paw-review-feedback` subagent → creates ReviewComments.md, GitHub pending review
+  2. Run `paw-review-critic` subagent → adds assessment sections to ReviewComments.md
+- Add **Human Control Point**:
+  - Pending review NOT auto-submitted
+  - User reviews comments before submission
+- Add **Terminal Behavior**:
+  - Report artifact locations
+  - Provide next steps for user (submit, revise, discard)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Both SKILL.md files exist with valid frontmatter
+- [ ] Both skills load via `paw_get_skill`
+- [ ] `paw_get_skills` catalog includes all 7 skills (1 workflow + 6 activities)
+- [ ] Token counts within targets
+- [ ] Total skill tokens under 20,000
+
+#### Manual Verification:
+- [ ] Rationale structure template is COMPLETE and matches source verbatim
+- [ ] Usefulness framework is COMPLETE and matches source verbatim
+- [ ] GitHub MCP integration isolated to feedback skill only
+- [ ] Workflow skill has complete orchestration for all stages
+- [ ] All content from R3A/R3B accounted for
+- [ ] Human control point clearly documented
+
+---
+
+## Phase 3: Review Agent & Workflow Completion
+
+### Overview
+Create the single PAW Review agent that dynamically loads skills. The workflow skill was built incrementally during Phase 2; this phase finalizes the agent and validates the complete orchestration.
+
+### Changes Required:
+
+#### 1. PAW Review Agent
 **File**: `agents/PAW Review.agent.md` (new)
 **Changes**:
 - Frontmatter: `name: PAW Review`, `description: Executes the PAW Review workflow using dynamically loaded skills`
@@ -480,6 +804,34 @@ Remove old PAW-R* agent files, update documentation to reflect the skills-based 
 
 ## Cross-Phase Testing Strategy
 
+### Phase 2 Sub-Phase Validation Gates
+
+Each Phase 2 sub-phase must pass validation before proceeding:
+
+**After Phase 2A (Shared Foundations):**
+- [ ] Workflow skill loads with Core Review Principles section
+- [ ] No duplication of principles (each appears once)
+- [ ] Subagent contract clearly defined
+
+**After Phase 2B (Understanding Stage):**
+- [ ] Understanding + Baseline skills load correctly
+- [ ] Manual test: Run understanding → baseline → understanding sequence
+- [ ] Verify all 3 artifacts created (ReviewContext, CodeResearch, DerivedSpec)
+- [ ] Verify artifact templates match original agents
+
+**After Phase 2C (Evaluation Stage):**
+- [ ] Impact + Gap skills load correctly
+- [ ] Must/Should/Could framework verified against original (exact match)
+- [ ] Manual test: Run evaluation stage with mock understanding artifacts
+- [ ] Verify ImpactAnalysis.md and GapAnalysis.md created
+
+**After Phase 2D (Output Stage):**
+- [ ] Feedback + Critic skills load correctly
+- [ ] Rationale template verified against original (exact match)
+- [ ] Usefulness framework verified against original (exact match)
+- [ ] Complete workflow runs end-to-end
+- [ ] All 7 skills in catalog
+
 ### Integration Tests:
 - Extension activation with all tools registered
 - Full skill catalog returned by `paw_get_skills`
@@ -512,5 +864,6 @@ Remove old PAW-R* agent files, update documentation to reflect the skills-based 
 - Original Issue: https://github.com/lossyrob/phased-agent-workflow/issues/154
 - Spec: `.paw/work/paw-review-skills/Spec.md`
 - Research: `.paw/work/paw-review-skills/SpecResearch.md`, `.paw/work/paw-review-skills/CodeResearch.md`
+- Agent Annotation Analysis: `.paw/work/paw-review-skills/context/agent-annotations.md`
 - Agent Skills Specification: https://agentskills.io/specification
 - Similar tool implementation: [src/tools/contextTool.ts](src/tools/contextTool.ts)

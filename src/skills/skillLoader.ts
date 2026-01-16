@@ -6,9 +6,28 @@ import * as vscode from 'vscode';
  * Entry in the skill catalog returned by `loadSkillCatalog`.
  */
 export interface SkillCatalogEntry {
+  /**
+   * Unique identifier for the skill. Must be 1-64 characters, lowercase
+   * alphanumeric and hyphens only, must not start/end with hyphen or contain
+   * consecutive hyphens, must match the parent directory name.
+   */
   name: string;
+  /**
+   * Describes what the skill does and when to use it. Must be 1-1024
+   * characters. Should include keywords that help agents identify relevant
+   * tasks.
+   */
   description: string;
+  /**
+   * Optional type classification from metadata (e.g., 'workflow', 'activity').
+   * Stored in metadata.type per the Agent Skills spec which allows arbitrary
+   * key-value metadata.
+   */
   type?: string;
+  /**
+   * Indicates where the skill was loaded from. Currently only 'builtin' for
+   * skills bundled with the extension.
+   */
   source: 'builtin';
 }
 
@@ -17,8 +36,14 @@ export interface SkillCatalogEntry {
  * Contains either the full SKILL.md content or an error message.
  */
 export interface SkillContent {
+  /** The skill name that was requested. */
   name: string;
+  /**
+   * The full SKILL.md file content including frontmatter and body. The body
+   * contains instructions with no format restrictions.
+   */
   content: string;
+  /** Error message if the skill could not be loaded, undefined on success. */
   error?: string;
 }
 

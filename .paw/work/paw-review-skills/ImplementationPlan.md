@@ -527,16 +527,62 @@ Migrate the Evaluation stage agents that perform impact and gap analysis. These 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Both SKILL.md files exist with valid frontmatter
-- [ ] Both skills load via `paw_get_skill`
-- [ ] `paw_get_skills` catalog includes both with `type: activity`
-- [ ] Token counts within targets
+- [x] Both SKILL.md files exist with valid frontmatter
+- [x] Both skills load via `paw_get_skill`
+- [x] `paw_get_skills` catalog includes both with `type: activity`
+- [x] Token counts within targets
 
 #### Manual Verification:
-- [ ] Must/Should/Could framework is COMPLETE and matches source verbatim
-- [ ] All heuristic patterns preserved from both agents
-- [ ] Artifact templates exactly match source agents
-- [ ] All content from R2A/R2B accounted for
+- [x] Must/Should/Could framework is COMPLETE and matches source verbatim
+- [x] All heuristic patterns preserved from both agents
+- [x] Artifact templates exactly match source agents
+- [x] All content from R2A/R2B accounted for
+
+### Phase 2C Status Update
+- **Status**: Completed
+- **Summary**:
+  - Created `skills/paw-review-impact/SKILL.md` (~507 lines):
+    - Complete YAML frontmatter with type: activity, stage: evaluation
+    - All 8 analysis steps preserved from R2A:
+      1. Integration Graph Building
+      2. Breaking Change Detection
+      3. Performance Assessment
+      4. Security & Authorization Review
+      5. Design & Architecture Assessment
+      6. User Impact Evaluation
+      7. Code Health Trend Assessment
+      8. Deployment Considerations
+    - Complete ImpactAnalysis.md template with all sections
+    - Guardrails and validation checklist preserved
+    - References Core Review Principles from workflow skill
+  - Created `skills/paw-review-gap/SKILL.md` (~613 lines):
+    - Complete YAML frontmatter with type: activity, stage: evaluation
+    - Must/Should/Could categorization framework preserved verbatim
+    - All 9 analysis steps preserved from R2B:
+      1. Correctness Analysis
+      2. Safety & Security Analysis
+      3. Testing Analysis (quantitative + qualitative)
+      4. Maintainability Analysis
+      5. Performance Analysis
+      6. Categorize Findings (Must/Should/Could)
+      7. Positive Observations
+      8. Style & Conventions Analysis
+      9. Generate GapAnalysis.md
+    - Over-engineering detection framework preserved
+    - Comment quality assessment (WHY vs WHAT) preserved
+    - Complete GapAnalysis.md template with all sections
+    - Guardrails and validation checklist preserved
+  - Workflow skill already had Evaluation Stage orchestration (from Phase 2A):
+    - Documents paw-review-impact → paw-review-gap sequence
+    - Stage gate for artifact verification
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 154 tests passing ✅
+  - All 5 skills (workflow + 4 activity) load correctly
+- **Notes for Review**:
+  - paw-review-gap is the largest activity skill at ~613 lines (as expected)
+  - All high-value content preserved: Must/Should/Could framework, breaking change patterns, test analysis
+  - Handoff/orchestration logic excluded per plan (stays in workflow skill)
 
 ---
 

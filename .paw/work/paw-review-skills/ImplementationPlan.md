@@ -382,10 +382,10 @@ Migrate the Understanding stage agents that handle PR analysis and baseline rese
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Both SKILL.md files exist with valid frontmatter
-- [ ] Both skills load via `paw_get_skill`
-- [ ] `paw_get_skills` catalog includes both with `type: activity`
-- [ ] Token counts within targets
+- [x] Both SKILL.md files exist with valid frontmatter
+- [x] Both skills load via `paw_get_skill`
+- [x] `paw_get_skills` catalog includes both with `type: activity`
+- [x] Token counts within targets
 
 #### Manual Verification:
 - [ ] Understanding skill handles both initial and resumption modes
@@ -393,6 +393,39 @@ Migrate the Understanding stage agents that handle PR analysis and baseline rese
 - [ ] Workflow skill clearly documents R1A-R1B-R1A pattern
 - [ ] Artifact templates exactly match source agents
 - [ ] All content from R1A/R1B accounted for (workflow or activity)
+
+### Phase 2B Status Update
+- **Status**: Completed
+- **Summary**:
+  - Created `skills/paw-review-understanding/SKILL.md` (~11KB):
+    - Complete YAML frontmatter with type: activity, stage: understanding
+    - Two execution modes: Initial (Steps 1-3) and Resumption (Step 4)
+    - Context detection for GitHub vs Non-GitHub
+    - ReviewContext.md template preserved from R1A
+    - DerivedSpec.md template preserved from R1A
+    - Research prompt generation logic
+    - Validation criteria and error handling
+    - References Core Review Principles from workflow skill
+  - Created `skills/paw-review-baseline/SKILL.md` (~7KB):
+    - Complete YAML frontmatter with type: activity, stage: understanding
+    - Remote sync and base commit verification (Steps 1-2)
+    - Checkout/restore pattern with state preservation
+    - Research methodology guidelines
+    - CodeResearch.md template preserved from R1B
+    - Validation checklist and error handling
+    - References Core Review Principles from workflow skill
+  - Workflow skill already has Understanding Stage orchestration (Phase 2A):
+    - Documents R1A-R1B-R1A resume pattern
+    - Stage gate for artifact verification
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 154 tests passing ✅
+  - All 3 skills load correctly via skill loader
+- **Notes for Review**:
+  - Understanding skill is comprehensive but under token targets
+  - Baseline skill focuses on git operations and research methodology
+  - Handoff/orchestration logic excluded per plan (stays in workflow skill)
+  - Artifact templates match source agents
 
 ---
 

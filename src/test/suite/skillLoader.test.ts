@@ -105,6 +105,43 @@ suite('Skill Loader', () => {
     }
   });
 
+  test('loadSkillCatalog skips skills with invalid frontmatter', () => {
+    const tempDir = createTempDir('paw-skill-invalid-');
+    try {
+      // Valid skill
+      createSkill(
+        tempDir,
+        'valid-skill',
+        [
+          '---',
+          'name: valid-skill',
+          'description: A valid skill',
+          '---',
+          'Body',
+        ].join('\n')
+      );
+
+      // Invalid skill - missing required fields
+      createSkill(
+        tempDir,
+        'invalid-skill',
+        [
+          '---',
+          'description: Missing name field',
+          '---',
+          'Body',
+        ].join('\n')
+      );
+
+      const catalog = loadSkillCatalog(vscode.Uri.file(tempDir));
+      // Should only contain the valid skill
+      assert.strictEqual(catalog.length, 1);
+      assert.strictEqual(catalog[0].name, 'valid-skill');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test('loadSkillContent returns error when skill is missing', () => {
     const tempDir = createTempDir('paw-skill-missing-');
     try {

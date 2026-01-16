@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+/**
+ * Entry in the skill catalog returned by `loadSkillCatalog`.
+ */
 export interface SkillCatalogEntry {
   name: string;
   description: string;
@@ -9,12 +12,19 @@ export interface SkillCatalogEntry {
   source: 'builtin';
 }
 
+/**
+ * Result of loading a skill's content.
+ * Contains either the full SKILL.md content or an error message.
+ */
 export interface SkillContent {
   name: string;
   content: string;
   error?: string;
 }
 
+/**
+ * Parsed YAML frontmatter from a SKILL.md file.
+ */
 interface SkillFrontmatter {
   name: string;
   description: string;
@@ -24,10 +34,19 @@ interface SkillFrontmatter {
   allowedTools?: string;
 }
 
+/**
+ * Removes surrounding quotes from a string value.
+ */
 function stripQuotes(value: string): string {
   return value.replace(/^['"]|['"]$/g, '');
 }
 
+/**
+ * Extracts the YAML frontmatter block from skill content.
+ * @param content - Full SKILL.md file content
+ * @returns The frontmatter text between --- delimiters
+ * @throws Error if frontmatter is missing or malformed
+ */
 function extractFrontmatter(content: string): string {
   if (!content.startsWith('---')) {
     throw new Error('Skill frontmatter is missing or malformed.');
@@ -41,6 +60,14 @@ function extractFrontmatter(content: string): string {
   return content.substring(3, closingIndex).trim();
 }
 
+/**
+ * Parses the YAML frontmatter from a SKILL.md file.
+ * Extracts name, description, and optional metadata fields.
+ * 
+ * @param content - Full SKILL.md file content with YAML frontmatter
+ * @returns Parsed frontmatter object
+ * @throws Error if required fields (name, description) are missing
+ */
 export function parseSkillFrontmatter(content: string): SkillFrontmatter {
   const frontmatter = extractFrontmatter(content);
   const lines = frontmatter.split(/\r?\n/);
@@ -112,6 +139,13 @@ export function parseSkillFrontmatter(content: string): SkillFrontmatter {
   return result as SkillFrontmatter;
 }
 
+/**
+ * Ensures the skills directory exists at the expected location.
+ * 
+ * @param extensionUri - URI to the extension root
+ * @returns Absolute filesystem path to the skills directory
+ * @throws Error if the skills directory does not exist
+ */
 export function ensureSkillsDirectory(extensionUri: vscode.Uri): string {
   const skillsUri = vscode.Uri.joinPath(extensionUri, 'skills');
   const skillsPath = skillsUri.fsPath;
@@ -123,6 +157,14 @@ export function ensureSkillsDirectory(extensionUri: vscode.Uri): string {
   return skillsPath;
 }
 
+/**
+ * Loads the catalog of all available skills from the bundled skills directory.
+ * Scans for subdirectories containing SKILL.md files and extracts their metadata.
+ * Skills with invalid frontmatter are silently skipped to allow graceful degradation.
+ * 
+ * @param extensionUri - URI to the extension root
+ * @returns Array of skill catalog entries with name, description, and type
+ */
 export function loadSkillCatalog(extensionUri: vscode.Uri): SkillCatalogEntry[] {
   const skillsPath = ensureSkillsDirectory(extensionUri);
   const entries: SkillCatalogEntry[] = [];
@@ -139,20 +181,32 @@ export function loadSkillCatalog(extensionUri: vscode.Uri): SkillCatalogEntry[] 
       continue;
     }
 
-    const content = fs.readFileSync(skillFile, 'utf-8');
-    const frontmatter = parseSkillFrontmatter(content);
+    try {
+      const content = fs.readFileSync(skillFile, 'utf-8');
+      const frontmatter = parseSkillFrontmatter(content);
 
-    entries.push({
-      name: frontmatter.name,
-      description: frontmatter.description,
-      type: frontmatter.metadata?.type,
-      source: 'builtin'
-    });
+      entries.push({
+        name: frontmatter.name,
+        description: frontmatter.description,
+        type: frontmatter.metadata?.type,
+        source: 'builtin'
+      });
+    } catch {
+      // Skip skills with invalid frontmatter to allow graceful degradation
+      continue;
+    }
   }
 
   return entries;
 }
 
+/**
+ * Loads the full content of a specific skill by name.
+ * 
+ * @param extensionUri - URI to the extension root
+ * @param skillName - Name of the skill directory to load (e.g., 'paw-review-workflow')
+ * @returns SkillContent with the full SKILL.md content, or an error if not found
+ */
 export function loadSkillContent(extensionUri: vscode.Uri, skillName: string): SkillContent {
   const skillsPath = ensureSkillsDirectory(extensionUri);
   const skillDir = path.join(skillsPath, skillName);

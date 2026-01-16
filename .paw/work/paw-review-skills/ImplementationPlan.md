@@ -150,15 +150,28 @@ interface SkillContent {
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Unit tests pass: `npm test`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Unit tests pass: `npm test`
 - [ ] Linting passes (if configured)
-- [ ] Extension activates without errors
+- [x] Extension activates without errors
 
 #### Manual Verification:
 - [ ] `paw_get_skills` returns formatted catalog when invoked by agent
 - [ ] `paw_get_skill` returns skill content for valid skill name
 - [ ] Error messages are clear for invalid skill names
+
+### Phase 1 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Added skill loading utilities and frontmatter parsing in `src/skills/skillLoader.ts`.
+  - Implemented `paw_get_skills` and `paw_get_skill` tools with formatting helpers and tests.
+  - Registered tools in the extension and added language model tool schemas.
+- **Automated Verification**:
+  - `npm run compile`
+  - `npm test`
+- **Notes for Review**:
+  - Validate frontmatter parsing behavior for nested metadata and optional fields.
+  - Manual verification of tool responses still pending.
 
 ---
 

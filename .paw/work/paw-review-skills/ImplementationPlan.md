@@ -688,19 +688,66 @@ Migrate the Output stage agents that generate review comments and perform qualit
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Both SKILL.md files exist with valid frontmatter
-- [ ] Both skills load via `paw_get_skill`
-- [ ] `paw_get_skills` catalog includes all 7 skills (1 workflow + 6 activities)
-- [ ] Token counts within targets
-- [ ] Total skill tokens under 20,000
+- [x] Both SKILL.md files exist with valid frontmatter
+- [x] Both skills load via `paw_get_skill`
+- [x] `paw_get_skills` catalog includes all 7 skills (1 workflow + 6 activities)
+- [x] Token counts within targets
+- [x] Total skill tokens under 20,000
 
 #### Manual Verification:
-- [ ] Rationale structure template is COMPLETE and matches source verbatim
-- [ ] Usefulness framework is COMPLETE and matches source verbatim
-- [ ] GitHub MCP integration isolated to feedback skill only
-- [ ] Workflow skill has complete orchestration for all stages
-- [ ] All content from R3A/R3B accounted for
-- [ ] Human control point clearly documented
+- [x] Rationale structure template is COMPLETE and matches source verbatim
+- [x] Usefulness framework is COMPLETE and matches source verbatim
+- [x] GitHub MCP integration isolated to feedback skill only
+- [x] Workflow skill has complete orchestration for all stages
+- [x] All content from R3A/R3B accounted for
+- [x] Human control point clearly documented
+
+### Phase 2D Status Update
+- **Status**: Completed
+- **Summary**:
+  - Created `skills/paw-review-feedback/SKILL.md` (~368 lines):
+    - Complete YAML frontmatter with type: activity, stage: output
+    - All 6 process steps preserved from R3A:
+      1. Batch Related Findings (One Issue, One Comment)
+      2. Build Comment Objects (Inline vs Thread determination)
+      3. Generate Rationale Sections (Evidence, Baseline Pattern, Impact, Best Practice)
+      4. Create ReviewComments.md with complete template
+      5. GitHub Context - Create Pending Review (MCP tool usage)
+      6. Non-GitHub Context handling
+    - Tone Adjustment framework preserved
+    - All guardrails preserved (No PAW Artifact References, No Automatic Submission, etc.)
+    - GitHub MCP integration isolated to this skill only
+  - Created `skills/paw-review-critic/SKILL.md` (~352 lines):
+    - Complete YAML frontmatter with type: activity, stage: output, updates: ReviewComments.md
+    - All 3 process steps preserved from R3B:
+      1. Read All Review Comments
+      2. Critical Assessment (Usefulness, Accuracy, Alternative Perspective, Trade-off Analysis)
+      3. Add Assessment Sections with recommendation guidelines
+    - Usefulness Evaluation Framework preserved verbatim (High/Medium/Low)
+    - Assessment Guidelines section preserved (Calibration, Rigor, Depth, Realism)
+    - All guardrails preserved (Advisory Only, Critical Thinking, Local Only, etc.)
+  - Workflow skill already had Output Stage orchestration (from Phase 2A):
+    - Documents paw-review-feedback → paw-review-critic sequence
+    - Human Control Point documented
+    - Terminal Behavior documented
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 154 tests passing ✅
+  - All 7 skills (1 workflow + 6 activity) load correctly
+- **Token Counts**:
+  - paw-review-workflow: 207 lines
+  - paw-review-understanding: 379 lines
+  - paw-review-baseline: 277 lines
+  - paw-review-impact: 507 lines
+  - paw-review-gap: 613 lines
+  - paw-review-feedback: 368 lines
+  - paw-review-critic: 352 lines
+  - **Total**: 2703 lines (~13,500 tokens estimated, well under 20,000 target)
+- **Notes for Review**:
+  - paw-review-feedback has all GitHub MCP integration (isolated as planned)
+  - paw-review-critic updates ReviewComments.md rather than creating new artifact
+  - Handoff/orchestration logic excluded per plan (stays in workflow skill)
+  - High-value content preserved: Rationale structure template, Usefulness framework
 
 ---
 

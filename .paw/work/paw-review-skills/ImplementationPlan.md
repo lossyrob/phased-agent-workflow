@@ -935,6 +935,20 @@ Wire the new tools into the extension, extend the installer to handle prompt fil
   - `removeInstalledAgents()` matches both `*.agent.md` and `*.prompt.md` patterns
   - No changes to handoffTool.ts needed - enum validation is in package.json schema
 
+**Addressed Review Comments:**
+- Consolidated duplicate frontmatter parsing logic:
+  - Created `src/utils/frontmatter.ts` with shared `extractFrontmatterField(content, fieldName)` helper
+  - Updated `src/agents/agentTemplates.ts` to use shared utility (reduced ~25 lines to 3 lines)
+  - Updated `src/agents/promptTemplates.ts` to use shared utility (reduced ~25 lines to 3 lines)
+- Added missing unit tests for `loadPromptTemplates`:
+  - Created `src/test/suite/promptTemplates.test.ts` with 5 test cases:
+    1. Loading valid prompt templates
+    2. Handling missing prompts directory (returns empty array)
+    3. Handling malformed frontmatter gracefully
+    4. Extracting agent field correctly with various formats (quotes, colons, case-insensitive)
+    5. Ignoring non-prompt files
+- All 159 tests passing
+
 ---
 
 ## Phase 5: Cleanup & Validation

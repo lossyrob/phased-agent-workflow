@@ -141,7 +141,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Authoritative parameter source for review workflow.
 
-**Created by:** PAW-R1A Understanding
+**Created by:** `paw-review-understanding` skill
 
 **Contents:**
 
@@ -158,7 +158,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Reverse-engineered specification inferred from implementation.
 
-**Created by:** PAW-R1A Understanding
+**Created by:** `paw-review-understanding` skill
 
 **Contents:**
 
@@ -174,7 +174,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** System-wide effects, integration analysis, and risk assessment.
 
-**Created by:** PAW-R2A Impact Analyzer
+**Created by:** `paw-review-impact` skill
 
 **Contents:**
 
@@ -190,7 +190,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Categorized findings with evidence and suggestions.
 
-**Created by:** PAW-R2B Gap Analyzer
+**Created by:** `paw-review-gap` skill
 
 **Structure:**
 
@@ -219,7 +219,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Complete feedback with rationale and assessment.
 
-**Created by:** PAW-R3A Feedback Generator, PAW-R3B Feedback Critic
+**Created by:** `paw-review-feedback` skill, `paw-review-critic` skill
 
 **For each comment:**
 
@@ -247,7 +247,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Guide Code Research Agent on what to map.
 
-**Created by:** PAW-02B Impl Planner (implementation) or PAW-R1A Understanding (review)
+**Created by:** PAW-02B Impl Planner
 
 **Contents:**
 

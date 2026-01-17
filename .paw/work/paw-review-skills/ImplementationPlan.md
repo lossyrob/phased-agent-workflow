@@ -778,15 +778,41 @@ Create the single PAW Review agent that dynamically loads skills. The workflow s
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Workflow skill parses with `type: workflow` metadata
-- [ ] Agent file lints: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
-- [ ] `paw_get_skills` catalog shows workflow skill with correct type
-- [ ] TypeScript compiles after agent template addition
+- [x] Workflow skill parses with `type: workflow` metadata
+- [x] Agent file lints: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+- [x] `paw_get_skills` catalog shows workflow skill with correct type
+- [x] TypeScript compiles after agent template addition
 
 #### Manual Verification:
-- [ ] Workflow skill clearly documents the R1A-R1B-R1A pattern
-- [ ] Agent prompts skills lookup before executing workflow
-- [ ] Subagent contract is clear and consistent across activities
+- [x] Workflow skill clearly documents the R1A-R1B-R1A pattern
+- [x] Agent prompts skills lookup before executing workflow
+- [x] Subagent contract is clear and consistent across activities
+
+### Phase 3 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Created `agents/PAW Review.agent.md` (199 lines, 1529 tokens):
+    - Frontmatter with description for skills-based workflow execution
+    - **Initialization** section: Load workflow skill via `paw_get_skill('paw-review-workflow')`
+    - **Context Detection**: PR URL/number from user input or arguments, non-GitHub branch handling
+    - **Multi-Repository Detection**: Notes cross-repo scenarios (detailed handling deferred)
+    - **Skill-Based Execution**: Documents all 3 stages (Understanding, Evaluation, Output)
+    - **Executing Subagents**: `runSubagent` tool usage pattern documented
+    - **Stage Gates**: Verification of artifacts between stages
+    - **Available Skills Discovery**: `paw_get_skills` usage for skill catalog
+    - **Workflow Completion**: Terminal output format matching workflow skill
+    - **Human Control Point**: Pending review never auto-submitted
+    - **Error Handling**: Stage failure recovery instructions
+    - **Guardrails**: Evidence-based, no fabrication, human authority
+- **Automated Verification**:
+  - `./scripts/lint-agent.sh agents/PAW\ Review.agent.md` ✅ (1529 tokens)
+  - `npm run compile` ✅
+  - `npm test` - 154 tests passing ✅
+- **Notes for Review**:
+  - Agent is lightweight (1529 tokens) - orchestration logic in workflow skill
+  - References both `paw_get_skills` (catalog) and `paw_get_skill` (content) tools
+  - Stage gate verification documented between each stage
+  - Human control point emphasized (no auto-submit of pending reviews)
 
 ---
 
@@ -871,15 +897,43 @@ Wire the new tools into the extension, extend the installer to handle prompt fil
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] All unit tests pass: `npm test`
-- [ ] Extension activates with new tools registered
-- [ ] Prompt file present in compiled output
+- [x] TypeScript compiles: `npm run compile`
+- [x] All unit tests pass: `npm test`
+- [x] Extension activates with new tools registered
+- [x] Prompt file present in compiled output
 
 #### Manual Verification:
 - [ ] `/paw-review` slash command appears in Copilot Chat
 - [ ] Prompt file invokes PAW Review agent
 - [ ] Tools respond correctly when invoked by agent
+
+### Phase 4 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Tool Registration: Already done in Phase 1 (lines 52-58 in extension.ts)
+  - Created `src/agents/promptTemplates.ts`:
+    - `PromptTemplate` interface with filename, agent, content fields
+    - `loadPromptTemplates(extensionUri)` function following agentTemplates.ts pattern
+    - `extractFrontmatterAgent()` helper for parsing YAML frontmatter
+  - Updated `src/agents/installer.ts`:
+    - Added import for `loadPromptTemplates`
+    - Modified `needsInstallation()` to check for prompt file existence
+    - Modified `installAgents()` to also load and install prompt files
+    - Modified `removeInstalledAgents()` to match prompt files for cleanup
+  - Created `prompts/paw-review.prompt.md`:
+    - YAML frontmatter with `agent: PAW Review`
+    - Description of skills-based workflow
+    - `$ARGUMENTS` placeholder for PR specification
+  - Updated `package.json`:
+    - Added `PAW Review` to `paw_call_agent` tool's `target_agent` enum
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 154 tests passing ✅
+- **Notes for Review**:
+  - Prompt file installation leverages existing installer infrastructure
+  - `filesInstalled` array in InstallationState tracks both agents and prompts
+  - `removeInstalledAgents()` matches both `*.agent.md` and `*.prompt.md` patterns
+  - No changes to handoffTool.ts needed - enum validation is in package.json schema
 
 ---
 

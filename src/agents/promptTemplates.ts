@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { extractFrontmatterField } from '../utils/frontmatter';
 
 /**
  * Represents a PAW prompt template loaded from the extension's prompts directory.
@@ -35,43 +36,13 @@ function getPromptsSourceDirectory(extensionUri: vscode.Uri): string | null {
 
 /**
  * Extracts the agent field from YAML frontmatter.
- * 
- * This is a simplified YAML parser that only extracts the agent field.
+ * Delegates to shared utility.
  * 
  * @param content - The full file content
  * @returns The agent value, or empty string if not found
  */
 function extractFrontmatterAgent(content: string): string {
-  // Check if content starts with YAML frontmatter delimiter
-  if (!content.startsWith('---')) {
-    return '';
-  }
-
-  // Find the closing delimiter
-  const closingIndex = content.indexOf('\n---', 3);
-  if (closingIndex === -1) {
-    return '';
-  }
-
-  // Extract and parse the frontmatter
-  const frontmatter = content.substring(3, closingIndex).trim();
-  const lines = frontmatter.split(/\r?\n/);
-  for (const line of lines) {
-    const [rawKey, ...rawValue] = line.split(':');
-    if (!rawKey || rawValue.length === 0) {
-      continue;
-    }
-
-    const key = rawKey.trim().toLowerCase();
-    if (key === 'agent') {
-      // Join value parts (in case value contains colons)
-      const value = rawValue.join(':').trim();
-      // Remove surrounding quotes if present
-      return value.replace(/^['"]|['"]$/g, '');
-    }
-  }
-
-  return '';
+  return extractFrontmatterField(content, 'agent');
 }
 
 /**

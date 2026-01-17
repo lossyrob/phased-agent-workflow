@@ -71,7 +71,8 @@ To preserve content and avoid loss during migration:
    - **Phase 2D: Output Stage** - R3A + R3B skills (feedback generation)
 3. **Phase 3: Review Agent & Workflow Completion** - Create PAW Review agent, complete workflow skill orchestration
 4. **Phase 4: Extension Integration** - Register tools, extend installer for prompt files, add entry point
-5. **Phase 5: Cleanup & Validation** - Remove old agents, update documentation, end-to-end testing
+5. **Phase 5: Reference Audit & Agent Removal** - Audit and fix PAW-R* references in new skills, then remove old agents
+6. **Phase 6: Documentation & Validation** - Update documentation, end-to-end testing
 
 ---
 
@@ -951,14 +952,38 @@ Wire the new tools into the extension, extend the installer to handle prompt fil
 
 ---
 
-## Phase 5: Cleanup & Validation
+## Phase 5: Reference Audit & Agent Removal
 
 ### Overview
-Remove old PAW-R* agent files, update documentation to reflect the skills-based architecture, and perform end-to-end validation.
+Audit all new skills and artifacts for stale references to PAW-R* agents, fix any found issues, then remove the old PAW-R* agent files and related components.
 
 ### Changes Required:
 
-#### 1. Remove Old Review Agents
+#### 1. Audit Skills for PAW-R* References
+**Files to audit**:
+- `skills/paw-review-workflow/SKILL.md`
+- `skills/paw-review-understanding/SKILL.md`
+- `skills/paw-review-baseline/SKILL.md`
+- `skills/paw-review-impact/SKILL.md`
+- `skills/paw-review-gap/SKILL.md`
+- `skills/paw-review-feedback/SKILL.md`
+- `skills/paw-review-critic/SKILL.md`
+
+**Known Issue Found**:
+- `skills/paw-review-understanding/SKILL.md` line 96 has `mode: PAW-R1B Baseline Researcher`
+- **Fix**: Change to `mode: PAW Review` (the unified review agent now handles all stages)
+
+**Search Pattern**: `PAW-R[0-9]` (regex) to find any PAW-R1A, PAW-R1B, PAW-R2A, etc.
+
+#### 2. Audit PAW Review Agent
+**File**: `agents/PAW Review.agent.md`
+**Verification**: Confirm no references to old PAW-R* agents (should reference skills instead)
+
+#### 3. Audit Prompt File
+**File**: `prompts/paw-review.prompt.md`
+**Verification**: Confirm no references to old PAW-R* agents
+
+#### 4. Remove Old Review Agents
 **Files to delete**:
 - `agents/PAW-R1A Understanding.agent.md`
 - `agents/PAW-R1B Baseline Researcher.agent.md`
@@ -967,19 +992,65 @@ Remove old PAW-R* agent files, update documentation to reflect the skills-based 
 - `agents/PAW-R3A Feedback Generator.agent.md`
 - `agents/PAW-R3B Feedback Critic.agent.md`
 
+#### 5. Remove Review Handoff Component
 **File**: `agents/components/review-handoff-instructions.component.md`
-**Changes**:
-- Delete file (no longer needed - handoffs encoded in workflow skill)
+**Reason**: No longer needed - handoffs are encoded in workflow skill orchestration
 
+#### 6. Verify package.json paw_call_agent Enum
 **File**: `package.json`
-**Changes**:
-- Update `paw_call_agent` tool schema to remove PAW-R* agents from `target_agent` enum (keep only `PAW Review`)
+**Verification**: Confirm PAW-R* agents are NOT in the `target_agent` enum (they should have been excluded when `PAW Review` was added in Phase 4)
 
-**Tests**:
-- Verify old agents no longer appear in catalog
-- Verify agent templates load without errors after removal
+### Success Criteria:
 
-#### 2. Documentation Updates
+#### Automated Verification:
+- [x] No PAW-R* references found in skills directory: `grep -r "PAW-R[0-9]" skills/`
+- [x] No PAW-R* references in PAW Review agent: `grep "PAW-R[0-9]" agents/PAW\ Review.agent.md`
+- [x] TypeScript compiles after agent removal: `npm run compile`
+- [x] All tests pass after removal: `npm test`
+- [x] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+
+#### Manual Verification:
+- [ ] Skill loader still returns all 7 skills correctly
+- [ ] `paw_call_agent` with `PAW Review` still works
+- [ ] No orphaned agent references in documentation
+
+### Phase 5 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Audited all 7 skills in `skills/paw-review-*` for PAW-R* references
+  - Found and fixed `mode: PAW-R1B Baseline Researcher` → `mode: PAW Review` in `skills/paw-review-understanding/SKILL.md` line 96
+  - Verified PAW Review agent and paw-review.prompt.md have no PAW-R* references
+  - Deleted 6 old PAW-R* agent files:
+    - `agents/PAW-R1A Understanding.agent.md`
+    - `agents/PAW-R1B Baseline Researcher.agent.md`
+    - `agents/PAW-R2A Impact Analyzer.agent.md`
+    - `agents/PAW-R2B Gap Analyzer.agent.md`
+    - `agents/PAW-R3A Feedback Generator.agent.md`
+    - `agents/PAW-R3B Feedback Critic.agent.md`
+  - Deleted `agents/components/review-handoff-instructions.component.md`
+  - Verified package.json `paw_call_agent` enum has no PAW-R* entries (only `PAW Review`)
+  - Updated installer test to expect 11 files (10 agents + 1 prompt) instead of 15
+- **Automated Verification**:
+  - `grep -r "PAW-R[0-9]" skills/` → No matches ✅
+  - `grep "PAW-R[0-9]" agents/PAW\ Review.agent.md` → No matches ✅
+  - `npm run compile` ✅
+  - `npm test` - 159 tests passing ✅
+  - `./scripts/lint-agent.sh agents/PAW\ Review.agent.md` - 1529 tokens ✅
+- **Notes for Review**:
+  - Old PAW-R* agents fully removed - skills now contain all review workflow logic
+  - The single PAW Review agent + workflow skill + activity skills now handle all review functionality
+  - Installer test updated from 15 to 11 expected files to reflect 6 fewer agents
+
+---
+
+## Phase 6: Documentation & Validation
+
+### Overview
+Update documentation to reflect the skills-based architecture and perform end-to-end validation.
+
+### Changes Required:
+
+#### 1. Documentation Updates
 **File**: `docs/reference/agents.md`
 **Changes**:
 - Remove PAW-R* agent documentation

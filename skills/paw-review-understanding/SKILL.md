@@ -93,7 +93,7 @@ Determine context type before proceeding:
    - What test coverage was present?
 
 2. **Create prompts/01B-code-research.prompt.md**:
-   - YAML frontmatter with `mode: PAW-R1B Baseline Researcher`
+   - YAML frontmatter with `mode: PAW Review`
    - Relative path to ReviewContext.md
    - Research questions only (no agent instructions)
 

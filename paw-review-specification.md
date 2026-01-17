@@ -14,6 +14,38 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 ---
 
+## Skills-Based Architecture
+
+The review workflow uses a **skills-based architecture** for dynamic, maintainable orchestration.
+
+**Invocation:** `/paw-review <PR-number-or-URL>`
+
+**How it works:**
+
+1. The **PAW Review** agent loads the `paw-review-workflow` skill
+2. The workflow skill orchestrates **activity skills** via subagent execution
+3. Each activity skill produces specific artifacts
+4. Complete review runs without manual pauses between stages
+
+**Bundled Skills:**
+
+| Skill | Type | Stage | Output |
+|-------|------|-------|--------|
+| `paw-review-workflow` | Workflow | — | Orchestration logic, core principles |
+| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
+| `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
+| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
+| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md, GitHub pending review |
+| `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
+
+**Tool Support:**
+
+- `paw_get_skills` — Retrieves catalog of available skills with metadata
+- `paw_get_skill` — Loads specific skill content by name
+
+---
+
 ## Repository Layout
 
 ```
@@ -38,9 +70,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Comprehensively understand what changed and why
 
-**Agents:** 
-* PAW-R1A Understanding
-* PAW-R1B Baseline Researcher (invoked during R1 research pause)
+**Skills:** `paw-review-understanding`, `paw-review-baseline`
 
 **Inputs:**
 * PR URL or number (GitHub context)
@@ -49,8 +79,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewContext.md` – PR metadata, changed files, flags (authoritative parameter source)
-* `.paw/reviews/<identifier>/prompts/code-research.prompt.md` – Generated research questions about pre-change system
-* `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding (created after research)
+* `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding
 * `.paw/reviews/<identifier>/DerivedSpec.md` – Reverse-engineered intent and acceptance criteria
 
 **Process:**
@@ -62,22 +91,13 @@ PAW Review applies the same principles as the implementation workflow: **traceab
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
 
-2. **Generate code research prompt**
-   - Identify areas needing baseline understanding based on changed files
-   - Create `prompts/code-research.prompt.md` with questions about:
-     - Pre-change behavior of modified modules
-     - Integration points and dependencies
-     - Patterns and conventions
-     - Performance context for sensitive code
-     - Test coverage baseline
-   - Guidance for PAW-R1B Baseline Researcher, not rigid template
+2. **Research pre-change baseline**
+   - Analyze codebase at base commit (pre-change state)
+   - Document how system worked before changes
+   - Record patterns, conventions, and integration points
+   - Create `CodeResearch.md` with file:line references
 
-3. **Pause for baseline research**
-   - Signal human to run PAW-R1B Baseline Researcher
-   - Wait until `CodeResearch.md` exists
-   - Researcher analyzes codebase at base commit (pre-change state)
-
-4. **Derive specification**
+3. **Derive specification**
    - Use CodeResearch.md to understand how system worked before changes
    - Reverse-engineer author intent from code analysis and PR description
    - Extract acceptance criteria from implementation
@@ -87,10 +107,8 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R1A Understanding with PR number or base branch
-* Agent creates ReviewContext.md and code-research.prompt.md
-* Run PAW-R1B Baseline Researcher to analyze pre-change system
-* Agent completes DerivedSpec.md using baseline understanding
+* Invoke `/paw-review <PR-number-or-URL>` or run PAW Review agent
+* Agent orchestrates all R1 activities automatically
 * Review artifacts to ensure understanding is accurate
 * Correct any misinterpretations in `DerivedSpec.md`
 * Proceed to Stage R2 once understanding complete and zero open questions
@@ -101,9 +119,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Agents:** 
-* PAW-R2A Impact Analyzer
-* PAW-R2B Gap Analyzer
+**Skills:** `paw-review-impact`, `paw-review-gap`
 
 **Inputs:**
 * All Stage R1 artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
@@ -115,7 +131,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Process:**
 
-1. **Analyze impact** (PAW-R2A Impact Analyzer)
+1. **Analyze impact**
    - Build integration graph: parse imports/exports, identify public API surfaces, map downstream consumers
    - Detect breaking changes: function signature diffs, config schema changes, data model modifications
    - Assess performance: new loops/recursion, database queries, algorithmic complexity
@@ -125,7 +141,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
    - **Code health trend**: Improving or degrading system health? Technical debt impact?
    - Document deployment considerations and risk assessment
 
-2. **Identify gaps** (PAW-R2B Gap Analyzer)
+2. **Identify gaps**
    - **Correctness:** Logic errors, edge cases, error handling, invariants
    - **Safety & Security:** Input validation, authorization checks, concurrency, data integrity
    - **Testing:** Coverage quantitative (if available) and qualitative (depth/breadth), test effectiveness (will fail when broken)
@@ -144,13 +160,12 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R2A Impact Analysis Agent
+* Agent orchestrates R2 activities automatically after R1 completion
 * Review `ImpactAnalysis.md` to understand system-wide effects, design fit, user impact
-* Invoke PAW-R2B Gap Analysis Agent
 * Review `GapAnalysis.md` findings in each category
 * Review positive observations section
 * Validate categorization feels appropriate (not inflated)
-* Add domain-specific concerns the agents might have missed
+* Add domain-specific concerns the agent might have missed
 * Proceed to Stage R3 to generate feedback
 
 ---
@@ -159,9 +174,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Generate comprehensive, well-structured review comments with rationale and critical assessment
 
-**Agents:**
-* PAW-R3A Feedback Generator
-* PAW-R3B Feedback Critic
+**Skills:** `paw-review-feedback`, `paw-review-critic`
 
 **Inputs:**
 * All prior artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md)
@@ -172,7 +185,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Process:**
 
-1. **Generate comprehensive feedback** (PAW-R3A Feedback Generator)
+1. **Generate comprehensive feedback**
    - Batch related findings (One Issue, One Comment policy)
    - Transform all findings from GapAnalysis.md into review comments
    - Include Must, Should, and Could items
@@ -191,7 +204,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
      - Rationale sections remain in ReviewComments.md
    - **Non-GitHub context**: All feedback in ReviewComments.md with manual posting instructions
 
-3. **Critical assessment** (PAW-R3B Feedback Critic)
+3. **Critical assessment**
    - Add **Assessment sections** to each comment in ReviewComments.md (local only, never posted):
      - Usefulness: Does this truly improve code quality?
      - Accuracy: Are evidence references correct?
@@ -208,12 +221,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R3A Feedback Generator
-  - Creates ReviewComments.md with rationale sections
-  - GitHub: Creates pending review with inline comments (text/suggestions only)
-  - Non-GitHub: Provides manual posting instructions
-* Invoke PAW-R3B Feedback Critic
-  - Adds assessment sections to ReviewComments.md
+* Agent orchestrates R3 activities automatically after R2 completion
 * **GitHub context**: 
   - Open PR in GitHub Files Changed tab
   - View all pending review comments
@@ -254,35 +262,11 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 - Flags (CI failures present, breaking changes suspected)
 - Metadata (created timestamp, git commit SHA, reviewer)
 
-**Purpose:** Single source of truth for all review parameters; read first by all downstream agents; updated when new information discovered.
-
----
-
-### prompts/code-research.prompt.md
-
-Generated guidance for PAW-R1B Baseline Researcher to analyze pre-change system state.
-
-**Contents:**
-- Target agent: "PAW-R1B Baseline Researcher"
-- PR/Branch title and context
-- Base branch and commit SHA
-- List of changed files
-- Instructions for checking out base commit
-- Question areas (adapted based on changes):
-  - Baseline Behavior: How modules functioned before changes
-  - Integration Points: Component dependencies
-  - Patterns & Conventions: Established patterns
-  - Performance Context: For sensitive code
-  - Test Coverage: Existing tests and patterns
-  - Specific Ambiguities: Questions from initial analysis
-
-**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system. The PAW-R1B Baseline Researcher defines its own output format, so the prompt does not include output format instructions.
+**Purpose:** Single source of truth for all review parameters; read first by all downstream stages; updated when new information discovered.
 
 ---
 
 ### CodeResearch.md
-
-Pre-change baseline understanding created by PAW-R1B Baseline Researcher analyzing codebase at base commit.
 
 **Contents:**
 - How system worked before changes (behavioral view)
@@ -593,7 +577,7 @@ File-level or PR-level comments to add manually if needed.
 
 ## Guardrails
 
-### Review Understanding Agent
+### Understanding Stage
 
 **Documentation, Not Critique:**
 - NEVER critique or suggest improvements during understanding phase
@@ -616,7 +600,7 @@ File-level or PR-level comments to add manually if needed.
 
 ---
 
-### Review Evaluation Agent
+### Evaluation Stage
 
 **Evidence-Based Analysis:**
 - NEVER inflate severity to justify more comments
@@ -647,7 +631,7 @@ File-level or PR-level comments to add manually if needed.
 
 ---
 
-### Review Feedback Agent
+### Feedback Stage
 
 **Human Control:**
 - NEVER submit the review automatically; always create as pending
@@ -736,20 +720,21 @@ Each stage produces artifacts that should meet these quality standards:
 ### Reviewing a Medium-Sized PR (200-500 lines)
 
 **Stage R1 (10-15 minutes):**
-1. Invoke Review Understanding Agent with PR number
-2. Read generated `PRContext.md` and `DerivedSpec.md`
-3. Verify understanding matches your reading of the PR
-4. Note any open questions in `DerivedSpec.md`
+1. Invoke `/paw-review <PR-number>` in Copilot Chat
+2. Agent runs Understanding and Baseline stages automatically
+3. Read generated `ReviewContext.md` and `DerivedSpec.md`
+4. Verify understanding matches your reading of the PR
+5. Note any open questions in `DerivedSpec.md`
 
 **Stage R2 (15-25 minutes):**
-1. Invoke Review Evaluation Agent
+1. Agent continues to Evaluation stage automatically
 2. Read `ImpactAnalysis.md` to understand system effects
 3. Review findings in `GapAnalysis.md`
 4. Validate categorization feels appropriate
 5. Add any domain-specific concerns
 
 **Stage R3 (10-20 minutes):**
-1. Invoke Review Feedback Agent to create pending review
+1. Agent continues to Feedback stage automatically
 2. **Agent creates pending review** with all inline comments via GitHub MCP tools
 3. **Agent saves** ReviewComments.md as reference
 4. **Open the PR in GitHub** to view pending review
@@ -767,21 +752,22 @@ Each stage produces artifacts that should meet these quality standards:
 ### Reviewing a Large PR (1000+ lines)
 
 **Stage R1 (20-30 minutes):**
-1. Start with Review Understanding Agent
-2. Review change categorization
-3. If mechanical changes dominate, note for quick acknowledgment
-4. Focus on semantic changes for deep review
-5. Consider suggesting PR split if too complex
+1. Invoke `/paw-review <PR-number>`
+2. Agent runs all R1 stages automatically
+3. Review change categorization
+4. If mechanical changes dominate, note for quick acknowledgment
+5. Focus on semantic changes for deep review
+6. Consider suggesting PR split if too complex
 
 **Stage R2 (30-45 minutes):**
-1. Run Review Evaluation Agent
+1. Agent continues to Evaluation automatically
 2. Focus on high-risk areas (auth, data, public APIs)
 3. Check for missing tests on complex logic
 4. Review integration points carefully
 5. Note if "too large to review thoroughly"
 
 **Stage R3 (15-25 minutes):**
-1. Generate comprehensive feedback with agent
+1. Agent generates comprehensive feedback automatically
 2. Agent creates pending review with all comments
 3. **Open PR in GitHub** to review all pending comments
 4. **Edit or delete** comments to fit PR scope and relationship

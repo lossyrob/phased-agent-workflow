@@ -1090,10 +1090,10 @@ Update documentation to reflect the skills-based architecture and perform end-to
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles without old agent references: `npm run compile`
-- [ ] All tests pass: `npm test`
-- [ ] Documentation builds: `mkdocs build --strict`
-- [ ] No lint errors after agent removal
+- [x] TypeScript compiles without old agent references: `npm run compile`
+- [x] All tests pass: `npm test`
+- [x] Documentation builds: `mkdocs build --strict`
+- [x] No lint errors after agent removal
 
 #### Manual Verification:
 - [ ] End-to-end review completes successfully on test PR
@@ -1101,6 +1101,42 @@ Update documentation to reflect the skills-based architecture and perform end-to
 - [ ] GitHub pending review contains expected comments
 - [ ] Implementation workflow agents (PAW-01A through PAW-05) still function normally
 - [ ] No references to old PAW-R* agents in UI or documentation
+
+### Phase 6 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Updated `docs/reference/agents.md`:
+    - Removed PAW-R* agent documentation (PAW-R1A through PAW-R3B)
+    - Added PAW Review agent section with skills-based architecture explanation
+    - Updated agent naming convention (PAW-Rx → PAW Review)
+    - Updated Next Steps section
+  - Updated `docs/specification/review.md`:
+    - Added Skills-Based Architecture section with skill table
+    - Updated all stage sections to reference skills instead of agents
+    - Removed old "Review Agents" section (individual agent descriptions)
+    - Updated Human Workflow Summary to single entry point (`/paw-review`)
+  - Updated `paw-review-specification.md`:
+    - Added Skills-Based Architecture section with skill table and tool support
+    - Updated Stage R1 (removed manual pause for baseline research - now automated)
+    - Updated Stage R2 (removed agent names, uses skill-based orchestration)
+    - Updated Stage R3 (removed agent names, uses skill-based orchestration)
+    - Removed prompts/code-research.prompt.md artifact documentation (no longer generated)
+    - Updated Guardrails section headings (agent names → stage names)
+    - Updated Example Workflow sections for automated skill orchestration
+  - Updated `README.md`:
+    - Replaced "Review Workflow Agents" numbered list with "Review Workflow" section
+    - Added `/paw-review` invocation documentation
+    - Updated "Two Workflows: Implementation and Review" section
+    - Updated links to documentation
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 159 tests passing ✅
+  - `mkdocs build --strict` ✅
+- **Notes for Review**:
+  - Documentation now consistently describes skills-based architecture
+  - All PAW-R* agent references removed from documentation
+  - Human workflow simplified to single entry point command
+  - Manual verification pending for end-to-end testing
 
 ---
 

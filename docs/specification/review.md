@@ -14,6 +14,36 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 | **Rewindable** | Any stage can restart if new information changes understanding |
 | **Human-controlled** | Nothing posted automatically; reviewer selects what to post |
 
+## Skills-Based Architecture
+
+The review workflow uses a **skills-based architecture** for dynamic, maintainable orchestration:
+
+**Invocation:** `/paw-review <PR-number-or-URL>`
+
+**How it works:**
+
+1. The **PAW Review** agent loads the `paw-review-workflow` skill
+2. The workflow skill orchestrates **activity skills** via subagent execution
+3. Each activity skill produces specific artifacts
+4. Complete review runs without manual pauses
+
+**Bundled Skills:**
+
+| Skill | Type | Stage | Output |
+|-------|------|-------|--------|
+| `paw-review-workflow` | Workflow | — | Orchestration logic |
+| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
+| `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
+| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
+| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md, pending review |
+| `paw-review-critic` | Activity | Output | Assessment sections |
+
+**Tool Support:**
+
+- `paw_get_skills` — Retrieves catalog of available skills
+- `paw_get_skill` — Loads specific skill content by name
+
 ## Workflow Stages
 
 ```
@@ -26,7 +56,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Goal:** Comprehensively understand what changed and why
 
-**Agents:** PAW-R1A Understanding, PAW-R1B Baseline Researcher
+**Skills:** `paw-review-understanding`, `paw-review-baseline`
 
 **Inputs:**
 
@@ -37,7 +67,6 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 **Outputs:**
 
 - `ReviewContext.md` — PR metadata, changed files, flags
-- `prompts/code-research.prompt.md` — Research questions about pre-change system
 - `CodeResearch.md` — Pre-change baseline understanding
 - `DerivedSpec.md` — Reverse-engineered intent and acceptance criteria
 
@@ -47,15 +76,11 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
     - Document all changed files with additions/deletions
     - Set flags: CI failures, breaking changes suspected
 
-2. **Generate code research prompt**
-    - Identify areas needing baseline understanding
-    - Create questions about pre-change behavior, patterns, dependencies
+2. **Research pre-change baseline**
+    - Analyze codebase at base commit (pre-change state)
+    - Document how system worked before changes
 
-3. **Pause for baseline research**
-    - Human runs PAW-R1B Baseline Researcher
-    - Researcher analyzes codebase at base commit (pre-change state)
-
-4. **Derive specification**
+3. **Derive specification**
     - Use CodeResearch.md to understand before/after behavior
     - Reverse-engineer author intent from code and PR description
     - Document assumptions and open questions
@@ -66,7 +91,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Agents:** PAW-R2A Impact Analyzer, PAW-R2B Gap Analyzer
+**Skills:** `paw-review-impact`, `paw-review-gap`
 
 **Inputs:**
 
@@ -80,14 +105,14 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Process:**
 
-1. **Analyze impact** (PAW-R2A)
+1. **Analyze impact**
     - Build integration graph of dependencies
     - Detect breaking changes
     - Assess performance and security implications
     - Evaluate design and architecture fit
     - Document deployment considerations and risk
 
-2. **Identify gaps** (PAW-R2B)
+2. **Identify gaps**
     - **Correctness:** Logic errors, edge cases, error handling
     - **Safety & Security:** Validation, authorization, concurrency
     - **Testing:** Coverage and test effectiveness
@@ -107,7 +132,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Goal:** Generate comprehensive, well-structured review comments
 
-**Agents:** PAW-R3A Feedback Generator, PAW-R3B Feedback Critic
+**Skills:** `paw-review-feedback`, `paw-review-critic`
 
 **Inputs:**
 
@@ -120,7 +145,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Process:**
 
-1. **Generate comprehensive feedback** (PAW-R3A)
+1. **Generate comprehensive feedback**
     - Transform all findings into review comments
     - Provide specific, actionable suggestions
     - Add rationale sections with evidence
@@ -129,7 +154,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
     - Save comprehensive feedback locally
     - GitHub: Create pending review with inline comments
 
-3. **Critical assessment** (PAW-R3B)
+3. **Critical assessment**
     - Add assessment sections (usefulness, accuracy, trade-offs)
     - Assessments help reviewer make informed decisions
     - Never posted to GitHub—for reviewer reference only
@@ -137,34 +162,6 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 4. **Support Q&A and tone adjustment**
     - Answer questions based on artifacts
     - Regenerate with adjusted tone if requested
-
----
-
-## Review Agents
-
-### PAW-R1A Understanding Agent
-
-Analyzes PR changes, generates baseline research prompts, and derives specification from implementation.
-
-### PAW-R1B Baseline Researcher
-
-Documents how the system worked before changes by analyzing codebase at base commit.
-
-### PAW-R2A Impact Analyzer
-
-Identifies integration points, breaking changes, and system-wide effects.
-
-### PAW-R2B Gap Analyzer
-
-Systematically identifies issues across correctness, safety, testing, and quality with Must/Should/Could categorization.
-
-### PAW-R3A Feedback Generator
-
-Transforms findings into structured review comments with rationale, creates GitHub pending reviews.
-
-### PAW-R3B Feedback Critic
-
-Critically assesses generated comments for usefulness and accuracy.
 
 ---
 
@@ -249,9 +246,12 @@ Complete feedback with rationale and assessment.
 
 ## Human Workflow Summary
 
-1. **R1:** Invoke Understanding Agent → Run Baseline Researcher → Review DerivedSpec.md
-2. **R2:** Invoke Impact Analyzer → Invoke Gap Analyzer → Review findings
-3. **R3:** Invoke Feedback Generator → Invoke Feedback Critic → Review pending comments → Edit/delete as needed → Submit review
+1. **Invoke:** Run `/paw-review <PR-number-or-URL>` in Copilot Chat
+2. **Review:** All artifacts created in `.paw/reviews/<identifier>/`
+3. **Edit:** Open GitHub pending review, edit/delete comments as needed
+4. **Submit:** Submit review manually (Approve/Comment/Request Changes)
+
+**Key principle:** Nothing is posted automatically. The pending review gives you full control over what feedback to share.
 
 ## Next Steps
 

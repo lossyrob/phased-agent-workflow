@@ -1145,48 +1145,184 @@ Update documentation to reflect the skills-based architecture and perform end-to
 ### Overview
 Add support for reviewing PRs that span multiple repositories (cross-repo scenario). This is common in monorepo setups or when a feature requires coordinated changes across multiple codebases.
 
+**Note**: This phase is split into two sub-phases to ensure foundational detection and artifact structure works before implementing cross-repo analysis logic.
+
+---
+
+## Phase 7A: Detection & Artifact Structure
+
+### Overview
+Establish the foundational structure for multi-repository reviews: detection triggers, artifact directory scheme, and multi-PR context parsing.
+
 ### Changes Required:
 
-#### 1. Multi-Repository Detection
+#### 1. Multi-Repository Detection (Extend)
 **File**: `agents/PAW Review.agent.md`
+**Status**: Partially complete - has section describing workflow but lacks detection triggers
 **Changes**:
-- ✅ Already updated: Agent now detects multiple PRs/repos in context
-- ✅ Already updated: Documents cross-repo workflow in Multi-Repository Support section
+- Add concrete detection triggers:
+  - Multiple PR URLs/numbers provided in arguments
+  - Multi-folder VS Code workspace detected
+  - PR links referencing different repositories
+- Specify artifact naming scheme: `PR-<number>-<repo-slug>/` (e.g., `PR-123-my-api/`)
+- Document how to derive repo-slug from repository name
 
-#### 2. Update Workflow Skill for Cross-Repo Orchestration
-**File**: `skills/paw-review-workflow/SKILL.md`
-**Changes**:
-- ✅ Already updated: Added Cross-Repository Support section documenting the multi-repo workflow
-- Add guidance for correlating findings across repositories
-- Add guidance for noting cross-repo dependencies in comments
+**Token impact**: ~50 tokens added
 
-#### 3. Update Understanding Skill for Multi-Repo Context
+**Tests**:
+- Manual: Invoke with `PR-123 PR-456` where PRs are from different repos
+
+#### 2. Update Understanding Skill for Multi-PR Context
 **File**: `skills/paw-review-understanding/SKILL.md`
 **Changes**:
-- Add section on handling ReviewContext when multiple PRs provided
-- Document how to track which PR/repo each artifact belongs to
-- Add identifier scheme for multi-repo: `PR-<number>-<repo-name>/`
+- Add "## Multi-Repository Mode" section after Context Detection, containing:
+  - Detection: Multiple PR URLs/numbers in input
+  - Per-PR processing: Create separate artifact directories
+  - Identifier scheme: `PR-<number>-<repo-slug>/`
+- Update ReviewContext.md template to support multi-PR frontmatter:
+  ```yaml
+  # For multi-repo scenarios, create one ReviewContext per PR
+  repository: owner/repo-name
+  related_prs:
+    - number: 456
+      repository: owner/other-repo
+      relationship: "depends-on"
+  ```
+- Add cross-reference field documentation
 
-#### 4. Update Baseline Skill for Multi-Repo Checkout
+**Token impact**: ~200 tokens added
+
+**Tests**:
+- Skill loads under 4500 tokens
+- Manual: Run understanding with two PR URLs
+
+#### 3. Update Workflow Skill Artifact Directory Section
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Update Identifier Derivation section:
+  ```markdown
+  ### Identifier Derivation
+  
+  - **Single GitHub PR**: `PR-<number>` (e.g., `PR-123`)
+  - **Multi-repo GitHub PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+  - **Local branch**: Slugified branch name (e.g., `feature-new-auth`)
+  
+  Repo-slug derivation: Last path segment of repository name, lowercase, special chars removed.
+  ```
+
+**Token impact**: ~75 tokens added
+
+**Tests**:
+- Skill loads under 5000 tokens
+
+### Content Preservation Checklist (Phase 7A)
+
+- [ ] Existing single-repo workflow unchanged (single PR still uses `PR-<number>/`)
+- [ ] No duplication with existing workflow skill principles
+- [ ] Identifier scheme clearly documented in one place (workflow skill)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] All tests pass: `npm test`
+- [ ] Skills token counts under targets: workflow <5000, understanding <4500
+- [ ] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+
+#### Manual Verification:
+- [ ] Single-PR workflow still works identically (`/paw-review PR-123`)
+- [ ] Multi-PR invocation creates separate artifact directories
+- [ ] Artifact directories follow scheme: `.paw/reviews/PR-123-repo-a/`, `.paw/reviews/PR-456-repo-b/`
+- [ ] ReviewContext.md includes `related_prs` field when multiple PRs detected
+
+### Phase 7A Status Update
+- **Status**: Not Started
+- **Blockers**: None - Phase 6 complete
+
+---
+
+## Phase 7B: Cross-Repository Analysis
+
+### Overview
+Implement cross-repo analysis logic: dependency detection, impact correlation, and multi-PR feedback generation.
+
+### Prerequisites
+Phase 7A must be complete - artifact structure and detection working.
+
+### Changes Required:
+
+#### 1. Update Baseline Skill for Multi-Repo Research
 **File**: `skills/paw-review-baseline/SKILL.md`
 **Changes**:
-- Add guidance for switching between repos during baseline research
-- Document state restoration when multiple repos involved
-- Add CodeResearch.md per repository pattern
+- Add "## Multi-Repository Mode" section:
+  - Process each repository's base commit independently
+  - Create CodeResearch.md per PR/repository
+  - Document state restoration between repos
+- Add guidance for identifying cross-repo patterns (shared conventions, interfaces)
 
-#### 5. Update Impact Skill for Cross-Repo Dependencies
+**Token impact**: ~150 tokens added
+
+**Tests**:
+- Skill loads under target
+- Manual: Baseline research completes for both repos
+
+#### 2. Update Impact Skill for Cross-Repo Dependencies
 **File**: `skills/paw-review-impact/SKILL.md`
 **Changes**:
-- Add cross-repo integration graph building
-- Document how to identify dependencies between changes in different repos
-- Add section on breaking changes that affect other repositories
+- Add "## Cross-Repository Impact" section after Integration Graph Building:
+  - Identify API contracts between repositories
+  - Flag breaking changes that affect other PRs in the review set
+  - Document dependency direction (which repo depends on which)
+- Update ImpactAnalysis.md template:
+  ```markdown
+  ## Cross-Repository Dependencies
+  
+  | This PR Changes | Affects PR | Type | Migration |
+  |-----------------|------------|------|-----------|
+  | `api/types.ts` exports | PR-456-frontend | Breaking | Update types import |
+  ```
 
-#### 6. Update Feedback Skill for Cross-Repo Comments
+**Token impact**: ~200 tokens added
+
+**Tests**:
+- Skill loads under 5500 tokens
+- Manual: Cross-repo dependencies appear in ImpactAnalysis.md
+
+#### 3. Update Gap Skill for Cross-Repo Consistency
+**File**: `skills/paw-review-gap/SKILL.md`
+**Changes**:
+- Add "## Cross-Repository Consistency" subsection in Correctness Analysis:
+  - Check for consistent versioning across repos
+  - Identify missing coordinated changes (API change without consumer update)
+  - Flag timing dependencies (order of deployment matters)
+
+**Token impact**: ~100 tokens added
+
+**Tests**:
+- Skill loads under target
+
+#### 4. Update Feedback Skill for Cross-Repo Comments
 **File**: `skills/paw-review-feedback/SKILL.md`
 **Changes**:
-- Add handling for creating pending reviews on multiple PRs
-- Document how to correlate comments across repos (note dependencies)
-- Add cross-repo reference format in comments
+- Add "## Multi-PR Pending Reviews" section:
+  - Create pending review on EACH affected PR
+  - Add cross-reference notation in comments: `(See also: owner/other-repo#456)`
+  - Document GitHub tool calls for multiple PRs
+- Update correlation guidance (moved from workflow skill - this is the correct location)
+
+**Token impact**: ~150 tokens added
+
+**Tests**:
+- Skill loads under target
+- Manual: Pending reviews created on both PRs
+- Manual: Comments include cross-references
+
+### Content Preservation Checklist (Phase 7B)
+
+- [ ] Single-repo analysis unchanged (no cross-repo sections appear when single PR)
+- [ ] Cross-repo sections conditional on multi-PR context
+- [ ] Existing templates extended, not replaced
+- [ ] Error handling covers: one repo offline, one PR closed, permission differences
 
 ### Success Criteria:
 
@@ -1194,20 +1330,19 @@ Add support for reviewing PRs that span multiple repositories (cross-repo scenar
 - [ ] TypeScript compiles: `npm run compile`
 - [ ] All tests pass: `npm test`
 - [ ] Documentation builds: `mkdocs build --strict`
-- [ ] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+- [ ] All skills under token targets
 
 #### Manual Verification:
-- [ ] Multi-repo scenario properly detected when multiple workspace folders present
-- [ ] Artifacts created per repository with correct identifiers
-- [ ] Cross-repo dependencies noted in review comments
-- [ ] Pending reviews created on correct PRs
+- [ ] Invoke `/paw-review https://github.com/owner/repo-a/pull/123 https://github.com/owner/repo-b/pull/456`
+- [ ] ImpactAnalysis.md contains Cross-Repository Dependencies section
+- [ ] GapAnalysis.md notes coordinated change issues
+- [ ] ReviewComments.md includes cross-references
+- [ ] GitHub pending reviews created on BOTH PRs
+- [ ] Single-PR workflow regression test passes
 
-### Phase 7 Status Update
-- **Status**: In Progress
-- **Summary**:
-  - PAW Review Agent already updated with Multi-Repository Support section
-  - Workflow skill already updated with Cross-Repository Support section
-  - Remaining: Update activity skills with cross-repo specific guidance
+### Phase 7B Status Update
+- **Status**: Not Started
+- **Blockers**: Phase 7A must be complete first
 
 ---
 

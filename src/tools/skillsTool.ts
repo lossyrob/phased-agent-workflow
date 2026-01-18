@@ -7,8 +7,7 @@ export function formatSkillCatalogMarkdown(entries: SkillCatalogEntry[]): string
   }
 
   const lines = entries.map(entry => {
-    const typeLabel = entry.type ? ` (${entry.type})` : '';
-    return `- **${entry.name}**${typeLabel}: ${entry.description}`;
+    return `- **${entry.name}**: ${entry.description}`;
   });
 
   return lines.join('\n');

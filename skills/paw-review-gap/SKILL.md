@@ -1,10 +1,6 @@
 ---
 name: paw-review-gap
 description: Systematically identifies gaps in correctness, safety, testing, and maintainability, categorizing findings by severity.
-metadata:
-  type: activity
-  artifacts: GapAnalysis.md
-  stage: evaluation
 ---
 
 # Gap Analysis Activity Skill

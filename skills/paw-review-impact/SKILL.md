@@ -1,10 +1,6 @@
 ---
 name: paw-review-impact
 description: Analyzes system-wide impact of PR changes including integration effects, breaking changes, performance, and security implications.
-metadata:
-  type: activity
-  artifacts: ImpactAnalysis.md
-  stage: evaluation
 ---
 
 # Impact Analysis Activity Skill

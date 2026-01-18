@@ -19,12 +19,6 @@ export interface SkillCatalogEntry {
    */
   description: string;
   /**
-   * Optional type classification from metadata (e.g., 'workflow', 'activity').
-   * Stored in metadata.type per the Agent Skills spec which allows arbitrary
-   * key-value metadata.
-   */
-  type?: string;
-  /**
    * Indicates where the skill was loaded from. Currently only 'builtin' for
    * skills bundled with the extension.
    */
@@ -213,7 +207,6 @@ export function loadSkillCatalog(extensionUri: vscode.Uri): SkillCatalogEntry[] 
       entries.push({
         name: frontmatter.name,
         description: frontmatter.description,
-        type: frontmatter.metadata?.type,
         source: 'builtin'
       });
     } catch {

@@ -8,12 +8,11 @@ suite('Skills Tool', () => {
     assert.strictEqual(result, 'No PAW skills are available.');
   });
 
-  test('formatSkillCatalogMarkdown renders entries with type', () => {
+  test('formatSkillCatalogMarkdown renders entries', () => {
     const entries: SkillCatalogEntry[] = [
       {
         name: 'paw-review-workflow',
         description: 'Workflow skill',
-        type: 'workflow',
         source: 'builtin',
       },
       {
@@ -25,7 +24,8 @@ suite('Skills Tool', () => {
 
     const result = formatSkillCatalogMarkdown(entries);
     assert.ok(result.includes('paw-review-workflow'));
-    assert.ok(result.includes('(workflow)'));
+    assert.ok(result.includes('Workflow skill'));
     assert.ok(result.includes('paw-review-understanding'));
+    assert.ok(result.includes('Understanding skill'));
   });
 });

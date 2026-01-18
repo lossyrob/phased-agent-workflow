@@ -1,11 +1,6 @@
 ---
 name: paw-review-critic
 description: Critically assesses generated review comments for usefulness, accuracy, and appropriateness, adding assessment sections.
-metadata:
-  type: activity
-  artifacts: none
-  updates: ReviewComments.md
-  stage: output
 ---
 
 # PAW Review Critic Skill

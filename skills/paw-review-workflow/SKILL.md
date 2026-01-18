@@ -1,9 +1,6 @@
 ---
 name: paw-review-workflow
 description: Orchestrates the PAW Review workflow, coordinating activity skills to analyze PRs and generate comprehensive review feedback.
-metadata:
-  type: workflow
-  version: "1.0"
 ---
 
 # PAW Review Workflow Skill
@@ -64,27 +61,11 @@ Each stage produces complete, well-structured artifacts:
 
 ## Subagent Contract
 
-Activity skills are executed as subagents. Each subagent MUST:
+Activity skills are executed via delegated agent sessions. Each activity MUST:
 
 ### Response Format
 
-Upon completion, respond with:
-```
-Activity complete.
-Artifact saved: <artifact-path>
-Status: Success|Partial|Blocked
-[Optional: Brief summary of key findings]
-```
-
-### Error Reporting
-
-If blocked or unable to complete:
-```
-Activity blocked.
-Reason: <specific reason>
-Missing: <what is needed>
-Recommendation: <next steps>
-```
+Upon completion, respond with artifact path and status (Success, Partial, or Blocked).
 
 ### Artifact Path Confirmation
 
@@ -120,15 +101,15 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 **Skills**: `paw-review-understanding`, `paw-review-baseline`
 
 **Sequence**:
-1. Run `paw-review-understanding` subagent
+1. Run `paw-review-understanding` activity
    - Input: PR number/URL or branch context
    - Output: `ReviewContext.md`, `prompts/01B-code-research.prompt.md`
    
-2. Run `paw-review-baseline` subagent
+2. Run `paw-review-baseline` activity
    - Input: ReviewContext.md, research prompt
    - Output: `CodeResearch.md`
    
-3. Run `paw-review-understanding` subagent (resume)
+3. Run `paw-review-understanding` activity (resume)
    - Input: ReviewContext.md, CodeResearch.md
    - Detects CodeResearch.md exists → skips to specification derivation
    - Output: `DerivedSpec.md`
@@ -140,11 +121,11 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 **Skills**: `paw-review-impact`, `paw-review-gap`
 
 **Sequence**:
-1. Run `paw-review-impact` subagent
+1. Run `paw-review-impact` activity
    - Input: All understanding artifacts
    - Output: `ImpactAnalysis.md`
    
-2. Run `paw-review-gap` subagent
+2. Run `paw-review-gap` activity
    - Input: All understanding + impact artifacts
    - Output: `GapAnalysis.md`
 
@@ -155,11 +136,11 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 **Skills**: `paw-review-feedback`, `paw-review-critic`
 
 **Sequence**:
-1. Run `paw-review-feedback` subagent
+1. Run `paw-review-feedback` activity
    - Input: All prior artifacts
    - Output: `ReviewComments.md`, GitHub pending review (if applicable)
    
-2. Run `paw-review-critic` subagent
+2. Run `paw-review-critic` activity
    - Input: ReviewComments.md + all prior artifacts
    - Output: Assessment sections added to `ReviewComments.md`
 
@@ -170,38 +151,13 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 ## Terminal Behavior
 
-Upon workflow completion, report:
-```
-Review workflow complete.
+Upon workflow completion, report artifact locations, GitHub pending review status (if applicable), and next steps for the human reviewer.
 
-Artifacts created:
-- .paw/reviews/<identifier>/ReviewContext.md
-- .paw/reviews/<identifier>/CodeResearch.md
-- .paw/reviews/<identifier>/DerivedSpec.md
-- .paw/reviews/<identifier>/ImpactAnalysis.md
-- .paw/reviews/<identifier>/GapAnalysis.md
-- .paw/reviews/<identifier>/ReviewComments.md
+## Cross-Repository Support
 
-GitHub Status: [Pending review created with N comments | Non-GitHub context]
-
-Next steps for reviewer:
-1. Review generated comments in ReviewComments.md
-2. Check GitHub pending review (if applicable)
-3. Modify or remove comments as needed
-4. Submit review when satisfied
-```
-
-## Cross-Repository Detection
-
-If multiple working directories or repositories are detected:
-- Note cross-repo scenario in initial response
-- Document which repositories are involved
-- Detailed cross-repo handling is deferred to future implementation
-
-## Error Recovery
-
-If a stage fails or produces incomplete artifacts:
-1. Report the specific failure with details
-2. Do NOT proceed to downstream stages
-3. Provide clear instructions for resolution
-4. Support re-running the failed stage after fixes
+If multiple repositories or PRs are detected:
+1. Identify which repositories have changes
+2. Determine the primary repository (where changes originate)
+3. For each repository, run the workflow stages independently
+4. In the Output stage, correlate findings across repositories
+5. Note cross-repo dependencies in the review comments

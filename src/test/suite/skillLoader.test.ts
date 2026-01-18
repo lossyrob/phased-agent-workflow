@@ -30,7 +30,6 @@ suite('Skill Loader', () => {
       'name: paw-review-workflow',
       'description: Orchestrates the review workflow',
       'metadata:',
-      '  type: workflow',
       '  version: "1.0"',
       '---',
       '',
@@ -40,7 +39,6 @@ suite('Skill Loader', () => {
     const result = parseSkillFrontmatter(content);
     assert.strictEqual(result.name, 'paw-review-workflow');
     assert.strictEqual(result.description, 'Orchestrates the review workflow');
-    assert.strictEqual(result.metadata?.type, 'workflow');
     assert.strictEqual(result.metadata?.version, '1.0');
   });
 
@@ -75,8 +73,6 @@ suite('Skill Loader', () => {
           '---',
           'name: paw-review-workflow',
           'description: Workflow skill',
-          'metadata:',
-          '  type: workflow',
           '---',
           'Body',
         ].join('\n')
@@ -89,8 +85,6 @@ suite('Skill Loader', () => {
           '---',
           'name: paw-review-understanding',
           'description: Understanding skill',
-          'metadata:',
-          '  type: activity',
           '---',
           'Body',
         ].join('\n')
@@ -99,7 +93,7 @@ suite('Skill Loader', () => {
       const catalog = loadSkillCatalog(vscode.Uri.file(tempDir));
       assert.strictEqual(catalog.length, 2);
       assert.ok(catalog.some(entry => entry.name === 'paw-review-workflow'));
-      assert.ok(catalog.some(entry => entry.type === 'activity'));
+      assert.ok(catalog.some(entry => entry.name === 'paw-review-understanding'));
     } finally {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }

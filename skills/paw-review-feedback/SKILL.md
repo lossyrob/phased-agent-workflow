@@ -1,10 +1,6 @@
 ---
 name: paw-review-feedback
 description: Transforms gap analysis findings into structured review comments with comprehensive rationale, creating GitHub pending review.
-metadata:
-  type: activity
-  artifacts: ReviewComments.md
-  stage: output
 ---
 
 # PAW Review Feedback Skill

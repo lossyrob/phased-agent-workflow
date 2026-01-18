@@ -1,10 +1,6 @@
 ---
 name: paw-review-baseline
 description: Analyzes the codebase at the PR's base commit to establish baseline understanding for review comparison.
-metadata:
-  type: activity
-  artifacts: CodeResearch.md
-  stage: understanding
 ---
 
 # Baseline Research Activity Skill
@@ -45,49 +41,20 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 
 ### Step 1: Sync Remote State
 
-1. Extract from ReviewContext.md:
-   - Remote name (default: `origin`)
-   - Base branch name
-   - Base commit SHA
+**Desired End State**: The base commit SHA (from ReviewContext.md) is locally available.
 
-2. Fetch latest remote state:
-   ```bash
-   git fetch <remote> <base-branch>
-   ```
-   
-3. If fetch fails (offline, no remote):
-   - Log warning: "⚠️ Could not fetch remote - proceeding with local state"
-   - Continue if base commit exists locally
-
-4. Verify base commit reachable:
-   ```bash
-   git cat-file -e <base-commit-sha>
-   ```
-   
-5. If commit unreachable:
-   ```
-   Activity blocked.
-   Reason: Base commit <sha> not found
-   Missing: Repository sync with upstream
-   Recommendation: Run `git fetch <remote>` or verify ReviewContext.md
-   ```
+1. Extract from ReviewContext.md: remote name, base branch, base commit SHA
+2. Ensure the repository has the latest remote state for the base branch
+3. Verify the base commit is reachable locally
+4. If the commit cannot be reached, report the blocker with context
 
 ### Step 2: Checkout Base Commit
 
-1. Save current state for restoration:
-   ```bash
-   git rev-parse --abbrev-ref HEAD
-   ```
+**Desired End State**: Working directory is at the base commit, with ability to restore original state.
 
-2. Checkout base commit:
-   ```bash
-   git checkout <base-commit-sha>
-   ```
-
-3. Confirm checkout:
-   ```bash
-   git log -1 --oneline
-   ```
+1. Record current branch/HEAD for later restoration
+2. Checkout the base commit
+3. Confirm the working directory reflects the pre-change state
 
 **CRITICAL**: All subsequent research must analyze code at this commit.
 
@@ -135,18 +102,13 @@ Add CodeResearch.md to Artifacts section to signal completion.
 
 ### Step 7: Restore Original State
 
-```bash
-git checkout <original-branch>
-git status  # Verify restoration
-```
+**Desired End State**: Working directory returned to original branch, clean state confirmed.
 
 ## Validation Criteria
 
 Before completing:
-- [ ] Remote fetched (or graceful offline handling)
 - [ ] Base commit verified reachable
-- [ ] Checkout successful at base commit
-- [ ] All research conducted at base commit
+- [ ] Research conducted at base commit (not current HEAD)
 - [ ] Research questions answered
 - [ ] Behavioral understanding documented (not implementation details)
 - [ ] Patterns and conventions identified
@@ -154,26 +116,6 @@ Before completing:
 - [ ] CodeResearch.md saved with valid frontmatter
 - [ ] ReviewContext.md updated
 - [ ] Original state restored
-
-## Error Handling
-
-### Base Commit Unreachable
-
-```
-Activity blocked.
-Reason: Base commit <sha> not found after fetch attempt
-Missing: Sync with upstream repository
-Recommendation: Run `git fetch <remote>` or check ReviewContext.md base commit SHA
-```
-
-### Checkout Failure
-
-```
-Activity blocked.
-Reason: Cannot checkout base commit - working tree has uncommitted changes
-Missing: Clean working tree
-Recommendation: Stash or commit local changes before running baseline research
-```
 
 ## Completion Response
 

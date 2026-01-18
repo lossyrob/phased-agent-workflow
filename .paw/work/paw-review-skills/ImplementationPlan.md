@@ -1140,6 +1140,77 @@ Update documentation to reflect the skills-based architecture and perform end-to
 
 ---
 
+## Phase 7: Cross-Repository Review Support
+
+### Overview
+Add support for reviewing PRs that span multiple repositories (cross-repo scenario). This is common in monorepo setups or when a feature requires coordinated changes across multiple codebases.
+
+### Changes Required:
+
+#### 1. Multi-Repository Detection
+**File**: `agents/PAW Review.agent.md`
+**Changes**:
+- ✅ Already updated: Agent now detects multiple PRs/repos in context
+- ✅ Already updated: Documents cross-repo workflow in Multi-Repository Support section
+
+#### 2. Update Workflow Skill for Cross-Repo Orchestration
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- ✅ Already updated: Added Cross-Repository Support section documenting the multi-repo workflow
+- Add guidance for correlating findings across repositories
+- Add guidance for noting cross-repo dependencies in comments
+
+#### 3. Update Understanding Skill for Multi-Repo Context
+**File**: `skills/paw-review-understanding/SKILL.md`
+**Changes**:
+- Add section on handling ReviewContext when multiple PRs provided
+- Document how to track which PR/repo each artifact belongs to
+- Add identifier scheme for multi-repo: `PR-<number>-<repo-name>/`
+
+#### 4. Update Baseline Skill for Multi-Repo Checkout
+**File**: `skills/paw-review-baseline/SKILL.md`
+**Changes**:
+- Add guidance for switching between repos during baseline research
+- Document state restoration when multiple repos involved
+- Add CodeResearch.md per repository pattern
+
+#### 5. Update Impact Skill for Cross-Repo Dependencies
+**File**: `skills/paw-review-impact/SKILL.md`
+**Changes**:
+- Add cross-repo integration graph building
+- Document how to identify dependencies between changes in different repos
+- Add section on breaking changes that affect other repositories
+
+#### 6. Update Feedback Skill for Cross-Repo Comments
+**File**: `skills/paw-review-feedback/SKILL.md`
+**Changes**:
+- Add handling for creating pending reviews on multiple PRs
+- Document how to correlate comments across repos (note dependencies)
+- Add cross-repo reference format in comments
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] All tests pass: `npm test`
+- [ ] Documentation builds: `mkdocs build --strict`
+- [ ] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+
+#### Manual Verification:
+- [ ] Multi-repo scenario properly detected when multiple workspace folders present
+- [ ] Artifacts created per repository with correct identifiers
+- [ ] Cross-repo dependencies noted in review comments
+- [ ] Pending reviews created on correct PRs
+
+### Phase 7 Status Update
+- **Status**: In Progress
+- **Summary**:
+  - PAW Review Agent already updated with Multi-Repository Support section
+  - Workflow skill already updated with Cross-Repository Support section
+  - Remaining: Update activity skills with cross-repo specific guidance
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Phase 2 Sub-Phase Validation Gates

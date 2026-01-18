@@ -1,10 +1,6 @@
 ---
 name: paw-review-understanding
 description: Analyzes PR changes to create ReviewContext.md and DerivedSpec.md artifacts. Handles both initial analysis and resumption after baseline research.
-metadata:
-  type: activity
-  artifacts: ReviewContext.md, DerivedSpec.md
-  stage: understanding
 ---
 
 # Understanding Activity Skill
@@ -62,21 +58,13 @@ Determine context type before proceeding:
 1. **Determine Remote Name**:
    - Check ReviewContext.md for `Remote` field (if resuming)
    - Default to `origin` if not specified
-   - Verify remote exists: `git remote -v`
 
 2. **Fetch PR Metadata**:
-   - **GitHub**: Use `mcp_github_pull_request_read` (method: get)
-     - Extract: number, title, author, state, created date, description, labels, reviewers
-     - Get CI status from `mcp_github_pull_request_read` (method: get_status)
-     - Get changed files from `mcp_github_pull_request_read` (method: get_files)
-   - **Non-GitHub**: Use git commands
-     - Current branch as head, provided branch as base
-     - `git log <base>..<head>` for commits
-     - `git diff <base>...<head> --stat` for changed files
+   - **GitHub**: Use GitHub tools to retrieve PR details (number, title, author, state, description, labels, reviewers, CI status, changed files)
+   - **Non-GitHub**: Use git to determine commits and changed files between base and head
 
 3. **Resolve Base Commit** (Non-GitHub only):
-   - Prefer remote: `git rev-parse <remote>/<base-branch>`
-   - Fallback to local: `git rev-parse <base-branch>`
+   - Prefer the remote tracking branch reference
    - Record source (remote|local|github-api) in ReviewContext.md
 
 4. **Create ReviewContext.md**:
@@ -179,30 +167,6 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - Observable before/after behavior characterized
 - All file:line references accurate
 - **Zero open questions**
-
-## Error Handling
-
-### Conflicting Information
-
-If PR description contradicts code:
-```
-CRITICAL: Discrepancy Block
-
-PR Description States:
-[quote]
-
-Code Analysis Shows:
-[file:line evidence]
-
-Activity Status: Blocked
-Reason: Cannot derive specification without resolving conflict
-```
-
-### Missing PR Description
-
-- Note in DerivedSpec.md: "No explicit goals stated"
-- Rely entirely on inferred goals from code analysis
-- Flag uncertainty explicitly
 
 ## Completion Response
 

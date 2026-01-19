@@ -15,11 +15,20 @@ Identify the review target:
 - **GitHub PR**: Extract from URL or number provided by user
 - **Local branch**: Use current branch, prompt for base if needed
 
-For GitHub contexts with multiple PRs detected (e.g., cross-repo scenarios), identify all PRs involved and determine if they're related changes across repositories.
+### Multi-Repository Detection Triggers
+
+A cross-repository review is detected when ANY of:
+1. **Multiple PR URLs/numbers**: User provides 2+ PRs (e.g., `PR-123 PR-456` or URLs from different repos)
+2. **Multi-root workspace**: `paw_get_context` returns `isMultiRootWorkspace: true`
+3. **Cross-repo PR links**: PR references contain repositories with different owner/repo paths
+
+When multi-repo detected, use artifact naming scheme: `PR-<number>-<repo-slug>/`
+- Example: `PR-123-my-api/`, `PR-456-my-frontend/`
+- Repo-slug derivation: Last segment of repo name, lowercase, special chars removed
 
 ## Multi-Repository Support
 
-If multiple repositories or PRs are detected:
+When cross-repository conditions are detected:
 1. Identify which repositories have changes
 2. Determine the primary repository (where changes originate)
 3. For each repository, run the workflow stages independently

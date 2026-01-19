@@ -89,8 +89,14 @@ All review artifacts are stored in a consistent directory structure:
 
 ### Identifier Derivation
 
-- **GitHub PR**: `PR-<number>` (e.g., `PR-123`)
+- **Single GitHub PR**: `PR-<number>` (e.g., `PR-123`)
+- **Multi-repo GitHub PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
 - **Local branch**: Slugified branch name (e.g., `feature-new-auth`)
+
+**Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
+Example: `acme-corp/my-api-service` → `my-api-service`
+
+**Multi-repo detection**: Use when `paw_get_context` returns `isMultiRootWorkspace: true` OR multiple PRs provided.
 
 ## Workflow Orchestration
 

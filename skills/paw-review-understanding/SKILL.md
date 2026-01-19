@@ -53,6 +53,32 @@ Determine context type before proceeding:
 - Request base branch name from user
 - Use git commands for metadata
 
+## Multi-Repository Mode
+
+**Detection**: Any of these conditions triggers multi-repo mode:
+- Multiple PR URLs/numbers in input (e.g., `PR-123 PR-456`)
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- PR links reference different repositories
+
+**Per-PR Processing**:
+- Create separate artifact directories for each PR
+- Run Steps 1-4 independently for each repository
+- Cross-reference related PRs in each ReviewContext.md
+
+**Identifier Scheme**:
+- Single PR: `PR-<number>` (e.g., `PR-123`)
+- Multi-repo PR: `PR-<number>-<repo-slug>` (e.g., `PR-123-my-api`)
+- Repo-slug: Last segment of repository name, lowercase, special chars removed
+
+**ReviewContext.md Extension** (for multi-repo):
+```yaml
+repository: owner/repo-name
+related_prs:
+  - number: 456
+    repository: owner/other-repo
+    relationship: "depends-on"  # or "related-to", "blocks"
+```
+
 ## Step 1: Context Gathering & ReviewContext.md Creation
 
 1. **Determine Remote Name**:

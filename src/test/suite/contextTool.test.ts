@@ -5,6 +5,7 @@ import * as path from 'path';
 import {
   ContextResult,
   InstructionStatus,
+  WorkspaceInfo,
   formatContextResponse,
   getContext,
   loadWorkflowContext,
@@ -13,6 +14,12 @@ import {
   getHandoffInstructions,
   HandoffMode,
 } from '../../tools/contextTool';
+
+/** Default workspace info for single-folder workspace in tests */
+const defaultWorkspaceInfo: WorkspaceInfo = {
+  workspaceFolderCount: 1,
+  isMultiRootWorkspace: false,
+};
 
 function createTempDir(prefix: string): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -133,6 +140,7 @@ suite('Context Tool', () => {
       workspace_instructions: status('Workspace data'),
       user_instructions: status('', 'Failed to read user instructions: EACCES'),
       workflow_context: status('Work Title: Demo Feature'),
+      workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
 
     assert.ok(response.includes('<workspace_instructions>'));
@@ -144,12 +152,39 @@ suite('Context Tool', () => {
     assert.ok(!response.includes('Follow custom instructions'));
   });
 
+  test('formatContextResponse includes workspace_info section', () => {
+    const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+    const singleRootResponse = formatContextResponse({
+      workspace_instructions: status('Workspace data'),
+      user_instructions: status(''),
+      workflow_context: status('Work Title: Demo'),
+      workspace_info: { workspaceFolderCount: 1, isMultiRootWorkspace: false },
+    } satisfies ContextResult);
+
+    assert.ok(singleRootResponse.includes('<workspace_info>'));
+    assert.ok(singleRootResponse.includes('workspaceFolderCount: 1'));
+    assert.ok(singleRootResponse.includes('isMultiRootWorkspace: false'));
+    assert.ok(singleRootResponse.includes('</workspace_info>'));
+
+    const multiRootResponse = formatContextResponse({
+      workspace_instructions: status('Workspace data'),
+      user_instructions: status(''),
+      workflow_context: status('Work Title: Demo'),
+      workspace_info: { workspaceFolderCount: 3, isMultiRootWorkspace: true },
+    } satisfies ContextResult);
+
+    assert.ok(multiRootResponse.includes('workspaceFolderCount: 3'));
+    assert.ok(multiRootResponse.includes('isMultiRootWorkspace: true'));
+  });
+
   test('formatContextResponse reports empty context when no sections exist', () => {
     const empty: InstructionStatus = { exists: false, content: '' };
     const response = formatContextResponse({
       workspace_instructions: empty,
       user_instructions: empty,
       workflow_context: empty,
+      workspace_info: defaultWorkspaceInfo,
     });
 
     assert.strictEqual(response, '<context status="empty" />');
@@ -624,6 +659,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
 
       assert.ok(response.includes('<handoff_instructions>'));
@@ -637,6 +673,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: auto'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
       assert.ok(autoResponse.includes('Auto Mode'));
 
@@ -644,6 +681,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: manual'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
       assert.ok(manualResponse.includes('Manual Mode'));
 
@@ -651,6 +689,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Handoff Mode: semi-auto'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
       assert.ok(semiAutoResponse.includes('Semi-Auto Mode'));
     });
@@ -662,6 +701,7 @@ Remote: origin`;
         workspace_instructions: status(''),
         user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nTarget Branch: main'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
 
       assert.ok(response.includes('Manual Mode'));
@@ -675,6 +715,7 @@ Remote: origin`;
         workspace_instructions: status('Workspace instructions content'),
         user_instructions: status('User instructions content'),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
+        workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
 
       const workspaceIndex = response.indexOf('<workspace_instructions>');
@@ -694,6 +735,7 @@ Remote: origin`;
         workspace_instructions: empty,
         user_instructions: empty,
         workflow_context: empty,
+        workspace_info: defaultWorkspaceInfo,
       });
 
       assert.strictEqual(response, '<context status="empty" />');

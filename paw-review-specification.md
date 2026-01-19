@@ -51,7 +51,7 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 ```
 .paw/
   reviews/
-    PR-<number>/              # e.g., PR-123/ (or <branch-slug>/ for non-GitHub)
+    PR-<number>/              # Single PR (e.g., PR-123/)
       ReviewContext.md        # Authoritative parameter source
       prompts/
         code-research.prompt.md  # Generated research questions
@@ -60,7 +60,20 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
       ImpactAnalysis.md      # System-wide effects
       GapAnalysis.md         # Categorized findings
       ReviewComments.md      # Complete feedback with rationale/assessment
+    PR-<number>-<repo-slug>/  # Multi-repo PR (e.g., PR-123-my-api/)
+      ...                     # Same structure per repository
+    <branch-slug>/            # Non-GitHub context
+      ...
 ```
+
+**Naming Scheme**:
+- **Single PR**: `PR-<number>/` (e.g., `PR-123/`)
+- **Multi-repo PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Non-GitHub**: `<branch-slug>/` (slugified branch name)
+
+**Multi-repo detection** triggers naming when:
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple PR URLs/numbers provided to review command
 
 ---
 

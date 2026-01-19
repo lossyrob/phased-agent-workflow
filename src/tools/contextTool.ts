@@ -82,8 +82,18 @@ export interface InstructionStatus {
 }
 
 /**
+ * Workspace environment information for multi-root workspace detection.
+ */
+export interface WorkspaceInfo {
+  /** Number of workspace folders currently open */
+  workspaceFolderCount: number;
+  /** Whether this is a multi-root workspace (2+ folders) */
+  isMultiRootWorkspace: boolean;
+}
+
+/**
  * Complete context result containing workspace instructions, user instructions,
- * and workflow context metadata.
+ * workflow context metadata, and workspace environment info.
  */
 export interface ContextResult {
   /** Workspace-specific custom instructions from .paw/instructions/ */
@@ -92,6 +102,8 @@ export interface ContextResult {
   user_instructions: InstructionStatus;
   /** Raw WorkflowContext.md content from .paw/work/<feature-slug>/ */
   workflow_context: InstructionStatus;
+  /** Workspace environment information for multi-root detection */
+  workspace_info: WorkspaceInfo;
 }
 
 /**
@@ -337,10 +349,19 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
   const userInstructions = loadCustomInstructions(userInstructionsDir, agentName);
   const workflowContext = loadWorkflowContext(workflowContextPath);
 
+  // Get workspace folder count for multi-root detection
+  const folderPaths = getWorkspaceFolderPaths();
+  const workspaceFolderCount = folderPaths.length;
+  const isMultiRootWorkspace = workspaceFolderCount >= 2;
+
   return {
     workspace_instructions: workspaceInstructions,
     user_instructions: userInstructions,
     workflow_context: workflowContext,
+    workspace_info: {
+      workspaceFolderCount,
+      isMultiRootWorkspace,
+    },
   };
 }
 
@@ -379,6 +400,7 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * - Workspace custom instructions wrapped in `<workspace_instructions>`
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
+ * - Workspace info wrapped in `<workspace_info>` with workspaceFolderCount and isMultiRootWorkspace
  * - Mode-specific handoff instructions wrapped in `<handoff_instructions>` (at END for recency)
  * - `<context status="empty" />` when no sections are available
  * 
@@ -421,6 +443,13 @@ export function formatContextResponse(result: ContextResult): string {
     workflowParts.push('</workflow_context>');
     sections.push(workflowParts.join('\n'));
   }
+
+  // Add workspace info for multi-root workspace detection
+  const workspaceInfoParts: string[] = ['<workspace_info>'];
+  workspaceInfoParts.push(`workspaceFolderCount: ${result.workspace_info.workspaceFolderCount}`);
+  workspaceInfoParts.push(`isMultiRootWorkspace: ${result.workspace_info.isMultiRootWorkspace}`);
+  workspaceInfoParts.push('</workspace_info>');
+  sections.push(workspaceInfoParts.join('\n'));
 
   // Parse handoff mode and add instructions at END for recency bias
   const handoffMode = parseHandoffMode(result.workflow_context.content || '');

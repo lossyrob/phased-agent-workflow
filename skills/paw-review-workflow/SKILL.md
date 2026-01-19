@@ -61,7 +61,17 @@ Each stage produces complete, well-structured artifacts:
 
 ## Subagent Contract
 
-Activity skills are executed via delegated agent sessions. Each activity MUST:
+Activity skills are executed via delegated agent sessions.
+
+### Skill Loading (CRITICAL)
+
+**Every subagent MUST load their skill FIRST before executing any work**:
+
+1. Call `paw_get_skill` with the skill name (e.g., `paw-review-understanding`)
+2. Read and internalize the skill instructions
+3. Only then begin executing the activity
+
+**Delegation prompt must include**: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
 
 ### Response Format
 
@@ -78,13 +88,12 @@ All review artifacts are stored in a consistent directory structure:
 ```
 .paw/reviews/<identifier>/
 ├── ReviewContext.md          # Stage: Understanding (initial)
+├── ResearchQuestions.md      # Stage: Understanding (initial)
 ├── CodeResearch.md           # Stage: Baseline Research
 ├── DerivedSpec.md            # Stage: Understanding (after research)
 ├── ImpactAnalysis.md         # Stage: Evaluation (impact)
 ├── GapAnalysis.md            # Stage: Evaluation (gaps)
-├── ReviewComments.md         # Stage: Output (feedback + critique)
-└── prompts/
-    └── 01B-code-research.prompt.md  # Generated research prompt
+└── ReviewComments.md         # Stage: Output (feedback + critique)
 ```
 
 ### Identifier Derivation
@@ -109,10 +118,10 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 **Sequence**:
 1. Run `paw-review-understanding` activity
    - Input: PR number/URL or branch context
-   - Output: `ReviewContext.md`, `prompts/01B-code-research.prompt.md`
+   - Output: `ReviewContext.md`, `ResearchQuestions.md`
    
 2. Run `paw-review-baseline` activity
-   - Input: ReviewContext.md, research prompt
+   - Input: ReviewContext.md, ResearchQuestions.md
    - Output: `CodeResearch.md`
    
 3. Run `paw-review-understanding` activity (resume)

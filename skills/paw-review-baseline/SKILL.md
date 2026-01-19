@@ -35,7 +35,7 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 ## Prerequisites
 
 - ReviewContext.md must exist with base commit SHA
-- prompts/01B-code-research.prompt.md should exist with research questions
+- ResearchQuestions.md should exist with research questions
 
 ## Multi-Repository Mode
 
@@ -105,9 +105,9 @@ If one repository fails:
 
 **CRITICAL**: All subsequent research must analyze code at this commit.
 
-### Step 3: Read Research Prompt
+### Step 3: Read Research Questions
 
-1. Read `prompts/01B-code-research.prompt.md`
+1. Read `ResearchQuestions.md`
 2. Note list of changed files from ReviewContext.md
 3. Identify modules/areas needing baseline documentation
 
@@ -202,7 +202,7 @@ last_updated: <YYYY-MM-DD>
 
 ## Research Questions
 
-<Questions from 01B-code-research.prompt.md>
+<Questions from ResearchQuestions.md>
 
 ## Summary
 

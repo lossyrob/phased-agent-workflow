@@ -98,7 +98,7 @@ related_prs:
    - Use template structure below
    - Include all metadata and flags
 
-## Step 2: Research Prompt Generation
+## Step 2: Research Questions Generation
 
 1. **Identify Research Needs** for each changed file:
    - How did the module function before changes?
@@ -106,18 +106,19 @@ related_prs:
    - What patterns and conventions were used?
    - What test coverage was present?
 
-2. **Create prompts/01B-code-research.prompt.md**:
-   - YAML frontmatter with `mode: PAW Review`
-   - Relative path to ReviewContext.md
-   - Research questions only (no agent instructions)
+2. **Create ResearchQuestions.md**:
+   - Write to `.paw/reviews/<identifier>/ResearchQuestions.md`
+   - YAML frontmatter with metadata
+   - Research questions organized by changed file/module
+   - Clear investigation targets with file:line references
 
 ## Step 3: Signal for Research
 
 Report completion of initial phase:
 ```
-Research Prompt Ready
+Research Questions Ready
 
-Created prompts/01B-code-research.prompt.md with questions about pre-change behavior.
+Created ResearchQuestions.md with questions about pre-change behavior.
 
 Files to investigate at base commit <sha>:
 - [list files]
@@ -182,7 +183,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - Flags section identifies applicable conditions
 - Base and head commit SHAs recorded
 
-### Research Prompt
+### ResearchQuestions.md
 - Questions are specific and answerable
 - All changed files covered
 - Clear investigation targets with file:line references
@@ -200,7 +201,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 ```
 Activity complete.
 Artifact saved: .paw/reviews/<identifier>/ReviewContext.md
-Artifact saved: .paw/reviews/<identifier>/prompts/01B-code-research.prompt.md
+Artifact saved: .paw/reviews/<identifier>/ResearchQuestions.md
 Status: Partial
 Summary: Context gathered, awaiting baseline research.
 ```
@@ -261,7 +262,7 @@ status: complete
 ## Artifacts
 
 - [x/] ReviewContext.md - This file
-- [x/] prompts/01B-code-research.prompt.md - Research guidance
+- [x/] ResearchQuestions.md - Research questions for baseline analysis
 - [x/] CodeResearch.md - Baseline understanding (paw-review-baseline)
 - [x/] DerivedSpec.md - Derived specification
 

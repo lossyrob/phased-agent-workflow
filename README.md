@@ -53,6 +53,7 @@ PAW Review uses a **skills-based architecture** for dynamic, maintainable code r
 - Understand before critiquing - research pre-change system behavior first
 - Comprehensive findings - generate all issues, human filters based on context
 - Evidence-based feedback - every finding includes file:line references and rationale
+- Cross-repository support - review related PRs across multiple repositories together
 - Full human control - nothing posted automatically, edit/delete comments before submitting
 
 See [Review Workflow Documentation](docs/specification/review.md) for detailed usage guide.
@@ -93,6 +94,7 @@ A structured three-stage process for thorough code review using a **skills-based
 - Understand before critiquing - research pre-change system behavior first
 - Comprehensive findings - generate all issues, human filters based on context
 - Evidence-based feedback - every finding includes file:line references and rationale
+- Cross-repository support - review related PRs across multiple repositories together
 - Full human control - nothing posted automatically, edit/delete comments before submitting
 
 See [PAW Review Workflow Documentation](docs/specification/review.md) for detailed usage guide.

@@ -46,6 +46,79 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 ---
 
+## Cross-Repository Review
+
+PAW Review supports reviewing coordinated changes across multiple repositories—common in monorepo setups, microservice architectures, or multi-package releases.
+
+### Invocation
+
+Review multiple PRs together:
+
+```
+/paw-review https://github.com/org/api/pull/123 https://github.com/org/frontend/pull/456
+```
+
+Or with shorthand:
+```
+/paw-review PR-123 PR-456
+```
+
+### Detection
+
+Multi-repository mode activates when:
+- Multiple PR URLs/numbers provided to the review command
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- PR links reference different repositories
+
+### How It Works
+
+1. **Per-repository processing**: Creates separate artifact directories (`PR-123-api/`, `PR-456-frontend/`)
+2. **Independent analysis**: Each PR analyzed through full Understanding, Evaluation stages
+3. **Cross-repo correlation**: Impact and Gap skills identify dependencies between repositories
+4. **Multi-PR pending reviews**: Creates pending reviews on each PR with cross-references
+
+### Cross-Repository Artifacts
+
+**ReviewContext.md** includes related PRs:
+```yaml
+repository: org/api
+related_prs:
+  - number: 456
+    repository: org/frontend
+    relationship: "depends-on"
+```
+
+**CodeResearch.md** includes cross-repository patterns section documenting shared conventions, interface contracts, and dependency relationships.
+
+**ImpactAnalysis.md** includes:
+```markdown
+## Cross-Repository Dependencies
+
+| This PR Changes | Affects PR | Type | Migration |
+|-----------------|------------|------|-----------|
+| `api/types.ts` exports | PR-456-frontend | Breaking | Update imports |
+
+### Deployment Order
+1. Deploy `api` first
+2. Deploy `frontend` second
+```
+
+**GapAnalysis.md** includes cross-repository consistency checks:
+- Version consistency (package versions, shared types)
+- Coordinated changes (API consumer updates, schema propagation)
+- Timing dependencies (deployment order, feature flags)
+
+**ReviewComments.md** includes cross-references:
+```
+This API change requires a frontend update. (See also: org/frontend#456)
+```
+
+### Single-PR Unchanged
+
+Single-PR workflows remain unchanged—multi-repo sections only appear when the context triggers multi-repository mode.
+
+---
+
 ## Repository Layout
 
 ```

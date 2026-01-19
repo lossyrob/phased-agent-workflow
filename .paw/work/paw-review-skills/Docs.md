@@ -155,6 +155,74 @@ No additional configuration required. The workflow uses:
 - Skills bundled with the extension
 - GitHub MCP tools for PR integration (when available)
 
+## Cross-Repository Review Support
+
+Phase 7 adds multi-repository review capabilities for coordinated changes across codebases.
+
+### Detection
+
+Multi-repository mode activates when:
+- Multiple PR URLs/numbers provided: `/paw-review PR-123 PR-456`
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- PR links reference different repositories
+
+### Artifact Structure
+
+| Scenario | Directory Pattern | Example |
+|----------|-------------------|---------|
+| Single PR | `PR-<number>/` | `.paw/reviews/PR-123/` |
+| Multi-repo PRs | `PR-<number>-<repo-slug>/` | `.paw/reviews/PR-123-my-api/` |
+
+**Repo-slug**: Last segment of repository name, lowercase (e.g., `owner/my-api` → `my-api`).
+
+### Multi-Repo Invocation
+
+```
+/paw-review https://github.com/org/api/pull/123 https://github.com/org/frontend/pull/456
+```
+
+The workflow:
+1. Creates separate artifact directories per repository
+2. Analyzes each PR independently
+3. Correlates impacts across boundaries
+4. Creates pending reviews on each PR with cross-references
+
+### Cross-Repository Artifacts
+
+**ReviewContext.md** includes related PRs:
+```yaml
+repository: org/api
+related_prs:
+  - number: 456
+    repository: org/frontend
+    relationship: "depends-on"
+```
+
+**ImpactAnalysis.md** includes cross-repo dependencies:
+```markdown
+## Cross-Repository Dependencies
+
+| This PR Changes | Affects PR | Type | Migration |
+|-----------------|------------|------|-----------|
+| `api/types.ts` exports | PR-456-frontend | Breaking | Update imports |
+```
+
+**GapAnalysis.md** includes cross-repo consistency checks (versioning, coordinated changes, timing dependencies).
+
+**ReviewComments.md** includes cross-references:
+```
+This API change requires a frontend update. (See also: org/frontend#456)
+```
+
+### Deployment Order
+
+When changes have deployment dependencies, ImpactAnalysis.md documents required order:
+```markdown
+### Deployment Order
+1. Deploy `api` first (provides new endpoints)
+2. Deploy `frontend` second (consumes endpoints)
+```
+
 ## Technical Reference
 
 ### Skill Loading Tools
@@ -173,6 +241,19 @@ No additional configuration required. The workflow uses:
 paw_get_skill({ skill_name: 'paw-review-workflow' })
 // Returns: Full SKILL.md content including frontmatter and body
 ```
+
+### paw_get_context Workspace Fields
+
+The `paw_get_context` tool includes workspace information for multi-repo detection:
+
+```markdown
+## Workspace Info
+
+- Workspace folder count: 2
+- Multi-root workspace: true
+```
+
+Agents use `isMultiRootWorkspace: true` to trigger multi-repository review mode.
 
 ### Skill File Format
 
@@ -214,8 +295,11 @@ interface SkillContent {
 
 ### Artifact Paths
 
-GitHub context: `.paw/reviews/PR-<number>/`
-Non-GitHub context: `.paw/reviews/<slugified-branch>/`
+| Context | Pattern | Example |
+|---------|---------|---------|
+| GitHub single PR | `.paw/reviews/PR-<number>/` | `.paw/reviews/PR-123/` |
+| GitHub multi-repo | `.paw/reviews/PR-<number>-<repo>/` | `.paw/reviews/PR-123-api/` |
+| Non-GitHub | `.paw/reviews/<slugified-branch>/` | `.paw/reviews/feature-auth/` |
 
 ### Error Handling
 
@@ -265,7 +349,14 @@ ls skills/paw-review-*/SKILL.md
 - Verify all 6 artifacts created in `.paw/reviews/PR-<number>/`
 - Verify GitHub pending review created (if GitHub context)
 
-**6. Verify implementation workflow unchanged:**
+**6. Cross-repository review:**
+- Open a multi-root workspace with multiple repositories
+- Run `/paw-review <PR-URL-1> <PR-URL-2>` with PRs from different repos
+- Verify separate artifact directories: `.paw/reviews/PR-<n>-<repo-slug>/`
+- Verify ImpactAnalysis.md contains Cross-Repository Dependencies section
+- Verify ReviewComments.md includes cross-reference notations
+
+**7. Verify implementation workflow unchanged:**
 - Run standard PAW implementation workflow
 - Verify PAW-01A through PAW-05 agents work normally
 
@@ -305,13 +396,13 @@ PAW implementation agents (PAW-01A through PAW-05, PAW-X) are unaffected:
 
 ### Known Limitations
 
-1. **Cross-repo reviews**: Multi-repository scenarios are detected but detailed handling is deferred. Single-repo reviews are fully supported.
+1. **Skill size**: Skills target <5000 tokens each. Very large skills may impact context window availability.
 
-2. **Skill size**: Skills target <5000 tokens each. Very large skills may impact context window availability.
+2. **Subagent tool access**: Subagents have equivalent tool access to parent agents (per VS Code behavior), but this is implementation-dependent.
 
-3. **Subagent tool access**: Subagents have equivalent tool access to parent agents (per VS Code behavior), but this is implementation-dependent.
+3. **Non-GitHub contexts**: Without GitHub PR context, review comments must be manually posted. The workflow generates the content but cannot create pending reviews.
 
-4. **Non-GitHub contexts**: Without GitHub PR context, review comments must be manually posted. The workflow generates the content but cannot create pending reviews.
+4. **Cross-repo analysis**: Best-effort when one repository is inaccessible; analysis continues with available data.
 
 ### Error Scenarios
 

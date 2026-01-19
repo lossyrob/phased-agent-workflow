@@ -44,6 +44,38 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 - `paw_get_skills` — Retrieves catalog of available skills
 - `paw_get_skill` — Loads specific skill content by name
 
+## Cross-Repository Review
+
+PAW Review supports coordinated review of multiple related PRs across repositories.
+
+**Invocation:**
+
+```
+/paw-review https://github.com/org/api/pull/123 https://github.com/org/frontend/pull/456
+```
+
+**Detection triggers:**
+
+- Multiple PR URLs/numbers in the command
+- Multi-root VS Code workspace detected
+- PRs reference different repositories
+
+**What happens:**
+
+1. Creates separate artifact directories per repository (`PR-123-api/`, `PR-456-frontend/`)
+2. Analyzes each PR through full review stages
+3. Identifies cross-repository impacts and dependencies
+4. Creates pending reviews on each PR with cross-references
+
+**Artifact additions for multi-repo:**
+
+- `ReviewContext.md` includes `related_prs` field linking to other PRs
+- `ImpactAnalysis.md` includes Cross-Repository Dependencies table
+- `GapAnalysis.md` includes cross-repo consistency checks
+- `ReviewComments.md` includes cross-references like `(See also: org/frontend#456)`
+
+Single-PR workflows remain unchanged—multi-repo features activate only when detected.
+
 ## Workflow Stages
 
 ```

@@ -1156,13 +1156,16 @@ Establish the foundational structure for multi-repository reviews: detection tri
 
 ### Changes Required:
 
-#### 1. Multi-Repository Detection (Extend)
-**File**: `agents/PAW Review.agent.md`
-**Status**: Partially complete - has section describing workflow but lacks detection triggers
+#### 1. Multi-Repository Detection (Extend + Context Tool Support)
+**Files**: `src/tools/contextTool.ts`, `agents/PAW Review.agent.md`
+**Status**: Partially complete - agent describes workflow but lacks detection triggers
 **Changes**:
-- Add concrete detection triggers:
+- Extend `paw_get_context` output to include:
+  - `workspaceFolderCount`
+  - `isMultiRootWorkspace`
+- Add concrete detection triggers (PAW Review agent must reference `paw_get_context` output):
   - Multiple PR URLs/numbers provided in arguments
-  - Multi-folder VS Code workspace detected
+  - `isMultiRootWorkspace: true`
   - PR links referencing different repositories
 - Specify artifact naming scheme: `PR-<number>-<repo-slug>/` (e.g., `PR-123-my-api/`)
 - Document how to derive repo-slug from repository name
@@ -1176,7 +1179,7 @@ Establish the foundational structure for multi-repository reviews: detection tri
 **File**: `skills/paw-review-understanding/SKILL.md`
 **Changes**:
 - Add "## Multi-Repository Mode" section after Context Detection, containing:
-  - Detection: Multiple PR URLs/numbers in input
+  - Detection: Multiple PR URLs/numbers in input OR `paw_get_context` indicates multi-root
   - Per-PR processing: Create separate artifact directories
   - Identifier scheme: `PR-<number>-<repo-slug>/`
 - Update ReviewContext.md template to support multi-PR frontmatter:
@@ -1210,6 +1213,14 @@ Establish the foundational structure for multi-repository reviews: detection tri
   Repo-slug derivation: Last path segment of repository name, lowercase, special chars removed.
   ```
 
+#### 4. Update Review Spec Repository Layout
+**File**: `paw-review-specification.md`
+**Changes**:
+- Update Repository Layout section to include multi-repo artifact naming:
+  - `PR-<number>-<repo-slug>/` for multi-PR reviews
+  - Keep `PR-<number>/` for single-PR reviews
+- Note that multi-repo naming is only used when `isMultiRootWorkspace` or multiple PRs are detected
+
 **Token impact**: ~75 tokens added
 
 **Tests**:
@@ -1234,6 +1245,7 @@ Establish the foundational structure for multi-repository reviews: detection tri
 - [ ] Multi-PR invocation creates separate artifact directories
 - [ ] Artifact directories follow scheme: `.paw/reviews/PR-123-repo-a/`, `.paw/reviews/PR-456-repo-b/`
 - [ ] ReviewContext.md includes `related_prs` field when multiple PRs detected
+- [ ] `paw_get_context` output includes `workspaceFolderCount` and `isMultiRootWorkspace`
 
 ### Phase 7A Status Update
 - **Status**: Not Started

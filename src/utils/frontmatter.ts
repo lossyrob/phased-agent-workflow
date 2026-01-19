@@ -8,6 +8,10 @@
  * This is a simplified YAML parser that extracts a single top-level field.
  * It handles quoted and unquoted values, and colons within values.
  * 
+ * @note Only handles single-line values; multi-line values are not supported
+ * @note Nested structures (objects/arrays) return empty string
+ * @note Returns empty string for arrays or object values
+ * 
  * @param content - The full file content
  * @param fieldName - The name of the field to extract (case-insensitive)
  * @returns The field value, or empty string if not found

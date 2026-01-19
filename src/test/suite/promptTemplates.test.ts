@@ -195,6 +195,47 @@ suite('Prompt Templates', () => {
     }
   });
 
+  test('loadPromptTemplates skips subdirectories', () => {
+    const tempDir = createTempDir('paw-prompts-subdir-');
+    try {
+      // Create a valid prompt at the root level
+      createPrompt(
+        tempDir,
+        'root-prompt.prompt.md',
+        [
+          '---',
+          'agent: Root Agent',
+          '---',
+          'Body',
+        ].join('\n')
+      );
+
+      // Create a subdirectory with a prompt file that should be ignored
+      const subdir = path.join(tempDir, 'prompts', 'subdir');
+      fs.mkdirSync(subdir, { recursive: true });
+      fs.writeFileSync(
+        path.join(subdir, 'nested.prompt.md'),
+        [
+          '---',
+          'agent: Nested Agent',
+          '---',
+          'Body',
+        ].join('\n')
+      );
+
+      // Create a directory named like a prompt file
+      fs.mkdirSync(path.join(tempDir, 'prompts', 'fake.prompt.md'), { recursive: true });
+
+      const templates = loadPromptTemplates(vscode.Uri.file(tempDir));
+      // Should only load the root-level prompt, not the subdirectory or nested files
+      assert.strictEqual(templates.length, 1);
+      assert.strictEqual(templates[0].filename, 'root-prompt.prompt.md');
+      assert.strictEqual(templates[0].agent, 'Root Agent');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   test('loadPromptTemplates ignores non-prompt files', () => {
     const tempDir = createTempDir('paw-prompts-ignore-');
     try {

@@ -28,4 +28,18 @@ suite('Skills Tool', () => {
     assert.ok(result.includes('paw-review-understanding'));
     assert.ok(result.includes('Understanding skill'));
   });
+
+  test('formatSkillCatalogMarkdown produces valid markdown list', () => {
+    const entries: SkillCatalogEntry[] = [
+      {
+        name: 'test-skill',
+        description: 'Test description',
+        source: 'builtin',
+      },
+    ];
+
+    const result = formatSkillCatalogMarkdown(entries);
+    // Should be a markdown list item
+    assert.ok(result.startsWith('- **test-skill**'), 'Should format as markdown list item');
+  });
 });

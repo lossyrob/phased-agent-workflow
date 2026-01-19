@@ -24,4 +24,25 @@ suite('Skill Tool', () => {
     const output = formatSkillContentResult(result);
     assert.strictEqual(output, '# Skill content');
   });
+
+  test('formatSkillContentResult includes skill name in error message', () => {
+    const result: SkillContent = {
+      name: 'missing-skill',
+      content: '',
+      error: 'Skill not found: missing-skill',
+    };
+
+    const output = formatSkillContentResult(result);
+    assert.ok(output.includes('missing-skill'), 'Error should include skill name');
+  });
+
+  test('formatSkillContentResult handles empty content with no error', () => {
+    const result: SkillContent = {
+      name: 'empty-skill',
+      content: '',
+    };
+
+    const output = formatSkillContentResult(result);
+    assert.strictEqual(output, '', 'Should return empty string for empty content with no error');
+  });
 });

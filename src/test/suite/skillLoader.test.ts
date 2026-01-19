@@ -167,4 +167,44 @@ suite('Skill Loader', () => {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  test('loadSkillContent handles empty skill name', () => {
+    const tempDir = createTempDir('paw-skill-empty-name-');
+    try {
+      fs.mkdirSync(path.join(tempDir, 'skills'), { recursive: true });
+      const result = loadSkillContent(vscode.Uri.file(tempDir), '');
+      assert.ok(result.error, 'Should return an error for empty skill name');
+      assert.strictEqual(result.content, '');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('loadSkillContent rejects path traversal attempts', () => {
+    const tempDir = createTempDir('paw-skill-traversal-');
+    try {
+      fs.mkdirSync(path.join(tempDir, 'skills'), { recursive: true });
+      const result = loadSkillContent(vscode.Uri.file(tempDir), '../etc/passwd');
+      assert.ok(result.error, 'Should return an error for path traversal attempt');
+      assert.strictEqual(result.content, '');
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('loadSkillContent handles special characters in skill name', () => {
+    const tempDir = createTempDir('paw-skill-special-');
+    try {
+      fs.mkdirSync(path.join(tempDir, 'skills'), { recursive: true });
+      // Various special characters that should not be in skill names
+      const specialNames = ['skill/name', 'skill\\name', 'skill..name', 'skill\0name'];
+      for (const name of specialNames) {
+        const result = loadSkillContent(vscode.Uri.file(tempDir), name);
+        assert.ok(result.error || !fs.existsSync(path.join(tempDir, 'skills', name)),
+          `Should handle special characters: ${name}`);
+      }
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });

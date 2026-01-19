@@ -264,6 +264,54 @@ For GitHub PRs, create pending review using MCP tools:
 - Reviewer can edit/delete any comments before submission
 - Comment IDs recorded in ReviewComments.md for tracking
 
+### Multi-PR Pending Reviews
+
+When reviewing PRs across multiple repositories:
+
+**Detection:**
+Multi-PR mode applies when:
+- Multiple artifact directories exist (`.paw/reviews/PR-<number>-<repo-slug>/`)
+- GapAnalysis.md files exist in multiple PR directories
+- ReviewContext.md contains `related_prs` entries
+
+**Per-PR Pending Review Creation:**
+
+1. **Iterate PRs**: For each PR in the review set:
+   - Read GapAnalysis.md from that PR's artifact directory
+   - Transform findings into comments as normal
+   - Create separate pending review on THAT PR using `mcp_github_pull_request_review_write`
+   - Post comments to that PR's pending review
+
+2. **Cross-Reference Notation**: When posting comments that relate to other PRs:
+   - Add cross-reference at end of comment: `(See also: owner/other-repo#456)`
+   - Example: "This API change requires a corresponding update. (See also: acme/frontend#456)"
+
+3. **Cross-Repository Findings**: For findings from Cross-Repository Dependencies:
+   - Post to the PR that should make the change
+   - Reference the related PR that triggered the finding
+   - Note deployment order if relevant
+
+**GitHub Tool Calls for Multiple PRs:**
+```
+# For each PR in the review set:
+mcp_github_pull_request_review_write(owner, repo_a, pr_123, method="create")
+mcp_github_add_comment_to_pending_review(...)  # comments for PR-123
+
+mcp_github_pull_request_review_write(owner, repo_b, pr_456, method="create")
+mcp_github_add_comment_to_pending_review(...)  # comments for PR-456
+```
+
+**ReviewComments.md Updates:**
+- Create separate ReviewComments.md in each PR's artifact directory
+- Each contains only comments relevant to that PR
+- Cross-references documented in both files
+
+**Error Handling:**
+If pending review creation fails for one PR:
+- Document the failure
+- Continue with other PRs
+- Provide manual posting instructions for failed PR
+
 ### Step 6: Non-GitHub Context
 
 For non-GitHub workflows (using git diff and branch names):

@@ -1341,18 +1341,18 @@ Phase 7A must be complete - artifact structure and detection working.
 
 ### Content Preservation Checklist (Phase 7B)
 
-- [ ] Single-repo analysis unchanged (no cross-repo sections appear when single PR)
-- [ ] Cross-repo sections conditional on multi-PR context
-- [ ] Existing templates extended, not replaced
-- [ ] Error handling covers: one repo offline, one PR closed, permission differences
+- [x] Single-repo analysis unchanged (no cross-repo sections appear when single PR)
+- [x] Cross-repo sections conditional on multi-PR context
+- [x] Existing templates extended, not replaced
+- [x] Error handling covers: one repo offline, one PR closed, permission differences
 
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] All tests pass: `npm test`
-- [ ] Documentation builds: `mkdocs build --strict`
-- [ ] All skills under token targets
+- [x] TypeScript compiles: `npm run compile`
+- [x] All tests pass: `npm test`
+- [x] Documentation builds: `mkdocs build --strict`
+- [x] All skills under token targets
 
 #### Manual Verification:
 - [ ] Invoke `/paw-review https://github.com/owner/repo-a/pull/123 https://github.com/owner/repo-b/pull/456`
@@ -1363,8 +1363,39 @@ Phase 7A must be complete - artifact structure and detection working.
 - [ ] Single-PR workflow regression test passes
 
 ### Phase 7B Status Update
-- **Status**: Not Started
-- **Blockers**: Phase 7A must be complete first
+- **Status**: Completed
+- **Summary**:
+  - Updated `skills/paw-review-baseline/SKILL.md` (~50 lines added):
+    - Added Multi-Repository Mode section with detection, per-repo processing, state restoration
+    - Added cross-repository pattern identification guidance (shared conventions, interface contracts, dependency relationships)
+    - Added error handling for partial failures
+  - Updated `skills/paw-review-impact/SKILL.md` (~65 lines added):
+    - Added Cross-Repository Impact section after Integration Graph Building
+    - Added API contract identification (shared types, endpoints, events, package exports)
+    - Added cross-repo breaking change detection with dependency direction
+    - Added ImpactAnalysis.md template update for Cross-Repository Dependencies table
+    - Added deployment order documentation
+  - Updated `skills/paw-review-gap/SKILL.md` (~40 lines added):
+    - Added Cross-Repository Consistency subsection in Correctness Analysis
+    - Added version consistency checks (package versions, shared types)
+    - Added coordinated changes detection (API consumer updates, schema propagation)
+    - Added timing dependencies (deployment order, feature flags, migrations)
+  - Updated `skills/paw-review-feedback/SKILL.md` (~55 lines added):
+    - Added Multi-PR Pending Reviews section after GitHub Context section
+    - Added per-PR pending review creation workflow
+    - Added cross-reference notation guidance: `(See also: owner/other-repo#456)`
+    - Added GitHub tool calls pattern for multiple PRs
+    - Added ReviewComments.md updates for multi-PR scenarios
+    - Added error handling for partial failures
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 160 tests passing ✅
+  - `mkdocs build --strict` ✅
+- **Notes for Review**:
+  - All four skills updated with conditional multi-repo sections
+  - Existing single-repo workflow unchanged (multi-repo sections only activate when detected)
+  - Cross-repo sections are additive - they extend existing templates rather than replacing
+  - Error handling added for partial failures (one repo fails, continue with others)
 
 ---
 

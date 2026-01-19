@@ -61,6 +61,70 @@ Identify what code depends on the changes:
 
 Integration points table with component, relationship, and impact description
 
+## Cross-Repository Impact
+
+When reviewing PRs across multiple repositories:
+
+### Detection
+
+Cross-repo impact analysis applies when:
+- Multiple PRs are being reviewed (separate artifact directories exist)
+- ReviewContext.md contains `related_prs` entries
+- `paw_get_context` returned `isMultiRootWorkspace: true`
+
+### API Contract Identification
+
+Identify contracts between repositories:
+
+- **Shared Types**: Type definitions used across repos (often in `@types/`, `shared/`, or package exports)
+- **API Endpoints**: REST/GraphQL endpoints consumed by other repos
+- **Event Schemas**: Message formats for pub/sub or event-driven communication
+- **Package Exports**: Public interfaces from shared packages
+
+### Cross-Repo Breaking Change Detection
+
+For each breaking change identified:
+1. Check if the change affects contracts used by other PRs in the review set
+2. Flag breaking changes that require coordinated updates across repos
+3. Document which PR depends on which
+
+**Cross-Repository Breaking Change Types:**
+- Type export changes affecting consumers in other repos
+- API endpoint changes consumed by other repos
+- Shared configuration schema changes
+- Package version constraints that conflict
+
+### Dependency Direction
+
+Document which repository depends on which:
+
+| Provider PR | Consumer PR | Contract | Direction |
+|-------------|-------------|----------|-----------|
+| PR-123-api | PR-456-frontend | `/api/users` endpoint | api → frontend |
+| PR-123-api | PR-456-frontend | `UserType` export | api → frontend |
+
+### Update ImpactAnalysis.md Template
+
+Add to each ImpactAnalysis.md when in multi-repo mode:
+
+```markdown
+## Cross-Repository Dependencies
+
+| This PR Changes | Affects PR | Type | Migration |
+|-----------------|------------|------|-----------|
+| `api/types.ts` exports | PR-456-frontend | Breaking | Update types import |
+| `/api/users` endpoint | PR-456-frontend | Compatible | No action needed |
+
+**Deployment Order:** PR-123-api MUST deploy before PR-456-frontend
+```
+
+### Error Handling
+
+If cross-repo analysis is blocked (e.g., can't access other repository):
+- Document the limitation
+- Proceed with single-repo analysis
+- Note potential cross-repo impacts that couldn't be verified
+
 ## Step 2: Breaking Change Detection
 
 Compare before/after to identify incompatible changes:

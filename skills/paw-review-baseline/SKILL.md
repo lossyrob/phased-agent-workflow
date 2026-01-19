@@ -37,6 +37,53 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 - ReviewContext.md must exist with base commit SHA
 - prompts/01B-code-research.prompt.md should exist with research questions
 
+## Multi-Repository Mode
+
+When reviewing PRs across multiple repositories (detected via multiple PR URLs or `isMultiRootWorkspace: true` from `paw_get_context`):
+
+### Detection
+
+Multi-repo mode activates when:
+- Multiple PR URLs/numbers provided in input
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- ReviewContext.md contains `related_prs` entries
+
+### Per-Repository Processing
+
+Process each repository's base commit independently:
+
+1. **Iterate Repositories**: For each PR in the review set:
+   - Read its ReviewContext.md from `.paw/reviews/PR-<number>-<repo-slug>/`
+   - Extract base commit SHA and repository path
+   
+2. **Checkout and Research**: For each repository:
+   - Navigate to repository root
+   - Checkout base commit
+   - Conduct baseline research
+   - Create CodeResearch.md in that PR's artifact directory
+   - Restore original state before moving to next repository
+
+3. **State Restoration**: Between repositories:
+   - Restore each repository to its original branch/HEAD
+   - Verify clean working state before proceeding
+
+### Cross-Repository Pattern Identification
+
+When analyzing multiple repositories, also document:
+
+- **Shared Conventions**: Common patterns used across repos (naming, error handling, API styles)
+- **Interface Contracts**: How repositories communicate (API schemas, shared types, event formats)
+- **Dependency Relationships**: Which repo depends on which (import paths, package dependencies)
+
+Add a "Cross-Repository Patterns" section to each CodeResearch.md noting patterns that appear across the repository set.
+
+### Error Handling
+
+If one repository fails:
+- Document the failure in that PR's artifact directory
+- Continue with remaining repositories
+- Report partial completion status
+
 ## Execution Steps
 
 ### Step 1: Sync Remote State

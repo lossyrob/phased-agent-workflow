@@ -64,6 +64,34 @@ Identify logic and implementation errors:
 - Missing state validation
 - Inconsistent state updates
 
+### Cross-Repository Consistency
+
+When reviewing PRs across multiple repositories, also check:
+
+**Version Consistency:**
+- Package versions compatible across repos (no conflicting dependency ranges)
+- Shared type definitions match (same version of `@types/` packages)
+- API version expectations aligned
+
+**Coordinated Changes:**
+- API changes in one repo have corresponding consumer updates in other repos
+- Schema changes propagated to all consumers
+- Missing coordinated updates flagged as gaps
+
+**Timing Dependencies:**
+- Deployment order matters (provider must deploy before consumer)
+- Feature flag coordination required
+- Database migration sequences across repos
+
+**Detection:**
+Cross-repo consistency applies when:
+- Multiple artifact directories exist (`.paw/reviews/PR-<number>-<repo-slug>/`)
+- ReviewContext.md contains `related_prs` entries
+- ImpactAnalysis.md contains Cross-Repository Dependencies section
+
+**Output:**
+Add "Cross-Repository Gaps" subsection in GapAnalysis.md with coordinated change issues.
+
 ### Output
 
 Correctness findings with file:line references, issue descriptions, and evidence

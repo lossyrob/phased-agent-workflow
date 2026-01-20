@@ -8,7 +8,7 @@
 
 1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
 2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette ([detailed instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix))
-3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/github) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp-server) in VS Code for optimal agent integration with your platform. While PAW can fall back to GitHub CLI, the MCP servers provide significantly better functionality and reliability. See [MCP Server Setup Guide](https://modelcontextprotocol.io/quickstart/user) for configuration instructions.
+3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/github/github-mcp-server) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) in VS Code for optimal agent integration with your platform. While PAW can fall back to GitHub CLI, the MCP servers provide significantly better functionality and reliability. See the server project READMEs for configuration instructions.
 4. **Open** the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `PAW` to see available commands
 5. **Start new work** with `PAW: New PAW Workflow`
 6. **Get help** anytime with `PAW: Get Work Status`

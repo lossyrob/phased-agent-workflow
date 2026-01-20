@@ -70,9 +70,11 @@ The migration preserves all existing review capabilities and artifacts while sig
 
 3. **Subagent Execution Model**: Each activity skill runs as a subagent via `runSubagent`. This provides clean context isolation—each stage starts fresh with its skill loaded, rather than accumulating context from all previous stages.
 
-4. **Stage Gates Between Stages**: The workflow verifies artifact existence before proceeding to the next stage. Missing artifacts cause the workflow to stop and report, preventing cascading failures.
+4. **Subagent Skill Loading Requirement**: Every subagent MUST call `paw_get_skill` FIRST before executing any work. The workflow skill explicitly requires delegation prompts to include: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity." This ensures subagents have the complete skill instructions before beginning their tasks.
 
-5. **Human Control Point**: The workflow creates a GitHub pending review but never auto-submits. Human reviewers retain full control over what feedback gets posted.
+5. **Stage Gates Between Stages**: The workflow verifies artifact existence before proceeding to the next stage. Missing artifacts cause the workflow to stop and report, preventing cascading failures.
+
+6. **Human Control Point**: The workflow creates a GitHub pending review but never auto-submits. Human reviewers retain full control over what feedback gets posted.
 
 ### Integration Points
 
@@ -117,6 +119,7 @@ All artifacts are written to `.paw/reviews/<identifier>/`:
 | Artifact | Stage | Contents |
 |----------|-------|----------|
 | ReviewContext.md | Understanding | PR metadata, changed files, CI status |
+| ResearchQuestions.md | Understanding | Research questions for baseline analysis |
 | CodeResearch.md | Understanding | Pre-change baseline analysis |
 | DerivedSpec.md | Understanding | Reverse-engineered spec from implementation |
 | ImpactAnalysis.md | Evaluation | System-wide effects, breaking changes |

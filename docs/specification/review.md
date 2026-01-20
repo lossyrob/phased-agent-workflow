@@ -32,7 +32,7 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | Skill | Type | Stage | Output |
 |-------|------|-------|--------|
 | `paw-review-workflow` | Workflow | — | Orchestration logic |
-| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
+| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, ResearchQuestions.md, DerivedSpec.md |
 | `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
 | `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
 | `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
@@ -43,6 +43,10 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 - `paw_get_skills` — Retrieves catalog of available skills
 - `paw_get_skill` — Loads specific skill content by name
+
+**Subagent Skill Loading:**
+
+Every subagent MUST call `paw_get_skill` FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
 
 ## Cross-Repository Review
 
@@ -99,6 +103,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 **Outputs:**
 
 - `ReviewContext.md` — PR metadata, changed files, flags
+- `ResearchQuestions.md` — Research questions for baseline analysis
 - `CodeResearch.md` — Pre-change baseline understanding
 - `DerivedSpec.md` — Reverse-engineered intent and acceptance criteria
 

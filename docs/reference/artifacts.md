@@ -21,8 +21,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
   reviews/                      # Review workflow
     PR-<number>/
       ReviewContext.md          # Review parameters
-      prompts/
-        code-research.prompt.md # Baseline research questions
+      ResearchQuestions.md      # Research questions for baseline analysis
       CodeResearch.md           # Pre-change baseline
       DerivedSpec.md           # Reverse-engineered spec
       ImpactAnalysis.md        # Impact analysis
@@ -153,6 +152,20 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Changed Files | Count, additions, deletions |
 | CI Status | Passing, failing, pending |
 | Flags | CI failures, breaking changes suspected |
+
+### ResearchQuestions.md
+
+**Purpose:** Research questions to guide baseline codebase analysis.
+
+**Created by:** `paw-review-understanding` skill
+
+**Contents:**
+
+- Questions about pre-change behavior
+- Areas needing investigation for baseline understanding
+- Specific patterns or behaviors to document
+
+**Note:** This artifact replaces the previous `prompts/code-research.prompt.md` approach, simplifying the review artifact structure by storing research questions directly in the review directory.
 
 ### DerivedSpec.md
 

@@ -82,30 +82,6 @@ export function isValidBranchName(value: string): boolean {
 }
 
 /**
- * Determine whether the provided value matches expected issue URL formats.
- * 
- * This validator supports multiple platform-specific URL patterns to enable
- * PAW to work with both GitHub Issues and Azure DevOps Work Items.
- * 
- * Supported formats:
- * - GitHub Issues: `https://github.com/{owner}/{repo}/issues/{number}`
- * - Azure DevOps Work Items: `https://dev.azure.com/{org}/{project}/_workitems/edit/{id}`
- * 
- * @param value - The URL string to validate
- * @returns true if the value matches a supported issue URL format, false otherwise
- * 
- * @example
- * isValidIssueUrl('https://github.com/owner/repo/issues/123') // true
- * isValidIssueUrl('https://dev.azure.com/org/project/_workitems/edit/456') // true
- * isValidIssueUrl('https://example.com') // false
- */
-export function isValidIssueUrl(value: string): boolean {
-  const githubPattern = /^https:\/\/github\.com\/[^/]+\/[^/]+\/issues\/\d+$/;
-  const azureDevOpsPattern = /^https:\/\/dev\.azure\.com\/[^/]+\/[^/]+\/_workitems\/edit\/\d+$/;
-  return githubPattern.test(value) || azureDevOpsPattern.test(value);
-}
-
-/**
  * Collect workflow mode selection from user.
  * 
  * Presents a Quick Pick menu with three workflow mode options:
@@ -316,20 +292,10 @@ export async function collectUserInputs(
 ): Promise<WorkItemInputs | undefined> {
   // Collect issue URL first (optional)
   // This enables future phases to customize branch input prompt based on issue URL presence
+  // No validation - agents interpret input contextually (URL, issue number, or identifier)
   const issueUrl = await vscode.window.showInputBox({
     prompt: 'Enter issue or work item URL (optional, press Enter to skip)',
-    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123',
-    validateInput: (value: string) => {
-      if (!value || value.trim().length === 0) {
-        return undefined;
-      }
-
-      if (!isValidIssueUrl(value)) {
-        return 'Invalid issue URL format. Expected GitHub issue or Azure DevOps work item URL.';
-      }
-
-      return undefined;
-    }
+    placeHolder: 'https://github.com/owner/repo/issues/123 or https://dev.azure.com/org/project/_workitems/edit/123'
   });
 
   if (issueUrl === undefined) {

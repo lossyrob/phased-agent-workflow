@@ -12,13 +12,12 @@ import {
  * These unit tests verify the input validation logic used in the work item initialization flow.
  * Tests cover:
  * - Git branch name validation (alphanumeric, hyphens, underscores, slashes only)
- * - Issue URL format validation (supports GitHub Issues and Azure DevOps Work Items)
  * - Workflow mode type validation
  * - Review strategy type validation
  * - WorkflowModeSelection interface usage
  * 
- * The validation functions are called by VS Code input boxes to provide real-time
- * feedback to users during the initialization process.
+ * Note: Issue URL validation was removed - agents now interpret input contextually
+ * (URL, issue number, or identifier) and handle errors gracefully.
  */
 suite('User Input Validation', () => {
   test('Valid branch names pass validation', () => {

@@ -14,12 +14,119 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 ---
 
+## Skills-Based Architecture
+
+The review workflow uses a **skills-based architecture** for dynamic, maintainable orchestration.
+
+**Invocation:** `/paw-review <PR-number-or-URL>`
+
+**How it works:**
+
+1. The **PAW Review** agent loads the `paw-review-workflow` skill
+2. The workflow skill orchestrates **activity skills** via subagent execution
+3. Each activity skill produces specific artifacts
+4. Complete review runs without manual pauses between stages
+
+**Bundled Skills:**
+
+| Skill | Type | Stage | Output |
+|-------|------|-------|--------|
+| `paw-review-workflow` | Workflow | — | Orchestration logic, core principles |
+| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
+| `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
+| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
+| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
+| `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
+| `paw-review-github` | Activity | Output | GitHub pending review (GitHub PRs only) |
+
+**Tool Support:**
+
+- `paw_get_skills` — Retrieves catalog of available skills with metadata
+- `paw_get_skill` — Loads specific skill content by name
+
+---
+
+## Cross-Repository Review
+
+PAW Review supports reviewing coordinated changes across multiple repositories—common in monorepo setups, microservice architectures, or multi-package releases.
+
+### Invocation
+
+Review multiple PRs together:
+
+```
+/paw-review https://github.com/org/api/pull/123 https://github.com/org/frontend/pull/456
+```
+
+Or with shorthand:
+```
+/paw-review PR-123 PR-456
+```
+
+### Detection
+
+Multi-repository mode activates when:
+- Multiple PR URLs/numbers provided to the review command
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- PR links reference different repositories
+
+### How It Works
+
+1. **Per-repository processing**: Creates separate artifact directories (`PR-123-api/`, `PR-456-frontend/`)
+2. **Independent analysis**: Each PR analyzed through full Understanding, Evaluation stages
+3. **Cross-repo correlation**: Impact and Gap skills identify dependencies between repositories
+4. **Multi-PR pending reviews**: Creates pending reviews on each PR with cross-references
+
+### Cross-Repository Artifacts
+
+**ReviewContext.md** includes related PRs:
+```yaml
+repository: org/api
+related_prs:
+  - number: 456
+    repository: org/frontend
+    relationship: "depends-on"
+```
+
+**CodeResearch.md** includes cross-repository patterns section documenting shared conventions, interface contracts, and dependency relationships.
+
+**ImpactAnalysis.md** includes:
+```markdown
+## Cross-Repository Dependencies
+
+| This PR Changes | Affects PR | Type | Migration |
+|-----------------|------------|------|-----------|
+| `api/types.ts` exports | PR-456-frontend | Breaking | Update imports |
+
+### Deployment Order
+1. Deploy `api` first
+2. Deploy `frontend` second
+```
+
+**GapAnalysis.md** includes cross-repository consistency checks:
+- Version consistency (package versions, shared types)
+- Coordinated changes (API consumer updates, schema propagation)
+- Timing dependencies (deployment order, feature flags)
+
+**ReviewComments.md** includes cross-references:
+```
+This API change requires a frontend update. (See also: org/frontend#456)
+```
+
+### Single-PR Unchanged
+
+Single-PR workflows remain unchanged—multi-repo sections only appear when the context triggers multi-repository mode.
+
+---
+
 ## Repository Layout
 
 ```
 .paw/
   reviews/
-    PR-<number>/              # e.g., PR-123/ (or <branch-slug>/ for non-GitHub)
+    PR-<number>/              # Single PR (e.g., PR-123/)
       ReviewContext.md        # Authoritative parameter source
       prompts/
         code-research.prompt.md  # Generated research questions
@@ -27,8 +134,22 @@ PAW Review applies the same principles as the implementation workflow: **traceab
       DerivedSpec.md         # Reverse-engineered specification
       ImpactAnalysis.md      # System-wide effects
       GapAnalysis.md         # Categorized findings
-      ReviewComments.md      # Complete feedback with rationale/assessment
+      ReviewComments.md      # Complete feedback with comment history
+    PR-<number>-<repo-slug>/  # Multi-repo PR (e.g., PR-123-my-api/)
+      ...                     # Same structure per repository
+      CrossRepoAnalysis.md    # Cross-repository correlation (multi-repo only)
+    <branch-slug>/            # Non-GitHub context
+      ...
 ```
+
+**Naming Scheme**:
+- **Single PR**: `PR-<number>/` (e.g., `PR-123/`)
+- **Multi-repo PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Non-GitHub**: `<branch-slug>/` (slugified branch name)
+
+**Multi-repo detection** triggers naming when:
+- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple PR URLs/numbers provided to review command
 
 ---
 
@@ -38,9 +159,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Comprehensively understand what changed and why
 
-**Agents:** 
-* PAW-R1A Understanding
-* PAW-R1B Baseline Researcher (invoked during R1 research pause)
+**Skills:** `paw-review-understanding`, `paw-review-baseline`
 
 **Inputs:**
 * PR URL or number (GitHub context)
@@ -49,8 +168,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewContext.md` – PR metadata, changed files, flags (authoritative parameter source)
-* `.paw/reviews/<identifier>/prompts/code-research.prompt.md` – Generated research questions about pre-change system
-* `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding (created after research)
+* `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding
 * `.paw/reviews/<identifier>/DerivedSpec.md` – Reverse-engineered intent and acceptance criteria
 
 **Process:**
@@ -62,22 +180,13 @@ PAW Review applies the same principles as the implementation workflow: **traceab
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
 
-2. **Generate code research prompt**
-   - Identify areas needing baseline understanding based on changed files
-   - Create `prompts/code-research.prompt.md` with questions about:
-     - Pre-change behavior of modified modules
-     - Integration points and dependencies
-     - Patterns and conventions
-     - Performance context for sensitive code
-     - Test coverage baseline
-   - Guidance for PAW-R1B Baseline Researcher, not rigid template
+2. **Research pre-change baseline**
+   - Analyze codebase at base commit (pre-change state)
+   - Document how system worked before changes
+   - Record patterns, conventions, and integration points
+   - Create `CodeResearch.md` with file:line references
 
-3. **Pause for baseline research**
-   - Signal human to run PAW-R1B Baseline Researcher
-   - Wait until `CodeResearch.md` exists
-   - Researcher analyzes codebase at base commit (pre-change state)
-
-4. **Derive specification**
+3. **Derive specification**
    - Use CodeResearch.md to understand how system worked before changes
    - Reverse-engineer author intent from code analysis and PR description
    - Extract acceptance criteria from implementation
@@ -87,10 +196,8 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R1A Understanding with PR number or base branch
-* Agent creates ReviewContext.md and code-research.prompt.md
-* Run PAW-R1B Baseline Researcher to analyze pre-change system
-* Agent completes DerivedSpec.md using baseline understanding
+* Invoke `/paw-review <PR-number-or-URL>` or run PAW Review agent
+* Agent orchestrates all R1 activities automatically
 * Review artifacts to ensure understanding is accurate
 * Correct any misinterpretations in `DerivedSpec.md`
 * Proceed to Stage R2 once understanding complete and zero open questions
@@ -101,9 +208,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Agents:** 
-* PAW-R2A Impact Analyzer
-* PAW-R2B Gap Analyzer
+**Skills:** `paw-review-impact`, `paw-review-gap`
 
 **Inputs:**
 * All Stage R1 artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
@@ -115,7 +220,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Process:**
 
-1. **Analyze impact** (PAW-R2A Impact Analyzer)
+1. **Analyze impact**
    - Build integration graph: parse imports/exports, identify public API surfaces, map downstream consumers
    - Detect breaking changes: function signature diffs, config schema changes, data model modifications
    - Assess performance: new loops/recursion, database queries, algorithmic complexity
@@ -125,7 +230,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
    - **Code health trend**: Improving or degrading system health? Technical debt impact?
    - Document deployment considerations and risk assessment
 
-2. **Identify gaps** (PAW-R2B Gap Analyzer)
+2. **Identify gaps**
    - **Correctness:** Logic errors, edge cases, error handling, invariants
    - **Safety & Security:** Input validation, authorization checks, concurrency, data integrity
    - **Testing:** Coverage quantitative (if available) and qualitative (depth/breadth), test effectiveness (will fail when broken)
@@ -144,88 +249,86 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 
 **Human Workflow:**
 
-* Invoke PAW-R2A Impact Analysis Agent
+* Agent orchestrates R2 activities automatically after R1 completion
 * Review `ImpactAnalysis.md` to understand system-wide effects, design fit, user impact
-* Invoke PAW-R2B Gap Analysis Agent
 * Review `GapAnalysis.md` findings in each category
 * Review positive observations section
 * Validate categorization feels appropriate (not inflated)
-* Add domain-specific concerns the agents might have missed
+* Add domain-specific concerns the agent might have missed
 * Proceed to Stage R3 to generate feedback
 
 ---
 
-### Stage R3 — Feedback Generation
+### Stage R3 — Output
 
-**Goal:** Generate comprehensive, well-structured review comments with rationale and critical assessment
+**Goal:** Generate comprehensive review comments, critically assess them, and create GitHub pending review
 
-**Agents:**
-* PAW-R3A Feedback Generator
-* PAW-R3B Feedback Critic
+**Skills:** `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
 
 **Inputs:**
 * All prior artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md)
+* CrossRepoAnalysis.md (multi-repo reviews only)
 
 **Outputs:**
-* `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with rationale and assessment sections (for reference)
-* **GitHub pending review** (GitHub context only) – Draft review with inline comments posted but not submitted
+* `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
+* **GitHub pending review** (GitHub context only) – Draft review with filtered comments (only those marked ready after critique)
 
 **Process:**
 
-1. **Generate comprehensive feedback** (PAW-R3A Feedback Generator)
+The Output stage uses an **iterative feedback-critique pattern** to refine comments before posting:
+
+1. **Initial Feedback Pass** (`paw-review-feedback`)
    - Batch related findings (One Issue, One Comment policy)
    - Transform all findings from GapAnalysis.md into review comments
-   - Include Must, Should, and Could items
+   - Include Must, Should, and Could items; incorporate CrossRepoAnalysis.md gaps for multi-repo
    - Provide specific, actionable suggestions with code examples
-   - **Add Rationale sections** to each comment in ReviewComments.md:
+   - Add **Rationale sections** to each comment:
      - Evidence: file:line references
      - Baseline Pattern: from CodeResearch.md
      - Impact: what could go wrong
      - Best Practice: citation from established guidelines
-   - Distinguish inline comments (line-specific) from thread comments (file/concept-level)
+   - Create `ReviewComments.md` with status: `draft`
+   - **Does NOT post to GitHub** in this pass
 
-2. **Create ReviewComments.md and pending review**
-   - Save comprehensive ReviewComments.md with all feedback, rationale sections
-   - **GitHub context**: Create pending review using GitHub MCP tools
-     - Post inline comments with text and code suggestions only (no rationale)
-     - Rationale sections remain in ReviewComments.md
-   - **Non-GitHub context**: All feedback in ReviewComments.md with manual posting instructions
-
-3. **Critical assessment** (PAW-R3B Feedback Critic)
-   - Add **Assessment sections** to each comment in ReviewComments.md (local only, never posted):
+2. **Critical Assessment** (`paw-review-critic`)
+   - Read and evaluate each comment
+   - Add **Assessment sections** (local only, never posted):
      - Usefulness: Does this truly improve code quality?
      - Accuracy: Are evidence references correct?
      - Alternative Perspectives: What might the reviewer have missed?
      - Trade-offs: Valid reasons for current approach?
-     - Recommendation: Include/modify/skip?
-   - Assessments help reviewer make informed decisions
-   - **Never post assessments to GitHub or external platforms**
+     - Recommendation: Include/Modify/Skip
+   - Generate Iteration Summary with skip and modify recommendations
 
-4. **Support Q&A and tone adjustment**
-   - Answer reviewer questions based on all artifacts
-   - Regenerate pending review with adjusted tone if requested
-   - Preserve IDs, evidence, rationale when adjusting tone
+3. **Critique Response Pass** (`paw-review-feedback`)
+   - Detect Assessment sections → enter Critique Response Mode
+   - For comments marked "Modify": Add `**Updated Comment:**` with improvements
+   - For comments marked "Skip": Note `**Final**: Skipped per critique`
+   - For comments marked "Include": Note `**Final**: ✓ Ready for GitHub posting`
+   - Update ReviewComments.md status to: `finalized`
+
+4. **GitHub Posting** (`paw-review-github`, GitHub PRs only)
+   - Filter to only comments marked "Ready for GitHub posting"
+   - Create pending review with filtered comments
+   - Update ReviewComments.md with posted status and review IDs
+   - Skipped comments remain in artifact for reference but are NOT posted
+   - **Non-GitHub context**: Provides manual posting instructions instead
 
 **Human Workflow:**
 
-* Invoke PAW-R3A Feedback Generator
-  - Creates ReviewComments.md with rationale sections
-  - GitHub: Creates pending review with inline comments (text/suggestions only)
-  - Non-GitHub: Provides manual posting instructions
-* Invoke PAW-R3B Feedback Critic
-  - Adds assessment sections to ReviewComments.md
+* Agent orchestrates all R3 activities automatically after R2 completion
 * **GitHub context**: 
   - Open PR in GitHub Files Changed tab
-  - View all pending review comments
+  - View pending review comments (only those that passed critique)
   - Edit comment text to adjust tone/wording
-  - Delete unwanted comments that don't fit context
-  - Add new comments if needed
+  - Delete unwanted comments; manually add skipped comments if you disagree with critique
+  - Consult ReviewComments.md for full comment history (original → assessment → updated)
   - Submit review when satisfied (Approve/Comment/Request Changes)
 * **Non-GitHub context**:
   - Use ReviewComments.md to manually post to review platform
   - Post only comment text and suggestions (keep rationale/assessment for reference)
-* **Optional**: Ask agent to adjust tone - regenerates pending review with new tone
-* **Optional**: Ask agent questions about findings - answers based on artifacts
+* **Optional**: Ask agent to adjust tone – regenerates comments with new tone
+* **Optional**: Ask agent questions about findings – answers based on artifacts
 
 ---
 
@@ -254,35 +357,11 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 - Flags (CI failures present, breaking changes suspected)
 - Metadata (created timestamp, git commit SHA, reviewer)
 
-**Purpose:** Single source of truth for all review parameters; read first by all downstream agents; updated when new information discovered.
-
----
-
-### prompts/code-research.prompt.md
-
-Generated guidance for PAW-R1B Baseline Researcher to analyze pre-change system state.
-
-**Contents:**
-- Target agent: "PAW-R1B Baseline Researcher"
-- PR/Branch title and context
-- Base branch and commit SHA
-- List of changed files
-- Instructions for checking out base commit
-- Question areas (adapted based on changes):
-  - Baseline Behavior: How modules functioned before changes
-  - Integration Points: Component dependencies
-  - Patterns & Conventions: Established patterns
-  - Performance Context: For sensitive code
-  - Test Coverage: Existing tests and patterns
-  - Specific Ambiguities: Questions from initial analysis
-
-**Purpose:** Flexible guidance (not rigid template) to help baseline researcher identify critical questions about pre-change system. The PAW-R1B Baseline Researcher defines its own output format, so the prompt does not include output format instructions.
+**Purpose:** Single source of truth for all review parameters; read first by all downstream stages; updated when new information discovered.
 
 ---
 
 ### CodeResearch.md
-
-Pre-change baseline understanding created by PAW-R1B Baseline Researcher analyzing codebase at base commit.
 
 **Contents:**
 - How system worked before changes (behavioral view)
@@ -394,7 +473,11 @@ Findings organized by severity and category, with positive observations.
 
 ### ReviewComments.md
 
-Complete review feedback with rationale and assessment sections (for reviewer reference).
+Complete review feedback with full comment history showing the evolution from original to posted.
+
+**Status Field:**
+- `draft` — Initial feedback pass complete, awaiting critique
+- `finalized` — Critique response complete, ready for GitHub posting
 
 **Structure:**
 
@@ -406,14 +489,13 @@ Complete review feedback with rationale and assessment sections (for reviewer re
 **Head Branch**: <head>
 **Review Date**: <date>
 **Reviewer**: <name>
-**Pending Review ID**: <id> (GitHub) OR "Manual posting required" (non-GitHub)
+**Status**: draft | finalized
+**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (non-GitHub)
 
-## Summary Comment
+## Summary
 
-<Brief, positive opening acknowledging the work>
-<Overview of feedback scope>
-
-**Findings**: X Must-address items, Y Should-address items, Z optional suggestions
+**Total Findings**: X Must-address, Y Should-address, Z optional suggestions
+**Posted**: N comments | **Skipped**: M comments (per critique)
 
 Full review artifacts: `.paw/reviews/<identifier>/`
 
@@ -426,174 +508,94 @@ Full review artifacts: `.paw/reviews/<identifier>/`
 **Type:** Must
 **Category:** Safety
 
-<Comment text explaining the issue>
+<Original comment text explaining the issue>
 
 **Suggestion:**
 ```typescript
-// Proposed fix or approach
+// Original proposed fix
 ```
 
 **Rationale:**
 - **Evidence**: `file.ts:45` shows unchecked null access
-- **Baseline Pattern**: CodeResearch.md (`file.ts:100`) shows standard null checks used elsewhere
-- **Impact**: Potential null pointer exception causing crash in production
-- **Best Practice**: review-research-notes.md § Safety - "Always validate inputs"
+- **Baseline Pattern**: CodeResearch.md (`file.ts:100`) shows standard null checks
+- **Impact**: Potential null pointer exception in production
+- **Best Practice**: "Always validate inputs before use"
 
-**Assessment:**
-- **Usefulness**: High - Prevents null pointer exception
+**Assessment:** (added by critic)
+- **Usefulness**: High - Prevents crash
 - **Accuracy**: Evidence references confirmed
 - **Alternative Perspective**: None identified
 - **Trade-offs**: No valid reason to skip null check
 - **Recommendation**: Include as-is
 
-**Posted**: ✓ Pending review comment ID: <id> (GitHub) OR ⚠ Post to `path/to/file.ts:45-50` (non-GitHub)
+**Updated Comment:** (added if critic recommended modification)
+<Refined comment text addressing critique feedback>
+
+**Updated Suggestion:** (if suggestion was modified)
+```typescript
+// Improved proposed fix
+```
+
+**Final**: ✓ Ready for GitHub posting
+**Posted**: ✓ Pending review comment ID: <id>
 
 ---
 
-## Thread Comments
+### File: `path/to/another.ts` | Lines: 78-82
 
-### File: `path/to/file.ts` (Overall Architecture)
+**Type:** Could
+**Category:** Style
 
-**Type:** Should
-**Category:** Maintainability
-
-<Discussion about broader pattern>
+<Original suggestion about naming convention>
 
 **Rationale:**
 ...
 
 **Assessment:**
+- **Usefulness**: Low - Stylistic preference
+- **Accuracy**: Valid but minor
+- **Trade-offs**: Current naming follows existing pattern
+- **Recommendation**: Skip
+
+**Final**: Skipped per critique
+**Posted**: — (not posted)
+
+---
+
+## Thread Comments
 ...
 
-**Posted**: ⚠ Add manually as file-level comment
-
----
-
 ## Questions for Author
-
-1. <Question about intent or design decision>
-2. <Clarification needed on edge case>
+...
 ```
+
+**Comment Evolution:**
+
+Each comment shows its complete history:
+1. **Original** — Initial feedback from first pass
+2. **Assessment** — Critic evaluation (Include/Modify/Skip recommendation)
+3. **Updated** — Refined version if modification was recommended
+4. **Final** — Ready for posting or skipped per critique
+5. **Posted** — GitHub pending review ID (after GitHub posting)
 
 **Key Sections:**
-- **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice citation
-- **Assessment** (local only, not posted): Usefulness, Accuracy, Alternative Perspectives, Trade-offs, Recommendation
-- **Posted Status**: Tracks what's in pending review vs needs manual posting
+- **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice
+- **Assessment** (local only, not posted): Usefulness, Accuracy, Trade-offs, Recommendation
+- **Updated** (if modified): Refined comment/suggestion addressing critique
+- **Final**: Posting status (`✓ Ready for GitHub posting` or `Skipped per critique`)
+- **Posted**: Tracks what's in pending review vs skipped
 
 **Purpose:** 
-- Comprehensive reference with full context for decision-making
-- Rationale/assessment help reviewer decide what to include
-- For GitHub: supplements pending review with reasoning
+- Complete reference with full comment history for decision-making
+- Shows evolution: original → assessment → updated → posted
+- Human can manually add skipped comments if they disagree with critique
 - For non-GitHub: source for manual posting with instructions
-
----
-
-### ReviewComments.md
-
-Reference copy of all review feedback (actual comments are in GitHub pending review).
-
-**Structure:**
-
-```markdown
-# Review Comments for PR #[number]
-
-**Note:** These comments have been posted as a pending review on GitHub. 
-Review and edit them at: [PR review URL]
-
-## Summary Comment (Pending review body)
-
-[Opening acknowledgment]
-
-[Brief overview of feedback]
-
-**Findings:** X Must-address items, Y Should-address items, Z optional suggestions
-
-Full review artifacts: `.paw/reviews/PR-[number]/`
-
----
-
-## Inline Comments (Posted to pending review)
-
-These comments are posted to specific lines in the GitHub pending review.
-
-### `path/to/file.ts` Line 123-127
-
-**Type:** Must | Should | Could  
-**Category:** [Correctness | Safety | Testing | etc.]
-
-[Specific comment about this code block]
-
-**Suggestion:**
-```[language]
-// Proposed fix or approach
-```
-
-**Posted:** ✓ (pending review comment ID: [id])
-
-### `path/to/another.ts` Line 45
-
-**Type:** Should  
-**Category:** Testing
-
-[Comment about missing test coverage for this specific function]
-
-**Posted:** ✓ (pending review comment ID: [id])
-
----
-
-## Thread Comments (Not yet supported in pending reviews)
-
-File-level or PR-level comments to add manually if needed.
-
-### File: `path/to/file.ts`
-
-**Type:** Must  
-**Category:** Security
-
-[Discussion about overall approach to security in this file]
-
-### General: Architecture
-
-**Type:** Should  
-**Category:** Maintainability
-
-[Broader concern about the architectural approach across multiple files]
-
----
-
-## Questions
-
-1. [Clarifying question about intent - add manually to review or as inline comment]
-2. [Question about edge case or design decision]
-```
-
-**Comment Type Guidance:**
-
-- **Inline comments** – Posted directly to specific lines via pending review:
-  - Logic errors in a specific function
-  - Missing null check at a particular location
-  - Incorrect usage of an API
-  - Performance issue in a specific loop
-  - Missing test for a specific code path
-
-- **Thread comments** – Add manually to the review body or as follow-up:
-  - Overall file organization or structure
-  - Missing integration tests across components
-  - Architectural concerns affecting multiple files
-  - Consistent pattern violations throughout
-  - Cross-cutting concerns (logging, error handling approach)
-
-**Purpose:** 
-- Serves as reference copy of all generated comments
-- Documents what was posted to the pending review
-- Includes thread-level comments that need manual posting
-- Can be used to regenerate comments if pending review is deleted
 
 ---
 
 ## Guardrails
 
-### Review Understanding Agent
+### Understanding Stage
 
 **Documentation, Not Critique:**
 - NEVER critique or suggest improvements during understanding phase
@@ -616,7 +618,7 @@ File-level or PR-level comments to add manually if needed.
 
 ---
 
-### Review Evaluation Agent
+### Evaluation Stage
 
 **Evidence-Based Analysis:**
 - NEVER inflate severity to justify more comments
@@ -647,7 +649,7 @@ File-level or PR-level comments to add manually if needed.
 
 ---
 
-### Review Feedback Agent
+### Feedback Stage
 
 **Human Control:**
 - NEVER submit the review automatically; always create as pending
@@ -736,20 +738,21 @@ Each stage produces artifacts that should meet these quality standards:
 ### Reviewing a Medium-Sized PR (200-500 lines)
 
 **Stage R1 (10-15 minutes):**
-1. Invoke Review Understanding Agent with PR number
-2. Read generated `PRContext.md` and `DerivedSpec.md`
-3. Verify understanding matches your reading of the PR
-4. Note any open questions in `DerivedSpec.md`
+1. Invoke `/paw-review <PR-number>` in Copilot Chat
+2. Agent runs Understanding and Baseline stages automatically
+3. Read generated `ReviewContext.md` and `DerivedSpec.md`
+4. Verify understanding matches your reading of the PR
+5. Note any open questions in `DerivedSpec.md`
 
 **Stage R2 (15-25 minutes):**
-1. Invoke Review Evaluation Agent
+1. Agent continues to Evaluation stage automatically
 2. Read `ImpactAnalysis.md` to understand system effects
 3. Review findings in `GapAnalysis.md`
 4. Validate categorization feels appropriate
 5. Add any domain-specific concerns
 
 **Stage R3 (10-20 minutes):**
-1. Invoke Review Feedback Agent to create pending review
+1. Agent continues to Feedback stage automatically
 2. **Agent creates pending review** with all inline comments via GitHub MCP tools
 3. **Agent saves** ReviewComments.md as reference
 4. **Open the PR in GitHub** to view pending review
@@ -767,21 +770,22 @@ Each stage produces artifacts that should meet these quality standards:
 ### Reviewing a Large PR (1000+ lines)
 
 **Stage R1 (20-30 minutes):**
-1. Start with Review Understanding Agent
-2. Review change categorization
-3. If mechanical changes dominate, note for quick acknowledgment
-4. Focus on semantic changes for deep review
-5. Consider suggesting PR split if too complex
+1. Invoke `/paw-review <PR-number>`
+2. Agent runs all R1 stages automatically
+3. Review change categorization
+4. If mechanical changes dominate, note for quick acknowledgment
+5. Focus on semantic changes for deep review
+6. Consider suggesting PR split if too complex
 
 **Stage R2 (30-45 minutes):**
-1. Run Review Evaluation Agent
+1. Agent continues to Evaluation automatically
 2. Focus on high-risk areas (auth, data, public APIs)
 3. Check for missing tests on complex logic
 4. Review integration points carefully
 5. Note if "too large to review thoroughly"
 
 **Stage R3 (15-25 minutes):**
-1. Generate comprehensive feedback with agent
+1. Agent generates comprehensive feedback automatically
 2. Agent creates pending review with all comments
 3. **Open PR in GitHub** to review all pending comments
 4. **Edit or delete** comments to fit PR scope and relationship

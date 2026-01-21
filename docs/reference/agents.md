@@ -11,7 +11,7 @@ Agents follow the `PAW-XX` naming scheme:
 - **PAW-03x** — Implementation stage agents
 - **PAW-04** — Documentation agent
 - **PAW-05** — PR agent
-- **PAW-Rx** — Review workflow agents
+- **PAW Review** — Review workflow agent (skills-based)
 - **PAW-X** — Utility agents
 
 ---
@@ -121,69 +121,58 @@ Agents follow the `PAW-XX` naming scheme:
 
 ---
 
-## Review Workflow Agents
+## Review Workflow
 
-### PAW-R1A Understanding
+### PAW Review
 
-**Purpose:** Analyze PR changes and derive specification from implementation.
+**Purpose:** Execute the complete PAW Review workflow using dynamically loaded skills.
 
-**Produces:**
+**Invocation:** `/paw-review <PR-number-or-URL>`
 
-- `ReviewContext.md` — PR metadata and parameters
-- `prompts/code-research.prompt.md` — Baseline research questions
-- `DerivedSpec.md` — Reverse-engineered specification
+**Architecture:** The PAW Review agent uses a skills-based architecture:
 
-### PAW-R1B Baseline Researcher
+1. Loads the `paw-review-workflow` skill for orchestration
+2. Executes activity skills via subagents for each stage
+3. Produces all review artifacts automatically
 
-**Purpose:** Document how the system worked before changes.
+**Skills Used:**
 
-**Produces:**
+| Skill | Type | Stage | Artifacts |
+|-------|------|-------|-----------|
+| `paw-review-workflow` | Workflow | — | Orchestrates all stages |
+| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
+| `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
+| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
+| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
+| `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
+| `paw-review-github` | Activity | Output | GitHub pending review |
 
-- `CodeResearch.md` — Pre-change baseline understanding
+**Workflow Stages:**
 
-**Focus:** Analyzes codebase at base commit (pre-change state).
+1. **Understanding Stage**
+   - Analyzes PR changes and creates ReviewContext.md
+   - Researches pre-change baseline at base commit
+   - Derives specification from implementation
 
-### PAW-R2A Impact Analyzer
+2. **Evaluation Stage**
+   - Identifies system-wide impacts and breaking changes
+   - Finds gaps across correctness, safety, testing, and quality
+   - Categorizes findings as Must/Should/Could
+   - Correlates findings across repositories (multi-repo reviews)
 
-**Purpose:** Identify integration points, breaking changes, and system-wide effects.
+3. **Output Stage** (4-step feedback-critique iteration)
+   - **Initial feedback**: Generates draft comments with rationale
+   - **Critique**: Adds assessment sections with Include/Modify/Skip recommendations
+   - **Critique response**: Updates comments per recommendations, marks final status
+   - **GitHub posting**: Creates pending review with only approved comments
 
-**Produces:**
+**Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
 
-- `ImpactAnalysis.md` — System-wide effects and risk assessment
+**Human Control:** Pending review is never auto-submitted. User reviews comments, edits/deletes as needed, consults ReviewComments.md for full context, then submits manually.
 
-### PAW-R2B Gap Analyzer
-
-**Purpose:** Systematically identify issues across quality dimensions.
-
-**Produces:**
-
-- `GapAnalysis.md` — Findings with Must/Should/Could categorization
-
-**Categories:**
-
-- Correctness, Safety & Security, Testing
-- Maintainability, Performance, Complexity
-- Positive Observations
-
-### PAW-R3A Feedback Generator
-
-**Purpose:** Transform findings into structured review comments.
-
-**Produces:**
-
-- `ReviewComments.md` — Complete feedback with rationale
-- GitHub pending review (GitHub context)
-
-### PAW-R3B Feedback Critic
-
-**Purpose:** Critically assess generated comments for quality.
-
-**Adds:**
-
-- Assessment sections to ReviewComments.md
-- Usefulness, accuracy, and trade-off analysis
-
-**Note:** Assessments are never posted—for reviewer reference only.
+**Note:** The six PAW-R* agents (R1A, R1B, R2A, R2B, R3A, R3B) have been replaced by this unified skills-based workflow.
 
 ---
 
@@ -218,4 +207,4 @@ PAW supports three handoff modes that control stage transitions:
 
 - [Artifacts Reference](artifacts.md) — Artifact descriptions
 - [Implementation Workflow](../specification/implementation.md) — How agents work together
-- [Review Workflow](../specification/review.md) — Review workflow agents in action
+- [Review Workflow](../specification/review.md) — Skills-based review workflow

@@ -188,7 +188,8 @@ suite('Agent Installation', () => {
       const result = await installAgents(mockContext);
       
       assert.strictEqual(result.errors.length, 0, 'Should not have errors');
-      assert.ok(result.filesInstalled.length >= 15, 'Should install at least 15 agents');
+      // 10 agents (PAW-01A through PAW-05, PAW-X Status, PAW Review) + 1 prompt file
+      assert.ok(result.filesInstalled.length >= 11, 'Should install at least 11 files (10 agents + 1 prompt)');
       
       // Verify files exist on disk
       for (const filename of result.filesInstalled) {

@@ -1,153 +1,202 @@
 ---
-description: 'PAW Review Gap Analysis Agent - Identify correctness, safety, testing, and quality gaps'
+name: paw-review-gap
+description: Systematically identifies gaps in correctness, safety, testing, and maintainability, categorizing findings by severity.
 ---
 
-# Gap Analysis Agent
+# Gap Analysis Activity Skill
 
-You systematically identify gaps and issues across correctness, safety, testing, and maintainability dimensions, categorizing findings as Must/Should/Could based on evidence.
+Systematically identify gaps and issues across correctness, safety, testing, and maintainability dimensions, categorizing findings as Must/Should/Could based on evidence.
 
-## Start / Initial Response
+> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
 
-Look for required artifacts in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`:
-- Phase 1: `ReviewContext.md`, `CodeResearch.md`, `DerivedSpec.md`
-- Phase 2: `ImpactAnalysis.md`
-
-If any prerequisite artifact is missing, STOP and inform the user which stage must be completed first.
-
-Once all prerequisites are confirmed, begin gap analysis.
-
-## Core Responsibilities
+## Responsibilities
 
 - Identify correctness issues (logic errors, edge cases, error handling)
 - Find safety and security gaps (input validation, permission checks)
 - Assess test coverage quantitatively (if reports available) and qualitatively (always)
 - Evaluate maintainability (code duplication, pattern adherence, documentation)
 - Categorize all findings as Must/Should/Could with evidence
-- Produce comprehensive `GapAnalysis.md` artifact
+- Recognize positive observations (mentoring value)
+- Produce comprehensive GapAnalysis.md artifact
 
-## Process Steps
+## Non-Responsibilities
 
-### 1. Correctness Analysis
+- System-wide impact analysis (handled by paw-review-impact)
+- Generating review comments (Output stage skills)
+- Workflow orchestration (handled by workflow skill)
+
+## Prerequisites
+
+Verify these artifacts exist at `.paw/reviews/<identifier>/`:
+- Phase 1: `ReviewContext.md`, `CodeResearch.md`, `DerivedSpec.md`
+- Phase 2: `ImpactAnalysis.md`
+
+If any artifact is missing, report the blocker and do not proceed.
+
+## Step 1: Correctness Analysis
 
 Identify logic and implementation errors:
 
-**Logic Anomalies:**
+### Logic Anomalies
+
 - Incorrect conditional logic (wrong operators, inverted conditions)
 - Off-by-one errors in loops or array access
 - Race conditions or concurrency issues
 - State management inconsistencies
 
-**Edge Case Handling:**
+### Edge Case Handling
+
 - Missing null/undefined checks
 - Empty array/object handling gaps
 - Boundary value issues (min/max, zero, negative)
 - String edge cases (empty, very long, special characters)
 
-**Error Handling Gaps:**
+### Error Handling Gaps
+
 - Missing try/catch blocks for operations that can fail
 - Error swallowing without logging
 - Unchecked promise rejections
 - Missing error propagation
 
-**State Transitions:**
+### State Transitions
+
 - Invalid state transitions allowed
 - Missing state validation
 - Inconsistent state updates
 
+### Cross-Repository Consistency
+
+When reviewing PRs across multiple repositories, also check:
+
+**Version Consistency:**
+- Package versions compatible across repos (no conflicting dependency ranges)
+- Shared type definitions match (same version of `@types/` packages)
+- API version expectations aligned
+
+**Coordinated Changes:**
+- API changes in one repo have corresponding consumer updates in other repos
+- Schema changes propagated to all consumers
+- Missing coordinated updates flagged as gaps
+
+**Timing Dependencies:**
+- Deployment order matters (provider must deploy before consumer)
+- Feature flag coordination required
+- Database migration sequences across repos
+
+**Detection:**
+Cross-repo consistency applies when:
+- Multiple artifact directories exist (`.paw/reviews/PR-<number>-<repo-slug>/`)
+- ReviewContext.md contains `related_prs` entries
+- ImpactAnalysis.md contains Cross-Repository Dependencies section
+
 **Output:**
+Add "Cross-Repository Gaps" subsection in GapAnalysis.md with coordinated change issues.
+
+### Output
+
 Correctness findings with file:line references, issue descriptions, and evidence
 
-### 2. Safety & Security Analysis
+## Step 2: Safety & Security Analysis
 
 Find security vulnerabilities and risks:
 
-**Input Validation:**
+### Input Validation
+
 - User input reaching sensitive operations without validation
 - Missing sanitization of user-provided data
 - Type coercion vulnerabilities
 - Length/size checks missing
 
-**Permission & Authorization:**
+### Permission & Authorization
+
 - Missing permission checks on operations
 - Auth middleware bypassed
 - Role-based access control gaps
 - Resource ownership checks missing
 
-**Data Exposure:**
+### Data Exposure
+
 - Sensitive data logged or returned in responses
 - PII handling without protection
 - Secrets in code or configuration
 - Overly broad data access
 
-**Injection Risks:**
+### Injection Risks
+
 - SQL injection (raw queries with user input)
 - XSS (unescaped user content)
 - Command injection
 - Path traversal
 
-**Cryptography:**
+### Cryptography
+
 - Weak algorithms or key sizes
 - Missing encryption for sensitive data
 - Insecure random number generation
 - Certificate validation disabled
 
-**Output:**
+### Output
+
 Safety/security findings with severity, file:line references, and concrete risks
 
-### 3. Testing Analysis
+## Step 3: Testing Analysis
 
 Assess test coverage and quality:
 
-**Quantitative Coverage (if available):**
-- Parse coverage reports: `coverage/summary.json`, `lcov.info`, `coverage.xml`
-- Extract line coverage percentage
-- Extract branch coverage percentage
-- Extract function coverage percentage
-- Note: Coverage reports are OPTIONAL - proceed with qualitative analysis if unavailable
+### Quantitative Coverage (if available)
 
-**Qualitative Coverage:**
+- Look for `coverage/summary.json`, `lcov.info`, `coverage.xml` in repo
+- Parse JSON: `coverage.summary.total.lines.pct`, `branches.pct`, `functions.pct`
+- Parse LCOV: `LF`, `LH` (lines found/hit), `BRF`, `BRH` (branches)
+- If absent: Note unavailable and proceed with qualitative
 
-*Depth Assessment:*
+### Qualitative Coverage
+
+**Depth Assessment:**
 - Do tests verify edge cases (null, empty, boundary values)?
 - Are error paths tested (exceptions, failures)?
 - Are different code branches exercised?
 - Do tests verify boundary conditions?
 
-*Breadth Assessment:*
+**Breadth Assessment:**
 - Are integration points tested?
 - Do tests cover user scenarios end-to-end?
 - Are cross-component interactions tested?
 - Is there happy path AND sad path coverage?
 
-*Quality Assessment:*
+**Quality Assessment:**
 - Do tests verify actual behavior vs trivially pass?
 - Are assertions meaningful (not just "doesn't crash")?
 - Do tests check side effects and state changes?
 - Are tests clear about what they're verifying?
 
-**Test Effectiveness:**
+### Test Effectiveness
+
 - Will these tests actually fail when the code is broken?
 - Are assertions meaningful or trivially passing?
 - Is there risk of false positives (tests fail when code is correct)?
 - Do tests verify behavior or just exercise code?
 
-**Test Maintainability:**
+### Test Maintainability
+
 - Tests are code too - are they maintainable?
 - Are tests overly complex or fragile?
 - Do tests have good names explaining what they verify?
 
-**Test Design:**
+### Test Design
+
 - Are tests separated appropriately between test methods?
 - Do tests make simple, clear assertions?
 - Are tests testing one thing or too many things?
 
-**Heuristics for Test Quality:**
+### Heuristics for Test Quality
+
 - Flag tests with no assertions (or only assert true)
 - Note overly complex test setup (may indicate design issue)
 - Check if test names clearly describe what's being tested
 - Identify tests that would pass even with bugs in code
 
-**Gap Detection:**
+### Gap Detection
 
 Compare code changes to test changes:
 ```
@@ -159,66 +208,67 @@ Count new conditionals/branches:
 - Each new `switch/case` adds cases to test
 - Each new loop adds edge cases (empty, one, many)
 
-**Specific Test Gaps:**
+### Specific Test Gaps
+
 - New functions without corresponding tests
 - Modified functions without updated tests
 - New error handling paths untested
 - New branches/conditions without branch tests
 
-**Output:**
+### Output
+
 Test coverage section with:
 - Quantitative metrics (if available)
 - Qualitative depth/breadth/quality assessment
 - Specific coverage gaps with file:line references
 - Overall assessment of test adequacy
 
-### 4. Maintainability Analysis
+## Step 4: Maintainability Analysis
 
 Evaluate code quality and long-term maintenance:
 
-**Code Duplication:**
+### Code Duplication
+
 - Repeated logic that could be extracted
 - Copy-pasted code blocks
 - Similar patterns across files without shared abstraction
 
-**Pattern Adherence:**
+### Pattern Adherence
+
 - Divergence from established patterns (from CodeResearch.md)
 - Inconsistent naming conventions
 - Architectural patterns violated
 - Style guide deviations
 
-**Code Clarity:**
+### Code Clarity
+
 - Confusing variable/function names
 - Complex nested logic without explanation
 - Magic numbers or strings without constants
 - Unclear control flow
 
-**Documentation Gaps:**
+### Documentation Gaps
+
 - Complex algorithms without comments
 - Public APIs without documentation
 - Unclear function purposes
 - Missing usage examples for non-obvious code
 
-**User-Facing Documentation:**
+### User-Facing Documentation
+
 - Do README files need updates?
 - Are API docs updated for public interface changes?
 - Do new features have usage documentation?
 
-**Orphaned Documentation:**
+### Orphaned Documentation
+
 - When code is deleted, is related documentation also removed?
 - Are there docs referencing removed code/features?
 - Do code comments reference deleted functions?
 
-**Documentation vs Comments:**
-- Public APIs: Should have documentation (what it does, how to use)
-- Comments: Should explain why, not what (internal reasoning)
+### Comment Quality Assessment
 
-**Heuristics for Documentation:**
-- Check if public API changes need README updates
-- Check if deleted code has corresponding docs to remove
-- Note missing API documentation for new public interfaces
-
-**Comment Quality Assessment:**
+**WHY vs WHAT:**
 - Do comments explain WHY not WHAT?
 - Are comments necessary or is code self-explanatory?
 - Should code be simplified instead of commented?
@@ -236,25 +286,28 @@ Evaluate code quality and long-term maintenance:
 - Gotchas or surprising behavior warnings
 - External context (why workaround needed, ticket references)
 
-**Heuristics for Comment Quality:**
+**Heuristics:**
 - Flag comments that just restate code: `// set x to 5` for `x = 5`
 - Flag long comment blocks on simple code (simplify code instead)
 - Note when complex code lacks explanatory comments
 - Check if comments explain WHY for non-obvious decisions
 
-**Output:**
+### Output
+
 Maintainability findings with improvement suggestions, including comment quality assessment
 
-### 5. Performance Analysis
+## Step 5: Performance Analysis
 
 Identify inefficient code patterns:
 
-**Algorithmic Inefficiency:**
+### Algorithmic Inefficiency
+
 - Worse complexity than baseline (O(n²) when O(n) was used before)
 - Unnecessary iterations or transformations
 - Inefficient data structure choices
 
-**Resource Usage:**
+### Resource Usage
+
 - Missing indexes for database queries
 - Lack of caching for repeated operations
 - Unbounded operations (no pagination, no limits)
@@ -262,14 +315,16 @@ Identify inefficient code patterns:
 
 **Note:** Deep performance analysis was done in Impact Analysis. Here, focus on obvious inefficiencies and code-level improvements.
 
-**Output:**
+### Output
+
 Performance gap findings (if any obvious issues exist)
 
-### 6. Categorize Findings
+## Step 6: Categorize Findings
 
 Apply Must/Should/Could categorization:
 
-**Must - Correctness/Safety/Security with Concrete Impact:**
+### Must - Correctness/Safety/Security with Concrete Impact
+
 - Null pointer / undefined access that will crash
 - Unchecked user input reaching SQL queries or file operations
 - Permission bypass allowing unauthorized actions
@@ -279,7 +334,8 @@ Apply Must/Should/Could categorization:
 
 **Evidence Required:** Concrete impact (not just "could cause issues")
 
-**Should - Quality/Completeness Improvements:**
+### Should - Quality/Completeness Improvements
+
 - Missing tests for new code paths (but no critical path untested)
 - Missing error handling for expected failures
 - Code needing refactor or documentation for clarity
@@ -290,27 +346,26 @@ Apply Must/Should/Could categorization:
 
 **Rationale Required:** Why this improves robustness or quality
 
-**Over-engineering Detection:**
+### Over-engineering Detection
+
 - Is code more generic than current requirements need?
 - Are abstractions solving problems that don't exist yet?
 - Is developer building for speculative future use cases?
 - Are there configuration options that aren't actually needed?
 - Is complexity added "just in case" vs for actual requirements?
 
-**Guiding Principle:**
-Solve the problem that needs to be solved now, not the problem that might need to be solved in the future.
+**Guiding Principle:** Solve the problem that needs to be solved now, not the problem that might need to be solved in the future.
 
-**Heuristics for Over-engineering:**
+**Heuristics:**
 - Flag generic interfaces with only one implementation
 - Note parameterization beyond current use cases
 - Identify "pluggable" architectures without multiple plugins
 - Check for abstraction layers without clear current need
 
-**Categorization:**
-- Should: Over-engineering that adds maintenance burden
-- Could: Suggest simplifying to just what's needed now
+**Categorization:** Should (adds maintenance burden) or Could (suggest simplifying)
 
-**Could - Optional Enhancements:**
+### Could - Optional Enhancements
+
 - Code duplication that could be extracted (but not causing bugs)
 - Naming improvements for marginal clarity gains
 - Additional edge case tests beyond common scenarios
@@ -319,17 +374,19 @@ Solve the problem that needs to be solved now, not the problem that might need t
 
 **Benefit Required:** Clear benefit stated (not just "nice to have")
 
-**Categorization Rules:**
+### Categorization Rules
+
 - **Don't inflate:** Style issues are not Must without concrete impact
 - **Evidence-based:** Every Must/Should needs file:line + rationale
 - **Informed by baseline:** Compare to patterns in CodeResearch.md
 - **Severity != Category:** High-severity Should is not auto-promoted to Must
 
-### 7. Identify Positive Observations
+## Step 7: Identify Positive Observations
 
 Recognize what the developer did well (mentoring value):
 
-**Good Practices to Commend:**
+### Good Practices to Commend
+
 - Well-designed code that's easy to understand
 - Comprehensive test coverage (especially edge cases)
 - Clear, meaningful naming
@@ -339,49 +396,56 @@ Recognize what the developer did well (mentoring value):
 - Clear documentation and comments
 - Thoughtful architectural decisions
 
-**Recognition Guidelines:**
+### Recognition Guidelines
+
 - Be specific about what was done well (not generic praise)
 - Highlight practices that should be emulated
 - Note when developer addressed difficult problems elegantly
 - Recognize attention to edge cases, testing, or maintainability
 - Acknowledge when feedback from previous reviews was incorporated
 
-**Output:**
-Positive observations to include in GapAnalysis.md before critical findings, to balance feedback
+### Output
 
-### 8. Add Style & Conventions Analysis
+Positive observations to include in GapAnalysis.md before critical findings
+
+## Step 8: Style & Conventions Analysis
 
 Evaluate adherence to style guidelines:
 
-**Style Guide Compliance:**
+### Style Guide Compliance
+
 - Is code following project style guide? (language-specific)
 - Are there style violations that should be fixed?
 - Are style preferences (vs requirements) marked as "Nit:"?
 
-**Mixed Changes Anti-pattern:**
+### Mixed Changes Anti-pattern
+
 - Are style changes mixed with functional changes?
 - Should formatting/style be in separate commit/PR?
 - Note: "Makes it hard to see what is being changed"
 
-**Style vs Preference:**
+### Style vs Preference
+
 - Style guide requirements = Must/Should fix
 - Personal preferences = "Nit:" (don't block on these)
 - When no rule exists: maintain consistency with existing code
 
-**Heuristics:**
+### Heuristics
+
 - Check for common style violations (indentation, naming conventions)
 - Identify large formatting changes mixed with logic changes
 - Note when new code diverges from style guide
 - Suggest extracting pure refactoring to separate PR if large
 
-**Output:**
+### Output
+
 Style findings categorized as:
 - Must/Should: Style guide violations
 - Nit: Stylistic preferences that would improve code but aren't mandatory
 
-### 9. Generate GapAnalysis.md
+## Step 9: Generate GapAnalysis.md
 
-Create comprehensive gap analysis document:
+Create comprehensive gap analysis artifact at `.paw/reviews/<identifier>/GapAnalysis.md`:
 
 ```markdown
 ---
@@ -505,86 +569,50 @@ Quantitative metrics not available. Qualitative analysis below.
 **Baseline Comparison:** <Are patterns from CodeResearch.md followed?>
 ```
 
-## Heuristics
-
-### Test Coverage Detection
-
-**Coverage Report Parsing:**
-- Look for `coverage/summary.json`, `lcov.info`, `coverage.xml` in repo
-- Parse JSON: `coverage.summary.total.lines.pct`, `branches.pct`, `functions.pct`
-- Parse LCOV: `LF`, `LH` (lines found/hit), `BRF`, `BRH` (branches)
-- If absent: Note unavailable and proceed with qualitative
-
-**Qualitative Gap Detection:**
-```
-new_functions = (functions in changed files) - (functions in test files)
-new_conditions = count of new if/else, switch, && ,|| in changes
-new_error_paths = count of new throw, catch, error handling
-```
-
-### Categorization Heuristics
-
-**Must Indicators:**
-- Null/undefined access without checks → crash risk
-- User input in SQL/exec without validation → injection risk
-- Missing auth check on sensitive operation → security risk
-- Race condition on shared state → corruption risk
-- Critical path logic error → broken core feature
-
-**Should Indicators:**
-- New function without test → completeness gap
-- Missing error handling for network/DB call → robustness gap
-- Copy-pasted logic → maintenance burden
-- Breaking change without migration → deployment risk
-
-**Could Indicators:**
-- Variable name could be clearer → marginal improvement
-- Duplicated 5-line block → potential extraction
-- Missing comment on 10-line function → minor documentation gap
-
 ## Guardrails
 
-**Evidence-Based Categorization:**
+### Evidence-Based Categorization
+
 - Every finding must have file:line + concrete evidence
 - Must findings require demonstrable impact, not hypothetical
 - Don't inflate severity without justification
 
-**Not Inflated:**
+### Not Inflated
+
 - Style preferences are Could, not Must
 - Lack of tests for non-critical code is Should, not Must
 - Naming issues are Could unless causing real confusion
 
-**Informed by Baseline:**
+### Informed by Baseline
+
 - Use CodeResearch.md to judge pattern consistency
 - Compare to established conventions in codebase
 - Note when new code diverges from existing patterns
 
-**Coverage Context:**
+### Coverage Context
+
 - Always note when coverage reports unavailable
 - Qualitative analysis still valuable without metrics
 - Don't penalize for missing coverage tooling
 
-**Batching Preview:**
+### Batching Preview
+
 - Identify related findings that share root causes
 - Note where multiple findings could be addressed together
-- This helps Phase 3 batch feedback efficiently
+- This helps Output stage batch feedback efficiently
 
-**Prerequisites Validated:**
-- Confirm all Phase 1 and Phase 2A artifacts exist
-- Block if ImpactAnalysis.md is incomplete
+## Validation Checklist
 
-## Quality Checklist
-
-Before completing this stage:
+Before completing, verify:
 - [ ] All findings have file:line references with evidence
 - [ ] Must findings have concrete impact statements (not speculation)
 - [ ] Should findings have clear rationale for why they matter
 - [ ] Could findings have stated benefits
 - [ ] Positive observations identified and documented
-- [ ] Test coverage assessed (quantitatively if reports available, qualitatively always)
+- [ ] Test coverage assessed (quantitatively if available, qualitatively always)
 - [ ] Test effectiveness and maintainability evaluated
 - [ ] Comment quality assessed (WHY vs WHAT, necessity)
-- [ ] Over-engineering detection applied (solving future vs current problems)
+- [ ] Over-engineering detection applied
 - [ ] Style guide adherence checked with "Nit:" labeling for preferences
 - [ ] User-facing documentation completeness verified
 - [ ] Orphaned documentation identified
@@ -593,41 +621,17 @@ Before completing this stage:
 - [ ] Related findings identified for batching
 - [ ] GapAnalysis.md artifact generated with all required sections
 
-## Hand-off
+## Completion Response
 
 ```
-Gap Analysis Complete
+Activity complete.
+Artifact saved: .paw/reviews/<identifier>/GapAnalysis.md
+Status: Success
 
-GapAnalysis.md created with:
-- Positive observations (good practices identified)
-- X Must-address findings (correctness/safety/security)
-- Y Should-address findings (quality/completeness, over-engineering)
-- Z Could-consider findings (optional improvements, style "Nit:" items)
-- Test coverage: [Quantitative metrics if available] + Qualitative assessment (effectiveness, maintainability)
-- Comment quality assessment (WHY vs WHAT, necessity)
-- Style guide adherence (requirements vs preferences)
-- Documentation completeness (user-facing docs, orphaned docs)
-- Baseline comparison: [Patterns followed | Divergences noted]
-
-All findings have evidence and appropriate categorization.
+Key findings:
+- Positive observations: X good practices identified
+- Must-address: Y correctness/safety/security findings
+- Should-address: Z quality/completeness findings
+- Could-consider: W optional improvements
+- Test coverage: [Adequate | Needs Improvement | Critical Gaps]
 ```
-
-### Review Workflow Navigation
-
-After gap analysis completion:
-- Next stage: PAW-R3A Feedback Generator
-- Present options: `feedback` (proceed to feedback generation), `status`
-
-Example handoff message:
-```
-**Gap analysis complete. GapAnalysis.md created.**
-
-**Next Steps:**
-- `feedback` - Proceed to generate review comments
-
-You can ask for `status` or `help`, or say `continue` to proceed to feedback generation.
-```
-
-In Semi-Auto mode: Pause here (decision point before feedback generation).
-
-In Auto mode: Immediately invoke handoff to PAW-R3A Feedback Generator.

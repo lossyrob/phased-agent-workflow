@@ -4,6 +4,8 @@ import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerContextTool } from './tools/contextTool';
 import { registerHandoffTool } from './tools/handoffTool';
 import { registerPromptGenerationTool } from './tools/promptGenerationTool';
+import { registerSkillTool } from './tools/skillTool';
+import { registerSkillsTool } from './tools/skillsTool';
 import {
   installAgents,
   needsInstallation,
@@ -50,6 +52,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerPromptGenerationTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_generate_prompt');
+
+  registerSkillsTool(context, outputChannel);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_skills');
+
+  registerSkillTool(context, outputChannel);
+  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_skill');
 
   const initCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',

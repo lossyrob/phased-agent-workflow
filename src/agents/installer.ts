@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { loadAgentTemplates } from './agentTemplates';
+import { loadPromptTemplates } from './promptTemplates';
 import { getPlatformInfo, resolvePromptsDirectory } from './platformDetection';
 
 /**
@@ -127,9 +128,9 @@ export function needsInstallation(
     return true;
   }
 
-  // Check if any expected files are missing (repair case)
-  const templates = loadAgentTemplates(extensionUri);
-  for (const template of templates) {
+  // Check if any expected agent files are missing (repair case)
+  const agentTemplates = loadAgentTemplates(extensionUri);
+  for (const template of agentTemplates) {
     const filePath = path.join(promptsDir, template.filename);
     if (!fs.existsSync(filePath)) {
       // Expected file is missing - repair needed
@@ -137,7 +138,17 @@ export function needsInstallation(
     }
   }
 
-  // All checks passed - agents are up to date
+  // Check if any expected prompt files are missing (repair case)
+  const promptTemplates = loadPromptTemplates(extensionUri);
+  for (const template of promptTemplates) {
+    const filePath = path.join(promptsDir, template.filename);
+    if (!fs.existsSync(filePath)) {
+      // Expected prompt file is missing - repair needed
+      return true;
+    }
+  }
+
+  // All checks passed - agents and prompts are up to date
   return false;
 }
 
@@ -375,6 +386,31 @@ export async function installAgents(
       }
     }
 
+    // Load and install prompt templates from extension resources
+    const promptTemplates = loadPromptTemplates(context.extension.extensionUri);
+    for (const template of promptTemplates) {
+      const filePath = path.join(promptsDir, template.filename);
+
+      try {
+        fs.writeFileSync(filePath, template.content, "utf-8");
+        result.filesInstalled.push(template.filename);
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[INFO] Installed prompt: ${template.filename}`
+          );
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Failed to write ${template.filename}: ${message}`);
+        if (outputChannel) {
+          outputChannel.appendLine(
+            `[ERROR] Failed to write ${template.filename}: ${message}`
+          );
+        }
+        // Continue installing other files
+      }
+    }
+
     // Update installation state
     const success = result.errors.length === 0;
     await updateInstallationState(
@@ -438,7 +474,8 @@ export async function removeInstalledAgents(
     try {
       const directoryEntries = fs.readdirSync(promptsDir);
       for (const entry of directoryEntries) {
-        if (/^paw-.*\.agent\.md$/i.test(entry)) {
+        // Match PAW agent files and PAW prompt files
+        if (/^paw-.*\.agent\.md$/i.test(entry) || /^paw-.*\.prompt\.md$/i.test(entry)) {
           candidateFiles.add(entry);
         }
       }

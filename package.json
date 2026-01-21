@@ -94,7 +94,8 @@
                 "PAW-03B Impl Reviewer",
                 "PAW-04 Documenter",
                 "PAW-05 PR",
-                "PAW-X Status"
+                "PAW-X Status",
+                "PAW Review"
               ]
             },
             "work_id": {
@@ -159,6 +160,37 @@
             "work_id",
             "template_key",
             "filename"
+          ]
+        }
+      },
+      {
+        "name": "paw_get_skills",
+        "displayName": "Get PAW Skills Catalog",
+        "modelDescription": "Retrieve a catalog of available PAW skills with metadata. Returns skill names, descriptions, and types for the agent to select appropriate skills.",
+        "toolReferenceName": "pawSkillsCatalog",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "required": []
+        }
+      },
+      {
+        "name": "paw_get_skill",
+        "displayName": "Get PAW Skill Content",
+        "modelDescription": "Retrieve the full content of a specific PAW skill by name. Use after consulting the catalog to load skills needed for the current task.",
+        "toolReferenceName": "pawSkillContent",
+        "canBeReferencedInPrompt": true,
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "skill_name": {
+              "type": "string",
+              "description": "The name of the skill to load"
+            }
+          },
+          "required": [
+            "skill_name"
           ]
         }
       }

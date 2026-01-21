@@ -1,16 +1,17 @@
 ---
-description: 'PAW Review Feedback Critic - Critically assess review comment quality and usefulness'
+name: paw-review-critic
+description: Critically assesses generated review comments for usefulness, accuracy, and appropriateness, adding assessment sections.
 ---
 
-# Feedback Critic
+# PAW Review Critic Skill
 
-You critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
+Critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
 
-## Start / Initial Response
+> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
 
-Look for `ReviewComments.md` in `.paw/reviews/PR-<number>/` or `.paw/reviews/<branch-slug>/`.
+## Prerequisites
 
-If ReviewComments.md is missing, STOP and inform the user that Phase R3A (Feedback Generation) must be completed first.
+Verify `ReviewComments.md` exists in `.paw/reviews/<identifier>/`.
 
 Also verify access to all supporting artifacts:
 - `ReviewContext.md` (PR metadata)
@@ -19,7 +20,7 @@ Also verify access to all supporting artifacts:
 - `ImpactAnalysis.md` (system-wide effects)
 - `GapAnalysis.md` (categorized findings)
 
-Once prerequisites are confirmed, begin critical assessment.
+If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
 
 ## Core Responsibilities
 
@@ -32,7 +33,7 @@ Once prerequisites are confirmed, begin critical assessment.
 
 ## Process Steps
 
-### 1. Read All Review Comments
+### Step 1: Read All Review Comments
 
 Understand the complete feedback landscape:
 
@@ -53,11 +54,11 @@ Understand the complete feedback landscape:
 - Identify linked comments (related but separate)
 - Understand categorization (Must/Should/Could)
 
-### 2. Critical Assessment
+### Step 2: Critical Assessment
 
 For each review comment, evaluate multiple dimensions:
 
-**Usefulness Evaluation:**
+#### Usefulness Evaluation
 
 Ask: "Does this comment truly improve code quality? Is it actionable?"
 
@@ -82,7 +83,7 @@ Ask: "Does this comment truly improve code quality? Is it actionable?"
 - Over-engineering for current requirements
 - Bikeshedding (arguing about trivial details)
 
-**Accuracy Validation:**
+#### Accuracy Validation
 
 Ask: "Are evidence references correct? Is the diagnosis sound?"
 
@@ -101,7 +102,7 @@ Ask: "Are evidence references correct? Is the diagnosis sound?"
 - Impact is speculative without concrete evidence
 - Suggestion would introduce new problems
 
-**Alternative Perspective Exploration:**
+#### Alternative Perspective Exploration
 
 Ask: "What might the initial reviewer have missed? Are there valid reasons for the current approach?"
 
@@ -119,7 +120,7 @@ Ask: "What might the initial reviewer have missed? Are there valid reasons for t
 - Comments that are too prescriptive vs exploratory
 - Recommendations that conflict with other constraints
 
-**Trade-off Analysis:**
+#### Trade-off Analysis
 
 Ask: "Are there valid reasons to do it the current way? What are the costs of changing?"
 
@@ -135,7 +136,7 @@ Ask: "Are there valid reasons to do it the current way? What are the costs of ch
 - Immediate needs vs future flexibility
 - Code purity vs pragmatic delivery
 
-### 3. Add Assessment Sections
+### Step 3: Add Assessment Sections
 
 Append assessment after each comment's rationale in ReviewComments.md:
 
@@ -151,16 +152,11 @@ Append assessment after each comment's rationale in ReviewComments.md:
 
 **CRITICAL - Where Assessments Go:**
 
-**Add to ReviewComments.md ONLY:**
-- Append assessment sections after rationale
-- Keep assessments local to reviewer's workspace
-- Use assessments to inform reviewer's decisions
-
-**DO NOT Post to GitHub or External Platforms:**
-- Assessments are internal decision-making tools
-- Not appropriate for PR author to see
-- Would reveal reviewer's uncertainty or internal deliberation
-- Could undermine confidence in feedback
+| Add to ReviewComments.md | DO NOT Post Externally |
+|-------------------------|------------------------|
+| Append assessment sections after rationale | No GitHub posting |
+| Keep assessments local to reviewer's workspace | Not visible to PR author |
+| Use assessments to inform reviewer's decisions | No external platform posting |
 
 **Why**: Assessments help the reviewer decide what feedback to give, but showing this internal evaluation process to the PR author would be confusing and potentially counterproductive.
 
@@ -175,16 +171,16 @@ Append assessment after each comment's rationale in ReviewComments.md:
 Missing null check before accessing user.profile could cause runtime error.
 
 **Suggestion:**
-​```typescript
+```typescript
 if (user?.profile) {
   return user.profile.name;
 }
 return 'Anonymous';
-​```
+```
 
 **Rationale:**
 - **Evidence**: `auth.ts:45` shows direct access to user.profile.name
-- **Baseline Pattern**: CodeResearch.md (auth.ts:120) shows null checks for user objects
+- **Baseline Pattern**: Similar code in `auth.ts:120` uses null checks for user objects
 - **Impact**: Null pointer exception if user profile not loaded
 - **Best Practice**: Defensive programming - validate before access
 
@@ -198,7 +194,7 @@ return 'Anonymous';
 **Posted**: ✓ Pending review comment ID: <id>
 ```
 
-**Recommendation Guidelines:**
+### Recommendation Guidelines
 
 **Include as-is:**
 - High usefulness + accurate diagnosis + no major alternatives
@@ -302,7 +298,7 @@ return 'Anonymous';
 
 **Respectful Tone:**
 - Assessment is about comment quality, not personal critique
-- Focus on improving feedback, not judging the Feedback Generation Agent
+- Focus on improving feedback, not judging the Feedback Generation skill
 - Acknowledge when comments are well-crafted
 
 **Context-Aware:**
@@ -316,7 +312,35 @@ return 'Anonymous';
 - Some comments will be excellent, others questionable
 - Honest assessment serves reviewer and PR author best
 
-## Quality Checklist
+## Iteration Summary
+
+After adding assessments to all comments, append an Iteration Summary section to ReviewComments.md:
+
+```markdown
+---
+
+## Iteration Summary
+
+### Comments to Update (Based on Critique)
+
+| Original Comment | Recommendation | Update Guidance |
+|------------------|----------------|-----------------|
+| File: auth.ts L45-50 | Modify | Soften tone; acknowledge valid alternative |
+| File: api.ts L88 | Skip | Stylistic preference, not actionable |
+| File: db.ts L120 | Include as-is | High value, accurate |
+
+### Counts
+- **Comments to Include as-is**: X
+- **Comments to Modify**: Y  
+- **Comments to Skip**: Z (will not post to GitHub, retained in ReviewComments.md)
+
+### Notes for Feedback Response
+[Any specific guidance for the feedback skill when updating comments]
+```
+
+**Skip Clarification**: Comments marked "Skip" remain in ReviewComments.md for documentation but will NOT be posted to GitHub by `paw-review-github`. The reviewer can override by changing the recommendation before the feedback response pass.
+
+## Validation Checklist
 
 Before completing, verify:
 
@@ -328,50 +352,20 @@ Before completing, verify:
 - [ ] Alternative perspectives genuinely considered
 - [ ] Trade-offs realistically evaluated
 - [ ] Recommendations actionable and justified
-- [ ] Assessments remain in ReviewComments.md (NOT posted to GitHub)
+- [ ] Assessments remain in ReviewComments.md (NOT posted externally)
+- [ ] Iteration Summary section appended with counts table
 - [ ] Tone is respectful and constructive
-- [ ] Ready for human reviewer to make final decisions
 
-## Hand-off to Human Reviewer
-
-After completing critical assessment:
+## Completion Response
 
 ```
-Review Comment Assessment Complete
+Activity complete.
+Artifact saved: .paw/reviews/<identifier>/ReviewComments.md (assessments added)
+Status: Success
 
-Added assessment sections to:
-- X inline comments
-- Y thread comments
+Iteration Summary:
+- Include as-is: N comments
+- Modify: M comments (with update guidance in assessments)
+- Skip: K comments (retained in artifact, will not post to GitHub)
 
-All assessments remain in ReviewComments.md only (not posted to GitHub or external platforms).
-
-Human reviewer can now:
-- Review all comments with full context (rationale + assessment)
-- Edit or delete comments in GitHub pending review as needed
-- Ask Feedback Generation Agent for modifications based on assessments
-- Request tone adjustments if needed
-- Submit review when satisfied with final feedback
-
-Recommendations Summary:
-- Include as-is: <count> comments
-- Modify: <count> comments (with specific suggestions in assessments)
-- Skip: <count> comments (with rationale in assessments)
-```
-
-### Review Workflow Navigation
-
-This is the terminal stage of the PAW Review workflow:
-- Present options: `revise feedback` (return to Feedback Generator), `status`
-
-Example handoff message:
-```
-**Feedback assessment complete. All comments have assessments in ReviewComments.md.**
-
-**Next Steps:**
-- `revise feedback` - Return to Feedback Generator for modifications
-- Review comments in GitHub UI and submit when ready
-
-You can ask for `status` or `help`, or say `continue` to revise feedback if needed.
-```
-
-**Terminal stage behavior**: If user says `continue`, return to PAW-R3A Feedback Generator for modifications. The primary action is for the human to review and submit the pending review.
+Next: Run paw-review-feedback in Critique Response Mode to finalize comments with **Final**: markers.

@@ -1,5 +1,5 @@
 ---
-description: 'PAW Review - Executes the PAW Review workflow using dynamically loaded skills'
+description: 'PAW Review - Executes the PAW Review workflow'
 ---
 # PAW Review Agent
 

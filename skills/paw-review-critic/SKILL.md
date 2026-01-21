@@ -312,6 +312,34 @@ return 'Anonymous';
 - Some comments will be excellent, others questionable
 - Honest assessment serves reviewer and PR author best
 
+## Iteration Summary
+
+After adding assessments to all comments, append an Iteration Summary section to ReviewComments.md:
+
+```markdown
+---
+
+## Iteration Summary
+
+### Comments to Update (Based on Critique)
+
+| Original Comment | Recommendation | Update Guidance |
+|------------------|----------------|-----------------|
+| File: auth.ts L45-50 | Modify | Soften tone; acknowledge valid alternative |
+| File: api.ts L88 | Skip | Stylistic preference, not actionable |
+| File: db.ts L120 | Include as-is | High value, accurate |
+
+### Counts
+- **Comments to Include as-is**: X
+- **Comments to Modify**: Y  
+- **Comments to Skip**: Z (will not post to GitHub, retained in ReviewComments.md)
+
+### Notes for Feedback Response
+[Any specific guidance for the feedback skill when updating comments]
+```
+
+**Skip Clarification**: Comments marked "Skip" remain in ReviewComments.md for documentation but will NOT be posted to GitHub by `paw-review-github`. The reviewer can override by changing the recommendation before the feedback response pass.
+
 ## Validation Checklist
 
 Before completing, verify:
@@ -325,6 +353,7 @@ Before completing, verify:
 - [ ] Trade-offs realistically evaluated
 - [ ] Recommendations actionable and justified
 - [ ] Assessments remain in ReviewComments.md (NOT posted externally)
+- [ ] Iteration Summary section appended with counts table
 - [ ] Tone is respectful and constructive
 
 ## Completion Response
@@ -334,14 +363,9 @@ Activity complete.
 Artifact saved: .paw/reviews/<identifier>/ReviewComments.md (assessments added)
 Status: Success
 
-Summary:
+Iteration Summary:
 - Include as-is: N comments
-- Modify: M comments (with suggestions in assessments)
-- Skip: K comments (with rationale in assessments)
+- Modify: M comments (with update guidance in assessments)
+- Skip: K comments (retained in artifact, will not post to GitHub)
 
-Human reviewer can now:
-- Review all comments with full context (rationale + assessment)
-- Edit or delete comments in GitHub pending review as needed
-- Request modifications based on assessments
-- Submit review when satisfied with final feedback
-```
+Next: Run paw-review-feedback in Critique Response Mode to finalize comments with **Final**: markers.

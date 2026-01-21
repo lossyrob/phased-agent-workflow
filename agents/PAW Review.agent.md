@@ -44,8 +44,21 @@ Use the skills catalog to discover available review skills, then execute each ac
 
 Execute stages in sequence with artifact verification between stages:
 1. **Understanding**: Context gathering, baseline research, specification derivation
-2. **Evaluation**: Impact analysis, gap identification  
-3. **Output**: Comment generation, quality assessment
+2. **Evaluation**: Impact analysis, gap identification, cross-repo correlation (if multi-repo)
+3. **Output**: Feedback generation, critique iteration, GitHub posting
+
+### Output Stage Flow
+
+The Output stage uses an iterative feedback-critique pattern:
+1. **paw-review-feedback (Initial)**: Generate draft comments in ReviewComments.md
+2. **paw-review-critic**: Assess each comment, add Include/Modify/Skip recommendations
+3. **paw-review-feedback (Critique Response)**: Update comments based on critique, add `**Final**:` markers
+4. **paw-review-github**: Post only finalized comments to GitHub pending review
+
+This flow ensures:
+- Critique insights improve posted comments before they reach GitHub
+- Low-value comments can be filtered out (Skip) before posting
+- Full comment history preserved in ReviewComments.md (original → assessment → updated → posted)
 
 The workflow skill documents the specific sequence including the Understanding stage's resume pattern for baseline research.
 

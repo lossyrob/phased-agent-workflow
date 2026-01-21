@@ -1,6 +1,6 @@
 ---
 name: paw-review-feedback
-description: Transforms gap analysis findings into structured review comments with comprehensive rationale, creating GitHub pending review.
+description: Transforms gap analysis findings into structured review comments with comprehensive rationale. Handles both initial draft generation and critique response iteration.
 ---
 
 # PAW Review Feedback Skill
@@ -29,9 +29,10 @@ If any required artifact is missing, report blocked status—earlier stages must
 - Transform findings into clear, actionable review comments
 - Generate comprehensive rationale sections citing evidence, baseline patterns, impact, and best practices
 - Create `ReviewComments.md` with all comments, rationale, and metadata
-- **REQUIRED for GitHub PRs**: Create pending review with inline/thread comments (pending reviews are safe—not visible until manually submitted by the reviewer)
-- For non-GitHub workflows: Provide manual posting instructions
+- **Critique Response Mode**: Update comments based on critic assessment, marking each with `**Final**:` status
 - Enable tone adjustment while preserving evidence and IDs
+
+**Note**: GitHub posting is handled by the `paw-review-github` skill after critique iteration completes.
 
 ## Process Steps
 
@@ -163,7 +164,7 @@ branch: <branch>
 repository: <repo>
 topic: "Review Comments for <PR/Branch>"
 tags: [review, comments, feedback]
-status: complete
+status: draft
 ---
 
 # Review Comments for <PR Number or Branch Slug>
@@ -173,7 +174,7 @@ status: complete
 **Head Branch**: <head>
 **Review Date**: <date>
 **Reviewer**: <git user>
-**Pending Review ID**: <id> (GitHub) OR "Manual posting required" (non-GitHub)
+**Status**: ⏳ Pending critique
 
 ## Summary Comment
 
@@ -205,8 +206,6 @@ status: complete
 - **Impact**: Potential null pointer exception causing crash in production
 - **Best Practice**: Defensive programming - validate inputs before use
 
-**Posted**: ✓ Pending review comment ID: <id>
-
 ---
 
 ### File: `path/to/another.ts` | Lines: 88
@@ -227,8 +226,6 @@ status: complete
 - **Impact**: Minor performance improvement in non-critical path
 - **Best Practice**: Optimization best practice reference
 
-**Posted**: ✓ Pending review comment ID: <id> OR ⚠ Manual posting (non-GitHub)
-
 ---
 
 ## Thread Comments
@@ -243,8 +240,6 @@ status: complete
 **Rationale:**
 ...
 
-**Posted**: ✓ Thread comment in pending review (general comment, no specific line) OR ⚠ Manual posting (non-GitHub)
-
 ---
 
 ## Questions for Author
@@ -258,105 +253,74 @@ status: complete
 - Every comment has rationale with all four components
 - File:line references for all evidence
 - Code examples for non-trivial suggestions
-- Clear Posted status (GitHub ID or manual instructions)
 
-### Step 5: Create GitHub Pending Review (REQUIRED for GitHub PRs)
+## Critique Response Mode
 
-**This step is MANDATORY for all GitHub PRs.** Pending reviews are safe because they:
-- Are invisible to the PR author until manually submitted
-- Allow the reviewer to edit/delete comments before submission
-- Preserve human control—reviewer must explicitly click submit
+When ReviewComments.md already contains Assessment sections (from `paw-review-critic`), enter Critique Response Mode to incorporate feedback and finalize comments.
 
-Create pending review using MCP tools:
+### Detection
 
-**Steps:**
-1. Use `mcp_github_pull_request_review_write` with method `create` and event omitted (creates pending review)
-2. For **EVERY** comment (Must, Should, AND Could), use `mcp_github_add_comment_to_pending_review` with:
-   - File path
-   - Line number (or start_line/end_line for multi-line)
-   - Comment text (description + suggestion ONLY)
-   - Side: RIGHT (for new code)
+- Check if comments have `**Assessment:**` sections
+- If assessments exist, this is a second pass to incorporate critique
+- Skip to Critique Response Mode steps below
 
-**CRITICAL - What to Post vs What to Keep Local:**
+### Process
 
-| Post to GitHub Pending Review | Keep ONLY in ReviewComments.md |
-|------------------------------|-------------------------------|
-| ALL comments (Must, Should, Could) | Rationale sections |
-| Comment description | Assessment sections (added by Critic) |
-| Code suggestion examples | Internal notes and artifact references |
-| Clear, actionable guidance | |
+For each comment with an assessment:
 
-**Why Post Everything:**
-- Reviewer can easily delete unwanted comments from pending review
-- Much easier to delete than to manually add later
-- Pending review is a draft—nothing is final until reviewer submits
+1. **Preserve Original**: Keep the original comment text intact
+2. **Include Critique**: The Assessment section remains as-is
+3. **Add Updated Version**: Based on the recommendation:
+   - **Include as-is**: Add `**Final**: ✓ Ready for GitHub posting`
+   - **Modify**: Add `**Updated Comment:**` section with revised text addressing critique feedback, then `**Final**: ✓ Ready for GitHub posting`
+   - **Skip**: Add `**Final**: Skipped per critique - [reason]` (comment remains in artifact but won't post to GitHub)
 
-**Why Keep Rationale Local:**
-- Rationale and assessment are for the reviewer's understanding and decision-making
-- They help the reviewer evaluate comment quality but would clutter the PR interface
-- They expose internal decision-making process
+### Updated Comment Structure
 
-**Result:**
-- Pending review visible only to reviewer in GitHub UI
-- ALL findings posted as comments in pending review
-- Reviewer can edit/delete any comments before submission
-- Comment IDs recorded in ReviewComments.md for tracking
+```markdown
+### File: `auth.ts` | Lines: 45-50
 
-### Multi-PR Pending Reviews
+**Type**: Must
+**Category**: Safety
 
-When reviewing PRs across multiple repositories:
+[Original comment text - preserved exactly]
 
-**Detection:**
-Multi-PR mode applies when:
-- Multiple artifact directories exist (`.paw/reviews/PR-<number>-<repo-slug>/`)
-- GapAnalysis.md files exist in multiple PR directories
-- ReviewContext.md contains `related_prs` entries
+**Suggestion:**
+[Original suggestion code]
 
-**Per-PR Pending Review Creation:**
+**Rationale:**
+[Original rationale]
 
-1. **Iterate PRs**: For each PR in the review set:
-   - Read GapAnalysis.md from that PR's artifact directory
-   - Transform findings into comments as normal
-   - Create separate pending review on THAT PR using `mcp_github_pull_request_review_write`
-   - Post comments to that PR's pending review
+**Assessment:**
+- **Usefulness**: Medium - [critique justification]
+- **Accuracy**: [validation]
+- **Alternative Perspective**: [alternatives considered]
+- **Trade-offs**: [trade-off analysis]
+- **Recommendation**: Modify to soften tone
 
-2. **Cross-Reference Notation**: When posting comments that relate to other PRs:
-   - Add cross-reference at end of comment: `(See also: owner/other-repo#456)`
-   - Example: "This API change requires a corresponding update. (See also: acme/frontend#456)"
+**Updated Comment:**
+[Revised comment text incorporating critique feedback]
 
-3. **Cross-Repository Findings**: For findings from Cross-Repository Dependencies:
-   - Post to the PR that should make the change
-   - Reference the related PR that triggered the finding
-   - Note deployment order if relevant
+**Updated Suggestion:**
+[Revised suggestion if needed]
 
-**GitHub Tool Calls for Multiple PRs:**
-```
-# For each PR in the review set:
-mcp_github_pull_request_review_write(owner, repo_a, pr_123, method="create")
-mcp_github_add_comment_to_pending_review(...)  # comments for PR-123
-
-mcp_github_pull_request_review_write(owner, repo_b, pr_456, method="create")
-mcp_github_add_comment_to_pending_review(...)  # comments for PR-456
+**Final**: ✓ Ready for GitHub posting
 ```
 
-**ReviewComments.md Updates:**
-- Create separate ReviewComments.md in each PR's artifact directory
-- Each contains only comments relevant to that PR
-- Cross-references documented in both files
+### Skip Handling
 
-**Error Handling:**
-If pending review creation fails for one PR:
-- Document the failure
-- Continue with other PRs
-- Provide manual posting instructions for failed PR
+For comments with `Recommendation: Skip`:
+- Do NOT remove the comment from ReviewComments.md
+- Add `**Final**: Skipped per critique - [reason from assessment]`
+- These comments provide documentation but won't be posted to GitHub
+- Reviewer can override by changing Final to "✓ Ready for GitHub posting"
 
-### Step 6: Non-GitHub Context
+### Critique Response Completion
 
-For non-GitHub workflows (using git diff and branch names):
-
-- All comments documented in ReviewComments.md with file paths and line ranges
-- Reviewer manually posts comments to their review platform as needed
-- Rationale and assessment sections remain in ReviewComments.md for reviewer reference
+After processing all comments with assessments:
+- Update ReviewComments.md status from `draft` to `finalized`
+- All comments must have `**Final**:` markers
+- Report count of comments: Include as-is, Modified, Skipped
 
 ## Tone Adjustment
 
@@ -379,23 +343,16 @@ Support tone adjustments while preserving evidence and IDs:
 **Adjustment Process:**
 1. Accept tone parameters from reviewer
 2. Regenerate comment TEXT ONLY (description + suggestion)
-3. Preserve: Comment IDs, file:line locations, rationale, evidence, categorization
+3. Preserve: File:line locations, rationale, evidence, categorization
 4. Update ReviewComments.md with new text
-5. If GitHub pending review exists: Delete old review, create new one with adjusted tone
-6. Maintain all comment tracking information
 
 ## Guardrails
 
-**No PAW Artifact References in Posted Comments:**
-- NEVER reference PAW artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, etc.) in comments posted to GitHub
+**No PAW Artifact References in Comments:**
+- NEVER reference PAW artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, etc.) in comments
 - These files are NOT committed to the branch and are NOT accessible to the PR submitter
 - Instead: Cite actual codebase files with file:line references
 - PAW artifacts are for YOUR internal use and for the reviewer's understanding only
-
-**No Automatic Submission:**
-- NEVER submit pending review automatically
-- Reviewer must explicitly submit after reviewing comments
-- Pending review is a draft that reviewer controls
 
 **Rationale Required:**
 - EVERY comment must have complete rationale section
@@ -408,10 +365,9 @@ Support tone adjustments while preserving evidence and IDs:
 - Code examples from actual codebase when citing patterns
 
 **Human Control:**
-- Reviewer edits comments in GitHub UI
-- Reviewer deletes unwanted comments
-- Reviewer decides what to submit
-- Reviewer controls submission timing
+- Reviewer can modify any comment before GitHub posting
+- Reviewer can override Skip recommendations
+- Final decisions rest with human reviewer
 
 **Comprehensive Coverage:**
 - ALL findings from GapAnalysis.md must be transformed into comments
@@ -426,7 +382,9 @@ Support tone adjustments while preserving evidence and IDs:
 
 ## Validation Checklist
 
-Before completing, verify:
+### Initial Pass (Draft Generation)
+
+Before completing initial pass, verify:
 
 - [ ] All GapAnalysis.md findings transformed into comments
 - [ ] Related issues batched appropriately (not scattered)
@@ -435,28 +393,43 @@ Before completing, verify:
 - [ ] Inline vs thread distinction applied correctly
 - [ ] Summary comment is positive and constructive
 - [ ] ReviewComments.md complete with all sections and metadata
-- [ ] **GitHub PRs (REQUIRED)**: Pending review created with ALL comments posted
-- [ ] **GitHub PRs (REQUIRED)**: Pending review ID recorded in ReviewComments.md
-- [ ] **Non-GitHub only**: Manual instructions provided for all comments
-- [ ] Rationale sections NOT posted to GitHub (kept local only)
-- [ ] No PAW artifact references in posted comment text
+- [ ] ReviewComments.md status is `draft`
+- [ ] No PAW artifact references in comment text
+
+### Critique Response Pass (Finalization)
+
+Before completing critique response, verify:
+
+- [ ] All comments with Assessment sections processed
+- [ ] `**Final**:` marker added to every comment
+- [ ] `**Updated Comment:**` added where Recommendation was Modify
+- [ ] Skip reasons documented for all skipped comments
+- [ ] ReviewComments.md status updated to `finalized`
+- [ ] Comment counts accurate: Include as-is, Modified, Skipped
 
 ## Completion Response
 
-**For GitHub PRs:**
+**Initial Pass (Draft):**
 ```
 Activity complete.
 Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
-Status: Success
-GitHub Pending Review: Created with N comments (Review ID: <id>)
+Status: Draft - awaiting critique
 
-NOTE: The pending review is ready for your review. Edit or delete any comments, then submit when satisfied.
+Summary:
+- Total comments generated: N
+- Must: X, Should: Y, Could: Z
+- Awaiting paw-review-critic assessment
 ```
 
-**For Non-GitHub:**
+**Critique Response (Finalized):**
 ```
 Activity complete.
 Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
-Status: Success
-GitHub: N/A (non-GitHub workflow - manual posting instructions provided in artifact)
-```
+Status: Finalized - ready for GitHub posting
+
+Summary:
+- Comments ready for posting: X
+- Comments modified per critique: Y
+- Comments skipped per critique: Z
+
+Next: Run paw-review-github to post finalized comments to GitHub pending review.

@@ -144,8 +144,10 @@ Agents follow the `PAW-XX` naming scheme:
 | `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
 | `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
 | `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
-| `paw-review-feedback` | Activity | Output | ReviewComments.md, GitHub pending review |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
+| `paw-review-github` | Activity | Output | GitHub pending review |
 
 **Workflow Stages:**
 
@@ -158,13 +160,17 @@ Agents follow the `PAW-XX` naming scheme:
    - Identifies system-wide impacts and breaking changes
    - Finds gaps across correctness, safety, testing, and quality
    - Categorizes findings as Must/Should/Could
+   - Correlates findings across repositories (multi-repo reviews)
 
-3. **Output Stage**
-   - Generates structured review comments with rationale
-   - Creates GitHub pending review (GitHub context)
-   - Adds critical assessment sections for reviewer reference
+3. **Output Stage** (4-step feedback-critique iteration)
+   - **Initial feedback**: Generates draft comments with rationale
+   - **Critique**: Adds assessment sections with Include/Modify/Skip recommendations
+   - **Critique response**: Updates comments per recommendations, marks final status
+   - **GitHub posting**: Creates pending review with only approved comments
 
-**Human Control:** Pending review is never auto-submitted. User reviews comments, edits/deletes as needed, then submits manually.
+**Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
+
+**Human Control:** Pending review is never auto-submitted. User reviews comments, edits/deletes as needed, consults ReviewComments.md for full context, then submits manually.
 
 **Note:** The six PAW-R* agents (R1A, R1B, R2A, R2B, R3A, R3B) have been replaced by this unified skills-based workflow.
 

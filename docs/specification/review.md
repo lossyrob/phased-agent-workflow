@@ -36,8 +36,10 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
 | `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
 | `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
-| `paw-review-feedback` | Activity | Output | ReviewComments.md, pending review |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections |
+| `paw-review-github` | Activity | Output | GitHub pending review |
 
 **Tool Support:**
 
@@ -165,39 +167,58 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 ---
 
-### Stage R3 — Feedback Generation
+### Stage R3 — Output
 
-**Goal:** Generate comprehensive, well-structured review comments
+**Goal:** Generate comprehensive review comments, critically assess them, and post to GitHub
 
-**Skills:** `paw-review-feedback`, `paw-review-critic`
+**Skills:** `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
 
 **Inputs:**
 
 - All prior artifacts
+- CrossRepoAnalysis.md (multi-repo only)
 
 **Outputs:**
 
-- `ReviewComments.md` — Complete feedback with rationale
-- **GitHub pending review** (GitHub context) — Draft review with inline comments
+- `ReviewComments.md` — Complete feedback with full comment history
+- **GitHub pending review** (GitHub context) — Draft review with filtered comments
 
 **Process:**
 
-1. **Generate comprehensive feedback**
-    - Transform all findings into review comments
-    - Provide specific, actionable suggestions
-    - Add rationale sections with evidence
+The Output stage uses an **iterative feedback-critique pattern**:
 
-2. **Create ReviewComments.md and pending review**
-    - Save comprehensive feedback locally
-    - GitHub: Create pending review with inline comments
+1. **Initial Feedback Pass** (`paw-review-feedback`)
+    - Transform all findings into review comments with rationale
+    - Incorporate cross-repo gaps for multi-repo reviews
+    - Create ReviewComments.md with status: `draft`
+    - Does NOT post to GitHub yet
 
-3. **Critical assessment**
-    - Add assessment sections (usefulness, accuracy, trade-offs)
-    - Assessments help reviewer make informed decisions
-    - Never posted to GitHub—for reviewer reference only
+2. **Critical Assessment** (`paw-review-critic`)
+    - Evaluate each comment for usefulness, accuracy, trade-offs
+    - Add assessment sections with Include/Modify/Skip recommendations
+    - Assessments help reviewer decide what to include
+    - Never posted to GitHub—for local reference only
 
-4. **Support Q&A and tone adjustment**
-    - Answer questions based on artifacts
+3. **Critique Response Pass** (`paw-review-feedback`)
+    - Process critic recommendations
+    - Add `**Updated Comment:**` for modified comments
+    - Mark each comment with `**Final**:` status
+    - Update ReviewComments.md status to: `finalized`
+
+4. **GitHub Posting** (`paw-review-github`, GitHub only)
+    - Filter to only comments marked "Ready for GitHub posting"
+    - Create pending review with filtered comments
+    - Skipped comments remain in artifact but are NOT posted
+    - Non-GitHub: provides manual posting instructions
+
+**Comment Evolution in ReviewComments.md:**
+
+Each comment shows its complete history:
+- **Original** — Initial feedback from first pass
+- **Assessment** — Critic evaluation
+- **Updated** — Refined version if modification was recommended
+- **Final** — Ready for posting or skipped per critique
+- **Posted** — GitHub pending review ID
     - Regenerate with adjusted tone if requested
 
 ---
@@ -271,13 +292,18 @@ Findings organized by severity.
 
 ### ReviewComments.md
 
-Complete feedback with rationale and assessment.
+Complete feedback with full comment history showing evolution from original to posted.
+
+**Status field:** `draft` (awaiting critique) or `finalized` (ready for posting)
 
 **For each comment:**
 
-- Comment text and suggestions
+- Original comment text and suggestions
 - Rationale (Evidence, Baseline Pattern, Impact, Best Practice)
 - Assessment (Usefulness, Accuracy, Trade-offs, Recommendation)
+- Updated comment/suggestion (if modified per critique)
+- Final status (`Ready for GitHub posting` or `Skipped per critique`)
+- Posted status (pending review ID after GitHub posting)
 
 ---
 
@@ -285,10 +311,12 @@ Complete feedback with rationale and assessment.
 
 1. **Invoke:** Run `/paw-review <PR-number-or-URL>` in Copilot Chat
 2. **Review:** All artifacts created in `.paw/reviews/<identifier>/`
-3. **Edit:** Open GitHub pending review, edit/delete comments as needed
-4. **Submit:** Submit review manually (Approve/Comment/Request Changes)
+3. **Consult:** Check ReviewComments.md for full comment history (original → assessment → updated)
+4. **Edit:** Open GitHub pending review, edit/delete comments as needed
+5. **Recover:** Manually add skipped comments if you disagree with critique
+6. **Submit:** Submit review manually (Approve/Comment/Request Changes)
 
-**Key principle:** Nothing is posted automatically. The pending review gives you full control over what feedback to share.
+**Key principle:** Comments are filtered by critique before posting. You retain full control: review the pending review, consult the complete history in ReviewComments.md, and manually add any skipped comments you want to include.
 
 ## Next Steps
 

@@ -36,8 +36,10 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
 | `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
 | `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
-| `paw-review-feedback` | Activity | Output | ReviewComments.md, GitHub pending review |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
+| `paw-review-github` | Activity | Output | GitHub pending review (GitHub PRs only) |
 
 **Tool Support:**
 
@@ -132,9 +134,10 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
       DerivedSpec.md         # Reverse-engineered specification
       ImpactAnalysis.md      # System-wide effects
       GapAnalysis.md         # Categorized findings
-      ReviewComments.md      # Complete feedback with rationale/assessment
+      ReviewComments.md      # Complete feedback with comment history
     PR-<number>-<repo-slug>/  # Multi-repo PR (e.g., PR-123-my-api/)
       ...                     # Same structure per repository
+      CrossRepoAnalysis.md    # Cross-repository correlation (multi-repo only)
     <branch-slug>/            # Non-GitHub context
       ...
 ```
@@ -256,70 +259,76 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 ---
 
-### Stage R3 — Feedback Generation
+### Stage R3 — Output
 
-**Goal:** Generate comprehensive, well-structured review comments with rationale and critical assessment
+**Goal:** Generate comprehensive review comments, critically assess them, and create GitHub pending review
 
-**Skills:** `paw-review-feedback`, `paw-review-critic`
+**Skills:** `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
 
 **Inputs:**
 * All prior artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md)
+* CrossRepoAnalysis.md (multi-repo reviews only)
 
 **Outputs:**
-* `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with rationale and assessment sections (for reference)
-* **GitHub pending review** (GitHub context only) – Draft review with inline comments posted but not submitted
+* `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
+* **GitHub pending review** (GitHub context only) – Draft review with filtered comments (only those marked ready after critique)
 
 **Process:**
 
-1. **Generate comprehensive feedback**
+The Output stage uses an **iterative feedback-critique pattern** to refine comments before posting:
+
+1. **Initial Feedback Pass** (`paw-review-feedback`)
    - Batch related findings (One Issue, One Comment policy)
    - Transform all findings from GapAnalysis.md into review comments
-   - Include Must, Should, and Could items
+   - Include Must, Should, and Could items; incorporate CrossRepoAnalysis.md gaps for multi-repo
    - Provide specific, actionable suggestions with code examples
-   - **Add Rationale sections** to each comment in ReviewComments.md:
+   - Add **Rationale sections** to each comment:
      - Evidence: file:line references
      - Baseline Pattern: from CodeResearch.md
      - Impact: what could go wrong
      - Best Practice: citation from established guidelines
-   - Distinguish inline comments (line-specific) from thread comments (file/concept-level)
+   - Create `ReviewComments.md` with status: `draft`
+   - **Does NOT post to GitHub** in this pass
 
-2. **Create ReviewComments.md and pending review**
-   - Save comprehensive ReviewComments.md with all feedback, rationale sections
-   - **GitHub context**: Create pending review using GitHub MCP tools
-     - Post inline comments with text and code suggestions only (no rationale)
-     - Rationale sections remain in ReviewComments.md
-   - **Non-GitHub context**: All feedback in ReviewComments.md with manual posting instructions
-
-3. **Critical assessment**
-   - Add **Assessment sections** to each comment in ReviewComments.md (local only, never posted):
+2. **Critical Assessment** (`paw-review-critic`)
+   - Read and evaluate each comment
+   - Add **Assessment sections** (local only, never posted):
      - Usefulness: Does this truly improve code quality?
      - Accuracy: Are evidence references correct?
      - Alternative Perspectives: What might the reviewer have missed?
      - Trade-offs: Valid reasons for current approach?
-     - Recommendation: Include/modify/skip?
-   - Assessments help reviewer make informed decisions
-   - **Never post assessments to GitHub or external platforms**
+     - Recommendation: Include/Modify/Skip
+   - Generate Iteration Summary with skip and modify recommendations
 
-4. **Support Q&A and tone adjustment**
-   - Answer reviewer questions based on all artifacts
-   - Regenerate pending review with adjusted tone if requested
-   - Preserve IDs, evidence, rationale when adjusting tone
+3. **Critique Response Pass** (`paw-review-feedback`)
+   - Detect Assessment sections → enter Critique Response Mode
+   - For comments marked "Modify": Add `**Updated Comment:**` with improvements
+   - For comments marked "Skip": Note `**Final**: Skipped per critique`
+   - For comments marked "Include": Note `**Final**: ✓ Ready for GitHub posting`
+   - Update ReviewComments.md status to: `finalized`
+
+4. **GitHub Posting** (`paw-review-github`, GitHub PRs only)
+   - Filter to only comments marked "Ready for GitHub posting"
+   - Create pending review with filtered comments
+   - Update ReviewComments.md with posted status and review IDs
+   - Skipped comments remain in artifact for reference but are NOT posted
+   - **Non-GitHub context**: Provides manual posting instructions instead
 
 **Human Workflow:**
 
-* Agent orchestrates R3 activities automatically after R2 completion
+* Agent orchestrates all R3 activities automatically after R2 completion
 * **GitHub context**: 
   - Open PR in GitHub Files Changed tab
-  - View all pending review comments
+  - View pending review comments (only those that passed critique)
   - Edit comment text to adjust tone/wording
-  - Delete unwanted comments that don't fit context
-  - Add new comments if needed
+  - Delete unwanted comments; manually add skipped comments if you disagree with critique
+  - Consult ReviewComments.md for full comment history (original → assessment → updated)
   - Submit review when satisfied (Approve/Comment/Request Changes)
 * **Non-GitHub context**:
   - Use ReviewComments.md to manually post to review platform
   - Post only comment text and suggestions (keep rationale/assessment for reference)
-* **Optional**: Ask agent to adjust tone - regenerates pending review with new tone
-* **Optional**: Ask agent questions about findings - answers based on artifacts
+* **Optional**: Ask agent to adjust tone – regenerates comments with new tone
+* **Optional**: Ask agent questions about findings – answers based on artifacts
 
 ---
 
@@ -464,7 +473,11 @@ Findings organized by severity and category, with positive observations.
 
 ### ReviewComments.md
 
-Complete review feedback with rationale and assessment sections (for reviewer reference).
+Complete review feedback with full comment history showing the evolution from original to posted.
+
+**Status Field:**
+- `draft` — Initial feedback pass complete, awaiting critique
+- `finalized` — Critique response complete, ready for GitHub posting
 
 **Structure:**
 
@@ -476,14 +489,13 @@ Complete review feedback with rationale and assessment sections (for reviewer re
 **Head Branch**: <head>
 **Review Date**: <date>
 **Reviewer**: <name>
-**Pending Review ID**: <id> (GitHub) OR "Manual posting required" (non-GitHub)
+**Status**: draft | finalized
+**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (non-GitHub)
 
-## Summary Comment
+## Summary
 
-<Brief, positive opening acknowledging the work>
-<Overview of feedback scope>
-
-**Findings**: X Must-address items, Y Should-address items, Z optional suggestions
+**Total Findings**: X Must-address, Y Should-address, Z optional suggestions
+**Posted**: N comments | **Skipped**: M comments (per critique)
 
 Full review artifacts: `.paw/reviews/<identifier>/`
 
@@ -496,168 +508,88 @@ Full review artifacts: `.paw/reviews/<identifier>/`
 **Type:** Must
 **Category:** Safety
 
-<Comment text explaining the issue>
+<Original comment text explaining the issue>
 
 **Suggestion:**
 ```typescript
-// Proposed fix or approach
+// Original proposed fix
 ```
 
 **Rationale:**
 - **Evidence**: `file.ts:45` shows unchecked null access
-- **Baseline Pattern**: CodeResearch.md (`file.ts:100`) shows standard null checks used elsewhere
-- **Impact**: Potential null pointer exception causing crash in production
-- **Best Practice**: review-research-notes.md § Safety - "Always validate inputs"
+- **Baseline Pattern**: CodeResearch.md (`file.ts:100`) shows standard null checks
+- **Impact**: Potential null pointer exception in production
+- **Best Practice**: "Always validate inputs before use"
 
-**Assessment:**
-- **Usefulness**: High - Prevents null pointer exception
+**Assessment:** (added by critic)
+- **Usefulness**: High - Prevents crash
 - **Accuracy**: Evidence references confirmed
 - **Alternative Perspective**: None identified
 - **Trade-offs**: No valid reason to skip null check
 - **Recommendation**: Include as-is
 
-**Posted**: ✓ Pending review comment ID: <id> (GitHub) OR ⚠ Post to `path/to/file.ts:45-50` (non-GitHub)
+**Updated Comment:** (added if critic recommended modification)
+<Refined comment text addressing critique feedback>
+
+**Updated Suggestion:** (if suggestion was modified)
+```typescript
+// Improved proposed fix
+```
+
+**Final**: ✓ Ready for GitHub posting
+**Posted**: ✓ Pending review comment ID: <id>
 
 ---
 
-## Thread Comments
+### File: `path/to/another.ts` | Lines: 78-82
 
-### File: `path/to/file.ts` (Overall Architecture)
+**Type:** Could
+**Category:** Style
 
-**Type:** Should
-**Category:** Maintainability
-
-<Discussion about broader pattern>
+<Original suggestion about naming convention>
 
 **Rationale:**
 ...
 
 **Assessment:**
+- **Usefulness**: Low - Stylistic preference
+- **Accuracy**: Valid but minor
+- **Trade-offs**: Current naming follows existing pattern
+- **Recommendation**: Skip
+
+**Final**: Skipped per critique
+**Posted**: — (not posted)
+
+---
+
+## Thread Comments
 ...
 
-**Posted**: ⚠ Add manually as file-level comment
-
----
-
 ## Questions for Author
-
-1. <Question about intent or design decision>
-2. <Clarification needed on edge case>
+...
 ```
+
+**Comment Evolution:**
+
+Each comment shows its complete history:
+1. **Original** — Initial feedback from first pass
+2. **Assessment** — Critic evaluation (Include/Modify/Skip recommendation)
+3. **Updated** — Refined version if modification was recommended
+4. **Final** — Ready for posting or skipped per critique
+5. **Posted** — GitHub pending review ID (after GitHub posting)
 
 **Key Sections:**
-- **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice citation
-- **Assessment** (local only, not posted): Usefulness, Accuracy, Alternative Perspectives, Trade-offs, Recommendation
-- **Posted Status**: Tracks what's in pending review vs needs manual posting
+- **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice
+- **Assessment** (local only, not posted): Usefulness, Accuracy, Trade-offs, Recommendation
+- **Updated** (if modified): Refined comment/suggestion addressing critique
+- **Final**: Posting status (`✓ Ready for GitHub posting` or `Skipped per critique`)
+- **Posted**: Tracks what's in pending review vs skipped
 
 **Purpose:** 
-- Comprehensive reference with full context for decision-making
-- Rationale/assessment help reviewer decide what to include
-- For GitHub: supplements pending review with reasoning
+- Complete reference with full comment history for decision-making
+- Shows evolution: original → assessment → updated → posted
+- Human can manually add skipped comments if they disagree with critique
 - For non-GitHub: source for manual posting with instructions
-
----
-
-### ReviewComments.md
-
-Reference copy of all review feedback (actual comments are in GitHub pending review).
-
-**Structure:**
-
-```markdown
-# Review Comments for PR #[number]
-
-**Note:** These comments have been posted as a pending review on GitHub. 
-Review and edit them at: [PR review URL]
-
-## Summary Comment (Pending review body)
-
-[Opening acknowledgment]
-
-[Brief overview of feedback]
-
-**Findings:** X Must-address items, Y Should-address items, Z optional suggestions
-
-Full review artifacts: `.paw/reviews/PR-[number]/`
-
----
-
-## Inline Comments (Posted to pending review)
-
-These comments are posted to specific lines in the GitHub pending review.
-
-### `path/to/file.ts` Line 123-127
-
-**Type:** Must | Should | Could  
-**Category:** [Correctness | Safety | Testing | etc.]
-
-[Specific comment about this code block]
-
-**Suggestion:**
-```[language]
-// Proposed fix or approach
-```
-
-**Posted:** ✓ (pending review comment ID: [id])
-
-### `path/to/another.ts` Line 45
-
-**Type:** Should  
-**Category:** Testing
-
-[Comment about missing test coverage for this specific function]
-
-**Posted:** ✓ (pending review comment ID: [id])
-
----
-
-## Thread Comments (Not yet supported in pending reviews)
-
-File-level or PR-level comments to add manually if needed.
-
-### File: `path/to/file.ts`
-
-**Type:** Must  
-**Category:** Security
-
-[Discussion about overall approach to security in this file]
-
-### General: Architecture
-
-**Type:** Should  
-**Category:** Maintainability
-
-[Broader concern about the architectural approach across multiple files]
-
----
-
-## Questions
-
-1. [Clarifying question about intent - add manually to review or as inline comment]
-2. [Question about edge case or design decision]
-```
-
-**Comment Type Guidance:**
-
-- **Inline comments** – Posted directly to specific lines via pending review:
-  - Logic errors in a specific function
-  - Missing null check at a particular location
-  - Incorrect usage of an API
-  - Performance issue in a specific loop
-  - Missing test for a specific code path
-
-- **Thread comments** – Add manually to the review body or as follow-up:
-  - Overall file organization or structure
-  - Missing integration tests across components
-  - Architectural concerns affecting multiple files
-  - Consistent pattern violations throughout
-  - Cross-cutting concerns (logging, error handling approach)
-
-**Purpose:** 
-- Serves as reference copy of all generated comments
-- Documents what was posted to the pending review
-- Includes thread-level comments that need manual posting
-- Can be used to regenerate comments if pending review is deleted
 
 ---
 

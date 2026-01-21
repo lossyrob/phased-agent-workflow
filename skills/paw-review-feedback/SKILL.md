@@ -26,7 +26,7 @@ If any artifact is missing, report blocked status—earlier stages must complete
 - Transform findings into clear, actionable review comments
 - Generate comprehensive rationale sections citing evidence, baseline patterns, impact, and best practices
 - Create `ReviewComments.md` with all comments, rationale, and metadata
-- For GitHub PRs: Create pending review with inline/thread comments (WITHOUT rationale sections)
+- **REQUIRED for GitHub PRs**: Create pending review with inline/thread comments (pending reviews are safe—not visible until manually submitted by the reviewer)
 - For non-GitHub workflows: Provide manual posting instructions
 - Enable tone adjustment while preserving evidence and IDs
 
@@ -227,9 +227,14 @@ status: complete
 - Code examples for non-trivial suggestions
 - Clear Posted status (GitHub ID or manual instructions)
 
-### Step 5: GitHub Context - Create Pending Review
+### Step 5: Create GitHub Pending Review (REQUIRED for GitHub PRs)
 
-For GitHub PRs, create pending review using MCP tools:
+**This step is MANDATORY for all GitHub PRs.** Pending reviews are safe because they:
+- Are invisible to the PR author until manually submitted
+- Allow the reviewer to edit/delete comments before submission
+- Preserve human control—reviewer must explicitly click submit
+
+Create pending review using MCP tools:
 
 **Steps:**
 1. Use `mcp_github_pull_request_review_write` with method `create` and event omitted (creates pending review)
@@ -397,16 +402,28 @@ Before completing, verify:
 - [ ] Inline vs thread distinction applied correctly
 - [ ] Summary comment is positive and constructive
 - [ ] ReviewComments.md complete with all sections and metadata
-- [ ] **GitHub context**: ALL comments (Must, Should, Could) posted to pending review
-- [ ] **Non-GitHub context**: Manual instructions provided for all comments
+- [ ] **GitHub PRs (REQUIRED)**: Pending review created with ALL comments posted
+- [ ] **GitHub PRs (REQUIRED)**: Pending review ID recorded in ReviewComments.md
+- [ ] **Non-GitHub only**: Manual instructions provided for all comments
 - [ ] Rationale sections NOT posted to GitHub (kept local only)
 - [ ] No PAW artifact references in posted comment text
 
 ## Completion Response
 
+**For GitHub PRs:**
 ```
 Activity complete.
 Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
 Status: Success
-GitHub: Pending review created with N comments (ID: <id>) | Non-GitHub: Manual posting instructions provided
+GitHub Pending Review: Created with N comments (Review ID: <id>)
+
+NOTE: The pending review is ready for your review. Edit or delete any comments, then submit when satisfied.
+```
+
+**For Non-GitHub:**
+```
+Activity complete.
+Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
+Status: Success
+GitHub: N/A (non-GitHub workflow - manual posting instructions provided in artifact)
 ```

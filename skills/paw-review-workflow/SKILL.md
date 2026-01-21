@@ -153,20 +153,32 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 **Sequence**:
 1. Run `paw-review-feedback` activity
    - Input: All prior artifacts
-   - Output: `ReviewComments.md`, GitHub pending review (if applicable)
+   - Output: `ReviewComments.md`
+   - **GitHub PRs (REQUIRED)**: Creates pending review with all comments
+   - Non-GitHub: Provides manual posting instructions
    
 2. Run `paw-review-critic` activity
    - Input: ReviewComments.md + all prior artifacts
    - Output: Assessment sections added to `ReviewComments.md`
 
-**Human Control Point**: Pending review is created but NOT submitted. Human reviewer:
-- Reviews generated comments
+**GitHub Pending Review Creation** (REQUIRED for GitHub PRs):
+- Pending reviews are safe—not visible to PR author until manually submitted
+- ALL comments (Must, Should, Could) posted to pending review
+- Reviewer can edit, delete, or add comments before submission
+- Preserves human control—reviewer explicitly submits when satisfied
+
+**Human Control Point**: The pending review is created but NOT submitted. Human reviewer:
+- Reviews generated comments in GitHub UI
 - Modifies, adds, or removes comments as needed
 - Submits review when satisfied
 
 ## Terminal Behavior
 
-Upon workflow completion, report artifact locations, GitHub pending review status (if applicable), and next steps for the human reviewer.
+Upon workflow completion, report:
+- Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
+- **GitHub PRs**: Pending review ID and comment count (e.g., "Pending review created: Review ID 12345678, 8 comments awaiting submission")
+- **Non-GitHub**: Manual posting instructions location
+- Next steps for the human reviewer (review comments, edit as needed, submit when ready)
 
 ## Cross-Repository Support
 

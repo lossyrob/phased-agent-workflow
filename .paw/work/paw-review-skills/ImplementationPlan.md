@@ -1815,12 +1815,12 @@ The new flow enables iterative refinement before external posting.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] New `paw-review-github` skill exists with valid frontmatter
-- [ ] All updated skills load via `paw_get_skill`
-- [ ] `paw_get_skills` catalog includes `paw-review-github` (8 skills total, or 9 with correlation)
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] All tests pass: `npm test`
-- [ ] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+- [x] New `paw-review-github` skill exists with valid frontmatter
+- [x] All updated skills load via `paw_get_skill`
+- [x] `paw_get_skills` catalog includes `paw-review-github` (9 skills total: 1 workflow + 8 activity)
+- [x] TypeScript compiles: `npm run compile`
+- [x] All tests pass: `npm test` (167 passing)
+- [x] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md` (755 tokens)
 
 #### Manual Verification:
 - [ ] Initial feedback pass creates ReviewComments.md WITHOUT GitHub pending review
@@ -1831,6 +1831,48 @@ The new flow enables iterative refinement before external posting.
 - [ ] ReviewComments.md shows progression: Original → Assessment → Updated → Posted
 - [ ] Reviewer can see full comment history in ReviewComments.md
 - [ ] Reviewer can override Skip by editing `**Final**:` before running GitHub Review
+
+### Phase 9 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Updated `skills/paw-review-feedback/SKILL.md`:
+    - Removed Step 5 (Create GitHub Pending Review) and Multi-PR sections
+    - Added Critique Response Mode section with detection, process, and skip handling
+    - Updated description to mention "Handles both initial draft generation and critique response iteration"
+    - Updated ReviewComments.md template: status=draft, removed Posted fields
+    - Updated validation checklists: Initial Pass and Critique Response Pass
+    - Updated completion responses for both passes
+  - Updated `skills/paw-review-critic/SKILL.md`:
+    - Added Iteration Summary section with Comments to Update table template
+    - Added Skip clarification (retained in artifact but not posted to GitHub)
+    - Updated completion response to reference next step (paw-review-feedback in Critique Response Mode)
+  - Created `skills/paw-review-github/SKILL.md` (~335 lines):
+    - YAML frontmatter with type: activity, stage: output, updates: ReviewComments.md
+    - Prerequisites section (finalized status, **Final**: markers)
+    - Process steps: Load, Filter postable comments, Create pending review, Update artifact, Multi-PR handling, Non-GitHub context
+    - GitHub MCP tool usage patterns documented
+    - Comment body construction (no rationale in posted comments)
+    - Multi-PR support with per-PR pending reviews
+    - Non-GitHub fallback with manual posting instructions
+    - Guardrails: pending review only, preserve history, human control
+    - Validation checklist and completion responses
+  - Updated `skills/paw-review-workflow/SKILL.md`:
+    - Restructured Output Stage to 4-step sequence
+    - Updated terminal behavior to mention comment evolution summary
+    - Updated artifact directory structure with ReviewComments.md evolution stages
+  - Updated `agents/PAW Review.agent.md`:
+    - Added Output Stage Flow section documenting 4-step pattern
+    - Documented benefits: critique improves posted comments, skip filtering, full history preserved
+- **Commit**: 98864de
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 167 tests passing ✅
+  - `./scripts/lint-agent.sh agents/PAW\ Review.agent.md` - 755 tokens ✅
+- **Notes for Review**:
+  - New paw-review-github skill is the 9th skill (1 workflow + 8 activity)
+  - Feedback skill now has two modes: Initial Pass and Critique Response Mode
+  - ReviewComments.md evolution clearly documented in workflow skill
+  - Manual verification items pending for end-to-end testing
 
 ---
 
@@ -1912,13 +1954,13 @@ Each Phase 2 sub-phase must pass validation before proceeding:
 - [ ] Cross-repo gaps appear in ReviewComments.md with cross-references
 
 **After Phase 9 (Feedback-Critique Iteration):**
-- [ ] Initial feedback pass creates ReviewComments.md WITHOUT GitHub pending review
-- [ ] Critic adds Assessment sections with recommendations
-- [ ] Second feedback pass adds Updated Comment sections
-- [ ] Skip comments marked but remain in ReviewComments.md
-- [ ] GitHub Review skill posts only "Ready for GitHub posting" comments
-- [ ] Full comment history visible: Original → Assessment → Updated → Posted
-- [ ] Skill catalog shows 8-9 skills (including paw-review-github)
+- [x] Initial feedback pass creates ReviewComments.md WITHOUT GitHub pending review
+- [x] Critic adds Assessment sections with recommendations
+- [x] Second feedback pass adds Updated Comment sections
+- [x] Skip comments marked but remain in ReviewComments.md
+- [x] GitHub Review skill posts only "Ready for GitHub posting" comments
+- [x] Full comment history visible: Original → Assessment → Updated → Posted
+- [x] Skill catalog shows 9 skills (including paw-review-github)
 
 ### Integration Tests:
 - Extension activation with all tools registered

@@ -17,8 +17,11 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 - `DerivedSpec.md` (what the PR is trying to achieve)
 - `ImpactAnalysis.md` (system-wide impact assessment)
 - `GapAnalysis.md` (categorized findings with evidence)
+- `CrossRepoAnalysis.md` (optional—only for multi-repo reviews)
 
-If any artifact is missing, report blocked status—earlier stages must complete first.
+If any required artifact is missing, report blocked status—earlier stages must complete first.
+
+**Multi-repo detection**: Check if `CrossRepoAnalysis.md` exists. If present, incorporate cross-repo gaps into comment generation.
 
 ## Core Responsibilities
 
@@ -51,6 +54,36 @@ Group findings that share the same root cause:
 - Multiple null checks missing in same class → One comment listing all locations
 - Architectural concern spanning 3 files → One thread comment discussing the pattern
 - Missing tests for several related methods → One comment about test coverage gap
+
+### Step 1.5: Incorporate Cross-Repository Correlation Findings (Multi-Repo Only)
+
+**Condition**: Only if `CrossRepoAnalysis.md` exists in the artifact directory.
+
+When `CrossRepoAnalysis.md` is present, add cross-repo gaps to the findings list:
+
+**Load Cross-Repo Gaps:**
+1. Read `CrossRepoAnalysis.md` → extract "Cross-Repository Gaps" section
+2. For each gap, create a finding entry with:
+   - Severity from gap (Must/Should/Could)
+   - Evidence from gap's file:line references
+   - Cross-reference notation from the gap's related PR
+
+**Cross-Repo Finding Format:**
+```markdown
+**Type**: Must (from CrossRepoAnalysis.md)
+**Category**: Cross-Repository Coordination
+**Files**: [repo-b/src/api/client.ts:8](repo-b/src/api/client.ts#L8)
+**Issue**: Missing consumer update for `lastLogin` field
+**Evidence**: 
+  - Added in repo-a: [repo-a/src/types/user.ts:22](repo-a/src/types/user.ts#L22)
+  - Missing in repo-b: [repo-b/src/api/client.ts](repo-b/src/api/client.ts)
+**Cross-Reference**: (Cross-repo: see repo-a#123 for interface change)
+```
+
+**Routing Cross-Repo Comments:**
+- Post cross-repo findings to the PR that needs to make the change
+- Include cross-reference notation: `(Cross-repo: see owner/other-repo#NNN for [context])`
+- Note deployment order in comment if relevant from CrossRepoAnalysis.md
 
 ### Step 2: Build Comment Objects
 

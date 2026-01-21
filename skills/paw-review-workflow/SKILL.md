@@ -93,6 +93,7 @@ All review artifacts are stored in a consistent directory structure:
 ├── DerivedSpec.md            # Stage: Understanding (after research)
 ├── ImpactAnalysis.md         # Stage: Evaluation (impact)
 ├── GapAnalysis.md            # Stage: Evaluation (gaps)
+├── CrossRepoAnalysis.md      # Stage: Correlation (multi-repo only)
 └── ReviewComments.md         # Stage: Output (feedback + critique)
 ```
 
@@ -146,6 +147,26 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Stage Gate**: Verify ImpactAnalysis.md, GapAnalysis.md exist before proceeding.
 
+### Cross-Repository Correlation Stage (Multi-Repo Only)
+
+**Skill**: `paw-review-correlation`
+
+**Condition**: Only run when multiple PRs/repositories detected. Skip for single-repo reviews.
+
+**Detection Criteria** (any of):
+- Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
+- `paw_get_context` returned `isMultiRootWorkspace: true`
+- ReviewContext.md contains `related_prs` entries
+
+**Sequence**:
+1. Run `paw-review-correlation` activity
+   - Input: All per-repo ImpactAnalysis.md and GapAnalysis.md files
+   - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
+
+**Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.
+
+**Skip Behavior**: For single-repo reviews, proceed directly to Output stage without running correlation.
+
 ### Output Stage
 
 **Skills**: `paw-review-feedback`, `paw-review-critic`
@@ -178,6 +199,7 @@ Upon workflow completion, report:
 - Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
 - **GitHub PRs**: Pending review ID and comment count (e.g., "Pending review created: Review ID 12345678, 8 comments awaiting submission")
 - **Non-GitHub**: Manual posting instructions location
+- **Multi-repo reviews**: Cross-repo findings summary (interface contracts analyzed, mismatches found, deployment order)
 - Next steps for the human reviewer (review comments, edit as needed, submit when ready)
 
 ## Cross-Repository Support
@@ -185,6 +207,7 @@ Upon workflow completion, report:
 If multiple repositories or PRs are detected:
 1. Identify which repositories have changes
 2. Determine the primary repository (where changes originate)
-3. For each repository, run the workflow stages independently
-4. In the Output stage, correlate findings across repositories
-5. Note cross-repo dependencies in the review comments
+3. For each repository, run the Understanding and Evaluation stages independently
+4. Run Cross-Repository Correlation stage to synthesize findings across repos
+5. In the Output stage, incorporate cross-repo findings into review comments
+6. Note cross-repo dependencies in comments using notation: `(See also: owner/other-repo#NNN)`

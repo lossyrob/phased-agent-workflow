@@ -73,6 +73,12 @@ To preserve content and avoid loss during migration:
 4. **Phase 4: Extension Integration** - Register tools, extend installer for prompt files, add entry point
 5. **Phase 5: Reference Audit & Agent Removal** - Audit and fix PAW-R* references in new skills, then remove old agents
 6. **Phase 6: Documentation & Validation** - Update documentation, end-to-end testing
+7. **Phase 7: Cross-Repository Review Support** (split into sub-phases)
+   - **Phase 7A: Detection & Artifact Structure** - Multi-repo detection triggers, artifact naming scheme
+   - **Phase 7B: Cross-Repository Analysis** - Per-skill cross-repo analysis additions
+8. **Phase 8: Cross-Repository Correlation Analysis** - New `paw-review-correlation` skill for synthesizing findings across PRs
+9. **Phase 9: Feedback-Critique Iteration & GitHub Review Stage** - Restructure Output stage to separate feedback, critique iteration, and GitHub posting
+10. **Phase 10: Documentation Update for Output Stage Changes** - Update documentation for new 4-step Output flow
 
 ---
 
@@ -1399,6 +1405,476 @@ Phase 7A must be complete - artifact structure and detection working.
 
 ---
 
+## Phase 8: Cross-Repository Correlation Analysis
+
+### Overview
+For multi-repo reviews, add dedicated analysis that examines how PRs relate to each other—identifying shared interfaces, dependency mismatches, and coordination gaps that wouldn't be visible when analyzing PRs in isolation.
+
+### Background
+When reviewing coordinated changes across repositories (e.g., API server + client, shared library + consumers), individual PR analysis may miss:
+- Interface contract mismatches (types, messages, endpoints)
+- Missing coordinated changes (API changed but consumer not updated)
+- Deployment ordering dependencies
+- Shared convention drift
+
+This phase adds a cross-repository correlation stage that synthesizes findings across all PRs in the review set.
+
+### Changes Required:
+
+#### 1. New Cross-Repository Correlation Skill
+**File**: `skills/paw-review-correlation/SKILL.md` (new)
+**Changes**:
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-correlation
+  description: Synthesizes findings across multiple PRs to identify cross-repository dependencies, interface mismatches, and coordination gaps.
+  metadata:
+    type: activity
+    artifacts: CrossRepoAnalysis.md
+    stage: evaluation
+  ```
+- **Prerequisites**: Verify multi-repo context (multiple PR artifact directories exist)
+- **Core Responsibilities**:
+  - Identify shared interfaces between repositories (types, APIs, events, messages)
+  - Detect interface contract mismatches (producer changed, consumer not updated)
+  - Flag missing coordinated changes
+  - Document deployment/migration ordering requirements
+  - Surface cross-cutting concerns (auth, logging conventions consistency)
+- **Process Steps**:
+  1. Load all per-repo ImpactAnalysis.md and GapAnalysis.md artifacts
+  2. Build cross-repo dependency graph (which repo exports what, which imports what)
+  3. Identify interface contracts (shared types, API endpoints, event schemas, package exports)
+  4. Detect mismatches (changed interface not reflected in consumer)
+  5. Analyze deployment dependencies (migration order, feature flag coordination)
+  6. Generate `CrossRepoAnalysis.md` with findings
+- **CrossRepoAnalysis.md Template**:
+  ```markdown
+  ---
+  date: <timestamp>
+  repositories: [owner/repo-a, owner/repo-b]
+  prs: [PR-123, PR-456]
+  topic: "Cross-Repository Correlation Analysis"
+  tags: [cross-repo, correlation, dependencies]
+  status: complete
+  ---
+
+  # Cross-Repository Correlation Analysis
+
+  ## Repository Relationship
+  
+  | Repository | Role | PRs |
+  |------------|------|-----|
+  | owner/repo-a | API Server (exports) | PR-123 |
+  | owner/repo-b | Client (imports) | PR-456 |
+
+  ## Shared Interfaces
+
+  ### Interface: UserProfile Type
+  - **Defined in**: repo-a `src/types/user.ts:15-25`
+  - **Consumed in**: repo-b `src/api/client.ts:8`
+  - **Status**: ✓ Aligned / ⚠ Mismatch
+
+  ## Cross-Repository Gaps
+
+  ### Gap: Missing Consumer Update
+  - **Severity**: Must
+  - **Issue**: repo-a adds `lastLogin` field to UserProfile, but repo-b doesn't handle it
+  - **Evidence**: 
+    - Added: `repo-a/src/types/user.ts:22` - `lastLogin: Date`
+    - Missing: `repo-b/src/api/client.ts` - no handling for new field
+  - **Recommendation**: Update repo-b to either consume or explicitly ignore the new field
+
+  ## Deployment Considerations
+
+  ### Recommended Order
+  1. repo-a (provides new field)
+  2. repo-b (consumes new field)
+
+  ### Feature Flag Coordination
+  - No feature flag coordination required for this change set
+
+  ## Summary
+  - X interface contracts analyzed
+  - Y mismatches found (Z Must-address)
+  - Recommended deployment order: repo-a → repo-b
+  ```
+
+**Token target**: ~2500 tokens
+
+**Tests**:
+- Skill loads via `paw_get_skill`
+- Frontmatter parses correctly with `type: activity`, `stage: evaluation`
+
+#### 2. Update Workflow Skill with Correlation Stage
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Add **Cross-Repository Correlation** section after Evaluation Stage:
+  ```markdown
+  ### Cross-Repository Correlation Stage (Multi-Repo Only)
+
+  **Skill**: `paw-review-correlation`
+
+  **Condition**: Only run when multiple PRs/repositories detected.
+
+  **Sequence**:
+  1. Run `paw-review-correlation` activity
+     - Input: All per-repo ImpactAnalysis.md and GapAnalysis.md files
+     - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
+
+  **Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.
+  ```
+- Update artifact directory structure to include `CrossRepoAnalysis.md`
+- Update terminal behavior to report cross-repo findings summary
+
+**Token impact**: ~100 tokens added
+
+#### 3. Update Feedback Skill to Consume Cross-Repo Analysis
+**File**: `skills/paw-review-feedback/SKILL.md`
+**Changes**:
+- Add `CrossRepoAnalysis.md` to prerequisites (optional, only for multi-repo)
+- Update comment generation to incorporate cross-repo gaps as findings
+- Add cross-reference notation for cross-repo issues: `(Cross-repo: see repo-b#456 for consumer update)`
+
+**Token impact**: ~50 tokens added
+
+### Success Criteria:
+
+#### Automated Verification:
+- [x] New skill file exists with valid frontmatter
+- [x] Skill loads via `paw_get_skill`
+- [x] `paw_get_skills` catalog includes `paw-review-correlation`
+- [x] TypeScript compiles: `npm run compile`
+- [x] All tests pass: `npm test`
+
+#### Manual Verification:
+- [ ] Multi-repo review generates `CrossRepoAnalysis.md`
+- [ ] Cross-repo gaps appear in final ReviewComments.md
+- [ ] Single-repo reviews skip correlation stage (no CrossRepoAnalysis.md generated)
+- [ ] Deployment order recommendations are actionable
+
+### Phase 8 Status Update
+- **Status**: Completed
+- **Summary**:
+  - Created `skills/paw-review-correlation/SKILL.md` (~290 lines):
+    - Complete YAML frontmatter with type: activity, stage: evaluation
+    - Applicability section (multi-repo only, with detection criteria)
+    - Prerequisites section (per-PR artifacts required)
+    - Core Responsibilities (interface detection, mismatch detection, deployment order)
+    - 6 Process Steps:
+      1. Load All Per-Repo Artifacts
+      2. Build Cross-Repo Dependency Graph
+      3. Identify Interface Contracts
+      4. Detect Interface Mismatches
+      5. Analyze Deployment Dependencies
+      6. Generate CrossRepoAnalysis.md
+    - Complete CrossRepoAnalysis.md template with all sections
+    - Validation checklist and error handling
+  - Updated `skills/paw-review-workflow/SKILL.md`:
+    - Added Cross-Repository Correlation Stage section between Evaluation and Output
+    - Added detection criteria (multiple artifact directories, isMultiRootWorkspace, related_prs)
+    - Added skip behavior for single-repo reviews
+    - Updated artifact directory structure to include CrossRepoAnalysis.md
+    - Updated terminal behavior to report cross-repo findings summary
+    - Updated Cross-Repository Support section with correlation stage reference
+  - Updated `skills/paw-review-feedback/SKILL.md`:
+    - Added CrossRepoAnalysis.md to prerequisites (optional for multi-repo)
+    - Added Step 1.5: Incorporate Cross-Repository Correlation Findings
+    - Added cross-repo finding format with cross-reference notation
+    - Added routing guidance for cross-repo comments
+- **Automated Verification**:
+  - `npm run compile` ✅
+  - `npm test` - 167 tests passing ✅
+  - 8 skills now in catalog (1 workflow + 7 activity)
+- **Notes for Review**:
+  - Correlation skill only runs for multi-repo reviews (skip behavior documented)
+  - CrossRepoAnalysis.md written to primary repo's artifact directory
+  - Cross-reference notation: `(Cross-repo: see owner/other-repo#NNN for [context])`
+  - Manual verification items pending for end-to-end multi-repo testing
+
+---
+
+## Phase 9: Feedback-Critique Iteration & GitHub Review Stage
+
+### Overview
+Restructure the Output stage to separate feedback generation, critique iteration, and GitHub posting into distinct phases. This ensures:
+1. Initial feedback generates draft ReviewComments.md (no GitHub posting)
+2. Critic evaluates and adds assessment sections
+3. Feedback **updates** comments based on critique (preserving original + critique + updated)
+4. New **GitHub Review skill** posts final pending review to GitHub (only comments NOT marked "Skip")
+
+### Background
+Current workflow posts GitHub pending reviews in the feedback skill BEFORE critique runs. This prevents:
+- Critique insights from improving posted comments
+- Skipped comments from being filtered out of GitHub
+- Reviewer from seeing original → critique → updated progression
+
+The new flow enables iterative refinement before external posting.
+
+### Changes Required:
+
+#### 1. Remove GitHub Posting from Feedback Skill
+**File**: `skills/paw-review-feedback/SKILL.md`
+**Changes**:
+- **Remove** "Step 5: GitHub Context - Create Pending Review" section entirely
+- **Remove** "Multi-PR Pending Reviews" section (moved to GitHub Review skill)
+- Update "Posted" field in template to show `⏳ Pending critique` instead of GitHub review IDs
+- Update core responsibilities to remove GitHub pending review creation
+- Add note: "GitHub posting handled by `paw-review-github` skill after critique iteration"
+
+**Rationale**: Feedback skill focuses purely on transforming findings into comments; GitHub integration moves to dedicated skill.
+
+#### 2. Update Critic Skill with Iteration Signal
+**File**: `skills/paw-review-critic/SKILL.md`
+**Changes**:
+- Add "## Iteration Summary" section at end of output:
+  ```markdown
+  ## Iteration Summary
+
+  After adding assessments to all comments, append:
+
+  ### Comments to Update (Based on Critique)
+
+  | Original Comment | Recommendation | Update Guidance |
+  |------------------|----------------|-----------------|
+  | File: auth.ts L45-50 | Modify | Soften tone; acknowledge valid alternative |
+  | File: api.ts L88 | Skip | Stylistic preference, not actionable |
+  | File: db.ts L120 | Include as-is | High value, accurate |
+
+  ### Summary
+  - Comments to Include as-is: X
+  - Comments to Modify: Y  
+  - Comments to Skip: Z (will not post to GitHub, retained in ReviewComments.md)
+  ```
+- Update recommendation guidelines to explicitly note Skip means "retained in artifact but not posted to GitHub"
+
+**Token impact**: ~100 tokens added
+
+#### 3. Update Feedback Skill for Critique Response Mode
+**File**: `skills/paw-review-feedback/SKILL.md`
+**Changes**:
+- Add "## Critique Response Mode" section:
+  ```markdown
+  ## Critique Response Mode
+
+  When ReviewComments.md already contains Assessment sections (from `paw-review-critic`), enter Critique Response Mode:
+
+  ### Detection
+  - Check if comments have `**Assessment:**` sections
+  - If assessments exist, this is a second pass to incorporate critique
+
+  ### Process
+  For each comment with an assessment:
+
+  1. **Preserve Original**: Keep the original comment text intact
+  2. **Include Critique**: The Assessment section remains as-is
+  3. **Add Updated Version**: Based on the recommendation:
+     - **Include as-is**: No update needed, mark `**Final**: Original stands`
+     - **Modify**: Add `**Updated Comment:**` section with revised text addressing critique feedback
+     - **Skip**: Add `**Final**: Skipped per critique - [reason]` (comment remains in artifact but won't post to GitHub)
+
+  ### Updated Comment Structure
+  ```markdown
+  ### File: `auth.ts` | Lines: 45-50
+
+  **Type**: Must
+  **Category**: Safety
+
+  [Original comment text - preserved exactly]
+
+  **Suggestion:**
+  [Original suggestion code]
+
+  **Rationale:**
+  [Original rationale]
+
+  **Assessment:**
+  - **Usefulness**: Medium - [critique justification]
+  - **Accuracy**: [validation]
+  - **Alternative Perspective**: [alternatives considered]
+  - **Trade-offs**: [trade-off analysis]
+  - **Recommendation**: Modify to soften tone
+
+  **Updated Comment:**
+  [Revised comment text incorporating critique feedback]
+
+  **Updated Suggestion:**
+  [Revised suggestion if needed]
+
+  **Final**: ✓ Ready for GitHub posting
+  ```
+
+  ### Skip Handling
+  For comments with `Recommendation: Skip`:
+  - Do NOT remove the comment from ReviewComments.md
+  - Add `**Final**: Skipped per critique - [reason from assessment]`
+  - These comments provide documentation but won't be posted to GitHub
+  - Reviewer can override by changing Final to "Ready for GitHub posting"
+  ```
+
+**Token impact**: ~300 tokens added
+
+#### 4. New GitHub Review Skill
+**File**: `skills/paw-review-github/SKILL.md` (new)
+**Changes**:
+- YAML frontmatter:
+  ```yaml
+  name: paw-review-github
+  description: Posts finalized review comments to GitHub as a pending review after critique iteration is complete.
+  metadata:
+    type: activity
+    artifacts: none
+    updates: ReviewComments.md
+    stage: output
+  ```
+- **Prerequisites**: 
+  - ReviewComments.md exists with `**Final**:` markers on all comments
+  - For GitHub PRs: Repository context available
+- **Core Responsibilities**:
+  - Read all comments from ReviewComments.md
+  - Filter to only comments marked `**Final**: ✓ Ready for GitHub posting`
+  - Create GitHub pending review with filtered comments
+  - Update ReviewComments.md with posted status and review IDs
+  - Handle multi-PR scenarios (create pending review per PR)
+- **Process Steps**:
+  1. **Load ReviewComments.md** - Read all comments
+  2. **Filter Postable Comments** - Only include comments where `**Final**:` contains "Ready for GitHub posting"
+  3. **Create Pending Review** (GitHub PRs):
+     - Call `mcp_github_pull_request_review_write` with method: "create"
+     - For each postable comment, call `mcp_github_add_comment_to_pending_review`
+     - Track review ID and comment IDs
+  4. **Update ReviewComments.md** - Update `**Posted**:` field with GitHub review/comment IDs
+  5. **Multi-PR Handling** - For multi-repo reviews, repeat steps 3-4 for each PR
+  6. **Non-GitHub Handling** - If not GitHub, provide manual posting instructions with filtered comment list
+- **Output Format**:
+  ```markdown
+  ## GitHub Posting Summary
+
+  **Pending Review Created**: Review ID 12345678
+  **Comments Posted**: 6 of 8 (2 skipped per critique)
+
+  | Comment | Status | GitHub ID |
+  |---------|--------|-----------|
+  | auth.ts L45-50 | ✓ Posted | comment-abc |
+  | api.ts L88 | Skipped | - |
+  | db.ts L120 | ✓ Posted | comment-def |
+  ```
+
+**Token target**: ~1500 tokens
+
+**Tests**:
+- Skill loads via `paw_get_skill`
+- Frontmatter parses correctly
+
+#### 5. Update Workflow Skill Orchestration
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Restructure Output Stage:
+  ```markdown
+  ### Output Stage
+
+  **Skills**: `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
+
+  **Sequence**:
+  1. Run `paw-review-feedback` activity (Initial Pass)
+     - Input: All prior artifacts
+     - Output: `ReviewComments.md` with draft comments (no GitHub posting)
+   
+  2. Run `paw-review-critic` activity
+     - Input: ReviewComments.md + all prior artifacts
+     - Output: Assessment sections added to `ReviewComments.md`, Iteration Summary
+
+  3. Run `paw-review-feedback` activity (Critique Response)
+     - Input: ReviewComments.md (with assessments) + all prior artifacts
+     - Detects Assessment sections → enters Critique Response Mode
+     - Output: Updated comments with `**Final**:` markers
+
+  4. Run `paw-review-github` activity (GitHub PRs only)
+     - Input: ReviewComments.md with finalized comments
+     - Output: Pending review created, ReviewComments.md updated with post status
+     - **Skipped for non-GitHub contexts**
+
+  **Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
+  ```
+- Update artifact directory to note ReviewComments.md goes through multiple updates
+- Update terminal behavior to note the feedback→critique→feedback→github flow
+
+**Token impact**: ~150 tokens added
+
+#### 6. Update PAW Review Agent
+**File**: `agents/PAW Review.agent.md`
+**Changes**:
+- Update Output Stage documentation to reflect 4-step sequence
+- Note the iterative feedback-critique pattern
+- Document that `paw-review-github` is the final step for GitHub PRs
+
+#### 7. Update Package.json Tool Schema
+**File**: `package.json`
+**Changes**:
+- Verify `paw_get_skill` accepts `paw-review-github` (handled automatically by skill loader)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] New `paw-review-github` skill exists with valid frontmatter
+- [ ] All updated skills load via `paw_get_skill`
+- [ ] `paw_get_skills` catalog includes `paw-review-github` (8 skills total, or 9 with correlation)
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] All tests pass: `npm test`
+- [ ] Agent lint passes: `./scripts/lint-agent.sh agents/PAW\ Review.agent.md`
+
+#### Manual Verification:
+- [ ] Initial feedback pass creates ReviewComments.md WITHOUT GitHub pending review
+- [ ] Critic adds Assessment sections with Include/Modify/Skip recommendations
+- [ ] Second feedback pass adds `**Updated Comment:**` for Modify recommendations
+- [ ] Skip comments have `**Final**: Skipped` but remain in ReviewComments.md
+- [ ] GitHub Review skill only posts comments marked "Ready for GitHub posting"
+- [ ] ReviewComments.md shows progression: Original → Assessment → Updated → Posted
+- [ ] Reviewer can see full comment history in ReviewComments.md
+- [ ] Reviewer can override Skip by editing `**Final**:` before running GitHub Review
+
+---
+
+## Phase 10: Documentation Update for Output Stage Changes
+
+### Overview
+Update all documentation to reflect the new feedback-critique iteration pattern and GitHub Review skill.
+
+### Changes Required:
+
+#### 1. Update Review Specification
+**File**: `paw-review-specification.md`
+**Changes**:
+- Update Stage R3 to describe 4-step Output sequence
+- Add `paw-review-github` skill to skill table
+- Document ReviewComments.md evolution (original → assessment → updated → posted)
+- Update artifact list with `CrossRepoAnalysis.md` for multi-repo
+
+#### 2. Update Review Documentation
+**File**: `docs/specification/review.md`
+**Changes**:
+- Update Output Stage section with new 4-step flow
+- Add GitHub Review skill description
+- Document critique iteration pattern
+- Update skill table (8-9 skills)
+
+#### 3. Update Reference Documentation
+**File**: `docs/reference/agents.md`
+**Changes**:
+- Update PAW Review agent description to mention critique iteration
+- Document that ReviewComments.md shows full comment evolution
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `mkdocs build --strict` passes
+- [ ] No broken internal links
+
+#### Manual Verification:
+- [ ] Documentation accurately describes the new 4-step Output flow
+- [ ] Skill count is accurate (8 or 9 depending on correlation skill)
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Phase 2 Sub-Phase Validation Gates
@@ -1429,6 +1905,21 @@ Each Phase 2 sub-phase must pass validation before proceeding:
 - [ ] Complete workflow runs end-to-end
 - [ ] All 7 skills in catalog
 
+**After Phase 8 (Cross-Repository Correlation):**
+- [x] Correlation skill loads correctly
+- [ ] Multi-repo review generates CrossRepoAnalysis.md
+- [ ] Single-repo reviews skip correlation (no CrossRepoAnalysis generated)
+- [ ] Cross-repo gaps appear in ReviewComments.md with cross-references
+
+**After Phase 9 (Feedback-Critique Iteration):**
+- [ ] Initial feedback pass creates ReviewComments.md WITHOUT GitHub pending review
+- [ ] Critic adds Assessment sections with recommendations
+- [ ] Second feedback pass adds Updated Comment sections
+- [ ] Skip comments marked but remain in ReviewComments.md
+- [ ] GitHub Review skill posts only "Ready for GitHub posting" comments
+- [ ] Full comment history visible: Original → Assessment → Updated → Posted
+- [ ] Skill catalog shows 8-9 skills (including paw-review-github)
+
 ### Integration Tests:
 - Extension activation with all tools registered
 - Full skill catalog returned by `paw_get_skills`
@@ -1442,6 +1933,9 @@ Each Phase 2 sub-phase must pass validation before proceeding:
 4. Verify artifact creation in `.paw/reviews/`
 5. Verify GitHub integration (pending review, line comments)
 6. Test error handling (invalid PR, missing permissions)
+7. **Multi-repo test**: Review two related PRs, verify CrossRepoAnalysis.md generated
+8. **Critique iteration test**: Verify ReviewComments.md shows original → assessment → updated progression
+9. **Skip filtering test**: Mark comment as Skip, verify it remains in artifact but not in GitHub pending review
 
 ## Performance Considerations
 

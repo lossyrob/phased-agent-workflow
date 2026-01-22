@@ -2,6 +2,14 @@
 
 This file contains instructions for GitHub Copilot when working with the Phased Agent Workflow (PAW) project.
 
+## Code Quality
+
+All code changes must pass the linter before being committed:
+
+```bash
+npm run lint
+```
+
 ## Agent Development
 
 When creating or modifying agent files in `agents/`, ALWAYS run the agent linter script:

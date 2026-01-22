@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Lint code
+        run: npm run lint
+      
       - name: Compile extension
         run: npm run compile
       
@@ -56,5 +59,6 @@ jobs:
         if: success()
         run: |
           echo "✅ All PR checks passed!"
+          echo "- Code linting: PASSED"
           echo "- Extension unit tests: PASSED"
           echo "- Agent linting: PASSED"

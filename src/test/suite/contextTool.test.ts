@@ -12,7 +12,6 @@ import {
   loadCustomInstructions,
   parseHandoffMode,
   getHandoffInstructions,
-  HandoffMode,
 } from '../../tools/contextTool';
 
 /** Default workspace info for single-folder workspace in tests */

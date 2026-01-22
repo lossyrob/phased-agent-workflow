@@ -17,6 +17,8 @@ Creates a complete PAW workflow structure with all necessary files and directori
     - **Branch name** (optional): Target branch name, or auto-derive from issue
     - **Workflow mode**: Full, Minimal, or Custom
     - **Review strategy**: PRs or Local (Minimal enforces Local)
+    - **Handoff mode**: Manual, Semi-Auto, or Auto
+    - **Artifact tracking**: Track (default) or Don't Track
 
 **What gets created:**
 
@@ -53,6 +55,29 @@ The Status Agent analyzes your workflow and reports:
 - Git branch status and divergence from target
 - PR states with review comment analysis (if PRs strategy)
 - Actionable next steps
+
+### PAW: Stop Tracking Artifacts
+
+Stops tracking workflow artifacts mid-workflow, removing them from git while keeping local copies.
+
+**How to use:**
+
+1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
+2. Type **"PAW: Stop Tracking Artifacts"**
+3. Select your work item from the list
+4. An agent session opens and executes the git commands
+
+**What happens:**
+
+- Artifacts are untracked from git index (files remain locally)
+- A `.gitignore` file is created in the workflow directory
+- Future commits won't include workflow artifacts
+
+**When to use:**
+
+- Contributing to non-PAW repositories where artifacts may be unwanted
+- Small changes where artifact overhead is disproportionate
+- Mid-workflow discovery that artifact tracking isn't needed
 
 ## Configuration
 

@@ -541,7 +541,8 @@ suite('Agent Installation', () => {
 
       // Track whether we simulated a permission error
       let permissionErrorHit = false;
-      const nativeFs = fs;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      const nativeFs = require('fs') as typeof fs;
       const originalUnlinkSync = nativeFs.unlinkSync;
 
       try {

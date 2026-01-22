@@ -219,7 +219,7 @@ Pass the artifact tracking preference to the initialization agent through templa
 
 ### Overview
 
-Create a new VS Code command that allows users to stop tracking artifacts mid-workflow. The command untracks committed artifacts without deleting them and creates the `.gitignore` marker.
+Create a new VS Code command that allows users to stop tracking artifacts mid-workflow. Following PAW's architecture philosophy (agents provide decision-making, tools provide procedural operations), this command opens a chat with an agent that executes the git operations rather than hardcoding procedural steps in TypeScript.
 
 ### Changes Required
 
@@ -229,24 +229,47 @@ Create a new VS Code command that allows users to stop tracking artifacts mid-wo
 
 **Changes**:
 - Create new file implementing the "Stop Tracking Artifacts" command
-- Follow pattern from [src/commands/getWorkStatus.ts](src/commands/getWorkStatus.ts)
-- Implement `scanWorkItems()` reuse or import from getWorkStatus.ts
-- Present Quick Pick for work item selection if multiple exist
-- Execute operations:
-  1. Check if `.gitignore` already exists (idempotent handling)
-  2. Run `git rm --cached -r .paw/work/<slug>/` to untrack without deleting
-  3. Create `.paw/work/<slug>/.gitignore` with content `*`
-  4. Stage the `.gitignore` file (so it's tracked and prevents future artifact tracking)
-  5. Inform user of success
+- Follow pattern from [src/commands/getWorkStatus.ts](src/commands/getWorkStatus.ts#L185-L240)
+- Reuse `scanWorkItems()` by extracting to shared utility or importing from getWorkStatus.ts
+- Present Quick Pick for work item selection (with auto-detect option if multiple exist)
+- Open new chat session with Copilot, passing a query that instructs the agent to:
+  - If Work ID provided: operate on `.paw/work/<slug>/` directory directly
+  - If auto-detect: find PAW workflow artifacts by scanning `.paw/work/` directories for `WorkflowContext.md`
+  - Execute the git commands to untrack artifacts and create `.gitignore`
+- The query includes precise git commands for the agent to execute:
+  ```
+  git rm --cached -r .paw/work/<slug>/
+  echo '*' > .paw/work/<slug>/.gitignore
+  git add .paw/work/<slug>/.gitignore
+  ```
 - Export `registerStopTrackingCommand()` factory function
-- Handle errors: no workspace, no work items found, git command failures
+
+**Brief Example** (command structure):
+```typescript
+// Query construction pattern - agent handles execution
+const query = workId
+  ? `Stop tracking PAW artifacts for Work ID: ${workId}. Execute: git rm --cached -r .paw/work/${workId}/ && echo '*' > .paw/work/${workId}/.gitignore && git add .paw/work/${workId}/.gitignore`
+  : `Stop tracking PAW artifacts. First find the active workflow by scanning .paw/work/ for WorkflowContext.md, then execute git rm --cached and create .gitignore.`;
+```
 
 **Tests**:
 - Unit test for command registration
 - Integration test: command appears in palette
-- Test cases: single work item auto-selects, multiple work items shows picker
+- Test cases: work item selection triggers correct query construction
 
-#### 2. Command Registration
+#### 2. Prompt Template (Optional Enhancement)
+
+**File**: `src/prompts/stopTrackingArtifacts.template.md` (new file, optional)
+
+**Changes**:
+- Create template with detailed instructions for the agent:
+  - How to locate workflow artifacts if not specified
+  - Exact git commands to execute
+  - Success/error handling guidance
+  - Idempotency: check if `.gitignore` already exists before running `git rm`
+- This is optional—inline query may be sufficient for this simple operation
+
+#### 3. Command Registration
 
 **File**: [src/extension.ts](src/extension.ts)
 
@@ -255,7 +278,7 @@ Create a new VS Code command that allows users to stop tracking artifacts mid-wo
 - Call `registerStopTrackingCommand(context, outputChannel)` in `activate()`
 - Add logging line: `'[INFO] Registered command: paw.stopTrackingArtifacts'`
 
-#### 3. Package.json Command Declaration
+#### 4. Package.json Command Declaration
 
 **File**: [package.json](package.json)
 
@@ -282,11 +305,12 @@ Create a new VS Code command that allows users to stop tracking artifacts mid-wo
 
 #### Manual Verification:
 - [ ] Command appears in palette: "PAW: Stop Tracking Artifacts"
-- [ ] Running command on workflow with committed artifacts → `git rm --cached` executes
-- [ ] After command: artifacts remain on filesystem but not in git index
-- [ ] After command: `.gitignore` exists in workflow directory with `*`
-- [ ] Running command twice is idempotent (no errors)
-- [ ] Running command with no workflows shows informative message
+- [ ] Selecting a work item opens chat with correct Work ID in query
+- [ ] Agent executes `git rm --cached` command successfully
+- [ ] After agent completes: artifacts remain on filesystem but not in git index
+- [ ] After agent completes: `.gitignore` exists in workflow directory with `*`
+- [ ] Running command twice is idempotent (agent handles gracefully)
+- [ ] Auto-detect option works when no specific workflow selected
 
 ---
 

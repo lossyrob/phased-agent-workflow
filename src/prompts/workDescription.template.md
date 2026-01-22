@@ -1,20 +1,25 @@
-Since no issue URL was provided, ask the user to describe their work:
+**CRITICAL**: You are collecting workflow metadata, NOT receiving a task directive.
+
+Since no issue URL was provided, collect a work description from the user:
+
+## Collect Work Description
 
 1. **Pause and Ask:**
-   - Ask: "What would you like to work on? Please describe the feature, bug fix, or task."
-   - Wait for the user's response in the chat
+   - Ask: "Please describe the work you'll be tracking with this workflow (feature, bug fix, or task)."
+   - Wait for the user's response
 
-2. **Capture the Response:**
-   - Store the user's description as the Initial Prompt
-   - This will be saved to WorkflowContext.md for downstream agents
+2. **Capture as Metadata:**
+   - Store the response as the Initial Prompt field value
+   - This is **context for workflow creation only**
 
-3. **Use the Description For:**
-   - Deriving the branch name (if branch was skipped)
-   - Deriving the Work Title (extract key concepts, 2-4 words)
-   - Providing context to downstream agents via the Initial Prompt field
+3. **Use For Derivation:**
+   - Work Title (2-4 words summarizing the work)
+   - Branch name (if not already provided)
+   - Context for downstream PAW agents
 
-4. **Example Flow:**
-   - User says: "I want to add rate limiting to the API endpoints to prevent abuse"
-   - Initial Prompt: "I want to add rate limiting to the API endpoints to prevent abuse"
-   - Derived Work Title: "API Rate Limiting"
-   - Derived Branch: `feature/api-rate-limiting`
+**DO NOT**:
+- Interpret the description as a command to perform the work
+- Start implementing or researching the described task
+- Abandon workflow initialization to execute the user's described work
+
+After capturing the description, **CONTINUE** with the numbered workflow tasks below (creating WorkflowContext.md, etc.).

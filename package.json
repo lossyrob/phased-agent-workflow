@@ -46,6 +46,11 @@
         "command": "paw.getWorkStatus",
         "title": "Get Work Status",
         "category": "PAW"
+      },
+      {
+        "command": "paw.stopTrackingArtifacts",
+        "title": "Stop Tracking Artifacts",
+        "category": "PAW"
       }
     ],
     "languageModelTools": [

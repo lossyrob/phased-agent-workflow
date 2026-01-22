@@ -4,6 +4,59 @@ import * as path from 'path';
 import { scanWorkItems } from '../utils/workItemScanner';
 
 /**
+ * Template variable substitutions for the stop tracking prompt.
+ */
+interface StopTrackingPromptVariables {
+  /** The Work ID (feature slug) */
+  WORK_ID: string;
+  /** Path to the work directory */
+  WORK_DIR: string;
+}
+
+/**
+ * Load and render the stop tracking prompt template.
+ * 
+ * @param variables - Template variable substitutions
+ * @returns Rendered prompt string
+ */
+function renderStopTrackingPrompt(variables: StopTrackingPromptVariables): string {
+  const templatePath = path.join(__dirname, '..', 'prompts', 'stopTrackingArtifacts.template.md');
+  let template = fs.readFileSync(templatePath, 'utf-8');
+  
+  // Replace all template variables
+  template = template.replace(/\{\{WORK_ID\}\}/g, variables.WORK_ID);
+  template = template.replace(/\{\{WORK_DIR\}\}/g, variables.WORK_DIR);
+  
+  return template;
+}
+
+/**
+ * Format relative time for display (e.g., "2 hours ago", "3 days ago").
+ * 
+ * @param date - Date to format
+ * @returns Human-readable relative time string
+ */
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) {
+    return 'just now';
+  } else if (diffMins < 60) {
+    return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  } else if (diffDays < 30) {
+    return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+}
+
+/**
  * QuickPick item representing a work item.
  */
 interface WorkItemQuickPickItem extends vscode.QuickPickItem {
@@ -39,10 +92,11 @@ export async function stopTrackingArtifactsCommand(
       return;
     }
 
-    // Build QuickPick items
+    // Build QuickPick items (already sorted by most recently modified)
     const quickPickItems: WorkItemQuickPickItem[] = workItems.map(item => ({
       label: item.slug,
       description: item.title,
+      detail: `Last modified: ${formatRelativeTime(item.lastModified)}`,
       slug: item.slug,
       workDir: item.workDir
     }));
@@ -74,25 +128,11 @@ export async function stopTrackingArtifactsCommand(
       return;
     }
 
-    // Construct query for the agent to execute git operations
-    const query = `Stop tracking PAW artifacts for Work ID: ${selection.slug}
-
-Execute the following git commands to untrack artifacts and create .gitignore:
-
-1. Untrack the workflow directory from git (keep files locally):
-   \`git rm --cached -r .paw/work/${selection.slug}/\`
-
-2. Create .gitignore to exclude future tracking:
-   \`echo '*' > .paw/work/${selection.slug}/.gitignore\`
-
-3. Stage the .gitignore file:
-   \`git add .paw/work/${selection.slug}/.gitignore\`
-
-4. Verify the changes:
-   - Run \`git status\` to confirm artifacts are untracked
-   - Confirm .gitignore contains \`*\`
-
-Report success or any errors encountered.`;
+    // Render prompt from template
+    const query = renderStopTrackingPrompt({
+      WORK_ID: selection.slug,
+      WORK_DIR: selection.workDir
+    });
 
     outputChannel.appendLine(
       `[INFO] Opening agent to stop tracking artifacts for ${selection.slug}`

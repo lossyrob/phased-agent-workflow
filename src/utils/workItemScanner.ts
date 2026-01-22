@@ -12,6 +12,8 @@ export interface WorkItem {
   title?: string;
   /** Path to the work directory */
   workDir: string;
+  /** Most recent modification time of any artifact */
+  lastModified: Date;
 }
 
 /**
@@ -26,13 +28,49 @@ export function parseWorkTitle(content: string): string | undefined {
 }
 
 /**
+ * Get the most recent modification time for a work item directory.
+ * 
+ * Checks modification times of key artifact files and returns the most recent.
+ * 
+ * @param workDir - Path to the .paw/work/<slug>/ directory
+ * @returns Most recent modification Date
+ */
+function getLastModified(workDir: string): Date {
+  const artifactFiles = [
+    'WorkflowContext.md',
+    'Spec.md',
+    'SpecResearch.md',
+    'CodeResearch.md',
+    'ImplementationPlan.md',
+    'Docs.md'
+  ];
+
+  let mostRecent = new Date(0); // Unix epoch as default
+
+  for (const artifact of artifactFiles) {
+    const filePath = path.join(workDir, artifact);
+    try {
+      const stats = fs.statSync(filePath);
+      if (stats.mtime > mostRecent) {
+        mostRecent = stats.mtime;
+      }
+    } catch {
+      // File doesn't exist, skip
+    }
+  }
+
+  return mostRecent;
+}
+
+/**
  * Scan workspace for active PAW work items.
  * 
  * Searches .paw/work/ directories in all workspace folders for work items
- * that have a WorkflowContext.md file.
+ * that have a WorkflowContext.md file. Results are sorted by most recently
+ * modified (newest first).
  * 
  * @param outputChannel - Output channel for logging
- * @returns Array of WorkItem objects
+ * @returns Array of WorkItem objects sorted by most recently modified
  */
 export async function scanWorkItems(
   outputChannel: vscode.OutputChannel
@@ -70,11 +108,13 @@ export async function scanWorkItems(
         try {
           const content = fs.readFileSync(contextPath, 'utf-8');
           const title = parseWorkTitle(content);
+          const lastModified = getLastModified(workDir);
 
           workItems.push({
             slug: entry.name,
             title,
-            workDir
+            workDir,
+            lastModified
           });
 
           outputChannel.appendLine(
@@ -92,6 +132,9 @@ export async function scanWorkItems(
       );
     }
   }
+
+  // Sort by most recently modified (newest first)
+  workItems.sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
 
   return workItems;
 }

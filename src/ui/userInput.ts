@@ -59,6 +59,14 @@ export interface WorkItemInputs {
   
   /** Handoff mode for stage transition handling */
   handoffMode: HandoffMode;
+
+  /**
+   * Whether to track workflow artifacts in git.
+   * 
+   * When true (default), workflow artifacts (.paw/work/<slug>/*) are committed to git.
+   * When false, a .gitignore is created to exclude artifacts from version control.
+   */
+  trackArtifacts: boolean;
   
   /**
    * Optional issue or work item URL to associate with the work item.
@@ -273,6 +281,50 @@ export async function collectHandoffMode(
 }
 
 /**
+ * Collect artifact tracking preference from user.
+ * 
+ * Presents a Quick Pick menu with two options:
+ * - Track: Workflow artifacts committed to git (default)
+ * - Don't Track: Exclude workflow artifacts from git
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to boolean (true = track, false = don't track), or undefined if cancelled
+ */
+export async function collectArtifactTracking(
+  outputChannel: vscode.OutputChannel
+): Promise<boolean | undefined> {
+  const trackingSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: "Track",
+        description: "Workflow artifacts committed to git (default)",
+        detail:
+          "Standard PAW behavior—artifacts visible in PRs and version history",
+        value: true,
+      },
+      {
+        label: "Don't Track",
+        description: "Exclude workflow artifacts from git",
+        detail:
+          "For external contributions or lightweight changes—artifacts stay local only",
+        value: false,
+      },
+    ],
+    {
+      placeHolder: "Select artifact tracking behavior",
+      title: "Artifact Tracking",
+    }
+  );
+
+  if (!trackingSelection) {
+    outputChannel.appendLine("[INFO] Artifact tracking selection cancelled");
+    return undefined;
+  }
+
+  return trackingSelection.value;
+}
+
+/**
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
@@ -351,11 +403,18 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  // Collect artifact tracking preference
+  const trackArtifacts = await collectArtifactTracking(outputChannel);
+  if (trackArtifacts === undefined) {
+    return undefined;
+  }
+
   return {
     targetBranch: targetBranch.trim(),
     workflowMode,
     reviewStrategy,
     handoffMode,
+    trackArtifacts,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };
 }

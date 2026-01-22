@@ -130,8 +130,8 @@ Add artifact tracking to the user input collection flow. The prompt appears afte
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
 - [ ] Unit tests pass (if added): `npm test`
 
 #### Manual Verification:
@@ -298,10 +298,10 @@ const query = workId
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
 - [ ] Unit tests pass: `npm test`
-- [ ] Extension activates without errors
+- [x] Extension activates without errors
 
 #### Manual Verification:
 - [ ] Command appears in palette: "PAW: Stop Tracking Artifacts"
@@ -311,6 +311,20 @@ const query = workId
 - [ ] After agent completes: `.gitignore` exists in workflow directory with `*`
 - [ ] Running command twice is idempotent (agent handles gracefully)
 - [ ] Auto-detect option works when no specific workflow selected
+
+### Phase 3 Implementation Notes
+
+**Status**: Phase 3 implementation complete, committed as `b7ed6c0`.
+
+**Implementation Summary**:
+- Created `src/commands/stopTrackingArtifacts.ts` with full command implementation
+- Uses QuickPick for work item selection with title extracted from WorkflowContext.md
+- Follows agent-based execution pattern per PAW architecture philosophy
+- Includes idempotency check (warns if .gitignore already exists)
+- Skipped optional prompt template—inline query is sufficient for this operation
+- Registered command in extension.ts and package.json
+
+**Review Notes**: Phases 1, 2, and 3 were all implemented before reviewer handoff due to workflow error. Reviewer should verify all three phases together.
 
 ---
 
@@ -360,14 +374,29 @@ Update agent instructions so they check for `.gitignore` presence before staging
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Agent linter passes for PAW-02B: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
-- [ ] Agent linter passes for PAW-04: `./scripts/lint-agent.sh agents/PAW-04\ Documenter.agent.md`
+- [x] Agent linter passes for PAW-02B: `./scripts/lint-agent.sh agents/PAW-02B\ Impl\ Planner.agent.md`
+- [x] Agent linter passes for PAW-04: `./scripts/lint-agent.sh agents/PAW-04\ Documenter.agent.md`
 
 #### Manual Verification:
 - [ ] Complete a workflow with "Don't Track" selected → no `.paw/` files appear in any commits
 - [ ] Complete a workflow with "Track" selected → artifacts committed normally
 - [ ] PAW-02B creates Planning PR without artifacts when `.gitignore` present
 - [ ] PAW-04 creates Docs PR with README.md but without Docs.md when `.gitignore` present
+
+### Phase 4 Implementation Notes
+
+**Status**: Phase 4 implementation complete, committed as `41fb5bd`.
+
+**Implementation Summary**:
+- Updated PAW-02B Impl Planner with .gitignore checks at three locations:
+  - PR review response artifact staging
+  - prs strategy completion staging
+  - local strategy completion staging
+- Updated PAW-04 Documenter with .gitignore checks at two locations:
+  - prs strategy staging (splits Docs.md from project docs)
+  - local strategy staging (same split)
+- Both agents now check for `.paw/work/<feature-slug>/.gitignore` before staging
+- If .gitignore exists, agents skip `.paw/` artifacts but still stage project docs
 
 ---
 

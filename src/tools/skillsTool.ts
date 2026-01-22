@@ -17,7 +17,7 @@ export function registerSkillsTool(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): void {
-  const tool = vscode.lm.registerTool<{}>(
+  const tool = vscode.lm.registerTool<Record<string, never>>(
     'paw_get_skills',
     {
       async prepareInvocation(_options, _token) {

@@ -28,7 +28,7 @@ function overridePromptDirectoryConfig(promptsDir: string): () => void {
 suite('Agent Installation', () => {
   let testDir: string;
   let mockContext: vscode.ExtensionContext;
-  let globalStateStore: Map<string, any>;
+  let globalStateStore: Map<string, unknown>;
 
   setup(() => {
     // Create temporary directory for test installation
@@ -41,7 +41,7 @@ suite('Agent Installation', () => {
     mockContext = {
       globalState: {
         get: (key: string) => globalStateStore.get(key),
-        update: async (key: string, value: any) => {
+        update: async (key: string, value: unknown) => {
           globalStateStore.set(key, value);
         },
         keys: () => Array.from(globalStateStore.keys()),
@@ -58,11 +58,11 @@ suite('Agent Installation', () => {
         activate: async () => undefined
       },
       subscriptions: [],
-      workspaceState: {} as any,
-      secrets: {} as any,
+      workspaceState: {} as vscode.Memento,
+      secrets: {} as vscode.SecretStorage,
       extensionUri: vscode.Uri.file(path.resolve(__dirname, '../../..')),
       extensionPath: path.resolve(__dirname, '../../..'),
-      environmentVariableCollection: {} as any,
+      environmentVariableCollection: {} as vscode.GlobalEnvironmentVariableCollection,
       storageUri: undefined,
       storagePath: undefined,
       globalStorageUri: vscode.Uri.file(testDir),
@@ -71,7 +71,7 @@ suite('Agent Installation', () => {
       logPath: testDir,
       extensionMode: vscode.ExtensionMode.Test,
       asAbsolutePath: (relativePath: string) => path.resolve(__dirname, '../../..', relativePath),
-      languageModelAccessInformation: {} as any
+      languageModelAccessInformation: {} as vscode.LanguageModelAccessInformation
     };
   });
 
@@ -215,7 +215,7 @@ suite('Agent Installation', () => {
     try {
       const result = await installAgents(mockContext);
       
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ version: string; filesInstalled: string[]; installedAt: string; success: boolean }>('paw.agentInstallation');
       assert.ok(state, 'Should create installation state');
       assert.strictEqual(state.version, '0.0.1', 'Should store current version');
       assert.ok(Array.isArray(state.filesInstalled), 'Should store installed files list');
@@ -270,7 +270,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(result.filesInstalled.length, 0, 'Should not install any files');
       
       // State should be updated even with failures
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ success: boolean }>('paw.agentInstallation');
       assert.ok(state, 'Should create installation state');
       assert.strictEqual(state.success, false, 'Should mark as failed');
     } finally {
@@ -336,7 +336,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(result2.filesInstalled.length, filesCount, 'Should install same number of files');
       
       // Check state reflects version change
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ version: string; previousVersion: string; filesDeleted: number }>('paw.agentInstallation');
       assert.strictEqual(state.version, '0.0.2', 'Should update to new version');
       assert.strictEqual(state.previousVersion, '0.0.1', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
@@ -367,7 +367,7 @@ suite('Agent Installation', () => {
       assert.strictEqual(result2.filesInstalled.length, filesCount, 'Should install same number of files');
       
       // Check state reflects version change
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ version: string; previousVersion: string; filesDeleted: number }>('paw.agentInstallation');
       assert.strictEqual(state.version, '0.0.1', 'Should update to downgraded version');
       assert.strictEqual(state.previousVersion, '0.0.2', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
@@ -389,7 +389,7 @@ suite('Agent Installation', () => {
       
       // Simulate cleanup error by manually updating state with a non-existent file
       // This is more reliable than file permissions which vary by platform
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ filesInstalled: string[] }>('paw.agentInstallation');
       state.filesInstalled = [...result1.filesInstalled, 'nonexistent-file.agent.md'];
       await mockContext.globalState.update('paw.agentInstallation', state);
       
@@ -403,7 +403,7 @@ suite('Agent Installation', () => {
       assert.ok(result2.filesInstalled.length > 0, 'Should install files even if cleanup encounters missing files');
       
       // State should reflect successful installation
-      const newState = mockContext.globalState.get<any>('paw.agentInstallation');
+      const newState = mockContext.globalState.get<{ version: string; filesDeleted?: number }>('paw.agentInstallation');
       assert.strictEqual(newState.version, '0.0.2', 'Should update version');
       assert.ok(newState.filesDeleted !== undefined, 'Should track cleanup even with missing files');
     } finally {
@@ -482,7 +482,7 @@ suite('Agent Installation', () => {
       }
       
       // State should track the cleanup
-      const state = mockContext.globalState.get<any>('paw.agentInstallation');
+      const state = mockContext.globalState.get<{ filesDeleted: number }>('paw.agentInstallation');
       assert.strictEqual(state.filesDeleted, installedFiles.length, 'Should have deleted all previous files');
     } finally {
       restoreConfig();
@@ -521,7 +521,7 @@ suite('Agent Installation', () => {
           );
         }
 
-        const state = mockContext.globalState.get<any>('paw.agentInstallation');
+        const state = mockContext.globalState.get<unknown>('paw.agentInstallation');
         assert.strictEqual(state, undefined, 'Installation state should be cleared after cleanup');
       } finally {
         restoreConfig();
@@ -536,7 +536,7 @@ suite('Agent Installation', () => {
 
       // Track whether we simulated a permission error
       let permissionErrorHit = false;
-      const nativeFs = require('fs') as typeof fs;
+      const nativeFs = fs;
       const originalUnlinkSync = nativeFs.unlinkSync;
 
       try {

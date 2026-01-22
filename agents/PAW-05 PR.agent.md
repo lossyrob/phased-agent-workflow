@@ -98,6 +98,20 @@ Custom Workflow Instructions: <text or none>
 
 **Note**: Final PR creation is mandatory in all workflow modes. This PR always goes from target branch → main/base branch regardless of mode or strategy.
 
+### Artifact Tracking Detection
+
+Before generating the PR description, check if workflow artifacts are excluded from git tracking:
+
+1. Check if `.paw/work/<feature-slug>/.gitignore` exists
+2. If it exists and contains `*`, artifacts are **untracked** - do NOT include the Artifacts section in the PR description
+3. If no `.gitignore` exists, artifacts are **tracked** - include the Artifacts section with links
+
+**Why**: When users choose not to track workflow artifacts, the artifacts remain local only. Including links to untracked artifacts in the PR description creates broken links that confuse reviewers.
+
+**Conditional PR Description Behavior**:
+- **Artifacts tracked** (no `.gitignore`): Include full "Artifacts" section with links to Spec.md, SpecResearch.md, etc.
+- **Artifacts untracked** (`.gitignore` exists): Omit the "Artifacts" section entirely. Summarize key information from artifacts directly in the PR body instead.
+
 ### Work Title for PR Naming
 
 The Final PR must be prefixed with the Work Title from WorkflowContext.md:
@@ -167,11 +181,13 @@ After all checks pass, create the PR with this format:
 - Closes issue at <Issue URL>
 
 ## Artifacts
+<!-- ONLY INCLUDE THIS SECTION IF ARTIFACTS ARE TRACKED (no .gitignore in workflow dir) -->
 - Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
 - Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)
 - Code Research: [CodeResearch.md](.paw/work/<feature-slug>/CodeResearch.md)
 - Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
 - Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
+<!-- END CONDITIONAL SECTION -->
 
 Read Work ID from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
 

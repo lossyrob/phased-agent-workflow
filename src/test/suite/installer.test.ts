@@ -337,6 +337,7 @@ suite('Agent Installation', () => {
       
       // Check state reflects version change
       const state = mockContext.globalState.get<{ version: string; previousVersion: string; filesDeleted: number }>('paw.agentInstallation');
+      assert.ok(state, 'State should exist');
       assert.strictEqual(state.version, '0.0.2', 'Should update to new version');
       assert.strictEqual(state.previousVersion, '0.0.1', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
@@ -368,6 +369,7 @@ suite('Agent Installation', () => {
       
       // Check state reflects version change
       const state = mockContext.globalState.get<{ version: string; previousVersion: string; filesDeleted: number }>('paw.agentInstallation');
+      assert.ok(state, 'State should exist');
       assert.strictEqual(state.version, '0.0.1', 'Should update to downgraded version');
       assert.strictEqual(state.previousVersion, '0.0.2', 'Should track previous version');
       assert.strictEqual(state.filesDeleted, filesCount, 'Should have deleted all previous files');
@@ -390,6 +392,7 @@ suite('Agent Installation', () => {
       // Simulate cleanup error by manually updating state with a non-existent file
       // This is more reliable than file permissions which vary by platform
       const state = mockContext.globalState.get<{ filesInstalled: string[] }>('paw.agentInstallation');
+      assert.ok(state, 'State should exist');
       state.filesInstalled = [...result1.filesInstalled, 'nonexistent-file.agent.md'];
       await mockContext.globalState.update('paw.agentInstallation', state);
       
@@ -404,6 +407,7 @@ suite('Agent Installation', () => {
       
       // State should reflect successful installation
       const newState = mockContext.globalState.get<{ version: string; filesDeleted?: number }>('paw.agentInstallation');
+      assert.ok(newState, 'State should exist');
       assert.strictEqual(newState.version, '0.0.2', 'Should update version');
       assert.ok(newState.filesDeleted !== undefined, 'Should track cleanup even with missing files');
     } finally {
@@ -483,6 +487,7 @@ suite('Agent Installation', () => {
       
       // State should track the cleanup
       const state = mockContext.globalState.get<{ filesDeleted: number }>('paw.agentInstallation');
+      assert.ok(state, 'State should exist');
       assert.strictEqual(state.filesDeleted, installedFiles.length, 'Should have deleted all previous files');
     } finally {
       restoreConfig();

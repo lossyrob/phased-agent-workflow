@@ -51,6 +51,10 @@ interface PromptVariables {
   WORK_DESCRIPTION_SECTION: string;
   /** Initial Prompt field for WorkflowContext.md (conditional) */
   INITIAL_PROMPT_FIELD: string;
+  /** Artifact tracking preference display value: "Track" or "Don't Track" */
+  TRACK_ARTIFACTS: string;
+  /** Conditional instructions for artifact exclusion (empty when tracking enabled) */
+  ARTIFACT_TRACKING_SECTION: string;
 }
 
 /**
@@ -164,6 +168,7 @@ function buildWorkDescriptionSection(): string {
  * @param handoffMode - Handoff mode (manual, semi-auto, or auto)
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
  * @param workspacePath - Absolute path to the workspace root directory
+ * @param trackArtifacts - Whether to track workflow artifacts in git (true) or exclude them (false)
  * @returns Complete prompt text with all variables substituted
  */
 export function constructAgentPrompt(
@@ -172,7 +177,8 @@ export function constructAgentPrompt(
   reviewStrategy: ReviewStrategy,
   handoffMode: HandoffMode,
   issueUrl: string | undefined,
-  workspacePath: string
+  workspacePath: string,
+  trackArtifacts: boolean
 ): string {
   const customInstructions = loadCustomInstructions(
     workspacePath,
@@ -230,6 +236,18 @@ export function constructAgentPrompt(
   const initialPromptFieldContent = !issueUrl
     ? 'Initial Prompt: <user_work_description>\n'
     : '';
+
+  // Build artifact tracking section for when tracking is disabled
+  // When tracking is disabled, the agent creates a .gitignore and skips artifact commits
+  const trackArtifactsDisplayValue = trackArtifacts ? 'Track' : "Don't Track";
+  const artifactTrackingSectionContent = trackArtifacts
+    ? ''
+    : `**IMPORTANT - Artifact Tracking DISABLED**:
+1. Create \`.paw/work/<feature-slug>/.gitignore\` containing \`*\`
+2. Do NOT stage or commit WorkflowContext.md or any \`.paw/\` files
+3. Continue with all other initialization steps normally
+
+`;
   
   // Prepare template variables for substitution
   const variables: PromptVariables = {
@@ -248,7 +266,9 @@ export function constructAgentPrompt(
     CUSTOM_INSTRUCTIONS: customInstructionsSection,
     BRANCH_AUTO_DERIVE_SECTION: branchAutoDeriveSectionContent,
     WORK_DESCRIPTION_SECTION: workDescriptionSectionContent,
-    INITIAL_PROMPT_FIELD: initialPromptFieldContent
+    INITIAL_PROMPT_FIELD: initialPromptFieldContent,
+    TRACK_ARTIFACTS: trackArtifactsDisplayValue,
+    ARTIFACT_TRACKING_SECTION: artifactTrackingSectionContent
   };
   
   // Load template and substitute variables

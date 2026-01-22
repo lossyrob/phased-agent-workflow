@@ -105,7 +105,8 @@ suite('Custom Instructions Loader', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('## Custom Instructions'));
       assert.ok(prompt.includes('## Custom Section'));
@@ -123,7 +124,8 @@ suite('Custom Instructions Loader', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(!prompt.includes('## Custom Instructions'));
       assert.ok(!prompt.includes('{{CUSTOM_INSTRUCTIONS}}'));
@@ -149,7 +151,8 @@ suite('Branch Mode Handling', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('feature/my-feature'), 'Explicit branch name should appear in prompt');
       assert.ok(!prompt.includes('Target Branch: auto'), 'auto sentinel should not appear when branch is explicit');
@@ -167,7 +170,8 @@ suite('Branch Mode Handling', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Target Branch: auto'), 'Empty branch should result in "auto" sentinel in WorkflowContext');
     } finally {
@@ -184,7 +188,8 @@ suite('Branch Mode Handling', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Target Branch: auto'), 'Whitespace-only branch should result in "auto" sentinel');
     } finally {
@@ -201,7 +206,8 @@ suite('Branch Mode Handling', () => {
         'prs',
         'manual',
         'https://github.com/owner/repo/issues/123',
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Target Branch: auto'), 'Auto branch should work with issue URL');
       assert.ok(prompt.includes('https://github.com/owner/repo/issues/123'), 'Issue URL should appear in prompt');
@@ -227,7 +233,8 @@ suite('Branch Auto-Derivation Section', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('**Branch Mode**: auto-derive'), 'Branch mode should be auto-derive');
       assert.ok(prompt.includes('Check Current Branch First'), 'Should include branch checking instructions');
@@ -246,7 +253,8 @@ suite('Branch Auto-Derivation Section', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('**Branch Mode**: explicit'), 'Branch mode should be explicit');
       assert.ok(!prompt.includes('Check Current Branch First'), 'Should not include auto-derivation instructions');
@@ -264,7 +272,8 @@ suite('Branch Auto-Derivation Section', () => {
         'prs',
         'manual',
         'https://github.com/owner/repo/issues/42',
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Derive From Issue Title'), 'Should include issue-based derivation');
       assert.ok(prompt.includes('Fetch the issue title from https://github.com/owner/repo/issues/42'), 'Should reference the issue URL');
@@ -283,7 +292,8 @@ suite('Branch Auto-Derivation Section', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Derive From Work Description'), 'Should include description-based derivation');
       assert.ok(!prompt.includes('Derive From Issue Title'), 'Should not include issue-based derivation');
@@ -309,7 +319,8 @@ suite('Work Description Section', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('What would you like to work on'), 'Should ask for work description');
       assert.ok(prompt.includes('Pause and Ask'), 'Should include pause instructions');
@@ -328,7 +339,8 @@ suite('Work Description Section', () => {
         'prs',
         'manual',
         'https://github.com/owner/repo/issues/123',
-        workspace
+        workspace,
+        true
       );
       assert.ok(!prompt.includes('What would you like to work on'), 'Should not ask for work description');
       assert.ok(!prompt.includes('Pause and Ask'), 'Should not include pause instructions');
@@ -354,7 +366,8 @@ suite('Initial Prompt Field', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('Initial Prompt: <user_work_description>'), 'Should include Initial Prompt placeholder');
     } finally {
@@ -371,7 +384,8 @@ suite('Initial Prompt Field', () => {
         'prs',
         'manual',
         'https://github.com/owner/repo/issues/123',
-        workspace
+        workspace,
+        true
       );
       assert.ok(!prompt.includes('Initial Prompt:'), 'Should not include Initial Prompt field');
     } finally {
@@ -388,7 +402,8 @@ suite('Initial Prompt Field', () => {
         'prs',
         'manual',
         undefined,
-        workspace
+        workspace,
+        true
       );
       assert.ok(prompt.includes('**Initial Prompt** (Optional)'), 'Should document Initial Prompt field');
     } finally {

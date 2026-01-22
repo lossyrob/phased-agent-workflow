@@ -9,6 +9,7 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
 - **Handoff Mode**: {{HANDOFF_MODE}}
+- **Track Artifacts**: {{TRACK_ARTIFACTS}}
 {{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
 
@@ -103,14 +104,16 @@ Ensure the branch `{{TARGET_BRANCH}}` is created and checked out. Handle conflic
 **If Branch Mode is "auto-derive":**
 Use the branch name derived from the steps above. Create and checkout the derived branch. If conflicts exist with existing branches, append a suffix (-2, -3, etc.) or prompt user for resolution.
 
-### 7. Commit WorkflowContext.md
+### 7. Commit WorkflowContext.md (Skip if artifacts not tracked)
 
+{{ARTIFACT_TRACKING_SECTION}}**If Track Artifacts is "Track":**
 After creating the workflow structure and checking out the target branch, commit the WorkflowContext.md file:
 
 1. Stage the WorkflowContext.md file: `git add .paw/work/<feature-slug>/WorkflowContext.md`
 2. Create an initial commit with message: `Initialize PAW workflow for <Work Title>`
 
-This ensures the workflow context is tracked in version control from the start.
+**If Track Artifacts is "Don't Track":**
+Skip committing WorkflowContext.md—it remains local only. Verify `.gitignore` exists in workflow directory with content `*`.
 
 ### 8. Open WorkflowContext.md
 

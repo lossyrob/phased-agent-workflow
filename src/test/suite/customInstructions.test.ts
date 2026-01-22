@@ -311,9 +311,9 @@ suite('Work Description Section', () => {
         undefined,
         workspace
       );
-      assert.ok(prompt.includes('What would you like to work on'), 'Should ask for work description');
+      assert.ok(prompt.includes('describe the work you\'ll be tracking'), 'Should ask for work description');
       assert.ok(prompt.includes('Pause and Ask'), 'Should include pause instructions');
-      assert.ok(prompt.includes('Capture the Response'), 'Should include capture instructions');
+      assert.ok(prompt.includes('Capture as Metadata'), 'Should include capture instructions');
     } finally {
       fs.rmSync(workspace, { recursive: true, force: true });
     }
@@ -330,7 +330,7 @@ suite('Work Description Section', () => {
         'https://github.com/owner/repo/issues/123',
         workspace
       );
-      assert.ok(!prompt.includes('What would you like to work on'), 'Should not ask for work description');
+      assert.ok(!prompt.includes('describe the work you\'ll be tracking'), 'Should not ask for work description');
       assert.ok(!prompt.includes('Pause and Ask'), 'Should not include pause instructions');
     } finally {
       fs.rmSync(workspace, { recursive: true, force: true });

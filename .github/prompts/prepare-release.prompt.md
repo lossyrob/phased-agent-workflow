@@ -35,7 +35,9 @@ Ask the user to confirm the version number before proceeding.
 
 ### 2. Identify PRs for Release
 
-Find the last release tag and its commit date. Then search for all merged PRs to the main branch since that date. You should get the PR number, title, labels, and merge date for each PR.
+Find the last release tag and its commit date. Then search for all merged PRs **that target the main branch** since that date. You should get the PR number, title, labels, base branch, and merge date for each PR.
+
+**IMPORTANT:** Only include PRs where the base/target branch is `main`. Exclude PRs that targeted feature branches (these are intermediate phase PRs that were merged into a feature branch before the final PR merged to main).
 
 Review the results to identify PRs that need labels.
 
@@ -67,7 +69,9 @@ Ensure no PRs are missing labels. If any are still unlabeled, repeat step 3.
 
 ### 5. Generate Changelog Preview
 
-Generate a changelog preview organized by label category. Search for merged PRs since the last release filtered by each label:
+Generate a changelog preview organized by label category. Only include PRs that were identified in step 2 (i.e., PRs that target `main` branch).
+
+Search for merged PRs since the last release filtered by each label:
 - `enhancement` for Features
 - `bug` for Bug Fixes
 - `documentation` for Documentation

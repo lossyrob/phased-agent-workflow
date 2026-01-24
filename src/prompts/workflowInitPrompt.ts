@@ -1,7 +1,7 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
 import { WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
+import { loadTemplate } from '../utils/templateLoader';
 
 /**
  * Relative path from workspace root to workflow initialization custom instructions file.
@@ -55,30 +55,6 @@ interface PromptVariables {
   TRACK_ARTIFACTS: string;
   /** Conditional instructions for artifact exclusion (empty when tracking enabled) */
   ARTIFACT_TRACKING_SECTION: string;
-}
-
-/**
- * Load a template file from either compiled (dist) or source locations.
- * 
- * This function handles both production (compiled JavaScript) and development
- * (TypeScript source) environments by checking both locations.
- * 
- * @param filename - The template filename (e.g., 'workItemInitPrompt.template.md')
- * @returns The template content as a string
- * @throws Error if template not found in either location
- */
-function loadTemplate(filename: string): string {
-  const compiledPath = path.join(__dirname, filename);
-  if (fs.existsSync(compiledPath)) {
-    return fs.readFileSync(compiledPath, 'utf-8');
-  }
-
-  const sourcePath = path.join(__dirname, '..', '..', 'src', 'prompts', filename);
-  if (fs.existsSync(sourcePath)) {
-    return fs.readFileSync(sourcePath, 'utf-8');
-  }
-
-  throw new Error(`${filename} not found in compiled or source locations`);
 }
 
 /**

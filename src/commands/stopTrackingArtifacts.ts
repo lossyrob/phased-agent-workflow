@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { scanWorkItems } from '../utils/workItemScanner';
+import { loadTemplate } from '../utils/templateLoader';
 
 /**
  * Template variable substitutions for the stop tracking prompt.
@@ -20,8 +21,7 @@ interface StopTrackingPromptVariables {
  * @returns Rendered prompt string
  */
 function renderStopTrackingPrompt(variables: StopTrackingPromptVariables): string {
-  const templatePath = path.join(__dirname, '..', 'prompts', 'stopTrackingArtifacts.template.md');
-  let template = fs.readFileSync(templatePath, 'utf-8');
+  let template = loadTemplate('stopTrackingArtifacts.template.md');
   
   // Replace all template variables
   template = template.replace(/\{\{WORK_ID\}\}/g, variables.WORK_ID);

@@ -212,7 +212,10 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - **REQUIRED**: Create Phase PR:
      - Source: `<target>_phase[N]` → Target: `<target_branch>`
      - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
-     - Body: `Phase <N>: <one-sentence objective>` + `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+     - Body: Scale description to phase complexity:
+       - Simple phases: `Phase <N>: <one-sentence objective>`
+       - Complex phases: Include key changes, approach taken, noteworthy decisions
+     - Footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
 
    **Step 7.2b: IF Review Strategy = 'local' - Push Target Branch Only**:

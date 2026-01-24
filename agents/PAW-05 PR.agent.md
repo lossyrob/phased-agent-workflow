@@ -153,28 +153,54 @@ Unresolved: Block → report w/ recommendation → require user resolution. Out-
 
 If checks fail, report status and recommendations. If the user explicitly confirms to proceed, continue with PR creation.
 
-## PR Description Template
+## PR Description Guidelines
 
-After all checks pass, create the PR with this format:
+**Scale description length to change complexity**. A few-line fix needs 2-3 sentences; a major feature needs comprehensive sections. Use judgment.
 
+**Required elements** (always include):
+- Summary of what the PR delivers
+- List of key changes
+- Testing status
+- Breaking changes (if any)
+- Artifacts link
+
+**For simple changes** (bug fixes, small features):
+```
+# [Feature/Task Name]
+
+Closes <Issue URL>
+
+Brief summary of what changed and why.
+
+**Changes**: List key changes in 2-3 bullets.
+
+**Testing**: All tests passing.
+
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+```
+
+**For complex changes** (large features, architectural changes):
 ```
 # [Feature/Task Name]
 
 Closes <Issue URL>
 
 ## Summary
-[1-2 sentence overview of what this PR delivers]
+[Comprehensive overview of what this PR delivers and key design decisions]
 
 ## Changes
-- [Key change 1]
-- [Key change 2]
-- [Key change 3]
+- [Detailed change with context]
+- [Another change with rationale]
+- ...expand as needed for reviewer understanding
 
 ## Testing
-[Brief testing status: "All tests passing" or specific notes]
+[Testing approach, coverage notes, manual verification performed]
 
 ## Breaking Changes
-[List any breaking changes, or "None"]
+[Detailed migration guidance if applicable]
+
+## Deployment Considerations
+[Include if relevant: feature flags, rollout strategy, dependencies]
 
 <details>
 <summary>Artifacts</summary>

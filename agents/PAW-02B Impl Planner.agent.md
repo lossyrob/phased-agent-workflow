@@ -286,15 +286,10 @@ After writing the plan to `.paw/work/<feature-slug>/ImplementationPlan.md`:
    - Verify: `git diff --cached`, commit, push: `git push -u <remote> <target_branch>_plan`
    - Create Planning PR (`<target_branch>_plan` → `<target_branch>`):
      - Title: `[<Work Title>] Planning: <brief description>`
-     - Body format:
-       ```
-       **🐾 Implementation Planner 🤖:**
-       
-       [Summary of deliverables, links to artifacts]
-       
-       ---
-       🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
-       ```
+     - Body: Scale description to plan complexity:
+       - Simple plans: `Planning for <Work Title>. See [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)`
+       - Complex plans: Include brief summary of approach, number of phases, key decisions
+     - Footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for review
 
    **IF Review Strategy = 'local'**:

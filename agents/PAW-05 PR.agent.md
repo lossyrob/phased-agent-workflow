@@ -167,78 +167,73 @@ Unresolved: Block → report w/ recommendation → require user resolution. Out-
 
 If checks fail, report status and recommendations. If the user explicitly confirms to proceed, continue with PR creation.
 
-## PR Description Template
+## PR Description Guidelines
 
-After all checks pass, create the PR with this format:
+**Scale description length to change complexity**. A few-line fix needs 2-3 sentences; a major feature needs comprehensive sections. Use judgment.
 
+**Required elements** (always include):
+- Summary of what the PR delivers
+- List of key changes
+- Testing status
+- Breaking changes (if any)
+- Artifacts link
+
+**For simple changes** (bug fixes, small features):
 ```
 # [Feature/Task Name]
 
+Closes <Issue URL>
+
+Brief summary of what changed and why.
+
+**Changes**: List key changes in 2-3 bullets.
+
+**Testing**: All tests passing.
+
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+```
+
+**For complex changes** (large features, architectural changes):
+```
+# [Feature/Task Name]
+
+Closes <Issue URL>
+
 ## Summary
-[1-2 paragraph overview from Spec.md]
+[Comprehensive overview of what this PR delivers and key design decisions]
 
-## Related Issues
-- Closes issue at <Issue URL>
+## Changes
+- [Detailed change with context]
+- [Another change with rationale]
+- ...expand as needed for reviewer understanding
 
-## Artifacts
+## Testing
+[Testing approach, coverage notes, manual verification performed]
+
+## Breaking Changes
+[Detailed migration guidance if applicable]
+
+## Deployment Considerations
+[Include if relevant: feature flags, rollout strategy, dependencies]
+
 <!-- ONLY INCLUDE THIS SECTION IF ARTIFACTS ARE TRACKED (no .gitignore in workflow dir) -->
+<details>
+<summary>Artifacts</summary>
 - Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
 - Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)
 - Code Research: [CodeResearch.md](.paw/work/<feature-slug>/CodeResearch.md)
 - Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
 - Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
+</details>
 <!-- END CONDITIONAL SECTION -->
 
 Read Work ID from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
 
-## Implementation Phases
-[List each phase with link to merged Phase PR]
-- Phase 1: [name] - PR number TBD
-- Phase 2: [name] - PR number TBD
-- ...
-
-## Documentation Updates
-- Docs PR number TBD
-- [Summary of documentation changes]
-
-## Changes Summary
-[High-level summary of what changed]
-
-### Key Changes
-- [Major change 1]
-- [Major change 2]
-- [Major change 3]
-
-## Testing
-[Reference testing from ImplementationPlan.md]
-- Unit tests: [status]
-- Integration tests: [status]
-- Manual testing: [completed]
-
-## Acceptance Criteria
-[List Spec.md acceptance criteria with completion status]
-- [ ] AC-001: [criterion] - ✅ Complete
-- [ ] AC-002: [criterion] - ✅ Complete
-
-## Open Questions Resolution
-
-### From SpecResearch.md
-- **[Question]**: [Resolution] — [reference]
-
-### From CodeResearch.md
-- **[Question]**: [Resolution] — [file:line]
-
-### Assumptions (from Spec.md)
-- [Assumption]: [Rationale]
-
-*State "No open questions raised" if none exist.*
-
-## Deployment Considerations
-[Any deployment notes, migration steps, rollout considerations]
-
-## Breaking Changes
-[List any breaking changes, or "None"]
+---
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
 ```
+
+Read Work ID from WorkflowContext.md and substitute into `<feature-slug>` placeholder.
 
 ## Process Steps
 

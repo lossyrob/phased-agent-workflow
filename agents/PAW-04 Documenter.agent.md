@@ -159,9 +159,7 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - **REQUIRED**: Create Docs PR:
      - Source: `<target>_docs` → Target: `<target_branch>`
      - Title: `[<Work Title>] Documentation` where Work Title from WorkflowContext.md
-     - Include summary of Docs.md (detailed feature reference) and project documentation updates
-     - Artifact links: `.paw/work/<feature-slug>/Docs.md` and `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+     - Body: `Documentation for <Work Title>.` + `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review of Docs PR
 
    **Step 5.2b: IF Review Strategy = 'local' - Commit to Target Branch**:

@@ -210,15 +210,10 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Verify on phase branch: `git branch --show-current` should show `<target>_phase[N]`
    - Push phase branch: `git push -u <remote> <target>_phase[N]`
    - **REQUIRED**: Create Phase PR:
-     - **PR Operations Context**: Provide branch names (source: phase branch, target: Target Branch), Work Title, Issue URL
      - Source: `<target>_phase[N]` → Target: `<target_branch>`
      - Title: `[<Work Title>] Implementation Phase <N>: <brief description>`
-     - Include phase objectives, changes made, testing performed
-     - Link to Issue URL from WorkflowContext.md
-     - Artifact links: Implementation Plan at `.paw/work/<feature-slug>/ImplementationPlan.md`
-     - At bottom: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
+     - Body: `Phase <N>: <one-sentence objective>` + `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
    - Pause for human review
-   - Post PR timeline comment starting with `**🐾 Implementation Reviewer 🤖:**` summarizing review and commits
 
    **Step 7.2b: IF Review Strategy = 'local' - Push Target Branch Only**:
    - Verify on target branch: `git branch --show-current` should show `<target_branch>`
@@ -259,25 +254,6 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
    - Push both Implementation Agent's commits and any improvement commits
    - Use `git push <remote> <branch_name>` (remote from WorkflowContext.md, branch from current working branch)
 
-6. **Post comprehensive summary comment**:
-   - Create a single summary comment on the PR (not individual replies to comments)
-   - Include two sections in the summary:
-     
-     **Section 1 - Detailed comment tracking:**
-     - For each review comment addressed by the Implementation Agent, document:
-       - The comment ID/link
-       - What was done to address it
-       - Specific commit hash(es) that addressed it
-     
-     **Section 2 - Overall summary:**
-     - Summarize all changes made by the Implementation Agent at a high level
-     - Note any improvements you added
-     - Note any areas for continued review
-     - Indicate readiness for re-review or approval
-   
-   - Format the summary for easy review by humans who will manually resolve comments in GitHub UI
-   - Start the comment with "**🐾 Implementation Reviewer 🤖:**"
-
 ## Inputs
 
 - Implementation branch name or PR link
@@ -289,7 +265,6 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 
 - Commits with docstrings and comments
 - Phase PR opened or updated
-- Single comprehensive summary comment on PR (for review comment follow-up) with detailed comment tracking and overall summary
 
 ## Guardrails
 
@@ -301,7 +276,7 @@ For final PRs, load context from all phases in ImplementationPlan.md, Spec.md fo
 - DO NOT revert Implementer's core logic changes or address review comments yourself (verify Implementer did)
 - DO NOT approve or merge PRs (human responsibility)
 - For initial phase review: ALWAYS push and open the PR
-- For review comment follow-up: ALWAYS push all commits after verification; post ONE comprehensive summary comment
+- For review comment follow-up: ALWAYS push all commits after verification
 - NEVER create standalone review artifacts (e.g., `Phase1-Review.md`)
 - Prefer no commits over cosmetic or no-op changes
 - DO NOT batch unrelated changes together; keep commits tightly scoped
@@ -326,7 +301,6 @@ Before pushing:
 - [ ] Phase PR has been opened
 - [ ] PR description references `ImplementationPlan.md` phase
 - [ ] No unnecessary or no-op documentation commits were created
-- [ ] Overall PR summary comment posted with `**🐾 Implementation Reviewer 🤖:**`
 
 For review comment follow-up:
 - [ ] All tests pass
@@ -334,9 +308,7 @@ For review comment follow-up:
 - [ ] Implementation Agent's commits verified and address the review comments
 - [ ] Any needed improvements committed
 - [ ] All commits (Implementation Agent's + yours) pushed to remote
-- [ ] Single comprehensive summary comment posted with detailed comment tracking and overall summary
 - [ ] For final PRs: Changes verified against full spec acceptance criteria
-- [ ] Summary comment starts with `**🐾 Implementation Reviewer 🤖:**`
 
 ## Hand-off
 

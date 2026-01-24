@@ -160,69 +160,33 @@ After all checks pass, create the PR with this format:
 ```
 # [Feature/Task Name]
 
+Closes <Issue URL>
+
 ## Summary
-[1-2 paragraph overview from Spec.md]
+[1-2 sentence overview of what this PR delivers]
 
-## Related Issues
-- Closes issue at <Issue URL>
-
-## Artifacts
-- Specification: [Spec.md](.paw/work/<feature-slug>/Spec.md)
-- Spec Research: [SpecResearch.md](.paw/work/<feature-slug>/SpecResearch.md)
-- Code Research: [CodeResearch.md](.paw/work/<feature-slug>/CodeResearch.md)
-- Implementation Plan: [ImplementationPlan.md](.paw/work/<feature-slug>/ImplementationPlan.md)
-- Documentation: [Docs.md](.paw/work/<feature-slug>/Docs.md)
-
-Read Work ID from WorkflowContext.md and substitute into <feature-slug> placeholder when generating PR.
-
-## Implementation Phases
-[List each phase with link to merged Phase PR]
-- Phase 1: [name] - PR number TBD
-- Phase 2: [name] - PR number TBD
-- ...
-
-## Documentation Updates
-- Docs PR number TBD
-- [Summary of documentation changes]
-
-## Changes Summary
-[High-level summary of what changed]
-
-### Key Changes
-- [Major change 1]
-- [Major change 2]
-- [Major change 3]
+## Changes
+- [Key change 1]
+- [Key change 2]
+- [Key change 3]
 
 ## Testing
-[Reference testing from ImplementationPlan.md]
-- Unit tests: [status]
-- Integration tests: [status]
-- Manual testing: [completed]
-
-## Acceptance Criteria
-[List Spec.md acceptance criteria with completion status]
-- [ ] AC-001: [criterion] - ✅ Complete
-- [ ] AC-002: [criterion] - ✅ Complete
-
-## Open Questions Resolution
-
-### From SpecResearch.md
-- **[Question]**: [Resolution] — [reference]
-
-### From CodeResearch.md
-- **[Question]**: [Resolution] — [file:line]
-
-### Assumptions (from Spec.md)
-- [Assumption]: [Rationale]
-
-*State "No open questions raised" if none exist.*
-
-## Deployment Considerations
-[Any deployment notes, migration steps, rollout considerations]
+[Brief testing status: "All tests passing" or specific notes]
 
 ## Breaking Changes
 [List any breaking changes, or "None"]
+
+<details>
+<summary>Artifacts</summary>
+
+All planning artifacts in `.paw/work/<feature-slug>/`
+</details>
+
+---
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
 ```
+
+Read Work ID from WorkflowContext.md and substitute into `<feature-slug>` placeholder.
 
 ## Process Steps
 

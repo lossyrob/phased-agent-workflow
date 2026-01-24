@@ -39,20 +39,23 @@ Create a `.gitignore` file in the workflow directory containing `*` to exclude a
 **File path**: `.paw/work/{{WORK_ID}}/.gitignore`
 **File content**: `*`
 
-This single-character gitignore pattern ensures all current and future artifacts in this workflow directory are ignored by git.
+This pattern ignores all files in the directory, including the `.gitignore` itself. This is intentional—we don't want the `.gitignore` committed either, so the entire workflow directory stays completely out of the repository.
 
-### 3. Stage the .gitignore File
+### 3. Commit the Removal
 
-Stage the newly created `.gitignore` file:
+Commit the deletion of the previously tracked artifacts:
 
 ```
-git add .paw/work/{{WORK_ID}}/.gitignore
+git commit -m "Stop tracking PAW artifacts for {{WORK_ID}}"
 ```
+
+**Important**: Do NOT stage the `.gitignore` file. It should remain local and untracked (ignored by itself). The commit should only contain the deletion of previously tracked files.
 
 ### 4. Verify Changes
 
 Confirm the operation succeeded:
-- Run `git status` to verify artifacts are no longer tracked and `.gitignore` is staged
-- Verify `.paw/work/{{WORK_ID}}/.gitignore` exists and contains `*`
+- Run `git status` to verify artifacts are no longer tracked and the commit was successful
+- The `.gitignore` file should NOT appear in git status (it's ignored)
+- Verify `.paw/work/{{WORK_ID}}/.gitignore` exists locally and contains `*`
 
 Report the results. If any step fails, explain what went wrong and suggest recovery options.

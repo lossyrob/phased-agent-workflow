@@ -36,6 +36,7 @@ The implementation uses a simple convention: a `.gitignore` file in the workflow
 | `src/utils/workItemScanner.ts` | Extracted shared utility for work item scanning |
 | `agents/PAW-02B Impl Planner.agent.md` | Added `.gitignore` checks at three artifact staging locations |
 | `agents/PAW-04 Documenter.agent.md` | Added `.gitignore` checks at two documentation staging locations |
+| `agents/PAW-05 PR.agent.md` | Added `.gitignore` check to omit artifact links when untracked |
 
 ### Integration Points
 
@@ -126,8 +127,9 @@ Execute the following git commands:
 |-------|-------------------|
 | PAW-02B Impl Planner | PR review response staging, prs strategy completion, local strategy completion |
 | PAW-04 Documenter | prs strategy staging, local strategy staging |
+| PAW-05 PR | Artifact section inclusion in final PR description |
 
-Other agents (PAW-01A, PAW-01B, PAW-02A, PAW-03A, PAW-03B, PAW-05) don't commit workflow artifacts and require no modification.
+Other agents (PAW-01A, PAW-01B, PAW-02A, PAW-03A, PAW-03B) don't commit workflow artifacts and require no modification.
 
 ## Edge Cases and Limitations
 

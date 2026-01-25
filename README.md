@@ -157,6 +157,15 @@ At any time during a PAW workflow, you can check your progress and get guidance 
 3. Select a work item from the list (sorted by most recently modified) or choose "Auto-detect from context"
 4. The Status Agent will analyze your workflow state and provide actionable next-step recommendations
 
+#### Artifact Tracking
+
+By default, PAW commits workflow artifacts (Spec.md, ImplementationPlan.md, etc.) to git. You can exclude artifacts when contributing to non-PAW repositories or making lightweight changes:
+
+- **At initialization**: Select "Don't Track" at the artifact tracking prompt
+- **Mid-workflow**: Run "PAW: Stop Tracking Artifacts" to untrack already-committed artifacts
+
+When excluded, artifacts stay local for your reference but don't appear in commits or PRs.
+
 #### Custom Instructions (Optional)
 
 ##### Workflow Initialization Instructions

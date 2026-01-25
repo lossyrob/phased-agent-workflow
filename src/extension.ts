@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
+import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
 import { registerContextTool } from './tools/contextTool';
 import { registerHandoffTool } from './tools/handoffTool';
 import { registerPromptGenerationTool } from './tools/promptGenerationTool';
@@ -68,6 +69,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerGetWorkStatusCommand(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered command: paw.getWorkStatus');
+
+  registerStopTrackingCommand(context, outputChannel);
+  outputChannel.appendLine('[INFO] Registered command: paw.stopTrackingArtifacts');
 
   outputChannel.appendLine('[INFO] PAW Workflow extension ready');
 }

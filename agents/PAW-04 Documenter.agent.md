@@ -152,7 +152,9 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - If not on docs branch `<target>_docs`:
      - Create and checkout: `git checkout -b <target>_docs`
    - Verify: `git branch --show-current`
-   - Stage ONLY documentation files modified: `git add <file1> <file2>` (Docs.md, README.md, CHANGELOG.md, etc.)
+   - **Before staging Docs.md**: Check if `.paw/work/<feature-slug>/.gitignore` exists
+     - If `.gitignore` exists: Stage only project documentation (README.md, CHANGELOG.md, etc.) - skip Docs.md
+     - If no `.gitignore`: Stage all documentation files: `git add <file1> <file2>` (Docs.md, README.md, CHANGELOG.md, etc.)
    - Verify staged changes: `git diff --cached`
    - Commit documentation changes with descriptive message
    - Push docs branch: `git push -u <remote> <target>_docs`
@@ -170,7 +172,9 @@ If prerequisites are not met, **STOP** and inform the user what's missing.
    - If not on target branch:
      - Checkout target branch: `git checkout <target_branch>`
    - Verify: `git branch --show-current`
-   - Stage ONLY documentation files modified: `git add <file1> <file2>`
+   - **Before staging Docs.md**: Check if `.paw/work/<feature-slug>/.gitignore` exists
+     - If `.gitignore` exists: Stage only project documentation (README.md, CHANGELOG.md, etc.) - skip Docs.md
+     - If no `.gitignore`: Stage all documentation files modified: `git add <file1> <file2>`
    - Verify staged changes: `git diff --cached`
    - Commit documentation changes with descriptive message
    - Push target branch: `git push <remote> <target_branch>`

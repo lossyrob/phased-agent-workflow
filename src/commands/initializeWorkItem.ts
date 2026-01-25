@@ -90,6 +90,7 @@ export async function initializeWorkItemCommand(
     }
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
     outputChannel.appendLine(`[INFO] Handoff mode: ${inputs.handoffMode}`);
+    outputChannel.appendLine(`[INFO] Track artifacts: ${inputs.trackArtifacts}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
@@ -101,7 +102,8 @@ export async function initializeWorkItemCommand(
       inputs.reviewStrategy,
       inputs.handoffMode,
       inputs.issueUrl,
-      workspaceFolder.uri.fsPath
+      workspaceFolder.uri.fsPath,
+      inputs.trackArtifacts
     );
 
     outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');

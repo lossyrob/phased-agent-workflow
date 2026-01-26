@@ -516,6 +516,26 @@ Session Policy: per-stage
 - Compilation passes: `npm run compile`
 - Type checking passes with no errors
 
+#### 4. Development Tooling Updates
+**Files**: `scripts/lint-agent.sh`, `.github/workflows/pr-checks.yml`, `.github/copilot-instructions.md`
+**Changes**:
+- **Add skill linting to `lint-agent.sh`**:
+  - Add `lint_skill()` function to lint skill files (`skills/*/SKILL.md`)
+  - Define skill token thresholds (suggest: WARN=8000, ERROR=12000 - skills can be larger since loaded on-demand)
+  - Add `--skills` flag to lint only skills, `--all` flag to lint both agents and skills
+  - Update `npm run lint:agent:all` script in `package.json` to use `--all` flag
+- **Update CI workflow** (`.github/workflows/pr-checks.yml`):
+  - Add `skills/**` to the `paths` trigger so skill changes trigger PR checks
+  - Update lint step to run `npm run lint:agent:all` (which now includes skills)
+- **Update copilot instructions** (`.github/copilot-instructions.md`):
+  - Add guidance to run skill linting when modifying skill files
+  - Example: `./scripts/lint-agent.sh --skills` or `./scripts/lint-agent.sh skills/paw-spec/SKILL.md`
+
+**Tests**:
+- Manual verification: `./scripts/lint-agent.sh --skills` lints all skill files
+- Manual verification: `./scripts/lint-agent.sh skills/paw-workflow/SKILL.md` lints single skill
+- CI runs on skill file changes
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -530,6 +550,8 @@ Session Policy: per-stage
 - [ ] New work items include `Review Policy` and `Session Policy` fields
 - [ ] `paw_get_context` returns policy values correctly (including Review Policy)
 - [ ] Old WorkflowContext.md files with `Handoff Mode` still work (backward compatibility)
+- [ ] Skill linting works: `./scripts/lint-agent.sh --skills` passes for all new skills
+- [ ] CI triggers on `skills/**` path changes
 
 ---
 
@@ -591,13 +613,28 @@ Remove the 9 individual implementation agent files and update documentation to r
 - Agent linting passes for remaining agents
 - Manual verification: Handoff messages reference correct agent
 
+#### 5. Clean Up Linting Script
+**File**: `scripts/lint-agent.sh`
+**Changes**:
+- Remove hardcoded special thresholds for deprecated agents:
+  - Remove `STATUS_AGENT_WARN_THRESHOLD` and `STATUS_AGENT_ERROR_THRESHOLD` (PAW-X Status.agent.md)
+  - Remove `SPEC_AGENT_WARN_THRESHOLD` and `SPEC_AGENT_ERROR_THRESHOLD` (PAW-01A Specification.agent.md)
+- Remove conditional logic that checks for these specific agent filenames
+- Keep standard thresholds (WARN=5000, ERROR=7000) for remaining agents (PAW.agent.md, PAW Review.agent.md)
+
+**Tests**:
+- Linting passes: `npm run lint:agent:all`
+- No references to deprecated agent names in lint script
+
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] All 9 legacy agent files removed from `agents/` directory
 - [ ] TypeScript compiles: `npm run compile`
 - [ ] Linting passes: `npm run lint`
+- [ ] Agent and skill linting passes: `npm run lint:agent:all`
 - [ ] Documentation builds: `mkdocs build --strict`
+- [ ] No hardcoded deprecated agent names in `scripts/lint-agent.sh`
 
 #### Manual Verification:
 - [ ] Extension activates without errors

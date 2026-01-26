@@ -23,7 +23,9 @@ After implementation:
 1. **Single PAW Agent** (~4KB) replaces PAW-01A through PAW-05 and PAW-X Status
 2. **Workflow Skill** (`paw-workflow`) provides activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
 3. **10 Activity Skills**: `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
-4. **1 Utility Skill**: `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
+4. **2 Utility Skills**:
+   - `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
+   - `paw-git-operations` for branch naming conventions, strategy-based branching logic, and selective staging discipline
 5. All existing artifacts produced in same locations with same formats
 6. All workflow modes (full/minimal/custom) function correctly
 7. **New policy configurations**:
@@ -176,7 +178,7 @@ Create the `paw-workflow` skill that provides the PAW agent with an activity cat
 ## Phase 2: Create Activity and Utility Skills
 
 ### Overview
-Extract domain-specific content from each implementation agent into dedicated activity skills, plus create a utility skill for shared PR review response mechanics. Activity skills describe **capabilities** (what they can do) rather than rigid modes, enabling flexible execution based on delegation instructions from the PAW agent.
+Extract domain-specific content from each implementation agent into dedicated activity skills, plus create two utility skills: one for shared PR review response mechanics and one for git/branch operations. Activity skills describe **capabilities** (what they can do) rather than rigid modes, enabling flexible execution based on delegation instructions from the PAW agent.
 
 ### Changes Required:
 
@@ -222,6 +224,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Create implementation plan from spec and research
   - Revise plan based on learnings
   - Address PR review comments (load `paw-review-response` for mechanics)
+- Reference `paw-git-operations` for planning branch creation and commit mechanics
 - Include ImplementationPlan.md template with phase structure
 
 #### 5. Implementation Skill
@@ -233,6 +236,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Make focused code changes with appropriate verification (tests/lint) per repository norms
   - Address PR review comments on implementation work (load `paw-review-response` for mechanics)
   - Handle non-linear requests (e.g., "adjust implementation to match updated spec") when delegated by PAW agent
+- Reference `paw-git-operations` for phase branch creation and selective staging
 - Document one-phase-per-invocation pattern
 
 #### 6. Implementation Review Skill
@@ -244,6 +248,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Add documentation/docstrings
   - Push changes and open Phase PRs
   - Verify PR comments have been addressed
+- Reference `paw-git-operations` for push and PR creation mechanics
 - Note: Named `paw-impl-review` to distinguish from `paw-review-*` skills for PR review workflow
 
 #### 7. Documentation Skill
@@ -254,6 +259,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Create Docs.md technical reference
   - Update project docs (README, CHANGELOG)
   - Address PR review comments (load `paw-review-response` for mechanics)
+- Reference `paw-git-operations` for docs branch creation (when using PRs strategy)
 - Include Docs.md template
 
 #### 8. Final PR Skill
@@ -292,6 +298,32 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Manual verification: Skill loads via `paw_get_skill('paw-review-response')`
 - Verify mechanics match current agent behavior
 
+#### 11. Git Operations Utility Skill
+**File**: `skills/paw-git-operations/SKILL.md`
+**Changes**:
+- Create utility skill containing shared git and branch mechanics
+- Content extracted from common patterns across PAW-02B, PAW-03A, PAW-03B, PAW-04:
+  - **Branch naming conventions**:
+    - Phase branches: `<target>_phase[N]` or `<target>_phase[M-N]`
+    - Planning branches: `<target>_plan`
+    - Docs branches: `<target>_docs`
+  - **Strategy-based branching logic**:
+    - PRs strategy: Create/verify phase branches, push to remote, create PRs
+    - Local strategy: Work directly on target branch, no intermediate branches
+  - **Selective staging discipline**:
+    - Always `git add <file1> <file2>` (never `git add .` or `git add -A`)
+    - Check `.paw/work/<feature-slug>/.gitignore` before staging `.paw/` artifacts
+    - Pre-commit verification: `git diff --cached`
+  - **Branch verification**:
+    - Verify current branch matches expected pattern before commits
+    - Handle incorrect branch situations (stop and switch)
+- Activity skills load this utility for git operations to ensure consistent branch handling
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-git-operations')`
+- Verify branch naming conventions match current agent behavior
+- Verify strategy-based logic covers both PRs and local strategies
+
 **Tests** (Phase 2 overall):
 - Manual verification: Each skill loads via `paw_get_skill` and describes capabilities flexibly
 - Verify skills are written for flexible execution based on delegation instructions
@@ -302,7 +334,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
 
 #### Automated Verification:
 - [ ] All 10 activity skill files exist in `skills/paw-*/SKILL.md` directories
-- [ ] Utility skill exists at `skills/paw-review-response/SKILL.md`
+- [ ] Utility skills exist at `skills/paw-review-response/SKILL.md` and `skills/paw-git-operations/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
@@ -310,7 +342,9 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - [ ] Skills describe capabilities flexibly (not rigid modes)
 - [ ] Skills are written for intelligent execution based on delegation instructions
 - [ ] Activity skills reference `paw-review-response` utility for PR comment work
+- [ ] Activity skills reference `paw-git-operations` utility for branch/commit work
 - [ ] No duplicate PR mechanics across activity skills (consolidated in utility skill)
+- [ ] No duplicate git/branch mechanics across activity skills (consolidated in utility skill)
 - [ ] Artifact templates match existing agent outputs
 - [ ] Quality checklists preserved from original agents
 

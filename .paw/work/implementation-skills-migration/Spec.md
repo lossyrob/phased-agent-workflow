@@ -9,14 +9,14 @@ Today, developers using PAW's implementation workflow interact with nine separat
 
 After this migration, users will invoke a single PAW agent that intelligently handles their implementation requests. When a user describes a feature, points to an issue, or asks for specific help (like "update the spec to align with the plan"), the agent reasons about what the user wants to accomplish, consults the workflow skill for available capabilities, and delegates to the appropriate activity skill with meaningful context. The workflow skill serves as a guide—providing an activity catalog, default flow guidance for typical progressions, and validation gates—rather than a rigid state machine that constrains behavior. Activity skills describe capabilities (what they can do) rather than fixed modes, enabling flexible execution based on delegation instructions. Users experience familiar workflow stages and artifact outputs, but through an intent-driven interface that handles both linear progressions and non-linear requests naturally.
 
-The migration preserves full compatibility with existing PAW features: all three workflow modes (full, minimal, custom) continue to function, and all artifacts (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md) are produced in the same locations with the same formats. The new architecture introduces refined policy configurations: Confirmation Policy (always, milestones, never) controls when workflow pauses for user input, while Session Policy (per-stage, continuous) controls whether stages get fresh conversations or share context. Existing Handoff Mode settings are automatically mapped to Confirmation Policy for backward compatibility. The primary change is architectural—moving detailed stage logic from agent files into skill files loaded on demand, with the PAW agent owning all orchestration decisions and activity skills providing flexible capabilities.
+The migration preserves full compatibility with existing PAW features: all three workflow modes (full, minimal, custom) continue to function, and all artifacts (Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md) are produced in the same locations with the same formats. The new architecture introduces refined policy configurations: Review Policy (always, milestones, never) controls when workflow pauses for human review of artifacts, while Session Policy (per-stage, continuous) controls whether stages get fresh conversations or share context. Existing Handoff Mode settings are automatically mapped to Review Policy for backward compatibility. The primary change is architectural—moving detailed stage logic from agent files into skill files loaded on demand, with the PAW agent owning all orchestration decisions and activity skills providing flexible capabilities.
 
 ## Objectives
 
 - Enable users to complete implementation work through a single PAW agent that reasons about their intent and delegates intelligently, eliminating the need to know which of nine agents handles each capability
 - Handle both linear workflow progressions and non-linear requests (like "update spec to align with plan") through intent-driven orchestration rather than rigid state-machine routing
 - Preserve all existing workflow behaviors including mode selection and artifact production so current users experience no functional regression
-- Introduce refined policy configurations (Confirmation Policy, Session Policy) that give users clearer control over workflow pausing and conversation context management
+- Introduce refined policy configurations (Review Policy, Session Policy) that give users clearer control over workflow pausing and conversation context management
 - Reduce total prompt token consumption compared to the current multi-agent setup by loading capability-based activity skills on demand
 - Improve maintainability by separating orchestration logic (intent reasoning, skill selection, delegation) from activity logic (domain-specific capabilities loaded as skills)
 - Follow the established pattern from the review workflow migration to maintain architectural consistency across both PAW workflows
@@ -27,12 +27,12 @@ The migration preserves full compatibility with existing PAW features: all three
 
 Narrative: A developer wants to build a new feature. They invoke the PAW agent with a feature description or issue link and progress through specification, planning, implementation, and PR creation without needing to switch between different agents.
 
-Independent Test: User invokes PAW agent with Confirmation Policy set to "milestones", completes the specification stage, and sees the workflow proceed to the research stage automatically.
+Independent Test: User invokes PAW agent with Review Policy set to "milestones", completes the specification stage, and sees the workflow proceed to the research stage automatically.
 
 Acceptance Scenarios:
 1. Given a user with a new feature brief, When they invoke the PAW agent, Then the agent loads the workflow skill and begins the specification stage
 2. Given a user completing a specification, When the workflow transitions to research, Then the appropriate research skill is loaded without user intervention
-3. Given a user with Confirmation Policy set to "always", When a stage completes, Then the agent presents next-step options and waits for user command
+3. Given a user with Review Policy set to "always", When a stage completes, Then the agent presents next-step options and waits for user command
 
 ### User Story P2 – Workflow Mode Preservation
 
@@ -44,19 +44,19 @@ Acceptance Scenarios:
 1. Given a user with Workflow Mode set to "minimal" in WorkflowContext.md, When they invoke the PAW agent, Then the workflow skill routes them directly to code research/planning
 2. Given a user with Workflow Mode set to "full", When they invoke the PAW agent, Then the workflow skill includes all stages including detailed specification
 
-### User Story P3 – Confirmation and Session Policy Control
+### User Story P3 – Review and Session Policy Control
 
-Narrative: A developer wants fine-grained control over workflow progression and conversation context. They configure Confirmation Policy to pause at milestones and Session Policy to maintain continuous conversation for tighter collaboration.
+Narrative: A developer wants fine-grained control over workflow progression and conversation context. They configure Review Policy to pause at milestones and Session Policy to maintain continuous conversation for tighter collaboration.
 
-Independent Test: User with Confirmation Policy "milestones" completes a non-milestone transition and sees automatic progression, then completes a milestone transition and receives prompt with explicit options.
+Independent Test: User with Review Policy "milestones" completes a non-milestone transition and sees automatic progression, then completes a milestone transition and receives prompt with explicit options.
 
 Acceptance Scenarios:
-1. Given a user with Confirmation Policy set to "always", When any stage completes, Then the agent pauses and presents explicit command options
-2. Given a user with Confirmation Policy set to "never", When a stage completes, Then the agent automatically proceeds to the next appropriate stage
-3. Given a user with Confirmation Policy set to "milestones", When a milestone transition occurs (e.g., planning → implement), Then the agent pauses; when a non-milestone transition occurs (e.g., spec → research), Then the agent proceeds automatically
+1. Given a user with Review Policy set to "always", When any artifact is produced, Then the agent pauses and presents explicit command options for review and iteration
+2. Given a user with Review Policy set to "never", When an artifact is produced, Then the agent automatically proceeds to the next appropriate activity
+3. Given a user with Review Policy set to "milestones", When a milestone artifact is produced (e.g., Spec.md, ImplementationPlan.md), Then the agent pauses for review; when a non-milestone artifact is produced (e.g., SpecResearch.md), Then the agent proceeds automatically
 4. Given a user with Session Policy set to "continuous", When delegating to an activity skill, Then the conversation context is preserved across delegated activities
 5. Given a user with Session Policy set to "per-stage", When delegating across stage boundaries, Then the workflow uses separate stage sessions rather than one continuous conversation
-6. Given an existing WorkflowContext.md with legacy Handoff Mode field, When the agent reads configuration, Then it correctly maps to Confirmation Policy (manual→always, semi-auto→milestones, auto→never)
+6. Given an existing WorkflowContext.md with legacy Handoff Mode field, When the agent reads configuration, Then it correctly maps to Review Policy (manual→always, semi-auto→milestones, auto→never)
 
 ### User Story P4 – Artifact Compatibility
 
@@ -102,13 +102,13 @@ Acceptance Scenarios:
 ### Functional Requirements
 
 - FR-001: The PAW agent loads the workflow skill on invocation to understand available capabilities, default flow guidance, and orchestration patterns (Stories: P1, P4)
-- FR-002: The workflow skill provides an activity catalog with capabilities for each skill, default flow guidance for typical progressions, and validation gates—serving as a guide rather than a rigid state machine (Stories: P1, P6)
+- FR-002: The workflow skill retrieves activity capabilities dynamically via the `paw_get_skills` tool rather than embedding a static catalog; this enables the PAW agent to discover all available skills (including non-implementation skills like review skills) for potential non-linear paths. The workflow skill provides default flow guidance for typical progressions and validation gates—serving as a guide rather than a rigid state machine (Stories: P1, P6)
 - FR-003: Activity skills are loaded on-demand when delegated to, describing capabilities (what they can do) rather than fixed modes, enabling flexible execution based on delegation instructions (Stories: P1, P6)
-- FR-004: The PAW agent reasons about user intent and constructs meaningful delegation prompts that include the user's specific request and relevant context (Stories: P1, P6)
+- FR-004: The PAW agent reasons about user intent and constructs activity-specific delegation prompts that contextualize what the activity should accomplish. For linear progressions, the delegation prompt describes the activity goal (e.g., "complete spec research for the questions in the research prompt"); for non-linear requests, the delegation prompt includes the user's specific request (e.g., "update the spec to align with implementation plan changes") as part of the activity context. Not every delegation includes the original user request verbatim—only when relevant to the delegated activity (Stories: P1, P6)
 - FR-005: Workflow mode detection routes users through appropriate stages: full mode includes all stages, minimal mode skips spec (Stories: P2)
-- FR-006: Confirmation Policy controls stage transition pausing: "always" pauses at all boundaries, "milestones" pauses at significant transitions, "never" proceeds continuously (Stories: P3)
+- FR-006: Review Policy controls when workflow pauses for human review—boundaries are defined at the artifact level, not stage level: "always" pauses after every artifact is produced for potential iteration, "milestones" pauses at significant artifacts that represent stage completions (e.g., Spec.md, ImplementationPlan.md), "never" proceeds continuously without pausing for review (Stories: P3)
 - FR-007: Session Policy controls conversation context: "per-stage" uses fresh conversations at transitions, "continuous" preserves conversation context throughout (Stories: P3)
-- FR-008: Legacy Handoff Mode values are automatically mapped to Confirmation Policy for backward compatibility (Stories: P3)
+- FR-008: Legacy Handoff Mode values are automatically mapped to Review Policy for backward compatibility (Stories: P3)
 - FR-009: Each activity skill produces its designated artifact in the standard location under `.paw/work/<feature-slug>/` (Stories: P4)
 - FR-010: Artifact formats remain compatible with existing specifications (Stories: P4)
 - FR-011: The status skill can diagnose workflow state from artifacts and provide accurate next-step guidance (Stories: P5)
@@ -124,7 +124,7 @@ Acceptance Scenarios:
 - **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status
 - **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
-- **Confirmation Policy**: Configuration controlling when workflow pauses (always, milestones, never)
+- **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
 
 ### Cross-Cutting / Non-Functional
@@ -136,9 +136,9 @@ Acceptance Scenarios:
 
 - SC-001: User can complete full workflow (spec → PR) using only the PAW agent, which reasons about intent and delegates to appropriate skills (FR-001, FR-002, FR-004, FR-013)
 - SC-002: All three workflow modes (full, minimal, custom) produce correct stage sequences when tested (FR-005)
-- SC-003: All three Confirmation Policy values (always, milestones, never) exhibit correct pausing behavior at transitions (FR-006)
+- SC-003: All three Review Policy values (always, milestones, never) exhibit correct pausing behavior at artifact boundaries (FR-006)
 - SC-004: Both Session Policy values (per-stage, continuous) correctly control conversation context management (FR-007)
-- SC-005: Legacy Handoff Mode values are correctly mapped to Confirmation Policy when present in existing WorkflowContext.md files (FR-008)
+- SC-005: Legacy Handoff Mode values are correctly mapped to Review Policy when present in existing WorkflowContext.md files (FR-008)
 - SC-006: Artifacts produced by the new system are location-compatible and format-compatible with existing tools and documentation (FR-009, FR-010)
 - SC-007: Status capability correctly identifies current stage and next steps for any valid workflow state (FR-011)
 - SC-008: The new PAW agent file is smaller than any single current implementation agent (under 5KB) (FR-003)
@@ -154,7 +154,7 @@ Acceptance Scenarios:
 - Activity skills can be loaded via `paw_get_skill` tool calls at runtime, consistent with how review skills are currently loaded
 - Shared mechanics can be extracted to utility skills that activity skills load conditionally, reducing duplication: paw-review-response for PR comment handling, paw-git-operations for branch naming and git operations
 - Users familiar with the current multi-agent workflow will quickly adapt to the intent-driven interface since stage names and concepts remain identical
-- Mapping legacy Handoff Mode to Confirmation Policy provides seamless backward compatibility for existing WorkflowContext.md files
+- Mapping legacy Handoff Mode to Review Policy provides seamless backward compatibility for existing WorkflowContext.md files
 - Token reduction is expected to be achieved primarily through on-demand skill loading and consolidating shared mechanics
 
 ## Scope
@@ -164,7 +164,7 @@ In Scope:
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
 - Create activity skills: `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
 - Create utility skill: `paw-review-response` for shared PR comment response mechanics
-- Update extension tooling to support new Confirmation Policy and Session Policy fields in WorkflowContext.md
+- Update extension tooling to support new Review Policy and Session Policy fields in WorkflowContext.md
 - Update context tool to parse new policy fields with backward compatibility mapping for legacy Handoff Mode
 - Update extension installer to deploy new agent and skills instead of individual agent files
 - Remove deprecated individual agent files after migration
@@ -179,7 +179,7 @@ Out of Scope:
 
 - `paw_get_skill` tool must be available for runtime skill loading
 - `paw_call_agent` tool must support the new "PAW" agent name for handoffs
-- `paw_get_context` tool must be updated to parse Confirmation Policy and Session Policy fields
+- `paw_get_context` tool must be updated to parse Review Policy and Session Policy fields
 - Extension installer (`src/agents/installer.ts`) must be updated to deploy skills directory structure
 - WorkflowContext.md initialization must include new policy fields
 
@@ -202,7 +202,7 @@ Out of Scope:
 - **Workflow Skill**: A skill that provides activity catalog, default flow guidance, validation gates, and policy behavior documentation—serving as a guide rather than a rigid state machine
 - **Activity Skill**: A capability-based skill that executes flexibly based on delegation instructions (e.g., specification skill can create, revise, or align specs)
 - **Utility Skill**: A shared skill providing common mechanics that activity skills load conditionally (e.g., PR comment response handling)
-- **Confirmation Policy**: Configuration controlling when workflow pauses for user input (always, milestones, never)—replaces legacy Handoff Mode
+- **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)—replaces legacy Handoff Mode
 - **Session Policy**: Configuration controlling whether stages get fresh conversations or share context (per-stage, continuous)
-- **Milestone Transition**: A significant stage boundary (e.g., planning → implement) where "milestones" Confirmation Policy pauses
+- **Milestone Artifact**: A significant artifact (e.g., Spec.md, ImplementationPlan.md) where "milestones" Review Policy pauses for human review
 - **Intent-Driven Orchestration**: The PAW agent reasons about what the user wants to accomplish and delegates to appropriate skills with meaningful context

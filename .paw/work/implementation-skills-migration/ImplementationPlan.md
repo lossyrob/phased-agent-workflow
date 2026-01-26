@@ -81,7 +81,12 @@ Activity skills will provide:
 ## Phase Summary
 
 1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
-2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into 10 activity skills (including `paw-init` for initialization) plus utility skills for shared mechanics
+2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into skills, split into sub-phases for context management:
+   - **Phase 2A: Utility Skills** - Create `paw-git-operations` and `paw-review-response` foundation skills that other skills reference
+   - **Phase 2B: Initialization & Specification Skills** - Create `paw-init`, `paw-spec`, `paw-spec-research` for early workflow stages
+   - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning` for the planning stage
+   - **Phase 2D: Implementation Skills** - Create `paw-implement`, `paw-impl-review` for core execution
+   - **Phase 2E: Finalization Skills** - Create `paw-docs`, `paw-pr`, `paw-status` for final workflow stages
 3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
 5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
@@ -189,11 +194,90 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 ## Phase 2: Create Activity and Utility Skills
 
 ### Overview
-Extract domain-specific content from each implementation agent into dedicated activity skills, plus create two utility skills: one for shared PR review response mechanics and one for git/branch operations. Activity skills describe **capabilities** (what they can do) rather than rigid modes, enabling flexible execution based on delegation instructions from the PAW agent.
+Extract domain-specific content from each implementation agent into dedicated activity skills, plus create two utility skills. Phase 2 is split into sub-phases for context management—each sub-phase creates 2-3 related skills to prevent context overload.
+
+**Sub-phase structure**:
+- **2A**: Utility skills (foundation that other skills reference)
+- **2B**: Initialization & specification skills (early workflow)
+- **2C**: Planning skills (middle workflow)
+- **2D**: Implementation skills (core execution)
+- **2E**: Finalization skills (docs, PR, status)
+
+Activity skills describe **capabilities** (what they can do) rather than rigid modes, enabling flexible execution based on delegation instructions from the PAW agent.
+
+---
+
+## Phase 2A: Utility Skills
+
+### Overview
+Create the two utility skills that provide shared mechanics referenced by activity skills. These must be created first since activity skills will reference them.
 
 ### Changes Required:
 
-#### 0. Initialization Skill
+#### 1. Git Operations Utility Skill
+**File**: `skills/paw-git-operations/SKILL.md`
+**Changes**:
+- Create utility skill containing shared git and branch mechanics
+- Content extracted from common patterns across PAW-02B, PAW-03A, PAW-03B, PAW-04:
+  - **Branch naming conventions**:
+    - Phase branches: `<target>_phase[N]` or `<target>_phase[M-N]`
+    - Planning branches: `<target>_plan`
+    - Docs branches: `<target>_docs`
+  - **Strategy-based branching logic**:
+    - PRs strategy: Create/verify phase branches, push to remote, create PRs
+    - Local strategy: Work directly on target branch, no intermediate branches
+  - **Selective staging discipline**:
+    - Always `git add <file1> <file2>` (never `git add .` or `git add -A`)
+    - Check `.paw/work/<feature-slug>/.gitignore` before staging `.paw/` artifacts
+    - Pre-commit verification: `git diff --cached`
+  - **Branch verification**:
+    - Verify current branch matches expected pattern before commits
+    - Handle incorrect branch situations (stop and switch)
+- Activity skills load this utility for git operations to ensure consistent branch handling
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-git-operations')`
+- Verify branch naming conventions match current agent behavior
+- Verify strategy-based logic covers both PRs and local strategies
+
+#### 2. Review Response Utility Skill
+**File**: `skills/paw-review-response/SKILL.md`
+**Changes**:
+- Create utility skill containing shared PR review response mechanics
+- Content extracted from common patterns across PAW-02B, PAW-03A, PAW-03B, PAW-04:
+  - Read all unresolved PR comments via MCP tools
+  - Create TODOs: one per comment (group small related comments)
+  - For each TODO: make changes → check `.gitignore` before staging `.paw/` artifacts → commit with message referencing comment → push → reply with format `**🐾 [Activity] 🤖:** [Change summary + commit hash]`
+  - Verify all comments addressed before signaling completion
+- Activity skills load this utility when addressing PR comments
+- Keeps activity skills focused on domain-specific guidance (what to change) while utility skill handles mechanics (how to commit/push/reply)
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-review-response')`
+- Verify mechanics match current agent behavior
+
+### Success Criteria (Phase 2A):
+
+#### Automated Verification:
+- [ ] Utility skills exist at `skills/paw-git-operations/SKILL.md` and `skills/paw-review-response/SKILL.md`
+- [ ] Each skill has valid YAML frontmatter with `name` and `description`
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] `paw-git-operations` covers branch naming, strategy-based logic, and selective staging
+- [ ] `paw-review-response` covers PR comment mechanics with TODO workflow
+- [ ] Both utilities can be loaded via `paw_get_skill`
+
+---
+
+## Phase 2B: Initialization & Specification Skills
+
+### Overview
+Create the initialization skill and specification-related skills for the early workflow stages.
+
+### Changes Required:
+
+#### 1. Initialization Skill
 **File**: `skills/paw-init/SKILL.md`
 **Changes**:
 - Extract initialization logic from `src/prompts/workItemInitPrompt.template.md` into a skill
@@ -226,7 +310,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Manual verification: Skill loads correctly
 - Test: Initialization creates correct directory structure and WorkflowContext.md
 
-#### 1. Specification Skill
+#### 2. Specification Skill
 **File**: `skills/paw-spec/SKILL.md`
 **Changes**:
 - Extract from `PAW-01A Specification.agent.md`: core principles, research question guidelines, drafting workflow, spec template, quality checklist
@@ -244,7 +328,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Manual verification: Skill loads correctly, describes capabilities flexibly
 - Test file: N/A (skill content verification is manual)
 
-#### 2. Spec Research Skill
+#### 3. Spec Research Skill
 **File**: `skills/paw-spec-research/SKILL.md`
 **Changes**:
 - Extract from `PAW-01B Spec Researcher.agent.md`: research methodology, behavioral documentation focus, document format
@@ -253,14 +337,46 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Define **capabilities**: Answer factual questions about existing system behavior
 - Define SpecResearch.md artifact template
 
-#### 3. Code Research Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify SpecResearch.md template matches current format
+
+### Success Criteria (Phase 2B):
+
+#### Automated Verification:
+- [ ] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`
+- [ ] Each skill has valid YAML frontmatter with `name` and `description`
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
+- [ ] `paw-init` references `paw-git-operations` for branch mechanics
+- [ ] `paw-spec` describes capabilities flexibly (not rigid modes)
+- [ ] `paw-spec` references `paw-review-response` for PR comment work
+- [ ] `paw-spec-research` defines SpecResearch.md template
+- [ ] Quality checklists preserved from original agents
+
+---
+
+## Phase 2C: Planning Skills
+
+### Overview
+Create the code research and planning skills for the middle workflow stage.
+
+### Changes Required:
+
+#### 1. Code Research Skill
 **File**: `skills/paw-code-research/SKILL.md`
 **Changes**:
 - Extract from `PAW-02A Code Researcher.agent.md`: research methodology (Code Location, Code Analysis, Pattern Finding), YAML frontmatter format, GitHub permalink generation
 - Define **capabilities**: Document implementation details with file:line references, additional research on demand
 - Define CodeResearch.md artifact template with frontmatter
 
-#### 4. Planning Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify CodeResearch.md template matches current format
+
+#### 2. Planning Skill
 **File**: `skills/paw-planning/SKILL.md`
 **Changes**:
 - Extract from `PAW-02B Impl Planner.agent.md`: context gathering steps, research process, plan template structure, important guidelines, quality checklist
@@ -271,7 +387,34 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Reference `paw-git-operations` for planning branch creation and commit mechanics
 - Include ImplementationPlan.md template with phase structure
 
-#### 5. Implementation Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify ImplementationPlan.md template matches current format
+
+### Success Criteria (Phase 2C):
+
+#### Automated Verification:
+- [ ] Skills exist at `skills/paw-code-research/SKILL.md`, `skills/paw-planning/SKILL.md`
+- [ ] Each skill has valid YAML frontmatter with `name` and `description`
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] `paw-code-research` defines research methodology and CodeResearch.md template
+- [ ] `paw-planning` references `paw-git-operations` for branch/commit mechanics
+- [ ] `paw-planning` references `paw-review-response` for PR comment work
+- [ ] ImplementationPlan.md template includes phase structure
+- [ ] Quality checklists preserved from original agents
+
+---
+
+## Phase 2D: Implementation Skills
+
+### Overview
+Create the implementation and implementation review skills for core execution.
+
+### Changes Required:
+
+#### 1. Implementation Skill
 **File**: `skills/paw-implement/SKILL.md`
 **Changes**:
 - Extract from `PAW-03A Implementer.agent.md`: implementation philosophy, blocking criteria, verification approach, committing guidelines
@@ -283,7 +426,11 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Reference `paw-git-operations` for phase branch creation and selective staging
 - Document one-phase-per-invocation pattern
 
-#### 6. Implementation Review Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify implementation philosophy preserved
+
+#### 2. Implementation Review Skill
 **File**: `skills/paw-impl-review/SKILL.md`
 **Changes**:
 - Extract from `PAW-03B Impl Reviewer.agent.md`: review process steps, documentation standards, PR description templates
@@ -295,7 +442,34 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Reference `paw-git-operations` for push and PR creation mechanics
 - Note: Named `paw-impl-review` to distinguish from `paw-review-*` skills for PR review workflow
 
-#### 7. Documentation Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify PR description templates preserved
+
+### Success Criteria (Phase 2D):
+
+#### Automated Verification:
+- [ ] Skills exist at `skills/paw-implement/SKILL.md`, `skills/paw-impl-review/SKILL.md`
+- [ ] Each skill has valid YAML frontmatter with `name` and `description`
+- [ ] Linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] `paw-implement` references `paw-git-operations` for branch/staging mechanics
+- [ ] `paw-implement` references `paw-review-response` for PR comment work
+- [ ] `paw-implement` documents one-phase-per-invocation pattern
+- [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
+- [ ] PR description templates preserved from original agents
+
+---
+
+## Phase 2E: Finalization Skills
+
+### Overview
+Create the documentation, final PR, and status skills for the final workflow stages.
+
+### Changes Required:
+
+#### 1. Documentation Skill
 **File**: `skills/paw-docs/SKILL.md`
 **Changes**:
 - Extract from `PAW-04 Documenter.agent.md`: Docs.md artifact format, project doc update guidelines, style matching
@@ -306,7 +480,11 @@ Extract domain-specific content from each implementation agent into dedicated ac
 - Reference `paw-git-operations` for docs branch creation (when using PRs strategy)
 - Include Docs.md template
 
-#### 8. Final PR Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify Docs.md template preserved
+
+#### 2. Final PR Skill
 **File**: `skills/paw-pr/SKILL.md`
 **Changes**:
 - Extract from `PAW-05 PR.agent.md`: pre-flight validation checks, PR description guidelines, artifact linking
@@ -316,7 +494,11 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Open final PR to main
 - Document simple vs complex PR description formats
 
-#### 9. Status Skill
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify PR description formats preserved
+
+#### 3. Status Skill
 **File**: `skills/paw-status/SKILL.md`
 **Changes**:
 - Extract from `PAW-X Status.agent.md`: workflow stages overview, artifact dependencies, common errors/resolutions
@@ -326,55 +508,29 @@ Extract domain-specific content from each implementation agent into dedicated ac
   - Explain PAW process
   - Post status updates to Issues/PRs
 
-#### 10. Review Response Utility Skill
-**File**: `skills/paw-review-response/SKILL.md`
-**Changes**:
-- Create utility skill containing shared PR review response mechanics
-- Content extracted from common patterns across PAW-02B, PAW-03A, PAW-03B, PAW-04:
-  - Read all unresolved PR comments via MCP tools
-  - Create TODOs: one per comment (group small related comments)
-  - For each TODO: make changes → check `.gitignore` before staging `.paw/` artifacts → commit with message referencing comment → push → reply with format `**🐾 [Activity] 🤖:** [Change summary + commit hash]`
-  - Verify all comments addressed before signaling completion
-- Activity skills load this utility when addressing PR comments
-- Keeps activity skills focused on domain-specific guidance (what to change) while utility skill handles mechanics (how to commit/push/reply)
-
 **Tests**:
-- Manual verification: Skill loads via `paw_get_skill('paw-review-response')`
-- Verify mechanics match current agent behavior
+- Manual verification: Skill loads correctly
+- Verify workflow stages documentation preserved
 
-#### 11. Git Operations Utility Skill
-**File**: `skills/paw-git-operations/SKILL.md`
-**Changes**:
-- Create utility skill containing shared git and branch mechanics
-- Content extracted from common patterns across PAW-02B, PAW-03A, PAW-03B, PAW-04:
-  - **Branch naming conventions**:
-    - Phase branches: `<target>_phase[N]` or `<target>_phase[M-N]`
-    - Planning branches: `<target>_plan`
-    - Docs branches: `<target>_docs`
-  - **Strategy-based branching logic**:
-    - PRs strategy: Create/verify phase branches, push to remote, create PRs
-    - Local strategy: Work directly on target branch, no intermediate branches
-  - **Selective staging discipline**:
-    - Always `git add <file1> <file2>` (never `git add .` or `git add -A`)
-    - Check `.paw/work/<feature-slug>/.gitignore` before staging `.paw/` artifacts
-    - Pre-commit verification: `git diff --cached`
-  - **Branch verification**:
-    - Verify current branch matches expected pattern before commits
-    - Handle incorrect branch situations (stop and switch)
-- Activity skills load this utility for git operations to ensure consistent branch handling
+### Success Criteria (Phase 2E):
 
-**Tests**:
-- Manual verification: Skill loads via `paw_get_skill('paw-git-operations')`
-- Verify branch naming conventions match current agent behavior
-- Verify strategy-based logic covers both PRs and local strategies
+#### Automated Verification:
+- [ ] Skills exist at `skills/paw-docs/SKILL.md`, `skills/paw-pr/SKILL.md`, `skills/paw-status/SKILL.md`
+- [ ] Each skill has valid YAML frontmatter with `name` and `description`
+- [ ] Linting passes: `npm run lint`
 
-**Tests** (Phase 2 overall):
-- Manual verification: Each skill loads via `paw_get_skill` and describes capabilities flexibly
-- Verify skills are written for flexible execution based on delegation instructions
-- Verify no duplicate PR mechanics across activity skills
-- Verify artifact templates match current agent outputs
+#### Manual Verification:
+- [ ] `paw-docs` references `paw-git-operations` for branch mechanics
+- [ ] `paw-docs` references `paw-review-response` for PR comment work
+- [ ] Docs.md template preserved from original agent
+- [ ] `paw-pr` documents simple vs complex PR description formats
+- [ ] `paw-status` covers workflow stages and common errors
 
-### Success Criteria:
+---
+
+## Phase 2 Overall Success Criteria
+
+After completing all Phase 2 sub-phases:
 
 #### Automated Verification:
 - [ ] All 10 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`)

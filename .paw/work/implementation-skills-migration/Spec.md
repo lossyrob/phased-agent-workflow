@@ -114,7 +114,7 @@ Acceptance Scenarios:
 - FR-011: The status skill can diagnose workflow state from artifacts and provide accurate next-step guidance (Stories: P5)
 - FR-012: The workflow skill validates prerequisites before allowing stage entry (e.g., Spec.md must exist before implementation) (Stories: P1)
 - FR-013: Phase-based implementation spawns separate subagent calls for each phase as specified in ImplementationPlan.md (Stories: P1)
-- FR-014: A shared utility skill (paw-review-response) provides PR comment response mechanics that activity skills load conditionally (Stories: P1)
+- FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic (Stories: P1)
 - FR-015: Activity skills report completion status back to the PAW agent and do not make orchestration decisions (e.g., pausing, next-step selection); the PAW agent applies policies and determines what happens next (Stories: P1, P3, P6)
 
 ### Key Entities
@@ -122,7 +122,7 @@ Acceptance Scenarios:
 - **PAW Agent**: Single orchestrator agent that replaces the nine implementation agents; reasons about user intent, loads appropriate skills, and constructs meaningful delegation prompts
 - **Workflow Skill**: Provides activity catalog with capabilities, default flow guidance (not rigid state machine), validation gates, transition table (default guidance for typical flow), and policy behavior documentation
 - **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status
-- **Utility Skills**: Shared mechanics loaded conditionally by activity skills (e.g., paw-review-response for PR comment handling)
+- **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
 - **Confirmation Policy**: Configuration controlling when workflow pauses (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
@@ -152,7 +152,7 @@ Acceptance Scenarios:
 - The workflow skill serves as a guide (activity catalog, default flow, validation gates) rather than a rigid state machine, enabling the PAW agent to reason about intent and handle non-linear requests
 - Activity skills describe capabilities flexibly, executing intelligently based on delegation instructions rather than requiring specific modes
 - Activity skills can be loaded via `paw_get_skill` tool calls at runtime, consistent with how review skills are currently loaded
-- Shared PR comment mechanics can be extracted to a utility skill (paw-review-response) that activity skills load conditionally, reducing duplication
+- Shared mechanics can be extracted to utility skills that activity skills load conditionally, reducing duplication: paw-review-response for PR comment handling, paw-git-operations for branch naming and git operations
 - Users familiar with the current multi-agent workflow will quickly adapt to the intent-driven interface since stage names and concepts remain identical
 - Mapping legacy Handoff Mode to Confirmation Policy provides seamless backward compatibility for existing WorkflowContext.md files
 - Token reduction is expected to be achieved primarily through on-demand skill loading and consolidating shared mechanics

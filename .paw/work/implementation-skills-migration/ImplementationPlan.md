@@ -22,13 +22,14 @@ The implementation workflow currently consists of 9 separate agent files totalin
 After implementation:
 1. **Single PAW Agent** (~4KB) replaces PAW-01A through PAW-05 and PAW-X Status
 2. **Workflow Skill** (`paw-workflow`) provides activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
-3. **10 Activity Skills**: `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
+3. **10 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
 4. **2 Utility Skills**:
    - `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
    - `paw-git-operations` for branch naming conventions, strategy-based branching logic, and selective staging discipline
-5. All existing artifacts produced in same locations with same formats
-6. All workflow modes (full/minimal/custom) function correctly
-7. **New policy configurations**:
+5. **Entry Point Prompt** (`prompts/paw.prompt.md`) invoked by VS Code command
+6. All existing artifacts produced in same locations with same formats
+7. All workflow modes (full/minimal/custom) function correctly
+8. **New policy configurations**:
    - Review Policy (`always | milestones | never`) controls when workflow pauses for human review at artifact boundaries
    - Session Policy (`per-stage | continuous`) controls conversation context management
 
@@ -36,13 +37,15 @@ After implementation:
 - User completes full workflow (spec → PR) using only PAW agent
 - Token count for active session measurably lower than equivalent multi-agent setup
 - All automated tests pass; artifact locations unchanged
+- VS Code "PAW: New PAW Workflow" command invokes `/paw` prompt and proceeds without "continue" step
 
 ## What We're NOT Doing
 
 - Changing artifact locations or formats
 - Modifying the review workflow (already migrated per PR #156)
 - Multi-runtime portability (Claude Code, Codex, etc.)
-- Changing the existing component files (`paw-context.component.md`, `handoff-instructions.component.md`)
+- Changing the existing component file `paw-context.component.md`
+- Note: `handoff-instructions.component.md` will require minimal updates to route commands to PAW agent
 
 ## Implementation Approach
 
@@ -78,10 +81,10 @@ Activity skills will provide:
 ## Phase Summary
 
 1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
-2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into 10 activity skills plus `paw-review-response` utility skill for PR comment mechanics
-3. **Phase 3: Create PAW Agent** - Build compact orchestrator agent that reasons about intent and delegates activities
-4. **Phase 4: Update Extension Tooling** - Modify handoff tool and installer to support the new architecture
-5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents, update documentation
+2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into 10 activity skills (including `paw-init` for initialization) plus utility skills for shared mechanics
+3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
+4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
+5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
 
 ---
 
@@ -100,6 +103,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 - **Activity Catalog Discovery**: Document that PAW agent retrieves available skills dynamically via `paw_get_skills` tool rather than embedding a static catalog; the workflow skill provides guidance on typical skill usage patterns:
   | Skill | Capabilities | Primary Artifacts |
   |-------|--------------|-------------------|
+  | `paw-init` | Initialize workflow, create WorkflowContext.md, branch setup | WorkflowContext.md |
   | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
   | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
   | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
@@ -117,6 +121,8 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   - **Finalization Stage**: `paw-docs` → `paw-pr`
 - **Default Transition Table** (guidance for typical flow, not exclusive paths):
 
+  *Note: The implementation workflow includes explicit transition mechanisms because it has more stage transitions (10 activities) than the review workflow (6 activities). This table documents typical flow patterns; the PAW agent ultimately decides based on Session Policy and user intent.*
+
   | Transition | Milestone? | per-stage Mechanism |
   |------------|------------|---------------------|
   | spec → spec-research | No | paw_call_agent |
@@ -130,12 +136,16 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   | docs → final-pr | **Yes** | paw_call_agent |
 
 - Document **Session Policy behavior**:
-  - `per-stage`: Use mechanism column from transition table
-  - `continuous`: Always use `runSubagent` (single conversation)
+  - `per-stage`: Use mechanism column from transition table; each stage gets a fresh conversation via `paw_call_agent`
+  - `continuous`: Always use `runSubagent` to preserve conversation context throughout workflow
+  - *Note*: Verify during Phase 3 testing that `runSubagent` actually preserves context as expected in VS Code's subagent model
 - Document **Review Policy behavior** (boundaries are artifact-level, not stage-level):
   - `always`: Pause after every artifact is produced for potential iteration
-  - `milestones`: Pause at milestone artifacts (e.g., Spec.md, ImplementationPlan.md); proceed automatically at non-milestone artifacts
+  - `milestones`: Pause at milestone artifacts; proceed automatically at non-milestone artifacts
   - `never`: Never pause, proceed continuously without review pauses
+- **Explicit Milestone Artifacts** (for Review Policy `milestones` behavior):
+  - **Milestone artifacts** (pause for review): Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation
+  - **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
 - Define stage gates (artifact verification between stages)
 - Encode workflow mode handling (full/minimal/custom)
 - **PR Comment Response Guidance** (which skills typically handle PR comments):
@@ -169,7 +179,8 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 - [ ] Transition table framed as default guidance (not exclusive paths)
 - [ ] Intelligent Routing Guidance section documents flexible intent-based delegation
 - [ ] Review Policy behavior documented for all three values with artifact-level boundaries clarified
-- [ ] Session Policy behavior documented for both values
+- [ ] Explicit milestone artifact list included (Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR)
+- [ ] Session Policy behavior documented for both values with implementation note about `runSubagent` context preservation
 - [ ] PR Comment Response Guidance covers all PR types
 - [ ] Subagent Completion Contract clearly specifies activity skills return status, not handle handoffs
 
@@ -181,6 +192,39 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 Extract domain-specific content from each implementation agent into dedicated activity skills, plus create two utility skills: one for shared PR review response mechanics and one for git/branch operations. Activity skills describe **capabilities** (what they can do) rather than rigid modes, enabling flexible execution based on delegation instructions from the PAW agent.
 
 ### Changes Required:
+
+#### 0. Initialization Skill
+**File**: `skills/paw-init/SKILL.md`
+**Changes**:
+- Extract initialization logic from `src/prompts/workItemInitPrompt.template.md` into a skill
+- Add YAML frontmatter with `name: paw-init`, `description`
+- Define **capabilities**:
+  - Generate Work Title from issue URL, branch name, or user description
+  - Generate Feature Slug from Work Title (normalized, unique)
+  - Create `.paw/work/<feature-slug>/` directory structure
+  - Generate WorkflowContext.md with all configuration fields
+  - Create and checkout git branch (explicit or auto-derived)
+  - Commit initial artifacts if tracking is enabled
+  - Open WorkflowContext.md for review
+- Include WorkflowContext.md template
+- Include validation rules (slug format, branch conflicts, review strategy constraints)
+- **Completion response**: Return feature slug and next step based on Workflow Mode
+- Reference `paw-git-operations` for branch creation mechanics
+
+**Input Parameters** (received via delegation from PAW agent):
+- `target_branch`: Git branch name or empty for auto-derive
+- `workflow_mode`: full | minimal | custom
+- `review_strategy`: prs | local
+- `review_policy`: always | milestones | never (maps from handoff_mode if provided)
+- `session_policy`: per-stage | continuous
+- `track_artifacts`: boolean
+- `issue_url`: optional GitHub/Azure DevOps URL
+- `custom_instructions`: optional (required if workflow_mode is custom)
+- `work_description`: optional user-provided description
+
+**Tests**:
+- Manual verification: Skill loads correctly
+- Test: Initialization creates correct directory structure and WorkflowContext.md
 
 #### 1. Specification Skill
 **File**: `skills/paw-spec/SKILL.md`
@@ -333,7 +377,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All 10 activity skill files exist in `skills/paw-*/SKILL.md` directories
+- [ ] All 10 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`)
 - [ ] Utility skills exist at `skills/paw-review-response/SKILL.md` and `skills/paw-git-operations/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
@@ -341,6 +385,7 @@ Extract domain-specific content from each implementation agent into dedicated ac
 #### Manual Verification:
 - [ ] Skills describe capabilities flexibly (not rigid modes)
 - [ ] Skills are written for intelligent execution based on delegation instructions
+- [ ] `paw-init` skill handles all initialization parameters and creates correct WorkflowContext.md
 - [ ] Activity skills reference `paw-review-response` utility for PR comment work
 - [ ] Activity skills reference `paw-git-operations` utility for branch/commit work
 - [ ] No duplicate PR mechanics across activity skills (consolidated in utility skill)
@@ -350,10 +395,10 @@ Extract domain-specific content from each implementation agent into dedicated ac
 
 ---
 
-## Phase 3: Create PAW Agent
+## Phase 3: Create PAW Agent and Entry Point
 
 ### Overview
-Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual implementation agents. The agent **reasons about user intent** and delegates intelligently to activity skills. It uses the workflow skill as guidance (not rigid rules), constructs meaningful delegation prompts, and handles both linear and non-linear requests.
+Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual implementation agents, plus the `/paw` entry point prompt. The agent **reasons about user intent** and delegates intelligently to activity skills. It uses the workflow skill as guidance (not rigid rules), constructs meaningful delegation prompts, and handles both linear and non-linear requests. The entry point prompt enables the VS Code command to invoke the PAW agent with configuration parameters.
 
 ### Changes Required:
 
@@ -364,7 +409,8 @@ Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual 
 - Include agent metadata (description) for VS Code prompts
 - One-sentence role description
 - Initialization: "Load the `paw-workflow` skill to understand available activities, default flow, and orchestration guidance"
-- Context detection: Work ID from user input or WorkflowContext.md
+- **Initialization Detection**: If invoked with initialization parameters (target_branch, workflow_mode, etc.) and no WorkflowContext.md exists, delegate to `paw-init` skill first
+- Context detection: Work ID from user input, initialization parameters, or existing WorkflowContext.md
 - **Policy detection from WorkflowContext.md**:
   - Read `Review Policy` (default: `milestones`)
   - Read `Session Policy` (default: `per-stage`)
@@ -394,7 +440,7 @@ Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual 
 - Core guardrails (brief list)
 
 **Tests**:
-- Unit test: Verify agent file is under 5KB (per SC-006)
+- Unit test: Verify agent file is under 5KB (per SC-008)
 - Manual verification: Agent loads successfully in VS Code, prompts for Work ID
 
 **Brief Example** (interface concept):
@@ -403,8 +449,8 @@ Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual 
 
 You execute the PAW implementation workflow by loading the workflow skill...
 
-## Initialization
-Load the `paw-workflow` skill...
+## Initialization Detection
+If initialization parameters provided and no WorkflowContext.md exists, delegate to paw-init...
 
 ## Context Detection
 [Brief detection logic]
@@ -421,17 +467,47 @@ Load the `paw-workflow` skill...
 - Human authority over workflow decisions
 ```
 
+#### 2. Entry Point Prompt
+**File**: `prompts/paw.prompt.md`
+**Changes**:
+- Create prompt file following pattern from `prompts/paw-review.prompt.md`
+- YAML frontmatter with `agent: PAW`
+- Accept configuration parameters passed from VS Code command:
+  - `$ARGUMENTS` placeholder for user arguments
+- Prompt content instructs PAW agent to:
+  - Load workflow skill
+  - If initialization parameters present, delegate to `paw-init`
+  - Otherwise, proceed based on existing WorkflowContext.md
+
+**Prompt Template**:
+```markdown
+---
+agent: PAW
+---
+
+Load the `paw-workflow` skill and execute it.
+
+$ARGUMENTS
+```
+
+**Tests**:
+- Prompt file exists and has correct frontmatter
+- VS Code command can invoke the prompt
+
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] Agent file exists at `agents/PAW.agent.md`
 - [ ] Agent file size under 5KB
 - [ ] Agent linting passes: `./scripts/lint-agent.sh agents/PAW.agent.md`
+- [ ] Prompt file exists at `prompts/paw.prompt.md`
+- [ ] Prompt file has valid YAML frontmatter with `agent: PAW`
 - [ ] Extension linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] Agent loads in VS Code prompts
 - [ ] Agent successfully loads workflow skill
+- [ ] Agent detects initialization parameters and delegates to `paw-init` when no WorkflowContext.md
 - [ ] Agent reads Review Policy and Session Policy from WorkflowContext.md
 - [ ] Agent correctly pauses at milestone artifacts when Review Policy = `milestones`
 - [ ] Agent retrieves skills dynamically via `paw_get_skills` tool
@@ -439,14 +515,14 @@ Load the `paw-workflow` skill...
 - [ ] Agent uses appropriate mechanism based on Session Policy
 - [ ] Agent handles non-linear requests (e.g., "update spec to align with plan")
 - [ ] Agent constructs meaningful delegation prompts with user context
-- [ ] Agent prompts for Work ID when invoked without context
+- [ ] `/paw` prompt can be invoked from VS Code
 
 ---
 
 ## Phase 4: Update Extension Tooling
 
 ### Overview
-Modify the extension's TypeScript code to support the new PAW agent architecture. This includes updating the handoff tool, updating WorkflowContext initialization to include new policy fields, and updating the context tool to parse the new fields.
+Modify the extension's TypeScript code to support the new PAW agent architecture. This includes updating the handoff tool, updating the VS Code initialization command to invoke `/paw` prompt, updating WorkflowContext initialization to include new policy fields, and updating the context tool to parse the new fields.
 
 ### Changes Required:
 
@@ -460,12 +536,49 @@ Modify the extension's TypeScript code to support the new PAW agent architecture
 - Unit tests in `src/test/tools/handoffTool.test.ts` (if exists) or manual verification
 - Test cases: Verify `paw_call_agent` accepts `"PAW"` as valid `target_agent`
 
-#### 2. WorkflowContext Initialization Updates
+#### 2. VS Code Initialization Command Updates
 **File**: `src/commands/initializeWorkItem.ts`
 **Changes**:
-- Add `Review Policy` field to WorkflowContext.md template (default: `milestones`)
-- Add `Session Policy` field to WorkflowContext.md template (default: `per-stage`)
-- Update field documentation in template
+- Modify `initializeWorkItem()` to invoke `/paw` prompt instead of `workItemInitPrompt.template.md`
+- Construct configuration object from quick pick selections:
+  ```typescript
+  const config = {
+    target_branch: inputs.targetBranch,
+    workflow_mode: inputs.workflowMode.mode,
+    review_strategy: inputs.reviewStrategy,
+    review_policy: mapHandoffModeToReviewPolicy(inputs.handoffMode),
+    session_policy: 'per-stage', // default
+    track_artifacts: inputs.trackArtifacts,
+    issue_url: inputs.issueUrl,
+    custom_instructions: inputs.workflowMode.customInstructions,
+    work_description: inputs.workDescription
+  };
+  ```
+- Format config as prompt arguments for `/paw` prompt
+- Invoke prompt via `workbench.action.chat.open` with mode set to PAW agent
+
+**Helper function**:
+```typescript
+function mapHandoffModeToReviewPolicy(handoffMode: string): string {
+  switch (handoffMode) {
+    case 'manual': return 'always';
+    case 'semi-auto': return 'milestones';
+    case 'auto': return 'never';
+    default: return 'milestones';
+  }
+}
+```
+
+**Tests**:
+- Manual verification: "PAW: New PAW Workflow" command invokes `/paw` prompt with configuration
+- Verify initialization proceeds without "continue" step
+
+#### 3. WorkflowContext Field Updates
+**File**: `src/commands/initializeWorkItem.ts` (if template-based) OR handled by `paw-init` skill
+**Changes**:
+- Add `Review Policy` field to WorkflowContext.md (default: `milestones`)
+- Add `Session Policy` field to WorkflowContext.md (default: `per-stage`)
+- Note: With the new architecture, the `paw-init` skill creates WorkflowContext.md, so the template in TypeScript may be deprecated
 
 **New WorkflowContext.md fields**:
 ```markdown
@@ -482,7 +595,7 @@ Session Policy: per-stage
 **Tests**:
 - Manual verification: Initialize new work item and verify new fields appear in WorkflowContext.md
 
-#### 3. Context Tool Updates
+#### 4. Context Tool Updates
 **File**: `src/tools/contextTool.ts`
 **Changes**:
 - Parse `Review Policy` field from WorkflowContext.md (default: `milestones` if missing)
@@ -497,15 +610,20 @@ Session Policy: per-stage
 - Manual verification: `paw_get_context` returns correct policy values
 - Test backward compatibility: Old WorkflowContext.md with `Handoff Mode` still works
 
-#### 2. Installer Verification
-**File**: `src/agents/installer.ts`
+#### 5. Installer and Prompt Template Updates
+**Files**: `src/agents/installer.ts`, `src/agents/promptTemplates.ts`
 **Changes**:
 - Verify `loadAgentTemplates()` will automatically pick up `PAW.agent.md` from `agents/` directory (no code changes expected—existing pattern handles this)
+- Verify `loadPromptTemplates()` picks up `prompts/paw.prompt.md`
 - Verify skill installation covers new `skills/paw-*/` directories (skill loader should automatically discover them)
+- Update `src/agents/promptTemplates.ts` to include `paw.prompt.md` in the prompt templates list (following the pattern of `paw-review.prompt.md`)
+- Add test for prompt template loading in `src/test/suite/promptTemplates.test.ts`
 
 **Tests**:
 - Manual verification: Build extension and verify PAW agent appears in VS Code prompts
+- Verify `/paw` prompt is available and loads correctly
 - Verify new skills appear in `paw_get_skills` catalog
+- Unit test: Prompt templates include `paw.prompt.md`
 
 #### 3. Type Compilation
 **File**: `tsconfig.json` (existing)
@@ -545,7 +663,10 @@ Session Policy: per-stage
 
 #### Manual Verification:
 - [ ] `paw_call_agent` tool accepts `"PAW"` as target agent
+- [ ] "PAW: New PAW Workflow" command invokes `/paw` prompt with configuration parameters
+- [ ] Initialization proceeds without "continue" step (PAW agent delegates to `paw-init`)
 - [ ] PAW agent appears in VS Code prompts directory after installation
+- [ ] `/paw` prompt is available and works
 - [ ] New skills appear in `paw_get_skills` catalog
 - [ ] New work items include `Review Policy` and `Session Policy` fields
 - [ ] `paw_get_context` returns policy values correctly (including Review Policy)
@@ -555,10 +676,10 @@ Session Policy: per-stage
 
 ---
 
-## Phase 5: Deprecate Legacy Agents
+## Phase 5: Deprecate Legacy Agents and Templates
 
 ### Overview
-Remove the 9 individual implementation agent files and update documentation to reflect the new single-agent architecture. This is the final cleanup phase after the new architecture is verified working.
+Remove the 9 individual implementation agent files, the old initialization prompt template, and update documentation to reflect the new single-agent architecture. This is the final cleanup phase after the new architecture is verified working.
 
 ### Changes Required:
 
@@ -582,7 +703,18 @@ Remove the 9 individual implementation agent files and update documentation to r
 - Manual verification: Extension builds and activates without errors
 - Verify old agent names no longer appear in VS Code prompts
 
-#### 2. Update Handoff Tool
+#### 2. Remove Old Initialization Template
+**File to remove**: `src/prompts/workItemInitPrompt.template.md`
+**Changes**:
+- Delete the template file (initialization now handled by `paw-init` skill)
+- Remove any references in `src/prompts/workflowInitPrompt.ts` if not needed
+- Keep `src/commands/initializeWorkItem.ts` but update to use new `/paw` invocation pattern
+
+**Tests**:
+- Compilation passes without template references
+- Initialization still works via `/paw` prompt
+
+#### 3. Update Handoff Tool
 **File**: `src/tools/handoffTool.ts`
 **Changes**:
 - Remove deprecated agent names from `AgentName` union type, leaving only `"PAW"` and `"PAW Review"`
@@ -630,6 +762,7 @@ Remove the 9 individual implementation agent files and update documentation to r
 
 #### Automated Verification:
 - [ ] All 9 legacy agent files removed from `agents/` directory
+- [ ] Old initialization template `src/prompts/workItemInitPrompt.template.md` removed
 - [ ] TypeScript compiles: `npm run compile`
 - [ ] Linting passes: `npm run lint`
 - [ ] Agent and skill linting passes: `npm run lint:agent:all`
@@ -643,12 +776,14 @@ Remove the 9 individual implementation agent files and update documentation to r
 - [ ] All three workflow modes (full/minimal/custom) work correctly
 - [ ] All Review Policy values work correctly (`always`/`milestones`/`never`) with artifact-level boundaries
 - [ ] All Session Policy values work correctly (`per-stage`/`continuous`)
+- [ ] "PAW: New PAW Workflow" command works end-to-end without "continue" step
 
 ---
 
 ## Cross-Phase Testing Strategy
 
 ### Integration Tests:
+- **Initialization flow**: Run "PAW: New PAW Workflow" command → verify `/paw` prompt invoked → PAW agent delegates to `paw-init` → WorkflowContext.md created → first stage begins automatically
 - Complete full workflow (spec → PR) using PAW agent in full workflow mode
 - Complete minimal workflow (skip spec) using PAW agent in minimal workflow mode
 - **Review Policy testing** (verify artifact-level boundaries):
@@ -665,23 +800,26 @@ Remove the 9 individual implementation agent files and update documentation to r
 - **Backward compatibility**: Verify old WorkflowContext.md with `Handoff Mode: semi-auto` still works
 
 ### Manual Testing Steps:
-1. Initialize new work item with `PAW Initialize`
-2. Verify WorkflowContext.md includes `Review Policy` and `Session Policy` fields
-3. Invoke PAW agent with Work ID
-4. Complete specification stage, verify Spec.md created
-5. Verify research stage triggers automatically (Review Policy: `milestones` doesn't pause at non-milestone artifacts)
-6. Complete planning, verify ImplementationPlan.md created
-7. Verify planning waits for user confirmation (milestone transition)
-8. **Non-linear test**: Ask PAW to "align spec with planning changes" → verify it delegates to paw-spec with context
-9. Complete implementation phase, verify phase PR created (prs strategy)
-10. Complete documentation, verify Docs.md created
-11. Complete final PR, verify PR to main created
-12. Verify all artifacts in `.paw/work/<feature-slug>/`
-13. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation
+1. Run "PAW: New PAW Workflow" command
+2. Complete quick pick selections (full mode, PRs strategy, milestones review policy)
+3. Verify PAW agent receives configuration and delegates to `paw-init`
+4. Verify WorkflowContext.md created with `Review Policy` and `Session Policy` fields
+5. Verify PAW agent proceeds to specification stage without requiring "continue"
+6. Complete specification stage, verify Spec.md created
+7. Verify research stage triggers automatically (Review Policy: `milestones` doesn't pause at non-milestone artifacts)
+8. Complete planning, verify ImplementationPlan.md created
+9. Verify planning waits for user confirmation (milestone transition)
+10. **Non-linear test**: Ask PAW to "align spec with planning changes" → verify it delegates to paw-spec with context
+11. Complete implementation phase, verify phase PR created (prs strategy)
+12. Complete documentation, verify Docs.md created
+13. Complete final PR, verify PR to main created
+14. Verify all artifacts in `.paw/work/<feature-slug>/`
+15. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation
 
 ## Performance Considerations
 
 - **Token Efficiency**: Combined agent + active skill tokens should be lower than loading a full implementation agent (~15-23KB). Target: <10KB per active session (agent ~4KB + skill ~5KB)
+- **Token Measurement Baseline**: Current agents range from 6.5KB (PAW-01B) to 23KB (PAW-01A), or ~1.5K-5K tokens each. Validation: Compare PAW agent (~4KB) + one loaded skill (~5KB) vs previous single-agent prompt size
 - **Skill Loading Latency**: Skills are small text files; latency should be negligible. Monitor if issues arise.
 - **Skill Caching**: Consider caching loaded skills within a session if performance issues arise (future optimization)
 
@@ -694,6 +832,7 @@ Remove the 9 individual implementation agent files and update documentation to r
 - **User Transition**: Users invoking old agent names will see them until Phase 5 completes
 - **Data Migration**: No data migration needed—artifact locations and formats unchanged
 - **Policy defaults**: New work items use `Review Policy: milestones`, `Session Policy: per-stage`
+- **Custom Workflow Instructions**: Users with `Workflow Mode: custom` whose Custom Workflow Instructions reference deprecated agent names (e.g., "start with PAW-02A", "use PAW-03A Implementer") should update their instructions to describe intent (e.g., "start with code research", "proceed to implementation") rather than specific agent names. The PAW agent will route requests to appropriate skills based on intent.
 
 ## References
 

@@ -23,6 +23,18 @@ The migration preserves full compatibility with existing PAW features: all three
 
 ## User Scenarios & Testing
 
+### User Story P0 – Unified Entry Point and Initialization
+
+Narrative: A developer wants to start new implementation work. They run the VS Code "PAW: New PAW Workflow" command, select configuration options via quick picks, and the system invokes the `/paw` prompt which routes to the PAW agent. The PAW agent handles initialization (creating WorkflowContext.md, branch setup) and then proceeds to the first workflow stage—all in a single conversation.
+
+Independent Test: User runs "PAW: New PAW Workflow", selects full mode with PRs strategy, and sees the PAW agent create the workflow directory, WorkflowContext.md, and git branch, then prompt for next steps.
+
+Acceptance Scenarios:
+1. Given a user running "PAW: New PAW Workflow", When they complete quick pick selections, Then the VS Code command invokes the `/paw` prompt with configuration parameters
+2. Given the PAW agent receiving initialization parameters (no existing WorkflowContext.md), When it loads the workflow skill, Then it delegates to the `paw-init` skill to create the workflow structure
+3. Given the `paw-init` skill completing initialization, When it returns success, Then the PAW agent proceeds to the first workflow stage based on Workflow Mode (spec for full, code-research for minimal)
+4. Given a user with an existing WorkflowContext.md who invokes `/paw`, When the PAW agent loads, Then it skips initialization and proceeds based on current workflow state
+
 ### User Story P1 – Single Entry Point for Implementation
 
 Narrative: A developer wants to build a new feature. They invoke the PAW agent with a feature description or issue link and progress through specification, planning, implementation, and PR creation without needing to switch between different agents.
@@ -92,7 +104,8 @@ Acceptance Scenarios:
 
 ### Edge Cases
 
-- User invokes PAW agent with no WorkflowContext.md initialized: Agent prompts user to initialize work item first
+- User invokes PAW agent with no WorkflowContext.md initialized and no initialization parameters: Agent prompts user to run "PAW: New PAW Workflow" command or provide initialization parameters
+- User invokes `/paw` with initialization parameters when WorkflowContext.md already exists: Agent skips initialization, proceeds with existing workflow
 - User attempts to skip to implementation without completing prerequisite stages: Workflow skill identifies missing artifacts and blocks progression with clear error
 - Multi-phase implementation plan with user wanting to stop mid-way: Agent saves progress and allows resume from current phase
 - Custom workflow mode with non-standard stage order: Workflow skill respects Custom Workflow Instructions field
@@ -101,7 +114,7 @@ Acceptance Scenarios:
 
 ### Functional Requirements
 
-- FR-001: The PAW agent loads the workflow skill on invocation to understand available capabilities, default flow guidance, and orchestration patterns (Stories: P1, P4)
+- FR-001: The PAW agent loads the workflow skill on invocation to understand available capabilities, default flow guidance, and orchestration patterns (Stories: P0, P1, P4)
 - FR-002: The workflow skill retrieves activity capabilities dynamically via the `paw_get_skills` tool rather than embedding a static catalog; this enables the PAW agent to discover all available skills (including non-implementation skills like review skills) for potential non-linear paths. The workflow skill provides default flow guidance for typical progressions and validation gates—serving as a guide rather than a rigid state machine (Stories: P1, P6)
 - FR-003: Activity skills are loaded on-demand when delegated to, describing capabilities (what they can do) rather than fixed modes, enabling flexible execution based on delegation instructions (Stories: P1, P6)
 - FR-004: The PAW agent reasons about user intent and constructs activity-specific delegation prompts that contextualize what the activity should accomplish. For linear progressions, the delegation prompt describes the activity goal (e.g., "complete spec research for the questions in the research prompt"); for non-linear requests, the delegation prompt includes the user's specific request (e.g., "update the spec to align with implementation plan changes") as part of the activity context. Not every delegation includes the original user request verbatim—only when relevant to the delegated activity (Stories: P1, P6)
@@ -116,16 +129,21 @@ Acceptance Scenarios:
 - FR-013: Phase-based implementation spawns separate subagent calls for each phase as specified in ImplementationPlan.md (Stories: P1)
 - FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic (Stories: P1)
 - FR-015: Activity skills report completion status back to the PAW agent and do not make orchestration decisions (e.g., pausing, next-step selection); the PAW agent applies policies and determines what happens next (Stories: P1, P3, P6)
+- FR-016: The `/paw` prompt file serves as the entry point for the PAW implementation workflow; it passes configuration parameters to the PAW agent and accepts optional arguments (Stories: P0)
+- FR-017: The `paw-init` skill handles workflow initialization: creating `.paw/work/<feature-slug>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled (Stories: P0)
+- FR-018: When the PAW agent receives initialization parameters and no WorkflowContext.md exists, it delegates to the `paw-init` skill; upon successful initialization, it proceeds to the first workflow stage based on Workflow Mode (Stories: P0)
+- FR-019: The VS Code "PAW: New PAW Workflow" command invokes the `/paw` prompt with configuration parameters instead of the current template-based prompt to a bare agent (Stories: P0)
 
 ### Key Entities
 
 - **PAW Agent**: Single orchestrator agent that replaces the nine implementation agents; reasons about user intent, loads appropriate skills, and constructs meaningful delegation prompts
 - **Workflow Skill**: Provides activity catalog with capabilities, default flow guidance (not rigid state machine), validation gates, transition table (default guidance for typical flow), and policy behavior documentation
-- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status
+- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: initialization, specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status
 - **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
+- **Initialization Parameters**: Configuration values captured by VS Code quick picks and passed to PAW agent via `/paw` prompt (target branch, workflow mode, review strategy, etc.)
 
 ### Cross-Cutting / Non-Functional
 
@@ -144,7 +162,9 @@ Acceptance Scenarios:
 - SC-008: The new PAW agent file is smaller than any single current implementation agent (under 5KB) (FR-003)
 - SC-009: Workflow skill blocks progression when required predecessor artifacts are missing (FR-012)
 - SC-010: Non-linear requests (e.g., "update spec to align with plan") are handled by reasoning about intent and delegating to appropriate skill with context (FR-004)
-- SC-011: Delegated activities reliably return completion signals that allow the PAW agent to apply Confirmation/Session Policy and select an appropriate next action without requiring the activity skill to perform orchestration (FR-015)
+- SC-011: Delegated activities reliably return completion signals that allow the PAW agent to apply Review/Session Policy and select an appropriate next action without requiring the activity skill to perform orchestration (FR-015)
+- SC-012: The `/paw` prompt file exists and is invoked by the VS Code "PAW: New PAW Workflow" command (FR-016, FR-019)
+- SC-013: New workflow initialization via `/paw` creates WorkflowContext.md, git branch, and proceeds to first stage without requiring user to say "continue" (FR-017, FR-018)
 
 ## Assumptions
 
@@ -162,18 +182,23 @@ Acceptance Scenarios:
 In Scope:
 - Create single PAW agent file that replaces PAW-01A through PAW-05 and PAW-X Status, with intent-driven orchestration
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
-- Create activity skills: `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
-- Create utility skill: `paw-review-response` for shared PR comment response mechanics
+- Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
+- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations
+- Create `/paw` entry point prompt file (`prompts/paw.prompt.md`) that invokes PAW agent with configuration parameters
+- Update VS Code "PAW: New PAW Workflow" command to invoke `/paw` prompt instead of template-based prompt to bare agent
 - Update extension tooling to support new Review Policy and Session Policy fields in WorkflowContext.md
 - Update context tool to parse new policy fields with backward compatibility mapping for legacy Handoff Mode
-- Update extension installer to deploy new agent and skills instead of individual agent files
-- Remove deprecated individual agent files after migration
+- Update extension installer to deploy new agent, skills, and prompt files
+- Remove deprecated individual agent files and old initialization template after migration
 
 Out of Scope:
 - Changing artifact locations or formats
 - Modifying the review workflow (already migrated per PR #156)
 - Multi-runtime portability (Claude Code, Codex, etc.)
-- Changes to the existing component files (paw-context.component.md, handoff-instructions.component.md)—these may be referenced by skills but not modified
+- Changes to `paw-context.component.md`—this component may be referenced by skills but not modified
+
+In Scope (Component Updates):
+- `handoff-instructions.component.md` requires minimal updates to route commands to the PAW agent instead of individual agents
 
 ## Dependencies
 
@@ -204,5 +229,5 @@ Out of Scope:
 - **Utility Skill**: A shared skill providing common mechanics that activity skills load conditionally (e.g., PR comment response handling)
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)—replaces legacy Handoff Mode
 - **Session Policy**: Configuration controlling whether stages get fresh conversations or share context (per-stage, continuous)
-- **Milestone Artifact**: A significant artifact (e.g., Spec.md, ImplementationPlan.md) where "milestones" Review Policy pauses for human review
+- **Milestone Artifact**: A significant artifact where "milestones" Review Policy pauses for human review. Complete list: Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation. Non-milestones (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
 - **Intent-Driven Orchestration**: The PAW agent reasons about what the user wants to accomplish and delegates to appropriate skills with meaningful context

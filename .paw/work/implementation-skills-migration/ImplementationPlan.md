@@ -29,7 +29,7 @@ After implementation:
 5. All existing artifacts produced in same locations with same formats
 6. All workflow modes (full/minimal/custom) function correctly
 7. **New policy configurations**:
-   - Confirmation Policy (`always | milestones | never`) controls when workflow pauses for user input
+   - Review Policy (`always | milestones | never`) controls when workflow pauses for human review at artifact boundaries
    - Session Policy (`per-stage | continuous`) controls conversation context management
 
 ### Verification:
@@ -54,13 +54,13 @@ Follow the PAW Review migration pattern:
 5. Deprecate individual implementation agents
 
 The workflow skill will provide:
-- **Activity Catalog**: Available skills and their capabilities (what each can do)
+- **Skill Discovery Pattern**: Document that PAW agent retrieves skills dynamically via `paw_get_skills` tool; workflow skill provides usage patterns for typical implementation skills
 - **Default Flow Guidance**: Typical stage progression for greenfield implementation
 - **Transition Table**: Default mechanism (runSubagent vs paw_call_agent) and milestone classification
 - **Artifact Structure**: Where artifacts live and their relationships
 - **PR Comment Response Guidance**: Which skills handle which PR types
 
-**Key insight**: The workflow skill is a **guide, not a state machine**. The PAW agent uses it to understand available capabilities, then reasons about how to fulfill user requests—including non-linear paths.
+**Key insight**: The workflow skill is a **guide, not a state machine**. The PAW agent retrieves available skills dynamically via `paw_get_skills`, uses workflow guidance to understand typical patterns, then reasons about how to fulfill user requests—including non-linear paths.
 
 Activity skills will provide:
 - **Capabilities**: What the skill can do (not rigid "modes")
@@ -77,7 +77,7 @@ Activity skills will provide:
 
 ## Phase Summary
 
-1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
+1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
 2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into 10 activity skills plus `paw-review-response` utility skill for PR comment mechanics
 3. **Phase 3: Create PAW Agent** - Build compact orchestrator agent that reasons about intent and delegates activities
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool and installer to support the new architecture
@@ -88,7 +88,7 @@ Activity skills will provide:
 ## Phase 1: Create Workflow Skill
 
 ### Overview
-Create the `paw-workflow` skill that provides the PAW agent with an activity catalog, default flow guidance, and orchestration patterns. This skill is a **reference guide** that the PAW agent consults, not a rigid state machine that constrains behavior.
+Create the `paw-workflow` skill that provides the PAW agent with skill usage patterns, default flow guidance, and orchestration patterns. This skill is a **reference guide** that the PAW agent consults—the PAW agent discovers available skills dynamically via `paw_get_skills` tool rather than relying on a static catalog embedded in the workflow skill.
 
 ### Changes Required:
 
@@ -97,7 +97,7 @@ Create the `paw-workflow` skill that provides the PAW agent with an activity cat
 **Changes**: 
 - Create skill following structure of `paw-review-workflow/SKILL.md`
 - Define Core Implementation Principles (evidence-based documentation, file:line references, artifact completeness)
-- **Activity Catalog** with capabilities:
+- **Activity Catalog Discovery**: Document that PAW agent retrieves available skills dynamically via `paw_get_skills` tool rather than embedding a static catalog; the workflow skill provides guidance on typical skill usage patterns:
   | Skill | Capabilities | Primary Artifacts |
   |-------|--------------|-------------------|
   | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
@@ -132,10 +132,10 @@ Create the `paw-workflow` skill that provides the PAW agent with an activity cat
 - Document **Session Policy behavior**:
   - `per-stage`: Use mechanism column from transition table
   - `continuous`: Always use `runSubagent` (single conversation)
-- Document **Confirmation Policy behavior**:
-  - `always`: Pause at every transition
-  - `milestones`: Pause only where Milestone? = Yes
-  - `never`: Never pause, run to completion
+- Document **Review Policy behavior** (boundaries are artifact-level, not stage-level):
+  - `always`: Pause after every artifact is produced for potential iteration
+  - `milestones`: Pause at milestone artifacts (e.g., Spec.md, ImplementationPlan.md); proceed automatically at non-milestone artifacts
+  - `never`: Never pause, proceed continuously without review pauses
 - Define stage gates (artifact verification between stages)
 - Encode workflow mode handling (full/minimal/custom)
 - **PR Comment Response Guidance** (which skills typically handle PR comments):
@@ -153,7 +153,7 @@ Create the `paw-workflow` skill that provides the PAW agent with an activity cat
 
 **Tests**:
 - Manual verification: Load skill via `paw_get_skill('paw-workflow')` and verify content matches specification
-- Verify activity catalog lists all skills with capabilities
+- Verify skill usage patterns table lists typical implementation skills with capabilities
 - Verify transition table is framed as default guidance
 
 ### Success Criteria:
@@ -164,11 +164,11 @@ Create the `paw-workflow` skill that provides the PAW agent with an activity cat
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Activity catalog includes all 9 activity skills with capabilities
+- [ ] Skill usage patterns table documents typical implementation skills with capabilities (PAW agent discovers skills dynamically via `paw_get_skills`)
 - [ ] Default flow guidance covers typical greenfield progression
 - [ ] Transition table framed as default guidance (not exclusive paths)
 - [ ] Intelligent Routing Guidance section documents flexible intent-based delegation
-- [ ] Confirmation Policy behavior documented for all three values
+- [ ] Review Policy behavior documented for all three values with artifact-level boundaries clarified
 - [ ] Session Policy behavior documented for both values
 - [ ] PR Comment Response Guidance covers all PR types
 - [ ] Subagent Completion Contract clearly specifies activity skills return status, not handle handoffs
@@ -366,21 +366,24 @@ Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual 
 - Initialization: "Load the `paw-workflow` skill to understand available activities, default flow, and orchestration guidance"
 - Context detection: Work ID from user input or WorkflowContext.md
 - **Policy detection from WorkflowContext.md**:
-  - Read `Confirmation Policy` (default: `milestones`)
+  - Read `Review Policy` (default: `milestones`)
   - Read `Session Policy` (default: `per-stage`)
 - Workflow mode detection summary (full/minimal/custom from WorkflowContext.md)
+- **Dynamic Skill Discovery**: Retrieve available skills via `paw_get_skills` tool rather than relying on static catalog in workflow skill
 - **Intelligent Request Handling**:
   1. Reason about user intent (what do they want to accomplish?)
-  2. Consult activity catalog from workflow skill (which skill has this capability?)
-  3. Construct delegation prompt with:
+  2. Consult skills catalog via `paw_get_skills` (which skill has this capability?)
+  3. Construct activity-specific delegation prompt:
      - Skill to load
-     - User's specific request/context
+     - Activity goal describing what the skill should accomplish
+     - For non-linear requests: include user's specific request as part of activity context
+     - Note: Not every delegation includes original user request verbatim—only when relevant
      - Relevant artifact paths
   4. Delegate via appropriate mechanism:
      - `runSubagent` if `continuous` Session Policy OR tight loop
      - `paw_call_agent` if `per-stage` Session Policy for stage transitions
   5. Receive completion status from activity
-  6. Apply Confirmation Policy for pause decisions
+  6. Apply Review Policy for pause decisions (at artifact boundaries)
   7. Either continue to next activity OR present options to user
 - **Non-linear request handling**:
   - "Update spec to align with plan" → delegate to paw-spec with alignment context
@@ -429,8 +432,10 @@ Load the `paw-workflow` skill...
 #### Manual Verification:
 - [ ] Agent loads in VS Code prompts
 - [ ] Agent successfully loads workflow skill
-- [ ] Agent reads Confirmation Policy and Session Policy from WorkflowContext.md
-- [ ] Agent correctly pauses at milestones when Confirmation Policy = `milestones`
+- [ ] Agent reads Review Policy and Session Policy from WorkflowContext.md
+- [ ] Agent correctly pauses at milestone artifacts when Review Policy = `milestones`
+- [ ] Agent retrieves skills dynamically via `paw_get_skills` tool
+- [ ] Agent constructs activity-specific delegation prompts (activity goal vs verbatim user request)
 - [ ] Agent uses appropriate mechanism based on Session Policy
 - [ ] Agent handles non-linear requests (e.g., "update spec to align with plan")
 - [ ] Agent constructs meaningful delegation prompts with user context
@@ -458,20 +463,20 @@ Modify the extension's TypeScript code to support the new PAW agent architecture
 #### 2. WorkflowContext Initialization Updates
 **File**: `src/commands/initializeWorkItem.ts`
 **Changes**:
-- Add `Confirmation Policy` field to WorkflowContext.md template (default: `milestones`)
+- Add `Review Policy` field to WorkflowContext.md template (default: `milestones`)
 - Add `Session Policy` field to WorkflowContext.md template (default: `per-stage`)
 - Update field documentation in template
 
 **New WorkflowContext.md fields**:
 ```markdown
-Confirmation Policy: milestones
+Review Policy: milestones
 Session Policy: per-stage
 ```
 
 **Field documentation**:
 | Field | Values | Description |
 |-------|--------|-------------|
-| Confirmation Policy | `always` / `milestones` / `never` | When workflow pauses for user confirmation |
+| Review Policy | `always` / `milestones` / `never` | When workflow pauses for human review at artifact boundaries |
 | Session Policy | `per-stage` / `continuous` | Whether each stage gets fresh chat or shares conversation |
 
 **Tests**:
@@ -480,10 +485,10 @@ Session Policy: per-stage
 #### 3. Context Tool Updates
 **File**: `src/tools/contextTool.ts`
 **Changes**:
-- Parse `Confirmation Policy` field from WorkflowContext.md (default: `milestones` if missing)
+- Parse `Review Policy` field from WorkflowContext.md (default: `milestones` if missing)
 - Parse `Session Policy` field from WorkflowContext.md (default: `per-stage` if missing)
 - Include parsed values in tool response for PAW agent consumption
-- **Backward compatibility**: Map old `Handoff Mode` field to new `Confirmation Policy` if present:
+- **Backward compatibility**: Map old `Handoff Mode` field to new `Review Policy` if present:
   - `manual` → `always`
   - `semi-auto` → `milestones`
   - `auto` → `never`
@@ -522,8 +527,8 @@ Session Policy: per-stage
 - [ ] `paw_call_agent` tool accepts `"PAW"` as target agent
 - [ ] PAW agent appears in VS Code prompts directory after installation
 - [ ] New skills appear in `paw_get_skills` catalog
-- [ ] New work items include `Confirmation Policy` and `Session Policy` fields
-- [ ] `paw_get_context` returns policy values correctly
+- [ ] New work items include `Review Policy` and `Session Policy` fields
+- [ ] `paw_get_context` returns policy values correctly (including Review Policy)
 - [ ] Old WorkflowContext.md files with `Handoff Mode` still work (backward compatibility)
 
 ---
@@ -599,7 +604,7 @@ Remove the 9 individual implementation agent files and update documentation to r
 - [ ] Only PAW and PAW Review agents appear in VS Code prompts
 - [ ] Full workflow (spec → PR) completes using PAW agent
 - [ ] All three workflow modes (full/minimal/custom) work correctly
-- [ ] All Confirmation Policy values work correctly (`always`/`milestones`/`never`)
+- [ ] All Review Policy values work correctly (`always`/`milestones`/`never`) with artifact-level boundaries
 - [ ] All Session Policy values work correctly (`per-stage`/`continuous`)
 
 ---
@@ -609,10 +614,10 @@ Remove the 9 individual implementation agent files and update documentation to r
 ### Integration Tests:
 - Complete full workflow (spec → PR) using PAW agent in full workflow mode
 - Complete minimal workflow (skip spec) using PAW agent in minimal workflow mode
-- **Confirmation Policy testing**:
-  - `always`: Verify pause at every stage boundary
-  - `milestones`: Verify pause only at milestone transitions (planning→implement, phase complete, docs→pr)
-  - `never`: Verify continuous progression through all stages
+- **Review Policy testing** (verify artifact-level boundaries):
+  - `always`: Verify pause after every artifact is produced
+  - `milestones`: Verify pause only at milestone artifacts (Spec.md, ImplementationPlan.md, etc.); auto-proceed at non-milestone artifacts (SpecResearch.md, CodeResearch.md)
+  - `never`: Verify continuous progression without review pauses
 - **Session Policy testing**:
   - `per-stage`: Verify new chat created at stage transitions (via `paw_call_agent`)
   - `continuous`: Verify single conversation throughout (all via `runSubagent`)
@@ -624,10 +629,10 @@ Remove the 9 individual implementation agent files and update documentation to r
 
 ### Manual Testing Steps:
 1. Initialize new work item with `PAW Initialize`
-2. Verify WorkflowContext.md includes `Confirmation Policy` and `Session Policy` fields
+2. Verify WorkflowContext.md includes `Review Policy` and `Session Policy` fields
 3. Invoke PAW agent with Work ID
 4. Complete specification stage, verify Spec.md created
-5. Verify research stage triggers automatically (Confirmation Policy: `milestones`)
+5. Verify research stage triggers automatically (Review Policy: `milestones` doesn't pause at non-milestone artifacts)
 6. Complete planning, verify ImplementationPlan.md created
 7. Verify planning waits for user confirmation (milestone transition)
 8. **Non-linear test**: Ask PAW to "align spec with planning changes" → verify it delegates to paw-spec with context
@@ -647,11 +652,11 @@ Remove the 9 individual implementation agent files and update documentation to r
 
 - **Backward Compatibility**: 
   - During Phase 4, both old and new agent names are supported in `paw_call_agent`
-  - Old `Handoff Mode` field maps to `Confirmation Policy`: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
+  - Old `Handoff Mode` field maps to `Review Policy`: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
   - Missing `Session Policy` defaults to `per-stage` (current behavior)
 - **User Transition**: Users invoking old agent names will see them until Phase 5 completes
 - **Data Migration**: No data migration needed—artifact locations and formats unchanged
-- **Policy defaults**: New work items use `Confirmation Policy: milestones`, `Session Policy: per-stage`
+- **Policy defaults**: New work items use `Review Policy: milestones`, `Session Policy: per-stage`
 
 ## References
 

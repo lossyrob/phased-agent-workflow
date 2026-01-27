@@ -3,9 +3,7 @@ name: paw-git-operations
 description: Shared git mechanics for PAW activity skills including branch naming conventions, strategy-based branching logic, and selective staging discipline.
 ---
 
-# Git Operations Utility Skill
-
-Provides consistent git and branch handling patterns for PAW activity skills. Load this skill when performing branch creation, commits, or push operations.
+# Git Operations
 
 ## Branch Naming Conventions
 

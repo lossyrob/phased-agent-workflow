@@ -3,9 +3,7 @@ name: paw-docs-guidance
 description: Documentation conventions for PAW implementation workflow. Provides Docs.md template structure, include/exclude guidelines, and project documentation update patterns.
 ---
 
-# Documentation Guidance Utility Skill
-
-Provides documentation conventions and templates for PAW implementation workflow. Load this skill when creating Docs.md or updating project documentation.
+# Documentation Guidance
 
 ## Docs.md Purpose
 

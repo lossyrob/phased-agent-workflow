@@ -3,9 +3,7 @@ name: paw-review-response
 description: Shared PR review comment response mechanics for PAW activity skills. Provides TODO workflow, commit patterns, and reply format for addressing reviewer feedback.
 ---
 
-# Review Response Utility Skill
-
-Provides consistent PR review comment handling for PAW activity skills. Load this skill when addressing PR review comments on Planning PRs, Phase PRs, Docs PRs, or Final PRs.
+# Review Response
 
 ## Review Comment Workflow
 

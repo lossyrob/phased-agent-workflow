@@ -1,11 +1,13 @@
 ---
 name: paw-workflow
-description: Guides multi-phase software implementation by coordinating activity skills through specification, planning, phased code changes with review, and PR creation. Provides default flow guidance, transition mechanisms, and PR comment routing.
+description: Guides multi-phase software implementation by coordinating activity skills through specification, planning, phased code changes with review, and PR creation. Assumes WorkflowContext.md exists (created by paw-init bootstrap skill). Provides default flow guidance, transition mechanisms, and PR comment routing.
 ---
 
 # PAW Implementation Workflow Skill
 
 This workflow skill orchestrates multi-phase software implementation, guiding an agent through specification, planning, implementation, and finalization stages. An agent using this workflow discovers available skills dynamically via `paw_get_skills` and uses this skill as a reference guide for typical patterns and orchestration.
+
+**Prerequisite**: This workflow skill assumes `WorkflowContext.md` already exists. The `paw-init` bootstrap skill must run first to create the workflow directory, WorkflowContext.md, and git branch. The orchestrating agent invokes `paw-init` directly before loading this workflow skill.
 
 ## Core Implementation Principles
 
@@ -58,11 +60,10 @@ Humans have final authority over all workflow decisions:
 
 ## Activity Skill Usage Patterns
 
-The orchestrating agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation skills:
+The orchestrating agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation activity skills:
 
 | Skill | Capabilities | Primary Artifacts |
 |-------|--------------|-------------------|
-| `paw-init` | Initialize workflow, create WorkflowContext.md, branch setup | WorkflowContext.md |
 | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
@@ -72,6 +73,9 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 | `paw-docs` | Create Docs.md, update project docs | Docs.md |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, provide guidance | Status responses |
+
+**Bootstrap Skill** (runs before this workflow skill is loaded):
+- `paw-init`: Initialize workflow, create WorkflowContext.md, branch setup
 
 **Utility Skills** (loaded by activity skills as needed):
 - `paw-git-operations`: Branch naming, strategy-based branching, selective staging
@@ -145,9 +149,10 @@ This section describes the typical greenfield implementation progression. The ag
 
 This table documents typical stage transitions as default guidance. The agent determines the actual mechanism based on Session Policy and user context.
 
+*Note: The `paw-init` bootstrap skill runs before this workflow is loaded and is not included in transitions below.*
+
 | Transition | Milestone? | per-stage Mechanism |
 |------------|------------|---------------------|
-| init → spec | No | paw_call_agent |
 | spec → spec-research | No | paw_call_agent |
 | spec-research → spec (resume) | No | paw_call_agent |
 | spec → code-research | No | paw_call_agent |

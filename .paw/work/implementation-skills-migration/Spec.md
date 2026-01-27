@@ -31,9 +31,9 @@ Independent Test: User runs "PAW: New PAW Workflow", selects full mode with PRs 
 
 Acceptance Scenarios:
 1. Given a user running "PAW: New PAW Workflow", When they complete quick pick selections, Then the VS Code command invokes the `/paw` prompt with configuration parameters
-2. Given the PAW agent receiving initialization parameters (no existing WorkflowContext.md), When it loads the workflow skill, Then it delegates to the `paw-init` skill to create the workflow structure
-3. Given the `paw-init` skill completing initialization, When it returns success, Then the PAW agent proceeds to the first workflow stage based on Workflow Mode (spec for full, code-research for minimal)
-4. Given a user with an existing WorkflowContext.md who invokes `/paw`, When the PAW agent loads, Then it skips initialization and proceeds based on current workflow state
+2. Given the PAW agent receiving initialization parameters (no existing WorkflowContext.md), When it checks for WorkflowContext.md, Then it delegates directly to the `paw-init` bootstrap skill (without loading the workflow skill first) to create the workflow structure
+3. Given the `paw-init` skill completing initialization, When it returns success with feature slug, Then the PAW agent loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (spec for full, code-research for minimal)
+4. Given a user with an existing WorkflowContext.md who invokes `/paw`, When the PAW agent loads, Then it loads the workflow skill and proceeds based on current workflow state
 
 ### User Story P1 – Single Entry Point for Implementation
 
@@ -115,7 +115,7 @@ Acceptance Scenarios:
 ### Functional Requirements
 
 - FR-001: The PAW agent loads the workflow skill on invocation to understand available capabilities, default flow guidance, and orchestration patterns (Stories: P0, P1, P4)
-- FR-002: The workflow skill retrieves activity capabilities dynamically via the `paw_get_skills` tool rather than embedding a static catalog; this enables the PAW agent to discover all available skills (including non-implementation skills like review skills) for potential non-linear paths. The workflow skill provides default flow guidance for typical progressions and validation gates—serving as a guide rather than a rigid state machine (Stories: P1, P6)
+- FR-002: The workflow skill retrieves activity capabilities dynamically via the `paw_get_skills` tool rather than embedding a static catalog; this enables the PAW agent to discover all available skills (including non-implementation skills like review skills) for potential non-linear paths. The workflow skill provides default flow guidance for typical progressions and validation gates—serving as a guide rather than a rigid state machine. **Prerequisite**: The workflow skill assumes WorkflowContext.md already exists (created by `paw-init` bootstrap skill) (Stories: P1, P6)
 - FR-003: Activity skills are loaded on-demand when delegated to, describing capabilities (what they can do) rather than fixed modes, enabling flexible execution based on delegation instructions (Stories: P1, P6)
 - FR-004: The PAW agent reasons about user intent and constructs activity-specific delegation prompts that contextualize what the activity should accomplish. For linear progressions, the delegation prompt describes the activity goal (e.g., "complete spec research for the questions in the research prompt"); for non-linear requests, the delegation prompt includes the user's specific request (e.g., "update the spec to align with implementation plan changes") as part of the activity context. Not every delegation includes the original user request verbatim—only when relevant to the delegated activity (Stories: P1, P6)
 - FR-005: Workflow mode detection routes users through appropriate stages: full mode includes all stages, minimal mode skips spec (Stories: P2)
@@ -130,15 +130,16 @@ Acceptance Scenarios:
 - FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic (Stories: P1)
 - FR-015: Activity skills report completion status back to the PAW agent and do not make orchestration decisions (e.g., pausing, next-step selection); the PAW agent applies policies and determines what happens next (Stories: P1, P3, P6)
 - FR-016: The `/paw` prompt file serves as the entry point for the PAW implementation workflow; it passes configuration parameters to the PAW agent and accepts optional arguments (Stories: P0)
-- FR-017: The `paw-init` skill handles workflow initialization: creating `.paw/work/<feature-slug>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled (Stories: P0)
-- FR-018: When the PAW agent receives initialization parameters and no WorkflowContext.md exists, it delegates to the `paw-init` skill; upon successful initialization, it proceeds to the first workflow stage based on Workflow Mode (Stories: P0)
+- FR-017: The `paw-init` skill is a **bootstrap skill** that handles workflow initialization: creating `.paw/work/<feature-slug>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled. Unlike activity skills, `paw-init` is invoked directly by the PAW agent before the workflow skill is loaded—it is not part of the workflow stages (Stories: P0)
+- FR-018: When the PAW agent receives initialization parameters and no WorkflowContext.md exists, it delegates directly to the `paw-init` bootstrap skill (without loading workflow skill first); upon successful initialization, it loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (Stories: P0)
 - FR-019: The VS Code "PAW: New PAW Workflow" command invokes the `/paw` prompt with configuration parameters instead of the current template-based prompt to a bare agent (Stories: P0)
 
 ### Key Entities
 
 - **PAW Agent**: Single orchestrator agent that replaces the nine implementation agents; reasons about user intent, loads appropriate skills, and constructs meaningful delegation prompts
 - **Workflow Skill**: Provides activity catalog with capabilities, default flow guidance (not rigid state machine), validation gates, transition table (default guidance for typical flow), and policy behavior documentation
-- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: initialization, specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status
+- **Bootstrap Skill**: The `paw-init` skill that runs before the workflow skill is loaded; creates WorkflowContext.md and sets up the workflow directory and git branch
+- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, code-research, planning, implementation, impl-review, documentation, final-pr, status (note: `paw-init` is a bootstrap skill, not an activity skill)
 - **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)

@@ -83,7 +83,7 @@ Activity skills will provide:
 1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
 2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into skills, split into sub-phases for context management:
    - **Phase 2A: Utility Skills** - Create `paw-git-operations` and `paw-review-response` foundation skills that other skills reference
-   - **Phase 2B: Initialization & Specification Skills** - Create `paw-init`, `paw-spec`, `paw-spec-research` for early workflow stages
+   - **Phase 2B: Bootstrap & Specification Skills** - Create `paw-init` (bootstrap skill), `paw-spec`, `paw-spec-research` for early workflow stages
    - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning` for the planning stage
    - **Phase 2D: Implementation Skills** - Create `paw-implement`, `paw-impl-review` for core execution
    - **Phase 2E: Finalization Skills** - Create `paw-docs`, `paw-pr`, `paw-status` for final workflow stages
@@ -108,7 +108,6 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 - **Activity Catalog Discovery**: Document that PAW agent retrieves available skills dynamically via `paw_get_skills` tool rather than embedding a static catalog; the workflow skill provides guidance on typical skill usage patterns:
   | Skill | Capabilities | Primary Artifacts |
   |-------|--------------|-------------------|
-  | `paw-init` | Initialize workflow, create WorkflowContext.md, branch setup | WorkflowContext.md |
   | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
   | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
   | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
@@ -118,6 +117,8 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   | `paw-docs` | Create Docs.md, update project docs | Docs.md |
   | `paw-pr` | Pre-flight validation, create final PR | Final PR |
   | `paw-status` | Diagnose workflow state, provide guidance | Status responses |
+  
+  **Note**: `paw-init` is a **bootstrap skill**, not an activity skill. It runs before the workflow skill is loaded to create WorkflowContext.md. The workflow skill assumes WorkflowContext.md already exists.
 - Define artifact directory structure (`.paw/work/<feature-slug>/`)
 - **Default Flow Guidance** (typical greenfield progression):
   - **Specification Stage**: `paw-spec` → `paw-spec-research` (if needed) → `paw-spec` (resume)
@@ -126,7 +127,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   - **Finalization Stage**: `paw-docs` → `paw-pr`
 - **Default Transition Table** (guidance for typical flow, not exclusive paths):
 
-  *Note: The implementation workflow includes explicit transition mechanisms because it has more stage transitions (10 activities) than the review workflow (6 activities). This table documents typical flow patterns; the PAW agent ultimately decides based on Session Policy and user intent.*
+  *Note: This table documents workflow stage transitions. The `paw-init` bootstrap skill runs before the workflow starts and is not included here—it is invoked directly by the PAW agent when WorkflowContext.md doesn't exist.*
 
   | Transition | Milestone? | per-stage Mechanism |
   |------------|------------|---------------------|
@@ -195,7 +196,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 
 Created `paw-workflow` skill (~10KB) following the pattern from `paw-review-workflow`. Key sections include:
 - Core Implementation Principles (5 principles for activity skills to reference)
-- Activity Skill Usage Patterns table (10 activity + 2 utility skills)
+- Activity Skill Usage Patterns table (9 activity + 2 utility skills; `paw-init` is a separate bootstrap skill)
 - Artifact Directory Structure
 - Default Flow Guidance for 4 stages (Specification, Planning, Implementation, Finalization)
 - Default Transition Table with milestone markers
@@ -289,18 +290,20 @@ Create the two utility skills that provide shared mechanics referenced by activi
 
 ---
 
-## Phase 2B: Initialization & Specification Skills
+## Phase 2B: Bootstrap & Specification Skills
 
 ### Overview
-Create the initialization skill and specification-related skills for the early workflow stages.
+Create the bootstrap skill (`paw-init`) and specification-related activity skills for the early workflow stages.
+
+**Architectural Note**: `paw-init` is a **bootstrap skill**, not an activity skill. It runs before the workflow skill is loaded, creating WorkflowContext.md which is required for the workflow to function. The PAW agent invokes `paw-init` directly when no WorkflowContext.md exists, then loads `paw-workflow` after initialization completes.
 
 ### Changes Required:
 
-#### 1. Initialization Skill
+#### 1. Bootstrap Skill: paw-init
 **File**: `skills/paw-init/SKILL.md`
 **Changes**:
-- Extract initialization logic from `src/prompts/workItemInitPrompt.template.md` into a skill
-- Add YAML frontmatter with `name: paw-init`, `description`
+- Extract initialization logic from `src/prompts/workItemInitPrompt.template.md` into a bootstrap skill
+- Add YAML frontmatter with `name: paw-init`, `description` (clarify it's a bootstrap skill in description)
 - Define **capabilities**:
   - Generate Work Title from issue URL, branch name, or user description
   - Generate Feature Slug from Work Title (normalized, unique)

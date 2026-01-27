@@ -166,7 +166,7 @@ Acceptance Scenarios:
 - **PAW Agent**: Single orchestrator agent that replaces the nine implementation agents; reasons about user intent, loads appropriate skills, and constructs meaningful delegation prompts
 - **Workflow Skill**: Provides activity catalog with capabilities, default flow guidance (not rigid state machine), validation gates, transition table (default guidance for typical flow), and policy behavior documentation
 - **Bootstrap Skill**: The `paw-init` skill that runs before the workflow skill is loaded; creates WorkflowContext.md and sets up the workflow directory and git branch
-- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, spec-review, code-research, planning, plan-review, implementation, impl-review, documentation, final-pr, status (note: `paw-init` is a bootstrap skill, not an activity skill)
+- **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, spec-review, code-research, planning, plan-review, implementation (includes final documentation phase), impl-review, final-pr, status (note: `paw-init` is a bootstrap skill, not an activity skill)
 - **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
@@ -212,7 +212,7 @@ Acceptance Scenarios:
 In Scope:
 - Create single PAW agent file that replaces PAW-01A through PAW-05 and PAW-X Status, with intent-driven orchestration
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
-- Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
+- Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
 - Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations
 - Create `/paw` entry point prompt file (`prompts/paw.prompt.md`) that invokes PAW agent with configuration parameters
 - Update VS Code "PAW: New PAW Workflow" command to invoke `/paw` prompt instead of template-based prompt to bare agent
@@ -259,5 +259,5 @@ In Scope (Component Updates):
 - **Utility Skill**: A shared skill providing common mechanics that activity skills load conditionally (e.g., PR comment response handling)
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)—replaces legacy Handoff Mode
 - **Session Policy**: Configuration controlling whether stages get fresh conversations or share context (per-stage, continuous)
-- **Milestone Artifact**: A significant artifact where "milestones" Review Policy pauses for human review. Complete list: Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation. Non-milestones (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
+- **Milestone Artifact**: A significant artifact where "milestones" Review Policy pauses for human review. Complete list: Spec.md, ImplementationPlan.md, Phase PR completion, Final PR creation. Non-milestones (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md (part of implementation phase), intermediate commits
 - **Intent-Driven Orchestration**: The PAW agent reasons about what the user wants to accomplish and delegates to appropriate skills with meaningful context

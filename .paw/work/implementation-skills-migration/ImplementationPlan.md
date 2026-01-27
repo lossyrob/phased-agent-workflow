@@ -22,7 +22,7 @@ The implementation workflow currently consists of 9 separate agent files totalin
 After implementation:
 1. **Single PAW Agent** (~4KB) replaces PAW-01A through PAW-05 and PAW-X Status
 2. **Workflow Skill** (`paw-workflow`) provides activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
-3. **12 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
+3. **11 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
 4. **2 Utility Skills**:
    - `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
    - `paw-git-operations` for branch naming conventions, strategy-based branching logic, and selective staging discipline
@@ -86,7 +86,7 @@ Activity skills will provide:
    - **Phase 2B: Bootstrap & Specification Skills** - Create `paw-init` (bootstrap skill), `paw-spec`, `paw-spec-research`, `paw-spec-review` for early workflow stages
    - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning`, `paw-plan-review` for the planning stage
    - **Phase 2D: Implementation Skills** - Create `paw-implement`, `paw-impl-review` for core execution
-   - **Phase 2E: Finalization Skills** - Create `paw-docs`, `paw-pr`, `paw-status` for final workflow stages
+   - **Phase 2E: Finalization Skills** - Create `paw-pr`, `paw-status` for final workflow stages
 3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
 5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
@@ -112,9 +112,8 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
   | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
   | `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
-  | `paw-implement` | Execute plan phases, make code changes, address PR comments | Code files |
-  | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
-  | `paw-docs` | Create Docs.md, update project docs | Docs.md |
+  | `paw-implement` | Execute plan phases, make code changes, create/update docs, address PR comments | Code files, Docs.md |
+  | `paw-impl-review` | Review implementation, add inline docs, open PRs | Phase PRs |
   | `paw-pr` | Pre-flight validation, create final PR | Final PR |
   | `paw-status` | Diagnose workflow state, provide guidance | Status responses |
   
@@ -124,7 +123,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   - **Specification Stage**: `paw-spec` → `paw-spec-research` (if needed) → `paw-spec` (resume)
   - **Planning Stage**: `paw-code-research` → `paw-planning`
   - **Implementation Stage**: For each phase in plan: `paw-implement` → `paw-impl-review`
-  - **Finalization Stage**: `paw-docs` → `paw-pr`
+  - **Finalization Stage**: `paw-pr`
 - **Default Transition Table** (guidance for typical flow, not exclusive paths):
 
   *Note: This table documents workflow stage transitions. The `paw-init` bootstrap skill runs before the workflow starts and is not included here—it is invoked directly by the PAW agent when WorkflowContext.md doesn't exist.*
@@ -138,8 +137,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   | planning → implement | **Yes** | paw_call_agent |
   | implement → impl-review (within phase) | No | runSubagent |
   | phase N complete → phase N+1 | **Yes** | paw_call_agent |
-  | all phases complete → docs | **Yes** | paw_call_agent |
-  | docs → final-pr | **Yes** | paw_call_agent |
+  | all phases complete → final-pr | **Yes** | paw_call_agent |
 
 - Document **Session Policy behavior**:
   - `per-stage`: Use mechanism column from transition table; each stage gets a fresh conversation via `paw_call_agent`
@@ -150,14 +148,13 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   - `milestones`: Pause at milestone artifacts; proceed automatically at non-milestone artifacts
   - `never`: Never pause, proceed continuously without review pauses
 - **Explicit Milestone Artifacts** (for Review Policy `milestones` behavior):
-  - **Milestone artifacts** (pause for review): Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation
-  - **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
+  - **Milestone artifacts** (pause for review): Spec.md, ImplementationPlan.md, Phase PR completion, Final PR creation
+  - **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md (part of implementation phase), intermediate commits
 - Define stage gates (artifact verification between stages)
 - Encode workflow mode handling (full/minimal/custom)
 - **PR Comment Response Guidance** (which skills typically handle PR comments):
   - Planning PR → `paw-planning`
   - Phase PR → `paw-implement` → `paw-impl-review`
-  - Docs PR → `paw-docs`
   - Final PR → `paw-implement` → `paw-impl-review`
 - Document status skill integration
 - **Intelligent Routing Guidance**: Document that PAW agent should:
@@ -185,7 +182,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 - [x] Transition table framed as default guidance (not exclusive paths)
 - [x] Intelligent Routing Guidance section documents flexible intent-based delegation
 - [x] Review Policy behavior documented for all three values with artifact-level boundaries clarified
-- [x] Explicit milestone artifact list included (Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR)
+- [x] Explicit milestone artifact list included (Spec.md, ImplementationPlan.md, Phase PR completion, Final PR)
 - [x] Session Policy behavior documented for both values with implementation note about `runSubagent` context preservation
 - [x] PR Comment Response Guidance covers all PR types
 - [x] Subagent Completion Contract clearly specifies activity skills return status, not handle handoffs
@@ -493,17 +490,22 @@ Create the implementation and implementation review skills for core execution.
 **File**: `skills/paw-implement/SKILL.md`
 **Changes**:
 - Extract from `PAW-03A Implementer.agent.md`: implementation philosophy, blocking criteria, verification approach, committing guidelines
+- Extract documentation capabilities from `PAW-04 Documenter.agent.md`: Docs.md artifact format, project doc update guidelines, style matching (per issue #150, documentation is now part of implementation phases)
 - Define **capabilities**:
   - Execute one or more plan items (typically a single phase) based on delegation instructions
   - Make focused code changes with appropriate verification (tests/lint) per repository norms
+  - Create/update Docs.md technical reference (final implementation phase)
+  - Update project documentation (README, CHANGELOG) when appropriate
   - Address PR review comments on implementation work (load `paw-review-response` for mechanics)
   - Handle non-linear requests (e.g., "adjust implementation to match updated spec") when delegated by PAW agent
 - Reference `paw-git-operations` for phase branch creation and selective staging
 - Document one-phase-per-invocation pattern
+- Include Docs.md template structure
 
 **Tests**:
 - Manual verification: Skill loads correctly
 - Verify implementation philosophy preserved
+- Verify Docs.md template preserved from original PAW-04 agent
 
 #### 2. Implementation Review Skill
 **File**: `skills/paw-impl-review/SKILL.md`
@@ -532,6 +534,8 @@ Create the implementation and implementation review skills for core execution.
 - [ ] `paw-implement` references `paw-git-operations` for branch/staging mechanics
 - [ ] `paw-implement` references `paw-review-response` for PR comment work
 - [ ] `paw-implement` documents one-phase-per-invocation pattern
+- [ ] `paw-implement` includes documentation capabilities (Docs.md creation, project doc updates)
+- [ ] `paw-implement` includes Docs.md template from original PAW-04 agent
 - [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
 - [ ] PR description templates preserved from original agents
 
@@ -540,26 +544,11 @@ Create the implementation and implementation review skills for core execution.
 ## Phase 2E: Finalization Skills
 
 ### Overview
-Create the documentation, final PR, and status skills for the final workflow stages.
+Create the final PR and status skills for the finalization stage. Note: Documentation is now handled as part of implementation phases (per issue #150), so there is no separate `paw-docs` skill. The `paw-implement` skill includes documentation capabilities for the final implementation phase.
 
 ### Changes Required:
 
-#### 1. Documentation Skill
-**File**: `skills/paw-docs/SKILL.md`
-**Changes**:
-- Extract from `PAW-04 Documenter.agent.md`: Docs.md artifact format, project doc update guidelines, style matching
-- Define **capabilities**:
-  - Create Docs.md technical reference
-  - Update project docs (README, CHANGELOG)
-  - Address PR review comments (load `paw-review-response` for mechanics)
-- Reference `paw-git-operations` for docs branch creation (when using PRs strategy)
-- Include Docs.md template
-
-**Tests**:
-- Manual verification: Skill loads correctly
-- Verify Docs.md template preserved
-
-#### 2. Final PR Skill
+#### 1. Final PR Skill
 **File**: `skills/paw-pr/SKILL.md`
 **Changes**:
 - Extract from `PAW-05 PR.agent.md`: pre-flight validation checks, PR description guidelines, artifact linking
@@ -573,7 +562,7 @@ Create the documentation, final PR, and status skills for the final workflow sta
 - Manual verification: Skill loads correctly
 - Verify PR description formats preserved
 
-#### 3. Status Skill
+#### 2. Status Skill
 **File**: `skills/paw-status/SKILL.md`
 **Changes**:
 - Extract from `PAW-X Status.agent.md`: workflow stages overview, artifact dependencies, common errors/resolutions
@@ -590,14 +579,11 @@ Create the documentation, final PR, and status skills for the final workflow sta
 ### Success Criteria (Phase 2E):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-docs/SKILL.md`, `skills/paw-pr/SKILL.md`, `skills/paw-status/SKILL.md`
+- [ ] Skills exist at `skills/paw-pr/SKILL.md`, `skills/paw-status/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-docs` references `paw-git-operations` for branch mechanics
-- [ ] `paw-docs` references `paw-review-response` for PR comment work
-- [ ] Docs.md template preserved from original agent
 - [ ] `paw-pr` documents simple vs complex PR description formats
 - [ ] `paw-status` covers workflow stages and common errors
 
@@ -608,7 +594,7 @@ Create the documentation, final PR, and status skills for the final workflow sta
 After completing all Phase 2 sub-phases:
 
 #### Automated Verification:
-- [ ] All 12 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`, `paw-spec-review`, `paw-plan-review`)
+- [ ] All 11 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`, `paw-spec-review`, `paw-plan-review`; no `paw-docs` per issue #150)
 - [ ] Utility skills exist at `skills/paw-review-response/SKILL.md` and `skills/paw-git-operations/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
@@ -619,6 +605,7 @@ After completing all Phase 2 sub-phases:
 - [ ] `paw-init` skill handles all initialization parameters and creates correct WorkflowContext.md
 - [ ] `paw-spec-review` validates specs against quality criteria and returns structured feedback
 - [ ] `paw-plan-review` validates plans against quality criteria and returns structured feedback
+- [ ] `paw-implement` includes documentation capabilities for final implementation phase
 - [ ] Activity skills reference `paw-review-response` utility for PR comment work
 - [ ] Activity skills reference `paw-git-operations` utility for branch/commit work
 - [ ] No duplicate PR mechanics across activity skills (consolidated in utility skill)
@@ -1043,8 +1030,8 @@ Remove the 9 individual implementation agent files, the old initialization promp
 8. Complete planning, verify ImplementationPlan.md created
 9. Verify planning waits for user confirmation (milestone transition)
 10. **Non-linear test**: Ask PAW to "align spec with planning changes" → verify it delegates to paw-spec with context
-11. Complete implementation phase, verify phase PR created (prs strategy)
-12. Complete documentation, verify Docs.md created
+11. Complete implementation phases including final documentation phase, verify phase PRs created (prs strategy)
+12. Verify Docs.md created during final implementation phase (not separate docs stage)
 13. Complete final PR, verify PR to main created
 14. Verify all artifacts in `.paw/work/<feature-slug>/`
 15. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation

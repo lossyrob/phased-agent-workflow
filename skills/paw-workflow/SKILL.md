@@ -1,17 +1,25 @@
 ---
 name: paw-workflow
-description: Orchestrates the PAW implementation workflow, coordinating activity skills to transform ideas into shipped code through specification, planning, implementation, and finalization stages.
+description: Guides multi-phase software implementation by coordinating activity skills through specification, planning, phased code changes with review, and PR creation. Provides default flow guidance, transition mechanisms, and PR comment routing.
 ---
 
 # PAW Implementation Workflow Skill
 
-This workflow skill orchestrates the PAW implementation process, guiding the PAW agent through specification, planning, implementation, and finalization stages. The PAW agent discovers available skills dynamically via `paw_get_skills` and uses this skill as a reference guide for typical patterns and orchestration.
+This workflow skill orchestrates multi-phase software implementation, guiding an agent through specification, planning, implementation, and finalization stages. An agent using this workflow discovers available skills dynamically via `paw_get_skills` and uses this skill as a reference guide for typical patterns and orchestration.
 
 ## Core Implementation Principles
 
 These principles apply to ALL implementation stages. Activity skills reference these principles rather than duplicating them.
 
-### 1. Evidence-Based Documentation
+### 1. Subagent Execution Model
+
+All activity skills MUST be executed as subagents (via `runSubagent` or `paw_call_agent`):
+- Isolates activity context from orchestrator context
+- Enables clean handoffs between stages
+- Activity skills return completion status—they do NOT make handoff decisions
+- The orchestrating agent owns all routing and transition logic
+
+### 2. Evidence-Based Documentation
 
 Every artifact MUST be supported by:
 - Specific file:line references for code claims
@@ -20,28 +28,28 @@ Every artifact MUST be supported by:
 
 **NEVER** include speculation, assumptions, or unverified claims.
 
-### 2. File:Line Reference Requirement
+### 3. File:Line Reference Requirement
 
 All code-related claims require specific file:line citations:
 - `[src/module.ts:45](src/module.ts#L45)` for single lines
 - `[src/module.ts:45-52](src/module.ts#L45-L52)` for ranges
 - Multiple locations listed explicitly
 
-### 3. No Fabrication Guardrail
+### 4. No Fabrication Guardrail
 
 **CRITICAL**: Do not fabricate, invent, or assume information:
 - If information is unavailable, state "Not found" or "Unable to determine"
 - Do not hallucinate file contents, function behaviors, or patterns
 - When uncertain, document the uncertainty explicitly
 
-### 4. Artifact Completeness
+### 5. Artifact Completeness
 
 Each stage produces complete, well-structured artifacts:
 - No placeholders or "TBD" markers
 - No unresolved questions blocking downstream stages
 - Each artifact is self-contained and traceable to sources
 
-### 5. Human Authority
+### 6. Human Authority
 
 Humans have final authority over all workflow decisions:
 - Review pauses honor human review preferences
@@ -50,7 +58,7 @@ Humans have final authority over all workflow decisions:
 
 ## Activity Skill Usage Patterns
 
-The PAW agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation skills:
+The orchestrating agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation skills:
 
 | Skill | Capabilities | Primary Artifacts |
 |-------|--------------|-------------------|
@@ -88,7 +96,7 @@ All implementation artifacts are stored in a consistent directory structure:
 
 ## Default Flow Guidance
 
-This section describes the typical greenfield implementation progression. The PAW agent uses this as guidance—not rigid rules—and adapts based on user intent and workflow state.
+This section describes the typical greenfield implementation progression. The agent uses this as guidance—not rigid rules—and adapts based on user intent and workflow state.
 
 ### Specification Stage
 
@@ -135,9 +143,7 @@ This section describes the typical greenfield implementation progression. The PA
 
 ## Default Transition Table
 
-This table documents typical stage transitions as default guidance. The PAW agent determines the actual mechanism based on Session Policy and user context.
-
-*Note: The implementation workflow includes explicit transition guidance because it has more stage transitions (10 activities) than the review workflow.*
+This table documents typical stage transitions as default guidance. The agent determines the actual mechanism based on Session Policy and user context.
 
 | Transition | Milestone? | per-stage Mechanism |
 |------------|------------|---------------------|
@@ -162,7 +168,7 @@ Review Policy controls when the workflow pauses for human review. Boundaries are
 
 ### Policy Values
 
-**`always`**: Pause after every artifact is produced for potential iteration
+**`always`** (setting value): When Review Policy is set to `always`, pause after every artifact is produced for potential iteration
 - Pause after: WorkflowContext.md, Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, each Phase PR completion, Docs.md, Final PR
 
 **`milestones`**: Pause only at milestone artifacts; auto-proceed at non-milestone artifacts
@@ -248,7 +254,7 @@ Notes: Created feature specification from issue description.
 
 ### Delegation Prompt Construction
 
-The PAW agent constructs delegation prompts that include:
+The orchestrating agent constructs delegation prompts that include:
 - Skill to load
 - Activity goal (what to accomplish)
 - Relevant artifact paths
@@ -256,7 +262,7 @@ The PAW agent constructs delegation prompts that include:
 
 ## Intelligent Routing Guidance
 
-The PAW agent reasons about user intent and routes requests intelligently. This section provides guidance—not rigid rules.
+The agent reasons about user intent and routes requests intelligently. This section provides guidance—not rigid rules.
 
 ### Intent-Based Routing
 
@@ -279,7 +285,7 @@ The workflow supports non-linear paths when appropriate:
 
 ### Request vs Activity Goal
 
-Not every delegation includes the original user request verbatim. The PAW agent constructs an **activity goal** appropriate for the skill:
+Not every delegation includes the original user request verbatim. The orchestrating agent constructs an **activity goal** appropriate for the skill:
 
 - **Direct request**: "Create the specification" → goal: "Create specification from issue brief"
 - **Contextual request**: "Update spec to match plan" → goal: "Revise specification to align with ImplementationPlan.md changes, specifically [details from user]"

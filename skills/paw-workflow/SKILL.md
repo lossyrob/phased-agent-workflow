@@ -66,8 +66,10 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 |-------|--------------|-------------------|
 | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
+| `paw-spec-review` | Review spec for quality, completeness, clarity; return structured feedback | Review feedback |
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
 | `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
+| `paw-plan-review` | Review plan for feasibility, spec alignment; return structured feedback | Review feedback |
 | `paw-implement` | Execute plan phases, make code changes, address PR comments | Code files |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
 | `paw-docs` | Create Docs.md, update project docs | Docs.md |
@@ -104,24 +106,28 @@ This section describes the typical greenfield implementation progression. The ag
 
 ### Specification Stage
 
-**Skills**: `paw-spec`, `paw-spec-research`
+**Skills**: `paw-spec`, `paw-spec-research`, `paw-spec-review`
 
 **Typical Sequence**:
 1. `paw-spec` (initial): Create specification from brief/issue
 2. `paw-spec-research` (if needed): Answer factual questions about existing system
 3. `paw-spec` (resume): Integrate research findings into specification
+4. `paw-spec-review`: Review spec for quality, completeness, and clarity
+5. If review identifies issues: `paw-spec` (revise) based on feedback
 
-**Stage Gate**: Verify Spec.md exists and meets quality criteria before proceeding.
+**Stage Gate**: Verify Spec.md exists and passes spec-review quality criteria before proceeding.
 
 ### Planning Stage
 
-**Skills**: `paw-code-research`, `paw-planning`
+**Skills**: `paw-code-research`, `paw-planning`, `paw-plan-review`
 
 **Typical Sequence**:
 1. `paw-code-research`: Document implementation details with file:line references
 2. `paw-planning`: Create phased implementation plan based on spec and research
+3. `paw-plan-review`: Review plan for feasibility, spec alignment, and completeness
+4. If review identifies issues: `paw-planning` (revise) based on feedback
 
-**Stage Gate**: Verify CodeResearch.md and ImplementationPlan.md exist before proceeding.
+**Stage Gate**: Verify CodeResearch.md and ImplementationPlan.md exist and plan passes plan-review quality criteria before proceeding.
 
 ### Implementation Stage
 
@@ -155,9 +161,13 @@ This table documents typical stage transitions as default guidance. The agent de
 |------------|------------|---------------------|
 | spec → spec-research | No | paw_call_agent |
 | spec-research → spec (resume) | No | paw_call_agent |
-| spec → code-research | No | paw_call_agent |
+| spec → spec-review | No | runSubagent |
+| spec-review → spec (revise) | No | paw_call_agent |
+| spec-review pass → code-research | No | paw_call_agent |
 | code-research → planning | No | paw_call_agent |
-| planning → implement | **Yes** | paw_call_agent |
+| planning → plan-review | No | runSubagent |
+| plan-review → planning (revise) | No | paw_call_agent |
+| plan-review pass → implement | **Yes** | paw_call_agent |
 | implement → impl-review (within phase) | No | runSubagent |
 | phase N complete → phase N+1 | **Yes** | paw_call_agent |
 | all phases complete → docs | **Yes** | paw_call_agent |
@@ -166,6 +176,11 @@ This table documents typical stage transitions as default guidance. The agent de
 **Mechanism Selection**:
 - **per-stage Session Policy**: Use mechanism column from table
 - **continuous Session Policy**: Always use `runSubagent` to preserve conversation context
+
+**Review Activity Notes**:
+- `paw-spec-review` and `paw-plan-review` run in subagents to manage context isolation
+- Review activities return structured feedback (pass/fail + specific issues), NOT orchestration decisions
+- The PAW agent decides whether to proceed or iterate based on review feedback
 
 ## Review Policy Behavior
 
@@ -285,6 +300,8 @@ The workflow supports non-linear paths when appropriate:
 | "Update spec to align with plan changes" | `paw-spec` with alignment context |
 | "Do more research on X" | `paw-spec-research` or `paw-code-research` based on X |
 | "Revise phase 2 of the plan" | `paw-planning` with revision context |
+| "Review the spec for quality" | `paw-spec-review` in subagent |
+| "Check if the plan is ready" | `paw-plan-review` in subagent |
 | "What's my current status?" | `paw-status` |
 | "Add error handling to implementation" | `paw-implement` with specific request |
 

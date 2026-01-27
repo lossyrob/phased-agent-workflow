@@ -22,7 +22,7 @@ The implementation workflow currently consists of 9 separate agent files totalin
 After implementation:
 1. **Single PAW Agent** (~4KB) replaces PAW-01A through PAW-05 and PAW-X Status
 2. **Workflow Skill** (`paw-workflow`) provides activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
-3. **10 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-code-research`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
+3. **12 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-docs`, `paw-pr`, `paw-status`
 4. **2 Utility Skills**:
    - `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
    - `paw-git-operations` for branch naming conventions, strategy-based branching logic, and selective staging discipline
@@ -83,8 +83,8 @@ Activity skills will provide:
 1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
 2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into skills, split into sub-phases for context management:
    - **Phase 2A: Utility Skills** - Create `paw-git-operations` and `paw-review-response` foundation skills that other skills reference
-   - **Phase 2B: Bootstrap & Specification Skills** - Create `paw-init` (bootstrap skill), `paw-spec`, `paw-spec-research` for early workflow stages
-   - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning` for the planning stage
+   - **Phase 2B: Bootstrap & Specification Skills** - Create `paw-init` (bootstrap skill), `paw-spec`, `paw-spec-research`, `paw-spec-review` for early workflow stages
+   - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning`, `paw-plan-review` for the planning stage
    - **Phase 2D: Implementation Skills** - Create `paw-implement`, `paw-impl-review` for core execution
    - **Phase 2E: Finalization Skills** - Create `paw-docs`, `paw-pr`, `paw-status` for final workflow stages
 3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
@@ -363,10 +363,34 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 - Manual verification: Skill loads correctly
 - Verify SpecResearch.md template matches current format
 
+#### 4. Spec Review Skill
+**File**: `skills/paw-spec-review/SKILL.md`
+**Changes**:
+- Create new skill for reviewing specifications before planning proceeds
+- Add YAML frontmatter with `name: paw-spec-review`, `description`
+- Reference Core Implementation Principles from `paw-workflow`
+- Define **capabilities**:
+  - Review Spec.md for quality, completeness, and clarity
+  - Validate against quality criteria (completeness, testability, no ambiguities, clear acceptance criteria)
+  - Identify specific sections needing revision
+  - Return structured feedback with pass/fail status
+- Define quality criteria checklist:
+  - All user stories have acceptance scenarios
+  - Functional requirements are complete and unambiguous
+  - Success criteria are testable
+  - No placeholder content or TBDs
+  - Scope is clearly defined (in/out)
+- **Completion response**: Return structured feedback (pass/fail + specific issues) to PAW agent
+- Skill runs in subagent to manage context isolation
+
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify skill provides clear quality criteria for specs
+
 ### Success Criteria (Phase 2B):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`
+- [ ] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
@@ -376,6 +400,8 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 - [ ] `paw-spec` describes capabilities flexibly (not rigid modes)
 - [ ] `paw-spec` references `paw-review-response` for PR comment work
 - [ ] `paw-spec-research` defines SpecResearch.md template
+- [ ] `paw-spec-review` defines clear quality criteria for spec validation
+- [ ] `paw-spec-review` returns structured feedback (not orchestration decisions)
 - [ ] Quality checklists preserved from original agents
 
 ---
@@ -413,10 +439,35 @@ Create the code research and planning skills for the middle workflow stage.
 - Manual verification: Skill loads correctly
 - Verify ImplementationPlan.md template matches current format
 
+#### 3. Plan Review Skill
+**File**: `skills/paw-plan-review/SKILL.md`
+**Changes**:
+- Create new skill for reviewing implementation plans before implementation proceeds
+- Add YAML frontmatter with `name: paw-plan-review`, `description`
+- Reference Core Implementation Principles from `paw-workflow`
+- Define **capabilities**:
+  - Review ImplementationPlan.md for feasibility, completeness, and spec alignment
+  - Validate against quality criteria (spec coverage, phase feasibility, clear success criteria, appropriate phase boundaries)
+  - Identify specific phases or sections needing revision
+  - Return structured feedback with pass/fail status
+- Define quality criteria checklist:
+  - All spec requirements mapped to plan phases
+  - Each phase has clear, testable success criteria
+  - Phase boundaries are logical (not too large, not too small)
+  - Dependencies between phases are explicit
+  - No placeholder content or TBDs
+  - Code research findings are incorporated
+- **Completion response**: Return structured feedback (pass/fail + specific issues) to PAW agent
+- Skill runs in subagent to manage context isolation
+
+**Tests**:
+- Manual verification: Skill loads correctly
+- Verify skill provides clear quality criteria for implementation plans
+
 ### Success Criteria (Phase 2C):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-code-research/SKILL.md`, `skills/paw-planning/SKILL.md`
+- [ ] Skills exist at `skills/paw-code-research/SKILL.md`, `skills/paw-planning/SKILL.md`, `skills/paw-plan-review/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
@@ -424,6 +475,8 @@ Create the code research and planning skills for the middle workflow stage.
 - [ ] `paw-code-research` defines research methodology and CodeResearch.md template
 - [ ] `paw-planning` references `paw-git-operations` for branch/commit mechanics
 - [ ] `paw-planning` references `paw-review-response` for PR comment work
+- [ ] `paw-plan-review` defines clear quality criteria for plan validation
+- [ ] `paw-plan-review` returns structured feedback (not orchestration decisions)
 - [ ] ImplementationPlan.md template includes phase structure
 - [ ] Quality checklists preserved from original agents
 
@@ -555,7 +608,7 @@ Create the documentation, final PR, and status skills for the final workflow sta
 After completing all Phase 2 sub-phases:
 
 #### Automated Verification:
-- [ ] All 10 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`)
+- [ ] All 12 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`, `paw-spec-review`, `paw-plan-review`)
 - [ ] Utility skills exist at `skills/paw-review-response/SKILL.md` and `skills/paw-git-operations/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
@@ -564,6 +617,8 @@ After completing all Phase 2 sub-phases:
 - [ ] Skills describe capabilities flexibly (not rigid modes)
 - [ ] Skills are written for intelligent execution based on delegation instructions
 - [ ] `paw-init` skill handles all initialization parameters and creates correct WorkflowContext.md
+- [ ] `paw-spec-review` validates specs against quality criteria and returns structured feedback
+- [ ] `paw-plan-review` validates plans against quality criteria and returns structured feedback
 - [ ] Activity skills reference `paw-review-response` utility for PR comment work
 - [ ] Activity skills reference `paw-git-operations` utility for branch/commit work
 - [ ] No duplicate PR mechanics across activity skills (consolidated in utility skill)

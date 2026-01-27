@@ -1002,11 +1002,13 @@ Remove the 9 individual implementation agent files, the old initialization promp
 - Manual verification: `paw_call_agent` rejects old agent names gracefully
 
 #### 3. Update Documentation
-**Files**: `docs/reference/agents.md`, `docs/guide/index.md`, `README.md`
+**Files**: `docs/reference/agents.md`, `docs/guide/index.md`, `README.md`, `paw-specification.md`, `docs/specification/implementation.md`, `docs/guide/stage-transitions.md`, `docs/guide/workflow-modes.md`, `docs/guide/two-workflows.md`
 **Changes**:
 - Update agent reference to document single PAW agent
 - Update workflow guide to reflect unified entry point
 - Update README quick start with new usage pattern
+- Update workflow/spec docs to align with the new implementation workflow structure where documentation is handled as a final implementation phase (no separate documentation stage/agent in the skills-based architecture)
+- Update stage transition guidance to remove/adjust any references to a dedicated `docs` stage/agent where it no longer applies, while preserving user-facing command semantics if still supported
 
 **Tests**:
 - Documentation builds: `mkdocs build --strict`

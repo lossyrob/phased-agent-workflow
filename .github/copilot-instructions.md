@@ -47,6 +47,21 @@ All pull requests to `main` must be labeled with one of the following labels:
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 
+## Skill Development
+
+This project has two skill locations with different capabilities:
+
+| Location | Loaded Via | Bundled Resources |
+|----------|------------|-------------------|
+| `.github/skills/` | VS Code skills system | ✅ Supported (`scripts/`, `references/`, `assets/`) |
+| `skills/` | `paw_get_skill` tool | ❌ **Not supported** - SKILL.md only |
+
+**When creating skills in `skills/`**: Only create the SKILL.md file. The `paw_get_skill` tool returns SKILL.md content as text—it cannot access bundled resources. Do not create `scripts/`, `references/`, or `assets/` subdirectories.
+
+**When creating skills in `.github/skills/`**: Full Agent Skills spec is supported, including bundled resources that Claude can read or execute.
+
+**For skill creation guidance**: Load the `skill-creator` skill at `.github/skills/skill-creator/SKILL.md` for comprehensive guidance on skill design principles, anatomy, and creation process.
+
 ## Shell Commands
 
 When writing shell commands in agent prompts or documentation, follow these guidelines:

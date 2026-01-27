@@ -297,15 +297,29 @@ Create the two utility skills that provide shared mechanics referenced by activi
 ### Success Criteria (Phase 2A):
 
 #### Automated Verification:
-- [ ] Utility skills exist at `skills/paw-git-operations/SKILL.md`, `skills/paw-review-response/SKILL.md`, and `skills/paw-docs-guidance/SKILL.md`
-- [ ] Each skill has valid YAML frontmatter with `name` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Utility skills exist at `skills/paw-git-operations/SKILL.md`, `skills/paw-review-response/SKILL.md`, and `skills/paw-docs-guidance/SKILL.md`
+- [x] Each skill has valid YAML frontmatter with `name` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] `paw-git-operations` covers branch naming, strategy-based logic, and selective staging
 - [ ] `paw-review-response` covers PR comment mechanics with TODO workflow
 - [ ] `paw-docs-guidance` provides Docs.md template and project doc update patterns
 - [ ] All utilities can be loaded via `paw_get_skill`
+
+### Phase 2A Completion Notes
+
+**Completed**: 2026-01-27
+
+Created three utility skills that provide shared mechanics for activity skills:
+
+1. **`paw-git-operations`** (~2.5KB): Branch naming conventions table, strategy-based branching logic (prs vs local), selective staging discipline with `.gitignore` checking, branch verification patterns.
+
+2. **`paw-review-response`** (~2.8KB): PR review comment workflow (read → TODO → address → commit → push → reply), reply format with activity names by PR type, commit message format, role separation between mechanics and domain logic.
+
+3. **`paw-docs-guidance`** (~3.2KB): Docs.md template structure, include/exclude guidelines, project documentation update patterns with style matching discipline, documentation depth by workflow mode.
+
+**Review notes**: Verify the utility skills can be loaded via `paw_get_skill` tool and that content matches expectations from the source agents.
 
 ---
 

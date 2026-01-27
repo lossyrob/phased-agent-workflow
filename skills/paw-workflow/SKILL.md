@@ -326,11 +326,3 @@ When user requests status or help:
 2. Provide workflow state diagnosis
 3. Recommend next steps based on artifact state
 4. Explain available options
-
-## Error Handling
-
-If any activity fails or returns `Blocked` status:
-1. Report the error clearly to the user
-2. Document what was attempted and what failed
-3. Seek guidance before proceeding
-4. Do not auto-retry without user confirmation

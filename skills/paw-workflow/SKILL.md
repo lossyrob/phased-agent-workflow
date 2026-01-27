@@ -7,20 +7,13 @@ description: Guides multi-phase software implementation by coordinating activity
 
 This workflow skill orchestrates multi-phase software implementation, guiding an agent through specification, planning, implementation, and finalization stages. An agent using this workflow discovers available skills dynamically via `paw_get_skills` and uses this skill as a reference guide for typical patterns and orchestration.
 
-**Prerequisite**: This workflow skill assumes `WorkflowContext.md` already exists. The `paw-init` bootstrap skill must run first to create the workflow directory, WorkflowContext.md, and git branch. The orchestrating agent invokes `paw-init` directly before loading this workflow skill.
+**Prerequisite**: This workflow skill assumes `WorkflowContext.md` already exists. The `paw-init` bootstrap skill must run first to create the workflow directory, WorkflowContext.md, and git branch.
 
 ## Core Implementation Principles
 
-These principles apply to ALL implementation stages. Activity skills reference these principles rather than duplicating them.
+These principles apply to ALL implementation stages.
 
-### 1. Subagent Execution Model
-
-All activities that use activity skills MUST be executed as subagents (via `runSubagent` or `paw_call_agent`):
-- Ensure sufficient prompting to the subagent to optimally perform the activity, understanding they will get instructions from their activity skill.
-- Activities return completion status—they do NOT make handoff decisions
-- You own all routing and transition logic
-
-### 2. Evidence-Based Documentation
+### 1. Evidence-Based Documentation
 
 Every artifact MUST be supported by:
 - Specific file:line references for code claims
@@ -29,28 +22,28 @@ Every artifact MUST be supported by:
 
 **NEVER** include speculation, assumptions, or unverified claims.
 
-### 3. File:Line Reference Requirement
+### 2. File:Line Reference Requirement
 
 All code-related claims require specific file:line citations:
 - `[src/module.ts:45](src/module.ts#L45)` for single lines
 - `[src/module.ts:45-52](src/module.ts#L45-L52)` for ranges
 - Multiple locations listed explicitly
 
-### 4. No Fabrication Guardrail
+### 3. No Fabrication Guardrail
 
 **CRITICAL**: Do not fabricate, invent, or assume information:
 - If information is unavailable, state "Not found" or "Unable to determine"
 - Do not hallucinate file contents, function behaviors, or patterns
 - When uncertain, document the uncertainty explicitly
 
-### 5. Artifact Completeness
+### 4. Artifact Completeness
 
 Each stage produces complete, well-structured artifacts:
 - No placeholders or "TBD" markers
 - No unresolved questions blocking downstream stages
 - Each artifact is self-contained and traceable to sources
 
-### 6. Human Authority
+### 5. Human Authority
 
 Humans have final authority over all workflow decisions:
 - Review pauses honor human review preferences
@@ -77,7 +70,7 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 **Bootstrap Skill** (runs before this workflow skill is loaded):
 - `paw-init`: Initialize workflow, create WorkflowContext.md, branch setup
 
-**Utility Skills** (loaded by activity skills as needed):
+**Utility Skills** (loaded by subagents as needed):
 - `paw-git-operations`: Branch naming, strategy-based branching, selective staging
 - `paw-review-response`: PR comment mechanics (read, commit, push, reply)
 
@@ -86,7 +79,7 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 All implementation artifacts are stored in a consistent directory structure:
 
 ```
-.paw/work/<feature-slug>/
+.paw/work/<work-id>/
 ├── WorkflowContext.md      # Configuration and state
 ├── Spec.md                 # Feature specification
 ├── SpecResearch.md         # Research answers (optional)
@@ -96,7 +89,7 @@ All implementation artifacts are stored in a consistent directory structure:
 └── prompts/                # Generated prompt files (optional)
 ```
 
-**Feature Slug Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
+**Work ID Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
 
 ## Default Flow Guidance
 
@@ -153,8 +146,6 @@ This section describes the typical greenfield implementation progression. The ag
 ## Default Transition Table
 
 This table documents typical stage transitions as default guidance. The agent determines the actual mechanism based on Session Policy and user context.
-
-*Note: The `paw-init` bootstrap skill runs before this workflow is loaded and is not included in transitions below.*
 
 | Transition | Milestone? | per-stage Mechanism |
 |------------|------------|---------------------|
@@ -238,7 +229,7 @@ When PRs have review comments that need addressing, route to the appropriate ski
 | Phase PR | `paw-implement` → `paw-impl-review` | Implementer makes changes, reviewer verifies and pushes |
 | Final PR | `paw-implement` → `paw-impl-review` | May require code changes; reviewer verifies |
 
-Activity skills load `paw-review-response` utility skill for the mechanics of:
+Subagents performing these activities load `paw-review-response` utility skill for the mechanics of:
 - Reading unresolved comments
 - Creating TODO lists per comment
 - Committing with comment references
@@ -246,21 +237,15 @@ Activity skills load `paw-review-response` utility skill for the mechanics of:
 
 ## Subagent Completion Contract
 
-Activity skills are executed via delegated agent sessions. Each skill returns a completion status—it does NOT make handoff decisions.
+All activities MUST be delegated to subagents (via `runSubagent`):
+- Subagents execute activities by loading the appropriate activity skill.
+- Ensure sufficient prompting to the subagent, including telling them which activity skill to load first
+- Subagents return completion status—they do NOT make handoff decisions
+- The agent executing the workflow (you) owns routing and transition logic
 
 ### Response Format
 
-Upon completion, activity skills respond with:
-- **Artifact path**: Where the artifact was written
-- **Status**: `Success`, `Partial` (awaiting input), or `Blocked` (error)
-- **Notes**: Brief summary of what was accomplished
-
-Example:
-```
-Status: Success
-Artifact: .paw/work/auth-system/Spec.md
-Notes: Created feature specification from issue description.
-```
+Upon completion, subagents respond where the artifact was written, if artifacts were produced, otherwise a textual response (e.g., review feedback)
 
 ### Skill Loading Requirement
 

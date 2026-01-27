@@ -60,6 +60,8 @@ This project has two skill locations with different capabilities:
 
 **When creating skills in `.github/skills/`**: Full Agent Skills spec is supported, including bundled resources that Claude can read or execute.
 
+**For skill creation guidance**: Load the `skill-creator` skill at `.github/skills/skill-creator/SKILL.md` for comprehensive guidance on skill design principles, anatomy, and creation process.
+
 ## Shell Commands
 
 When writing shell commands in agent prompts or documentation, follow these guidelines:

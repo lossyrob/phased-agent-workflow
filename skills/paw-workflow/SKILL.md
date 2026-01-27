@@ -57,7 +57,10 @@ Humans have final authority over all workflow decisions:
 This section distinguishes:
 - **Activity skills**: produce workflow artifacts and represent major stages (listed in the table below)
 - **Bootstrap skills**: set up the workflow workspace (e.g., `paw-init`)
-- **Utility skills**: support common mechanics used by activity skills (e.g., `paw-review-response` for PR comment response workflows)
+- **Utility skills**: support common mechanics used by activity skills:
+  - `paw-review-response` for PR comment response workflows
+  - `paw-git-operations` for branch naming, strategy-based branching, and selective staging
+  - `paw-docs-guidance` for documentation conventions, Docs.md template, and project doc update patterns
 
 Only **activity skills** are listed in the Activities table.
 
@@ -68,7 +71,7 @@ This table documents typical usage patterns for activities, which each have asso
 | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
 | `paw-spec-review` | Review spec for quality, completeness, clarity; return structured feedback | Review feedback |
-| `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
+| `paw-code-research` | Document implementation details with file:line refs, discover docs infrastructure | CodeResearch.md |
 | `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
 | `paw-plan-review` | Review plan for feasibility, spec alignment; return structured feedback | Review feedback |
 | `paw-implement` | Execute plan phases, make code changes, create/update docs, address PR comments | Code files, Docs.md |
@@ -131,7 +134,7 @@ This section describes the typical greenfield implementation progression. The ag
 
 **Repeat** for each phase in the implementation plan.
 
-**Documentation Phase**: The final implementation phase typically includes documentation work—creating Docs.md, updating README, CHANGELOG, and any project guides. This keeps documentation in the same review flow as code changes.
+**Documentation Phase**: The final implementation phase typically includes documentation work—creating Docs.md, updating README, CHANGELOG, and any project guides. The implementer loads `paw-docs-guidance` utility skill for templates and conventions. Documentation research findings from CodeResearch.md inform which project docs to update. This keeps documentation in the same review flow as code changes.
 
 **Stage Gate**: All plan phases completed (including documentation phase) with passing verification.
 

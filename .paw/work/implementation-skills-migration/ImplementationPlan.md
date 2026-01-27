@@ -23,9 +23,10 @@ After implementation:
 1. **Single PAW Agent** (~4KB) replaces PAW-01A through PAW-05 and PAW-X Status
 2. **Workflow Skill** (`paw-workflow`) provides activity catalog, default flow guidance, validation gates, default transition guidance, and PR comment response guidance
 3. **11 Activity Skills**: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
-4. **2 Utility Skills**:
+4. **3 Utility Skills**:
    - `paw-review-response` for shared PR comment mechanics (loaded conditionally by activity skills)
    - `paw-git-operations` for branch naming conventions, strategy-based branching logic, and selective staging discipline
+   - `paw-docs-guidance` for documentation conventions, Docs.md template, and project documentation update patterns (loaded by implementer during docs phase)
 5. **Entry Point Prompt** (`prompts/paw.prompt.md`) invoked by VS Code command
 6. All existing artifacts produced in same locations with same formats
 7. All workflow modes (full/minimal/custom) function correctly
@@ -114,13 +115,15 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   |-------|--------------|-------------------|
   | `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
   | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
-  | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
-  | `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
-  | `paw-implement` | Execute plan phases, make code changes, create/update docs, address PR comments | Code files, Docs.md |
+  | `paw-code-research` | Document implementation details with file:line refs, discover docs infrastructure | CodeResearch.md |
+  | `paw-planning` | Create implementation plan with documentation phase when warranted, revise plan, address PR comments | ImplementationPlan.md |
+  | `paw-implement` | Execute plan phases, make code changes, execute docs phases (loads paw-docs-guidance), address PR comments | Code files, Docs.md |
   | `paw-impl-review` | Review implementation, add inline docs, open PRs | Phase PRs |
   | `paw-pr` | Pre-flight validation, create final PR | Final PR |
   
     **Note**: `paw-init` is a **bootstrap skill**, not an activity skill. It runs before the workflow skill is loaded to create WorkflowContext.md. The workflow skill assumes WorkflowContext.md already exists. `paw-status` is loaded directly by the PAW agent when the user asks for status/help (it does not need to appear in the workflow skill's usage-patterns table).
+    
+    **Utility skills** (`paw-review-response`, `paw-git-operations`, `paw-docs-guidance`) are loaded conditionally by activity skills—they don't appear in workflow guidance since the PAW orchestrator doesn't delegate to them directly.
 - Define artifact directory structure (`.paw/work/<feature-slug>/`)
 - **Default Flow Guidance** (typical greenfield progression):
   - **Specification Stage**: `paw-spec` → `paw-spec-research` (if needed) → `paw-spec` (resume)
@@ -275,17 +278,34 @@ Create the two utility skills that provide shared mechanics referenced by activi
 - Manual verification: Skill loads via `paw_get_skill('paw-review-response')`
 - Verify mechanics match current agent behavior
 
+#### 3. Documentation Guidance Utility Skill
+**File**: `skills/paw-docs-guidance/SKILL.md`
+**Changes**:
+- Create utility skill containing documentation conventions and templates
+- Content extracted from `PAW-04 Documenter.agent.md`:
+  - **Docs.md template structure**: Overview, architecture, usage patterns, API reference, configuration, testing approach
+  - **What to include/exclude guidelines**: Focus on design decisions, integration points, user-facing behavior; exclude code reproduction, exhaustive API docs
+  - **Project documentation update patterns**: README (concise summary), CHANGELOG (single entry), guides (match existing style)
+  - **Style matching guidance**: Study existing docs, match verbosity level, be concise in project docs
+- Implementer loads this utility when executing documentation phases
+- Keeps `paw-implement` focused on execution mechanics while utility skill provides documentation domain knowledge
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-docs-guidance')`
+- Verify Docs.md template matches current PAW-04 agent
+
 ### Success Criteria (Phase 2A):
 
 #### Automated Verification:
-- [ ] Utility skills exist at `skills/paw-git-operations/SKILL.md` and `skills/paw-review-response/SKILL.md`
+- [ ] Utility skills exist at `skills/paw-git-operations/SKILL.md`, `skills/paw-review-response/SKILL.md`, and `skills/paw-docs-guidance/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] `paw-git-operations` covers branch naming, strategy-based logic, and selective staging
 - [ ] `paw-review-response` covers PR comment mechanics with TODO workflow
-- [ ] Both utilities can be loaded via `paw_get_skill`
+- [ ] `paw-docs-guidance` provides Docs.md template and project doc update patterns
+- [ ] All utilities can be loaded via `paw_get_skill`
 
 ---
 
@@ -417,11 +437,27 @@ Create the code research and planning skills for the middle workflow stage.
 **Changes**:
 - Extract from `PAW-02A Code Researcher.agent.md`: research methodology (Code Location, Code Analysis, Pattern Finding), YAML frontmatter format, GitHub permalink generation
 - Define **capabilities**: Document implementation details with file:line references, additional research on demand
-- Define CodeResearch.md artifact template with frontmatter
+- **Documentation System Research** (per issue #150): Include documentation infrastructure discovery as standard research component:
+  - Discover documentation framework (mkdocs, docusaurus, sphinx, plain markdown, etc.)
+  - Identify docs directory structure and navigation configuration files
+  - Document existing documentation style and conventions
+  - Note README, CHANGELOG, and other standard project docs locations
+  - Capture any documentation build/serve commands
+- Define CodeResearch.md artifact template with frontmatter, including **Documentation System** section:
+  ```markdown
+  ## Documentation System
+  - **Framework**: [mkdocs/docusaurus/sphinx/markdown/none]
+  - **Docs Directory**: [path to docs folder]
+  - **Navigation Config**: [path to mkdocs.yml/sidebar.js/etc.]
+  - **Style Conventions**: [key observations about existing doc style]
+  - **Build Command**: [command to build/serve docs locally]
+  - **Standard Files**: [README.md, CHANGELOG.md, etc. locations]
+  ```
 
 **Tests**:
 - Manual verification: Skill loads correctly
 - Verify CodeResearch.md template matches current format
+- Verify Documentation System section is included in template
 
 #### 2. Planning Skill
 **File**: `skills/paw-planning/SKILL.md`
@@ -431,6 +467,17 @@ Create the code research and planning skills for the middle workflow stage.
   - Create implementation plan from spec and research
   - Revise plan based on learnings
   - Address PR review comments (load `paw-review-response` for mechanics)
+  - **Documentation phase planning** (per issue #150): Include documentation as final implementation phase when documentation updates are warranted
+- **Documentation Phase Planning Guidelines**:
+  - Read Documentation System section from CodeResearch.md to understand project docs infrastructure
+  - Include documentation phase when work creates user-facing features, changes APIs, or modifies existing behavior worth documenting
+  - Documentation phase is the **final implementation phase** (not a separate stage) and goes through the same review flow as code changes
+  - Documentation phase should specify:
+    - Docs.md creation (comprehensive technical reference)
+    - Project documentation updates (README, CHANGELOG, guides) following project conventions from CodeResearch.md
+    - Documentation build verification command (if framework discovered)
+  - Implementer executes documentation phase like any code phase, loading `paw-docs-guidance` utility for templates and conventions
+  - **Omit documentation phase** for purely internal changes, refactors without behavior changes, or work where user explicitly indicates no docs needed
 - Reference `paw-git-operations` for planning branch creation and commit mechanics
 - Include ImplementationPlan.md template with phase structure
 
@@ -472,8 +519,10 @@ Create the code research and planning skills for the middle workflow stage.
 
 #### Manual Verification:
 - [ ] `paw-code-research` defines research methodology and CodeResearch.md template
+- [ ] `paw-code-research` includes Documentation System section in template (framework, docs dir, nav config, style, build command)
 - [ ] `paw-planning` references `paw-git-operations` for branch/commit mechanics
 - [ ] `paw-planning` references `paw-review-response` for PR comment work
+- [ ] `paw-planning` includes documentation phase planning guidelines (when to include, what to specify, references to paw-docs-guidance)
 - [ ] `paw-plan-review` defines clear quality criteria for plan validation
 - [ ] `paw-plan-review` returns structured feedback (not orchestration decisions)
 - [ ] ImplementationPlan.md template includes phase structure
@@ -492,22 +541,25 @@ Create the implementation and implementation review skills for core execution.
 **File**: `skills/paw-implement/SKILL.md`
 **Changes**:
 - Extract from `PAW-03A Implementer.agent.md`: implementation philosophy, blocking criteria, verification approach, committing guidelines
-- Extract documentation capabilities from `PAW-04 Documenter.agent.md`: Docs.md artifact format, project doc update guidelines, style matching (per issue #150, documentation is now part of implementation phases)
 - Define **capabilities**:
   - Execute one or more plan items (typically a single phase) based on delegation instructions
   - Make focused code changes with appropriate verification (tests/lint) per repository norms
-  - Create/update Docs.md technical reference (final implementation phase)
-  - Update project documentation (README, CHANGELOG) when appropriate
+  - Execute documentation phases (create/update Docs.md, update project documentation)
   - Address PR review comments on implementation work (load `paw-review-response` for mechanics)
   - Handle non-linear requests (e.g., "adjust implementation to match updated spec") when delegated by PAW agent
+- **Documentation Phase Execution** (per issue #150):
+  - When executing a documentation phase (as specified in ImplementationPlan.md), load `paw-docs-guidance` utility skill for templates and conventions
+  - Documentation phases are executed like any other implementation phase—same branch strategy, same review flow
+  - The plan provides documentation phase details; the `paw-docs-guidance` utility provides the templates and guidance for creating Docs.md and updating project docs
+  - Verify documentation builds correctly using command from CodeResearch.md (if documentation framework discovered)
 - Reference `paw-git-operations` for phase branch creation and selective staging
+- Reference `paw-docs-guidance` for documentation templates and conventions (loaded conditionally during docs phases)
 - Document one-phase-per-invocation pattern
-- Include Docs.md template structure
 
 **Tests**:
 - Manual verification: Skill loads correctly
 - Verify implementation philosophy preserved
-- Verify Docs.md template preserved from original PAW-04 agent
+- Verify skill references paw-docs-guidance for documentation phases
 
 #### 2. Implementation Review Skill
 **File**: `skills/paw-impl-review/SKILL.md`
@@ -535,9 +587,9 @@ Create the implementation and implementation review skills for core execution.
 #### Manual Verification:
 - [ ] `paw-implement` references `paw-git-operations` for branch/staging mechanics
 - [ ] `paw-implement` references `paw-review-response` for PR comment work
+- [ ] `paw-implement` references `paw-docs-guidance` for documentation phase execution
 - [ ] `paw-implement` documents one-phase-per-invocation pattern
-- [ ] `paw-implement` includes documentation capabilities (Docs.md creation, project doc updates)
-- [ ] `paw-implement` includes Docs.md template from original PAW-04 agent
+- [ ] `paw-implement` documents documentation phase execution (load paw-docs-guidance, verify docs build)
 - [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
 - [ ] PR description templates preserved from original agents
 
@@ -546,7 +598,7 @@ Create the implementation and implementation review skills for core execution.
 ## Phase 2E: Finalization Skills
 
 ### Overview
-Create the final PR and status skills for the finalization stage. Note: Documentation is now handled as part of implementation phases (per issue #150), so there is no separate `paw-docs` skill. The `paw-implement` skill includes documentation capabilities for the final implementation phase.
+Create the final PR and status skills for the finalization stage. Note: Documentation is now handled as part of implementation phases (per issue #150), so there is no separate `paw-docs` skill. Documentation templates and conventions are provided by the `paw-docs-guidance` utility skill, which `paw-implement` loads conditionally during documentation phases.
 
 ### Changes Required:
 
@@ -597,7 +649,7 @@ After completing all Phase 2 sub-phases:
 
 #### Automated Verification:
 - [ ] All 11 activity skill files exist in `skills/paw-*/SKILL.md` directories (including `paw-init`, `paw-spec-review`, `paw-plan-review`; no `paw-docs` per issue #150)
-- [ ] Utility skills exist at `skills/paw-review-response/SKILL.md` and `skills/paw-git-operations/SKILL.md`
+- [ ] All 3 utility skills exist: `skills/paw-review-response/SKILL.md`, `skills/paw-git-operations/SKILL.md`, and `skills/paw-docs-guidance/SKILL.md`
 - [ ] Each skill has valid YAML frontmatter with `name` and `description`
 - [ ] Linting passes: `npm run lint`
 
@@ -607,11 +659,15 @@ After completing all Phase 2 sub-phases:
 - [ ] `paw-init` skill handles all initialization parameters and creates correct WorkflowContext.md
 - [ ] `paw-spec-review` validates specs against quality criteria and returns structured feedback
 - [ ] `paw-plan-review` validates plans against quality criteria and returns structured feedback
-- [ ] `paw-implement` includes documentation capabilities for final implementation phase
+- [ ] `paw-code-research` includes Documentation System section in CodeResearch.md template
+- [ ] `paw-planning` includes documentation phase planning guidelines
+- [ ] `paw-implement` references `paw-docs-guidance` for documentation phase execution
+- [ ] `paw-docs-guidance` provides Docs.md template and project doc update patterns
 - [ ] Activity skills reference `paw-review-response` utility for PR comment work
 - [ ] Activity skills reference `paw-git-operations` utility for branch/commit work
 - [ ] No duplicate PR mechanics across activity skills (consolidated in utility skill)
 - [ ] No duplicate git/branch mechanics across activity skills (consolidated in utility skill)
+- [ ] No duplicate documentation templates across skills (consolidated in `paw-docs-guidance` utility)
 - [ ] Artifact templates match existing agent outputs
 - [ ] Quality checklists preserved from original agents
 
@@ -1027,15 +1083,16 @@ Remove the 9 individual implementation agent files, the old initialization promp
 4. Verify WorkflowContext.md created with `Review Policy` and `Session Policy` fields
 5. Verify PAW agent proceeds to specification stage without requiring "continue"
 6. Complete specification stage, verify Spec.md created
-7. Verify research stage triggers automatically (Review Policy: `milestones` doesn't pause at non-milestone artifacts)
-8. Complete planning, verify ImplementationPlan.md created
+7. Verify code research includes Documentation System section in CodeResearch.md (per issue #150)
+8. Complete planning, verify ImplementationPlan.md created with documentation phase when appropriate
 9. Verify planning waits for user confirmation (milestone transition)
 10. **Non-linear test**: Ask PAW to "align spec with planning changes" → verify it delegates to paw-spec with context
 11. Complete implementation phases including final documentation phase, verify phase PRs created (prs strategy)
-12. Verify Docs.md created during final implementation phase (not separate docs stage)
-13. Complete final PR, verify PR to main created
-14. Verify all artifacts in `.paw/work/<feature-slug>/`
-15. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation
+12. Verify Docs.md created during documentation phase (implementer loads paw-docs-guidance)
+13. Verify documentation build command runs successfully (if framework discovered in research)
+14. Complete final PR, verify PR to main created
+15. Verify all artifacts in `.paw/work/<feature-slug>/`
+16. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation
 
 ## Performance Considerations
 
@@ -1058,6 +1115,7 @@ Remove the 9 individual implementation agent files, the old initialization promp
 ## References
 
 - Original Issue: https://github.com/lossyrob/phased-agent-workflow/issues/164
+- Documentation Integration: https://github.com/lossyrob/phased-agent-workflow/issues/150 (eliminate separate docs stage)
 - Spec: `.paw/work/implementation-skills-migration/Spec.md`
 - Research: `.paw/work/implementation-skills-migration/SpecResearch.md`, `.paw/work/implementation-skills-migration/CodeResearch.md`
 - Reference pattern: `agents/PAW Review.agent.md`, `skills/paw-review-workflow/SKILL.md`

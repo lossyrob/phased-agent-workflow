@@ -154,7 +154,7 @@ Acceptance Scenarios:
 - FR-012: The workflow skill validates prerequisites before allowing stage entry (e.g., Spec.md must exist before implementation) (Stories: P1)
 - FR-013: Phase-based implementation spawns separate subagent calls for each phase as specified in ImplementationPlan.md (Stories: P1)
 - FR-013: Phase-based implementation spawns separate delegated worker executions (subagents) for each phase as specified in ImplementationPlan.md, regardless of Session Policy (Stories: P1)
-- FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic (Stories: P1)
+- FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic, paw-docs-guidance for documentation conventions and templates (Stories: P1)
 - FR-015: Activity skills report completion status back to the PAW agent and do not make orchestration decisions (e.g., pausing, next-step selection); the PAW agent applies policies and determines what happens next (Stories: P1, P3, P6)
 - FR-015: Activity skills execute in delegated worker sessions (subagents), report completion status back to the PAW agent, and do not make orchestration decisions (e.g., pausing, next-step selection). The PAW agent applies policies and determines what happens next, including whether to start a fresh orchestrator session via `paw_call_agent` (Stories: P1, P3, P6)
 - FR-023: When the PAW agent starts a fresh orchestrator session via `paw_call_agent`, it includes a resume hint sufficient for the new session to pick up at the intended workflow point (e.g., next activity name and relevant artifact paths), and the new session validates/derives actual workflow state from artifacts before delegating work (Stories: P3)
@@ -165,6 +165,9 @@ Acceptance Scenarios:
 - FR-020: The `paw-spec-review` skill runs in a subagent to review Spec.md for quality, completeness, and clarity; it validates against quality criteria and returns structured feedback that the PAW agent uses to determine whether to proceed to planning or iterate on the specification (Stories: P7)
 - FR-021: The `paw-plan-review` skill runs in a subagent to review ImplementationPlan.md for feasibility, spec alignment, and phase completeness; it validates against quality criteria and returns structured feedback that the PAW agent uses to determine whether to proceed to implementation or iterate on the plan (Stories: P8)
 - FR-022: Planning artifact review activities (spec-review, plan-review) execute in separate subagent sessions to manage context, following the same pattern as impl-review for implementation phases (Stories: P7, P8)
+- FR-024: The `paw-code-research` skill includes documentation system research as part of its standard research, discovering documentation framework (mkdocs, docusaurus, etc.), docs directory structure, navigation configuration, and style conventions, documenting findings in CodeResearch.md (Stories: P1)
+- FR-025: The `paw-planning` skill includes documentation phase planning as part of its standard planning when documentation updates are warranted, using documentation research findings from CodeResearch.md to plan appropriate updates to Docs.md, README, CHANGELOG, and other project documentation (Stories: P1)
+- FR-026: The `paw-docs-guidance` utility skill provides documentation conventions, Docs.md template, and project documentation update patterns that the `paw-implement` skill loads conditionally when executing documentation phases (Stories: P1)
 
 ### Key Entities
 
@@ -172,7 +175,10 @@ Acceptance Scenarios:
 - **Workflow Skill**: Provides activity catalog with capabilities, default flow guidance (not rigid state machine), validation gates, transition table (default guidance for typical flow), and policy behavior documentation
 - **Bootstrap Skill**: The `paw-init` skill that runs before the workflow skill is loaded; creates WorkflowContext.md and sets up the workflow directory and git branch
 - **Activity Skills**: Capability-based skills that execute flexibly based on delegation instructions: specification, spec-research, spec-review, code-research, planning, plan-review, implementation (includes final documentation phase), impl-review, final-pr, status (note: `paw-init` is a bootstrap skill, not an activity skill)
-- **Utility Skills**: Shared mechanics loaded conditionally by activity skills (paw-review-response for PR comment handling, paw-git-operations for branch naming, strategy-based branching, and selective staging)
+- **Utility Skills**: Shared mechanics loaded conditionally by activity skills:
+  - `paw-review-response` for PR comment handling
+  - `paw-git-operations` for branch naming, strategy-based branching, and selective staging
+  - `paw-docs-guidance` for documentation conventions, Docs.md template, and project doc update patterns (loaded by implementer during docs phase)
 - **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
@@ -218,7 +224,7 @@ In Scope:
 - Create single PAW agent file that replaces PAW-01A through PAW-05 and PAW-X Status, with intent-driven orchestration
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
 - Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
-- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations
+- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations, `paw-docs-guidance` for documentation conventions and templates
 - Create `/paw` entry point prompt file (`prompts/paw.prompt.md`) that invokes PAW agent with configuration parameters
 - Update VS Code "PAW: New PAW Workflow" command to invoke `/paw` prompt instead of template-based prompt to bare agent
 - Update extension tooling to support new Review Policy and Session Policy fields in WorkflowContext.md

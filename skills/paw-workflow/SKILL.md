@@ -15,12 +15,14 @@ These principles apply to ALL implementation stages.
 
 ### 1. Evidence-Based Documentation
 
-Every artifact MUST be supported by:
+Code-related claims in any artifact MUST be supported by:
 - Specific file:line references for code claims
 - Concrete code patterns or test results
 - Direct evidence from the codebase
 
-**NEVER** include speculation, assumptions, or unverified claims.
+For non-code claims (e.g., requirements or planning decisions), cite the source when available (issue/discussion/user input) and clearly label assumptions.
+
+Do not present speculation, assumptions, or unverified claims as fact.
 
 ### 2. File:Line Reference Requirement
 
@@ -50,9 +52,16 @@ Humans have final authority over all workflow decisions:
 - Implementation choices can be overridden
 - Artifacts are advisory until human-approved
 
-## Activity Skill Usage Patterns
+## Activities
 
-The orchestrating agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation activity skills:
+This section distinguishes:
+- **Activity skills**: produce workflow artifacts and represent major stages (listed in the table below)
+- **Bootstrap skills**: set up the workflow workspace (e.g., `paw-init`)
+- **Utility skills**: support common mechanics used by activity skills (e.g., `paw-review-response` for PR comment response workflows)
+
+Only **activity skills** are listed in the Activities table.
+
+This table documents typical usage patterns for activities, which each have associate skills:
 
 | Skill | Capabilities | Primary Artifacts |
 |-------|--------------|-------------------|
@@ -65,14 +74,6 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 | `paw-implement` | Execute plan phases, make code changes, create/update docs, address PR comments | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add inline docs, open PRs | Phase PRs |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
-| `paw-status` | Diagnose workflow state, provide guidance | Status responses |
-
-**Bootstrap Skill** (runs before this workflow skill is loaded):
-- `paw-init`: Initialize workflow, create WorkflowContext.md, branch setup
-
-**Utility Skills** (loaded by subagents as needed):
-- `paw-git-operations`: Branch naming, strategy-based branching, selective staging
-- `paw-review-response`: PR comment mechanics (read, commit, push, reply)
 
 ## Artifact Directory Structure
 
@@ -145,26 +146,30 @@ This section describes the typical greenfield implementation progression. The ag
 
 ## Default Transition Table
 
-This table documents typical stage transitions as default guidance. The agent determines the actual mechanism based on Session Policy and user context.
+This table documents typical stage transitions as default guidance.
 
-| Transition | Milestone? | per-stage Mechanism |
-|------------|------------|---------------------|
-| spec → spec-research | No | paw_call_agent |
-| spec-research → spec (resume) | No | paw_call_agent |
-| spec → spec-review | No | runSubagent |
-| spec-review → spec (revise) | No | paw_call_agent |
-| spec-review pass → code-research | No | paw_call_agent |
-| code-research → planning | No | paw_call_agent |
-| planning → plan-review | No | runSubagent |
-| plan-review → planning (revise) | No | paw_call_agent |
-| plan-review pass → implement | **Yes** | paw_call_agent |
-| implement → impl-review (within phase) | No | runSubagent |
-| phase N complete → phase N+1 | **Yes** | paw_call_agent |
-| all phases complete → final-pr | **Yes** | paw_call_agent |
+Two separate mechanisms are involved:
+- **Orchestrator session boundaries**: When Session Policy is `per-stage`, the PAW orchestrator may start a fresh PAW agent session using `paw_call_agent` (a "session reset"). The call should include a resume hint (what workflow point to resume at) so the new session can pick up correctly.
+- **Activity execution**: The actual work of each activity skill is executed in a delegated worker session (a subagent) via `runSubagent`, regardless of Session Policy.
+
+| Transition | Milestone? | Session Policy: `per-stage` (orchestrator) | Activity execution |
+|------------|------------|------------------------------------------|------------------|
+| spec → spec-research | No | (same session) | `runSubagent` (`paw-spec-research`) |
+| spec-research → spec (resume) | No | (same session) | `runSubagent` (`paw-spec`) |
+| spec → spec-review | No | (same session) | `runSubagent` (`paw-spec-review`) |
+| spec-review → spec (revise) | No | (same session) | `runSubagent` (`paw-spec`) |
+| spec-review pass → code-research | No | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-code-research`) |
+| code-research → planning | No | (same session) | `runSubagent` (`paw-planning`) |
+| planning → plan-review | No | (same session) | `runSubagent` (`paw-plan-review`) |
+| plan-review → planning (revise) | No | (same session) | `runSubagent` (`paw-planning`) |
+| plan-review pass → implement | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
+| implement → impl-review (within phase) | No | (same session) | `runSubagent` (`paw-impl-review`) |
+| phase N complete → phase N+1 | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
+| all phases complete → final-pr | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-pr`) |
 
 **Mechanism Selection**:
-- **per-stage Session Policy**: Use mechanism column from table
-- **continuous Session Policy**: Always use `runSubagent` to preserve conversation context
+- **per-stage Session Policy**: Use `paw_call_agent` only at stage boundaries to start a fresh PAW agent session, then delegate the intended activity via `runSubagent`
+- **continuous Session Policy**: Keep a single PAW agent session throughout; still delegate activities via `runSubagent`
 
 **Review Activity Notes**:
 - `paw-spec-review` and `paw-plan-review` run in subagents to manage context isolation
@@ -202,22 +207,22 @@ Session Policy controls conversation context management across stage transitions
 
 ### Policy Values
 
-**`per-stage`**: Each stage gets a fresh conversation via `paw_call_agent`
-- Reduces context accumulation
-- Each activity starts with clean context
-- Follow mechanism column from Transition Table
+**`per-stage`**: Stage boundaries start a fresh PAW agent session via `paw_call_agent`
+- Reduces context accumulation in the orchestrator
+- `paw_call_agent` should include a resume hint (e.g., intended next activity + relevant artifact paths)
+- The new PAW agent session re-loads this workflow skill, validates/derives actual workflow state from artifacts, then delegates the intended activity via `runSubagent`
 
-**`continuous`**: Single conversation throughout workflow via `runSubagent`
-- Preserves all conversation context
-- Full history available to all activities
-- *Implementation note*: Verify `runSubagent` preserves context as expected in VS Code's model
+**`continuous`**: Single PAW agent session throughout the workflow
+- Preserves orchestrator context across stage boundaries
+- Activities are still executed via delegated worker sessions (`runSubagent`)
+- *Implementation note*: Verify delegated-worker behavior matches expectations in VS Code's model
 
 ### Applying Session Policy
 
 When transitioning to next activity:
 1. Check Session Policy from WorkflowContext.md
-2. If `per-stage`: Use `paw_call_agent` at stage boundaries (or `runSubagent` for within-stage transitions like implement → impl-review)
-3. If `continuous`: Always use `runSubagent`
+2. If `per-stage`: Use `paw_call_agent` at stage boundaries to start a fresh PAW agent session with a resume hint; the new session delegates the intended activity via `runSubagent`
+3. If `continuous`: Keep the same PAW agent session and delegate the intended activity via `runSubagent`
 
 ## PR Comment Response Guidance
 
@@ -237,15 +242,15 @@ Subagents performing these activities load `paw-review-response` utility skill f
 
 ## Subagent Completion Contract
 
-All activities MUST be delegated to subagents (via `runSubagent`):
-- Subagents execute activities by loading the appropriate activity skill.
+All activity execution MUST occur in delegated worker sessions (subagents):
+- Subagents execute activities by loading the appropriate activity skill via `paw_get_skill`.
 - Ensure sufficient prompting to the subagent, including telling them which activity skill to load first
-- Subagents return completion status—they do NOT make handoff decisions
+- Subagents do NOT make handoff decisions
 - The agent executing the workflow (you) owns routing and transition logic
 
 ### Response Format
 
-Upon completion, subagents respond where the artifact was written, if artifacts were produced, otherwise a textual response (e.g., review feedback)
+Upon completion, subagents respond where the artifact was written, if artifacts were produced, otherwise a textual response (e.g., review feedback). If there were errors or the activity was not completed, the subagent MUST indicate failure with an explanation.
 
 ### Skill Loading Requirement
 
@@ -284,7 +289,6 @@ The workflow supports non-linear paths when appropriate:
 | "Revise phase 2 of the plan" | `paw-planning` with revision context |
 | "Review the spec for quality" | `paw-spec-review` in subagent |
 | "Check if the plan is ready" | `paw-plan-review` in subagent |
-| "What's my current status?" | `paw-status` |
 | "Add error handling to implementation" | `paw-implement` with specific request |
 
 ### Request vs Activity Goal

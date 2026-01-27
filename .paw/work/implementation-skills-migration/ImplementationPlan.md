@@ -156,7 +156,6 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
   - Planning PR → `paw-planning`
   - Phase PR → `paw-implement` → `paw-impl-review`
   - Final PR → `paw-implement` → `paw-impl-review`
-- Document status skill integration
 - **Intelligent Routing Guidance**: Document that PAW agent should:
   - Reason about user intent, using workflow guidance as a reference
   - Select appropriate skill(s) based on what user wants to accomplish
@@ -655,7 +654,6 @@ Create the compact PAW orchestrator agent (~4KB) that replaces the 9 individual 
   - "Update spec to align with plan" → delegate to paw-spec with alignment context
   - "Do more research on X" → delegate to appropriate research skill
   - Agent reasons about appropriate skill and constructs meaningful delegation
-- Status integration: "Load `paw-status` skill when user requests status or help"
 - Error handling: "If any stage fails, report error and seek guidance"
 - Core guardrails (brief list)
 

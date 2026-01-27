@@ -428,14 +428,14 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 - [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
-- [ ] `paw-init` references `paw-git-operations` for branch mechanics
-- [ ] `paw-spec` describes capabilities flexibly (not rigid modes)
-- [ ] `paw-spec` references `paw-review-response` for PR comment work
-- [ ] `paw-spec-research` defines SpecResearch.md template
-- [ ] `paw-spec-review` defines clear quality criteria for spec validation
-- [ ] `paw-spec-review` returns structured feedback (not orchestration decisions)
-- [ ] Quality checklists preserved from original agents
+- [x] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
+- [x] `paw-init` references `paw-git-operations` for branch mechanics
+- [x] `paw-spec` describes capabilities flexibly (not rigid modes)
+- [x] `paw-spec` references `paw-review-response` for PR comment work
+- [x] `paw-spec-research` defines SpecResearch.md template
+- [x] `paw-spec-review` defines clear quality criteria for spec validation
+- [x] `paw-spec-review` returns structured feedback (not orchestration decisions)
+- [x] Quality checklists preserved from original agents
 
 ### Phase 2B Completion Notes
 

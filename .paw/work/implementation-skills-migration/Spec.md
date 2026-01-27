@@ -67,7 +67,8 @@ Acceptance Scenarios:
 2. Given a user with Review Policy set to "never", When an artifact is produced, Then the agent automatically proceeds to the next appropriate activity
 3. Given a user with Review Policy set to "milestones", When a milestone artifact is produced (e.g., Spec.md, ImplementationPlan.md), Then the agent pauses for review; when a non-milestone artifact is produced (e.g., SpecResearch.md), Then the agent proceeds automatically
 4. Given a user with Session Policy set to "continuous", When delegating to an activity skill, Then the conversation context is preserved across delegated activities
-5. Given a user with Session Policy set to "per-stage", When delegating across stage boundaries, Then the workflow uses separate stage sessions rather than one continuous conversation
+5. Given a user with Session Policy set to "per-stage", When crossing a stage boundary, Then the PAW orchestrator starts a fresh PAW agent session via `paw_call_agent` and includes enough state/hints for the new session to resume at the correct next activity
+6. Given a new PAW agent session started via `paw_call_agent`, When it initializes, Then it loads the workflow skill and delegates the next activity via `runSubagent` (not inline) based on workflow state
 6. Given an existing WorkflowContext.md with legacy Handoff Mode field, When the agent reads configuration, Then it correctly maps to Review Policy (manual→always, semi-auto→milestones, auto→never)
 
 ### User Story P4 – Artifact Compatibility
@@ -145,14 +146,18 @@ Acceptance Scenarios:
 - FR-005: Workflow mode detection routes users through appropriate stages: full mode includes all stages, minimal mode skips spec (Stories: P2)
 - FR-006: Review Policy controls when workflow pauses for human review—boundaries are defined at the artifact level, not stage level: "always" pauses after every artifact is produced for potential iteration, "milestones" pauses at significant artifacts that represent stage completions (e.g., Spec.md, ImplementationPlan.md), "never" proceeds continuously without pausing for review (Stories: P3)
 - FR-007: Session Policy controls conversation context: "per-stage" uses fresh conversations at transitions, "continuous" preserves conversation context throughout (Stories: P3)
+- FR-007: Session Policy controls orchestrator conversation context: "per-stage" starts a fresh PAW agent session at stage boundaries via `paw_call_agent` (with resume state), "continuous" preserves orchestrator context throughout (Stories: P3)
 - FR-008: Legacy Handoff Mode values are automatically mapped to Review Policy for backward compatibility (Stories: P3)
 - FR-009: Each activity skill produces its designated artifact in the standard location under `.paw/work/<feature-slug>/` (Stories: P4)
 - FR-010: Artifact formats remain compatible with existing specifications (Stories: P4)
 - FR-011: The status skill can diagnose workflow state from artifacts and provide accurate next-step guidance (Stories: P5)
 - FR-012: The workflow skill validates prerequisites before allowing stage entry (e.g., Spec.md must exist before implementation) (Stories: P1)
 - FR-013: Phase-based implementation spawns separate subagent calls for each phase as specified in ImplementationPlan.md (Stories: P1)
+- FR-013: Phase-based implementation spawns separate delegated worker executions (subagents) for each phase as specified in ImplementationPlan.md, regardless of Session Policy (Stories: P1)
 - FR-014: Shared utility skills provide common mechanics that activity skills load conditionally: paw-review-response for PR comment handling, paw-git-operations for branch naming conventions and strategy-based branching logic (Stories: P1)
 - FR-015: Activity skills report completion status back to the PAW agent and do not make orchestration decisions (e.g., pausing, next-step selection); the PAW agent applies policies and determines what happens next (Stories: P1, P3, P6)
+- FR-015: Activity skills execute in delegated worker sessions (subagents), report completion status back to the PAW agent, and do not make orchestration decisions (e.g., pausing, next-step selection). The PAW agent applies policies and determines what happens next, including whether to start a fresh orchestrator session via `paw_call_agent` (Stories: P1, P3, P6)
+- FR-023: When the PAW agent starts a fresh orchestrator session via `paw_call_agent`, it includes a resume hint sufficient for the new session to pick up at the intended workflow point (e.g., next activity name and relevant artifact paths), and the new session validates/derives actual workflow state from artifacts before delegating work (Stories: P3)
 - FR-016: The `/paw` prompt file serves as the entry point for the PAW implementation workflow; it passes configuration parameters to the PAW agent and accepts optional arguments (Stories: P0)
 - FR-017: The `paw-init` skill is a **bootstrap skill** that handles workflow initialization: creating `.paw/work/<feature-slug>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled. Unlike activity skills, `paw-init` is invoked directly by the PAW agent before the workflow skill is loaded—it is not part of the workflow stages (Stories: P0)
 - FR-018: When the PAW agent receives initialization parameters and no WorkflowContext.md exists, it delegates directly to the `paw-init` bootstrap skill (without loading workflow skill first); upon successful initialization, it loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (Stories: P0)

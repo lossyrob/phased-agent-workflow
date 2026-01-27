@@ -423,9 +423,9 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 ### Success Criteria (Phase 2B):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`
-- [ ] Each skill has valid YAML frontmatter with `name` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`
+- [x] Each skill has valid YAML frontmatter with `name` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
@@ -436,6 +436,22 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 - [ ] `paw-spec-review` defines clear quality criteria for spec validation
 - [ ] `paw-spec-review` returns structured feedback (not orchestration decisions)
 - [ ] Quality checklists preserved from original agents
+
+### Phase 2B Completion Notes
+
+**Completed**: 2026-01-27
+
+Created four skills for the bootstrap and specification stages:
+
+1. **`paw-init`** (~6.3KB): Bootstrap skill with WorkflowContext.md template, input parameters table, execution steps for slug generation and branch creation, references `paw-git-operations` for branch mechanics.
+
+2. **`paw-spec`** (~7.3KB): Specification activity skill with core principles (9 items from PAW-01A), research question guidelines, Spec.md template, quality checklist sections. Defines flexible capabilities including new spec creation, research integration, spec revision, and PR comment handling.
+
+3. **`paw-spec-research`** (~5.1KB): Spec research skill with behavioral documentation scope, SpecResearch.md template with YAML frontmatter, anti-evaluation directives, and quality guidelines for concise answers.
+
+4. **`paw-spec-review`** (~4.4KB): New spec review skill with quality criteria checklist covering content quality, narrative quality, requirement completeness, ambiguity control, scope & risk, and research integration. Returns structured PASS/FAIL feedback format.
+
+**Review notes**: Verify `paw-spec` references `paw-review-response` for PR comment work (currently only mentions it in capabilities, may need explicit reference). Manual verification items remain for Phase 2B review.
 
 ---
 

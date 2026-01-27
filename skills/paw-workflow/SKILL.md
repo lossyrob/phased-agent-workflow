@@ -1,6 +1,6 @@
 ---
 name: paw-workflow
-description: Guides multi-phase software implementation by coordinating activity skills through specification, planning, phased code changes with review, and PR creation. Assumes WorkflowContext.md exists (created by paw-init bootstrap skill). Provides default flow guidance, transition mechanisms, and PR comment routing.
+description: Orchestrates PAW multi-phase software implementation workflows. Use when coordinating activity skills through specification, planning, phased implementation, and PR creation stages. Provides default flow guidance, transition mechanisms, session/review policy behavior, and PR comment routing. Requires WorkflowContext.md to exist (created by paw-init bootstrap skill).
 ---
 
 # PAW Implementation Workflow Skill

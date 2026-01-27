@@ -70,9 +70,8 @@ The orchestrating agent retrieves available skills dynamically via `paw_get_skil
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
 | `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
 | `paw-plan-review` | Review plan for feasibility, spec alignment; return structured feedback | Review feedback |
-| `paw-implement` | Execute plan phases, make code changes, address PR comments | Code files |
-| `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
-| `paw-docs` | Create Docs.md, update project docs | Docs.md |
+| `paw-implement` | Execute plan phases, make code changes, create/update docs, address PR comments | Code files, Docs.md |
+| `paw-impl-review` | Review implementation, add inline docs, open PRs | Phase PRs |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, provide guidance | Status responses |
 
@@ -94,7 +93,7 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── SpecResearch.md         # Research answers (optional)
 ├── CodeResearch.md         # Implementation details with file:line refs
 ├── ImplementationPlan.md   # Phased implementation plan
-├── Docs.md                 # Technical documentation
+├── Docs.md                 # Technical documentation (created during final implementation phase)
 └── prompts/                # Generated prompt files (optional)
 ```
 
@@ -135,19 +134,20 @@ This section describes the typical greenfield implementation progression. The ag
 
 **Typical Sequence** (per phase in ImplementationPlan.md):
 1. `paw-implement`: Execute phase, make code changes, run verification
-2. `paw-impl-review`: Review changes, add documentation, open Phase PR (PRs strategy)
+2. `paw-impl-review`: Review changes, add inline documentation, open Phase PR (PRs strategy)
 
 **Repeat** for each phase in the implementation plan.
 
-**Stage Gate**: All plan phases completed with passing verification.
+**Documentation Phase**: The final implementation phase typically includes documentation work—creating Docs.md, updating README, CHANGELOG, and any project guides. This keeps documentation in the same review flow as code changes.
+
+**Stage Gate**: All plan phases completed (including documentation phase) with passing verification.
 
 ### Finalization Stage
 
-**Skills**: `paw-docs`, `paw-pr`
+**Skills**: `paw-pr`
 
 **Typical Sequence**:
-1. `paw-docs`: Create Docs.md technical reference, update project docs
-2. `paw-pr`: Run pre-flight validation, create final PR to main
+1. `paw-pr`: Run pre-flight validation, create final PR to main
 
 **Stage Gate**: Final PR created with all artifacts linked.
 
@@ -170,8 +170,7 @@ This table documents typical stage transitions as default guidance. The agent de
 | plan-review pass → implement | **Yes** | paw_call_agent |
 | implement → impl-review (within phase) | No | runSubagent |
 | phase N complete → phase N+1 | **Yes** | paw_call_agent |
-| all phases complete → docs | **Yes** | paw_call_agent |
-| docs → final-pr | **Yes** | paw_call_agent |
+| all phases complete → final-pr | **Yes** | paw_call_agent |
 
 **Mechanism Selection**:
 - **per-stage Session Policy**: Use mechanism column from table
@@ -189,11 +188,11 @@ Review Policy controls when the workflow pauses for human review. Boundaries are
 ### Policy Values
 
 **`always`** (setting value): When Review Policy is set to `always`, pause after every artifact is produced for potential iteration
-- Pause after: WorkflowContext.md, Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, each Phase PR completion, Docs.md, Final PR
+- Pause after: WorkflowContext.md, Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, each Phase PR completion, Final PR
 
 **`milestones`**: Pause only at milestone artifacts; auto-proceed at non-milestone artifacts
-- **Milestone artifacts** (pause): Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation
-- **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
+- **Milestone artifacts** (pause): Spec.md, ImplementationPlan.md, Phase PR completion, Final PR creation
+- **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md (part of implementation phase), intermediate commits
 
 **`never`**: Never pause, proceed continuously without review pauses
 - Workflow continues automatically through all stages
@@ -238,7 +237,6 @@ When PRs have review comments that need addressing, route to the appropriate ski
 |---------|--------------|-------|
 | Planning PR | `paw-planning` | Comments on ImplementationPlan.md |
 | Phase PR | `paw-implement` → `paw-impl-review` | Implementer makes changes, reviewer verifies and pushes |
-| Docs PR | `paw-docs` | Comments on Docs.md or project docs |
 | Final PR | `paw-implement` → `paw-impl-review` | May require code changes; reviewer verifies |
 
 Activity skills load `paw-review-response` utility skill for the mechanics of:

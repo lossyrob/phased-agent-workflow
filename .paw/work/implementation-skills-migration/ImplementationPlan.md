@@ -174,20 +174,39 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Skill file exists at `skills/paw-workflow/SKILL.md`
-- [ ] YAML frontmatter contains `name: paw-workflow` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Skill file exists at `skills/paw-workflow/SKILL.md`
+- [x] YAML frontmatter contains `name: paw-workflow` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Skill usage patterns table documents typical implementation skills with capabilities (PAW agent discovers skills dynamically via `paw_get_skills`)
-- [ ] Default flow guidance covers typical greenfield progression
-- [ ] Transition table framed as default guidance (not exclusive paths)
-- [ ] Intelligent Routing Guidance section documents flexible intent-based delegation
-- [ ] Review Policy behavior documented for all three values with artifact-level boundaries clarified
-- [ ] Explicit milestone artifact list included (Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR)
-- [ ] Session Policy behavior documented for both values with implementation note about `runSubagent` context preservation
-- [ ] PR Comment Response Guidance covers all PR types
-- [ ] Subagent Completion Contract clearly specifies activity skills return status, not handle handoffs
+- [x] Skill usage patterns table documents typical implementation skills with capabilities (PAW agent discovers skills dynamically via `paw_get_skills`)
+- [x] Default flow guidance covers typical greenfield progression
+- [x] Transition table framed as default guidance (not exclusive paths)
+- [x] Intelligent Routing Guidance section documents flexible intent-based delegation
+- [x] Review Policy behavior documented for all three values with artifact-level boundaries clarified
+- [x] Explicit milestone artifact list included (Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR)
+- [x] Session Policy behavior documented for both values with implementation note about `runSubagent` context preservation
+- [x] PR Comment Response Guidance covers all PR types
+- [x] Subagent Completion Contract clearly specifies activity skills return status, not handle handoffs
+
+### Phase 1 Completion Notes
+
+**Completed**: 2026-01-26
+
+Created `paw-workflow` skill (~10KB) following the pattern from `paw-review-workflow`. Key sections include:
+- Core Implementation Principles (5 principles for activity skills to reference)
+- Activity Skill Usage Patterns table (10 activity + 2 utility skills)
+- Artifact Directory Structure
+- Default Flow Guidance for 4 stages (Specification, Planning, Implementation, Finalization)
+- Default Transition Table with milestone markers
+- Review Policy behavior (`always`/`milestones`/`never`) at artifact-level boundaries
+- Session Policy behavior (`per-stage`/`continuous`) with runSubagent implementation note
+- PR Comment Response Guidance for all PR types
+- Subagent Completion Contract (status-only returns)
+- Intelligent Routing Guidance with non-linear request examples
+- Workflow Mode handling (full/minimal/custom)
+
+**Review notes**: Consider whether the skill size (~10KB) is appropriate or if some sections could be condensed. The content follows the Implementation Plan requirements closely.
 
 ---
 

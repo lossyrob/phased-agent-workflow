@@ -1,0 +1,326 @@
+---
+name: paw-workflow
+description: Orchestrates the PAW implementation workflow, coordinating activity skills to transform ideas into shipped code through specification, planning, implementation, and finalization stages.
+---
+
+# PAW Implementation Workflow Skill
+
+This workflow skill orchestrates the PAW implementation process, guiding the PAW agent through specification, planning, implementation, and finalization stages. The PAW agent discovers available skills dynamically via `paw_get_skills` and uses this skill as a reference guide for typical patterns and orchestration.
+
+## Core Implementation Principles
+
+These principles apply to ALL implementation stages. Activity skills reference these principles rather than duplicating them.
+
+### 1. Evidence-Based Documentation
+
+Every artifact MUST be supported by:
+- Specific file:line references for code claims
+- Concrete code patterns or test results
+- Direct evidence from the codebase
+
+**NEVER** include speculation, assumptions, or unverified claims.
+
+### 2. File:Line Reference Requirement
+
+All code-related claims require specific file:line citations:
+- `[src/module.ts:45](src/module.ts#L45)` for single lines
+- `[src/module.ts:45-52](src/module.ts#L45-L52)` for ranges
+- Multiple locations listed explicitly
+
+### 3. No Fabrication Guardrail
+
+**CRITICAL**: Do not fabricate, invent, or assume information:
+- If information is unavailable, state "Not found" or "Unable to determine"
+- Do not hallucinate file contents, function behaviors, or patterns
+- When uncertain, document the uncertainty explicitly
+
+### 4. Artifact Completeness
+
+Each stage produces complete, well-structured artifacts:
+- No placeholders or "TBD" markers
+- No unresolved questions blocking downstream stages
+- Each artifact is self-contained and traceable to sources
+
+### 5. Human Authority
+
+Humans have final authority over all workflow decisions:
+- Review pauses honor human review preferences
+- Implementation choices can be overridden
+- Artifacts are advisory until human-approved
+
+## Activity Skill Usage Patterns
+
+The PAW agent retrieves available skills dynamically via `paw_get_skills`. This table documents typical usage patterns for implementation skills:
+
+| Skill | Capabilities | Primary Artifacts |
+|-------|--------------|-------------------|
+| `paw-init` | Initialize workflow, create WorkflowContext.md, branch setup | WorkflowContext.md |
+| `paw-spec` | Create spec, revise spec, align with downstream artifacts | Spec.md |
+| `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
+| `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
+| `paw-planning` | Create implementation plan, revise plan, address PR comments | ImplementationPlan.md |
+| `paw-implement` | Execute plan phases, make code changes, address PR comments | Code files |
+| `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
+| `paw-docs` | Create Docs.md, update project docs | Docs.md |
+| `paw-pr` | Pre-flight validation, create final PR | Final PR |
+| `paw-status` | Diagnose workflow state, provide guidance | Status responses |
+
+**Utility Skills** (loaded by activity skills as needed):
+- `paw-git-operations`: Branch naming, strategy-based branching, selective staging
+- `paw-review-response`: PR comment mechanics (read, commit, push, reply)
+
+## Artifact Directory Structure
+
+All implementation artifacts are stored in a consistent directory structure:
+
+```
+.paw/work/<feature-slug>/
+├── WorkflowContext.md      # Configuration and state
+├── Spec.md                 # Feature specification
+├── SpecResearch.md         # Research answers (optional)
+├── CodeResearch.md         # Implementation details with file:line refs
+├── ImplementationPlan.md   # Phased implementation plan
+├── Docs.md                 # Technical documentation
+└── prompts/                # Generated prompt files (optional)
+```
+
+**Feature Slug Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
+
+## Default Flow Guidance
+
+This section describes the typical greenfield implementation progression. The PAW agent uses this as guidance—not rigid rules—and adapts based on user intent and workflow state.
+
+### Specification Stage
+
+**Skills**: `paw-spec`, `paw-spec-research`
+
+**Typical Sequence**:
+1. `paw-spec` (initial): Create specification from brief/issue
+2. `paw-spec-research` (if needed): Answer factual questions about existing system
+3. `paw-spec` (resume): Integrate research findings into specification
+
+**Stage Gate**: Verify Spec.md exists and meets quality criteria before proceeding.
+
+### Planning Stage
+
+**Skills**: `paw-code-research`, `paw-planning`
+
+**Typical Sequence**:
+1. `paw-code-research`: Document implementation details with file:line references
+2. `paw-planning`: Create phased implementation plan based on spec and research
+
+**Stage Gate**: Verify CodeResearch.md and ImplementationPlan.md exist before proceeding.
+
+### Implementation Stage
+
+**Skills**: `paw-implement`, `paw-impl-review`
+
+**Typical Sequence** (per phase in ImplementationPlan.md):
+1. `paw-implement`: Execute phase, make code changes, run verification
+2. `paw-impl-review`: Review changes, add documentation, open Phase PR (PRs strategy)
+
+**Repeat** for each phase in the implementation plan.
+
+**Stage Gate**: All plan phases completed with passing verification.
+
+### Finalization Stage
+
+**Skills**: `paw-docs`, `paw-pr`
+
+**Typical Sequence**:
+1. `paw-docs`: Create Docs.md technical reference, update project docs
+2. `paw-pr`: Run pre-flight validation, create final PR to main
+
+**Stage Gate**: Final PR created with all artifacts linked.
+
+## Default Transition Table
+
+This table documents typical stage transitions as default guidance. The PAW agent determines the actual mechanism based on Session Policy and user context.
+
+*Note: The implementation workflow includes explicit transition guidance because it has more stage transitions (10 activities) than the review workflow.*
+
+| Transition | Milestone? | per-stage Mechanism |
+|------------|------------|---------------------|
+| init → spec | No | paw_call_agent |
+| spec → spec-research | No | paw_call_agent |
+| spec-research → spec (resume) | No | paw_call_agent |
+| spec → code-research | No | paw_call_agent |
+| code-research → planning | No | paw_call_agent |
+| planning → implement | **Yes** | paw_call_agent |
+| implement → impl-review (within phase) | No | runSubagent |
+| phase N complete → phase N+1 | **Yes** | paw_call_agent |
+| all phases complete → docs | **Yes** | paw_call_agent |
+| docs → final-pr | **Yes** | paw_call_agent |
+
+**Mechanism Selection**:
+- **per-stage Session Policy**: Use mechanism column from table
+- **continuous Session Policy**: Always use `runSubagent` to preserve conversation context
+
+## Review Policy Behavior
+
+Review Policy controls when the workflow pauses for human review. Boundaries are at the **artifact level**, not stage level.
+
+### Policy Values
+
+**`always`**: Pause after every artifact is produced for potential iteration
+- Pause after: WorkflowContext.md, Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, each Phase PR completion, Docs.md, Final PR
+
+**`milestones`**: Pause only at milestone artifacts; auto-proceed at non-milestone artifacts
+- **Milestone artifacts** (pause): Spec.md, ImplementationPlan.md, Phase PR completion, Docs.md, Final PR creation
+- **Non-milestone artifacts** (auto-proceed): WorkflowContext.md, SpecResearch.md, CodeResearch.md, intermediate commits
+
+**`never`**: Never pause, proceed continuously without review pauses
+- Workflow continues automatically through all stages
+- Human can still intervene at any time
+
+### Applying Review Policy
+
+After producing an artifact:
+1. Determine if artifact is a milestone (see list above)
+2. Check Review Policy from WorkflowContext.md
+3. If pause required: Present status and wait for user
+4. If auto-proceed: Continue to next activity
+
+## Session Policy Behavior
+
+Session Policy controls conversation context management across stage transitions.
+
+### Policy Values
+
+**`per-stage`**: Each stage gets a fresh conversation via `paw_call_agent`
+- Reduces context accumulation
+- Each activity starts with clean context
+- Follow mechanism column from Transition Table
+
+**`continuous`**: Single conversation throughout workflow via `runSubagent`
+- Preserves all conversation context
+- Full history available to all activities
+- *Implementation note*: Verify `runSubagent` preserves context as expected in VS Code's model
+
+### Applying Session Policy
+
+When transitioning to next activity:
+1. Check Session Policy from WorkflowContext.md
+2. If `per-stage`: Use `paw_call_agent` at stage boundaries (or `runSubagent` for within-stage transitions like implement → impl-review)
+3. If `continuous`: Always use `runSubagent`
+
+## PR Comment Response Guidance
+
+When PRs have review comments that need addressing, route to the appropriate skill:
+
+| PR Type | Skill to Load | Notes |
+|---------|--------------|-------|
+| Planning PR | `paw-planning` | Comments on ImplementationPlan.md |
+| Phase PR | `paw-implement` → `paw-impl-review` | Implementer makes changes, reviewer verifies and pushes |
+| Docs PR | `paw-docs` | Comments on Docs.md or project docs |
+| Final PR | `paw-implement` → `paw-impl-review` | May require code changes; reviewer verifies |
+
+Activity skills load `paw-review-response` utility skill for the mechanics of:
+- Reading unresolved comments
+- Creating TODO lists per comment
+- Committing with comment references
+- Pushing and replying to comments
+
+## Subagent Completion Contract
+
+Activity skills are executed via delegated agent sessions. Each skill returns a completion status—it does NOT make handoff decisions.
+
+### Response Format
+
+Upon completion, activity skills respond with:
+- **Artifact path**: Where the artifact was written
+- **Status**: `Success`, `Partial` (awaiting input), or `Blocked` (error)
+- **Notes**: Brief summary of what was accomplished
+
+Example:
+```
+Status: Success
+Artifact: .paw/work/auth-system/Spec.md
+Notes: Created feature specification from issue description.
+```
+
+### Skill Loading Requirement
+
+**Every subagent MUST load their skill FIRST**:
+1. Call `paw_get_skill` with the skill name
+2. Read and internalize the skill instructions
+3. Only then begin executing the activity
+
+### Delegation Prompt Construction
+
+The PAW agent constructs delegation prompts that include:
+- Skill to load
+- Activity goal (what to accomplish)
+- Relevant artifact paths
+- User context (only when relevant to the activity)
+
+## Intelligent Routing Guidance
+
+The PAW agent reasons about user intent and routes requests intelligently. This section provides guidance—not rigid rules.
+
+### Intent-Based Routing
+
+1. **Analyze user request**: What do they want to accomplish?
+2. **Consult skill catalog**: Which skill has this capability?
+3. **Consider workflow state**: What artifacts exist? What's the current stage?
+4. **Construct delegation**: Build meaningful prompt with context
+
+### Non-Linear Request Examples
+
+The workflow supports non-linear paths when appropriate:
+
+| User Request | Routing |
+|-------------|---------|
+| "Update spec to align with plan changes" | `paw-spec` with alignment context |
+| "Do more research on X" | `paw-spec-research` or `paw-code-research` based on X |
+| "Revise phase 2 of the plan" | `paw-planning` with revision context |
+| "What's my current status?" | `paw-status` |
+| "Add error handling to implementation" | `paw-implement` with specific request |
+
+### Request vs Activity Goal
+
+Not every delegation includes the original user request verbatim. The PAW agent constructs an **activity goal** appropriate for the skill:
+
+- **Direct request**: "Create the specification" → goal: "Create specification from issue brief"
+- **Contextual request**: "Update spec to match plan" → goal: "Revise specification to align with ImplementationPlan.md changes, specifically [details from user]"
+
+## Workflow Mode Handling
+
+Read Workflow Mode from WorkflowContext.md and adapt behavior:
+
+### Full Mode
+
+Standard multi-phase implementation:
+- All stages apply (spec → planning → implementation → finalization)
+- Multiple phases in implementation plan
+- Review Strategy determines branching (PRs or local)
+
+### Minimal Mode
+
+Simplified single-phase implementation:
+- May skip specification stage if already exists
+- Single phase in implementation plan
+- Forces local Review Strategy (no intermediate PRs)
+
+### Custom Mode
+
+User-defined workflow:
+- Read Custom Workflow Instructions from WorkflowContext.md
+- Adapt stage sequence and phase structure per instructions
+- May skip or reorder stages
+
+## Status Integration
+
+When user requests status or help:
+1. Load `paw-status` skill
+2. Provide workflow state diagnosis
+3. Recommend next steps based on artifact state
+4. Explain available options
+
+## Error Handling
+
+If any activity fails or returns `Blocked` status:
+1. Report the error clearly to the user
+2. Document what was attempted and what failed
+3. Seek guidance before proceeding
+4. Do not auto-retry without user confirmation

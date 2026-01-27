@@ -24,23 +24,33 @@ Create intermediate branches for each workflow stage; push and create PRs for re
 
 **Phase work:**
 1. Check current branch: `git branch --show-current`
-2. If not on correct phase branch, create: `git checkout -b <target>_phase[N]`
+2. If not on correct phase branch:
+   - Checkout target branch: `git checkout <target>`
+   - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+   - Pull latest: `git pull`
+   - Create phase branch from target: `git checkout -b <target>_phase[N]`
 3. Verify: `git branch --show-current`
 4. Implement on phase branch, commit locally
 5. Push: `git push -u <remote> <target>_phase[N]`
 6. Create PR: `<target>_phase[N]` → `<target>`
 
 **Planning work:**
-1. Create planning branch: `git checkout -b <target>_plan`
-2. Commit planning artifacts
-3. Push: `git push -u <remote> <target>_plan`
-4. Create PR: `<target>_plan` → `<target>`
+1. Checkout target branch: `git checkout <target>`
+2. Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+3. Pull latest: `git pull`
+4. Create planning branch: `git checkout -b <target>_plan`
+5. Commit planning artifacts
+6. Push: `git push -u <remote> <target>_plan`
+7. Create PR: `<target>_plan` → `<target>`
 
 **Docs work:**
-1. Create docs branch: `git checkout -b <target>_docs`
-2. Commit documentation
-3. Push: `git push -u <remote> <target>_docs`
-4. Create PR: `<target>_docs` → `<target>`
+1. Checkout target branch: `git checkout <target>`
+2. Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+3. Pull latest: `git pull`
+4. Create docs branch: `git checkout -b <target>_docs`
+5. Commit documentation
+6. Push: `git push -u <remote> <target>_docs`
+7. Create PR: `<target>_docs` → `<target>`
 
 ### Local Strategy
 
@@ -48,7 +58,10 @@ Work directly on target branch; no intermediate branches or PRs between stages.
 
 **All work:**
 1. Check current branch: `git branch --show-current`
-2. If not on target branch: `git checkout <target>`
+2. If not on target branch:
+   - Checkout target: `git checkout <target>`
+   - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+   - Pull latest: `git pull`
 3. Verify: `git branch --show-current`
 4. Implement, commit to target branch
 5. Push: `git push <remote> <target>`

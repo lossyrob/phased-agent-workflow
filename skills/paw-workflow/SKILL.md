@@ -15,11 +15,10 @@ These principles apply to ALL implementation stages. Activity skills reference t
 
 ### 1. Subagent Execution Model
 
-All activity skills MUST be executed as subagents (via `runSubagent` or `paw_call_agent`):
-- Isolates activity context from orchestrator context
-- Enables clean handoffs between stages
-- Activity skills return completion status—they do NOT make handoff decisions
-- The orchestrating agent owns all routing and transition logic
+All activities that use activity skills MUST be executed as subagents (via `runSubagent` or `paw_call_agent`):
+- Ensure sufficient prompting to the subagent to optimally perform the activity, understanding they will get instructions from their activity skill.
+- Activities return completion status—they do NOT make handoff decisions
+- You own all routing and transition logic
 
 ### 2. Evidence-Based Documentation
 

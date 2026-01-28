@@ -19,7 +19,7 @@ Convert a rough Issue / feature brief into a **structured feature specification*
 
 ## Core Principles
 
-1. **User value focus**: Describe WHAT & WHY, never implementation details (no tech stack, file paths, library names, code snippets, API signatures)
+1. **User value focus**: Describe WHAT & WHY, not implementation details 
 2. **Independently testable stories**: Prioritize user stories (P1 highest) with acceptance scenarios and "Independent Test" statement
 3. **Resolve before drafting**: Clarification questions answered before drafting—no unresolved critical questions or placeholder markers
 4. **Enumerated traceability**: Use IDs (FR-001, SC-001) linking stories ↔ FRs ↔ SCs; cite research sources

@@ -7,8 +7,6 @@ description: Bootstrap skill for PAW workflow initialization. Creates WorkflowCo
 
 Bootstrap skill that initializes the PAW workflow directory structure. This runs **before** the workflow skill is loaded—WorkflowContext.md must exist for the workflow to function.
 
-> **Note**: This is a bootstrap skill, not an activity skill. The PAW agent invokes it directly when no WorkflowContext.md exists.
-
 ## Capabilities
 
 - Generate Work Title from issue URL, branch name, or user description
@@ -33,55 +31,33 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `custom_instructions` | Conditional | text | Required if workflow_mode is `custom` |
 | `work_description` | No | text | User-provided work description |
 
-## Execution Steps
+## Desired End States
 
-### 1. Generate Work Title
+### Work Title
+- A 2-4 word human-readable name exists
+- Sources (priority order): issue title → branch name → work description
+- Capitalized appropriately (e.g., `User Auth System`)
 
-**If Issue URL provided:**
-- Fetch issue title and use as Work Title basis
-- Keep concise (2-4 words), capitalize appropriately
+### Feature Slug
+- Unique within `.paw/work/`
+- Format: lowercase letters, numbers, hyphens only; 1-100 chars
+- No leading/trailing/consecutive hyphens
+- Not reserved (`.`, `..`, `node_modules`, `.git`, `.paw`)
+- If conflict: append `-2`, `-3`, etc.
 
-**If branch name provided (no issue):**
-- Remove standard prefixes (`feature/`, `bugfix/`, `hotfix/`)
-- Split on hyphens, underscores, slashes
-- Capitalize first letter of each word
-- Example: `feature/user-auth-system` → `User Auth System`
+### Configuration Validation
+- If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
+- Invalid combinations: STOP and report error
 
-**If work description provided (no issue, no branch):**
-- Extract key noun phrases (2-4 words)
-- Capitalize appropriately
-
-### 2. Generate Feature Slug
-
-Create normalized slug from Work Title:
-
-**Format rules:**
-- Lowercase letters (a-z), numbers (0-9), hyphens (-) only
-- No leading, trailing, or consecutive hyphens
-- Length: 1-100 characters
-- Not reserved: `.`, `..`, `node_modules`, `.git`, `.paw`
-
-**Uniqueness:**
-- Verify `.paw/work/<slug>/` doesn't exist
-- If conflict: append `-2`, `-3`, etc. until unique
-
-### 3. Validate Review Strategy
-
-**Constraint:** If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`.
-
-If mismatch detected: STOP and report error to user.
-
-### 4. Create Directory Structure
-
+### Directory Structure
 ```
 .paw/work/<feature-slug>/
 ├── WorkflowContext.md
 └── prompts/
 ```
 
-### 5. Generate WorkflowContext.md
-
-Create `.paw/work/<feature-slug>/WorkflowContext.md`:
+### WorkflowContext.md
+Created at `.paw/work/<feature-slug>/WorkflowContext.md` with all input parameters:
 
 ```markdown
 # WorkflowContext
@@ -101,50 +77,19 @@ Artifact Paths: auto-derived
 Additional Inputs: none
 ```
 
-**Field Descriptions:**
+### Git Branch
+> Branch creation and checkout follows `paw-git-operations` patterns.
 
-| Field | Description |
-|-------|-------------|
-| Work Title | 2-4 word human-readable name for PR titles |
-| Feature Slug | Normalized identifier for artifact directory |
-| Target Branch | Git branch holding completed work |
-| Workflow Mode | `full`, `minimal`, or `custom` |
-| Review Strategy | `prs` (intermediate PRs) or `local` (direct commits) |
-| Review Policy | `always`, `milestones`, or `never` |
-| Session Policy | `per-stage` or `continuous` |
-| Custom Workflow Instructions | Free-text for custom mode, or "none" |
-| Initial Prompt | User's work description if no issue, or "none" |
-| Issue URL | Associated issue/work item URL, or "none" |
-| Remote | Git remote name (default: "origin") |
-| Artifact Paths | Location hint (default: "auto-derived") |
-| Additional Inputs | Extra parameters, or "none" |
+- Target branch exists and is checked out
+- If explicit branch provided: use as-is (prompt if exists)
+- If auto-derive: `feature/<feature-slug>`
 
-### 6. Create Git Branch
+### Artifact Tracking
+- **If tracking enabled**: WorkflowContext.md committed with message `Initialize PAW workflow for <Work Title>`
+- **If tracking disabled**: `.gitignore` with `*` created in work directory
 
-> Reference `paw-git-operations` for branch creation mechanics.
-
-**If target_branch provided:**
-- Create and checkout `target_branch`
-- If branch exists: prompt user for resolution or checkout existing
-
-**If auto-derive:**
-- Derive branch name: `feature/<feature-slug>`
-- Create and checkout derived branch
-- If conflict: append suffix or prompt user
-
-### 7. Artifact Tracking
-
-**If track_artifacts is true:**
-1. Stage WorkflowContext.md: `git add .paw/work/<feature-slug>/WorkflowContext.md`
-2. Commit: `Initialize PAW workflow for <Work Title>`
-
-**If track_artifacts is false:**
-1. Create `.paw/work/<feature-slug>/.gitignore` with content `*`
-2. Skip commit—artifacts remain local only
-
-### 8. Open WorkflowContext.md
-
-Open `.paw/work/<feature-slug>/WorkflowContext.md` in editor for review.
+### User Review
+- WorkflowContext.md presented for user review/confirmation
 
 ## Completion Response
 

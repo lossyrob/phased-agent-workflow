@@ -16,6 +16,13 @@ Create detailed implementation plans through interactive refinement. Plans descr
 - Address PR review comments (load `paw-review-response` for mechanics)
 - Plan documentation phases when documentation updates are warranted
 
+## Be Skeptical
+
+- Question vague requirements—ask "why" and "what about"
+- Identify potential issues early
+- Don't assume—verify with code research
+- If user corrects a misunderstanding, verify the correction against code before accepting
+
 ## Strategic Planning Guidelines
 
 Operate at the **C4 container/component abstraction level**:

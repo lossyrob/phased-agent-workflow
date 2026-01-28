@@ -638,12 +638,15 @@ Create the implementation and implementation review skills for core execution.
   - Add documentation/docstrings
   - Push changes and open Phase PRs
   - Verify PR comments have been addressed
+  - Post progress updates as PR comments
 - Reference `paw-git-operations` for push and PR creation mechanics
+- **PR Update Policy**: Clarify that after a PR is opened, progress updates and change summaries should be posted as **PR comments**, not modifications to the PR body. PR body modifications require explicit user request. This prevents accidental overwrite of carefully crafted PR descriptions.
 - Note: Named `paw-impl-review` to distinguish from `paw-review-*` skills for PR review workflow
 
 **Tests**:
 - Manual verification: Skill loads correctly
 - Verify PR description templates preserved
+- Verify skill documents PR update policy (comments over body modifications)
 
 ### Success Criteria (Phase 2D):
 
@@ -659,6 +662,7 @@ Create the implementation and implementation review skills for core execution.
 - [ ] `paw-implement` documents one-phase-per-invocation pattern
 - [ ] `paw-implement` documents documentation phase execution (load paw-docs-guidance, verify docs build)
 - [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
+- [ ] `paw-impl-review` documents PR update policy (post comments, don't modify PR body)
 - [ ] PR description templates preserved from original agents
 
 ---

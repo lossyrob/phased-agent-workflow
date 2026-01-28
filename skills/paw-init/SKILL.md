@@ -10,8 +10,8 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 ## Capabilities
 
 - Generate Work Title from issue URL, branch name, or user description
-- Generate Feature Slug from Work Title (normalized, unique)
-- Create `.paw/work/<feature-slug>/` directory structure
+- Generate Work ID from Work Title (normalized, unique)
+- Create `.paw/work/<work-id>/` directory structure
 - Generate WorkflowContext.md with all configuration fields
 - Create and checkout git branch (explicit or auto-derived)
 - Commit initial artifacts if tracking is enabled
@@ -38,7 +38,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 - Sources (priority order): issue title → branch name → work description
 - Capitalized appropriately (e.g., `User Auth System`)
 
-### Feature Slug
+### Work ID
 - Unique within `.paw/work/`
 - Format: lowercase letters, numbers, hyphens only; 1-100 chars
 - No leading/trailing/consecutive hyphens
@@ -51,19 +51,19 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 
 ### Directory Structure
 ```
-.paw/work/<feature-slug>/
+.paw/work/<work-id>/
 ├── WorkflowContext.md
 └── prompts/
 ```
 
 ### WorkflowContext.md
-Created at `.paw/work/<feature-slug>/WorkflowContext.md` with all input parameters:
+Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
 
 ```markdown
 # WorkflowContext
 
 Work Title: <generated_work_title>
-Feature Slug: <generated_feature_slug>
+Work ID: <generated_work_id>
 Target Branch: <target_branch>
 Workflow Mode: <workflow_mode>
 Review Strategy: <review_strategy>
@@ -82,7 +82,7 @@ Additional Inputs: none
 
 - Target branch exists and is checked out
 - If explicit branch provided: use as-is (prompt if exists)
-- If auto-derive: `feature/<feature-slug>`
+- If auto-derive: `feature/<work-id>`
 
 ### Artifact Tracking
 - **If tracking enabled**: WorkflowContext.md committed with message `Initialize PAW workflow for <Work Title>`
@@ -98,7 +98,7 @@ Return to PAW agent:
 ```
 Initialization complete.
 
-Feature Slug: <feature-slug>
+Work ID: <work-id>
 Workflow Mode: <workflow_mode>
 Target Branch: <target_branch>
 
@@ -120,7 +120,7 @@ Next step based on Workflow Mode:
 
 ## Validation Checklist
 
-- [ ] Feature slug is unique and valid format
+- [ ] Work ID is unique and valid format
 - [ ] Review strategy valid for workflow mode
 - [ ] WorkflowContext.md created with all fields
 - [ ] Git branch created and checked out

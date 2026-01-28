@@ -20,7 +20,7 @@ Review specifications for quality, completeness, and clarity before planning pro
 
 ### 1. Load Specification
 
-Read `Spec.md` from `.paw/work/<feature-slug>/Spec.md`
+Read `Spec.md` from `.paw/work/<work-id>/Spec.md`
 
 ### 2. Evaluate Against Quality Criteria
 

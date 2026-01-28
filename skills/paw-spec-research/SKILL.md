@@ -142,14 +142,14 @@ Before completion:
 - [ ] Responses are concise and directly address questions
 - [ ] Behavioral focus maintained (no implementation details)
 - [ ] Optional external questions copied to manual section
-- [ ] SpecResearch.md saved to `.paw/work/<feature-slug>/SpecResearch.md`
+- [ ] SpecResearch.md saved to `.paw/work/<work-id>/SpecResearch.md`
 
 ## Completion Response
 
 ```
 Spec research complete.
 
-Artifact: .paw/work/<feature-slug>/SpecResearch.md
+Artifact: .paw/work/<work-id>/SpecResearch.md
 Questions answered: <count>
 Open unknowns: <count>
 External questions (manual): <count>

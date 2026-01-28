@@ -204,7 +204,7 @@ Out of Scope:
 
 ## References
 - Issue: <link>
-- Research: .paw/work/<feature-slug>/SpecResearch.md
+- Research: .paw/work/<work-id>/SpecResearch.md
 ```
 
 ## Quality Checklist
@@ -266,7 +266,7 @@ Ready for paw-spec-research activity.
 ```
 Specification complete.
 
-Artifact: .paw/work/<feature-slug>/Spec.md
+Artifact: .paw/work/<work-id>/Spec.md
 User stories: <count>
 Functional requirements: <count>
 Success criteria: <count>

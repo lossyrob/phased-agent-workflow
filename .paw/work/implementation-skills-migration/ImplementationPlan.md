@@ -95,6 +95,7 @@ Activity skills will provide:
 3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
 5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
+6. **Phase 6: Work Shaping Utility Skill** - Create `paw-work-shaping` utility skill for interactive pre-spec ideation sessions
 
 ---
 
@@ -124,7 +125,7 @@ Create the `paw-workflow` skill that provides the PAW agent with skill usage pat
     **Note**: `paw-init` is a **bootstrap skill**, not an activity skill. It runs before the workflow skill is loaded to create WorkflowContext.md. The workflow skill assumes WorkflowContext.md already exists. `paw-status` is loaded directly by the PAW agent when the user asks for status/help (it does not need to appear in the workflow skill's usage-patterns table).
     
     **Utility skills** (`paw-review-response`, `paw-git-operations`, `paw-docs-guidance`) are loaded conditionally by activity skills—they don't appear in workflow guidance since the PAW orchestrator doesn't delegate to them directly.
-- Define artifact directory structure (`.paw/work/<feature-slug>/`)
+- Define artifact directory structure (`.paw/work/<work-id>/`)
 - **Default Flow Guidance** (typical greenfield progression):
   - **Specification Stage**: `paw-spec` → `paw-spec-research` (if needed) → `paw-spec` (resume)
   - **Planning Stage**: `paw-code-research` → `paw-planning`
@@ -250,7 +251,7 @@ Create the two utility skills that provide shared mechanics referenced by activi
     - Local strategy: Work directly on target branch, no intermediate branches
   - **Selective staging discipline**:
     - Always `git add <file1> <file2>` (never `git add .` or `git add -A`)
-    - Check `.paw/work/<feature-slug>/.gitignore` before staging `.paw/` artifacts
+    - Check `.paw/work/<work-id>/.gitignore` before staging `.paw/` artifacts
     - Pre-commit verification: `git diff --cached`
   - **Branch verification**:
     - Verify current branch matches expected pattern before commits
@@ -339,15 +340,15 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 - Add YAML frontmatter with `name: paw-init`, `description` (clarify it's a bootstrap skill in description)
 - Define **capabilities**:
   - Generate Work Title from issue URL, branch name, or user description
-  - Generate Feature Slug from Work Title (normalized, unique)
-  - Create `.paw/work/<feature-slug>/` directory structure
+  - Generate Work ID from Work Title (normalized, unique)
+  - Create `.paw/work/<work-id>/` directory structure
   - Generate WorkflowContext.md with all configuration fields
   - Create and checkout git branch (explicit or auto-derived)
   - Commit initial artifacts if tracking is enabled
   - Open WorkflowContext.md for review
 - Include WorkflowContext.md template
 - Include validation rules (slug format, branch conflicts, review strategy constraints)
-- **Completion response**: Return feature slug and next step based on Workflow Mode
+- **Completion response**: Return work ID and next step based on Workflow Mode
 - Reference `paw-git-operations` for branch creation mechanics
 
 **Input Parameters** (received via delegation from PAW agent):
@@ -423,19 +424,58 @@ Create the bootstrap skill (`paw-init`) and specification-related activity skill
 ### Success Criteria (Phase 2B):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`
-- [ ] Each skill has valid YAML frontmatter with `name` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Skills exist at `skills/paw-init/SKILL.md`, `skills/paw-spec/SKILL.md`, `skills/paw-spec-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`
+- [x] Each skill has valid YAML frontmatter with `name` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
-- [ ] `paw-init` references `paw-git-operations` for branch mechanics
-- [ ] `paw-spec` describes capabilities flexibly (not rigid modes)
-- [ ] `paw-spec` references `paw-review-response` for PR comment work
-- [ ] `paw-spec-research` defines SpecResearch.md template
-- [ ] `paw-spec-review` defines clear quality criteria for spec validation
-- [ ] `paw-spec-review` returns structured feedback (not orchestration decisions)
-- [ ] Quality checklists preserved from original agents
+- [x] `paw-init` handles all initialization parameters and creates correct WorkflowContext.md
+- [x] `paw-init` references `paw-git-operations` for branch mechanics
+- [x] `paw-spec` describes capabilities flexibly (not rigid modes)
+- [x] `paw-spec` references `paw-review-response` for PR comment work
+- [x] `paw-spec-research` defines SpecResearch.md template
+- [x] `paw-spec-review` defines clear quality criteria for spec validation
+- [x] `paw-spec-review` returns structured feedback (not orchestration decisions)
+- [x] Quality checklists preserved from original agents
+
+### Phase 2B Completion Notes
+
+**Completed**: 2026-01-27
+
+Created four skills for the bootstrap and specification stages:
+
+1. **`paw-init`** (~6.3KB): Bootstrap skill with WorkflowContext.md template, input parameters table, execution steps for slug generation and branch creation, references `paw-git-operations` for branch mechanics.
+
+2. **`paw-spec`** (~7.3KB): Specification activity skill with core principles (9 items from PAW-01A), research question guidelines, Spec.md template, quality checklist sections. Defines flexible capabilities including new spec creation, research integration, spec revision, and PR comment handling.
+
+3. **`paw-spec-research`** (~5.1KB): Spec research skill with behavioral documentation scope, SpecResearch.md template with YAML frontmatter, anti-evaluation directives, and quality guidelines for concise answers.
+
+4. **`paw-spec-review`** (~4.4KB): New spec review skill with quality criteria checklist covering content quality, narrative quality, requirement completeness, ambiguity control, scope & risk, and research integration. Returns structured PASS/FAIL feedback format.
+
+**Review notes**: Verify `paw-spec` references `paw-review-response` for PR comment work (currently only mentions it in capabilities, may need explicit reference). Manual verification items remain for Phase 2B review.
+
+### Addressed Review Comments (PR #168): 2026-01-28
+
+Addressed review comments from owner and Copilot code review:
+
+1. **Rename 'feature slug' to 'work ID'** (owner comment): Updated all references across all four skills to use 'Work ID' consistently.
+
+2. **Default values with confirmation** (owner comment): Updated `paw-init` Input Parameters table to show defaults and added "Handling Missing Parameters" section explaining the confirmation flow.
+
+3. **Remove hardcoded templates** (Copilot comments): Replaced static response templates with descriptions of what information to include in:
+   - `paw-init`: Completion Response, Error Handling table removed
+   - `paw-spec`: Completion Response templates, Research Prompt Format template
+   - `paw-spec-research`: Completion Response template, Execution Steps
+   - `paw-spec-review`: Feedback Format templates, Completion Response template
+
+4. **Describe end states instead of procedures** (Copilot comments): Refactored procedural sections to describe desired end states:
+   - `paw-spec`: Execution Based on Context sections
+   - `paw-spec-research`: Converted Execution Steps to Desired End State + Research Process
+   - `paw-spec-review`: Converted Execution Steps to Desired End State + Review Process
+
+5. **Agent reference to skill reference** (Copilot comment): Changed Research Prompt Format from referencing `PAW-01B Spec Researcher` agent to `paw-spec-research` skill.
+
+6. **Research Prompt → ResearchQuestions naming** (owner comment): Updated artifact naming from "Research Prompt" to "ResearchQuestions" to align with paw-review workflow pattern. The file is `ResearchQuestions.md` (plain markdown), not a `.prompt.md` file.
 
 ---
 
@@ -1073,6 +1113,73 @@ Remove the 9 individual implementation agent files, the old initialization promp
 
 ---
 
+## Phase 6: Work Shaping Utility Skill
+
+### Overview
+Create the `paw-work-shaping` utility skill that enables interactive pre-spec ideation sessions. This skill allows users to explore vague ideas collaboratively with the PAW agent before committing to formal specification, producing a structured document suitable for spec input or GitHub issue creation.
+
+### Changes Required:
+
+#### 1. Work Shaping Utility Skill
+**File**: `skills/paw-work-shaping/SKILL.md`
+**Changes**:
+- Create utility skill for interactive pre-spec ideation
+- **Session Flow**:
+  - Agent-led Q&A to progressively clarify the idea
+  - Signal when "complete enough" and offer to finish
+  - User can end anytime
+- **Codebase Research**: Delegate to `paw-code-research` skill via subagent when codebase context is needed
+- **Execution Context**: Runs in main agent context (not a subagent) to maintain interactive conversation with user
+- **Document Sections**:
+  - Work breakdown (sub-items under main idea)
+  - Edge cases and boundary conditions
+  - Rough architecture (component interactions)
+  - Critical analysis (value vs. alternatives, build vs. modify tradeoffs)
+  - Codebase fit (similar existing features, reuse opportunities)
+  - Risk assessment (negative impacts, gotchas)
+- **Output Artifact**: `WorkShaping.md`
+  - Location: `.paw/work/<work-id>/WorkShaping.md` if work directory exists
+  - Otherwise: workspace root (prompt user for alternate location)
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-work-shaping')`
+- Manual verification: Q&A session progresses interactively
+- Manual verification: Codebase research delegates to subagent
+- Manual verification: WorkShaping.md produced with expected sections
+
+#### 2. Update PAW Agent Detection
+**File**: `agents/PAW.agent.md` (or via workflow skill update)
+**Changes**:
+- Add detection patterns for when work shaping would be beneficial:
+  - User explicitly asks to explore/shape an idea
+  - Vague requests with exploratory language
+  - Explicit uncertainty ("I'm not sure if...", "maybe we could...")
+- When detected, load `paw-work-shaping` skill and begin interactive session
+
+**Tests**:
+- Manual verification: PAW agent detects exploratory requests
+- Manual verification: PAW agent suggests shaping for vague requests
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Skill file exists: `skills/paw-work-shaping/SKILL.md`
+- [ ] Skill has valid YAML frontmatter with `name` and `description`
+- [ ] Skill linting passes: `./scripts/lint-agent.sh skills/paw-work-shaping/SKILL.md`
+- [ ] Overall linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Skill loads via `paw_get_skill('paw-work-shaping')`
+- [ ] User can ask PAW to "help me think through an idea" and session begins
+- [ ] Q&A progresses interactively with agent-led questions
+- [ ] Codebase research delegates to `paw-code-research` via subagent
+- [ ] Agent signals when idea is "complete enough" and offers to finish
+- [ ] User can end session early if desired
+- [ ] WorkShaping.md produced at correct location with all sections
+- [ ] Document is suitable as input to spec process or GitHub issue
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Integration Tests:
@@ -1091,6 +1198,7 @@ Remove the 9 individual implementation agent files, the old initialization promp
   - Mid-workflow, ask "do more research on X" → verify routes to appropriate research skill
   - Request revision of earlier artifact → verify PAW reasons about appropriate skill
 - **Backward compatibility**: Verify old WorkflowContext.md with `Handoff Mode: semi-auto` still works
+- **Work shaping flow**: Ask PAW to "help me think through an idea" → verify interactive Q&A session → verify codebase research delegates to subagent → verify WorkShaping.md produced
 
 ### Manual Testing Steps:
 1. Run "PAW: New PAW Workflow" command
@@ -1107,7 +1215,7 @@ Remove the 9 individual implementation agent files, the old initialization promp
 12. Verify Docs.md created during documentation phase (implementer loads paw-docs-guidance)
 13. Verify documentation build command runs successfully (if framework discovered in research)
 14. Complete final PR, verify PR to main created
-15. Verify all artifacts in `.paw/work/<feature-slug>/`
+15. Verify all artifacts in `.paw/work/<work-id>/`
 16. **Session Policy test**: Re-run workflow with `Session Policy: continuous` and verify single conversation
 
 ## Performance Considerations

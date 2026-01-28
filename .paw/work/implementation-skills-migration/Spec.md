@@ -32,7 +32,7 @@ Independent Test: User runs "PAW: New PAW Workflow", selects full mode with PRs 
 Acceptance Scenarios:
 1. Given a user running "PAW: New PAW Workflow", When they complete quick pick selections, Then the VS Code command invokes the `/paw` prompt with configuration parameters
 2. Given the PAW agent receiving initialization parameters (no existing WorkflowContext.md), When it checks for WorkflowContext.md, Then it delegates directly to the `paw-init` bootstrap skill (without loading the workflow skill first) to create the workflow structure
-3. Given the `paw-init` skill completing initialization, When it returns success with feature slug, Then the PAW agent loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (spec for full, code-research for minimal)
+3. Given the `paw-init` skill completing initialization, When it returns success with work ID, Then the PAW agent loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (spec for full, code-research for minimal)
 4. Given a user with an existing WorkflowContext.md who invokes `/paw`, When the PAW agent loads, Then it loads the workflow skill and proceeds based on current workflow state
 
 ### User Story P1 – Single Entry Point for Implementation
@@ -75,11 +75,11 @@ Acceptance Scenarios:
 
 Narrative: A developer using PAW for an existing project wants to ensure their artifacts remain in familiar locations. They complete a full workflow and find all artifacts where expected.
 
-Independent Test: User completes implementation and verifies Spec.md, ImplementationPlan.md, and Docs.md appear in `.paw/work/<feature-slug>/`.
+Independent Test: User completes implementation and verifies Spec.md, ImplementationPlan.md, and Docs.md appear in `.paw/work/<work-id>/`.
 
 Acceptance Scenarios:
-1. Given a user completing the specification stage, When Spec.md is created, Then it exists at `.paw/work/<feature-slug>/Spec.md`
-2. Given a user completing planning, When ImplementationPlan.md is created, Then it exists at `.paw/work/<feature-slug>/ImplementationPlan.md`
+1. Given a user completing the specification stage, When Spec.md is created, Then it exists at `.paw/work/<work-id>/Spec.md`
+2. Given a user completing planning, When ImplementationPlan.md is created, Then it exists at `.paw/work/<work-id>/ImplementationPlan.md`
 3. Given artifact formats, When the migration is complete, Then artifact content structure matches pre-migration format
 
 ### User Story P5 – Status and Help
@@ -127,6 +127,19 @@ Acceptance Scenarios:
 3. Given the plan-review skill completing, When issues are found, Then it returns structured feedback identifying specific phases or sections needing revision
 4. Given the plan-review skill completing, When plan passes review, Then the workflow proceeds to the implementation stage
 
+### User Story P9 – Work Shaping (Pre-Spec Ideation)
+
+Narrative: A developer has a vague idea they want to explore before committing to formal specification. They ask the PAW agent to help shape the idea, and the agent runs an interactive Q&A session that progressively clarifies the concept, explores codebase implications, and produces a structured document suitable for spec input or GitHub issue creation.
+
+Independent Test: User asks PAW to "help me think through an idea for X"; agent leads Q&A session, delegates codebase research to subagent, signals when complete, and produces WorkShaping.md.
+
+Acceptance Scenarios:
+1. Given a user with a vague idea, When they ask PAW to explore/shape it (or PAW detects exploratory language), Then the PAW agent loads the work-shaping skill and begins an interactive Q&A session
+2. Given the work-shaping skill executing, When codebase context is needed, Then it delegates to `paw-code-research` skill via subagent to manage context
+3. Given the work-shaping session progressing, When the idea is sufficiently clarified, Then the agent signals "complete enough" and offers to finish
+4. Given the user ending the session (explicitly or by accepting completion), When the session ends, Then WorkShaping.md is produced at `.paw/work/<work-id>/WorkShaping.md` (if work directory exists) or workspace root
+5. Given no PAW work directory exists, When producing the artifact, Then prompt the user for an alternate location
+
 ### Edge Cases
 
 - User invokes PAW agent with no WorkflowContext.md initialized and no initialization parameters: Agent prompts user to run "PAW: New PAW Workflow" command or provide initialization parameters
@@ -142,13 +155,13 @@ Acceptance Scenarios:
 - FR-001: The PAW agent loads the workflow skill on invocation to understand available capabilities, default flow guidance, and orchestration patterns (Stories: P0, P1, P4)
 - FR-002: The workflow skill retrieves activity capabilities dynamically via the `paw_get_skills` tool rather than embedding a static catalog; this enables the PAW agent to discover all available skills (including non-implementation skills like review skills) for potential non-linear paths. The workflow skill provides default flow guidance for typical progressions and validation gates—serving as a guide rather than a rigid state machine. **Prerequisite**: The workflow skill assumes WorkflowContext.md already exists (created by `paw-init` bootstrap skill) (Stories: P1, P6)
 - FR-003: Activity skills are loaded on-demand when delegated to, describing capabilities (what they can do) rather than fixed modes, enabling flexible execution based on delegation instructions (Stories: P1, P6)
-- FR-004: The PAW agent reasons about user intent and constructs activity-specific delegation prompts that contextualize what the activity should accomplish. For linear progressions, the delegation prompt describes the activity goal (e.g., "complete spec research for the questions in the research prompt"); for non-linear requests, the delegation prompt includes the user's specific request (e.g., "update the spec to align with implementation plan changes") as part of the activity context. Not every delegation includes the original user request verbatim—only when relevant to the delegated activity (Stories: P1, P6)
+- FR-004: The PAW agent reasons about user intent and constructs activity-specific delegation prompts that contextualize what the activity should accomplish. For linear progressions, the delegation prompt describes the activity goal (e.g., "complete spec research for the questions in ResearchQuestions.md"); for non-linear requests, the delegation prompt includes the user's specific request (e.g., "update the spec to align with implementation plan changes") as part of the activity context. Not every delegation includes the original user request verbatim—only when relevant to the delegated activity (Stories: P1, P6)
 - FR-005: Workflow mode detection routes users through appropriate stages: full mode includes all stages, minimal mode skips spec (Stories: P2)
 - FR-006: Review Policy controls when workflow pauses for human review—boundaries are defined at the artifact level, not stage level: "always" pauses after every artifact is produced for potential iteration, "milestones" pauses at significant artifacts that represent stage completions (e.g., Spec.md, ImplementationPlan.md), "never" proceeds continuously without pausing for review (Stories: P3)
 - FR-007: Session Policy controls conversation context: "per-stage" uses fresh conversations at transitions, "continuous" preserves conversation context throughout (Stories: P3)
 - FR-007: Session Policy controls orchestrator conversation context: "per-stage" starts a fresh PAW agent session at stage boundaries via `paw_call_agent` (with resume state), "continuous" preserves orchestrator context throughout (Stories: P3)
 - FR-008: Legacy Handoff Mode values are automatically mapped to Review Policy for backward compatibility (Stories: P3)
-- FR-009: Each activity skill produces its designated artifact in the standard location under `.paw/work/<feature-slug>/` (Stories: P4)
+- FR-009: Each activity skill produces its designated artifact in the standard location under `.paw/work/<work-id>/` (Stories: P4)
 - FR-010: Artifact formats remain compatible with existing specifications (Stories: P4)
 - FR-011: The status skill can diagnose workflow state from artifacts and provide accurate next-step guidance (Stories: P5)
 - FR-012: The workflow skill validates prerequisites before allowing stage entry (e.g., Spec.md must exist before implementation) (Stories: P1)
@@ -159,7 +172,7 @@ Acceptance Scenarios:
 - FR-015: Activity skills execute in delegated worker sessions (subagents), report completion status back to the PAW agent, and do not make orchestration decisions (e.g., pausing, next-step selection). The PAW agent applies policies and determines what happens next, including whether to start a fresh orchestrator session via `paw_call_agent` (Stories: P1, P3, P6)
 - FR-023: When the PAW agent starts a fresh orchestrator session via `paw_call_agent`, it includes a resume hint sufficient for the new session to pick up at the intended workflow point (e.g., next activity name and relevant artifact paths), and the new session validates/derives actual workflow state from artifacts before delegating work (Stories: P3)
 - FR-016: The `/paw` prompt file serves as the entry point for the PAW implementation workflow; it passes configuration parameters to the PAW agent and accepts optional arguments (Stories: P0)
-- FR-017: The `paw-init` skill is a **bootstrap skill** that handles workflow initialization: creating `.paw/work/<feature-slug>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled. Unlike activity skills, `paw-init` is invoked directly by the PAW agent before the workflow skill is loaded—it is not part of the workflow stages (Stories: P0)
+- FR-017: The `paw-init` skill is a **bootstrap skill** that handles workflow initialization: creating `.paw/work/<work-id>/` directory, generating WorkflowContext.md, creating/checking out git branch, and committing initial artifacts if tracking is enabled. Unlike activity skills, `paw-init` is invoked directly by the PAW agent before the workflow skill is loaded—it is not part of the workflow stages (Stories: P0)
 - FR-018: When the PAW agent receives initialization parameters and no WorkflowContext.md exists, it delegates directly to the `paw-init` bootstrap skill (without loading workflow skill first); upon successful initialization, it loads the workflow skill and proceeds to the first workflow stage based on Workflow Mode (Stories: P0)
 - FR-019: The VS Code "PAW: New PAW Workflow" command invokes the `/paw` prompt with configuration parameters instead of the current template-based prompt to a bare agent (Stories: P0)
 - FR-020: The `paw-spec-review` skill runs in a subagent to review Spec.md for quality, completeness, and clarity; it validates against quality criteria and returns structured feedback that the PAW agent uses to determine whether to proceed to planning or iterate on the specification (Stories: P7)
@@ -168,6 +181,7 @@ Acceptance Scenarios:
 - FR-024: The `paw-code-research` skill includes documentation system research as part of its standard research, discovering documentation framework (mkdocs, docusaurus, etc.), docs directory structure, navigation configuration, and style conventions, documenting findings in CodeResearch.md (Stories: P1)
 - FR-025: The `paw-planning` skill includes documentation phase planning as part of its standard planning when documentation updates are warranted, using documentation research findings from CodeResearch.md to plan appropriate updates to Docs.md, README, CHANGELOG, and other project documentation (Stories: P1)
 - FR-026: The `paw-docs-guidance` utility skill provides documentation conventions, Docs.md template, and project documentation update patterns that the `paw-implement` skill loads conditionally when executing documentation phases (Stories: P1)
+- FR-027: The `paw-work-shaping` utility skill provides an interactive Q&A session for pre-spec ideation; it runs in the main agent context (not a subagent), delegates codebase research to `paw-code-research` via subagent, and produces WorkShaping.md containing work breakdown, edge cases, rough architecture, critical analysis, codebase fit, and risk assessment (Stories: P9)
 
 ### Key Entities
 
@@ -179,7 +193,8 @@ Acceptance Scenarios:
   - `paw-review-response` for PR comment handling
   - `paw-git-operations` for branch naming, strategy-based branching, and selective staging
   - `paw-docs-guidance` for documentation conventions, Docs.md template, and project doc update patterns (loaded by implementer during docs phase)
-- **Artifact State**: Collection of files in `.paw/work/<feature-slug>/` that encode workflow progress
+  - `paw-work-shaping` for interactive pre-spec ideation sessions (loaded by PAW agent when user wants to explore/shape an idea)
+- **Artifact State**: Collection of files in `.paw/work/<work-id>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
 - **Initialization Parameters**: Configuration values captured by VS Code quick picks and passed to PAW agent via `/paw` prompt (target branch, workflow mode, review strategy, etc.)
@@ -224,7 +239,7 @@ In Scope:
 - Create single PAW agent file that replaces PAW-01A through PAW-05 and PAW-X Status, with intent-driven orchestration
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
 - Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
-- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations, `paw-docs-guidance` for documentation conventions and templates
+- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations, `paw-docs-guidance` for documentation conventions and templates, `paw-work-shaping` for interactive pre-spec ideation
 - Create `/paw` entry point prompt file (`prompts/paw.prompt.md`) that invokes PAW agent with configuration parameters
 - Update VS Code "PAW: New PAW Workflow" command to invoke `/paw` prompt instead of template-based prompt to bare agent
 - Update extension tooling to support new Review Policy and Session Policy fields in WorkflowContext.md

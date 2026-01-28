@@ -16,22 +16,16 @@ Review specifications for quality, completeness, and clarity before planning pro
 - Identify specific sections needing revision
 - Return structured feedback with pass/fail status
 
-## Execution Steps
+## Desired End State
 
-### 1. Load Specification
+After review, the PAW agent receives:
+- Pass/fail determination
+- For passing specs: confirmation of readiness for planning (with optional polish suggestions)
+- For failing specs: specific issues by criterion, affected sections, and suggestions for fixing
 
-Read `Spec.md` from `.paw/work/<work-id>/Spec.md`
+## Review Process
 
-### 2. Evaluate Against Quality Criteria
-
-Review each criterion in the checklist below. For each failing item:
-- Note the specific issue
-- Identify the section(s) affected
-- Suggest what needs to change (without prescribing exact wording)
-
-### 3. Return Structured Feedback
-
-Return findings to PAW agent—do NOT decide next steps.
+Evaluate the specification at `.paw/work/<work-id>/Spec.md` against the Quality Criteria Checklist below. For failing items, note the specific issue, identify affected section(s), and suggest what needs to change without prescribing exact wording.
 
 ## Quality Criteria Checklist
 
@@ -70,36 +64,11 @@ Return findings to PAW agent—do NOT decide next steps.
 - [ ] **Research incorporated**: System research questions answered or converted to assumptions
 - [ ] **External questions listed**: Optional external questions preserved for manual completion
 
-## Feedback Format
+## Feedback Guidance
 
-### Pass
+**For passing specs**: Indicate readiness for planning. Include minor polish suggestions if any.
 
-```
-Spec Review: PASS
-
-Specification meets quality criteria. Ready for planning stage.
-
-Minor suggestions (optional):
-- <any polish recommendations>
-```
-
-### Fail
-
-```
-Spec Review: FAIL
-
-Issues requiring revision:
-
-1. [Criterion]: <specific issue>
-   Section: <which section(s)>
-   Suggestion: <what to fix>
-
-2. [Criterion]: <specific issue>
-   Section: <which section(s)>
-   Suggestion: <what to fix>
-
-Items passing: <count>/<total>
-```
+**For failing specs**: List each failing criterion with the specific issue, affected section(s), and a suggestion for what to fix. Include count of passing vs total criteria.
 
 ## Review Guidelines
 
@@ -125,14 +94,4 @@ Consider workflow mode when reviewing:
 
 ## Completion Response
 
-Return structured feedback to PAW agent:
-
-```
-Spec review complete.
-
-Result: <PASS | FAIL>
-Criteria passing: <count>/<total>
-Issues found: <count>
-
-<Detailed feedback per format above>
-```
+Report to PAW agent: pass/fail result, criteria passing count, issues found count, and detailed feedback per Feedback Guidance above. Do NOT make orchestration decisions—return status only.

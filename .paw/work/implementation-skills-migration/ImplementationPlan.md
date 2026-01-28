@@ -596,6 +596,13 @@ Created three skills for the planning workflow stage:
 
 **Review notes**: Skills follow established patterns from Phase 2B. Quality checklists preserved from PAW-02A and PAW-02B agents.
 
+**Post-review updates** (2026-01-28):
+- Added "Documentarian, Not Critic" identity block to `paw-code-research` (from HumanLayer comparison)
+- Added "Be Skeptical" section to `paw-planning` with verification guidance
+- Restored Automated/Manual success criteria structure in ImplementationPlan.md template (was in original agent, lost in compression)
+- Added "Blocked on Open Questions" protocol to `paw-planning`: if blocked, return without artifact; PAW agent resolves via research (`never` policy) or user query (`always`/`milestones`)
+- Updated `paw-workflow` with blocked activity handling and planning-specific resolution loop
+
 ---
 
 ## Phase 2D: Implementation Skills

@@ -19,17 +19,26 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 
 ## Input Parameters
 
-| Parameter | Required | Values | Description |
-|-----------|----------|--------|-------------|
-| `target_branch` | Yes* | branch name or empty | Git branch for work (*empty = auto-derive) |
-| `workflow_mode` | Yes | `full`, `minimal`, `custom` | Workflow complexity |
-| `review_strategy` | Yes | `prs`, `local` | PR creation strategy |
-| `review_policy` | No | `always`, `milestones`, `never` | When to pause for review (default: `milestones`) |
-| `session_policy` | No | `per-stage`, `continuous` | Session context management (default: `per-stage`) |
-| `track_artifacts` | No | boolean | Commit PAW artifacts (default: true) |
-| `issue_url` | No | URL or empty | GitHub/Azure DevOps issue URL |
-| `custom_instructions` | Conditional | text | Required if workflow_mode is `custom` |
-| `work_description` | No | text | User-provided work description |
+| Parameter | Required | Default | Values |
+|-----------|----------|---------|--------|
+| `target_branch` | No | auto-derive from work ID | branch name |
+| `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
+| `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
+| `review_policy` | No | `milestones` | `always`, `milestones`, `never` |
+| `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
+| `track_artifacts` | No | `true` | boolean |
+| `issue_url` | No | none | URL |
+| `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |
+| `work_description` | No | none | text |
+
+### Handling Missing Parameters
+
+When parameters are not provided:
+1. Apply defaults from the table above
+2. **Present configuration summary** and ask for confirmation before proceeding
+3. If user requests changes, update values and re-confirm
+
+This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
 
 ## Desired End States
 
@@ -93,30 +102,7 @@ Additional Inputs: none
 
 ## Completion Response
 
-Return to PAW agent:
-
-```
-Initialization complete.
-
-Work ID: <work-id>
-Workflow Mode: <workflow_mode>
-Target Branch: <target_branch>
-
-Next step based on Workflow Mode:
-- full: Proceed to specification (`paw-spec`)
-- minimal: Proceed to code research (`paw-code-research`)
-- custom: Follow Custom Workflow Instructions
-```
-
-## Error Handling
-
-| Error | Action |
-|-------|--------|
-| Slug conflict | Append suffix or prompt user |
-| Branch exists | Prompt user: checkout existing or choose new name |
-| Git error | Provide clear message with recovery guidance |
-| Network failure | Fall back to branch-derived titles |
-| Invalid review strategy | Stop and report constraint violation |
+Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step based on workflow mode (full → spec, minimal → code research, custom → per instructions).
 
 ## Validation Checklist
 

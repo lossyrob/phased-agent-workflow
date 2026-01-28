@@ -127,6 +127,19 @@ Acceptance Scenarios:
 3. Given the plan-review skill completing, When issues are found, Then it returns structured feedback identifying specific phases or sections needing revision
 4. Given the plan-review skill completing, When plan passes review, Then the workflow proceeds to the implementation stage
 
+### User Story P9 – Work Shaping (Pre-Spec Ideation)
+
+Narrative: A developer has a vague idea they want to explore before committing to formal specification. They ask the PAW agent to help shape the idea, and the agent runs an interactive Q&A session that progressively clarifies the concept, explores codebase implications, and produces a structured document suitable for spec input or GitHub issue creation.
+
+Independent Test: User asks PAW to "help me think through an idea for X"; agent leads Q&A session, delegates codebase research to subagent, signals when complete, and produces WorkShaping.md.
+
+Acceptance Scenarios:
+1. Given a user with a vague idea, When they ask PAW to explore/shape it (or PAW detects exploratory language), Then the PAW agent loads the work-shaping skill and begins an interactive Q&A session
+2. Given the work-shaping skill executing, When codebase context is needed, Then it delegates to `paw-code-research` skill via subagent to manage context
+3. Given the work-shaping session progressing, When the idea is sufficiently clarified, Then the agent signals "complete enough" and offers to finish
+4. Given the user ending the session (explicitly or by accepting completion), When the session ends, Then WorkShaping.md is produced at `.paw/work/<work-id>/WorkShaping.md` (if work directory exists) or workspace root
+5. Given no PAW work directory exists, When producing the artifact, Then prompt the user for an alternate location
+
 ### Edge Cases
 
 - User invokes PAW agent with no WorkflowContext.md initialized and no initialization parameters: Agent prompts user to run "PAW: New PAW Workflow" command or provide initialization parameters
@@ -168,6 +181,7 @@ Acceptance Scenarios:
 - FR-024: The `paw-code-research` skill includes documentation system research as part of its standard research, discovering documentation framework (mkdocs, docusaurus, etc.), docs directory structure, navigation configuration, and style conventions, documenting findings in CodeResearch.md (Stories: P1)
 - FR-025: The `paw-planning` skill includes documentation phase planning as part of its standard planning when documentation updates are warranted, using documentation research findings from CodeResearch.md to plan appropriate updates to Docs.md, README, CHANGELOG, and other project documentation (Stories: P1)
 - FR-026: The `paw-docs-guidance` utility skill provides documentation conventions, Docs.md template, and project documentation update patterns that the `paw-implement` skill loads conditionally when executing documentation phases (Stories: P1)
+- FR-027: The `paw-work-shaping` utility skill provides an interactive Q&A session for pre-spec ideation; it runs in the main agent context (not a subagent), delegates codebase research to `paw-code-research` via subagent, and produces WorkShaping.md containing work breakdown, edge cases, rough architecture, critical analysis, codebase fit, and risk assessment (Stories: P9)
 
 ### Key Entities
 
@@ -179,6 +193,7 @@ Acceptance Scenarios:
   - `paw-review-response` for PR comment handling
   - `paw-git-operations` for branch naming, strategy-based branching, and selective staging
   - `paw-docs-guidance` for documentation conventions, Docs.md template, and project doc update patterns (loaded by implementer during docs phase)
+  - `paw-work-shaping` for interactive pre-spec ideation sessions (loaded by PAW agent when user wants to explore/shape an idea)
 - **Artifact State**: Collection of files in `.paw/work/<work-id>/` that encode workflow progress
 - **Review Policy**: Configuration controlling when workflow pauses for human review at artifact boundaries (always, milestones, never)
 - **Session Policy**: Configuration controlling conversation context management (per-stage, continuous)
@@ -224,7 +239,7 @@ In Scope:
 - Create single PAW agent file that replaces PAW-01A through PAW-05 and PAW-X Status, with intent-driven orchestration
 - Create `paw-workflow` skill with activity catalog, default flow guidance, validation gates, transition table, and policy behavior documentation
 - Create activity skills: `paw-init`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-status`
-- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations, `paw-docs-guidance` for documentation conventions and templates
+- Create utility skills: `paw-review-response` for shared PR comment response mechanics, `paw-git-operations` for branch naming and git operations, `paw-docs-guidance` for documentation conventions and templates, `paw-work-shaping` for interactive pre-spec ideation
 - Create `/paw` entry point prompt file (`prompts/paw.prompt.md`) that invokes PAW agent with configuration parameters
 - Update VS Code "PAW: New PAW Workflow" command to invoke `/paw` prompt instead of template-based prompt to bare agent
 - Update extension tooling to support new Review Policy and Session Policy fields in WorkflowContext.md

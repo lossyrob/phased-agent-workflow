@@ -95,6 +95,7 @@ Activity skills will provide:
 3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
 5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
+6. **Phase 6: Work Shaping Utility Skill** - Create `paw-work-shaping` utility skill for interactive pre-spec ideation sessions
 
 ---
 
@@ -1112,6 +1113,73 @@ Remove the 9 individual implementation agent files, the old initialization promp
 
 ---
 
+## Phase 6: Work Shaping Utility Skill
+
+### Overview
+Create the `paw-work-shaping` utility skill that enables interactive pre-spec ideation sessions. This skill allows users to explore vague ideas collaboratively with the PAW agent before committing to formal specification, producing a structured document suitable for spec input or GitHub issue creation.
+
+### Changes Required:
+
+#### 1. Work Shaping Utility Skill
+**File**: `skills/paw-work-shaping/SKILL.md`
+**Changes**:
+- Create utility skill for interactive pre-spec ideation
+- **Session Flow**:
+  - Agent-led Q&A to progressively clarify the idea
+  - Signal when "complete enough" and offer to finish
+  - User can end anytime
+- **Codebase Research**: Delegate to `paw-code-research` skill via subagent when codebase context is needed
+- **Execution Context**: Runs in main agent context (not a subagent) to maintain interactive conversation with user
+- **Document Sections**:
+  - Work breakdown (sub-items under main idea)
+  - Edge cases and boundary conditions
+  - Rough architecture (component interactions)
+  - Critical analysis (value vs. alternatives, build vs. modify tradeoffs)
+  - Codebase fit (similar existing features, reuse opportunities)
+  - Risk assessment (negative impacts, gotchas)
+- **Output Artifact**: `WorkShaping.md`
+  - Location: `.paw/work/<work-id>/WorkShaping.md` if work directory exists
+  - Otherwise: workspace root (prompt user for alternate location)
+
+**Tests**:
+- Manual verification: Skill loads via `paw_get_skill('paw-work-shaping')`
+- Manual verification: Q&A session progresses interactively
+- Manual verification: Codebase research delegates to subagent
+- Manual verification: WorkShaping.md produced with expected sections
+
+#### 2. Update PAW Agent Detection
+**File**: `agents/PAW.agent.md` (or via workflow skill update)
+**Changes**:
+- Add detection patterns for when work shaping would be beneficial:
+  - User explicitly asks to explore/shape an idea
+  - Vague requests with exploratory language
+  - Explicit uncertainty ("I'm not sure if...", "maybe we could...")
+- When detected, load `paw-work-shaping` skill and begin interactive session
+
+**Tests**:
+- Manual verification: PAW agent detects exploratory requests
+- Manual verification: PAW agent suggests shaping for vague requests
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] Skill file exists: `skills/paw-work-shaping/SKILL.md`
+- [ ] Skill has valid YAML frontmatter with `name` and `description`
+- [ ] Skill linting passes: `./scripts/lint-agent.sh skills/paw-work-shaping/SKILL.md`
+- [ ] Overall linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Skill loads via `paw_get_skill('paw-work-shaping')`
+- [ ] User can ask PAW to "help me think through an idea" and session begins
+- [ ] Q&A progresses interactively with agent-led questions
+- [ ] Codebase research delegates to `paw-code-research` via subagent
+- [ ] Agent signals when idea is "complete enough" and offers to finish
+- [ ] User can end session early if desired
+- [ ] WorkShaping.md produced at correct location with all sections
+- [ ] Document is suitable as input to spec process or GitHub issue
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Integration Tests:
@@ -1130,6 +1198,7 @@ Remove the 9 individual implementation agent files, the old initialization promp
   - Mid-workflow, ask "do more research on X" → verify routes to appropriate research skill
   - Request revision of earlier artifact → verify PAW reasons about appropriate skill
 - **Backward compatibility**: Verify old WorkflowContext.md with `Handoff Mode: semi-auto` still works
+- **Work shaping flow**: Ask PAW to "help me think through an idea" → verify interactive Q&A session → verify codebase research delegates to subagent → verify WorkShaping.md produced
 
 ### Manual Testing Steps:
 1. Run "PAW: New PAW Workflow" command

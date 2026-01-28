@@ -47,7 +47,7 @@ SpecResearch.md artifact created at `.paw/work/<work-id>/SpecResearch.md` contai
 
 ## Research Process
 
-Read the research prompt at `prompts/01B-spec-research.prompt.md` for questions and context. For each question, search the codebase for relevant behavior, ensure sufficient context before stating behavior confidently, and document answers factually with evidence sources.
+Read `.paw/work/<work-id>/ResearchQuestions.md` for questions and context. For each question, search the codebase for relevant behavior, ensure sufficient context before stating behavior confidently, and document answers factually with evidence sources.
 
 ## SpecResearch.md Template
 

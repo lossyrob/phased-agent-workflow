@@ -84,7 +84,7 @@ Stop clarification when:
 
 - Run Clarification Phase to resolve user-intent gaps before drafting
 - Classify unknowns: assumptions (document in spec) vs research questions (generate prompt)
-- If research needed: generate prompt at `prompts/01B-spec-research.prompt.md` and STOP
+- If research needed: generate ResearchQuestions at `.paw/work/<work-id>/ResearchQuestions.md` and STOP
 - If no research needed: proceed to complete specification
 
 ### Resume After Research (SpecResearch.md exists)
@@ -119,10 +119,9 @@ Research answers "how does the system work today?" NOT "what should we build?"
 - "Should we use JWT or sessions?" → Design decision, not research
 - "What status codes for new endpoint?" → Design decision, not research
 
-## Research Prompt Format
+## ResearchQuestions Format
 
-Generate a research prompt at `prompts/01B-spec-research.prompt.md` containing:
-- YAML frontmatter with `skill: 'paw-spec-research'`
+Generate ResearchQuestions at `.paw/work/<work-id>/ResearchQuestions.md` containing:
 - Target branch and issue URL (for context)
 - Agent notes from intake that help researcher understand constraints
 - Numbered list of internal system behavior questions
@@ -240,6 +239,6 @@ Out of Scope:
 
 Report to PAW agent based on outcome:
 
-**Research needed**: Include research prompt path, question count, documented assumptions count, and indicate waiting for research.
+**Research needed**: Include ResearchQuestions path, question count, documented assumptions count, and indicate waiting for research.
 
 **Specification complete**: Include artifact path, counts (user stories, FRs, success criteria), and confirmation that quality checklist passes.

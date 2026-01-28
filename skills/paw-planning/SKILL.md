@@ -105,9 +105,14 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 - **Tests**: [Test file, key scenarios]
 
 ### Success Criteria:
+
+#### Automated Verification:
 - [ ] Tests pass: `<command>`
 - [ ] Lint/typecheck: `<command>`
-- [ ] Manual: [verification steps]
+
+#### Manual Verification:
+- [ ] [User-observable behavior]
+- [ ] [Edge cases requiring human judgment]
 
 ---
 
@@ -178,3 +183,17 @@ Report to PAW agent:
 - Number of phases and brief summary
 - Review Strategy used (PR created or committed to target)
 - Any items requiring user decision
+
+### Blocked on Open Questions
+
+If planning encounters questions that cannot be answered from existing artifacts (Spec.md, CodeResearch.md):
+
+1. **Do NOT write ImplementationPlan.md** — partial artifacts cause confusion on re-invocation
+2. **Return to PAW agent** with:
+   - Status: `blocked`
+   - List of specific open questions
+   - What research or clarification would resolve each question
+3. **PAW agent handles resolution** based on Review Policy:
+   - `never`: PAW agent conducts additional research to resolve questions autonomously
+   - `always`/`milestones`: PAW agent asks user for clarification
+4. **Re-invocation**: PAW agent calls planning again with answers provided in the delegation prompt

@@ -17,6 +17,8 @@ description: Spec research activity skill for PAW workflow. Answers factual ques
 
 ## Scope: Behavioral Documentation Only
 
+> **Note**: The file:line citation requirement from `paw-workflow` Core Principles applies to *implementation claims* in CodeResearch.md, not behavioral documentation here. SpecResearch.md documents *what* the system does, not *how* it's implemented.
+
 **What to document:**
 - Behavioral descriptions (what system does from user/component perspective)
 - Conceptual data flows (entities and their purposes)
@@ -25,10 +27,11 @@ description: Spec research activity skill for PAW workflow. Answers factual ques
 - Configuration effects (what happens when changed)
 
 **What NOT to document:**
-- File paths or line numbers (Code Research handles this)
 - Implementation details or code structure (Code Research handles this)
 - Technical architecture or design patterns (Code Research handles this)
 - Code snippets or function signatures (Code Research handles this)
+
+**Evidence references**: Use documentation-level citations (e.g., "README section X", "API docs", "config file behavior") rather than code file:line references.
 
 **Key difference from CodeResearch.md:**
 - SpecResearch.md: "The auth system requires email and password, returns session token" (behavioral)
@@ -49,7 +52,7 @@ For each question:
 1. Search codebase for relevant behavior
 2. **Read files fully**—never use limit/offset; incomplete context leads to incorrect descriptions
 3. Document the answer factually
-4. Note evidence source (e.g., "API docs", "config behavior")
+4. Note evidence source (e.g., "API docs", "config behavior", "README")
 
 ### 3. Handle Unanswerable Questions
 

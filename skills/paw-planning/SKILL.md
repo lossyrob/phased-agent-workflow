@@ -156,6 +156,18 @@ When addressing Planning PR comments, load `paw-review-response` utility for mec
 4. For each TODO: make changes → commit → push → reply
 5. Verify all comments addressed and artifacts consistent
 
+### Plan Revision
+
+When revising based on paw-plan-review feedback:
+
+**Desired end state**: ImplementationPlan.md updated to address all BLOCKING issues
+
+1. Read paw-plan-review feedback completely
+2. Address BLOCKING issues first (these prevent implementation)
+3. Address IMPROVE issues if scope permits
+4. Acknowledge NOTE items in commit message if applicable
+5. Re-run quality checklist to verify fix didn't introduce new issues
+
 ## Branching and Commits
 
 > **Reference**: Load `paw-git-operations` skill for branch naming, commit mechanics, and PR descriptions.

@@ -80,33 +80,32 @@ Stop clarification when:
 
 ### New Specification (No SpecResearch.md)
 
-1. Read issue/brief and extract constraints
-2. **Run Clarification Phase** - resolve user-intent gaps before drafting
-3. Derive prioritized user stories
-4. Classify remaining unknowns: assumptions vs research questions
-5. Generate research prompt at `prompts/01B-spec-research.prompt.md` (if research needed)
-6. **STOP** - return completion status; wait for research
+**Desired end state**: Research prompt generated OR specification complete
+
+- Run Clarification Phase to resolve user-intent gaps before drafting
+- Classify unknowns: assumptions (document in spec) vs research questions (generate prompt)
+- If research needed: generate prompt at `prompts/01B-spec-research.prompt.md` and STOP
+- If no research needed: proceed to complete specification
 
 ### Resume After Research (SpecResearch.md exists)
 
-1. Read SpecResearch.md findings
-2. Map research answers to requirements
-3. Resolve any new clarifications
-4. Assemble complete specification
+**Desired end state**: Complete specification integrating research findings
+
+- Map research answers to requirements
+- Resolve any new clarifications surfaced by research
+- Assemble complete specification
 
 ### Revise Specification
 
-When delegated to align spec with downstream artifacts (e.g., plan changes):
-1. Read current Spec.md and the artifact requiring alignment
-2. Identify specific sections needing updates
-3. Make targeted revisions maintaining traceability
-4. Update version/date in spec header
+**Desired end state**: Spec aligned with downstream artifacts, traceability maintained
+
+- Identify specific sections needing updates based on alignment requirements
+- Make targeted revisions while maintaining ID traceability
+- Update version/date in spec header
 
 ### Address PR Review Comments
 
-Load `paw-review-response` utility skill for mechanics. Focus on:
-- What spec sections to update based on feedback
-- How to maintain traceability when making changes
+Load `paw-review-response` utility skill for mechanics. Focus on what spec sections to update and how to maintain traceability.
 
 ## Research Question Guidelines
 
@@ -122,26 +121,12 @@ Research answers "how does the system work today?" NOT "what should we build?"
 
 ## Research Prompt Format
 
-```markdown
----
-agent: 'PAW-01B Spec Researcher'
----
-# Spec Research Prompt: <feature>
-Perform research to answer the following questions.
-
-Target Branch: <target_branch>
-Issue URL: <issue_url or 'none'>
-
-## Agent Notes
-<Context from intake that helps researcher understand constraints>
-
-## Questions
-1. <internal system behavior question>
-2. ...
-
-### Optional External / Context
-1. <external standard/benchmark question>
-```
+Generate a research prompt at `prompts/01B-spec-research.prompt.md` containing:
+- YAML frontmatter with `skill: 'paw-spec-research'`
+- Target branch and issue URL (for context)
+- Agent notes from intake that help researcher understand constraints
+- Numbered list of internal system behavior questions
+- Optional section for external/context questions
 
 ## Specification Template
 
@@ -251,26 +236,10 @@ Out of Scope:
 
 ## Completion Response
 
-**After generating research prompt:**
-```
-Research prompt generated at prompts/01B-spec-research.prompt.md
+## Completion Response
 
-Status: Awaiting research
-Research questions: <count>
-Assumptions documented: <count>
+Report to PAW agent based on outcome:
 
-Ready for paw-spec-research activity.
-```
+**Research needed**: Include research prompt path, question count, documented assumptions count, and indicate waiting for research.
 
-**After completing specification:**
-```
-Specification complete.
-
-Artifact: .paw/work/<work-id>/Spec.md
-User stories: <count>
-Functional requirements: <count>
-Success criteria: <count>
-
-Quality checklist: All items pass
-Ready for planning stage.
-```
+**Specification complete**: Include artifact path, counts (user stories, FRs, success criteria), and confirmation that quality checklist passes.

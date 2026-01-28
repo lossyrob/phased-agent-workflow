@@ -37,32 +37,17 @@ description: Spec research activity skill for PAW workflow. Answers factual ques
 - SpecResearch.md: "The auth system requires email and password, returns session token" (behavioral)
 - CodeResearch.md: "Auth implemented in auth/handlers.go:45 using bcrypt" (implementation)
 
-## Execution Steps
+## Desired End State
 
-### 1. Read Research Prompt
+SpecResearch.md artifact created at `.paw/work/<work-id>/SpecResearch.md` containing:
+- Summary of key findings about existing system behavior
+- Each question answered with evidence source and spec implications
+- Unanswerable questions listed as Open Unknowns with rationale
+- External questions preserved for manual completion
 
-Read the prompt at `prompts/01B-spec-research.prompt.md` to understand:
-- Questions to answer
-- Agent notes providing context
-- Target branch and issue URL
+## Research Process
 
-### 2. Research Questions
-
-For each question:
-1. Search codebase for relevant behavior
-2. **Read files fully**—never use limit/offset; incomplete context leads to incorrect descriptions
-3. Document the answer factually
-4. Note evidence source (e.g., "API docs", "config behavior", "README")
-
-### 3. Handle Unanswerable Questions
-
-If a question cannot be answered after consulting:
-- Internal specs/overview docs
-- Existing artifacts
-- Config files
-- Relevant code
-
-List it under "Open Unknowns" with rationale for why it couldn't be answered.
+Read the research prompt at `prompts/01B-spec-research.prompt.md` for questions and context. For each question, search the codebase for relevant behavior, ensure sufficient context before stating behavior confidently, and document answers factually with evidence sources.
 
 ## SpecResearch.md Template
 
@@ -146,13 +131,4 @@ Before completion:
 
 ## Completion Response
 
-```
-Spec research complete.
-
-Artifact: .paw/work/<work-id>/SpecResearch.md
-Questions answered: <count>
-Open unknowns: <count>
-External questions (manual): <count>
-
-Ready for paw-spec to integrate findings.
-```
+Report to PAW agent: artifact path, counts (questions answered, open unknowns, external questions for manual completion), and readiness for spec integration.

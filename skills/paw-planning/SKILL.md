@@ -47,28 +47,25 @@ Operate at the **C4 container/component abstraction level**:
 
 ## Documentation Phase Planning
 
-Include documentation as the **final implementation phase** when warranted.
+Include documentation as the **final implementation phase**. The documentation phase is standard for all non-trivial changes.
 
-### When to Include
+### What the Documentation Phase Produces
+
+1. **Docs.md** (always): Technical reference capturing implementation details, usage, and verification approach—serves as the "as-built" record even for internal changes
+2. **Project documentation updates** (when warranted): README, CHANGELOG, guides following project conventions
+3. **Documentation build verification**: Command from CodeResearch.md (if framework discovered)
+
+### When to Include Project Docs
 
 - Work creates user-facing features
 - APIs are added or changed
-- Existing behavior is modified in ways worth documenting
-- CodeResearch.md shows documentation infrastructure exists
+- Existing behavior is modified in ways users should know about
 
-### When to Omit
+### When to Omit Project Docs
 
-- Purely internal changes
-- Refactors without behavior changes
-- User explicitly indicates no docs needed
-
-### What to Specify
-
-When including a documentation phase:
-
-1. **Docs.md creation**: Comprehensive technical reference for the feature
-2. **Project documentation updates**: README, CHANGELOG, guides following project conventions
-3. **Documentation build verification**: Command from CodeResearch.md (if framework discovered)
+- Purely internal changes (Docs.md still required)
+- Refactors without behavior changes (Docs.md still required)
+- User explicitly indicates no project docs needed
 
 **Note**: Implementer loads `paw-docs-guidance` utility skill for templates and conventions during documentation phases.
 

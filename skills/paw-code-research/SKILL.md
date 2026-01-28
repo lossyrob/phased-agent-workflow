@@ -133,13 +133,13 @@ last_updated: [YYYY-MM-DD]
 
 ### GitHub Permalinks
 
-When on main branch or pushed commit, generate permalinks:
+When on main branch or pushed commit, permalinks enhance traceability:
 
 ```
 https://github.com/{owner}/{repo}/blob/{commit}/{file}#L{line}
 ```
 
-Use `gh repo view --json owner,name` to get repository info.
+Permalinks are optional—file:line references are the primary evidence requirement. If remote URL and commit SHA are readily available, include permalinks; otherwise proceed without them.
 
 ## Execution
 

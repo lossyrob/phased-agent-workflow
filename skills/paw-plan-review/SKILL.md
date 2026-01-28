@@ -60,9 +60,10 @@ Review implementation plans for quality, feasibility, and alignment with specifi
 
 ### Documentation Planning
 
-- [ ] Documentation phase included when warranted (user-facing changes, API changes)
-- [ ] Documentation phase omitted with reason when not needed
-- [ ] If included: references `paw-docs-guidance` and CodeResearch.md
+- [ ] Documentation phase included (standard for all non-trivial changes)
+- [ ] Docs.md specified for technical reference (always required)
+- [ ] Project docs updates included if user-facing or API changes exist
+- [ ] If project docs omitted: reason provided
 
 ## Review Process
 

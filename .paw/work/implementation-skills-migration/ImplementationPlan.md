@@ -453,6 +453,27 @@ Created four skills for the bootstrap and specification stages:
 
 **Review notes**: Verify `paw-spec` references `paw-review-response` for PR comment work (currently only mentions it in capabilities, may need explicit reference). Manual verification items remain for Phase 2B review.
 
+### Addressed Review Comments (PR #168): 2026-01-28
+
+Addressed review comments from owner and Copilot code review:
+
+1. **Rename 'feature slug' to 'work ID'** (owner comment): Updated all references across all four skills to use 'Work ID' consistently.
+
+2. **Default values with confirmation** (owner comment): Updated `paw-init` Input Parameters table to show defaults and added "Handling Missing Parameters" section explaining the confirmation flow.
+
+3. **Remove hardcoded templates** (Copilot comments): Replaced static response templates with descriptions of what information to include in:
+   - `paw-init`: Completion Response, Error Handling table removed
+   - `paw-spec`: Completion Response templates, Research Prompt Format template
+   - `paw-spec-research`: Completion Response template, Execution Steps
+   - `paw-spec-review`: Feedback Format templates, Completion Response template
+
+4. **Describe end states instead of procedures** (Copilot comments): Refactored procedural sections to describe desired end states:
+   - `paw-spec`: Execution Based on Context sections
+   - `paw-spec-research`: Converted Execution Steps to Desired End State + Research Process
+   - `paw-spec-review`: Converted Execution Steps to Desired End State + Review Process
+
+5. **Agent reference to skill reference** (Copilot comment): Changed Research Prompt Format from referencing `PAW-01B Spec Researcher` agent to `paw-spec-research` skill.
+
 ---
 
 ## Phase 2C: Planning Skills

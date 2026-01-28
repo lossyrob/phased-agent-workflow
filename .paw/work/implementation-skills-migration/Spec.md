@@ -127,6 +127,19 @@ Acceptance Scenarios:
 3. Given the plan-review skill completing, When issues are found, Then it returns structured feedback identifying specific phases or sections needing revision
 4. Given the plan-review skill completing, When plan passes review, Then the workflow proceeds to the implementation stage
 
+### User Story P8b – Planning Blocked on Open Questions
+
+Narrative: A developer's planning activity encounters questions that cannot be answered from existing artifacts. The planning skill returns blocked status without writing an artifact, and the PAW agent resolves the questions based on Review Policy before re-invoking planning.
+
+Independent Test: Planning encounters unanswerable question; returns blocked without artifact; PAW agent resolves via research (never policy) or user query (always/milestones); re-invokes planning with answer.
+
+Acceptance Scenarios:
+1. Given `paw-planning` executing with Review Policy "never", When it encounters a question not answerable from Spec.md or CodeResearch.md, Then it returns blocked status with the open question and does NOT write ImplementationPlan.md
+2. Given `paw-planning` returning blocked with Review Policy "never", When the PAW agent receives the blocked response, Then it delegates to `paw-code-research` to resolve the question autonomously
+3. Given `paw-planning` returning blocked with Review Policy "always" or "milestones", When the PAW agent receives the blocked response, Then it asks the user for clarification
+4. Given open questions resolved (via research or user), When the PAW agent re-invokes `paw-planning`, Then it includes the answers in the delegation prompt
+5. Given re-invoked `paw-planning` with answers, When planning completes successfully, Then ImplementationPlan.md is written normally
+
 ### User Story P9 – Work Shaping (Pre-Spec Ideation)
 
 Narrative: A developer has a vague idea they want to explore before committing to formal specification. They ask the PAW agent to help shape the idea, and the agent runs an interactive Q&A session that progressively clarifies the concept, explores codebase implications, and produces a structured document suitable for spec input or GitHub issue creation.
@@ -182,6 +195,7 @@ Acceptance Scenarios:
 - FR-025: The `paw-planning` skill includes documentation phase planning as part of its standard planning when documentation updates are warranted, using documentation research findings from CodeResearch.md to plan appropriate updates to Docs.md, README, CHANGELOG, and other project documentation (Stories: P1)
 - FR-026: The `paw-docs-guidance` utility skill provides documentation conventions, Docs.md template, and project documentation update patterns that the `paw-implement` skill loads conditionally when executing documentation phases (Stories: P1)
 - FR-027: The `paw-work-shaping` utility skill provides an interactive Q&A session for pre-spec ideation; it runs in the main agent context (not a subagent), delegates codebase research to `paw-code-research` via subagent, and produces WorkShaping.md containing work breakdown, edge cases, rough architecture, critical analysis, codebase fit, and risk assessment (Stories: P9)
+- FR-028: Activity skills may return `blocked` status with open questions when required information is not available in existing artifacts; when blocked, the skill does NOT write a partial artifact. The PAW agent resolves questions based on Review Policy: "never" resolves via additional research autonomously, "always"/"milestones" asks user for clarification. After resolution, the PAW agent re-invokes the activity with answers in the delegation prompt (Stories: P8b)
 
 ### Key Entities
 

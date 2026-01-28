@@ -567,20 +567,41 @@ Create the code research and planning skills for the middle workflow stage.
 ### Success Criteria (Phase 2C):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-code-research/SKILL.md`, `skills/paw-planning/SKILL.md`, `skills/paw-plan-review/SKILL.md`
-- [ ] Each skill has valid YAML frontmatter with `name` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Skills exist at `skills/paw-code-research/SKILL.md`, `skills/paw-planning/SKILL.md`, `skills/paw-plan-review/SKILL.md`
+- [x] Each skill has valid YAML frontmatter with `name` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-code-research` defines research methodology and CodeResearch.md template
-- [ ] `paw-code-research` includes Documentation System section in template (framework, docs dir, nav config, style, build command)
-- [ ] `paw-planning` references `paw-git-operations` for branch/commit mechanics
-- [ ] `paw-planning` references `paw-review-response` for PR comment work
-- [ ] `paw-planning` includes documentation phase planning guidelines (when to include, what to specify, references to paw-docs-guidance)
-- [ ] `paw-plan-review` defines clear quality criteria for plan validation
-- [ ] `paw-plan-review` returns structured feedback (not orchestration decisions)
-- [ ] ImplementationPlan.md template includes phase structure
-- [ ] Quality checklists preserved from original agents
+- [x] `paw-code-research` defines research methodology and CodeResearch.md template
+- [x] `paw-code-research` includes Documentation System section in template (framework, docs dir, nav config, style, build command)
+- [x] `paw-planning` references `paw-git-operations` for branch/commit mechanics
+- [x] `paw-planning` references `paw-review-response` for PR comment work
+- [x] `paw-planning` includes documentation phase planning guidelines (when to include, what to specify, references to paw-docs-guidance)
+- [x] `paw-plan-review` defines clear quality criteria for plan validation
+- [x] `paw-plan-review` returns structured feedback (not orchestration decisions)
+- [x] ImplementationPlan.md template includes phase structure
+- [x] Quality checklists preserved from original agents
+
+### Phase 2C Completion Notes
+
+**Completed**: 2026-01-28
+
+Created three skills for the planning workflow stage:
+
+1. **`paw-code-research`** (~5.5KB): Research methodology (Code Location, Code Analysis, Pattern Finding), CodeResearch.md template with YAML frontmatter and Documentation System section (framework, docs directory, nav config, style conventions, build command, standard files). Includes workflow mode adaptation and follow-up research handling.
+
+2. **`paw-planning`** (~7KB): Implementation planning with strategic guidelines (C4 abstraction level), ImplementationPlan.md template with phase structure. Includes documentation phase planning guidelines (when to include/omit, what to specify, references paw-docs-guidance). References paw-git-operations for branching and paw-review-response for PR comment work.
+
+3. **`paw-plan-review`** (~3KB): Plan review skill with quality criteria covering spec coverage, phase feasibility, completeness, research integration, strategic focus, and documentation planning. Returns structured PASS/FAIL feedback with categorized issues (BLOCKING, IMPROVE, NOTE).
+
+**Review notes**: Skills follow established patterns from Phase 2B. Quality checklists preserved from PAW-02A and PAW-02B agents.
+
+**Post-review updates** (2026-01-28):
+- Added "Documentarian, Not Critic" identity block to `paw-code-research` (from HumanLayer comparison)
+- Added "Be Skeptical" section to `paw-planning` with verification guidance
+- Restored Automated/Manual success criteria structure in ImplementationPlan.md template (was in original agent, lost in compression)
+- Added "Blocked on Open Questions" protocol to `paw-planning`: if blocked, return without artifact; PAW agent resolves via research (`never` policy) or user query (`always`/`milestones`)
+- Updated `paw-workflow` with blocked activity handling and planning-specific resolution loop
 
 ---
 
@@ -624,12 +645,15 @@ Create the implementation and implementation review skills for core execution.
   - Add documentation/docstrings
   - Push changes and open Phase PRs
   - Verify PR comments have been addressed
+  - Post progress updates as PR comments
 - Reference `paw-git-operations` for push and PR creation mechanics
+- **PR Update Policy**: Clarify that after a PR is opened, progress updates and change summaries should be posted as **PR comments**, not modifications to the PR body. PR body modifications require explicit user request. This prevents accidental overwrite of carefully crafted PR descriptions.
 - Note: Named `paw-impl-review` to distinguish from `paw-review-*` skills for PR review workflow
 
 **Tests**:
 - Manual verification: Skill loads correctly
 - Verify PR description templates preserved
+- Verify skill documents PR update policy (comments over body modifications)
 
 ### Success Criteria (Phase 2D):
 
@@ -645,6 +669,7 @@ Create the implementation and implementation review skills for core execution.
 - [ ] `paw-implement` documents one-phase-per-invocation pattern
 - [ ] `paw-implement` documents documentation phase execution (load paw-docs-guidance, verify docs build)
 - [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
+- [ ] `paw-impl-review` documents PR update policy (post comments, don't modify PR body)
 - [ ] PR description templates preserved from original agents
 
 ---

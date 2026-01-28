@@ -122,6 +122,12 @@ This section describes the typical greenfield implementation progression. The ag
 3. `paw-plan-review`: Review plan for feasibility, spec alignment, and completeness
 4. If review identifies issues: `paw-planning` (revise) based on feedback
 
+**Handling Blocked Planning**: If `paw-planning` returns with open questions (no artifact written):
+1. Check Review Policy:
+   - `never`: Conduct additional `paw-code-research` to resolve questions, then re-invoke `paw-planning` with answers
+   - `always`/`milestones`: Ask user for clarification, then re-invoke `paw-planning` with answers
+2. Re-invoke `paw-planning` with answers included in delegation prompt
+
 **Stage Gate**: Verify CodeResearch.md and ImplementationPlan.md exist and plan passes plan-review quality criteria before proceeding.
 
 ### Implementation Stage
@@ -254,6 +260,21 @@ All activity execution MUST occur in delegated worker sessions (subagents):
 ### Response Format
 
 Upon completion, subagents respond where the artifact was written, if artifacts were produced, otherwise a textual response (e.g., review feedback). If there were errors or the activity was not completed, the subagent MUST indicate failure with an explanation.
+
+### Blocked Activity Response
+
+Some activities may return `blocked` status with open questions instead of producing an artifact. This occurs when:
+- Required information is not available in existing artifacts
+- Questions require user clarification or additional research
+
+When an activity returns blocked:
+1. **Read the open questions** from the response
+2. **Apply Review Policy** to determine resolution approach:
+   - `never`: Resolve questions via additional research (e.g., `paw-code-research`) autonomously
+   - `always`/`milestones`: Ask user for clarification
+3. **Re-invoke the activity** with answers included in the delegation prompt
+
+The activity skill should NOT write partial artifacts when blocked—clean re-invocation is preferred.
 
 ### Skill Loading Requirement
 

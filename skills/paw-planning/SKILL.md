@@ -16,15 +16,6 @@ Create detailed implementation plans through interactive refinement. Plans descr
 - Address PR review comments (load `paw-review-response` for mechanics)
 - Plan documentation phases when documentation updates are warranted
 
-## Core Principles
-
-1. **Be Skeptical**: Question vague requirements, identify issues early, verify with code
-2. **Be Thorough**: Read all context completely, research patterns, include file:line references
-3. **Be Practical**: Incremental testable changes, consider migration/rollback, handle edge cases
-4. **No Open Questions**: Resolve all unknowns before finalizing—no TBD or placeholder content
-5. **Idempotent Updates**: Same inputs produce minimal diffs; preserve completed sections
-6. **Strategic Not Tactical**: Describe component purposes and interfaces, not implementation code
-
 ## Strategic Planning Guidelines
 
 Operate at the **C4 container/component abstraction level**:
@@ -82,100 +73,51 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 # [Feature/Task Name] Implementation Plan
 
 ## Overview
-
-[Brief description of what we're implementing and why]
+[What we're implementing and why]
 
 ## Current State Analysis
-
-[What exists now, what's missing, key constraints discovered]
+[Existing state, gaps, key constraints from research]
 
 ## Desired End State
-
-[Specification of the desired end state and how to verify it]
-
-### Key Discoveries:
-- [Important finding with file:line reference]
-- [Pattern to follow]
-- [Constraint to work within]
+[Target state specification and verification approach]
 
 ## What We're NOT Doing
-
-[Explicitly list out-of-scope items to prevent scope creep]
-
-## Implementation Approach
-
-[High-level strategy and reasoning]
+[Out-of-scope items]
 
 ## Phase Summary
-
-1. **Phase 1: [Name]** - [One-sentence objective]
-2. **Phase 2: [Name]** - [One-sentence objective]
+1. **Phase 1: [Name]** - [Objective]
+2. **Phase 2: [Name]** - [Objective]
 ...
 
 ---
 
-## Phase 1: [Descriptive Name]
-
-### Overview
-[What this phase accomplishes]
+## Phase 1: [Name]
 
 ### Changes Required:
-
-#### 1. [Component/File Group]
-**File**: `path/to/file.ext`
-**Changes**: 
-- Implement `ComponentName` following pattern in `path/to/reference.ext`
-- Add methods: `methodName()`, `propertyName`
-- Integrate with `DependencyName` at `path/to/dependency.ext`
-
-**Tests**:
-- Unit tests in `path/to/component.test.ext`
-- Test cases: [key scenarios]
-- Follow patterns in `path/to/existing.test.ext`
+- **`path/to/file.ext`**: [Component changes, pattern references]
+- **Tests**: [Test file, key scenarios]
 
 ### Success Criteria:
-
-#### Automated Verification:
-- [ ] Tests pass: `<test command>`
-- [ ] Linting passes: `<lint command>`
-- [ ] Type checking passes: `<typecheck command>`
-
-#### Manual Verification:
-- [ ] Feature works as expected when tested
-- [ ] Edge cases handled correctly
+- [ ] Tests pass: `<command>`
+- [ ] Lint/typecheck: `<command>`
+- [ ] Manual: [verification steps]
 
 ---
 
 ## Phase N: Documentation (if warranted)
 
-### Overview
-Create feature documentation and update project docs.
-
 ### Changes Required:
-
-#### 1. Feature Documentation
-**File**: `.paw/work/<work-id>/Docs.md`
-**Changes**: Create comprehensive technical reference (load `paw-docs-guidance` for template)
-
-#### 2. Project Documentation
-**Files**: Based on CodeResearch.md Documentation System findings
-**Changes**: Update README, CHANGELOG, guides following project conventions
+- **`.paw/work/<work-id>/Docs.md`**: Technical reference (load `paw-docs-guidance`)
+- **Project docs**: Per CodeResearch.md findings
 
 ### Success Criteria:
-
-#### Automated Verification:
-- [ ] Documentation builds: `<build command from CodeResearch.md>`
-- [ ] Links valid: `<link check command if available>`
-
-#### Manual Verification:
-- [ ] Documentation accurately describes feature
-- [ ] Style matches existing project docs
+- [ ] Docs build: `<command>`
+- [ ] Content accurate, style consistent
 
 ---
 
 ## References
-
-- Original Issue: [link or 'none']
+- Issue: [link or 'none']
 - Spec: `.paw/work/<work-id>/Spec.md`
 - Research: `.paw/work/<work-id>/SpecResearch.md`, `.paw/work/<work-id>/CodeResearch.md`
 ```
@@ -207,34 +149,7 @@ When addressing Planning PR comments, load `paw-review-response` utility for mec
 
 ## Branching and Commits
 
-> **Reference**: Load `paw-git-operations` skill for branch naming and staging mechanics.
-
-### PRs Strategy
-
-1. Checkout target branch, pull latest
-2. Create planning branch: `<target>_plan`
-3. Commit planning artifacts
-4. Push and create PR: `<target>_plan` → `<target>`
-
-**PR Description**:
-- Title: `[<Work Title>] Planning: <brief description>`
-- Body: Scale to plan complexity (simple → link to plan; complex → include summary)
-- Footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
-
-### Local Strategy
-
-1. Ensure on target branch
-2. Commit planning artifacts directly
-3. Push to target branch
-4. Skip intermediate PR
-
-### Selective Staging
-
-Before staging `.paw/` artifacts, check if `.paw/work/<work-id>/.gitignore` exists:
-- If exists: skip `.paw/` artifacts (tracking disabled)
-- If not: stage all changed files
-
-Always use `git add <file1> <file2>` (never `git add .`).
+> **Reference**: Load `paw-git-operations` skill for branch naming, commit mechanics, and PR descriptions.
 
 ## Quality Checklist
 

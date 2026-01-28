@@ -29,42 +29,21 @@ Document **where and how** code works with precise file:line references. Creates
 - Documentation system configuration
 
 **Do NOT**:
-- Suggest improvements or changes
+- Suggest improvements or propose fixes
 - Critique implementation choices
 - Recommend refactoring
-- Identify bugs or problems
-- Perform root cause analysis
+
+**May document neutrally** (with file:line evidence): observed constraints, limitations, or risks that inform planning decisions.
 
 **Relationship to SpecResearch.md**: This research assumes behavioral understanding from SpecResearch.md exists. CodeResearch.md adds implementation detail (where code lives, how it works) for planning.
 
-## Research Methodology
+## Research Goals
 
-### Code Location: Find WHERE
+- **Map locations**: Full paths from repo root for all relevant files (implementation, tests, config, docs, types)
+- **Trace code paths**: Entry points, data flow, transformations—documented with file:line evidence
+- **Identify patterns**: Conventions, similar implementations, reusable structures
 
-1. Search for files containing relevant keywords
-2. Check common locations (src/, lib/, pkg/, etc.)
-3. Categorize by purpose: implementation, tests, config, docs, types
-4. Return full paths from repository root
-
-### Code Analysis: Understand HOW
-
-1. Read entry points (exports, public methods, handlers)
-2. Follow code paths step by step
-3. Document with file:line references
-4. Note transformations, validations, side effects
-
-**Guidelines**:
-- Always include file:line references for claims
-- Read files thoroughly before making statements
-- Trace actual code paths—don't assume
-- Focus on "how it works" not "how it should work"
-
-### Pattern Finding: Discover CONVENTIONS
-
-1. Find similar implementations as templates
-2. Show code structure and patterns
-3. Note conventions in use
-4. Include file:line references
+**Guidelines**: Include file:line references for all claims. Read thoroughly before stating. Trace actual paths—don't assume.
 
 ## Documentation System Discovery
 
@@ -100,11 +79,6 @@ last_updated: [YYYY-MM-DD]
 ---
 
 # Research: [Topic]
-
-**Date**: [timestamp]
-**Git Commit**: [hash]
-**Branch**: [branch]
-**Repository**: [repo]
 
 ## Research Question
 

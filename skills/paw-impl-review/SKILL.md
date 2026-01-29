@@ -44,7 +44,7 @@ Act as a critical PR reviewer, not just a documentation pass:
 - Verify tests exist for new functionality
 
 **Small refactors** (do yourself): Remove unused parameters, dead code, extract duplicate utilities
-**Large refactors** (coordinate): Restructuring, major changes → request `paw-implement` redo
+**Large refactors** (coordinate): Restructuring, major changes → return `blocked` with reason "Requires Implementer rework", specific changes needed, and evidence (file:line references, test output)
 
 ## Execution Contexts
 
@@ -52,43 +52,46 @@ Act as a critical PR reviewer, not just a documentation pass:
 
 **Desired end state**: Implementation reviewed, documented, pushed, PR opened (if prs strategy)
 
-1. **Checkout implementation branch**:
-   - For prs strategy: `<target>_phase[N]`
-   - For local strategy: `<target>`
-2. **Read implementation changes fully** using `git diff` or `git log`
-3. **Compare against ImplementationPlan.md** requirements
-4. **Review for quality**:
-   - Code clarity and readability
-   - Adherence to project conventions
-   - Error handling completeness
-   - **Code necessity**: Are all parameters, functions, logic actually needed?
-   - **Unused/dead code**: Flag parameters that don't affect behavior
-   - **Code duplication**: Check for similar logic across phase changes
-5. **Run tests** to verify correctness (REQUIRED)
-6. **Make improvements**:
-   - Add docstrings to new functions/classes
-   - Add inline comments for complex logic
-   - Small refactors (remove unused parameters, simplify)
-   - **Do NOT modify core functional logic**
-7. **Commit improvements** with clear messages
-8. **Push and open PR** (see PR Operations below)
+**Required context**:
+- Implementation branch checked out (load `paw-git-operations` for branch naming)
+- Implementation changes via `git diff` or `git log`
+- ImplementationPlan.md requirements for comparison
+
+**Review focus**:
+- Code clarity, readability, project conventions
+- Code necessity: unused parameters, dead code, duplication
+- Tests exist and pass (REQUIRED)
+
+**Allowed improvements**:
+- Add docstrings to new functions/classes
+- Add inline comments for complex logic
+- Small refactors (remove unused parameters, simplify)
+- **Do NOT modify core functional logic**
+
+**Constraints**:
+- Commit improvements with clear messages
+- Push and open PR per PR Operations below
 
 ### Review Comment Verification
 
-When verifying `paw-implement` addressed PR comments:
-
 **Desired end state**: Comments verified, commits pushed, replies posted
 
-1. **Verify correct branch** (phase branch for phase PRs, target for final PRs)
-2. **Verify Implementer's commits are present** locally (not yet pushed)
-3. **Read all PR comments and threads**
-4. **Review Implementer's commits** against the comments
-5. **Run tests** (REQUIRED):
-   - If tests fail, fix them!
-   - If functional code changed but tests not updated, this is a BLOCKER
-6. **Add improvements if needed** (documentation, polish)
-7. **Push all commits** (Implementer's + yours)
-8. **Reply to comments** (see Reply Format below)
+**Required context**:
+- Correct branch (phase branch for phase PRs, target for final PRs)
+- Implementer's commits present locally (not yet pushed)
+- All PR comments and threads
+
+**Verification**:
+- Review Implementer's commits against the comments
+- Run tests (REQUIRED):
+  - If tests fail due to reviewer changes → fix them
+  - If tests fail due to Implementer's code → return `blocked`
+  - If functional code changed but tests not updated → BLOCKER
+
+**Constraints**:
+- Add improvements if needed (documentation, polish)
+- Push all commits (Implementer's + yours)
+- Reply to comments per Reply Format below
 
 ## PR Operations
 
@@ -161,32 +164,21 @@ Before making any edit:
 ### Initial Phase Review
 
 - [ ] All tests pass
-- [ ] New functionality has corresponding tests
-- [ ] Reviewed for code necessity (no unused parameters, dead code)
-- [ ] Checked for duplication across phase changes
-- [ ] Questioned design decisions
-- [ ] All public functions/classes have docstrings
-- [ ] Complex logic has explanatory comments
-- [ ] Commit messages clearly describe changes
+- [ ] Reviewed for code necessity and duplication
+- [ ] Docstrings added to public functions/classes
 - [ ] No modifications to core functional logic
-- [ ] Branch pushed to remote
-- [ ] Phase PR opened (prs strategy only)
-- [ ] PR description references ImplementationPlan.md phase
-- [ ] No unnecessary or no-op documentation commits
+- [ ] Branch pushed, PR opened (prs strategy)
 
 ### Review Comment Verification
 
 - [ ] All tests pass
-- [ ] If functional code changed, tests were updated
 - [ ] Implementer's commits verified against comments
-- [ ] Any needed improvements committed
 - [ ] All commits pushed
 - [ ] Replies posted to each addressed comment
-- [ ] For final PRs: Changes verified against spec acceptance criteria
 
 ## Completion Response
 
-Report to PAW agent:
+Report back:
 - Phase reviewed and PR status
 - PR URL (if prs strategy) or push confirmation
 - Verification results (tests, lint)

@@ -45,22 +45,11 @@ Plans are carefully designed, but reality can be messy:
 
 When things don't match the plan exactly, think about why and communicate clearly. The plan is your guide, but your judgment matters too.
 
-## Blocking on Uncertainties
+## Blocking Behavior
 
-When the plan or codebase conflicts with reality or leaves critical gaps:
+When plan conflicts with codebase reality or leaves critical gaps: **STOP immediately**. No TODO comments, placeholders, or speculative code. Return status `blocked` with specific blockers and what would resolve each.
 
-- **STOP immediately** — do not guess or partially complete work
-- DO NOT leave TODO comments, placeholder code, or speculative logic
-- DO NOT proceed if prerequisites are missing or failing
-
-**Common blocking situations:**
-- Plan references files, modules, or APIs that don't exist or differ materially
-- Dependencies unavailable, incompatible, or failing
-- Success criteria cannot be executed with current tooling
-- Plan, spec, and repository instructions contradict
-- External services, credentials, or feature flags unavailable
-
-**When blocked**: Return to PAW agent with status `blocked`, specific blockers, and what would resolve each.
+**Exception**: If delegation explicitly allows degraded verification for non-critical checks (e.g., flaky tests, optional linters), report as `⚠️ warning` and proceed.
 
 ## Execution Contexts
 
@@ -68,89 +57,48 @@ When the plan or codebase conflicts with reality or leaves critical gaps:
 
 **Desired end state**: Phase implemented, tests passing, changes committed locally on correct branch
 
-1. Read ImplementationPlan.md completely to identify current phase
-2. Read CodeResearch.md for codebase patterns and conventions
-3. Handle branching per Review Strategy (load `paw-git-operations`)
-4. Implement phase changes
-5. Run success criteria checks (tests, lint)
-6. Fix any issues before proceeding
-7. Update ImplementationPlan.md with phase status and notes
-8. Check off completed items in plan
-9. Commit locally with descriptive message
-10. **DO NOT push** — `paw-impl-review` handles that
+**Required context**:
+- Current phase requirements from ImplementationPlan.md
+- Codebase conventions and verification commands from CodeResearch.md
+- Branch state per Review Strategy (load `paw-git-operations`)
+
+**Constraints**:
+- All verification commands from CodeResearch.md must pass before committing
+- Update ImplementationPlan.md with phase status and check off completed items
+- Commit locally with descriptive message
+- **DO NOT push** — `paw-impl-review` handles that
 
 ### Documentation Phase Execution
 
-When executing a documentation phase (as specified in ImplementationPlan.md):
-
 **Desired end state**: Docs.md created/updated, project docs updated (if warranted), docs build passing
 
-1. Load `paw-docs-guidance` utility skill for templates and conventions
-2. Create or update Docs.md using template
-3. Update project documentation (README, CHANGELOG, guides) if warranted
-4. Verify docs build correctly using command from CodeResearch.md (if framework discovered)
-5. Commit documentation changes
-6. **DO NOT push** — `paw-impl-review` handles that
+**Required context**:
+- Load `paw-docs-guidance` utility skill for templates and conventions
+- Docs build command from CodeResearch.md (if framework discovered)
 
-Documentation phases are executed like any other phase—same branch strategy, same review flow.
+**Constraints**:
+- Use same branch strategy and review flow as code phases
+- Verify docs build passes before committing
+- **DO NOT push** — `paw-impl-review` handles that
 
 ### PR Review Comment Response
 
-When addressing PR review comments:
-
 **Desired end state**: All review comments addressed with focused commits, ready for verification
 
-1. **Determine PR type** from target branch:
-   - Targets feature branch → Phase PR (work on phase branch)
-   - Targets `main` → Final PR (work on target branch, load all phase contexts)
-2. **Update local branch**: Pull latest to include any reviewer commits
-3. **Load `paw-review-response`** for mechanics
-4. **Determine which comments need work**: Read all comment threads, skip already-addressed
-5. **Group comments into commit groups**: Related comments addressed together
-6. **Address groups sequentially**: For each group:
-   - Make changes
-   - Stage selectively: `git add <file1> <file2>`
-   - Verify: `git diff --cached`
-   - Commit with message referencing comment(s)
-   - Mark group complete
-7. **DO NOT push** — `paw-impl-review` verifies and pushes
+**Required context**:
+- PR metadata (URL or number) from delegation—if absent, return `blocked`
+- PR type determined from PR description/metadata (Phase PR vs Final PR)
+- Load `paw-review-response` for commit/reply mechanics
+- Pull latest to include any reviewer commits
 
-**CRITICAL**: Complete each group fully (changes + commit) before starting the next.
+**Constraints**:
+- One focused commit per comment group (related comments addressed together)
+- Complete each group fully (changes + commit) before starting next
+- **DO NOT push** — `paw-impl-review` verifies and pushes
 
 ## Branching and Commits
 
 > **Reference**: Load `paw-git-operations` skill for branch naming, commit mechanics, and selective staging.
-
-### Branch Verification
-
-Before every commit:
-- Verify current branch: `git branch --show-current`
-- For prs strategy: Must be on `<target>_phase[N]`
-- For local strategy: Must be on `<target>`
-- If on wrong branch, STOP and switch immediately
-
-### Selective Staging
-
-- Use `git add <file1> <file2>` for specific files
-- NEVER use `git add .` or `git add -A`
-- Verify with `git diff --cached` before commit
-- Check `.paw/work/<work-id>/.gitignore` before staging `.paw/` artifacts
-
-## Workflow Mode Handling
-
-### Full Mode
-- Standard multi-phase implementation
-- Implement one phase at a time
-- Each phase has its own phase branch (prs strategy) or commits to target (local strategy)
-
-### Minimal Mode
-- Single-phase implementation
-- Implement the complete phase
-- Uses local strategy (no phase branches)
-
-### Custom Mode
-- Follow phase structure from Custom Workflow Instructions
-- Review Strategy determines branching
 
 ## Resuming Work
 
@@ -171,27 +119,20 @@ If the plan has existing checkmarks:
 
 ### Initial Phase Implementation
 
-- [ ] All automated success criteria in active phase are green
-- [ ] Changes committed locally with clear messages
-- [ ] ImplementationPlan.md updated with phase status and notes
-- [ ] Phase checkbox marked complete
-- [ ] Commits contain only related changes
-- [ ] On correct branch (verify with `git branch --show-current`)
-- [ ] **Branch NOT pushed**
+- [ ] All automated success criteria green
+- [ ] ImplementationPlan.md updated with phase status
+- [ ] Changes committed locally (NOT pushed)
 
 ### PR Review Comment Response
 
 - [ ] All automated checks passing
 - [ ] Each comment group addressed with focused commit
-- [ ] Commit messages reference comments addressed
 - [ ] ImplementationPlan.md updated with "Addressed Review Comments:" section
-- [ ] Commits contain only comment-related changes
 - [ ] All commits local (NOT pushed)
-- [ ] On correct branch
 
 ## Completion Response
 
-Report to PAW agent:
+Report back:
 - Phase(s) completed and brief summary
 - Verification results (tests, lint)
 - Branch name and commit hash(es)

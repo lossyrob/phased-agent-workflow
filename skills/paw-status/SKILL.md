@@ -76,7 +76,6 @@ Map state to guidance:
 | CodeResearch.md exists, no Plan | "Create plan: `plan`" |
 | Plan exists, no phase work | "Begin Phase 1: `implement`" |
 | Phase N complete, Phase N+1 exists | "Continue Phase N+1: `implement`" |
-| All phases complete, no Docs.md + full | "Write docs: `docs`" |
 | All complete | "Create final PR: `pr`" |
 
 ## Workflow Mode Behavior
@@ -86,20 +85,10 @@ Expect: Spec → Spec Research (optional) → Code Research → Plan → Impleme
 
 ### Minimal Mode
 Expect: Code Research → Plan → Implementation (single phase) → Final PR
-Skips: Spec, Spec Research, separate Docs stage (local strategy enforced)
+Skips: Spec, Spec Research (local strategy enforced)
 
 ### Custom Mode
 Inspect disk to discover actual stages per Custom Workflow Instructions.
-
-## Common Errors & Resolutions
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| "Cannot start Implementation: ImplementationPlan.md not found" | Skipped planning | Run `plan` first |
-| "Phase N not found" | Invalid phase number | Check plan phases with `status` |
-| "Auto mode requires local strategy" | Incompatible settings | Use local strategy or semi-auto mode |
-| "Branch is N commits behind main" | Divergence | User decision: merge, rebase, or continue |
-| "Detached HEAD" | Git state issue | Checkout branch: `git checkout <branch>` |
 
 ## Multi-Work Management
 
@@ -133,6 +122,8 @@ When asked "What does <stage> do?", provide:
 3. Expected outputs
 4. Typical duration
 5. Command to run
+
+For implementation details (e.g., two-agent pattern, delegation mechanics), reference `paw-workflow` skill.
 
 For "How do I start?", explain:
 - `PAW: New PAW Workflow` command

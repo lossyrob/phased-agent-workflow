@@ -81,23 +81,7 @@ Check if workflow artifacts are tracked in git:
 
 ### Simple Changes
 
-For bug fixes, small features, straightforward implementations:
-
-```markdown
-# [<Work Title>] <description>
-
-Closes <Issue URL>
-
-Brief summary of what changed and why.
-
-**Changes**: 
-- Key change 1
-- Key change 2
-
-**Testing**: All tests passing.
-
-🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
-```
+For bug fixes, small features: title with `[Work Title]` prefix, close issue, brief summary, changes list, testing status, PAW footer.
 
 ### Complex Changes
 
@@ -165,3 +149,5 @@ Report back:
 - Pre-flight validation summary
 - Items for reviewer attention
 - Merge readiness assessment
+
+Next steps: Address PR feedback via `address comments`, then merge to complete workflow.

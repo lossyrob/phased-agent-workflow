@@ -289,6 +289,7 @@ The orchestrating agent constructs delegation prompts that include:
 - Skill to load
 - Activity goal (what to accomplish)
 - Relevant artifact paths
+- Workflow configuration (Work ID, Workflow Mode, Review Strategy, Target Branch, Issue URL) as needed by the activity
 - User context (only when relevant to the activity)
 
 ## Intelligent Routing Guidance

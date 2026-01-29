@@ -64,13 +64,6 @@ The workflow skill provides default flow guidance, but requests can be non-linea
 
 Construct meaningful delegation prompts that include the user's context and specific request.
 
-### PR Comment Response
-
-When user provides a PR with review comments:
-- Planning PR → delegate to `paw-planning`
-- Phase PR → delegate to `paw-implement` (makes changes), then `paw-impl-review` (verifies/pushes)
-- Final PR → delegate to `paw-implement` (makes changes), then `paw-impl-review` (verifies/pushes)
-
 ### Status and Help
 
 When user asks for status, help, or workflow guidance, delegate to `paw-status`.

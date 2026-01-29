@@ -68,6 +68,19 @@ Research documentation infrastructure as a standard component. Capture in CodeRe
 
 **Why**: Planning skill uses this to determine if documentation phases are warranted and how to structure them.
 
+## Verification Commands Discovery
+
+Research project verification commands. Capture in CodeResearch.md:
+
+| Aspect | What to Find |
+|--------|--------------|
+| Test Command | `npm test`, `make test`, `pytest`, etc. |
+| Lint Command | `npm run lint`, `make lint`, `eslint`, etc. |
+| Build Command | `npm run build`, `make build`, `tsc`, etc. |
+| Type Check | `npm run typecheck`, `tsc --noEmit`, `mypy`, etc. |
+
+**Why**: Implementation skill uses these to verify changes before committing.
+
 ## CodeResearch.md Artifact
 
 Save to: `.paw/work/<work-id>/CodeResearch.md`
@@ -104,6 +117,13 @@ last_updated: [YYYY-MM-DD]
 - **Style Conventions**: [key observations]
 - **Build Command**: [command or N/A]
 - **Standard Files**: [README, CHANGELOG locations]
+
+## Verification Commands
+
+- **Test Command**: [e.g., `npm test`, `make test`, `pytest`]
+- **Lint Command**: [e.g., `npm run lint`, `make lint`]
+- **Build Command**: [e.g., `npm run build`, `make build`]
+- **Type Check**: [e.g., `npm run typecheck`, `tsc --noEmit`]
 
 ## Detailed Findings
 

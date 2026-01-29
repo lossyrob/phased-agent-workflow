@@ -658,19 +658,38 @@ Create the implementation and implementation review skills for core execution.
 ### Success Criteria (Phase 2D):
 
 #### Automated Verification:
-- [ ] Skills exist at `skills/paw-implement/SKILL.md`, `skills/paw-impl-review/SKILL.md`
-- [ ] Each skill has valid YAML frontmatter with `name` and `description`
-- [ ] Linting passes: `npm run lint`
+- [x] Skills exist at `skills/paw-implement/SKILL.md`, `skills/paw-impl-review/SKILL.md`
+- [x] Each skill has valid YAML frontmatter with `name` and `description`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-implement` references `paw-git-operations` for branch/staging mechanics
-- [ ] `paw-implement` references `paw-review-response` for PR comment work
-- [ ] `paw-implement` references `paw-docs-guidance` for documentation phase execution
-- [ ] `paw-implement` documents one-phase-per-invocation pattern
-- [ ] `paw-implement` documents documentation phase execution (load paw-docs-guidance, verify docs build)
-- [ ] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
-- [ ] `paw-impl-review` documents PR update policy (post comments, don't modify PR body)
-- [ ] PR description templates preserved from original agents
+- [x] `paw-implement` references `paw-git-operations` for branch/staging mechanics
+- [x] `paw-implement` references `paw-review-response` for PR comment work
+- [x] `paw-implement` references `paw-docs-guidance` for documentation phase execution
+- [x] `paw-implement` documents one-phase-per-invocation pattern
+- [x] `paw-implement` documents documentation phase execution (load paw-docs-guidance, verify docs build)
+- [x] `paw-impl-review` references `paw-git-operations` for push/PR mechanics
+- [x] `paw-impl-review` documents PR update policy (post comments, don't modify PR body)
+- [x] PR description templates preserved from original agents
+
+### Phase 2D Completion Notes
+
+**Completed**: 2026-01-28
+
+Created two skills for implementation execution:
+
+1. **`paw-implement`** (~5.3KB): Implementation activity skill with execution contexts for initial phase development, documentation phases, and PR review comment response. Includes implementation philosophy, blocking behavior, workflow mode handling, artifact update discipline. References `paw-git-operations` for branching, `paw-review-response` for PR comments, `paw-docs-guidance` for documentation phases.
+
+2. **`paw-impl-review`** (~4.8KB): Implementation review skill with execution contexts for initial phase review and review comment verification. Includes review philosophy (act as critical PR reviewer), scope boundaries distinguishing reviewer vs implementer work, PR operations with description scaling, PR update policy (comments over body modifications). References `paw-git-operations` for push/PR mechanics.
+
+**Key patterns preserved from source agents:**
+- Forward Momentum vs Maintainability role separation
+- One-phase-per-invocation pattern for `paw-implement`
+- Blocking on uncertainties with structured reporting
+- Quality checklists for both initial work and PR comment handling
+- Decision gate for determining scope boundaries
+
+**Review notes**: Skills follow patterns established in Phase 2B and 2C. Manual verification confirms all references to utility skills are in place.
 
 ---
 

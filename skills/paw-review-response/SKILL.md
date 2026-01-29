@@ -44,10 +44,9 @@ Work through TODOs one at a time. For each:
 3. **Stage selectively**: `git add <file1> <file2>` (never `git add .`)
 4. **Verify staged changes**: `git diff --cached`
 5. **Commit** with message referencing the comment
-6. **Push** the commit
-7. **Reply** to the comment (see Reply Format below)
+6. **Push/Reply timing**: Determined by calling activity skill—some push immediately per-comment, others batch commits and defer push to a verification step
 
-**CRITICAL**: Complete each TODO fully (changes + commit + push + reply) before starting the next.
+**CRITICAL**: Complete each TODO's changes and commit before starting the next. Push and reply timing per activity skill instructions.
 
 ### 4. Verify Completion
 

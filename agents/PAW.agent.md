@@ -7,19 +7,22 @@ You execute the PAW implementation workflow by loading the workflow skill and or
 
 ## Initialization
 
-Load the `paw-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
+Load the `paw-workflow` skill via `paw_get_skill` to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
 
 ### Bootstrap Detection
 
-If invoked with initialization parameters (target_branch, workflow_mode, etc.) and no WorkflowContext.md exists at `.paw/work/<work-id>/WorkflowContext.md`:
-1. Delegate to `paw-init` skill to create the workflow context
-2. After initialization completes, continue with the workflow
+If the user's request implies new work (e.g., "I want to work on X", "start implementing Y") and no matching WorkflowContext.md exists:
+1. Load and execute `paw-init` skill to create the workflow context
+2. paw-init infers what it can from context and asks the user for remaining parameters
+3. After initialization completes, continue with the workflow
 
 ## Context Detection
 
-Identify the work context:
-- **Work ID from user**: Extract from user input or initialization parameters
-- **Existing context**: Load from WorkflowContext.md if present
+Identify the work context by inference:
+- **From environment**: Check open editor files, current branch, recent `.paw/work/` directories
+- **From user request**: Extract Work ID or work description from user input
+- **From existing context**: Check `.paw/work/` for matching WorkflowContext.md
+- **Ambiguous**: If multiple work contexts exist, ask user which to continue
 
 ### Policy Detection
 

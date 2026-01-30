@@ -676,9 +676,11 @@ Target Branch: main`;
       assert.strictEqual(parseReviewPolicy(content), 'always');
     });
 
-    test('returns milestones for invalid Review Policy values', () => {
-      assert.strictEqual(parseReviewPolicy('Review Policy: invalid'), 'milestones');
-      assert.strictEqual(parseReviewPolicy('Review Policy: '), 'milestones');
+    test('falls back to Handoff Mode default for invalid Review Policy values', () => {
+      // Invalid Review Policy doesn't match regex, falls back to Handoff Mode parsing
+      // No Handoff Mode present → default 'manual' → maps to 'always'
+      assert.strictEqual(parseReviewPolicy('Review Policy: invalid'), 'always');
+      assert.strictEqual(parseReviewPolicy('Review Policy: '), 'always');
     });
   });
 

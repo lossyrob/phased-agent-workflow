@@ -54,10 +54,32 @@ const FEATURE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 export type HandoffMode = "manual" | "semi-auto" | "auto";
 
 /**
+ * Valid Review Policy values for artifact-level pause decisions.
+ */
+export type ReviewPolicy = "always" | "milestones" | "never";
+
+/**
+ * Valid Session Policy values for context management.
+ */
+export type SessionPolicy = "per-stage" | "continuous";
+
+/**
  * Pattern to extract Handoff Mode from WorkflowContext.md content.
  * Matches "Handoff Mode: <mode>" on its own line, case-insensitive.
  */
 const HANDOFF_MODE_PATTERN = /^Handoff Mode:\s*(manual|semi-auto|auto)\s*$/im;
+
+/**
+ * Pattern to extract Review Policy from WorkflowContext.md content.
+ * Matches "Review Policy: <policy>" on its own line, case-insensitive.
+ */
+const REVIEW_POLICY_PATTERN = /^Review Policy:\s*(always|milestones|never)\s*$/im;
+
+/**
+ * Pattern to extract Session Policy from WorkflowContext.md content.
+ * Matches "Session Policy: <policy>" on its own line, case-insensitive.
+ */
+const SESSION_POLICY_PATTERN = /^Session Policy:\s*(per-stage|continuous)\s*$/im;
 
 /**
  * Parameters for retrieving PAW context information.
@@ -135,6 +157,70 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
   }
 
   return "manual";
+}
+
+/**
+ * Maps legacy Handoff Mode values to the new Review Policy values.
+ * Used for backward compatibility when WorkflowContext.md has Handoff Mode but not Review Policy.
+ * 
+ * @param handoffMode - The handoff mode value
+ * @returns Corresponding Review Policy value
+ */
+function mapHandoffModeToReviewPolicy(handoffMode: HandoffMode): ReviewPolicy {
+  switch (handoffMode) {
+    case 'manual':
+      return 'always';
+    case 'semi-auto':
+      return 'milestones';
+    case 'auto':
+      return 'never';
+    default:
+      return 'milestones';
+  }
+}
+
+/**
+ * Parses the Review Policy from WorkflowContext.md content.
+ * First looks for explicit "Review Policy: <policy>" line.
+ * If not found, falls back to mapping from legacy Handoff Mode for backward compatibility.
+ *
+ * @param workflowContent - Raw WorkflowContext.md content
+ * @returns Parsed Review Policy or mapped value from Handoff Mode
+ */
+export function parseReviewPolicy(workflowContent: string): ReviewPolicy {
+  if (!workflowContent) {
+    return "milestones";
+  }
+
+  // First try to find explicit Review Policy
+  const match = workflowContent.match(REVIEW_POLICY_PATTERN);
+  if (match) {
+    return match[1].toLowerCase() as ReviewPolicy;
+  }
+
+  // Backward compatibility: map from Handoff Mode if present
+  const handoffMode = parseHandoffMode(workflowContent);
+  return mapHandoffModeToReviewPolicy(handoffMode);
+}
+
+/**
+ * Parses the Session Policy from WorkflowContext.md content.
+ * Looks for "Session Policy: <policy>" line and extracts the policy value.
+ *
+ * @param workflowContent - Raw WorkflowContext.md content
+ * @returns Parsed Session Policy or 'per-stage' as default
+ */
+export function parseSessionPolicy(workflowContent: string): SessionPolicy {
+  if (!workflowContent) {
+    return "per-stage";
+  }
+
+  const match = workflowContent.match(SESSION_POLICY_PATTERN);
+  if (match) {
+    return match[1].toLowerCase() as SessionPolicy;
+  }
+
+  return "per-stage";
 }
 
 /**
@@ -401,8 +487,13 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
  * - Workspace info wrapped in `<workspace_info>` with workspaceFolderCount and isMultiRootWorkspace
+ * - Parsed policies wrapped in `<parsed_policies>` with review_policy and session_policy
  * - Mode-specific handoff instructions wrapped in `<handoff_instructions>` (at END for recency)
  * - `<context status="empty" />` when no sections are available
+ * 
+ * Policy parsing includes backward compatibility:
+ * - review_policy: Uses explicit "Review Policy" field, or maps from legacy "Handoff Mode"
+ * - session_policy: Uses explicit "Session Policy" field, defaults to "per-stage"
  * 
  * @param result - Context result to format
  * @returns Tagged Markdown text ready for agent consumption
@@ -451,8 +542,18 @@ export function formatContextResponse(result: ContextResult): string {
   workspaceInfoParts.push('</workspace_info>');
   sections.push(workspaceInfoParts.join('\n'));
 
+  // Parse and add policy values for PAW agent consumption
+  const workflowContent = result.workflow_context.content || '';
+  const reviewPolicy = parseReviewPolicy(workflowContent);
+  const sessionPolicy = parseSessionPolicy(workflowContent);
+  const policyParts: string[] = ['<parsed_policies>'];
+  policyParts.push(`review_policy: ${reviewPolicy}`);
+  policyParts.push(`session_policy: ${sessionPolicy}`);
+  policyParts.push('</parsed_policies>');
+  sections.push(policyParts.join('\n'));
+
   // Parse handoff mode and add instructions at END for recency bias
-  const handoffMode = parseHandoffMode(result.workflow_context.content || '');
+  const handoffMode = parseHandoffMode(workflowContent);
   const handoffInstructions = getHandoffInstructions(handoffMode);
   sections.push(`<handoff_instructions>\n${handoffInstructions}\n</handoff_instructions>`);
 

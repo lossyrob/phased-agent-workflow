@@ -12,16 +12,16 @@ npm run lint
 
 ## Agent Development
 
-When creating or modifying agent files in `agents/`, ALWAYS run the agent linter script:
+When creating or modifying agent files in `agents/`, ALWAYS run the prompting linter script:
 
 ```bash
-./scripts/lint-agent.sh agents/<filename>.agent.md
+./scripts/lint-prompting.sh agents/<filename>.agent.md
 ```
 
-When creating or modifying skill files in `skills/`, ALWAYS run the skill linter script:
+When creating or modifying skill files in `skills/`, ALWAYS run the prompting linter script:
 
 ```bash
-./scripts/lint-agent.sh skills/<skillname>/SKILL.md
+./scripts/lint-prompting.sh skills/<skillname>/SKILL.md
 ```
 
 To lint all agents and skills at once:

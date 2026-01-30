@@ -209,9 +209,9 @@
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src --ext ts",
     "package": "vsce package",
-    "lint:agent": "./scripts/lint-agent.sh",
-    "lint:agent:all": "./scripts/lint-agent.sh --all",
-    "lint:skills": "./scripts/lint-agent.sh --skills",
+    "lint:agent": "./scripts/lint-prompting.sh",
+    "lint:agent:all": "./scripts/lint-prompting.sh --all",
+    "lint:skills": "./scripts/lint-prompting.sh --skills",
     "build-vsix": "./scripts/build-vsix.sh",
     "count-tokens": "node ./scripts/count-tokens.js"
   },

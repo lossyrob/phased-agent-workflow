@@ -19,19 +19,19 @@ npm install
 
 ## Development Scripts
 
-### Agent Linting
+### Prompting Linting
 
-Agent files should be kept within reasonable token limits to ensure they work effectively with language models.
+Agent and skill files should be kept within reasonable token limits to ensure they work effectively with language models.
 
-**Script**: `scripts/lint-agent.sh`
+**Script**: `scripts/lint-prompting.sh`
 
 **Usage**:
 ```bash
 # Lint all agent files in agents/
-./scripts/lint-agent.sh
+./scripts/lint-prompting.sh
 
 # Lint a specific agent file
-./scripts/lint-agent.sh agents/PAW-01A.agent.md
+./scripts/lint-prompting.sh agents/PAW-01A.agent.md
 ```
 
 **npm Scripts**:

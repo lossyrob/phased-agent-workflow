@@ -1,8 +1,8 @@
 #!/bin/bash
-# Lint agent and skill files for token size
-# Usage: ./scripts/lint-agent.sh [file.agent.md | file/SKILL.md]
-#        ./scripts/lint-agent.sh --skills     # Lint only skills
-#        ./scripts/lint-agent.sh --all        # Lint both agents and skills
+# Lint agent, skill, and custom agent files for token size
+# Usage: ./scripts/lint-prompting.sh [file.agent.md | file/SKILL.md]
+#        ./scripts/lint-prompting.sh --skills     # Lint only skills
+#        ./scripts/lint-prompting.sh --all        # Lint both agents and skills
 #        If no file is provided, lints all agents in agents/
 
 set -euo pipefail

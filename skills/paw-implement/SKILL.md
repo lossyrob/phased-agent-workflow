@@ -9,6 +9,15 @@ Execute implementation plan phases by making code changes, running verification,
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.
 
+## Critical: Preserve Existing Changes
+
+**DO NOT modify, revert, or stage existing uncommitted changes** in the working directory. The user may have in-progress work they haven't committed yet.
+
+- Before making changes, check `git status` to understand current state
+- Only stage files YOU modified for the current phase
+- Never use `git add .` or `git add -A` (can capture unrelated changes)
+- If existing uncommitted changes conflict with plan work, report as `blocked` and ask user how to proceed
+
 ## Capabilities
 
 - Execute one or more plan phases based on delegation instructions

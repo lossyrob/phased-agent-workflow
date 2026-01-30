@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 
 /**
  * Valid PAW agent names that can be targeted for handoff.
- * Note: "PAW" is the new unified orchestrator agent; individual agent names
- * are retained for backward compatibility during the migration period.
+ * Note: "PAW" is the unified orchestrator agent; individual stage agent names
+ * are retained for backward compatibility during migration.
  */
 export type AgentName =
   | "PAW"

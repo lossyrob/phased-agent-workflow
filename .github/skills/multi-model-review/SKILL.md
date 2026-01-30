@@ -109,7 +109,7 @@ Write in markdown format suitable for saving to a file.
 
 **For each model review** (start with most comprehensive, typically Opus):
 
-Present each finding to user:
+Present each finding to user in chat, not a selector:
 ```
 ## Finding #N: [Title]
 
@@ -120,6 +120,9 @@ Present each finding to user:
 
 **Proposed**:
 [Show proposed change]
+
+**My Opinion**:
+- [Rationale for applying, skipping, or discussing]
 
 ---
 

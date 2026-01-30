@@ -11,6 +11,8 @@ import {
   loadWorkflowContext,
   loadCustomInstructions,
   parseHandoffMode,
+  parseReviewPolicy,
+  parseSessionPolicy,
   getHandoffInstructions,
 } from '../../tools/contextTool';
 
@@ -175,6 +177,64 @@ suite('Context Tool', () => {
 
     assert.ok(multiRootResponse.includes('workspaceFolderCount: 3'));
     assert.ok(multiRootResponse.includes('isMultiRootWorkspace: true'));
+  });
+
+  test('formatContextResponse includes parsed_policies section', () => {
+    const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+    const response = formatContextResponse({
+      workspace_instructions: status(''),
+      user_instructions: status(''),
+      workflow_context: status('Review Policy: always\nSession Policy: continuous'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+
+    assert.ok(response.includes('<parsed_policies>'));
+    assert.ok(response.includes('review_policy: always'));
+    assert.ok(response.includes('session_policy: continuous'));
+    assert.ok(response.includes('</parsed_policies>'));
+  });
+
+  test('formatContextResponse maps legacy Handoff Mode to review_policy', () => {
+    const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+    // When only Handoff Mode is present, review_policy should be mapped
+    const manualResponse = formatContextResponse({
+      workspace_instructions: status(''),
+      user_instructions: status(''),
+      workflow_context: status('Handoff Mode: manual'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+    assert.ok(manualResponse.includes('review_policy: always'));
+
+    const semiAutoResponse = formatContextResponse({
+      workspace_instructions: status(''),
+      user_instructions: status(''),
+      workflow_context: status('Handoff Mode: semi-auto'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+    assert.ok(semiAutoResponse.includes('review_policy: milestones'));
+
+    const autoResponse = formatContextResponse({
+      workspace_instructions: status(''),
+      user_instructions: status(''),
+      workflow_context: status('Handoff Mode: auto'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+    assert.ok(autoResponse.includes('review_policy: never'));
+  });
+
+  test('formatContextResponse defaults session_policy to per-stage', () => {
+    const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+    const response = formatContextResponse({
+      workspace_instructions: status(''),
+      user_instructions: status(''),
+      workflow_context: status('Work Title: Demo'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+
+    assert.ok(response.includes('session_policy: per-stage'));
   });
 
   test('formatContextResponse reports empty context when no sections exist', () => {
@@ -576,6 +636,86 @@ Remote: origin`;
     test('handles extra whitespace around mode value', () => {
       assert.strictEqual(parseHandoffMode('Handoff Mode:   auto   '), 'auto');
       assert.strictEqual(parseHandoffMode('Handoff Mode:\tmanual'), 'manual');
+    });
+  });
+
+  suite('parseReviewPolicy', () => {
+    test('returns milestones as default for empty content', () => {
+      assert.strictEqual(parseReviewPolicy(''), 'milestones');
+    });
+
+    test('parses explicit Review Policy values', () => {
+      assert.strictEqual(parseReviewPolicy('Review Policy: always'), 'always');
+      assert.strictEqual(parseReviewPolicy('Review Policy: milestones'), 'milestones');
+      assert.strictEqual(parseReviewPolicy('Review Policy: never'), 'never');
+    });
+
+    test('is case insensitive for field name and value', () => {
+      assert.strictEqual(parseReviewPolicy('Review Policy: ALWAYS'), 'always');
+      assert.strictEqual(parseReviewPolicy('review policy: MILESTONES'), 'milestones');
+      assert.strictEqual(parseReviewPolicy('REVIEW POLICY: never'), 'never');
+    });
+
+    test('falls back to mapping from Handoff Mode when Review Policy missing', () => {
+      assert.strictEqual(parseReviewPolicy('Handoff Mode: manual'), 'always');
+      assert.strictEqual(parseReviewPolicy('Handoff Mode: semi-auto'), 'milestones');
+      assert.strictEqual(parseReviewPolicy('Handoff Mode: auto'), 'never');
+    });
+
+    test('prefers explicit Review Policy over Handoff Mode', () => {
+      const content = 'Handoff Mode: manual\nReview Policy: never';
+      assert.strictEqual(parseReviewPolicy(content), 'never');
+    });
+
+    test('extracts Review Policy from multiline content', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Review Policy: always
+Target Branch: main`;
+      assert.strictEqual(parseReviewPolicy(content), 'always');
+    });
+
+    test('returns milestones for invalid Review Policy values', () => {
+      assert.strictEqual(parseReviewPolicy('Review Policy: invalid'), 'milestones');
+      assert.strictEqual(parseReviewPolicy('Review Policy: '), 'milestones');
+    });
+  });
+
+  suite('parseSessionPolicy', () => {
+    test('returns per-stage as default for empty content', () => {
+      assert.strictEqual(parseSessionPolicy(''), 'per-stage');
+    });
+
+    test('parses explicit Session Policy values', () => {
+      assert.strictEqual(parseSessionPolicy('Session Policy: per-stage'), 'per-stage');
+      assert.strictEqual(parseSessionPolicy('Session Policy: continuous'), 'continuous');
+    });
+
+    test('is case insensitive for field name and value', () => {
+      assert.strictEqual(parseSessionPolicy('Session Policy: PER-STAGE'), 'per-stage');
+      assert.strictEqual(parseSessionPolicy('session policy: CONTINUOUS'), 'continuous');
+      assert.strictEqual(parseSessionPolicy('SESSION POLICY: per-stage'), 'per-stage');
+    });
+
+    test('extracts Session Policy from multiline content', () => {
+      const content = `# WorkflowContext
+
+Work Title: Demo
+Session Policy: continuous
+Target Branch: main`;
+      assert.strictEqual(parseSessionPolicy(content), 'continuous');
+    });
+
+    test('returns per-stage for invalid Session Policy values', () => {
+      assert.strictEqual(parseSessionPolicy('Session Policy: invalid'), 'per-stage');
+      assert.strictEqual(parseSessionPolicy('Session Policy: '), 'per-stage');
+    });
+
+    test('handles content with both policies', () => {
+      const content = `Review Policy: always
+Session Policy: continuous`;
+      assert.strictEqual(parseSessionPolicy(content), 'continuous');
     });
   });
 

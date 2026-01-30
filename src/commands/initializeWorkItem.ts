@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { collectUserInputs, HandoffMode } from "../ui/userInput";
 import { validateGitRepository } from "../git/validation";
+import { mapHandoffModeToReviewPolicy } from "../utils/backwardCompat";
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -12,25 +13,6 @@ const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
   'instructions',
   'init-instructions.md'
 );
-
-/**
- * Maps the legacy handoff mode values to the new Review Policy values.
- * 
- * @param handoffMode - The handoff mode (manual, semi-auto, or auto)
- * @returns The corresponding Review Policy value
- */
-function mapHandoffModeToReviewPolicy(handoffMode: HandoffMode): string {
-  switch (handoffMode) {
-    case 'manual':
-      return 'always';
-    case 'semi-auto':
-      return 'milestones';
-    case 'auto':
-      return 'never';
-    default:
-      return 'milestones';
-  }
-}
 
 /**
  * Constructs the configuration prompt arguments for the PAW agent.

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { mapHandoffModeToReviewPolicy } from '../utils/backwardCompat';
 
 /**
  * Resolves the path to a handoff template file.
@@ -157,26 +158,6 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
   }
 
   return "manual";
-}
-
-/**
- * Maps legacy Handoff Mode values to the new Review Policy values.
- * Used for backward compatibility when WorkflowContext.md has Handoff Mode but not Review Policy.
- * 
- * @param handoffMode - The handoff mode value
- * @returns Corresponding Review Policy value
- */
-function mapHandoffModeToReviewPolicy(handoffMode: HandoffMode): ReviewPolicy {
-  switch (handoffMode) {
-    case 'manual':
-      return 'always';
-    case 'semi-auto':
-      return 'milestones';
-    case 'auto':
-      return 'never';
-    default:
-      return 'milestones';
-  }
 }
 
 /**

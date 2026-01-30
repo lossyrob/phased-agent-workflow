@@ -210,7 +210,8 @@
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "lint:agent": "./scripts/lint-agent.sh",
-    "lint:agent:all": "./scripts/lint-agent.sh",
+    "lint:agent:all": "./scripts/lint-agent.sh --all",
+    "lint:skills": "./scripts/lint-agent.sh --skills",
     "build-vsix": "./scripts/build-vsix.sh",
     "count-tokens": "node ./scripts/count-tokens.js"
   },

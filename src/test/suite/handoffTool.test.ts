@@ -88,15 +88,8 @@ suite('Handoff Tool', () => {
   suite('Agent Name Enum', () => {
     test('accepts all valid PAW agent names', () => {
       const validAgentNames: HandoffParams['target_agent'][] = [
-        'PAW-01A Specification',
-        'PAW-01B Spec Researcher',
-        'PAW-02A Code Researcher',
-        'PAW-02B Impl Planner',
-        'PAW-03A Implementer',
-        'PAW-03B Impl Reviewer',
-        'PAW-04 Documenter',
-        'PAW-05 PR',
-        'PAW-X Status',
+        'PAW',
+        'PAW Review',
       ];
 
       validAgentNames.forEach(agentName => {
@@ -112,7 +105,7 @@ suite('Handoff Tool', () => {
       // This test verifies TypeScript type checking
       // Invalid agent names would fail compilation
       const validParams: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
       };
       assert.ok(validParams);
@@ -122,7 +115,7 @@ suite('Handoff Tool', () => {
   suite('Inline Instruction Parameter', () => {
     test('accepts optional inline instruction string', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
         inline_instruction: 'Phase 2',
       };
@@ -131,7 +124,7 @@ suite('Handoff Tool', () => {
 
     test('accepts undefined inline instruction', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
       };
       assert.strictEqual(params.inline_instruction, undefined);
@@ -139,7 +132,7 @@ suite('Handoff Tool', () => {
 
     test('constructs prompt with inline instruction appended', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
         inline_instruction: 'Focus on error handling',
       };
@@ -150,7 +143,7 @@ suite('Handoff Tool', () => {
 
     test('constructs prompt without inline instruction when not provided', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
       };
       const prompt = constructPromptMessage(params);
@@ -161,7 +154,7 @@ suite('Handoff Tool', () => {
   suite('Prompt Message Construction', () => {
     test('includes Work ID in prompt', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
       };
       const prompt = constructPromptMessage(params);
@@ -170,7 +163,7 @@ suite('Handoff Tool', () => {
 
     test('appends inline instruction when provided', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
         inline_instruction: 'Phase 2',
       };
@@ -181,7 +174,7 @@ suite('Handoff Tool', () => {
 
     test('uses fire-and-forget pattern (prompt construction is synchronous)', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW-03A Implementer',
+        target_agent: 'PAW',
         work_id: 'test-feature',
       };
 
@@ -221,22 +214,22 @@ suite('Handoff Tool', () => {
 
   suite('Tool Approval Messages', () => {
     test('constructs invocation message with agent name and work ID', () => {
-      const message = constructInvocationMessage('PAW-03A Implementer', 'test-feature');
-      assert.ok(message.includes('PAW-03A Implementer'));
+      const message = constructInvocationMessage('PAW', 'test-feature');
+      assert.ok(message.includes('PAW'));
       assert.ok(message.includes('test-feature'));
     });
 
     test('constructs confirmation message with inline instruction when provided', () => {
-      const message = constructConfirmationMessage('PAW-03A Implementer', 'test-feature', 'Phase 2');
-      assert.ok(message.includes('PAW-03A Implementer'));
+      const message = constructConfirmationMessage('PAW', 'test-feature', 'Phase 2');
+      assert.ok(message.includes('PAW'));
       assert.ok(message.includes('test-feature'));
       assert.ok(message.includes('Phase 2'));
       assert.ok(message.includes('With instruction:'));
     });
 
     test('constructs confirmation message without inline instruction when not provided', () => {
-      const message = constructConfirmationMessage('PAW-03A Implementer', 'test-feature');
-      assert.ok(message.includes('PAW-03A Implementer'));
+      const message = constructConfirmationMessage('PAW', 'test-feature');
+      assert.ok(message.includes('PAW'));
       assert.ok(message.includes('test-feature'));
       assert.ok(!message.includes('With instruction:'));
     });

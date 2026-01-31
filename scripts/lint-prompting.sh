@@ -11,14 +11,6 @@ set -euo pipefail
 WARN_THRESHOLD=5000
 ERROR_THRESHOLD=7000
 
-# Special threshold for Status Agent (needs more context to guide users)
-STATUS_AGENT_WARN_THRESHOLD=5000
-STATUS_AGENT_ERROR_THRESHOLD=8000
-
-# Special threshold for Spec Agent (temporarily higher until token optimization)
-SPEC_AGENT_WARN_THRESHOLD=5000
-SPEC_AGENT_ERROR_THRESHOLD=10000
-
 # Token thresholds for skills (higher since loaded on-demand)
 SKILL_WARN_THRESHOLD=8000
 SKILL_ERROR_THRESHOLD=12000
@@ -56,16 +48,9 @@ lint_file() {
     # Count tokens using Node.js script
     local token_count=$(node scripts/count-tokens.js "$file" 2>/dev/null || echo "0")
     
-    # Use special thresholds for specific agents
+    # Use standard thresholds for all agents
     local warn_threshold=$WARN_THRESHOLD
     local error_threshold=$ERROR_THRESHOLD
-    if [[ "$filename" == "PAW-X Status.agent.md" ]]; then
-        warn_threshold=$STATUS_AGENT_WARN_THRESHOLD
-        error_threshold=$STATUS_AGENT_ERROR_THRESHOLD
-    elif [[ "$filename" == "PAW-01A Specification.agent.md" ]]; then
-        warn_threshold=$SPEC_AGENT_WARN_THRESHOLD
-        error_threshold=$SPEC_AGENT_ERROR_THRESHOLD
-    fi
     
     # Check thresholds
     if (( token_count >= error_threshold )); then

@@ -17,22 +17,37 @@
 
 **Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. Built on GitHub Copilot Agent Mode in VS Code, PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts. PAW empowers engineers to deliver fast, high-quality contributions by focusing human attention on high-leverage decision points—refining specifications, reviewing implementation plans, and guiding code at critical junctures—while AI agents handle the systematic execution.
 
-PAW is a system of *collaborating AI chat modes* that emulate the human software development lifecycle — each agent produces durable artifacts (specs, research docs, plans, PRs, and documentation).
-The process emphasizes **clarity, traceability, and recoverability**, letting developers iterate intelligently and “rewind” if context or quality drift occurs.
+PAW uses a **skills-based architecture** where compact orchestrator agents delegate to specialized activity skills. This enables efficient token usage while maintaining comprehensive workflow capabilities.
 
-### Implementation Workflow Agents
+### Implementation Workflow
 
-1. **Spec Agent** — turns a rough issue or work item into a refined feature specification and prompts for system research.
-2. **Spec Research Agent** — documents how the current system behaves (facts only, no design).
-3. **Code Research Agent** — maps relevant code areas and dependencies.
-4. **Implementation Plan Agent** — writes a detailed, multi-phase plan of work.
-5. **Implementation Agents** — executes plan phases, managing commits, PRs, and review loops. Split into two steps to allow agentic review and documentation improvements.
-6. **Documenter Agent** — produces comprehensive technical documentation (`Docs.md`) that serves as the authoritative reference for understanding what was built, how it works, and how to use it. Updates project documentation according to project guidance.
-7. **PR/Status Agent** — maintains issue/work item and PR descriptions, ensuring everything stays in sync and clear.
+The **PAW agent** orchestrates the implementation workflow by loading the `paw-workflow` skill and delegating to activity skills:
+
+**Invocation:** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
+
+**Activity Skills:**
+
+| Skill | Purpose |
+|-------|---------|
+| `paw-init` | Bootstrap workflow, create WorkflowContext.md |
+| `paw-spec` | Create specifications from issues/briefs |
+| `paw-spec-research` | Document current system behavior |
+| `paw-code-research` | Map code areas and dependencies |
+| `paw-planning` | Create phased implementation plans |
+| `paw-implement` | Execute plan phases, make code changes |
+| `paw-impl-review` | Review changes, add docs, open PRs |
+| `paw-pr` | Open final PR to main |
+| `paw-status` | Check progress, recommend next steps |
+
+**Key benefits:**
+- Single orchestrator agent (~4KB) + on-demand skill loading
+- Intelligent routing based on user intent
+- Flexible execution—skills adapt to delegation context
+- Full workflow mode support (full/minimal/custom)
 
 ### Review Workflow
 
-PAW Review uses a **skills-based architecture** for dynamic, maintainable code review orchestration.
+The **PAW Review** agent orchestrates the review workflow using `paw-review-workflow` skill.
 
 **Invocation:** `/paw-review <PR-number-or-URL>` in Copilot Chat
 

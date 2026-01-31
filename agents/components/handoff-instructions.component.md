@@ -8,54 +8,47 @@ When the user's message starts with one of these patterns, it is a **COMMAND** t
 
 | Pattern | Action |
 |---------|---------|
-| `feedback: <text>` | Hand off to PAW-03A Implementer (local strategy) |
-| `address comments`, `check pr` | Hand off to appropriate agent for PR comments |
-| `implement`, `review`, `docs`, `pr` | Hand off per Command Mapping table below |
-| `spec`, `research`, `plan`, `status` | Hand off per Command Mapping table below |
+| `feedback: <text>` | Hand off to PAW agent (local strategy) |
+| `address comments`, `check pr` | Hand off to PAW agent for PR comments |
+| `implement`, `review`, `docs`, `pr` | Hand off to PAW agent |
+| `spec`, `research`, `plan`, `status` | Hand off to PAW agent |
 
-**IMPORTANT**: Even if the command content seems within your current scope (e.g., `feedback: add clarifying comments` for a Reviewer), the command prefix means the user wants the designated agent to handle it. Recognize the command and hand off.
+**IMPORTANT**: Even if the command content seems within your current scope, the command prefix means the user wants the PAW agent to handle it. Recognize the command and hand off.
 
 ### Invoking Handoffs
 
 When transitioning to another stage:
-1. Map user request to target agent (see Command Mapping below)
+1. Map user request to target agent (PAW for implementation workflow, PAW Review for review workflow)
 2. Call `paw_call_agent` with: `target_agent`, `work_id`, optional `inline_instruction`
 3. Tool opens new chat - your conversation ends
 
 **Command Mapping** (user command → agent):
 | Command | Agent |
 |---------|-------|
-| `spec`, `specification` | PAW-01A Specification |
-| `research` | PAW-01B Spec Researcher (from spec stage) or PAW-02A Code Researcher (from spec research/planning stages) |
-| `plan`, `planner` | PAW-02B Impl Planner |
-| `implement`, `implementer` | PAW-03A Implementer |
-| `review`, `reviewer` | PAW-03B Impl Reviewer |
-| `docs`, `documenter`, `documentation` | PAW-04 Documenter |
-| `pr`, `final pr` | PAW-05 PR |
-| `status`, `help` | PAW-X Status |
+| `spec`, `specification` | PAW |
+| `research` | PAW |
+| `plan`, `planner` | PAW |
+| `implement`, `implementer` | PAW |
+| `review`, `reviewer` | PAW |
+| `docs`, `documenter`, `documentation` | PAW |
+| `pr`, `final pr` | PAW |
+| `status`, `help` | PAW |
 
-Context-sensitive commands:
-- `research`: Maps to Spec Researcher when coming from Spec stage, Code Researcher when coming from completed spec research or planning stages
-- `review`: Maps to Implementation Review during implementation phases
-- `implement`: Agent determines current phase automatically
+The PAW agent routes requests to appropriate skills based on context.
 
 **Addressing PR Review Comments** (prs strategy only):
-When a Planning PR, Phase PR, Docs PR, or Final PR has review comments that need addressing:
-- `address comments` - Hand off to the appropriate agent to address PR review comments
-  - Planning PR → PAW-02B Impl Planner
-  - Phase PR → PAW-03A Implementer (makes changes) → PAW-03B Impl Reviewer (verifies and pushes)
-  - Docs PR → PAW-04 Documenter
-  - Final PR → PAW-03A Implementer (makes changes) → PAW-03B Impl Reviewer (verifies and pushes)
+When a Planning PR, Phase PR, or Final PR has review comments that need addressing:
+- `address comments` - Hand off to PAW agent to address PR review comments
 - `check pr` - Alternative command for addressing PR review comments
 
 **Providing Local Feedback** (local strategy only):
 When using local strategy without PRs, the user provides feedback directly:
-- `feedback: <user's feedback>` - Hand off to PAW-03A Implementer with feedback as inline instruction
-- Example: User says `feedback: add error handling for edge cases` → call `paw_call_agent` with `target_agent: 'PAW-03A Implementer'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
+- `feedback: <user's feedback>` - Hand off to PAW agent with feedback as inline instruction
+- Example: User says `feedback: add error handling for edge cases` → call `paw_call_agent` with `target_agent: 'PAW'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
 
 **Inline instructions**: Use `inline_instruction` parameter to pass context to the next agent. Common uses:
 - User feedback: `"Address feedback: add error handling"`
-- Prompt file paths: `"Research prompt at: .paw/work/<feature-slug>/prompts/01B-spec-research.prompt.md"`
+- Prompt file paths: `"Research prompt at: .paw/work/<work-id>/prompts/01B-spec-research.prompt.md"`
 - Additional context: `"implement but add logging"`
 
 **Continue command**: When user says `continue`, proceed to the **first command** in your presented "Next Steps" list (the default next stage). Agents must order their options with the recommended default action first—this becomes the `continue` target.
@@ -97,7 +90,7 @@ Example handoff message after completing implementation:
 **Phase 2 implementation complete. All tests passing.**
 
 **Next Steps:**
-- `review` - Hand off to Implementation Review Agent to verify and open Phase PR
+- `review` - Hand off to PAW agent for implementation review and Phase PR
 
 You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to review.
 ```

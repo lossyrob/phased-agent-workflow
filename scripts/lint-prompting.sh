@@ -192,8 +192,8 @@ main() {
     # Lint specific files if provided
     if [[ ${#files_to_lint[@]} -gt 0 ]]; then
         for file in "${files_to_lint[@]}"; do
-            # Determine if this is a skill or agent file
-            if [[ "$file" == *"/SKILL.md" ]] || [[ "$file" == */skills/* ]]; then
+            # Determine if this is a skill or agent file (only SKILL.md files use skill thresholds)
+            if [[ "$file" == */SKILL.md ]]; then
                 if ! lint_skill "$file"; then
                     exit_code=1
                 fi

@@ -640,8 +640,8 @@ Remote: origin`;
   });
 
   suite('parseReviewPolicy', () => {
-    test('returns milestones as default for empty content', () => {
-      assert.strictEqual(parseReviewPolicy(''), 'milestones');
+    test('returns always as default for empty content', () => {
+      assert.strictEqual(parseReviewPolicy(''), 'always');
     });
 
     test('parses explicit Review Policy values', () => {

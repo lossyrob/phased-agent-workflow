@@ -170,7 +170,7 @@ export function parseHandoffMode(workflowContent: string): HandoffMode {
  */
 export function parseReviewPolicy(workflowContent: string): ReviewPolicy {
   if (!workflowContent) {
-    return "milestones";
+    return "always";
   }
 
   // First try to find explicit Review Policy

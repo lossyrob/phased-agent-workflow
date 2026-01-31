@@ -32,20 +32,39 @@ Agent and skill files should be kept within reasonable token limits to ensure th
 
 # Lint a specific agent file
 ./scripts/lint-prompting.sh agents/PAW-01A.agent.md
+
+# Lint all skill files in skills/
+./scripts/lint-prompting.sh --skills
+
+# Lint both agents and skills
+./scripts/lint-prompting.sh --all
+
+# Lint a specific skill file
+./scripts/lint-prompting.sh skills/paw-workflow/SKILL.md
 ```
 
 **npm Scripts**:
 ```bash
 # Lint all agents
+npm run lint:agent
+
+# Lint all agents and skills
 npm run lint:agent:all
 
-# Or just
-npm run lint:agent
+# Lint only skills
+npm run lint:skills
 ```
 
 **Token Thresholds**:
-- **Warning**: 3,500 tokens - Consider refactoring to reduce size
-- **Error**: 6,500 tokens - Must be reduced before committing
+
+| File Type | Warning | Error |
+|-----------|---------|-------|
+| Agents (default) | 5,000 tokens | 7,000 tokens |
+| Skills | 8,000 tokens | 12,000 tokens |
+| Status Agent | 5,000 tokens | 8,000 tokens |
+| Spec Agent | 5,000 tokens | 10,000 tokens |
+
+Skills have higher thresholds since they are loaded on-demand rather than included in every prompt.
 
 The linter uses `@dqbd/tiktoken` with the `gpt-4o-mini` model to count tokens, which provides accurate token counts for OpenAI models.
 

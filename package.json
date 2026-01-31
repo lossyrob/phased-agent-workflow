@@ -91,6 +91,7 @@
               "type": "string",
               "description": "The exact name of the PAW agent to invoke",
               "enum": [
+                "PAW",
                 "PAW-01A Specification",
                 "PAW-01B Spec Researcher",
                 "PAW-02A Code Researcher",

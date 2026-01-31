@@ -11,6 +11,7 @@ on:
     paths:
       - 'src/**'
       - 'agents/**'
+      - 'skills/**'
       - 'scripts/**'
       - '.github/workflows/pr-checks.yml'
 

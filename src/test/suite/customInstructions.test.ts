@@ -103,7 +103,8 @@ suite('Custom Instructions Loader', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -122,7 +123,8 @@ suite('Custom Instructions Loader', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -149,7 +151,8 @@ suite('Branch Mode Handling', () => {
         'feature/my-feature',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -168,7 +171,8 @@ suite('Branch Mode Handling', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -186,7 +190,8 @@ suite('Branch Mode Handling', () => {
         '   ',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -204,7 +209,8 @@ suite('Branch Mode Handling', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         'https://github.com/owner/repo/issues/123',
         workspace,
         true
@@ -231,7 +237,8 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -251,7 +258,8 @@ suite('Branch Auto-Derivation Section', () => {
         'feature/my-branch',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -270,7 +278,8 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         'https://github.com/owner/repo/issues/42',
         workspace,
         true
@@ -290,7 +299,8 @@ suite('Branch Auto-Derivation Section', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -317,7 +327,8 @@ suite('Work Description Section', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -337,7 +348,8 @@ suite('Work Description Section', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         'https://github.com/owner/repo/issues/123',
         workspace,
         true
@@ -364,7 +376,8 @@ suite('Initial Prompt Field', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true
@@ -382,7 +395,8 @@ suite('Initial Prompt Field', () => {
         'feature/test',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         'https://github.com/owner/repo/issues/123',
         workspace,
         true
@@ -400,7 +414,8 @@ suite('Initial Prompt Field', () => {
         '',
         { mode: 'full' },
         'prs',
-        'manual',
+        'always',
+        'per-stage',
         undefined,
         workspace,
         true

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { formatCustomInstructions, loadCustomInstructions } from './customInstructions';
-import { WorkflowModeSelection, ReviewStrategy, HandoffMode } from '../ui/userInput';
+import { WorkflowModeSelection, ReviewStrategy } from '../ui/userInput';
+import type { ReviewPolicy, SessionPolicy } from '../tools/contextTool';
 import { loadTemplate } from '../utils/templateLoader';
 
 /**
@@ -27,8 +28,10 @@ interface PromptVariables {
   WORKFLOW_MODE: string;
   /** Review strategy (prs or local) */
   REVIEW_STRATEGY: string;
-  /** Handoff mode (manual, semi-auto, or auto) */
-  HANDOFF_MODE: string;
+  /** Review policy (always, milestones, or never) */
+  REVIEW_POLICY: string;
+  /** Session policy (per-stage or continuous) */
+  SESSION_POLICY: string;
   /** Custom workflow instructions section (for custom mode) */
   CUSTOM_INSTRUCTIONS_SECTION: string;
   /** Custom workflow instructions field for WorkflowContext.md */
@@ -141,7 +144,8 @@ function buildWorkDescriptionSection(): string {
  * @param targetBranch - The git branch name where work will be committed
  * @param workflowMode - Workflow mode selection including optional custom instructions
  * @param reviewStrategy - Review strategy (prs or local)
- * @param handoffMode - Handoff mode (manual, semi-auto, or auto)
+ * @param reviewPolicy - Review policy (always, milestones, or never)
+ * @param sessionPolicy - Session policy (per-stage or continuous)
  * @param issueUrl - Optional issue or work item URL (GitHub Issue or Azure DevOps Work Item)
  * @param workspacePath - Absolute path to the workspace root directory
  * @param trackArtifacts - Whether to track workflow artifacts in git (true) or exclude them (false)
@@ -151,7 +155,8 @@ export function constructAgentPrompt(
   targetBranch: string,
   workflowMode: WorkflowModeSelection,
   reviewStrategy: ReviewStrategy,
-  handoffMode: HandoffMode,
+  reviewPolicy: ReviewPolicy,
+  sessionPolicy: SessionPolicy,
   issueUrl: string | undefined,
   workspacePath: string,
   trackArtifacts: boolean
@@ -231,7 +236,8 @@ export function constructAgentPrompt(
     BRANCH_MODE: branchMode,
     WORKFLOW_MODE: workflowMode.mode,
     REVIEW_STRATEGY: reviewStrategy,
-    HANDOFF_MODE: handoffMode,
+    REVIEW_POLICY: reviewPolicy,
+    SESSION_POLICY: sessionPolicy,
     CUSTOM_INSTRUCTIONS_SECTION: customWorkflowInstructionsSection,
     CUSTOM_INSTRUCTIONS_FIELD: customWorkflowInstructionsField,
     ISSUE_URL: issueUrl || 'Not provided',

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { collectUserInputs, HandoffMode } from "../ui/userInput";
+import { collectUserInputs } from "../ui/userInput";
+import type { ReviewPolicy, SessionPolicy } from "../tools/contextTool";
 import { validateGitRepository } from "../git/validation";
-import { mapHandoffModeToReviewPolicy } from "../utils/backwardCompat";
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -26,7 +26,8 @@ function constructPawPromptArguments(
     targetBranch: string;
     workflowMode: { mode: string; customInstructions?: string };
     reviewStrategy: string;
-    handoffMode: HandoffMode;
+    reviewPolicy: ReviewPolicy;
+    sessionPolicy: SessionPolicy;
     trackArtifacts: boolean;
     issueUrl?: string;
   },
@@ -37,8 +38,8 @@ function constructPawPromptArguments(
     target_branch: inputs.targetBranch.trim() || 'auto',
     workflow_mode: inputs.workflowMode.mode,
     review_strategy: inputs.reviewStrategy,
-    review_policy: mapHandoffModeToReviewPolicy(inputs.handoffMode),
-    session_policy: 'per-stage',
+    review_policy: inputs.reviewPolicy,
+    session_policy: inputs.sessionPolicy,
     track_artifacts: inputs.trackArtifacts,
   };
 
@@ -147,8 +148,8 @@ export async function initializeWorkItemCommand(
       outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
     }
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
-    outputChannel.appendLine(`[INFO] Handoff mode: ${inputs.handoffMode}`);
-    outputChannel.appendLine(`[INFO] Review policy: ${mapHandoffModeToReviewPolicy(inputs.handoffMode)}`);
+    outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
+    outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
     outputChannel.appendLine(`[INFO] Track artifacts: ${inputs.trackArtifacts}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);

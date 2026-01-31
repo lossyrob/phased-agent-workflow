@@ -8,7 +8,8 @@ You are tasked with creating a complete PAW (Phased Agent Workflow) workflow dir
 - **Branch Mode**: {{BRANCH_MODE}}
 - **Workflow Mode**: {{WORKFLOW_MODE}}
 - **Review Strategy**: {{REVIEW_STRATEGY}}
-- **Handoff Mode**: {{HANDOFF_MODE}}
+- **Review Policy**: {{REVIEW_POLICY}}
+- **Session Policy**: {{SESSION_POLICY}}
 - **Track Artifacts**: {{TRACK_ARTIFACTS}}
 {{CUSTOM_INSTRUCTIONS_SECTION}}- **Issue URL**: {{ISSUE_URL}}
 - **Workspace Path**: {{WORKSPACE_PATH}}
@@ -68,7 +69,8 @@ Feature Slug: <generated_feature_slug>
 Target Branch: {{TARGET_BRANCH}}
 Workflow Mode: {{WORKFLOW_MODE}}
 Review Strategy: {{REVIEW_STRATEGY}}
-Handoff Mode: {{HANDOFF_MODE}}
+Review Policy: {{REVIEW_POLICY}}
+Session Policy: {{SESSION_POLICY}}
 {{CUSTOM_INSTRUCTIONS_FIELD}}{{INITIAL_PROMPT_FIELD}}Issue URL: {{ISSUE_URL_FIELD}}
 Remote: origin
 Artifact Paths: auto-derived
@@ -82,7 +84,8 @@ Additional Inputs: none
 - **Target Branch** (Required): Git branch that will hold completed work
 - **Workflow Mode** (Required): Workflow mode selection ('full', 'minimal', or 'custom')
 - **Review Strategy** (Required): Review strategy ('prs' or 'local')
-- **Handoff Mode** (Required): Handoff mode ('manual', 'semi-auto', or 'auto')
+- **Review Policy** (Required): Review policy ('always', 'milestones', or 'never')
+- **Session Policy** (Required): Session policy ('per-stage' or 'continuous')
 - **Custom Workflow Instructions** (Optional): Free-text workflow instructions for custom mode
 - **Initial Prompt** (Optional): User's work description when no issue URL provided
 - **Issue URL** (Optional): URL to associated issue/work item, or "none"

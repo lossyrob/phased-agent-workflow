@@ -7,8 +7,7 @@
  * @module utils/backwardCompat
  */
 
-import type { HandoffMode } from "../ui/userInput";
-import type { ReviewPolicy } from "../tools/contextTool";
+import type { HandoffMode, ReviewPolicy } from "../tools/contextTool";
 
 /**
  * Maps legacy Handoff Mode values to Review Policy values.

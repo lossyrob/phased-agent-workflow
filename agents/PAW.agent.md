@@ -7,7 +7,7 @@ You execute the PAW implementation workflow by loading the workflow skill and or
 
 ## Initialization
 
-**REQUIRED**: Call `paw_get_skill('paw-workflow')` before processing any request. This provides orchestration patterns, policy behaviors, and artifact structure needed for all PAW operations.
+**REQUIRED**: Call the paw_get_skill tool with skill_name: 'paw-workflow' before processing any request. This provides orchestration patterns, policy behaviors, and artifact structure needed for all PAW operations.
 
 If the skill fails to load, report the error and stop. Do not proceed to request handling until the workflow skill is loaded.
 
@@ -40,9 +40,16 @@ For each user request:
 
 The workflow skill provides default flow guidance, non-linear request routing examples, and PR comment response routing.
 
+### Utility Skill Loading
+
+For direct mechanical requests (not delegated activities), load the relevant utility skill:
+- Git/branch operations → `paw-git-operations`
+- PR comment responses → `paw-review-response`
+- Documentation conventions → `paw-docs-guidance`
+
 ### Status and Help
 
-When user asks for status, help, or workflow guidance, delegate to `paw-status`.
+When user asks for status, help, or workflow guidance, delegate to `paw-status` via subagent.
 
 ## Error Handling
 

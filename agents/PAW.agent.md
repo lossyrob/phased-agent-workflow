@@ -54,25 +54,32 @@ For each user request:
 3. **Construct delegation prompt**: Skill to load, activity goal, relevant artifact paths, user context when relevant
 4. **Delegate via subagent**: Invoke the activity in a separate agent session
 5. **Process completion status** and apply Review Policy for pause decisions
-6. **Continue workflow** per Default Flow Guidance in `paw-workflow` skill
+6. **ALWAYS continue workflow** - determine and execute the next step per Default Flow Guidance
 
 The workflow skill provides default flow guidance, non-linear request routing examples, and PR comment response routing.
 
-### Workflow Continuation (CRITICAL)
+### Workflow Continuation (MANDATORY)
 
-**After each activity completes, you must determine and execute the next workflow step.** Do not stop after a single delegation returns.
+**You MUST continue the workflow after each activity completes.** The PAW workflow is multi-step by design. Stopping after a single delegation is incorrect behavior.
 
-Consult the **Default Flow Guidance** in `paw-workflow` to determine what comes next:
-- After `paw-implement` → delegate to `paw-impl-review`
-- After `paw-spec` → delegate to `paw-spec-review`
-- After `paw-planning` → delegate to `paw-plan-review`
-- After review passes → proceed to next stage per workflow skill
+After every `runSubagent` returns:
+1. Check the completion status
+2. Consult **Default Flow Guidance** in `paw-workflow` skill
+3. **Delegate the next activity immediately** unless a pause condition is met
 
-**Pause only when**:
-- Review Policy dictates a pause at current artifact
-- Activity returns `blocked` status
-- User explicitly requests to pause
-- Review activity identifies issues requiring user decision
+**Common continuations** (consult workflow skill for complete guidance):
+- After `paw-implement` → `paw-impl-review` (ALWAYS - review is mandatory)
+- After `paw-spec` → `paw-spec-review`
+- After `paw-planning` → `paw-plan-review`
+- After review passes → proceed to next stage
+
+**Pause ONLY when**:
+- Review Policy dictates a pause at current milestone artifact
+- Activity returns `blocked` status requiring user decision
+- User explicitly requests a pause
+- Review identifies critical issues requiring human guidance
+
+If unsure what comes next, consult the workflow skill's Default Flow Guidance section.
 
 ### Utility Skill Loading
 

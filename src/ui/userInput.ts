@@ -26,8 +26,8 @@ export interface WorkflowModeSelection {
   /** The selected workflow mode */
   mode: WorkflowMode;
   
-  /** Custom instructions for workflow stages (required when mode is 'custom') */
-  customInstructions?: string;
+  /** Custom workflow stage instructions (required when mode is 'custom') */
+  workflowCustomization?: string;
 }
 
 /**
@@ -138,7 +138,7 @@ export async function collectWorkflowMode(
   // If custom mode selected, prompt for custom workflow instructions
   // These instructions help agents determine which stages to include
   if (modeSelection.value === 'custom') {
-    const customInstructions = await vscode.window.showInputBox({
+    const workflowCustomization = await vscode.window.showInputBox({
       prompt: 'Describe your desired workflow stages (e.g., "skip docs, single branch, multi-phase plan")',
       placeHolder: 'skip spec and docs, use local review strategy',
       validateInput: (value: string) => {
@@ -149,14 +149,14 @@ export async function collectWorkflowMode(
       }
     });
 
-    if (customInstructions === undefined) {
-      outputChannel.appendLine('[INFO] Custom instructions input cancelled');
+    if (workflowCustomization === undefined) {
+      outputChannel.appendLine('[INFO] Custom workflow input cancelled');
       return undefined;
     }
 
     return {
       mode: 'custom',
-      customInstructions: customInstructions.trim()
+      workflowCustomization: workflowCustomization.trim()
     };
   }
 

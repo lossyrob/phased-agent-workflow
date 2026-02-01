@@ -13,7 +13,7 @@ import { validateGitRepository } from "../git/validation";
 function constructPawPromptArguments(
   inputs: {
     targetBranch: string;
-    workflowMode: { mode: string; customInstructions?: string };
+    workflowMode: { mode: string; workflowCustomization?: string };
     reviewStrategy: string;
     reviewPolicy: ReviewPolicy;
     sessionPolicy: SessionPolicy;
@@ -37,8 +37,8 @@ function constructPawPromptArguments(
     config.issue_url = inputs.issueUrl;
   }
 
-  if (inputs.workflowMode.customInstructions) {
-    config.custom_instructions = inputs.workflowMode.customInstructions;
+  if (inputs.workflowMode.workflowCustomization) {
+    config.custom_instructions = inputs.workflowMode.workflowCustomization;
   }
 
   // Format as structured prompt arguments
@@ -107,8 +107,8 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
     outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
-    if (inputs.workflowMode.customInstructions) {
-      outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
+    if (inputs.workflowMode.workflowCustomization) {
+      outputChannel.appendLine(`[INFO] Workflow customization: ${inputs.workflowMode.workflowCustomization}`);
     }
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
     outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);

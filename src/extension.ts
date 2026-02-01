@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
@@ -43,6 +45,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Install or update PAW agents if needed
   await installAgentsIfNeeded(context, outputChannel);
+
+  // Check for deprecated .paw/instructions directories
+  await checkForDeprecatedInstructions(outputChannel);
 
   registerContextTool(context);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
@@ -193,5 +198,49 @@ async function installAgentsIfNeeded(
     }
     
     // Don't throw - allow extension to continue activating
+  }
+}
+
+/**
+ * Checks for deprecated .paw/instructions directories and notifies users to migrate.
+ * 
+ * PAW custom instructions (.paw/instructions/) were deprecated in favor of VS Code's
+ * standard copilot-instructions.md mechanism. This function warns users who still
+ * have the deprecated directory structure.
+ */
+async function checkForDeprecatedInstructions(
+  outputChannel: vscode.OutputChannel
+): Promise<void> {
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    return;
+  }
+
+  const foldersWithDeprecated: string[] = [];
+
+  for (const folder of workspaceFolders) {
+    const instructionsDir = path.join(folder.uri.fsPath, '.paw', 'instructions');
+    if (fs.existsSync(instructionsDir)) {
+      foldersWithDeprecated.push(folder.name);
+      outputChannel.appendLine(
+        `[WARN] Deprecated .paw/instructions/ directory found in "${folder.name}". ` +
+        `Custom instructions are no longer supported. Use copilot-instructions.md instead.`
+      );
+    }
+  }
+
+  if (foldersWithDeprecated.length > 0) {
+    const action = await vscode.window.showWarningMessage(
+      `PAW custom instructions (.paw/instructions/) are deprecated and no longer loaded. ` +
+      `Migrate to copilot-instructions.md for project-level customization.`,
+      'Learn More',
+      'Dismiss'
+    );
+
+    if (action === 'Learn More') {
+      vscode.env.openExternal(
+        vscode.Uri.parse('https://code.visualstudio.com/docs/copilot/copilot-customization')
+      );
+    }
   }
 }

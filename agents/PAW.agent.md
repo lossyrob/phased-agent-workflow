@@ -65,19 +65,26 @@ The workflow skill provides default flow guidance, non-linear request routing ex
 After every `runSubagent` returns:
 1. Check the completion status
 2. Consult **Default Flow Guidance** in `paw-workflow` skill
-3. **Delegate the next activity immediately** unless a pause condition is met
+3. **Determine the next activity** from Default Flow Guidance
+4. **Check Review Policy** - proceed automatically or pause for user confirmation
+5. **Delegate or pause** based on policy and pause conditions
 
-**Common continuations** (consult workflow skill for complete guidance):
-- After `paw-implement` → `paw-impl-review` (ALWAYS - review is mandatory)
+**Logical next steps** (what comes next - Review Policy determines when):
+- After `paw-implement` → `paw-impl-review` (review is mandatory)
 - After `paw-spec` → `paw-spec-review`
 - After `paw-planning` → `paw-plan-review`
 - After review passes → proceed to next stage
 
-**Pause ONLY when**:
-- Review Policy dictates a pause at current milestone artifact
+**Pause when**:
+- Review Policy dictates a pause at current milestone
 - Activity returns `blocked` status requiring user decision
 - User explicitly requests a pause
 - Review identifies critical issues requiring human guidance
+
+**Review Policy behavior**:
+- `always` → pause after every activity for user confirmation
+- `milestones` → auto-proceed within stages, pause at milestone artifacts
+- `none` → auto-proceed unless blocked
 
 If unsure what comes next, consult the workflow skill's Default Flow Guidance section.
 

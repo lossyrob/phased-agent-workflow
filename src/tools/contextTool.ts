@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { mapHandoffModeToReviewPolicy } from '../utils/backwardCompat';
@@ -115,14 +114,9 @@ export interface WorkspaceInfo {
 }
 
 /**
- * Complete context result containing workspace instructions, user instructions,
- * workflow context metadata, and workspace environment info.
+ * Complete context result containing workflow context metadata and workspace environment info.
  */
 export interface ContextResult {
-  /** Workspace-specific custom instructions from .paw/instructions/ */
-  workspace_instructions: InstructionStatus;
-  /** User-level custom instructions from ~/.paw/instructions/ */
-  user_instructions: InstructionStatus;
   /** Raw WorkflowContext.md content from .paw/work/<feature-slug>/ */
   workflow_context: InstructionStatus;
   /** Workspace environment information for multi-root detection */
@@ -270,37 +264,6 @@ export function loadWorkflowContext(filePath: string): InstructionStatus {
 }
 
 /**
- * Loads custom instruction file for a specific agent from the given directory.
- * Looks for a file named `<agentName>-instructions.md`.
- * 
- * @param directory - Directory path containing instruction files (e.g., .paw/instructions/)
- * @param agentName - Name of the agent (e.g., 'PAW')
- * @returns InstructionStatus with file content or error information
- */
-export function loadCustomInstructions(directory: string, agentName: string): InstructionStatus {
-  try {
-    if (!fs.existsSync(directory)) {
-      return { exists: false, content: '' };
-    }
-
-    const filePath = path.join(directory, `${agentName}-instructions.md`);
-    if (!fs.existsSync(filePath)) {
-      return { exists: false, content: '' };
-    }
-
-    const fileContent = normalizeContent(fs.readFileSync(filePath, 'utf-8'));
-    return { exists: true, content: fileContent };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      exists: true,
-      content: '',
-      error: `Failed to read custom instructions: ${message}`,
-    };
-  }
-}
-
-/**
  * Resolves the workspace path for a given Work ID (feature slug).
  * Searches all workspace folders for one containing .paw/work/<featureSlug>.
  * 
@@ -383,37 +346,28 @@ function validateParams(params: ContextParams): { featureSlug: string; agentName
 }
 
 /**
- * Retrieves complete PAW context including workspace instructions, user instructions,
- * and workflow metadata for a specific work item and agent.
+ * Retrieves PAW context including workflow metadata for a specific work item.
  * 
  * This function:
  * 1. Validates the Work ID (feature slug) format and agent name
  * 2. Verifies the Work ID directory (.paw/work/<work-id>/) exists
- * 3. Loads workspace-specific custom instructions from .paw/instructions/
- * 4. Loads user-level custom instructions from ~/.paw/instructions/
- * 5. Loads raw WorkflowContext.md content from .paw/work/<work-id>/
+ * 3. Loads raw WorkflowContext.md content from .paw/work/<work-id>/
  * 
- * Missing instruction files are handled gracefully and returned with exists=false.
- * However, if the Work ID directory itself doesn't exist, an error is thrown
+ * If the Work ID directory itself doesn't exist, an error is thrown
  * immediately to allow the agent to correct the Work ID and retry.
  * 
  * @param params - Context parameters with feature_slug (Work ID) and agent_name
- * @returns Promise resolving to ContextResult with all loaded content
+ * @returns Promise resolving to ContextResult with workflow context
  * @throws Error if Work ID format is invalid, Work ID directory doesn't exist,
  *         agent name is empty, or no workspace is open
  */
 export async function getContext(params: ContextParams): Promise<ContextResult> {
-  const { featureSlug, agentName } = validateParams(params);
+  const { featureSlug } = validateParams(params);
 
   // Validate that Work ID directory exists - throws error if not found
-  const { workspacePath, featureDir } = resolveWorkspacePath(featureSlug);
+  const { featureDir } = resolveWorkspacePath(featureSlug);
 
-  const workspaceInstructionsDir = path.join(workspacePath, '.paw', 'instructions');
-  const userInstructionsDir = path.join(os.homedir(), '.paw', 'instructions');
   const workflowContextPath = path.join(featureDir, 'WorkflowContext.md');
-
-  const workspaceInstructions = loadCustomInstructions(workspaceInstructionsDir, agentName);
-  const userInstructions = loadCustomInstructions(userInstructionsDir, agentName);
   const workflowContext = loadWorkflowContext(workflowContextPath);
 
   // Get workspace folder count for multi-root detection
@@ -422,8 +376,6 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
   const isMultiRootWorkspace = workspaceFolderCount >= 2;
 
   return {
-    workspace_instructions: workspaceInstructions,
-    user_instructions: userInstructions,
     workflow_context: workflowContext,
     workspace_info: {
       workspaceFolderCount,
@@ -433,39 +385,10 @@ export async function getContext(params: ContextParams): Promise<ContextResult> 
 }
 
 /**
- * Formats an instruction section with a distinct XML-style tag wrapper to avoid
- * ambiguity with the content's own Markdown structure.
- * 
- * @param tagName - Wrapper tag name (e.g., 'workspace_instructions')
- * @param status - Instruction status containing content and optional error
- * @returns Tagged section or an empty string when no content exists
- */
-function formatInstructionSection(tagName: string, status: InstructionStatus): string {
-  if (!status.content && !status.error) {
-    return '';
-  }
-
-  const parts: string[] = [`<${tagName}>`];
-
-  if (status.content) {
-    parts.push(status.content);
-  }
-
-  if (status.error) {
-    parts.push(`<warning>${status.error}</warning>`);
-  }
-
-  parts.push(`</${tagName}>`);
-  return parts.join('\n');
-}
-
-/**
  * Formats a complete context result as a natural language Markdown response
  * suitable for agent consumption.
  * 
  * The formatted response is purely structural data:
- * - Workspace custom instructions wrapped in `<workspace_instructions>`
- * - User custom instructions wrapped in `<user_instructions>`
  * - Workflow context wrapped in `<workflow_context>` with code fencing
  * - Workspace info wrapped in `<workspace_info>` with workspaceFolderCount and isMultiRootWorkspace
  * - Parsed policies wrapped in `<parsed_policies>` with review_policy and session_policy
@@ -481,26 +404,14 @@ function formatInstructionSection(tagName: string, status: InstructionStatus): s
  */
 export function formatContextResponse(result: ContextResult): string {
   // Check if any actual context exists before building response
-  const hasWorkspaceContent = result.workspace_instructions.content || result.workspace_instructions.error;
-  const hasUserContent = result.user_instructions.content || result.user_instructions.error;
   const hasWorkflowContent = result.workflow_context.content || result.workflow_context.error;
   
   // Return early if no actual context sections have content
-  if (!hasWorkspaceContent && !hasUserContent && !hasWorkflowContent) {
+  if (!hasWorkflowContent) {
     return '<context status="empty" />';
   }
 
   const sections: string[] = [];
-
-  const workspaceSection = formatInstructionSection('workspace_instructions', result.workspace_instructions);
-  if (workspaceSection) {
-    sections.push(workspaceSection);
-  }
-
-  const userSection = formatInstructionSection('user_instructions', result.user_instructions);
-  if (userSection) {
-    sections.push(userSection);
-  }
 
   if (hasWorkflowContent) {
     const workflowParts: string[] = ['<workflow_context>'];
@@ -543,8 +454,7 @@ export function formatContextResponse(result: ContextResult): string {
 
 /**
  * Registers the PAW context tool with VS Code's Language Model Tool API.
- * This enables agents to retrieve workspace-specific custom instructions,
- * user-level custom instructions, and workflow context at runtime.
+ * This enables agents to retrieve workflow context at runtime.
  * 
  * @param context - VS Code extension context for managing subscriptions
  */
@@ -559,7 +469,7 @@ export function registerContextTool(context: vscode.ExtensionContext): void {
           confirmationMessages: {
             title: 'Get PAW Context',
             message: new vscode.MarkdownString(
-              `This will retrieve custom instructions and workflow context for:\n\n` +
+              `This will retrieve workflow context for:\n\n` +
               `- **Feature**: ${feature_slug}\n` +
               `- **Agent**: ${agent_name}`
             )

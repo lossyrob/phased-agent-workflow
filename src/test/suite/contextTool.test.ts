@@ -9,7 +9,6 @@ import {
   formatContextResponse,
   getContext,
   loadWorkflowContext,
-  loadCustomInstructions,
   parseHandoffMode,
   parseReviewPolicy,
   parseSessionPolicy,
@@ -73,49 +72,27 @@ function overrideEnv(values: Record<string, string | undefined>): () => void {
 }
 
 suite('Context Tool', () => {
-  test('getContext loads workspace, user, and workflow content when present', async () => {
+  test('getContext loads workflow content when present', async () => {
     const featureSlug = 'ctx-tool-e2e';
     const agentName = 'PAW-Test Agent';
     const workspaceRoot = createTempDir('paw-ctx-workspace-');
-    const tempHome = createTempDir('paw-ctx-home-');
 
     try {
       const workflowContextPath = path.join(workspaceRoot, '.paw', 'work', featureSlug, 'WorkflowContext.md');
       writeFileRecursive(workflowContextPath, 'Work Title: Demo\nTarget Branch: feature/demo');
 
-      const workspaceInstructionsPath = path.join(
-        workspaceRoot,
-        '.paw',
-        'instructions',
-        `${agentName}-instructions.md`
-      );
-      writeFileRecursive(workspaceInstructionsPath, 'Workspace instructions line');
-
-      const userInstructionsPath = path.join(
-        tempHome,
-        '.paw',
-        'instructions',
-        `${agentName}-instructions.md`
-      );
-      writeFileRecursive(userInstructionsPath, 'User instructions line');
-
       const restoreEnv = overrideEnv({
-        HOME: tempHome,
-        USERPROFILE: tempHome,
         PAW_WORKSPACE_PATH: workspaceRoot,
       });
 
       try {
         const result = await getContext({ feature_slug: featureSlug, agent_name: agentName });
-        assert.strictEqual(result.workspace_instructions.content, 'Workspace instructions line');
-        assert.strictEqual(result.user_instructions.content, 'User instructions line');
         assert.ok(result.workflow_context.content.includes('Work Title: Demo'));
       } finally {
         restoreEnv();
       }
     } finally {
       fs.rmSync(workspaceRoot, { recursive: true, force: true });
-      fs.rmSync(tempHome, { recursive: true, force: true });
     }
   });
 
@@ -138,27 +115,30 @@ suite('Context Tool', () => {
     const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
     const response = formatContextResponse({
-      workspace_instructions: status('Workspace data'),
-      user_instructions: status('', 'Failed to read user instructions: EACCES'),
       workflow_context: status('Work Title: Demo Feature'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
 
-    assert.ok(response.includes('<workspace_instructions>'));
-    assert.ok(response.includes('</workspace_instructions>'));
-    assert.ok(response.includes('<user_instructions>'));
-    assert.ok(response.includes('<warning>Failed to read user instructions: EACCES</warning>'));
     assert.ok(response.includes('<workflow_context>'));
     assert.ok(response.includes('```markdown'));
-    assert.ok(!response.includes('Follow custom instructions'));
+  });
+
+  test('formatContextResponse includes workflow_context error as warning', () => {
+    const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
+
+    const response = formatContextResponse({
+      workflow_context: status('', 'Failed to read: EACCES'),
+      workspace_info: defaultWorkspaceInfo,
+    } satisfies ContextResult);
+
+    assert.ok(response.includes('<workflow_context>'));
+    assert.ok(response.includes('<warning>Failed to read: EACCES</warning>'));
   });
 
   test('formatContextResponse includes workspace_info section', () => {
     const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
     const singleRootResponse = formatContextResponse({
-      workspace_instructions: status('Workspace data'),
-      user_instructions: status(''),
       workflow_context: status('Work Title: Demo'),
       workspace_info: { workspaceFolderCount: 1, isMultiRootWorkspace: false },
     } satisfies ContextResult);
@@ -169,8 +149,6 @@ suite('Context Tool', () => {
     assert.ok(singleRootResponse.includes('</workspace_info>'));
 
     const multiRootResponse = formatContextResponse({
-      workspace_instructions: status('Workspace data'),
-      user_instructions: status(''),
       workflow_context: status('Work Title: Demo'),
       workspace_info: { workspaceFolderCount: 3, isMultiRootWorkspace: true },
     } satisfies ContextResult);
@@ -183,8 +161,6 @@ suite('Context Tool', () => {
     const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
     const response = formatContextResponse({
-      workspace_instructions: status(''),
-      user_instructions: status(''),
       workflow_context: status('Review Policy: always\nSession Policy: continuous'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
@@ -200,24 +176,18 @@ suite('Context Tool', () => {
 
     // When only Handoff Mode is present, review_policy should be mapped
     const manualResponse = formatContextResponse({
-      workspace_instructions: status(''),
-      user_instructions: status(''),
       workflow_context: status('Handoff Mode: manual'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
     assert.ok(manualResponse.includes('review_policy: always'));
 
     const semiAutoResponse = formatContextResponse({
-      workspace_instructions: status(''),
-      user_instructions: status(''),
       workflow_context: status('Handoff Mode: semi-auto'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
     assert.ok(semiAutoResponse.includes('review_policy: milestones'));
 
     const autoResponse = formatContextResponse({
-      workspace_instructions: status(''),
-      user_instructions: status(''),
       workflow_context: status('Handoff Mode: auto'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
@@ -228,8 +198,6 @@ suite('Context Tool', () => {
     const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
     const response = formatContextResponse({
-      workspace_instructions: status(''),
-      user_instructions: status(''),
       workflow_context: status('Work Title: Demo'),
       workspace_info: defaultWorkspaceInfo,
     } satisfies ContextResult);
@@ -240,8 +208,6 @@ suite('Context Tool', () => {
   test('formatContextResponse reports empty context when no sections exist', () => {
     const empty: InstructionStatus = { exists: false, content: '' };
     const response = formatContextResponse({
-      workspace_instructions: empty,
-      user_instructions: empty,
       workflow_context: empty,
       workspace_info: defaultWorkspaceInfo,
     });
@@ -338,99 +304,6 @@ suite('Context Tool', () => {
     });
   });
 
-  suite('loadCustomInstructions', () => {
-    test('returns exists: false for missing directory', () => {
-      const nonExistentDir = '/tmp/this-directory-definitely-does-not-exist-12345';
-      const agentName = 'PAW-Test Agent';
-      
-      const result = loadCustomInstructions(nonExistentDir, agentName);
-      
-      assert.strictEqual(result.exists, false);
-      assert.strictEqual(result.content, '');
-      assert.strictEqual(result.error, undefined);
-    });
-
-    test('returns exists: false for missing agent-specific instruction file', () => {
-      const tempDir = createTempDir('paw-custom-inst-dir-');
-      const agentName = 'PAW-Test Agent';
-      
-      try {
-        fs.mkdirSync(tempDir, { recursive: true });
-        
-        const result = loadCustomInstructions(tempDir, agentName);
-        
-        assert.strictEqual(result.exists, false);
-        assert.strictEqual(result.content, '');
-        assert.strictEqual(result.error, undefined);
-      } finally {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-    });
-
-    test('returns file content for valid agent-specific instruction file', () => {
-      const tempDir = createTempDir('paw-custom-inst-valid-');
-      const agentName = 'PAW-Test Agent';
-      const filePath = path.join(tempDir, `${agentName}-instructions.md`);
-      const content = '# Custom Instructions\n- Always include tests\n- Use TypeScript';
-      
-      try {
-        writeFileRecursive(filePath, content);
-        
-        const result = loadCustomInstructions(tempDir, agentName);
-        
-        assert.strictEqual(result.exists, true);
-        assert.strictEqual(result.content, content);
-        assert.strictEqual(result.error, undefined);
-      } finally {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-    });
-
-    test('returns exists: true with error message for file read errors', () => {
-      const tempDir = createTempDir('paw-custom-inst-error-');
-      const agentName = 'PAW-Test Agent';
-      const filePath = path.join(tempDir, `${agentName}-instructions.md`);
-      
-      try {
-        // Create file then make it unreadable
-        writeFileRecursive(filePath, 'test content');
-        fs.chmodSync(filePath, 0o000);
-        
-        const result = loadCustomInstructions(tempDir, agentName);
-        
-        assert.strictEqual(result.exists, true);
-        assert.strictEqual(result.content, '');
-        assert.ok(result.error?.includes('Failed to read custom instructions'));
-      } finally {
-        // Restore permissions before cleanup
-        try {
-          fs.chmodSync(filePath, 0o644);
-        } catch (e) {
-          // Ignore if file doesn't exist
-        }
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-    });
-
-    test('normalizes line endings and trims whitespace', () => {
-      const tempDir = createTempDir('paw-custom-inst-norm-');
-      const agentName = 'PAW-Test Agent';
-      const filePath = path.join(tempDir, `${agentName}-instructions.md`);
-      const contentWithCRLF = 'Instruction 1\r\nInstruction 2\r\n  ';
-      
-      try {
-        writeFileRecursive(filePath, contentWithCRLF);
-        
-        const result = loadCustomInstructions(tempDir, agentName);
-        
-        assert.strictEqual(result.exists, true);
-        assert.strictEqual(result.content, 'Instruction 1\nInstruction 2');
-      } finally {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-    });
-  });
-
   suite('getContext validation', () => {
     test('throws error for invalid feature slug format with path traversal', async () => {
       const workspaceRoot = createTempDir('paw-ctx-validation-');
@@ -477,39 +350,23 @@ suite('Context Tool', () => {
       }
     });
 
-    test('returns partial results when workspace instructions missing', async () => {
+    test('returns workflow context when present', async () => {
       const featureSlug = 'partial-test';
       const agentName = 'PAW-Test Agent';
       const workspaceRoot = createTempDir('paw-ctx-partial-');
-      const tempHome = createTempDir('paw-ctx-partial-home-');
 
       try {
         const workflowContextPath = path.join(workspaceRoot, '.paw', 'work', featureSlug, 'WorkflowContext.md');
         writeFileRecursive(workflowContextPath, 'Work Title: Partial Test');
 
-        const userInstructionsPath = path.join(
-          tempHome,
-          '.paw',
-          'instructions',
-          `${agentName}-instructions.md`
-        );
-        writeFileRecursive(userInstructionsPath, 'User instructions only');
-
         const restoreEnv = overrideEnv({
-          HOME: tempHome,
-          USERPROFILE: tempHome,
           PAW_WORKSPACE_PATH: workspaceRoot,
         });
 
         try {
           const result = await getContext({ feature_slug: featureSlug, agent_name: agentName });
           
-          // Workspace instructions should be missing
-          assert.strictEqual(result.workspace_instructions.exists, false);
-          
-          // User instructions and workflow context should exist
-          assert.strictEqual(result.user_instructions.exists, true);
-          assert.strictEqual(result.user_instructions.content, 'User instructions only');
+          // Workflow context should exist
           assert.strictEqual(result.workflow_context.exists, true);
           assert.ok(result.workflow_context.content.includes('Work Title: Partial Test'));
         } finally {
@@ -517,15 +374,13 @@ suite('Context Tool', () => {
         }
       } finally {
         fs.rmSync(workspaceRoot, { recursive: true, force: true });
-        fs.rmSync(tempHome, { recursive: true, force: true });
       }
     });
 
-    test('returns empty results when all files missing (no errors thrown)', async () => {
+    test('returns empty workflow context when file missing', async () => {
       const featureSlug = 'empty-test';
       const agentName = 'PAW-Test Agent';
       const workspaceRoot = createTempDir('paw-ctx-empty-');
-      const tempHome = createTempDir('paw-ctx-empty-home-');
 
       try {
         // Create feature directory but no files
@@ -533,24 +388,19 @@ suite('Context Tool', () => {
         fs.mkdirSync(featureDir, { recursive: true });
 
         const restoreEnv = overrideEnv({
-          HOME: tempHome,
-          USERPROFILE: tempHome,
           PAW_WORKSPACE_PATH: workspaceRoot,
         });
 
         try {
           const result = await getContext({ feature_slug: featureSlug, agent_name: agentName });
           
-          // All should be missing
-          assert.strictEqual(result.workspace_instructions.exists, false);
-          assert.strictEqual(result.user_instructions.exists, false);
+          // Workflow context should be missing
           assert.strictEqual(result.workflow_context.exists, false);
         } finally {
           restoreEnv();
         }
       } finally {
         fs.rmSync(workspaceRoot, { recursive: true, force: true });
-        fs.rmSync(tempHome, { recursive: true, force: true });
       }
     });
   });
@@ -797,8 +647,6 @@ Session Policy: continuous`;
       const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
       const response = formatContextResponse({
-        workspace_instructions: status(''),
-        user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
@@ -811,24 +659,18 @@ Session Policy: continuous`;
       const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
       const autoResponse = formatContextResponse({
-        workspace_instructions: status(''),
-        user_instructions: status(''),
         workflow_context: status('Handoff Mode: auto'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
       assert.ok(autoResponse.includes('Auto Mode'));
 
       const manualResponse = formatContextResponse({
-        workspace_instructions: status(''),
-        user_instructions: status(''),
         workflow_context: status('Handoff Mode: manual'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
       assert.ok(manualResponse.includes('Manual Mode'));
 
       const semiAutoResponse = formatContextResponse({
-        workspace_instructions: status(''),
-        user_instructions: status(''),
         workflow_context: status('Handoff Mode: semi-auto'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
@@ -839,8 +681,6 @@ Session Policy: continuous`;
       const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
       const response = formatContextResponse({
-        workspace_instructions: status(''),
-        user_instructions: status(''),
         workflow_context: status('Work Title: Demo\nTarget Branch: main'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
@@ -853,28 +693,20 @@ Session Policy: continuous`;
       const status = (content: string, error?: string): InstructionStatus => ({ exists: true, content, error });
 
       const response = formatContextResponse({
-        workspace_instructions: status('Workspace instructions content'),
-        user_instructions: status('User instructions content'),
         workflow_context: status('Work Title: Demo\nHandoff Mode: auto'),
         workspace_info: defaultWorkspaceInfo,
       } satisfies ContextResult);
 
-      const workspaceIndex = response.indexOf('<workspace_instructions>');
-      const userIndex = response.indexOf('<user_instructions>');
       const workflowIndex = response.indexOf('<workflow_context>');
       const handoffIndex = response.indexOf('<handoff_instructions>');
 
-      // Handoff should be after all other sections
-      assert.ok(handoffIndex > workspaceIndex, 'handoff_instructions should be after workspace_instructions');
-      assert.ok(handoffIndex > userIndex, 'handoff_instructions should be after user_instructions');
+      // Handoff should be after workflow_context
       assert.ok(handoffIndex > workflowIndex, 'handoff_instructions should be after workflow_context');
     });
 
-    test('returns empty context when only handoff instructions present', () => {
+    test('returns empty context when workflow_context missing', () => {
       const empty: InstructionStatus = { exists: false, content: '' };
       const response = formatContextResponse({
-        workspace_instructions: empty,
-        user_instructions: empty,
         workflow_context: empty,
         workspace_info: defaultWorkspaceInfo,
       });

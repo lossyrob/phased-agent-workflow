@@ -146,7 +146,6 @@ The **PAW Workflow Extension** automates PAW agent installation and work item in
   - Creates and checks out git branch
   - Opens WorkflowContext.md for immediate editing
   - Navigate stages using simple commands; prompt files generated on-demand when customization needed
-- **Custom instructions support**: Tailor the initialization workflow for your project
 
 #### Installation
 
@@ -181,43 +180,9 @@ By default, PAW commits workflow artifacts (Spec.md, ImplementationPlan.md, etc.
 
 When excluded, artifacts stay local for your reference but don't appear in commits or PRs.
 
-#### Custom Instructions (Optional)
+#### Customization
 
-##### Workflow Initialization Instructions
-
-You can tailor the initialization workflow for your project:
-
-1. Create the directory and file:
-   ```bash
-   mkdir -p .paw/instructions
-   touch .paw/instructions/init-instructions.md
-   ```
-
-2. Add your project-specific guidance using Markdown format:
-   - Naming conventions for feature slugs and branches
-   - Required metadata that must appear in `WorkflowContext.md`
-   - Stage transition preferences and handoff mode defaults
-   - Integration requirements (e.g., mandatory issue URLs)
-
-When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
-
-##### Agent Behavior Customization
-
-You can customize how PAW agents behave during workflows at both project and user levels:
-
-**Project-level (workspace) instructions** (`.paw/instructions/<agent-name>-instructions.md`):
-- Apply to all users working in the project
-- Override user-level instructions when present
-- Should be committed to version control for team-wide standards
-- Example: `.paw/instructions/PAW-02B Impl Planner-instructions.md` for project planning conventions
-
-**User-level instructions** (`~/.paw/instructions/<agent-name>-instructions.md`):
-- Apply across all PAW workflows for a specific user
-- Respected unless overridden by workspace instructions
-- Personal preferences that follow you across projects
-- Example: `~/.paw/instructions/PAW-01A Specification-instructions.md` for your spec format preferences
-
-Agents call the `paw_get_context` tool at startup to retrieve custom instructions and workflow metadata dynamically. This enables workspace-aware agent behavior while keeping agent files globally installed and unchanged.
+For agent customization, use VS Code's standard `copilot-instructions.md` (project-level) or `AGENTS.md` files rather than PAW-specific instructions. These integrate with all VS Code agents and skills.
 
 #### Requirements
 

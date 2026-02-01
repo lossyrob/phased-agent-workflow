@@ -4,7 +4,6 @@ import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
 import { registerContextTool } from './tools/contextTool';
 import { registerHandoffTool } from './tools/handoffTool';
-import { registerPromptGenerationTool } from './tools/promptGenerationTool';
 import { registerSkillTool } from './tools/skillTool';
 import { registerSkillsTool } from './tools/skillsTool';
 import {
@@ -50,9 +49,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerHandoffTool(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_new_session');
-
-  registerPromptGenerationTool(context);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_generate_prompt');
 
   registerSkillsTool(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_get_skills');

@@ -62,67 +62,20 @@ User can also end anytime with "that's enough", "let's write it up", etc.
 
 Synthesize the conversation into WorkShaping.md.
 
-## WorkShaping.md Template
+## Artifact Content
 
-```markdown
-# Work Shaping: <Work Title>
+WorkShaping.md should capture:
+- Problem statement (who benefits, what problem is solved)
+- Work breakdown (core functionality vs supporting features)
+- Edge cases with expected handling
+- Rough architecture (component interactions, data flow)
+- Critical analysis (value assessment, build vs modify tradeoffs)
+- Codebase fit (similar features, reuse opportunities)
+- Risk assessment (potential negative impacts, gotchas)
+- Open questions for downstream stages
+- Session insights and key decisions
 
-**Date**: <YYYY-MM-DD>
-**Status**: Shaped (ready for specification)
-
-## Problem Statement
-
-<Clear description of the problem being solved and who benefits>
-
-## Work Breakdown
-
-### Core Functionality
-- <Main capability 1>
-- <Main capability 2>
-
-### Supporting Features
-- <Supporting item>
-
-## Edge Cases and Boundary Conditions
-
-- <Edge case>: <How it should be handled>
-
-## Rough Architecture
-
-<High-level component interactions, data flow, integration points>
-
-## Critical Analysis
-
-### Value Assessment
-<Why this is worth building, what alternatives exist>
-
-### Build vs. Modify Tradeoffs
-<New construction vs. extending existing features>
-
-## Codebase Fit
-
-### Similar Existing Features
-- <Existing feature and how it relates>
-
-### Reuse Opportunities
-- <Existing code/patterns that can be leveraged>
-
-## Risk Assessment
-
-### Potential Negative Impacts
-- <Risk>: <Impact and mitigation thoughts>
-
-### Implementation Gotchas
-- <Gotcha to watch for>
-
-## Open Questions
-
-<Any remaining questions that spec stage should address>
-
-## Session Notes
-
-<Key insights or decisions from the shaping conversation>
-```
+Use clear section headers. Omit sections that don't apply.
 
 ## Artifact Location
 

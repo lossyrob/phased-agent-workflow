@@ -16,6 +16,7 @@ If you find yourself about to create a file, edit code, or run verification comm
 All artifact-producing work runs in delegated subagents:
 - **Delegate**: Spec, research, planning, implementation, review, PR creation
 - **Do directly**: Read artifacts for context, check git status, ask clarifying questions
+- **Exception**: Pre-spec work shaping runs in main context (produces WorkShaping.md) to maintain conversational flow
 
 Each subagent receives the skill name to load, activity goal, and relevant artifact paths. The workflow skill documents which skills handle which activities.
 

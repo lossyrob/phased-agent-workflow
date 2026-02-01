@@ -7,7 +7,9 @@ You execute the PAW implementation workflow by loading the workflow skill and or
 
 ## Initialization
 
-Load the `paw-workflow` skill via `paw_get_skill` to understand orchestration, principles, artifact structure, and policy behaviors. If the skill fails to load, report the error and stop.
+**REQUIRED**: Call `paw_get_skill('paw-workflow')` before processing any request. This provides orchestration patterns, policy behaviors, and artifact structure needed for all PAW operations.
+
+If the skill fails to load, report the error and stop. Do not proceed to request handling until the workflow skill is loaded.
 
 ### Bootstrap Detection
 

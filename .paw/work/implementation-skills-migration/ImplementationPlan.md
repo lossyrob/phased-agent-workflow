@@ -99,6 +99,7 @@ Activity skills will provide:
 7. **Phase 7: Deprecate Custom Instructions and Prompt Generation** - Remove legacy custom instruction templates
 8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
 9. **Phase 9: Remove paw_get_context Tool** - Remove tool, handoff templates, and component files; agents read WorkflowContext.md directly
+10. **Phase 10: Workflow Checkpoint Skill** - Split workflow guidance into reference skill (loaded at init) and checkpoint skill (reloaded after each activity) to keep continuation logic in recent context
 
 ---
 
@@ -1693,3 +1694,102 @@ With the skills-based architecture:
 - Research: `.paw/work/implementation-skills-migration/SpecResearch.md`, `.paw/work/implementation-skills-migration/CodeResearch.md`
 - Reference pattern: `agents/PAW Review.agent.md`, `skills/paw-review-workflow/SKILL.md`
 - Planning docs: `planning/paw_v2/` on branch `planning/paw_v2`
+
+---
+
+## Phase 10: Workflow Checkpoint Skill
+
+### Overview
+
+Split `paw-workflow` into two skills: a comprehensive reference skill and a compact checkpoint skill. The checkpoint skill is reloaded after each activity completes to bring workflow continuation logic into recent context, addressing the "agent forgets workflow instructions" problem caused by early-loaded content being pushed out of the attention window.
+
+### Problem Statement
+
+The `paw-workflow` skill is loaded early in the PAW session and provides comprehensive orchestration guidance (~350 lines). As conversation grows, this early content gets pushed toward the start of the context window where LLM attention weakens. The result: the agent forgets to continue the workflow after activities complete, stopping prematurely instead of consulting the Default Flow Guidance.
+
+This problem is exacerbated by Phase 8's hybrid execution model—when activities execute directly in the PAW session (rather than returning from subagents), there's no structured completion response that forces the agent to evaluate next steps.
+
+### Solution
+
+Create `paw-workflow-checkpoint` (~80-100 lines) containing:
+- Condensed transition table (what comes next after each activity)
+- Pause conditions (when to stop vs continue)
+- Review Policy application logic
+- Session Policy transition guidance
+
+The PAW agent is instructed to reload this skill after each activity completes, bringing the decision logic into recent context at the exact moment it's needed.
+
+### Skill Content Distribution
+
+**`paw-workflow` (reference, loaded at init)**:
+- Core Implementation Principles
+- Activity table with capabilities
+- Artifact directory structure
+- Detailed policy definitions (Review Policy, Session Policy)
+- PR Comment Response Guidance
+- Intelligent Routing Guidance
+- Subagent Completion Contract (for research/review activities)
+- Workflow Mode handling
+
+**`paw-workflow-checkpoint` (compact, reloaded after each activity)**:
+- Default Flow Guidance (condensed)
+- Transition decision table
+- Pause conditions checklist
+- "What comes next" decision tree
+- Review Policy quick reference (which artifacts are milestones)
+
+### Changes Required
+
+#### 1. Create Checkpoint Skill
+**File**: `skills/paw-workflow-checkpoint/SKILL.md`
+**Content**:
+- YAML frontmatter with name and description
+- Condensed Default Flow Guidance (~20 lines)
+- Transition decision table extracted from paw-workflow
+- Pause conditions checklist
+- Quick reference for milestone artifacts
+
+**Size target**: <100 lines, <2KB
+
+#### 2. Update Workflow Skill
+**File**: `skills/paw-workflow/SKILL.md`
+**Changes**:
+- Add note that `paw-workflow-checkpoint` should be loaded after each activity
+- Keep full content as reference (no content removal needed)
+- Add cross-reference to checkpoint skill in Default Flow Guidance section
+
+#### 3. Update PAW Agent
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Replace duplicated transition examples with single instruction:
+  > "After each activity completes, load `paw-workflow-checkpoint` to determine the next step."
+- Remove the "Workflow Continuation (CRITICAL)" section added as a stopgap (if present)
+- Keep the emphasis on not stopping after a single activity
+
+#### 4. Register Checkpoint Skill
+**File**: `src/tools/skillTool.ts`
+**Changes**:
+- Add `paw-workflow-checkpoint` to skill registry
+
+### Dependencies
+
+- **Phase 8 dependency**: Phase 8 removes subagent delegation for interactive activities. The checkpoint skill becomes the primary mechanism for ensuring workflow continuation when activities execute directly.
+- **Phase 9 consideration**: No direct dependency, but both phases simplify the architecture. Phase 9 removes `paw_get_context`; this phase adds a focused checkpoint skill.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] Skill file exists at `skills/paw-workflow-checkpoint/SKILL.md`
+- [ ] YAML frontmatter contains `name: paw-workflow-checkpoint` and `description`
+- [ ] Skill size <100 lines, <2KB
+- [ ] Linting passes: `npm run lint`
+- [ ] Skill linting passes: `npm run lint:skills`
+- [ ] PAW agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+
+#### Manual Verification:
+- [ ] After `paw-spec` completes, agent loads checkpoint skill and proceeds to `paw-spec-review`
+- [ ] After `paw-implement` completes, agent loads checkpoint skill and proceeds to `paw-impl-review`
+- [ ] After `paw-impl-review` (phase N), agent loads checkpoint skill and proceeds to phase N+1
+- [ ] Checkpoint skill content appears in recent context (verifiable via trace/logs)
+- [ ] Agent correctly applies Review Policy pause conditions from checkpoint skill
+- [ ] No duplicate transition logic between PAW.agent.md and workflow skills

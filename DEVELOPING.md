@@ -31,7 +31,7 @@ Agent and skill files should be kept within reasonable token limits to ensure th
 ./scripts/lint-prompting.sh
 
 # Lint a specific agent file
-./scripts/lint-prompting.sh agents/PAW-01A.agent.md
+./scripts/lint-prompting.sh agents/PAW.agent.md
 
 # Lint all skill files in skills/
 ./scripts/lint-prompting.sh --skills

@@ -11,9 +11,9 @@ import { extractFrontmatterField } from '../utils/frontmatter';
  * Represents a PAW agent template loaded from the extension's agents directory.
  */
 export interface AgentTemplate {
-  /** The original filename (e.g., 'PAW-01A Specification.agent.md') */
+  /** The original filename (e.g., 'PAW.agent.md', 'PAW Review.agent.md') */
   filename: string;
-  /** The derived agent name (e.g., 'Specification') */
+  /** The derived agent name (e.g., 'PAW', 'Review') */
   name: string;
   /** The description from YAML frontmatter */
   description: string;
@@ -55,25 +55,25 @@ function extractFrontmatterDescription(content: string): string {
  * 
  * Removes the '.agent.md' extension and the 'PAW-##X ' prefix.
  * 
- * @param filename - The agent filename (e.g., 'PAW-01A Specification.agent.md')
- * @returns The derived name (e.g., 'Specification')
+ * @param filename - The agent filename (e.g., 'PAW.agent.md', 'PAW Review.agent.md')
+ * @returns The derived name (e.g., 'PAW', 'Review')
  * 
  * @example
- * deriveAgentName('PAW-01A Specification.agent.md') // returns 'Specification'
- * deriveAgentName('PAW-03B Impl Reviewer.agent.md') // returns 'Impl Reviewer'
+ * deriveAgentName('PAW.agent.md') // returns 'PAW'
+ * deriveAgentName('PAW Review.agent.md') // returns 'Review'
  */
 function deriveAgentName(filename: string): string {
   // Remove the .agent.md extension
   const withoutExtension = filename.replace(/\.agent\.md$/i, '');
-  // Remove the PAW-##X prefix (e.g., 'PAW-01A ', 'PAW-R1B ')
+  // Remove the PAW-##X prefix (e.g., 'PAW-01A ', 'PAW-R1B ') - legacy support
   return withoutExtension.replace(/^PAW-[^\s]+\s*/i, '').trim();
 }
 
 /**
- * Derives the full agent identifier from the filename (e.g., 'PAW-01A Specification').
+ * Derives the full agent identifier from the filename (e.g., 'PAW', 'PAW Review').
  * 
- * @param filename - The agent filename (e.g., 'PAW-01A Specification.agent.md')
- * @returns The full agent identifier without extension (e.g., 'PAW-01A Specification')
+ * @param filename - The agent filename (e.g., 'PAW.agent.md', 'PAW Review.agent.md')
+ * @returns The full agent identifier without extension (e.g., 'PAW', 'PAW Review')
  */
 function deriveAgentIdentifier(filename: string): string {
   return filename.replace(/\.agent\.md$/i, '');

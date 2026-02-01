@@ -260,6 +260,8 @@ In Scope:
 - Update context tool to parse new policy fields with backward compatibility mapping for legacy Handoff Mode
 - Update extension installer to deploy new agent, skills, and prompt files
 - Remove deprecated individual agent files and old initialization template after migration
+- Deprecate PAW-specific custom instructions feature (`.paw/instructions/`) in favor of standard VS Code custom instructions
+- Remove prompt generation tool (`paw_generate_prompt`) as prompt files are no longer needed in skills-based architecture
 
 Out of Scope:
 - Changing artifact locations or formats

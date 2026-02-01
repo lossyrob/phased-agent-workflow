@@ -1230,6 +1230,89 @@ Removed legacy agents and templates, completing the migration to skills-based ar
 
 ---
 
+## Phase 7: Deprecate Custom Instructions and Prompt Generation
+
+### Overview
+Remove PAW-specific custom instructions feature and prompt generation tool. Users will use standard VS Code custom instructions (`copilot-instructions.md`, `AGENTS.md`) for agent customization instead of `.paw/instructions/` files. This simplifies the extension and aligns with VS Code ecosystem conventions.
+
+### Rationale
+- PAW custom instructions were designed for 9-agent model (stage-specific instructions)
+- With 2-agent skills-based model, stage-specific customization is less meaningful
+- VS Code's built-in custom instructions work across all agents and skills
+- Reduces maintenance burden and code complexity
+
+### Changes Required:
+
+#### 1. Remove Prompt Generation Tool
+**Files to delete**:
+- `src/tools/promptGenerationTool.ts`
+- `src/test/suite/promptGenerationTool.test.ts`
+
+**Files to update**:
+- `package.json`: Remove `paw_generate_prompt` from `languageModelTools`
+
+**Tests**:
+- Compile passes: `npm run compile`
+- Lint passes: `npm run lint`
+
+#### 2. Remove Custom Instructions Loading
+**Files to update**:
+- `src/tools/contextTool.ts`: Remove `loadCustomInstructions` function and related code
+- `src/test/suite/customInstructions.test.ts`: Remove tests for custom instructions
+- `package.json`: Update `paw_get_context` schema to remove instructions-related parameters
+
+**Tests**:
+- Compile passes: `npm run compile`
+- Lint passes: `npm run lint`
+- `paw_get_context` still returns workflow context without instructions
+
+#### 3. Update PAW Agent Instructions
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Add instruction to pay attention to any custom instructions in context
+- Note that users should use `copilot-instructions.md` or `AGENTS.md` for customization
+- Remove any references to `.paw/instructions/` directory
+
+**Tests**:
+- Agent lint passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+
+#### 4. Remove Custom Instructions Documentation
+**Files to delete**:
+- `docs/guide/custom-instructions.md`
+
+**Files to update**:
+- `mkdocs.yml`: Remove custom-instructions.md from nav
+- `README.md`: Remove custom instructions section, add note about using VS Code custom instructions
+- Any other docs referencing `.paw/instructions/`
+
+**Tests**:
+- Documentation builds: `mkdocs build --strict`
+
+#### 5. Clean Up Legacy Artifacts
+**Files to delete**:
+- `.paw/instructions/` directory (if exists in repo)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `src/tools/promptGenerationTool.ts` deleted
+- [ ] `src/test/suite/promptGenerationTool.test.ts` deleted
+- [ ] `docs/guide/custom-instructions.md` deleted
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] Linting passes: `npm run lint`
+- [ ] Agent linting passes: `npm run lint:agent:all`
+- [ ] Documentation builds: `mkdocs build --strict`
+- [ ] No references to `paw_generate_prompt` in package.json
+- [ ] No references to `.paw/instructions/` in documentation
+
+#### Manual Verification:
+- [ ] Extension activates without errors
+- [ ] `paw_get_context` returns workflow context successfully
+- [ ] PAW agent respects `copilot-instructions.md` when present
+- [ ] No user-visible errors when `.paw/instructions/` files exist (graceful ignore)
+
+---
+
 ## Phase 6: Work Shaping Utility Skill
 
 ### Overview

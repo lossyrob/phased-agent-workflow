@@ -69,7 +69,7 @@ Or with shorthand:
 
 Multi-repository mode activates when:
 - Multiple PR URLs/numbers provided to the review command
-- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple workspace folders open in VS Code (detected via multiple `.git` directories)
 - PR links reference different repositories
 
 ### How It Works
@@ -148,7 +148,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 - **Non-GitHub**: `<branch-slug>/` (slugified branch name)
 
 **Multi-repo detection** triggers naming when:
-- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple workspace folders open in VS Code (detected via multiple `.git` directories)
 - Multiple PR URLs/numbers provided to review command
 
 ---

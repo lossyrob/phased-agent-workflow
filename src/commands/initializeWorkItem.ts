@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { collectUserInputs } from "../ui/userInput";
-import type { ReviewPolicy, SessionPolicy } from "../tools/contextTool";
+import type { ReviewPolicy, SessionPolicy } from "../types/workflow";
 import { validateGitRepository } from "../git/validation";
 
 /**

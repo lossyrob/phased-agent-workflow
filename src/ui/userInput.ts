@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import type { ReviewPolicy, SessionPolicy } from '../tools/contextTool';
+import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 
 // Re-export types for consumers that import from userInput.ts
-export type { ReviewPolicy, SessionPolicy } from '../tools/contextTool';
+export type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 
 /**
  * Workflow mode determines which stages are included in the workflow.

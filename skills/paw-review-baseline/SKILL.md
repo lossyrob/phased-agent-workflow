@@ -39,13 +39,13 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 
 ## Multi-Repository Mode
 
-When reviewing PRs across multiple repositories (detected via multiple PR URLs or `isMultiRootWorkspace: true` from `paw_get_context`):
+When reviewing PRs across multiple repositories:
 
 ### Detection
 
 Multi-repo mode activates when:
 - Multiple PR URLs/numbers provided in input
-- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple workspace folders open (detected via multiple `.git` directories)
 - ReviewContext.md contains `related_prs` entries
 
 ### Per-Repository Processing

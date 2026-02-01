@@ -15,7 +15,7 @@ This skill is **only invoked for multi-repository reviews**. Skip this activity 
 - Single PR is being reviewed
 - All PRs are from the same repository
 - No `related_prs` entries in ReviewContext.md
-- `paw_get_context` returned `isMultiRootWorkspace: false` with single PR
+- Single workspace folder open with single PR
 
 ## Prerequisites
 

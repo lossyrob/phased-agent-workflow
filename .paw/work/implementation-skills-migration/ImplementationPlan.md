@@ -1607,24 +1607,64 @@ With the skills-based architecture:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `src/tools/contextTool.ts` deleted
-- [ ] `src/prompts/handoffAuto.template.md` deleted
-- [ ] `src/prompts/handoffManual.template.md` deleted
-- [ ] `src/prompts/handoffSemiAuto.template.md` deleted
-- [ ] `agents/components/paw-context.component.md` deleted
-- [ ] `agents/components/handoff-instructions.component.md` deleted
-- [ ] No `paw_get_context` in `package.json`
-- [ ] No `paw_get_context` references in `src/extension.ts`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
-- [ ] Agent linting passes: `npm run lint:agent:all`
-- [ ] Skill linting passes: `npm run lint:skills`
+- [x] `src/tools/contextTool.ts` deleted
+- [x] `src/prompts/handoffAuto.template.md` deleted
+- [x] `src/prompts/handoffManual.template.md` deleted
+- [x] `src/prompts/handoffSemiAuto.template.md` deleted
+- [x] `agents/components/paw-context.component.md` deleted
+- [x] `agents/components/handoff-instructions.component.md` deleted
+- [x] No `paw_get_context` in `package.json`
+- [x] No `paw_get_context` references in `src/extension.ts`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
+- [x] Agent linting passes: `npm run lint:agent:all`
+- [x] Skill linting passes: `npm run lint:skills`
 
 #### Manual Verification:
 - [ ] Extension activates without errors
 - [ ] PAW agent reads WorkflowContext.md directly and respects policy values
 - [ ] PAW Review correctly detects multi-repo scenarios without tool
 - [ ] No runtime errors when invoking PAW or PAW Review workflows
+
+**Phase PR**: https://github.com/lossyrob/phased-agent-workflow/pull/178
+
+### Phase 9 Completion Notes
+
+**Completed**: 2026-02-01
+
+Removed `paw_get_context` tool and related components:
+
+**Files deleted:**
+- `src/tools/contextTool.ts` (515 lines)
+- `src/test/suite/contextTool.test.ts`
+- `src/prompts/handoffAuto.template.md`
+- `src/prompts/handoffManual.template.md`
+- `src/prompts/handoffSemiAuto.template.md`
+- `agents/components/paw-context.component.md`
+- `agents/components/handoff-instructions.component.md`
+
+**Files updated:**
+- `package.json`: Removed `paw_get_context` from `languageModelTools`
+- `src/extension.ts`: Removed `registerContextTool` import and call
+- `src/types/workflow.ts`: Created new file for shared type definitions (HandoffMode, ReviewPolicy, SessionPolicy)
+- `src/ui/userInput.ts`: Updated imports to use `types/workflow.ts`
+- `src/utils/backwardCompat.ts`: Updated imports to use `types/workflow.ts`
+- `src/commands/initializeWorkItem.ts`: Updated imports to use `types/workflow.ts`
+- `agents/PAW Review.agent.md`: Replaced `paw_get_context` multi-repo detection with file system inspection
+- `skills/paw-review-workflow/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-understanding/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-baseline/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-impact/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-correlation/SKILL.md`: Replaced `paw_get_context` references
+
+**Verification:**
+- 93 tests pass (down from 160 - removed contextTool tests)
+- TypeScript compilation passes
+- ESLint passes
+- Agent and skill linting passes (all 27 files)
+- Documentation builds successfully
+
+**Note**: Multi-repo detection now relies on file system inspection (multiple `.git` directories) rather than a tool call, simplifying the architecture for skills-only runtime portability.
 
 ---
 

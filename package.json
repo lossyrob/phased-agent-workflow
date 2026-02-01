@@ -55,30 +55,6 @@
     ],
     "languageModelTools": [
       {
-        "name": "paw_get_context",
-        "displayName": "Get PAW Context",
-        "modelDescription": "Retrieve workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workflow_context> for raw WorkflowContext.md content.",
-        "toolReferenceName": "pawContext",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "feature_slug": {
-              "type": "string",
-              "description": "The normalized Work ID (also called feature slug, e.g., 'auth-system')"
-            },
-            "agent_name": {
-              "type": "string",
-              "description": "The name of the calling agent (e.g., 'PAW-02B Impl Planner')"
-            }
-          },
-          "required": [
-            "feature_slug",
-            "agent_name"
-          ]
-        }
-      },
-      {
         "name": "paw_new_session",
         "displayName": "Start New PAW Session",
         "modelDescription": "Start a fresh PAW agent chat session with cleared context. Use for session resets, stage transitions, or when user requests 'clear context' / 'new session'. Includes Work ID context and optional inline instructions.",

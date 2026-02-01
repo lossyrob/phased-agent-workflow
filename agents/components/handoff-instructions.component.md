@@ -19,7 +19,7 @@ When the user's message starts with one of these patterns, it is a **COMMAND** t
 
 When transitioning to another stage:
 1. Map user request to target agent (PAW for implementation workflow, PAW Review for review workflow)
-2. Call `paw_call_agent` with: `target_agent`, `work_id`, optional `inline_instruction`
+2. Call `paw_new_session` with: `target_agent`, `work_id`, optional `inline_instruction`
 3. Tool opens new chat - your conversation ends
 
 **Command Mapping** (user command → agent):
@@ -44,7 +44,7 @@ When a Planning PR, Phase PR, or Final PR has review comments that need addressi
 **Providing Local Feedback** (local strategy only):
 When using local strategy without PRs, the user provides feedback directly:
 - `feedback: <user's feedback>` - Hand off to PAW agent with feedback as inline instruction
-- Example: User says `feedback: add error handling for edge cases` → call `paw_call_agent` with `target_agent: 'PAW'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
+- Example: User says `feedback: add error handling for edge cases` → call `paw_new_session` with `target_agent: 'PAW'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
 
 **Inline instructions**: Use `inline_instruction` parameter to pass context to the next agent. Common uses:
 - User feedback: `"Address feedback: add error handling"`
@@ -99,7 +99,7 @@ You can ask me to generate a prompt file for the next stage, ask for `status` or
 
 **AFTER presenting your handoff message, IMMEDIATELY check handoff mode and act:**
 - **Manual mode** → STOP and wait for user command
-- **Semi-Auto mode at routine transition** → call `paw_call_agent` now
-- **Auto mode** → call `paw_call_agent` now
+- **Semi-Auto mode at routine transition** → call `paw_new_session` now
+- **Auto mode** → call `paw_new_session` now
 
 Reference `<handoff_instructions>` from `paw_get_context` to determine your mode and whether this is a routine transition.

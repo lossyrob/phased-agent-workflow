@@ -96,6 +96,8 @@ Activity skills will provide:
 4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
 5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
 6. **Phase 6: Work Shaping Utility Skill** - Create `paw-work-shaping` utility skill for interactive pre-spec ideation sessions
+7. **Phase 7: Deprecate Custom Instructions and Prompt Generation** - Remove legacy custom instruction templates
+8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
 
 ---
 
@@ -1404,6 +1406,95 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
 
 ---
 
+## Phase 8: Hybrid Execution Model
+
+### Overview
+
+Refactor the PAW agent execution model to use a hybrid approach: interactive activities execute directly in the PAW session (preserving user interactivity), while research and review activities delegate to subagents (leveraging context isolation for focused work). This addresses the loss of interactivity caused by the original "orchestrator delegates everything" design.
+
+### Problem Statement
+
+The original design (Phase 3) positioned the PAW agent as a pure orchestrator that delegates all work to subagents. Testing revealed this creates a poor user experience for interactive activities like implementation:
+- Subagents cannot interact with users mid-task
+- When issues arise, the subagent must return to PAW, which can only re-delegate
+- Users lose the ability to course-correct during implementation
+- The "NEVER implement directly" guardrails fight against natural workflow
+
+The PAW Review workflow succeeds with subagent delegation because review is inherently "analyze and report"—low interactivity. Implementation workflows require ongoing user collaboration.
+
+### Activity Classification
+
+| Activity | Interactivity | Execution Model | Rationale |
+|----------|---------------|-----------------|-----------|
+| `paw-spec-research` | Low | Subagent | "Answer these questions" - returns results |
+| `paw-code-research` | Low | Subagent | "Document details" - returns results |
+| `paw-spec-review` | Low | Subagent | "Review and report" - returns feedback |
+| `paw-plan-review` | Low | Subagent | "Review and report" - returns feedback |
+| `paw-spec` | High | Direct | User clarifies requirements interactively |
+| `paw-planning` | High | Direct | Phase decisions, handling blockers |
+| `paw-implement` | High | Direct | Adapting to reality, user course-correction |
+| `paw-impl-review` | Medium | Direct | May need user input on review scope |
+| `paw-pr` | Medium | Direct | PR description, final checks |
+| `paw-init` | Medium | Direct | Bootstrap needs user input |
+| `paw-status` | Low | Direct | Simple, no context isolation benefit |
+| `paw-work-shaping` | High | Direct | Interactive Q&A by design |
+
+### Changes Required
+
+#### 1. PAW Agent Execution Model
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Replace "NEVER implement directly" with hybrid execution model
+- Define which activities delegate to subagents vs execute directly
+- Remove guardrails that prevent direct execution
+- Add guidance: "Load skill and execute directly for interactive activities"
+
+#### 2. Workflow Skill Updates
+**File**: `skills/paw-workflow/SKILL.md`
+**Changes**:
+- Update "Subagent Completion Contract" to specify which activities use subagents
+- Rename or refine section to "Execution Model" covering both patterns
+- Update Default Transition Table to indicate execution model per transition
+- Remove/revise language implying all activities run in subagents
+
+#### 3. Activity Skills - Subagent Awareness
+**Files**: `skills/paw-spec-research/SKILL.md`, `skills/paw-code-research/SKILL.md`, `skills/paw-spec-review/SKILL.md`, `skills/paw-plan-review/SKILL.md`
+**Changes**:
+- Add note that these skills typically run in subagent context
+- Ensure completion responses are structured for return to orchestrator
+
+#### 4. Activity Skills - Interactive Awareness
+**Files**: `skills/paw-spec/SKILL.md`, `skills/paw-planning/SKILL.md`, `skills/paw-implement/SKILL.md`, `skills/paw-impl-review/SKILL.md`, `skills/paw-pr/SKILL.md`
+**Changes**:
+- Add note that these skills run in main PAW session (interactive)
+- Skills may internally delegate to subagents for isolated work (e.g., paw-implement calling code-research mid-phase)
+
+#### 5. Integration Tests Update
+**File**: Cross-Phase Testing Strategy (this document)
+**Changes**:
+- Update Session Policy testing to reflect hybrid model
+- Add tests for interactive activities (user can intervene mid-implementation)
+- Add tests for subagent activities (research returns to orchestrator)
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] PAW agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+- [ ] Workflow skill linting passes: `./scripts/lint-prompting.sh skills/paw-workflow/SKILL.md`
+- [ ] All activity skills lint: `npm run lint:skills`
+- [ ] Overall linting passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] User asks PAW to "continue implementation" → PAW loads paw-implement and executes directly
+- [ ] User can interrupt mid-implementation with questions or corrections
+- [ ] User asks PAW for "code research on X" → PAW delegates to subagent, receives results
+- [ ] Research subagent returns structured results to PAW
+- [ ] PAW can invoke research subagent mid-implementation when needed
+- [ ] Spec review runs in subagent, returns feedback to PAW
+- [ ] Interactive activities preserve conversation context with user
+
+---
+
 ## Cross-Phase Testing Strategy
 
 ### Integration Tests:
@@ -1460,6 +1551,7 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
 - **Data Migration**: No data migration needed—artifact locations and formats unchanged
 - **Policy defaults**: New work items use `Review Policy: milestones`, `Session Policy: per-stage`
 - **Custom Workflow Instructions**: Users with `Workflow Mode: custom` whose Custom Workflow Instructions reference deprecated agent names (e.g., "start with PAW-02A", "use PAW-03A Implementer") should update their instructions to describe intent (e.g., "start with code research", "proceed to implementation") rather than specific agent names. The PAW agent will route requests to appropriate skills based on intent.
+- **Tool Rename (Phase 6)**: `paw_call_agent` was renamed to `paw_new_session` for clarity. The new name better conveys the tool's purpose—starting a fresh chat session with cleared context. References to `paw_call_agent` in this plan document the original design; the implemented tool is `paw_new_session`.
 
 ## References
 

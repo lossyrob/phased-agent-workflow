@@ -104,7 +104,7 @@ export function registerHandoffTool(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): void {
-  const tool = vscode.lm.registerTool<HandoffParams>("paw_call_agent", {
+  const tool = vscode.lm.registerTool<HandoffParams>("paw_new_session", {
     async prepareInvocation(options, _token) {
       const { target_agent, work_id, inline_instruction } = options.input;
 

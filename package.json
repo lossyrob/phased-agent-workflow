@@ -79,9 +79,9 @@
         }
       },
       {
-        "name": "paw_call_agent",
-        "displayName": "Call PAW Agent",
-        "modelDescription": "Invoke a PAW agent in a new chat session with Work ID context. Use 'PAW' for implementation workflow (spec, research, planning, implementation) and 'PAW Review' for PR review workflow. Supports inline instructions for customizing agent behavior.",
+        "name": "paw_new_session",
+        "displayName": "Start New PAW Session",
+        "modelDescription": "Start a fresh PAW agent chat session with cleared context. Use for session resets, stage transitions, or when user requests 'clear context' / 'new session'. Includes Work ID context and optional inline instructions.",
         "toolReferenceName": "pawHandoff",
         "canBeReferencedInPrompt": true,
         "inputSchema": {

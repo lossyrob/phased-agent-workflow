@@ -11,7 +11,7 @@ Convert a rough Issue / feature brief into a **structured feature specification*
 
 ## Capabilities
 
-- Create new specification from issue/brief
+- Create new specification from issue/brief or WorkShaping.md output
 - Clarify ambiguous requirements through interactive Q&A
 - Generate research prompt for factual questions about existing system
 - Integrate research findings into specification
@@ -82,7 +82,10 @@ Stop clarification when:
 
 **Desired end state**: Research prompt generated OR specification complete
 
-- Run Clarification Phase to resolve user-intent gaps before drafting
+**Input source precedence**: WorkShaping.md (if exists) → issue/brief → user description
+
+- Check for WorkShaping.md in work directory; if present, use its structured content as primary input
+- Run Clarification Phase to resolve remaining user-intent gaps before drafting
 - Classify unknowns: assumptions (document in spec) vs research questions (generate prompt)
 - If research needed: generate ResearchQuestions at `.paw/work/<work-id>/ResearchQuestions.md` and STOP
 - If no research needed: proceed to complete specification

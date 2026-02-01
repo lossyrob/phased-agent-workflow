@@ -85,6 +85,7 @@ All implementation artifacts are stored in a consistent directory structure:
 ```
 .paw/work/<work-id>/
 ├── WorkflowContext.md      # Configuration and state
+├── WorkShaping.md          # Pre-spec ideation output (optional, from paw-work-shaping)
 ├── Spec.md                 # Feature specification
 ├── SpecResearch.md         # Research answers (optional)
 ├── CodeResearch.md         # Implementation details with file:line refs
@@ -103,8 +104,10 @@ This section describes the typical greenfield implementation progression. The ag
 
 **Skills**: `paw-spec`, `paw-spec-research`, `paw-spec-review`
 
+**Note**: If WorkShaping.md exists (from pre-spec ideation via `paw-work-shaping`), it serves as primary input to `paw-spec`.
+
 **Typical Sequence**:
-1. `paw-spec` (initial): Create specification from brief/issue
+1. `paw-spec` (initial): Create specification from brief/issue (or WorkShaping.md if available)
 2. `paw-spec-research` (if needed): Answer factual questions about existing system
 3. `paw-spec` (resume): Integrate research findings into specification
 4. `paw-spec-review`: Review spec for quality, completeness, and clarity
@@ -158,7 +161,7 @@ This section describes the typical greenfield implementation progression. The ag
 This table documents typical stage transitions as default guidance.
 
 Two separate mechanisms are involved:
-- **Orchestrator session boundaries**: When Session Policy is `per-stage`, the PAW orchestrator may start a fresh PAW agent session using `paw_call_agent` (a "session reset"). The call should include a resume hint (what workflow point to resume at) so the new session can pick up correctly.
+- **Orchestrator session boundaries**: When Session Policy is `per-stage`, the PAW orchestrator may start a fresh PAW agent session using `paw_new_session` (a "session reset"). The call should include a resume hint (what workflow point to resume at) so the new session can pick up correctly.
 - **Activity execution**: The actual work of each activity skill is executed in a delegated worker session (a subagent) via `runSubagent`, regardless of Session Policy.
 
 | Transition | Milestone? | Session Policy: `per-stage` (orchestrator) | Activity execution |
@@ -167,17 +170,17 @@ Two separate mechanisms are involved:
 | spec-research → spec (resume) | No | (same session) | `runSubagent` (`paw-spec`) |
 | spec → spec-review | No | (same session) | `runSubagent` (`paw-spec-review`) |
 | spec-review → spec (revise) | No | (same session) | `runSubagent` (`paw-spec`) |
-| spec-review pass → code-research | No | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-code-research`) |
+| spec-review pass → code-research | No | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-code-research`) |
 | code-research → planning | No | (same session) | `runSubagent` (`paw-planning`) |
 | planning → plan-review | No | (same session) | `runSubagent` (`paw-plan-review`) |
 | plan-review → planning (revise) | No | (same session) | `runSubagent` (`paw-planning`) |
-| plan-review pass → implement | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
+| plan-review pass → implement | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
 | implement → impl-review (within phase) | No | (same session) | `runSubagent` (`paw-impl-review`) |
-| phase N complete → phase N+1 | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
-| all phases complete → final-pr | **Yes** | `paw_call_agent` (new PAW session w/ resume hint) | `runSubagent` (`paw-pr`) |
+| phase N complete → phase N+1 | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
+| all phases complete → final-pr | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-pr`) |
 
 **Mechanism Selection**:
-- **per-stage Session Policy**: Use `paw_call_agent` only at stage boundaries to start a fresh PAW agent session, then delegate the intended activity via `runSubagent`
+- **per-stage Session Policy**: Use `paw_new_session` only at stage boundaries to start a fresh PAW agent session, then delegate the intended activity via `runSubagent`
 - **continuous Session Policy**: Keep a single PAW agent session throughout; still delegate activities via `runSubagent`
 
 **Review Activity Notes**:
@@ -216,9 +219,9 @@ Session Policy controls conversation context management across stage transitions
 
 ### Policy Values
 
-**`per-stage`**: Stage boundaries start a fresh PAW agent session via `paw_call_agent`
+**`per-stage`**: Stage boundaries start a fresh PAW agent session via `paw_new_session`
 - Reduces context accumulation in the orchestrator
-- `paw_call_agent` should include a resume hint (e.g., intended next activity + relevant artifact paths)
+- `paw_new_session` should include a resume hint (e.g., intended next activity + relevant artifact paths)
 - The new PAW agent session re-loads this workflow skill, validates/derives actual workflow state from artifacts, then delegates the intended activity via `runSubagent`
 
 **`continuous`**: Single PAW agent session throughout the workflow
@@ -230,7 +233,7 @@ Session Policy controls conversation context management across stage transitions
 
 When transitioning to next activity:
 1. Check Session Policy from WorkflowContext.md
-2. If `per-stage`: Use `paw_call_agent` at stage boundaries to start a fresh PAW agent session with a resume hint; the new session delegates the intended activity via `runSubagent`
+2. If `per-stage`: Use `paw_new_session` at stage boundaries to start a fresh PAW agent session with a resume hint; the new session delegates the intended activity via `runSubagent`
 3. If `continuous`: Keep the same PAW agent session and delegate the intended activity via `runSubagent`
 
 ## PR Comment Response Guidance

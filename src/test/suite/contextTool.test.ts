@@ -736,7 +736,7 @@ Session Policy: continuous`;
       const instructions = getHandoffInstructions('manual');
       assert.ok(instructions.includes('Manual Mode'));
       assert.ok(instructions.includes('STOP and wait'));
-      assert.ok(instructions.includes('Do NOT call `paw_call_agent`'));
+      assert.ok(instructions.includes('Do NOT call `paw_new_session`'));
       assert.ok(instructions.includes('user controls all stage transitions'));
     });
 
@@ -751,7 +751,7 @@ Session Policy: continuous`;
     test('returns auto mode instructions', () => {
       const instructions = getHandoffInstructions('auto');
       assert.ok(instructions.includes('Auto Mode'));
-      assert.ok(instructions.includes('Immediately call `paw_call_agent`'));
+      assert.ok(instructions.includes('Immediately call `paw_new_session`'));
       assert.ok(instructions.includes('Do NOT wait for user input'));
       assert.ok(instructions.includes('CRITICAL'));
     });

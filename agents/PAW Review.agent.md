@@ -19,7 +19,7 @@ Identify the review target:
 
 A cross-repository review is detected when ANY of:
 1. **Multiple PR URLs/numbers**: User provides 2+ PRs (e.g., `PR-123 PR-456` or URLs from different repos)
-2. **Multi-root workspace**: `paw_get_context` returns `isMultiRootWorkspace: true`
+2. **Multi-root workspace**: Multiple workspace folders open in VS Code (check via file system—multiple `.git` directories)
 3. **Cross-repo PR links**: PR references contain repositories with different owner/repo paths
 
 When multi-repo detected, use artifact naming scheme: `PR-<number>-<repo-slug>/`

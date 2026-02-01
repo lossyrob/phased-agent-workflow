@@ -112,7 +112,7 @@ All review artifacts are stored in a consistent directory structure:
 **Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
 Example: `acme-corp/my-api-service` → `my-api-service`
 
-**Multi-repo detection**: Use when `paw_get_context` returns `isMultiRootWorkspace: true` OR multiple PRs provided.
+**Multi-repo detection**: Use when multiple workspace folders are open in VS Code OR multiple PRs provided.
 
 ## Workflow Orchestration
 
@@ -161,7 +161,7 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Detection Criteria** (any of):
 - Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
-- `paw_get_context` returned `isMultiRootWorkspace: true`
+- Multiple workspace folders open (detected via multiple `.git` directories)
 - ReviewContext.md contains `related_prs` entries
 
 **Sequence**:

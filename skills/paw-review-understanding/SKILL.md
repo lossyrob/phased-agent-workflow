@@ -57,7 +57,7 @@ Determine context type before proceeding:
 
 **Detection**: Any of these conditions triggers multi-repo mode:
 - Multiple PR URLs/numbers in input (e.g., `PR-123 PR-456`)
-- `paw_get_context` returns `isMultiRootWorkspace: true`
+- Multiple workspace folders open (detected via multiple `.git` directories)
 - PR links reference different repositories
 
 **Per-PR Processing**:

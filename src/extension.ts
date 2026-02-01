@@ -4,7 +4,6 @@ import * as path from 'path';
 import { initializeWorkItemCommand } from './commands/initializeWorkItem';
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
-import { registerContextTool } from './tools/contextTool';
 import { registerHandoffTool } from './tools/handoffTool';
 import { registerSkillTool } from './tools/skillTool';
 import { registerSkillsTool } from './tools/skillsTool';
@@ -48,9 +47,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Check for deprecated .paw/instructions directories
   await checkForDeprecatedInstructions(outputChannel);
-
-  registerContextTool(context);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_context');
 
   registerHandoffTool(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_new_session');

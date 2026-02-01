@@ -99,7 +99,7 @@ Activity skills will provide:
 7. **Phase 7: Deprecate Custom Instructions and Prompt Generation** - Remove legacy custom instruction templates
 8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
 9. **Phase 9: Remove paw_get_context Tool** - Remove tool, handoff templates, and component files; agents read WorkflowContext.md directly
-10. **Phase 10: Workflow Checkpoint Skill** - Split workflow guidance into reference skill (loaded at init) and checkpoint skill (reloaded after each activity) to keep continuation logic in recent context
+10. **Phase 10: TODO-Based Workflow Enforcement** - Use TODO lists as externalized memory for mandatory workflow steps; move compact workflow rules into agent; solve the "forgetting" problem without custom tooling
 
 ---
 
@@ -1607,24 +1607,64 @@ With the skills-based architecture:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `src/tools/contextTool.ts` deleted
-- [ ] `src/prompts/handoffAuto.template.md` deleted
-- [ ] `src/prompts/handoffManual.template.md` deleted
-- [ ] `src/prompts/handoffSemiAuto.template.md` deleted
-- [ ] `agents/components/paw-context.component.md` deleted
-- [ ] `agents/components/handoff-instructions.component.md` deleted
-- [ ] No `paw_get_context` in `package.json`
-- [ ] No `paw_get_context` references in `src/extension.ts`
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
-- [ ] Agent linting passes: `npm run lint:agent:all`
-- [ ] Skill linting passes: `npm run lint:skills`
+- [x] `src/tools/contextTool.ts` deleted
+- [x] `src/prompts/handoffAuto.template.md` deleted
+- [x] `src/prompts/handoffManual.template.md` deleted
+- [x] `src/prompts/handoffSemiAuto.template.md` deleted
+- [x] `agents/components/paw-context.component.md` deleted
+- [x] `agents/components/handoff-instructions.component.md` deleted
+- [x] No `paw_get_context` in `package.json`
+- [x] No `paw_get_context` references in `src/extension.ts`
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
+- [x] Agent linting passes: `npm run lint:agent:all`
+- [x] Skill linting passes: `npm run lint:skills`
 
 #### Manual Verification:
 - [ ] Extension activates without errors
 - [ ] PAW agent reads WorkflowContext.md directly and respects policy values
 - [ ] PAW Review correctly detects multi-repo scenarios without tool
 - [ ] No runtime errors when invoking PAW or PAW Review workflows
+
+**Phase PR**: https://github.com/lossyrob/phased-agent-workflow/pull/178
+
+### Phase 9 Completion Notes
+
+**Completed**: 2026-02-01
+
+Removed `paw_get_context` tool and related components:
+
+**Files deleted:**
+- `src/tools/contextTool.ts` (515 lines)
+- `src/test/suite/contextTool.test.ts`
+- `src/prompts/handoffAuto.template.md`
+- `src/prompts/handoffManual.template.md`
+- `src/prompts/handoffSemiAuto.template.md`
+- `agents/components/paw-context.component.md`
+- `agents/components/handoff-instructions.component.md`
+
+**Files updated:**
+- `package.json`: Removed `paw_get_context` from `languageModelTools`
+- `src/extension.ts`: Removed `registerContextTool` import and call
+- `src/types/workflow.ts`: Created new file for shared type definitions (HandoffMode, ReviewPolicy, SessionPolicy)
+- `src/ui/userInput.ts`: Updated imports to use `types/workflow.ts`
+- `src/utils/backwardCompat.ts`: Updated imports to use `types/workflow.ts`
+- `src/commands/initializeWorkItem.ts`: Updated imports to use `types/workflow.ts`
+- `agents/PAW Review.agent.md`: Replaced `paw_get_context` multi-repo detection with file system inspection
+- `skills/paw-review-workflow/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-understanding/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-baseline/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-impact/SKILL.md`: Replaced `paw_get_context` references
+- `skills/paw-review-correlation/SKILL.md`: Replaced `paw_get_context` references
+
+**Verification:**
+- 93 tests pass (down from 160 - removed contextTool tests)
+- TypeScript compilation passes
+- ESLint passes
+- Agent and skill linting passes (all 27 files)
+- Documentation builds successfully
+
+**Note**: Multi-repo detection now relies on file system inspection (multiple `.git` directories) rather than a tool call, simplifying the architecture for skills-only runtime portability.
 
 ---
 
@@ -1697,99 +1737,283 @@ With the skills-based architecture:
 
 ---
 
-## Phase 10: Workflow Checkpoint Skill
+## Phase 10: TODO-Based Workflow Enforcement
 
 ### Overview
 
-Split `paw-workflow` into two skills: a comprehensive reference skill and a compact checkpoint skill. The checkpoint skill is reloaded after each activity completes to bring workflow continuation logic into recent context, addressing the "agent forgets workflow instructions" problem caused by early-loaded content being pushed out of the attention window.
+Address the instruction-following reliability problem by combining two strategies: (1) move compact workflow rules into the agent's system prompt, and (2) use TODO lists as externalized memory for mandatory workflow steps. This solves the "forgetting" problem documented in `notes/workflow-instruction-following-issue.md` without requiring custom tooling.
 
 ### Problem Statement
 
-The `paw-workflow` skill is loaded early in the PAW session and provides comprehensive orchestration guidance (~350 lines). As conversation grows, this early content gets pushed toward the start of the context window where LLM attention weakens. The result: the agent forgets to continue the workflow after activities complete, stopping prematurely instead of consulting the Default Flow Guidance.
+Despite explicit "MANDATORY" markers and clear instructions in skills, agents consistently:
+1. **Skip implementation reviews** — proceeding directly to next phase instead of `paw-impl-review`
+2. **Ignore utility skill loading** — not loading `paw-git-operations` for branch verification
+3. **Override pause points** — continuing when Review Policy dictates a pause
 
-This problem is exacerbated by Phase 8's hybrid execution model—when activities execute directly in the PAW session (rather than returning from subagents), there's no structured completion response that forces the agent to evaluate next steps.
+Root causes identified:
+- **Attention decay**: Instructions loaded early get pushed out of the attention window
+- **Momentum override**: Agent optimizes for progress over process compliance
+- **Task vs identity**: Skill instructions feel advisory ("what to do") not constitutional ("who I am")
 
-### Solution
+### Solution: Externalized Workflow State via TODOs
 
-Create `paw-workflow-checkpoint` (~80-100 lines) containing:
-- Condensed transition table (what comes next after each activity)
-- Pause conditions (when to stop vs continue)
-- Review Policy application logic
-- Session Policy transition guidance
+The key insight: **externalized memory > internalized rules**. Instead of relying solely on the agent remembering workflow rules, we leverage the TODO mechanism that exists in VS Code Copilot and Copilot CLI:
 
-The PAW agent is instructed to reload this skill after each activity completes, bringing the decision logic into recent context at the exact moment it's needed.
+1. **Compact workflow rules in agent** — Agent knows mandatory transitions
+2. **TODO tracking instructions** — Agent writes mandatory next steps as TODO items
+3. **Before-stopping checklist** — Agent checks TODOs before ending any response
 
-### Skill Content Distribution
+This works because:
+- TODOs **persist across turns** (survive attention decay)
+- Agent is **trained to check TODOs frequently** (platform behavior)
+- TODOs are **visible to users** (accountability)
+- Pattern is **portable** (most coding assistants have task tracking)
 
-**`paw-workflow` (reference, loaded at init)**:
-- Core Implementation Principles
-- Activity table with capabilities
-- Artifact directory structure
-- Detailed policy definitions (Review Policy, Session Policy)
-- PR Comment Response Guidance
-- Intelligent Routing Guidance
-- Subagent Completion Contract (for research/review activities)
-- Workflow Mode handling
+### Architectural Change
 
-**`paw-workflow-checkpoint` (compact, reloaded after each activity)**:
-- Default Flow Guidance (condensed)
-- Transition decision table
-- Pause conditions checklist
-- "What comes next" decision tree
-- Review Policy quick reference (which artifacts are milestones)
+**Before** (current):
+```
+PAW.agent.md (122 lines)
+  └── "Load paw-workflow skill for orchestration rules"
+       └── paw-workflow skill (373 lines) contains all workflow logic
+            └── Agent loads skill but selectively ignores rules
+```
+
+**After** (proposed):
+```
+PAW.agent.md (~150-180 lines)
+  ├── Workflow Rules (compact, ~30 lines)
+  ├── Workflow Tracking via TODOs (instructions, ~20 lines)
+  ├── Before-Stopping Checklist (~15 lines)
+  └── Activity skills loaded for HOW (domain expertise only)
+
+paw-workflow skill (~150-200 lines, optional reference)
+  └── Principles, artifact structure, PR routing (not enforcement)
+```
+
+### Content Distribution
+
+#### Moves INTO PAW.agent.md:
+
+| Content | Lines | Purpose |
+|---------|-------|---------|
+| Mandatory transitions (compact table) | ~15 | Know what TODOs to create |
+| Review Policy behavior | ~10 | Pause decision logic |
+| Session Policy behavior | ~5 | Session boundary rules |
+| Milestone artifact list | ~5 | Review Policy pause points |
+| Branch discipline requirement | ~5 | Pre-implementation gate |
+| TODO tracking instructions | ~20 | Externalization mechanism |
+| Before-stopping checklist | ~15 | Verification gate |
+
+#### STAYS in paw-workflow skill (optional reference):
+
+| Content | Purpose |
+|---------|---------|
+| Core Implementation Principles | Quality guidance |
+| Activities table | Skill discovery patterns |
+| Artifact directory structure | Reference material |
+| PR Comment Response Guidance | Routing patterns |
+
+#### STAYS in activity skills:
+
+| Content | Skills |
+|---------|--------|
+| Domain expertise (how to do X) | paw-spec, paw-implement, etc. |
+| Artifact templates and formats | Various |
+| Quality checklists for specific activities | Various |
+| Git operation mechanics | paw-git-operations |
+
+### Agent Structure (New Sections)
+
+#### Workflow Rules (Compact)
+
+```markdown
+## Workflow Rules
+
+### Mandatory Transitions
+| After Activity | Required Next | Skippable? |
+|----------------|---------------|------------|
+| paw-implement (any phase) | paw-impl-review | NO |
+| paw-spec | paw-spec-review | NO |
+| paw-planning | paw-plan-review | NO |
+| paw-impl-review (phase N, passes) | paw-implement (phase N+1) or paw-pr | Per Review Policy |
+
+### Prerequisites
+| Before Activity | Required Prerequisite |
+|-----------------|----------------------|
+| paw-implement (any phase) | verify-branch |
+
+### Review Policy Behavior
+- `always`: Pause after every artifact for user confirmation
+- `milestones`: Pause at Spec.md, ImplementationPlan.md, Phase PR, Final PR
+- `never`: Auto-proceed unless blocked
+
+### Branch Discipline
+`verify-branch` loads `paw-git-operations` and confirms correct branch before implementation.
+For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
+```
+
+#### Workflow Tracking (NEW)
+
+```markdown
+## Workflow Tracking
+
+Use TODOs to externalize mandatory workflow steps. After completing ANY activity:
+
+1. Mark the activity TODO as complete
+2. Add `[ ] reconcile-workflow` TODO
+3. Continue to next TODO (which triggers reconciliation)
+
+**Reconciliation** (when processing `reconcile-workflow` TODO):
+1. Confirm last completed activity
+2. Determine mandatory next step from Workflow Rules
+3. Check Prerequisites table — add any required prerequisite TODOs before the activity
+4. Add unchecked TODO for the required next activity
+5. Add another `[ ] reconcile-workflow` after that activity
+6. Mark reconciliation complete
+
+This pattern ensures workflow state is always curated using the latest context.
+
+**Example TODO state mid-workflow:**
+- [x] paw-spec (create Spec.md)
+- [x] reconcile-workflow
+- [x] paw-spec-review
+- [x] reconcile-workflow
+- [x] paw-planning (create ImplementationPlan.md)
+- [x] reconcile-workflow
+- [x] verify-branch (Phase 1)
+- [x] paw-implement (Phase 1)
+- [ ] reconcile-workflow ← PENDING (will add impl-review)
+
+**After reconciliation runs:**
+- [x] paw-implement (Phase 1)
+- [x] reconcile-workflow
+- [ ] paw-impl-review (Phase 1)
+- [ ] reconcile-workflow
+
+**Transitioning to next phase (after review passes):**
+- [x] paw-impl-review (Phase 1)
+- [x] reconcile-workflow
+- [ ] verify-branch (Phase 2) ← Prerequisite added
+- [ ] paw-implement (Phase 2)
+- [ ] reconcile-workflow
+
+**TODO format**: `[ ] <activity-name> (<context>)` — Keep activity name visible for easy identification.
+```
+
+#### Before Yielding Control (NEW)
+
+```markdown
+## Before Yielding Control
+
+This check applies when **stopping work or pausing the workflow** — not on every response.
+Normal mid-task responses (tool output, progress updates) don't require this check.
+
+**When yielding control to the user**, verify:
+
+1. **Check TODOs** — Are there unchecked workflow items?
+2. **If yes** — Execute them (don't yield yet)
+3. **If no** — Safe to yield
+
+**Valid reasons to yield:**
+- Pausing per Review Policy at a milestone
+- Blocked and need user decision
+- User explicitly requested pause
+- All workflow TODOs completed (workflow finished)
+
+**NEVER yield with pending workflow TODOs** — complete them or create a PAUSE TODO explaining why.
+```
 
 ### Changes Required
 
-#### 1. Create Checkpoint Skill
-**File**: `skills/paw-workflow-checkpoint/SKILL.md`
-**Content**:
-- YAML frontmatter with name and description
-- Condensed Default Flow Guidance (~20 lines)
-- Transition decision table extracted from paw-workflow
-- Pause conditions checklist
-- Quick reference for milestone artifacts
-
-**Size target**: <100 lines, <2KB
-
-#### 2. Update Workflow Skill
-**File**: `skills/paw-workflow/SKILL.md`
-**Changes**:
-- Add note that `paw-workflow-checkpoint` should be loaded after each activity
-- Keep full content as reference (no content removal needed)
-- Add cross-reference to checkpoint skill in Default Flow Guidance section
-
-#### 3. Update PAW Agent
+#### 1. Update PAW Agent
 **File**: `agents/PAW.agent.md`
 **Changes**:
-- Replace duplicated transition examples with single instruction:
-  > "After each activity completes, load `paw-workflow-checkpoint` to determine the next step."
-- Remove the "Workflow Continuation (CRITICAL)" section added as a stopgap (if present)
-- Keep the emphasis on not stopping after a single activity
+- Add **Workflow Rules** section (compact mandatory transitions, prerequisites, policies)
+- Add **Workflow Tracking** section (TODO externalization + reconciliation pattern)
+- Add **Before Yielding Control** section (verification gate)
+- Simplify **Initialization** — remove "load paw-workflow first" requirement
+- Update **Request Handling** — workflow rules are now embedded, not skill-loaded
+- Remove redundant **Workflow Continuation (MANDATORY)** section (replaced by TODO mechanism)
 
-#### 4. Register Checkpoint Skill
-**File**: `src/tools/skillTool.ts`
+**Target size**: ~160-190 lines
+
+#### 2. Refactor Workflow Skill to Reference
+**File**: `skills/paw-workflow/SKILL.md`
 **Changes**:
-- Add `paw-workflow-checkpoint` to skill registry
+- Add header: "This skill provides reference documentation. Workflow enforcement is in PAW agent."
+- Keep: Core Implementation Principles, Activities table, Artifact structure, PR routing
+- Remove: Mandatory transition rules, policy enforcement logic (now in agent)
+- Remove: "Workflow Continuation" section (now in agent)
+
+**Target size**: ~150-200 lines (from 373)
+
+#### 3. Update Activity Skills
+**Files**: All `paw-*` activity skills
+**Changes**:
+- Remove any "check workflow for next step" references
+- Skills return completion status only
+- PAW agent (with embedded rules + TODO tracking) handles transitions
 
 ### Dependencies
 
-- **Phase 8 dependency**: Phase 8 removes subagent delegation for interactive activities. The checkpoint skill becomes the primary mechanism for ensuring workflow continuation when activities execute directly.
-- **Phase 9 consideration**: No direct dependency, but both phases simplify the architecture. Phase 9 removes `paw_get_context`; this phase adds a focused checkpoint skill.
+- **Builds on Phase 8**: Hybrid execution model preserved; this changes enforcement mechanism
+- **Phase 9 compatible**: `paw_get_context` removal is orthogonal
+
+### Tradeoffs
+
+| Gain | Cost |
+|------|------|
+| Externalized memory (survives attention decay) | Slightly more verbose agent output (TODO updates) |
+| Portable (TODO exists in most platforms) | Relies on agent discipline to update TODOs |
+| Visible accountability (user sees pending steps) | Agent file grows ~30-50 lines |
+| Smaller agent than original plan (~150 vs ~250) | paw-workflow becomes optional (potential confusion) |
+| No custom tooling required | — |
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] Skill file exists at `skills/paw-workflow-checkpoint/SKILL.md`
-- [ ] YAML frontmatter contains `name: paw-workflow-checkpoint` and `description`
-- [ ] Skill size <100 lines, <2KB
-- [ ] Linting passes: `npm run lint`
+- [ ] `agents/PAW.agent.md` contains Workflow Rules, Workflow Tracking, Before Stopping sections
+- [ ] Agent size is 150-180 lines
+- [ ] `paw-workflow` skill reduced to reference content (~150-200 lines)
+- [ ] Agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
 - [ ] Skill linting passes: `npm run lint:skills`
-- [ ] PAW agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+- [ ] All other tests pass: `npm run lint`
 
-#### Manual Verification:
-- [ ] After `paw-spec` completes, agent loads checkpoint skill and proceeds to `paw-spec-review`
-- [ ] After `paw-implement` completes, agent loads checkpoint skill and proceeds to `paw-impl-review`
-- [ ] After `paw-impl-review` (phase N), agent loads checkpoint skill and proceeds to phase N+1
-- [ ] Checkpoint skill content appears in recent context (verifiable via trace/logs)
-- [ ] Agent correctly applies Review Policy pause conditions from checkpoint skill
-- [ ] No duplicate transition logic between PAW.agent.md and workflow skills
+#### Manual Verification (TODO Behavior):
+- [ ] After `paw-implement`, agent adds `paw-impl-review` to TODOs
+- [ ] Agent checks TODOs before stopping
+- [ ] Agent does NOT stop with unchecked workflow TODOs
+- [ ] TODO list reflects current workflow state accurately
+
+#### Manual Verification (Instruction Following):
+- [ ] After `paw-implement` (Phase N), agent proceeds to `paw-impl-review` without prompting
+- [ ] Agent verifies branch before starting implementation
+- [ ] Review Policy pauses are respected at milestone artifacts
+- [ ] Agent does NOT skip reviews even under "momentum"
+
+#### Regression Verification:
+- [ ] Full workflow (spec → PR) completes successfully
+- [ ] Activity skills still provide domain expertise when loaded
+- [ ] Non-linear requests still work (e.g., "update spec based on plan feedback")
+
+### Open Questions
+
+1. **Should paw-workflow skill be kept or removed entirely?**
+   - Recommendation: Keep as optional reference, clearly labeled
+   - Useful for onboarding and understanding the system
+   - Not required for enforcement (that's in agent + TODOs)
+
+2. **What about the PAW Review agent?**
+   - Review workflow is separate; may face same instruction-following issues
+   - Consider parallel TODO-based enforcement if issues emerge
+   - For now: out of scope for Phase 10
+
+3. **What if agent forgets to update TODOs?**
+   - The Before Yielding Control checklist creates a verification gate
+   - If agent skips TODO update but checks before yielding, it will notice missing state
+   - Dual mechanism (rules + TODOs + checklist) provides redundancy
+
+### Phase 10 Completion Notes
+
+*To be filled in after implementation*

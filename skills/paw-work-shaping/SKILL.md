@@ -41,7 +41,7 @@ Agent-led Q&A to build understanding:
 - Success definition: How will we know it works?
 - Constraints: Performance, security, compatibility requirements?
 
-**Codebase research**: When questions arise about existing system behavior, patterns, or integration points, delegate to `paw-code-research` skill via subagent with specific questions. Integrate findings into the conversation.
+**Codebase research**: When questions arise about existing system behavior, patterns, or integration points, delegate to `paw-code-research` skill via subagent with specific questions. Request findings returned in chat summary rather than full artifact generation. Integrate findings into the conversation.
 
 ### 3. Completion Detection
 
@@ -73,7 +73,7 @@ WorkShaping.md should capture:
 - Codebase fit (similar features, reuse opportunities)
 - Risk assessment (potential negative impacts, gotchas)
 - Open questions for downstream stages
-- Session insights and key decisions
+- Session notes: key decisions and insights from the Q&A (e.g., scope decisions, rejected alternatives, surprising discoveries)
 
 Use clear section headers. Omit sections that don't apply.
 

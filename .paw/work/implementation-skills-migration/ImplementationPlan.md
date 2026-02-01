@@ -98,6 +98,7 @@ Activity skills will provide:
 6. **Phase 6: Work Shaping Utility Skill** - Create `paw-work-shaping` utility skill for interactive pre-spec ideation sessions
 7. **Phase 7: Deprecate Custom Instructions and Prompt Generation** - Remove legacy custom instruction templates
 8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
+9. **Phase 9: Remove paw_get_context Tool** - Remove tool, handoff templates, and component files; agents read WorkflowContext.md directly
 
 ---
 
@@ -1492,6 +1493,113 @@ The PAW Review workflow succeeds with subagent delegation because review is inhe
 - [ ] PAW can invoke research subagent mid-implementation when needed
 - [ ] Spec review runs in subagent, returns feedback to PAW
 - [ ] Interactive activities preserve conversation context with user
+
+---
+
+## Phase 9: Remove paw_get_context Tool
+
+### Overview
+Remove the `paw_get_context` tool entirely. With custom instructions removed (Phase 7) and handoff behavior moved to `paw-workflow` skill, this tool provides no unique value. Agents can read WorkflowContext.md directly and the skill documents policy behavior. Removing this tool simplifies the extension and eases transition to a skills-only implementation (e.g., GitHub Copilot CLI without LanguageModelTools).
+
+### Rationale
+The `paw_get_context` tool currently provides:
+1. **WorkflowContext.md content** → Agent can read file directly
+2. **Parsed policies** (review_policy, session_policy) → Agent parses from WorkflowContext.md; trivial regex
+3. **Handoff instructions** (mode-specific templates) → Replaced by `paw-workflow` skill guidance
+4. **Multi-root workspace detection** (isMultiRootWorkspace) → Only used by PAW Review for artifact naming; can be detected via file system
+
+With the skills-based architecture:
+- Workflow skill documents Review Policy and Session Policy behavior
+- Agent reads WorkflowContext.md directly for configuration values
+- No custom instructions to load
+- Fewer tools = easier portability to skills-only runtimes
+
+### Changes Required:
+
+#### 1. Remove Context Tool Implementation
+**Files to delete**:
+- `src/tools/contextTool.ts`
+- `src/test/suite/contextTool.test.ts` (if exists)
+
+**Files to update**:
+- `src/extension.ts`: Remove `registerContextTool` import and call
+- `package.json`: Remove `paw_get_context` from `languageModelTools` contribution
+
+**Tests**:
+- Compile passes: `npm run compile`
+- Lint passes: `npm run lint`
+
+#### 2. Remove Handoff Template Files
+**Files to delete**:
+- `src/prompts/handoffAuto.template.md`
+- `src/prompts/handoffManual.template.md`
+- `src/prompts/handoffSemiAuto.template.md`
+
+**Tests**:
+- Compile passes: `npm run compile`
+
+#### 3. Remove Component Files
+**Files to delete**:
+- `agents/components/paw-context.component.md`
+- `agents/components/handoff-instructions.component.md`
+
+**Tests**:
+- No remaining references in agent files
+
+#### 4. Update PAW Review Agent
+**File**: `agents/PAW Review.agent.md`
+**Changes**:
+- Remove reference to `paw_get_context` for multi-root workspace detection
+- Add guidance: "Detect multi-repo mode by checking for multiple `.git` directories in workspace folders or multiple PR URLs in input"
+
+**Tests**:
+- Agent lint passes: `./scripts/lint-prompting.sh agents/PAW\ Review.agent.md`
+
+#### 5. Update PAW Review Skills
+**Files**: 
+- `skills/paw-review-workflow/SKILL.md`
+- `skills/paw-review-understanding/SKILL.md`
+- `skills/paw-review-baseline/SKILL.md`
+- `skills/paw-review-impact/SKILL.md`
+- `skills/paw-review-correlation/SKILL.md`
+
+**Changes**:
+- Replace `paw_get_context` references with direct file reading guidance
+- Update multi-repo detection to use file system inspection or input analysis
+
+**Tests**:
+- Skill linting passes: `npm run lint:skills`
+
+#### 6. Update PAW Agent (if needed)
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Ensure agent reads WorkflowContext.md directly (likely already does via skill guidance)
+- Remove any lingering references to `paw_get_context`
+
+**Tests**:
+- Agent lint passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `src/tools/contextTool.ts` deleted
+- [ ] `src/prompts/handoffAuto.template.md` deleted
+- [ ] `src/prompts/handoffManual.template.md` deleted
+- [ ] `src/prompts/handoffSemiAuto.template.md` deleted
+- [ ] `agents/components/paw-context.component.md` deleted
+- [ ] `agents/components/handoff-instructions.component.md` deleted
+- [ ] No `paw_get_context` in `package.json`
+- [ ] No `paw_get_context` references in `src/extension.ts`
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] Linting passes: `npm run lint`
+- [ ] Agent linting passes: `npm run lint:agent:all`
+- [ ] Skill linting passes: `npm run lint:skills`
+
+#### Manual Verification:
+- [ ] Extension activates without errors
+- [ ] PAW agent reads WorkflowContext.md directly and respects policy values
+- [ ] PAW Review correctly detects multi-repo scenarios without tool
+- [ ] No runtime errors when invoking PAW or PAW Review workflows
 
 ---
 

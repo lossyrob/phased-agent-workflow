@@ -5,7 +5,7 @@ description: Implementation activity skill for PAW workflow. Executes plan phase
 
 # Implementation
 
-> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), preserving user interactivity for course-correction during implementation. May delegate to subagents for focused research mid-phase.
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), preserving user interactivity for course-correction during implementation.
 
 Execute implementation plan phases by making code changes, running verification, and committing locally. Operates one phase per invocation by default.
 

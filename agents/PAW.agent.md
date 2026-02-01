@@ -95,7 +95,7 @@ After each activity completes (whether direct or subagent):
 - Review identifies critical issues requiring human guidance
 
 **Review Policy behavior**:
-- `always` → pause after every activity for user confirmation
+- `always` → pause after every artifact for user confirmation
 - `milestones` → auto-proceed within stages, pause at milestone artifacts
 - `never` → auto-proceed unless blocked
 

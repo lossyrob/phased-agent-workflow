@@ -5,7 +5,7 @@ description: Implementation planning activity skill for PAW workflow. Creates ph
 
 # Implementation Planning
 
-> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), preserving user interactivity for phase decisions and blocker handling. May delegate to subagents for focused research.
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), preserving user interactivity for phase decisions and blocker handling.
 
 Create detailed implementation plans through interactive refinement. Plans describe WHAT to build (components, interfaces, behaviors) at the architectural level, delegating HOW to implement to the implementer.
 

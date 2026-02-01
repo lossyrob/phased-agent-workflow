@@ -5,7 +5,7 @@ description: Plan review activity skill for PAW workflow. Reviews implementation
 
 # Plan Review
 
-> **Execution Context**: This skill typically runs in a **subagent** session, delegated by the PAW orchestrator. Return structured feedback (pass/fail + issues) to the orchestrator—do not make orchestration decisions.
+> **Execution Context**: This skill runs in a **subagent** session, delegated by the PAW orchestrator. Return structured feedback (pass/fail + issues) to the orchestrator—do not make orchestration decisions.
 
 Review implementation plans for quality, feasibility, and alignment with specification before implementation proceeds.
 

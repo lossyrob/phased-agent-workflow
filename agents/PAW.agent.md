@@ -54,9 +54,25 @@ For each user request:
 3. **Construct delegation prompt**: Skill to load, activity goal, relevant artifact paths, user context when relevant
 4. **Delegate via subagent**: Invoke the activity in a separate agent session
 5. **Process completion status** and apply Review Policy for pause decisions
-6. **Continue or present options** based on policy and user request
+6. **Continue workflow** per Default Flow Guidance in `paw-workflow` skill
 
 The workflow skill provides default flow guidance, non-linear request routing examples, and PR comment response routing.
+
+### Workflow Continuation (CRITICAL)
+
+**After each activity completes, you must determine and execute the next workflow step.** Do not stop after a single delegation returns.
+
+Consult the **Default Flow Guidance** in `paw-workflow` to determine what comes next:
+- After `paw-implement` → delegate to `paw-impl-review`
+- After `paw-spec` → delegate to `paw-spec-review`
+- After `paw-planning` → delegate to `paw-plan-review`
+- After review passes → proceed to next stage per workflow skill
+
+**Pause only when**:
+- Review Policy dictates a pause at current artifact
+- Activity returns `blocked` status
+- User explicitly requests to pause
+- Review activity identifies issues requiring user decision
 
 ### Utility Skill Loading
 
@@ -72,3 +88,7 @@ When user asks for status, help, or workflow guidance, delegate to `paw-status` 
 ## Error Handling
 
 If any activity fails, report the error to the user and seek guidance on how to proceed.
+
+## Customization
+
+For agent customization, use VS Code's standard `copilot-instructions.md` or `AGENTS.md` files rather than PAW-specific instructions.

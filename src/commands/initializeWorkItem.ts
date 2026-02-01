@@ -2,17 +2,6 @@ import * as vscode from 'vscode';
 import { collectUserInputs } from "../ui/userInput";
 import type { ReviewPolicy, SessionPolicy } from "../tools/contextTool";
 import { validateGitRepository } from "../git/validation";
-import * as path from 'path';
-import * as fs from 'fs';
-
-/**
- * Relative path from workspace root to workflow initialization custom instructions file.
- */
-const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
-  '.paw',
-  'instructions',
-  'init-instructions.md'
-);
 
 /**
  * Constructs the configuration prompt arguments for the PAW agent.
@@ -31,7 +20,7 @@ function constructPawPromptArguments(
     trackArtifacts: boolean;
     issueUrl?: string;
   },
-  workspacePath: string
+  _workspacePath: string
 ): string {
   // Build configuration object for paw-init skill
   const config: Record<string, string | boolean> = {
@@ -52,22 +41,11 @@ function constructPawPromptArguments(
     config.custom_instructions = inputs.workflowMode.customInstructions;
   }
 
-  // Check for init-specific custom instructions
-  const customInstructionsPath = path.join(
-    workspacePath,
-    WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
-  );
-  const hasCustomInstructions = fs.existsSync(customInstructionsPath);
-
   // Format as structured prompt arguments
   let args = `## Initialization Parameters\n\n`;
 
   for (const [key, value] of Object.entries(config)) {
     args += `- **${key}**: ${value}\n`;
-  }
-
-  if (hasCustomInstructions) {
-    args += `\n## Custom Instructions\n\nLoad custom instructions from: ${WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH}\n`;
   }
 
   return args;
@@ -119,21 +97,6 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Git repository validated');
-
-    // Check for custom instructions
-    outputChannel.appendLine('[INFO] Checking for custom instructions...');
-    const customInstructionsPath = path.join(
-      workspaceFolder.uri.fsPath,
-      WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
-    );
-    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
-    
-    if (hasCustomInstructions) {
-      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
-    } else {
-      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
-    }
-
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
     const inputs = await collectUserInputs(outputChannel);

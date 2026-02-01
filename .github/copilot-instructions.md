@@ -200,3 +200,13 @@ When prompts reference other agents, skills, or components, verify they still ex
 ### Don't Waste Context on Error Handling
 
 Let agents determine how to handle errors and report to users. Explicit error handling instructions consume tokens without adding value—agents can reason about appropriate error responses contextually.
+
+## Implementation Review Guidelines
+
+When reviewing implementation changes, verify cross-artifact consistency:
+
+- Changes to `paw-specification.md` → verify `paw-status` skill reflects updated stages, modes, or strategies
+- Changes to `paw-status` skill → verify it aligns with specification definitions
+- Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match specification
+
+**Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.

@@ -85,6 +85,7 @@ All implementation artifacts are stored in a consistent directory structure:
 ```
 .paw/work/<work-id>/
 ├── WorkflowContext.md      # Configuration and state
+├── WorkShaping.md          # Pre-spec ideation output (optional, from paw-work-shaping)
 ├── Spec.md                 # Feature specification
 ├── SpecResearch.md         # Research answers (optional)
 ├── CodeResearch.md         # Implementation details with file:line refs
@@ -103,8 +104,10 @@ This section describes the typical greenfield implementation progression. The ag
 
 **Skills**: `paw-spec`, `paw-spec-research`, `paw-spec-review`
 
+**Note**: If WorkShaping.md exists (from pre-spec ideation via `paw-work-shaping`), it serves as primary input to `paw-spec`.
+
 **Typical Sequence**:
-1. `paw-spec` (initial): Create specification from brief/issue
+1. `paw-spec` (initial): Create specification from brief/issue (or WorkShaping.md if available)
 2. `paw-spec-research` (if needed): Answer factual questions about existing system
 3. `paw-spec` (resume): Integrate research findings into specification
 4. `paw-spec-review`: Review spec for quality, completeness, and clarity

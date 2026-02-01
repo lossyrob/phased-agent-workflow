@@ -26,6 +26,15 @@ If the user's request implies new work (e.g., "I want to work on X", "start impl
 2. paw-init infers what it can from context and asks the user for remaining parameters
 3. After initialization completes, continue with the workflow
 
+### Work Shaping Detection
+
+Detect when pre-spec ideation would be beneficial:
+- User explicitly asks to explore, shape, or flesh out an idea
+- Vague requests with exploratory language ("what if", "maybe we could")
+- Explicit uncertainty ("I'm not sure if...", "not sure how to approach")
+
+When detected, load `paw-work-shaping` skill and begin interactive session. Work shaping runs in main agent context (not a subagent) to maintain natural conversation flow.
+
 ## Context Detection
 
 Identify the work context by inference:

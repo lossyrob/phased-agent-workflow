@@ -38,6 +38,8 @@ For each user request:
 5. **Process completion status** and apply Review Policy for pause decisions
 6. **Continue or present options** based on policy and user request
 
+**Key principle**: If a skill reasonably matches the user's request, delegate to it via subagent rather than performing the work directly. Activity skills contain domain expertise and produce consistent artifacts.
+
 The workflow skill provides default flow guidance, non-linear request routing examples, and PR comment response routing.
 
 ### Utility Skill Loading

@@ -5,6 +5,8 @@ PAW provides two complementary workflows for different development scenarios:
 1. **Implementation Workflow** — Building new features from scratch
 2. **Review Workflow** — Thoroughly reviewing existing pull requests
 
+Both workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
+
 ## PAW Implementation Workflow
 
 The core workflow for building features: turns GitHub Issues into production-ready code through structured phases.
@@ -15,8 +17,7 @@ graph LR
     B --> C[Research]
     C --> D[Planning]
     D --> E[Implementation]
-    E --> F[Documentation]
-    F --> G[Final PR]
+    E --> F[Final PR]
 ```
 
 ### What It Does
@@ -26,9 +27,17 @@ The Implementation Workflow transforms feature ideas into production-ready code 
 - **Specification** → Turn rough ideas into testable requirements
 - **Research** → Understand the codebase and system behavior  
 - **Planning** → Create detailed implementation plans with phases
-- **Implementation** → Execute plans with automated verification
-- **Documentation** → Generate comprehensive technical docs
+- **Implementation** → Execute plans with automated verification (includes documentation when appropriate)
 - **Final PR** → Open the pull request to main
+
+### Architecture
+
+The **PAW agent** orchestrates the workflow by:
+
+1. Loading the `paw-workflow` skill for guidance
+2. Discovering available skills via `paw_get_skills`
+3. Delegating activities to specialized skills (e.g., `paw-spec`, `paw-planning`, `paw-implement`)
+4. Applying Review Policy for pause decisions at artifact boundaries
 
 ### When to Use It
 

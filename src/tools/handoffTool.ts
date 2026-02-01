@@ -2,20 +2,11 @@ import * as vscode from "vscode";
 
 /**
  * Valid PAW agent names that can be targeted for handoff.
- * Note: "PAW" is the unified orchestrator agent; individual stage agent names
- * are retained for backward compatibility during migration.
+ * 
+ * - "PAW" is the unified implementation workflow orchestrator
+ * - "PAW Review" is the PR review workflow agent
  */
-export type AgentName =
-  | "PAW"
-  | "PAW-01A Specification"
-  | "PAW-01B Spec Researcher"
-  | "PAW-02A Code Researcher"
-  | "PAW-02B Impl Planner"
-  | "PAW-03A Implementer"
-  | "PAW-03B Impl Reviewer"
-  | "PAW-04 Documenter"
-  | "PAW-05 PR"
-  | "PAW-X Status";
+export type AgentName = "PAW" | "PAW Review";
 
 /**
  * Parameters for calling a PAW agent.

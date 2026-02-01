@@ -88,7 +88,7 @@ const SESSION_POLICY_PATTERN = /^Session Policy:\s*(per-stage|continuous)\s*$/im
 export interface ContextParams {
   /** The normalized Work ID (also called feature slug, e.g., 'auth-system') */
   feature_slug: string;
-  /** The name of the calling agent (e.g., 'PAW-02B Impl Planner') */
+  /** The name of the calling agent (e.g., 'PAW') */
   agent_name: string;
 }
 
@@ -274,7 +274,7 @@ export function loadWorkflowContext(filePath: string): InstructionStatus {
  * Looks for a file named `<agentName>-instructions.md`.
  * 
  * @param directory - Directory path containing instruction files (e.g., .paw/instructions/)
- * @param agentName - Name of the agent (e.g., 'PAW-02B Impl Planner')
+ * @param agentName - Name of the agent (e.g., 'PAW')
  * @returns InstructionStatus with file content or error information
  */
 export function loadCustomInstructions(directory: string, agentName: string): InstructionStatus {

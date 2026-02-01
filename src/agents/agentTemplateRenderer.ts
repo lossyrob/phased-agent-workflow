@@ -51,7 +51,7 @@ function substituteVariables(content: string, variables: Map<string, string>): s
  * Expands component placeholders within an agent template using the provided component map.
  *
  * @param content Raw agent markdown with component placeholders
- * @param agentIdentifier Agent identifier (e.g., 'PAW-01A Specification')
+ * @param agentIdentifier Agent identifier (e.g., 'PAW', 'PAW Review')
  * @param components Map of component names to their markdown content
  * @returns Agent markdown with all known components expanded
  */

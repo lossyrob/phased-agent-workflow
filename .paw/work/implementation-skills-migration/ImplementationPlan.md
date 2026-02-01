@@ -1180,13 +1180,13 @@ Remove the 9 individual implementation agent files, the old initialization promp
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] All 9 legacy agent files removed from `agents/` directory
-- [ ] Old initialization template `src/prompts/workItemInitPrompt.template.md` removed
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
-- [ ] Agent and skill linting passes: `npm run lint:agent:all`
-- [ ] Documentation builds: `mkdocs build --strict`
-- [ ] No hardcoded deprecated agent names in `scripts/lint-agent.sh`
+- [x] All 9 legacy agent files removed from `agents/` directory
+- [x] Old initialization template `src/prompts/workItemInitPrompt.template.md` removed
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
+- [x] Agent and skill linting passes: `npm run lint:agent:all`
+- [x] Documentation builds: `mkdocs build --strict`
+- [x] No hardcoded deprecated agent names in `scripts/lint-prompting.sh`
 
 #### Manual Verification:
 - [ ] Extension activates without errors
@@ -1196,6 +1196,120 @@ Remove the 9 individual implementation agent files, the old initialization promp
 - [ ] All Review Policy values work correctly (`always`/`milestones`/`never`) with artifact-level boundaries
 - [ ] All Session Policy values work correctly (`per-stage`/`continuous`)
 - [ ] "PAW: New PAW Workflow" command works end-to-end without "continue" step
+
+### Phase 5 Completion Notes
+
+**Completed**: 2026-01-31
+
+Removed legacy agents and templates, completing the migration to skills-based architecture:
+
+**Files removed:**
+- 9 legacy agent files (PAW-01A through PAW-05, PAW-X Status) totaling ~163KB
+- `src/prompts/workItemInitPrompt.template.md` (initialization now via paw-init skill)
+- `src/prompts/workflowInitPrompt.ts` (no longer used, Phase 4 updated initializeWorkItem.ts)
+
+**Code updates:**
+- `src/tools/handoffTool.ts`: AgentName type reduced to `"PAW" | "PAW Review"`
+- `agents/components/handoff-instructions.component.md`: All commands route to PAW agent
+- `scripts/lint-prompting.sh`: Removed special thresholds for deprecated agents
+- Test files updated to use new agent names
+
+**Documentation updates:**
+- `docs/reference/agents.md`: Rewritten for skills-based architecture with PAW agent and skill tables
+- `docs/specification/implementation.md`: Updated workflow stages to use skills, removed separate docs stage
+- `docs/guide/stage-transitions.md`: Updated for Review Policy (replacing Handoff Mode), PAW agent routing
+- `docs/guide/two-workflows.md`: Added architecture section explaining skills-based design
+- `README.md`: Updated Implementation Workflow section with skill tables and benefits
+
+**Metrics:**
+- Agent count: 9 → 2 (PAW, PAW Review)
+- Code size reduction: ~163KB agent content → ~4KB (PAW agent ~464 tokens)
+- Verification: All automated checks pass (compile, lint, agent lint, mkdocs build)
+
+**Review notes**: Manual verification items require VS Code Extension Development Host testing.
+
+---
+
+## Phase 7: Deprecate Custom Instructions and Prompt Generation
+
+### Overview
+Remove PAW-specific custom instructions feature and prompt generation tool. Users will use standard VS Code custom instructions (`copilot-instructions.md`, `AGENTS.md`) for agent customization instead of `.paw/instructions/` files. This simplifies the extension and aligns with VS Code ecosystem conventions.
+
+### Rationale
+- PAW custom instructions were designed for 9-agent model (stage-specific instructions)
+- With 2-agent skills-based model, stage-specific customization is less meaningful
+- VS Code's built-in custom instructions work across all agents and skills
+- Reduces maintenance burden and code complexity
+
+### Changes Required:
+
+#### 1. Remove Prompt Generation Tool
+**Files to delete**:
+- `src/tools/promptGenerationTool.ts`
+- `src/test/suite/promptGenerationTool.test.ts`
+
+**Files to update**:
+- `package.json`: Remove `paw_generate_prompt` from `languageModelTools`
+
+**Tests**:
+- Compile passes: `npm run compile`
+- Lint passes: `npm run lint`
+
+#### 2. Remove Custom Instructions Loading
+**Files to update**:
+- `src/tools/contextTool.ts`: Remove `loadCustomInstructions` function and related code
+- `src/test/suite/customInstructions.test.ts`: Remove tests for custom instructions
+- `package.json`: Update `paw_get_context` schema to remove instructions-related parameters
+
+**Tests**:
+- Compile passes: `npm run compile`
+- Lint passes: `npm run lint`
+- `paw_get_context` still returns workflow context without instructions
+
+#### 3. Update PAW Agent Instructions
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Add instruction to pay attention to any custom instructions in context
+- Note that users should use `copilot-instructions.md` or `AGENTS.md` for customization
+- Remove any references to `.paw/instructions/` directory
+
+**Tests**:
+- Agent lint passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+
+#### 4. Remove Custom Instructions Documentation
+**Files to delete**:
+- `docs/guide/custom-instructions.md`
+
+**Files to update**:
+- `mkdocs.yml`: Remove custom-instructions.md from nav
+- `README.md`: Remove custom instructions section, add note about using VS Code custom instructions
+- Any other docs referencing `.paw/instructions/`
+
+**Tests**:
+- Documentation builds: `mkdocs build --strict`
+
+#### 5. Clean Up Legacy Artifacts
+**Files to delete**:
+- `.paw/instructions/` directory (if exists in repo)
+
+### Success Criteria:
+
+#### Automated Verification:
+- [ ] `src/tools/promptGenerationTool.ts` deleted
+- [ ] `src/test/suite/promptGenerationTool.test.ts` deleted
+- [ ] `docs/guide/custom-instructions.md` deleted
+- [ ] TypeScript compiles: `npm run compile`
+- [ ] Linting passes: `npm run lint`
+- [ ] Agent linting passes: `npm run lint:agent:all`
+- [ ] Documentation builds: `mkdocs build --strict`
+- [ ] No references to `paw_generate_prompt` in package.json
+- [ ] No references to `.paw/instructions/` in documentation
+
+#### Manual Verification:
+- [ ] Extension activates without errors
+- [ ] `paw_get_context` returns workflow context successfully
+- [ ] PAW agent respects `copilot-instructions.md` when present
+- [ ] No user-visible errors when `.paw/instructions/` files exist (graceful ignore)
 
 ---
 
@@ -1246,12 +1360,34 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
 - Manual verification: PAW agent detects exploratory requests
 - Manual verification: PAW agent suggests shaping for vague requests
 
+#### 3. Update paw-spec Skill for WorkShaping.md Input
+**File**: `skills/paw-spec/SKILL.md`
+**Changes**:
+- Add WorkShaping.md as a priority input source in "New Specification" execution context
+- Input source precedence: WorkShaping.md (if exists) → issue/brief → user description
+- When WorkShaping.md exists, use its structured content (work breakdown, edge cases, architecture, codebase fit) as primary input—this provides richer context than a raw issue and may reduce clarification questions needed
+- Update capabilities list to mention "Create spec from WorkShaping.md output"
+
+**Tests**:
+- Manual verification: paw-spec checks for WorkShaping.md before prompting for issue
+- Manual verification: When WorkShaping.md exists, spec uses its content as primary input
+
+#### 4. Update paw-workflow Skill for WorkShaping.md
+**File**: `skills/paw-workflow/SKILL.md`
+**Changes**:
+- Add WorkShaping.md to artifact directory structure (as optional pre-spec artifact)
+- Add note in Specification Stage that WorkShaping.md can serve as input to paw-spec
+
+**Tests**:
+- Manual verification: WorkShaping.md listed in artifact structure
+- Manual verification: Specification Stage references WorkShaping.md as optional input
+
 ### Success Criteria:
 
 #### Automated Verification:
 - [ ] Skill file exists: `skills/paw-work-shaping/SKILL.md`
 - [ ] Skill has valid YAML frontmatter with `name` and `description`
-- [ ] Skill linting passes: `./scripts/lint-agent.sh skills/paw-work-shaping/SKILL.md`
+- [ ] Skill linting passes: `./scripts/lint-prompting.sh skills/paw-work-shaping/SKILL.md`
 - [ ] Overall linting passes: `npm run lint`
 
 #### Manual Verification:
@@ -1263,6 +1399,8 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
 - [ ] User can end session early if desired
 - [ ] WorkShaping.md produced at correct location with all sections
 - [ ] Document is suitable as input to spec process or GitHub issue
+- [ ] paw-spec detects and uses WorkShaping.md when it exists
+- [ ] paw-workflow documents WorkShaping.md in artifact structure
 
 ---
 
@@ -1285,6 +1423,7 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
   - Request revision of earlier artifact → verify PAW reasons about appropriate skill
 - **Backward compatibility**: Verify old WorkflowContext.md with `Handoff Mode: semi-auto` still works
 - **Work shaping flow**: Ask PAW to "help me think through an idea" → verify interactive Q&A session → verify codebase research delegates to subagent → verify WorkShaping.md produced
+- **Work shaping → spec flow**: After WorkShaping.md produced, proceed to spec stage → verify paw-spec detects and uses WorkShaping.md as primary input
 
 ### Manual Testing Steps:
 1. Run "PAW: New PAW Workflow" command

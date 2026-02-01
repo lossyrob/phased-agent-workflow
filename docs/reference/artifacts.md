@@ -56,7 +56,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Testable requirements document defining what the feature must do.
 
-**Created by:** PAW-01A Specification
+**Created by:** `paw-spec` skill
 
 **Contents:**
 
@@ -73,7 +73,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Factual documentation of how the current system works.
 
-**Created by:** PAW-01B Spec Researcher
+**Created by:** `paw-spec-research` skill
 
 **Contents:**
 
@@ -88,7 +88,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Technical mapping of where and how relevant code works.
 
-**Created by:** PAW-02A Code Researcher
+**Created by:** `paw-code-research` skill
 
 **Contents:**
 
@@ -103,7 +103,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Detailed plan with discrete phases that can be reviewed and merged independently.
 
-**Created by:** PAW-02B Impl Planner
+**Created by:** `paw-planning` skill
 
 **Contents:**
 
@@ -121,7 +121,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Authoritative technical reference for the implemented work.
 
-**Created by:** PAW-04 Documenter
+**Created by:** `paw-docs-guidance` skill (via `paw-impl-review`)
 
 **Contents:**
 
@@ -248,7 +248,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Guide Spec Research Agent on what to investigate.
 
-**Created by:** PAW-01A Specification
+**Created by:** `paw-spec` skill
 
 **Contents:**
 
@@ -260,7 +260,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Purpose:** Guide Code Research Agent on what to map.
 
-**Created by:** PAW-02B Impl Planner
+**Created by:** `paw-planning` skill
 
 **Contents:**
 

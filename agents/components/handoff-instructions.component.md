@@ -53,12 +53,6 @@ When using local strategy without PRs, the user provides feedback directly:
 
 **Continue command**: When user says `continue`, proceed to the **first command** in your presented "Next Steps" list (the default next stage). Agents must order their options with the recommended default action first—this becomes the `continue` target.
 
-### Generating Prompt Files
-
-When user says "generate prompt for [stage]":
-- Call `paw_generate_prompt` with: `work_id`, `template_key`, `filename`, optional `additional_content`
-- Inform user of file path for editing
-
 ### Required Handoff Message Format
 
 **CRITICAL**: At the end of your completed work, you MUST present a handoff message with next-step options. Handoff messages are for **successful completion only**. If you are blocked (e.g., merge conflicts, missing info, errors needing user input), present the blocker clearly and STOP - do NOT add "Next Steps" until the blocker is resolved and work is complete.
@@ -66,7 +60,7 @@ When user says "generate prompt for [stage]":
 Format your handoff message as:
 1. A brief status line (what was completed)
 2. A "Next Steps" list with the logical next stage(s) as short commands with descriptions
-3. A guidance line mentioning `generate prompt`, `status`/`help`, and `continue`
+3. A guidance line mentioning `status`/`help` and `continue`
 
 ```
 **[Status of completed work]**
@@ -74,14 +68,14 @@ Format your handoff message as:
 **Next Steps:**
 - `[command]` - [description of what this does]
 
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to [NEXT_STAGE_DESCRIPTION].
+You can ask for `status` or `help`, or say `continue` to [NEXT_STAGE_DESCRIPTION].
 ```
 
 Rules for handoff messages:
 1. **Use short commands** - Match the Command Mapping table above
 2. **Include descriptions** - Brief explanation of what each command does
 3. **Only list actual next stages** - Don't include `status` or `generate prompt` as next steps
-4. **Always include the guidance line** - Reminds users about prompt generation, help, and continue
+4. **Always include the guidance line** - Reminds users about help and continue
 5. **Make continue explicit** - The guidance line must specify what `continue` does, e.g., `say 'continue' to proceed to review`
 6. **Order options by recommendation** - Place the default/recommended next step first in "Next Steps"; this becomes the `continue` target
 
@@ -92,7 +86,7 @@ Example handoff message after completing implementation:
 **Next Steps:**
 - `review` - Hand off to PAW agent for implementation review and Phase PR
 
-You can ask me to generate a prompt file for the next stage, ask for `status` or `help`, or say `continue` to proceed to review.
+You can ask for `status` or `help`, or say `continue` to proceed to review.
 ```
 
 **`continue` behavior**: Proceeds to the first command in "Next Steps" (your default next stage). Do NOT include hard-coded "When user says continue" lines in agent-specific handoff sections—the behavior is derived from your presented options.

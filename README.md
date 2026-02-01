@@ -269,13 +269,6 @@ research but skip external dependencies
 
 The inline instruction is passed directly to the target agent alongside the Work ID, allowing for quick customization without filesystem management.
 
-### Dynamic Prompt Generation
-
-To generate a prompt file for editing before execution:
-```
-generate prompt for implementer Phase 3
-```
-
 For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
 
 ## Workflow

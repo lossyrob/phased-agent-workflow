@@ -33,6 +33,7 @@ Focus on ensuring code is well-documented, readable, and maintainable.
 - Writing functional code or tests
 - Addressing PR review comments with code changes
 - Merging PRs (human responsibility)
+- Switching branches (assumed to be on correct branch)
 
 ## Review Philosophy
 

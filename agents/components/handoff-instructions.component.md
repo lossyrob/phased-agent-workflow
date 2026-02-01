@@ -44,7 +44,7 @@ When a Planning PR, Phase PR, or Final PR has review comments that need addressi
 **Providing Local Feedback** (local strategy only):
 When using local strategy without PRs, the user provides feedback directly:
 - `feedback: <user's feedback>` - Hand off to PAW agent with feedback as inline instruction
-- Example: User says `feedback: add error handling for edge cases` → call `paw_new_session` with `target_agent: 'PAW'`, `inline_instruction: 'Address feedback: add error handling for edge cases'``
+- Example: User says `feedback: add error handling for edge cases` → call `paw_new_session` with `target_agent: 'PAW'`, `inline_instruction: 'Address feedback: add error handling for edge cases'`
 
 **Inline instructions**: Use `inline_instruction` parameter to pass context to the next agent. Common uses:
 - User feedback: `"Address feedback: add error handling"`

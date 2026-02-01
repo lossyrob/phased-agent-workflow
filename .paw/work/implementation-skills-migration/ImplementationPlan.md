@@ -1460,6 +1460,7 @@ Create the `paw-work-shaping` utility skill that enables interactive pre-spec id
 - **Data Migration**: No data migration needed—artifact locations and formats unchanged
 - **Policy defaults**: New work items use `Review Policy: milestones`, `Session Policy: per-stage`
 - **Custom Workflow Instructions**: Users with `Workflow Mode: custom` whose Custom Workflow Instructions reference deprecated agent names (e.g., "start with PAW-02A", "use PAW-03A Implementer") should update their instructions to describe intent (e.g., "start with code research", "proceed to implementation") rather than specific agent names. The PAW agent will route requests to appropriate skills based on intent.
+- **Tool Rename (Phase 6)**: `paw_call_agent` was renamed to `paw_new_session` for clarity. The new name better conveys the tool's purpose—starting a fresh chat session with cleared context. References to `paw_call_agent` in this plan document the original design; the implemented tool is `paw_new_session`.
 
 ## References
 

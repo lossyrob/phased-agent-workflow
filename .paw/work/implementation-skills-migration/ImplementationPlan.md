@@ -1298,21 +1298,45 @@ Remove PAW-specific custom instructions feature and prompt generation tool. User
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] `src/tools/promptGenerationTool.ts` deleted
-- [ ] `src/test/suite/promptGenerationTool.test.ts` deleted
-- [ ] `docs/guide/custom-instructions.md` deleted
-- [ ] TypeScript compiles: `npm run compile`
-- [ ] Linting passes: `npm run lint`
-- [ ] Agent linting passes: `npm run lint:agent:all`
-- [ ] Documentation builds: `mkdocs build --strict`
-- [ ] No references to `paw_generate_prompt` in package.json
-- [ ] No references to `.paw/instructions/` in documentation
+- [x] `src/tools/promptGenerationTool.ts` deleted
+- [x] `src/test/suite/promptGenerationTool.test.ts` deleted
+- [x] `docs/guide/custom-instructions.md` deleted
+- [x] TypeScript compiles: `npm run compile`
+- [x] Linting passes: `npm run lint`
+- [x] Agent linting passes: `npm run lint:agent:all`
+- [x] Documentation builds: `mkdocs build --strict`
+- [x] No references to `paw_generate_prompt` in package.json
+- [x] No references to `.paw/instructions/` in documentation
 
 #### Manual Verification:
-- [ ] Extension activates without errors
-- [ ] `paw_get_context` returns workflow context successfully
-- [ ] PAW agent respects `copilot-instructions.md` when present
-- [ ] No user-visible errors when `.paw/instructions/` files exist (graceful ignore)
+- [x] Extension activates without errors
+- [x] `paw_get_context` returns workflow context successfully
+- [x] PAW agent respects `copilot-instructions.md` when present
+- [x] No user-visible errors when `.paw/instructions/` files exist (graceful ignore)
+
+### Phase 7 Completion Notes
+
+**PR**: [#177](https://github.com/lossyrob/phased-agent-workflow/pull/177)
+
+**Completed**: 2026-02-01
+
+**Changes made**:
+- Removed `paw_generate_prompt` tool and associated `promptGenerationTool.ts`
+- Removed custom instructions loading (`loadCustomInstructions`) from `contextTool.ts`
+- Removed `src/prompts/customInstructions.ts` module
+- Removed `docs/guide/custom-instructions.md` documentation
+- Removed `.paw/instructions/` directory (migrated to `copilot-instructions.md`)
+- Updated `PAW.agent.md` with customization guidance
+- Updated `README.md` with VS Code custom instructions guidance
+- Updated `mkdocs.yml` navigation
+- Simplified `ContextResult` interface (no longer includes `workspace_instructions` or `user_instructions`)
+- Removed `promptGenerationTool.test.ts` and `customInstructions.test.ts`
+
+**Verification**:
+- All 167 tests pass
+- TypeScript compilation passes
+- Linting passes (code and agents)
+- Documentation builds successfully with `mkdocs build --strict`
 
 ---
 

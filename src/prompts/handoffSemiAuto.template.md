@@ -3,7 +3,7 @@
 After completing your work successfully:
 1. Present a handoff message with "Next Steps" listing available commands
 2. Check if this is a **routine transition** (see list below)
-3. At routine transitions: Add "Automatically proceeding..." and immediately call `paw_call_agent`
+3. At routine transitions: Add "Automatically proceeding..." and immediately call `paw_new_session`
 4. At decision points: Wait for user command
 
 **Routine transitions** (auto-proceed):

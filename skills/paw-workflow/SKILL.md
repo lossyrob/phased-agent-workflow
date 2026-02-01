@@ -222,19 +222,18 @@ Session Policy controls conversation context management across stage transitions
 **`per-stage`**: Stage boundaries start a fresh PAW agent session via `paw_new_session`
 - Reduces context accumulation in the orchestrator
 - `paw_new_session` should include a resume hint (e.g., intended next activity + relevant artifact paths)
-- The new PAW agent session re-loads this workflow skill, validates/derives actual workflow state from artifacts, then delegates the intended activity via `runSubagent`
+- The new PAW agent session re-loads this workflow skill, validates workflow state from artifacts, then executes the intended activity per Activity Classification (direct or subagent)
 
 **`continuous`**: Single PAW agent session throughout the workflow
 - Preserves orchestrator context across stage boundaries
-- Activities are still executed via delegated worker sessions (`runSubagent`)
-- *Implementation note*: Verify delegated-worker behavior matches expectations in VS Code's model
+- Activities execute per Activity Classification (direct for interactive, subagent for research/review)
 
 ### Applying Session Policy
 
 When transitioning to next activity:
 1. Check Session Policy from WorkflowContext.md
-2. If `per-stage`: Use `paw_new_session` at stage boundaries to start a fresh PAW agent session with a resume hint; the new session delegates the intended activity via `runSubagent`
-3. If `continuous`: Keep the same PAW agent session and delegate the intended activity via `runSubagent`
+2. If `per-stage`: Use `paw_new_session` at stage boundaries; the new session executes the intended activity per Activity Classification
+3. If `continuous`: Keep the same PAW agent session and execute the intended activity per Activity Classification
 
 ## PR Comment Response Guidance
 

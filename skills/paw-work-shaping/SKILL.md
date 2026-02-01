@@ -5,7 +5,9 @@ description: Interactive pre-spec ideation utility skill. Agent-led Q&A to progr
 
 # Work Shaping
 
-Interactive ideation session to transform vague ideas into structured, spec-ready work items. Runs in main agent context (not a subagent) to maintain natural conversation flow.
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent)—interactive Q&A by design.
+
+Interactive ideation session to transform vague ideas into structured, spec-ready work items.
 
 ## When to Use
 

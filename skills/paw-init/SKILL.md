@@ -5,6 +5,8 @@ description: Bootstrap skill for PAW workflow initialization. Creates WorkflowCo
 
 # PAW Initialization
 
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), as bootstrap requires user input for workflow parameters.
+
 Bootstrap skill that initializes the PAW workflow directory structure. This runs **before** the workflow skill is loaded—WorkflowContext.md must exist for the workflow to function.
 
 ## Capabilities

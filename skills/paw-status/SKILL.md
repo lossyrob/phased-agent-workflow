@@ -5,6 +5,8 @@ description: Workflow status activity skill for PAW workflow. Diagnoses workflow
 
 # Workflow Status
 
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent)—simple diagnostic with no context isolation benefit.
+
 Serve as the workflow navigator and historian. Diagnose current workflow state, recommend next actions, and optionally post updates to Issues/PRs.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

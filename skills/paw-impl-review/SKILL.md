@@ -5,6 +5,8 @@ description: Implementation review activity skill for PAW workflow. Reviews impl
 
 # Implementation Review
 
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), allowing user input on review scope and decisions. Coordinates with `paw-implement` which also runs directly.
+
 Review implementation changes for quality and maintainability, add documentation, push branches, and open PRs. Acts as quality gate between implementation and human review.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

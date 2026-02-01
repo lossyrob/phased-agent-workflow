@@ -5,6 +5,8 @@ description: Final PR activity skill for PAW workflow. Creates comprehensive fin
 
 # Final PR
 
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), allowing user interaction for PR description and final checks.
+
 Create the final PR merging all implementation work to main branch after pre-flight validation.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

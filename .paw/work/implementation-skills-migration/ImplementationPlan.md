@@ -1505,10 +1505,10 @@ The PAW Review workflow succeeds with subagent delegation because review is inhe
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] PAW agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
-- [ ] Workflow skill linting passes: `./scripts/lint-prompting.sh skills/paw-workflow/SKILL.md`
-- [ ] All activity skills lint: `npm run lint:skills`
-- [ ] Overall linting passes: `npm run lint`
+- [x] PAW agent linting passes: `./scripts/lint-prompting.sh agents/PAW.agent.md`
+- [x] Workflow skill linting passes: `./scripts/lint-prompting.sh skills/paw-workflow/SKILL.md`
+- [x] All activity skills lint: `npm run lint:skills`
+- [x] Overall linting passes: `npm run lint`
 
 #### Manual Verification:
 - [ ] User asks PAW to "continue implementation" → PAW loads paw-implement and executes directly

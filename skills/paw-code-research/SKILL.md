@@ -5,6 +5,8 @@ description: Code research activity skill for PAW workflow. Documents implementa
 
 # Code Research
 
+> **Execution Context**: This skill typically runs in a **subagent** session, delegated by the PAW orchestrator. Return structured results to the orchestrator upon completion.
+
 Document **where and how** code works with precise file:line references. Creates a technical map of the existing system for implementation planning.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

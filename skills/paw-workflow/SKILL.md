@@ -158,34 +158,34 @@ This section describes the typical greenfield implementation progression. The ag
 
 ## Default Transition Table
 
-This table documents typical stage transitions as default guidance.
+This table documents typical stage transitions as default guidance. The table reflects the hybrid execution model—interactive activities execute directly, research/review activities delegate to subagents.
 
 Two separate mechanisms are involved:
-- **Orchestrator session boundaries**: When Session Policy is `per-stage`, the PAW orchestrator may start a fresh PAW agent session using `paw_new_session` (a "session reset"). The call should include a resume hint (what workflow point to resume at) so the new session can pick up correctly.
-- **Activity execution**: The actual work of each activity skill is executed in a delegated worker session (a subagent) via `runSubagent`, regardless of Session Policy.
+- **Orchestrator session boundaries**: When Session Policy is `per-stage`, the PAW orchestrator may start a fresh PAW agent session using `paw_new_session` (a "session reset"). The call should include a resume hint so the new session can pick up correctly.
+- **Activity execution**: Interactive activities execute directly in the PAW session; research/review activities delegate via `runSubagent`.
 
-| Transition | Milestone? | Session Policy: `per-stage` (orchestrator) | Activity execution |
-|------------|------------|------------------------------------------|------------------|
-| spec → spec-research | No | (same session) | `runSubagent` (`paw-spec-research`) |
-| spec-research → spec (resume) | No | (same session) | `runSubagent` (`paw-spec`) |
-| spec → spec-review | No | (same session) | `runSubagent` (`paw-spec-review`) |
-| spec-review → spec (revise) | No | (same session) | `runSubagent` (`paw-spec`) |
-| spec-review pass → code-research | No | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-code-research`) |
-| code-research → planning | No | (same session) | `runSubagent` (`paw-planning`) |
-| planning → plan-review | No | (same session) | `runSubagent` (`paw-plan-review`) |
-| plan-review → planning (revise) | No | (same session) | `runSubagent` (`paw-planning`) |
-| plan-review pass → implement | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
-| implement → impl-review (within phase) | No | (same session) | `runSubagent` (`paw-impl-review`) |
-| phase N complete → phase N+1 | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-implement`) |
-| all phases complete → final-pr | **Yes** | `paw_new_session` (new PAW session w/ resume hint) | `runSubagent` (`paw-pr`) |
+| Transition | Milestone? | Session Policy: `per-stage` | Activity Execution |
+|------------|------------|----------------------------|--------------------|
+| spec → spec-research | No | (same session) | Subagent |
+| spec-research → spec (resume) | No | (same session) | Direct |
+| spec → spec-review | No | (same session) | Subagent |
+| spec-review → spec (revise) | No | (same session) | Direct |
+| spec-review pass → code-research | No | `paw_new_session` | Subagent |
+| code-research → planning | No | (same session) | Direct |
+| planning → plan-review | No | (same session) | Subagent |
+| plan-review → planning (revise) | No | (same session) | Direct |
+| plan-review pass → implement | **Yes** | `paw_new_session` | Direct |
+| implement → impl-review | No | (same session) | Direct |
+| phase N complete → phase N+1 | **Yes** | `paw_new_session` | Direct |
+| all phases complete → final-pr | **Yes** | `paw_new_session` | Direct |
 
-**Mechanism Selection**:
-- **per-stage Session Policy**: Use `paw_new_session` only at stage boundaries to start a fresh PAW agent session, then delegate the intended activity via `runSubagent`
-- **continuous Session Policy**: Keep a single PAW agent session throughout; still delegate activities via `runSubagent`
+**Session Policy Application**:
+- **per-stage**: Use `paw_new_session` at stage boundaries for fresh PAW session
+- **continuous**: Single PAW session throughout
 
-**Review Activity Notes**:
-- `paw-spec-review` and `paw-plan-review` run in subagents to manage context isolation
-- Review activities return structured feedback (pass/fail + specific issues), NOT orchestration decisions
+**Notes**:
+- `paw-spec-review` and `paw-plan-review` run in subagents for context isolation
+- Review activities return structured feedback (pass/fail + issues), NOT orchestration decisions
 - The PAW agent decides whether to proceed or iterate based on review feedback
 
 ## Review Policy Behavior
@@ -252,48 +252,70 @@ Subagents performing these activities load `paw-review-response` utility skill f
 - Committing with comment references
 - Pushing and replying to comments
 
-## Subagent Completion Contract
+## Execution Model
 
-All activity execution MUST occur in delegated worker sessions (subagents):
-- Subagents execute activities by loading the appropriate activity skill via `paw_get_skill`.
-- Ensure sufficient prompting to the subagent, including telling them which activity skill to load first
+The PAW workflow uses a **hybrid execution model**: interactive activities execute directly in the PAW session, while research and review activities delegate to subagents.
+
+### Activity Classification
+
+| Activity | Execution | Rationale |
+|----------|-----------|----------|
+| `paw-spec` | Direct | User clarifies requirements interactively |
+| `paw-planning` | Direct | Phase decisions, handling blockers |
+| `paw-implement` | Direct | Adapting to reality, user course-correction |
+| `paw-impl-review` | Direct | May need user input on review scope |
+| `paw-pr` | Direct | PR description, final checks |
+| `paw-init` | Direct | Bootstrap needs user input |
+| `paw-status` | Direct | Simple, no context isolation benefit |
+| `paw-work-shaping` | Direct | Interactive Q&A by design |
+| `paw-spec-research` | Subagent | "Answer these questions" - returns results |
+| `paw-code-research` | Subagent | "Document details" - returns results |
+| `paw-spec-review` | Subagent | "Review and report" - returns feedback |
+| `paw-plan-review` | Subagent | "Review and report" - returns feedback |
+
+### Direct Execution Pattern
+
+For interactive activities, the PAW agent:
+1. Loads the skill via `paw_get_skill`
+2. Executes the activity directly in the current session
+3. Interacts with user as needed during execution
+4. Continues workflow after completion
+
+### Subagent Delegation Pattern
+
+For research and review activities:
+- Subagents execute by loading the appropriate activity skill via `paw_get_skill`
+- Ensure sufficient prompting, including which skill to load first
 - Subagents do NOT make handoff decisions
-- The agent executing the workflow (you) owns routing and transition logic
+- The PAW agent owns routing and transition logic
 
-### Response Format
+### Subagent Response Format
 
-Upon completion, subagents respond where the artifact was written, if artifacts were produced, otherwise a textual response (e.g., review feedback). If there were errors or the activity was not completed, the subagent MUST indicate failure with an explanation.
+Upon completion, subagents respond where the artifact was written (if produced) or provide textual feedback (e.g., review results). Subagents MUST indicate failure with explanation if activity was not completed.
 
 ### Blocked Activity Response
 
-Some activities may return `blocked` status with open questions instead of producing an artifact. This occurs when:
+Activities may return `blocked` status with open questions instead of producing an artifact when:
 - Required information is not available in existing artifacts
 - Questions require user clarification or additional research
 
 When an activity returns blocked:
 1. **Read the open questions** from the response
 2. **Apply Review Policy** to determine resolution approach:
-   - `never`: Resolve questions via additional research (e.g., `paw-code-research`) autonomously
+   - `never`: Resolve questions via additional research autonomously
    - `always`/`milestones`: Ask user for clarification
-3. **Re-invoke the activity** with answers included in the delegation prompt
+3. **Re-invoke the activity** with answers
 
 The activity skill should NOT write partial artifacts when blocked—clean re-invocation is preferred.
 
-### Skill Loading Requirement
-
-**Every subagent MUST load their skill FIRST**:
-1. Call `paw_get_skill` with the skill name
-2. Read and internalize the skill instructions
-3. Only then begin executing the activity
-
 ### Delegation Prompt Construction
 
-The orchestrating agent constructs delegation prompts that include:
+For subagent delegation, construct prompts including:
 - Skill to load
 - Activity goal (what to accomplish)
 - Relevant artifact paths
-- Workflow configuration (Work ID, Workflow Mode, Review Strategy, Target Branch, Issue URL) as needed by the activity
-- User context (only when relevant to the activity)
+- Workflow configuration as needed by the activity
+- User context (only when relevant)
 
 ## Intelligent Routing Guidance
 
@@ -310,14 +332,14 @@ The agent reasons about user intent and routes requests intelligently. This sect
 
 The workflow supports non-linear paths when appropriate:
 
-| User Request | Routing |
-|-------------|---------|
-| "Update spec to align with plan changes" | `paw-spec` with alignment context |
-| "Do more research on X" | `paw-spec-research` or `paw-code-research` based on X |
-| "Revise phase 2 of the plan" | `paw-planning` with revision context |
-| "Review the spec for quality" | `paw-spec-review` in subagent |
-| "Check if the plan is ready" | `paw-plan-review` in subagent |
-| "Add error handling to implementation" | `paw-implement` with specific request |
+| User Request | Activity | Execution |
+|-------------|----------|----------|
+| "Update spec to align with plan changes" | `paw-spec` | Direct |
+| "Do more research on X" | `paw-spec-research` or `paw-code-research` | Subagent |
+| "Revise phase 2 of the plan" | `paw-planning` | Direct |
+| "Review the spec for quality" | `paw-spec-review` | Subagent |
+| "Check if the plan is ready" | `paw-plan-review` | Subagent |
+| "Add error handling to implementation" | `paw-implement` | Direct |
 
 ### Request vs Activity Goal
 

@@ -5,6 +5,8 @@ description: Spec research activity skill for PAW workflow. Answers factual ques
 
 # Spec Research
 
+> **Execution Context**: This skill typically runs in a **subagent** session, delegated by the PAW orchestrator. Return structured results to the orchestrator upon completion.
+
 **Describe how the system works today** to answer questions from the spec research prompt. Document existing behavior—no design, no improvements.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

@@ -5,6 +5,8 @@ description: Specification activity skill for PAW workflow. Converts issue/brief
 
 # Specification
 
+> **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), preserving user interactivity for requirement clarification. May delegate to subagents for focused research work.
+
 Convert a rough Issue / feature brief into a **structured feature specification**. Emphasizes prioritized user stories, enumerated requirements, measurable success criteria, explicit assumptions, and traceability.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

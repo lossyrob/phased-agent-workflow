@@ -5,6 +5,8 @@ description: Specification review skill for PAW workflow. Validates Spec.md agai
 
 # Spec Review
 
+> **Execution Context**: This skill typically runs in a **subagent** session, delegated by the PAW orchestrator. Return structured feedback (pass/fail + issues) to the orchestrator—do not make orchestration decisions.
+
 Review specifications for quality, completeness, and clarity before planning proceeds. Return structured feedback—do not make orchestration decisions.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.

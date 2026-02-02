@@ -193,9 +193,12 @@ When revising based on paw-plan-review feedback:
 
 Report to PAW agent:
 - Artifact path: `.paw/work/<work-id>/ImplementationPlan.md`
-- Number of phases and brief summary
+- **Plan summary** for quick review:
+  - Architecture approach (1-2 sentences)
+  - Phase overview (numbered list with one-line objective each)
+  - What's explicitly NOT being done (scope boundaries)
 - Review Strategy used (PR created or committed to target)
-- Any items requiring user decision
+- Any items requiring user decision or observations worth noting
 
 ### Blocked on Open Questions
 

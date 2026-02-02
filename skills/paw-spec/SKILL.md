@@ -240,10 +240,16 @@ Out of Scope:
 
 ## Completion Response
 
-## Completion Response
-
 Report to PAW agent based on outcome:
 
 **Research needed**: Include ResearchQuestions path, question count, documented assumptions count, and indicate waiting for research.
 
-**Specification complete**: Include artifact path, counts (user stories, FRs, success criteria), and confirmation that quality checklist passes.
+**Specification complete**: Include:
+- Artifact path
+- **Spec summary** for quick review:
+  - Overview (1-2 sentences capturing the core value)
+  - Key objectives (bulleted)
+  - Scope highlights (what's in, what's explicitly out)
+- Counts (user stories, FRs, success criteria)
+- Any observations worth noting (e.g., "stakeholder alignment may be needed on X")
+- Confirmation that quality checklist passes

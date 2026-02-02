@@ -105,7 +105,8 @@ Typical greenfield progression (adapt based on user intent and workflow state):
 ### Implementation Stage
 Per phase in ImplementationPlan.md:
 1. `paw-implement`: Execute phase, make code changes
-2. `paw-impl-review`: Review changes, open Phase PR
+2. `paw-impl-review`: Review changes (returns verdict)
+3. Phase PR created (PRs strategy) or push (local strategy)
 
 Final phase typically includes documentation (Docs.md, README, CHANGELOG).
 

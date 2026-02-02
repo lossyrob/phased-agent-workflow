@@ -5,7 +5,7 @@ description: Workflow transition gate for PAW. Handles stage boundaries, session
 
 # Workflow Transition
 
-> **Execution Context**: This skill runs **directly** in the PAW session when processing a `paw-transition` TODO. It determines what happens next and whether a session boundary should be crossed.
+> **Execution Context**: This skill runs in a **subagent** session, delegated by the PAW orchestrator when processing a `paw-transition` TODO. Return structured output—do not make orchestration decisions beyond the transition.
 
 ## Purpose
 
@@ -51,13 +51,12 @@ Stage boundaries occur when moving between these stages:
 - all phases complete → final-pr
 
 **If crossing a stage boundary AND Session Policy = `per-stage`**:
-- Call `paw_new_session` with:
-  - `target_agent`: "PAW"
-  - `work_id`: current work ID
-  - `inline_instruction`: next activity and phase (e.g., "Phase 2: Tool Enhancement")
-- **STOP** - do not continue in this session
+- Set session_action = `new_session`
+- Set inline_instruction to: next activity and phase (e.g., "Phase 2: Tool Enhancement")
+- Continue to Step 4 (preflight still needed for inline_instruction context)
 
 **If NOT crossing boundary OR Session Policy = `continuous`**:
+- Set session_action = `continue`
 - Continue to Step 4
 
 ### Step 4: Preflight Checks
@@ -87,18 +86,26 @@ Add TODO for next activity:
 
 ## Completion
 
-After completing all steps (or calling `paw_new_session`), mark the `paw-transition` TODO complete.
+After completing all steps, return structured output:
 
-**Normal completion output**:
 ```
-Transition complete.
-Next: <activity-name>
-Session: continuing (or: new session started)
-Preflight: all checks passed
+TRANSITION RESULT:
+- session_action: [continue | new_session]
+- next_activity: [activity name and context]
+- preflight: [passed | blocked: <reason>]
+- work_id: [current work ID]
+- inline_instruction: [for new_session only: resume hint]
 ```
+
+**If session_action = new_session**: The PAW agent must call `paw_new_session` with the provided work_id and inline_instruction.
+
+**If preflight = blocked**: The PAW agent must report the blocker to the user.
+
+Mark the `paw-transition` TODO complete after returning this output.
 
 ## Guardrails
 
 - Do NOT skip the stage boundary check (Step 3)
-- Do NOT proceed past Step 3 if `paw_new_session` is required
-- Do NOT mark transition complete if preflight checks fail
+- Do NOT return session_action = continue if boundary + per-stage policy
+- Do NOT return preflight = passed if checks actually failed
+- Do NOT call paw_new_session directly—return the decision for PAW agent to act on

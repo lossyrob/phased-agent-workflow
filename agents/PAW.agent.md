@@ -54,7 +54,7 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 2. Add `[ ] paw-transition` TODO
 3. Continue to next TODO
 
-**Transition** (when processing `paw-transition` TODO): Load `paw-transition` skill and execute its procedure. The skill handles stage boundaries, session policy, preflight checks, and queuing the next activity.
+**Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response (session_action, next_activity, preflight status).
 
 **TODO format**: `[ ] <activity-name> (<context>)`
 
@@ -97,6 +97,7 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 
 **Subagent delegation** (delegate via `runSubagent`):
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`
+- `paw-transition`
 
 ### Work Shaping Detection
 

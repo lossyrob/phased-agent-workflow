@@ -129,41 +129,6 @@ export_all_agents() {
     echo "Done. Exported all agents."
 }
 
-# Generate skills catalog
-generate_catalog() {
-    local output_dir="${1:-$DEFAULT_SKILLS_OUT}"
-    local catalog_file="$output_dir/CATALOG.md"
-    
-    mkdir -p "$output_dir"
-    
-    echo "# PAW Skills Catalog" > "$catalog_file"
-    echo "" >> "$catalog_file"
-    echo "Available skills for CLI usage:" >> "$catalog_file"
-    echo "" >> "$catalog_file"
-    
-    for skill_dir in "$SKILLS_DIR"/*/; do
-        if [[ -f "$skill_dir/SKILL.md" ]]; then
-            local skill_name
-            skill_name=$(basename "$skill_dir")
-            
-            # Extract description from frontmatter
-            local description
-            description=$(grep -A1 "^description:" "$skill_dir/SKILL.md" 2>/dev/null | tail -1 | sed 's/^description: *//' | tr -d "'\"")
-            
-            if [[ -z "$description" ]]; then
-                description="(no description)"
-            fi
-            
-            echo "- **$skill_name**: $description" >> "$catalog_file"
-        fi
-    done
-    
-    echo "" >> "$catalog_file"
-    echo "To use a skill, read \`skills/<skill-name>/SKILL.md\`" >> "$catalog_file"
-    
-    echo "Generated catalog: $catalog_file"
-}
-
 # Main
 case "${1:-}" in
     skill)
@@ -182,27 +147,26 @@ case "${1:-}" in
         ;;
     skills)
         export_all_skills "${2:-}"
-        generate_catalog "${2:-}"
         ;;
     agents)
         export_all_agents "${2:-}"
         ;;
-    catalog)
-        generate_catalog "${2:-}"
-        ;;
-    *)
+    help|--help|-h)
         echo "PAW CLI Export Tool"
         echo ""
         echo "Usage:"
+        echo "  $0                                  - Export all skills and agents"
         echo "  $0 skill <skill-name> [output-dir]  - Export single skill"
         echo "  $0 agent <agent-name> [output-dir]  - Export single agent"
-        echo "  $0 skills [output-dir]              - Export all skills + catalog"
+        echo "  $0 skills [output-dir]              - Export all skills"
         echo "  $0 agents [output-dir]              - Export all agents"
-        echo "  $0 catalog [output-dir]             - Generate skills catalog only"
         echo ""
         echo "Default output directories:"
         echo "  Skills: $DEFAULT_SKILLS_OUT"
         echo "  Agents: $DEFAULT_AGENTS_OUT"
-        exit 1
+        ;;
+    *)
+        export_all_skills
+        export_all_agents
         ;;
 esac

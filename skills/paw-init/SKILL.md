@@ -63,8 +63,7 @@ This mirrors the VS Code command flow which prompts sequentially but allows skip
 ### Directory Structure
 ```
 .paw/work/<work-id>/
-├── WorkflowContext.md
-└── prompts/
+└── WorkflowContext.md
 ```
 
 ### WorkflowContext.md

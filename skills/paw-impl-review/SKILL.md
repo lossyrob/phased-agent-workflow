@@ -72,6 +72,17 @@ After review, the PAW agent receives:
 
 ## Review Process
 
+### Plan Completeness Check (CRITICAL)
+
+**Before reviewing code quality**, verify the implementation covers all plan items:
+
+1. **Read ImplementationPlan.md** for the current phase
+2. **Extract all planned changes**: files to modify, features to add, components to update
+3. **Compare against actual changes**: `git diff` against the plan checklist
+4. **Flag gaps**: If the plan says "update services A, B, C" but only A and B changed → BLOCKED
+
+**This check catches partial implementations** where the agent implements some items but forgets others.
+
 ### Initial Phase Review
 
 **Required context**:
@@ -114,6 +125,7 @@ When reviewing Implementer's response to PR comments:
 
 ## Quality Checklist
 
+- [ ] **Plan completeness verified**: All phase items from ImplementationPlan.md implemented
 - [ ] Project instruction files discovered and reviewed
 - [ ] Required commands from instructions pass (lint, build, test)
 - [ ] Changes follow documented coding conventions
@@ -135,6 +147,7 @@ Return structured feedback to PAW agent:
 **BLOCKED**: Implementation needs rework
 - List blocking issues with file:line references
 - Specify what Implementer needs to change
+- Note **incomplete plan items** (e.g., "Phase 2 says update services A, B, C but only A implemented")
 - Note test failures or missing tests
 - Note violations of project instruction conventions
 

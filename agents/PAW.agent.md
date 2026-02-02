@@ -18,9 +18,12 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-implement (any phase) | paw-impl-review | NO |
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
-| paw-impl-review (passes) | paw-implement (next phase) or paw-pr | Check Milestone Pause |
+| paw-impl-review (passes) | Push & Phase PR (prs strategy) | NO |
+| Phase PR created | paw-implement (next phase) or paw-pr | Check Milestone Pause |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
+
+**Post impl-review flow** (PRs strategy): After `paw-impl-review` returns PASS, load `paw-git-operations` and create Phase PR. For local strategy, push to target branch (no PR).
 
 ### Prerequisites
 | Before Activity | Required Prerequisite |
@@ -114,12 +117,15 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 ## Hybrid Execution Model
 
 **Direct execution** (load skill, execute in this session):
-- `paw-spec`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-pr`
+- `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`
 - `paw-init`, `paw-status`, `paw-work-shaping`
 
 **Subagent delegation** (delegate via `runSubagent`):
-- `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`
+- `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 - `paw-transition`
+
+**Orchestrator-handled** (after subagent returns):
+- Push and Phase PR creation (after `paw-impl-review` passes, using `paw-git-operations`)
 
 ### Work Shaping Detection
 

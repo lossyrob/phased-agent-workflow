@@ -98,7 +98,7 @@ Activity skills will provide:
 | 9 | Remove paw_get_context Tool | ✅ Complete |
 | 10 | TODO-Based Workflow Enforcement | ✅ Complete |
 | 11 | CLI-Compatible Templating | ✅ Complete |
-| 12 | Separate Review from Git Operations | 📋 Planned |
+| 12 | Separate Review from Git Operations | ✅ Complete |
 
 ---
 
@@ -2355,4 +2355,34 @@ Execution model inconsistency:
 
 ### Phase 12 Completion Notes
 
-*To be filled in after implementation*
+**Changes made:**
+
+1. **Refactored `paw-impl-review` to pure review (subagent pattern)**:
+   - Changed execution context from direct to subagent
+   - Removed all push/PR creation capabilities
+   - Updated to return structured verdict (PASS/BLOCKED) like other review skills
+   - Simplified to focus solely on code quality review and documentation
+
+2. **Extended `paw-git-operations` with Phase PR creation**:
+   - Added "Phase PR Creation" section with push and PR mechanics
+   - Added PR title format, body scaling guidance
+   - Added PR update policy and reply format for PR comments
+
+3. **Updated PAW agent workflow rules**:
+   - Updated Mandatory Transitions table to include explicit "Push & Phase PR" step
+   - Moved `paw-impl-review` from Direct to Subagent execution
+   - Added "Orchestrator-handled" category for post-review git operations
+
+4. **Updated `paw-workflow` skill**:
+   - Updated Activities table to clarify `paw-impl-review` returns verdict (not PRs)
+   - Updated Execution Model section with new categories
+   - Added note about Phase PR creation being orchestrator-handled
+
+5. **Updated `export-for-cli.sh` (review feedback)**:
+   - Changed default directories from `~/.config/github-copilot/` to `~/.copilot/`
+   - Aligns with GitHub CLI user-level custom agents/skills locations
+
+**Decisions made:**
+- Chose to extend `paw-git-operations` rather than create new `paw-phase-pr` skill (fewer skills, git-ops already has branching context)
+- Azure DevOps support deferred (Option C per Open Questions)
+- Local strategy skips Phase PR entirely (no PR to create)

@@ -63,10 +63,12 @@ Humans have final authority over all workflow decisions:
 | `paw-planning` | Create implementation plan, revise plan | ImplementationPlan.md |
 | `paw-plan-review` | Review plan for feasibility, spec alignment | Review feedback |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
-| `paw-impl-review` | Review implementation, open PRs | Phase PRs |
+| `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 
-**Utility skills**: `paw-git-operations` (branching), `paw-review-response` (PR comments), `paw-docs-guidance` (documentation).
+**Note**: Phase PR creation is handled by PAW agent (using `paw-git-operations`) after `paw-impl-review` passes.
+
+**Utility skills**: `paw-git-operations` (branching, Phase PRs), `paw-review-response` (PR comments), `paw-docs-guidance` (documentation).
 
 ## Artifact Directory Structure
 
@@ -122,9 +124,11 @@ Load `paw-review-response` utility skill for comment mechanics.
 
 ## Execution Model
 
-**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-impl-review`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
+**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
 
-**Subagent delegation**: `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`
+**Subagent delegation**: `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
+
+**Orchestrator-handled**: Push and Phase PR creation (after `paw-impl-review` passes, using `paw-git-operations`)
 
 Activities may return `blocked` status with open questions. Apply Review Policy to determine resolution approach (`never`: research autonomously; `always`/`milestones`: ask user).
 

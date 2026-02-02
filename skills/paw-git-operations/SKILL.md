@@ -122,3 +122,73 @@ git branch --show-current
 3. ✓ Check `.paw/work/<slug>/.gitignore` before staging `.paw/` artifacts
 4. ✓ Review staged changes: `git diff --cached`
 5. ✓ Commit with descriptive message
+
+## Phase PR Creation
+
+After implementation review passes, create Phase PR (PRs strategy only).
+
+### Push and Create PR
+
+```bash
+# 1. Verify on phase branch
+git branch --show-current  # Should be <target>_phase[N]
+
+# 2. Push branch
+git push -u <remote> <target>_phase[N]
+
+# 3. Create PR via gh CLI
+gh pr create \
+  --base <target> \
+  --head <target>_phase[N] \
+  --title "[<Work Title>] Phase <N>: <description>" \
+  --body "<PR body>"
+```
+
+### PR Title Format
+
+`[<Work Title>] Phase <N>: <one-sentence description>`
+
+Example: `[Auth System] Phase 1: Add JWT token validation`
+
+### PR Body Scaling
+
+**Simple phases**:
+```
+Phase <N>: <one-sentence objective>
+
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+```
+
+**Complex phases**:
+```
+## Summary
+<Key changes and approach>
+
+## Design Decisions
+<Noteworthy decisions made>
+
+## Reviewer Notes
+<Items for reviewer attention>
+
+🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)
+```
+
+### Post-PR Actions
+
+1. Capture PR URL from `gh pr create` output
+2. Update ImplementationPlan.md with PR link in phase notes
+3. Report PR URL to user
+
+### PR Update Policy
+
+After a PR is opened, post progress updates as **PR comments**, not modifications to the PR body. PR body modifications require explicit user request.
+
+### Reply Format (PR Comments)
+
+When replying to review comments:
+
+```
+**🐾 PAW 🤖:**
+
+[What was changed and commit hash reference]
+```

@@ -11,8 +11,8 @@
 #   ./scripts/export-for-cli.sh agents [output-dir]   # Export all agents
 #
 # Default output directories (GitHub Copilot CLI user-level locations):
-#   Skills: ~/.config/github-copilot/skills/
-#   Agents: ~/.config/github-copilot/agents/
+#   Skills: ~/.copilot/skills/
+#   Agents: ~/.copilot/agents/
 
 set -e
 
@@ -21,13 +21,13 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SKILLS_DIR="$PROJECT_ROOT/skills"
 AGENTS_DIR="$PROJECT_ROOT/agents"
 
-# Default CLI config directories
+# Default CLI config directories (matches GitHub CLI custom agents/skills locations)
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
-    DEFAULT_SKILLS_OUT="$APPDATA/github-copilot/skills"
-    DEFAULT_AGENTS_OUT="$APPDATA/github-copilot/agents"
+    DEFAULT_SKILLS_OUT="$USERPROFILE/.copilot/skills"
+    DEFAULT_AGENTS_OUT="$USERPROFILE/.copilot/agents"
 else
-    DEFAULT_SKILLS_OUT="$HOME/.config/github-copilot/skills"
-    DEFAULT_AGENTS_OUT="$HOME/.config/github-copilot/agents"
+    DEFAULT_SKILLS_OUT="$HOME/.copilot/skills"
+    DEFAULT_AGENTS_OUT="$HOME/.copilot/agents"
 fi
 
 # Process conditional blocks for CLI environment

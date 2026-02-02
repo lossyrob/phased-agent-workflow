@@ -56,12 +56,10 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 1. Identify last completed activity
 2. Look up mandatory next step in Workflow Rules
 3. Check Prerequisites table—prepend any required prerequisites
-4. **Check session boundary**: If Session Policy is `per-stage` AND next activity crosses a stage boundary, prepend `[ ] session-boundary (<from> → <to>)` TODO
+4. **MANDATORY session boundary check**: If Session Policy is `per-stage` AND next activity crosses a stage boundary → call `paw_new_session` immediately. Do NOT add more TODOs, do NOT proceed with next activity in this session.
 5. Add TODO for next activity, followed by another `reconcile-workflow`
 
 **TODO format**: `[ ] <activity-name> (<context>)`
-
-**Special TODO**: `[ ] session-boundary (<from> → <to>)` — Call `paw_new_session` with target activity and artifact paths before proceeding
 
 ## Before Yielding Control
 
@@ -91,6 +89,8 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 | All phases complete | Final PR | `continue` or `pr` |
 
 **Format**: Brief status + "Say `continue` to proceed." Don't mention tool names, work IDs, or phase numbers in the default prompt—the agent knows the context.
+
+**IMPORTANT**: `continue` means "proceed through the workflow"—NOT "skip workflow rules." Always check Session Policy before proceeding.
 
 ## Hybrid Execution Model
 

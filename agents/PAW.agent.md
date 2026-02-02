@@ -18,7 +18,7 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-implement (any phase) | paw-impl-review | NO |
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
-| paw-impl-review (passes) | paw-implement (next phase) or paw-pr | Per Review Policy |
+| paw-impl-review (passes) | paw-implement (next phase) or paw-pr | Check Milestone Pause |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 
@@ -33,6 +33,11 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 - `always`: Pause after every artifact for user confirmation
 - `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
 - `never`: Auto-proceed unless blocked
+
+**Legacy Handoff Mode mapping** (for older WorkflowContext.md files):
+- `manual` → `always`
+- `semi-auto` → `milestones`
+- `auto` → `never`
 
 ### Session Policy Behavior
 {{#vscode}}
@@ -69,6 +74,7 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 {{#cli}}
 - `session_action`: Ignored in CLI (single-session mode)
 {{/cli}}
+- `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation before proceeding
 - `artifact_tracking`: Pass to activity (if `disabled`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
 

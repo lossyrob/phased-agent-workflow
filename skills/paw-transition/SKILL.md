@@ -25,6 +25,9 @@ Read WorkflowContext.md to determine:
 - Work ID and target branch
 - Session Policy (`per-stage` | `continuous`)
 - Review Strategy (`prs` | `local`)
+- Review Policy (`always` | `milestones` | `never`)
+  - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
+  - If neither present, default to `milestones`
 
 Identify last completed activity from TODOs or artifacts.
 
@@ -42,22 +45,28 @@ Use the Mandatory Transitions table:
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
 
-### Step 3: Check Stage Boundary
+### Step 3: Check Stage Boundary and Milestone Pause
 
-Stage boundaries occur when moving between these stages:
+**Stage boundaries** occur when moving between these stages:
 - spec-review passes → code-research
 - plan-review passes → implement (Phase 1)
 - phase N complete → phase N+1
 - all phases complete → final-pr
 
-**If crossing a stage boundary AND Session Policy = `per-stage`**:
-- Set session_action = `new_session`
-- Set inline_instruction to: next activity and phase (e.g., "Phase 2: Tool Enhancement")
-- Continue to Step 4 (preflight still needed for inline_instruction context)
+**Milestones** (require pause check): Spec.md complete, ImplementationPlan.md complete, Phase PR completion, Final PR
 
-**If NOT crossing boundary OR Session Policy = `continuous`**:
-- Set session_action = `continue`
-- Continue to Step 4
+**Determine pause_at_milestone**:
+- If at a milestone AND Review Policy ∈ {`always`, `milestones`}: set `pause_at_milestone = true`
+- If Review Policy = `never`: set `pause_at_milestone = false`
+- If not at a milestone: set `pause_at_milestone = false`
+
+**Determine session_action**:
+- If crossing a stage boundary AND Session Policy = `per-stage`: set `session_action = new_session`
+- Otherwise: set `session_action = continue`
+
+If `session_action = new_session`, set inline_instruction to: next activity and phase (e.g., "Phase 2: Tool Enhancement")
+
+Continue to Step 4 (preflight still needed for inline_instruction context).
 
 ### Step 4: Preflight Checks
 
@@ -96,12 +105,15 @@ After completing all steps, return structured output:
 ```
 TRANSITION RESULT:
 - session_action: [continue | new_session]
+- pause_at_milestone: [true | false]
 - next_activity: [activity name and context]
 - artifact_tracking: [enabled | disabled]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
 ```
+
+**If pause_at_milestone = true**: The PAW agent must PAUSE and wait for user confirmation before proceeding.
 
 **If session_action = new_session**: The PAW agent must call `paw_new_session` with the provided work_id and inline_instruction.
 

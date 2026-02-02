@@ -51,15 +51,10 @@ When calling `paw_new_session`, include resume hint: intended next activity + re
 Use TODOs to externalize mandatory workflow steps. After completing ANY activity:
 
 1. Mark the activity TODO as complete
-2. Add `[ ] reconcile-workflow` TODO
-3. Continue to next TODO (triggers reconciliation)
+2. Add `[ ] transition` TODO
+3. Continue to next TODO
 
-**Reconciliation** (when processing `reconcile-workflow`):
-1. Identify last completed activity
-2. Look up mandatory next step in Workflow Rules
-3. Check Prerequisites table—prepend any required prerequisites
-4. **Check session boundary**: If Session Policy is `per-stage` AND next activity crosses a stage boundary, call `paw_new_session`
-5. Add TODO for next activity, followed by another `reconcile-workflow`
+**Transition** (when processing `transition` TODO): Load `paw-transition` skill and execute its procedure. The skill handles stage boundaries, session policy, preflight checks, and queuing the next activity.
 
 **TODO format**: `[ ] <activity-name> (<context>)`
 

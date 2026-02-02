@@ -20,6 +20,8 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-planning | paw-plan-review | NO |
 | paw-impl-review (passes) | paw-implement (next phase) or paw-pr | Per Review Policy |
 
+**Skippable = NO**: Execute immediately without pausing or asking for confirmation.
+
 ### Prerequisites
 | Before Activity | Required Prerequisite |
 |-----------------|----------------------|

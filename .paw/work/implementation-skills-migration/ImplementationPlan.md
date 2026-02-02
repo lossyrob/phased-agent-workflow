@@ -100,6 +100,8 @@ Activity skills will provide:
 8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
 9. **Phase 9: Remove paw_get_context Tool** - Remove tool, handoff templates, and component files; agents read WorkflowContext.md directly
 10. **Phase 10: TODO-Based Workflow Enforcement** - Use TODO lists as externalized memory for mandatory workflow steps; move compact workflow rules into agent; solve the "forgetting" problem without custom tooling
+11. **Phase 11: CLI-Compatible Templating** - Add conditional blocks for VS Code vs CLI environments; create export script for GitHub Copilot CLI testing
+12. **Phase 12: Separate Review from Git Operations** - Refactor `paw-impl-review` to be pure review (subagent), extract PR/push operations into workflow-level git-ops step for platform portability (GitHub, Azure DevOps)
 
 ---
 
@@ -2195,5 +2197,146 @@ Read the skill file at `skills/paw-review-understanding/SKILL.md`.
    - Recommendation: Out of scope for initial implementation; add if workflow proves useful
 
 ### Phase 11 Completion Notes
+
+*To be filled in after implementation*
+
+
+---
+
+## Phase 12: Separate Review from Git Operations
+
+### Overview
+
+Refactor the implementation review activity to separate two distinct concerns:
+1. **Review** - Evaluate code quality, check for issues, return verdict (pure evaluation)
+2. **Git Operations** - Push branches, create PRs (platform-specific side effects)
+
+This enables:
+- `paw-impl-review` to become a subagent (like `paw-spec-review` and `paw-plan-review`)
+- Platform-specific PR creation (GitHub vs Azure DevOps) isolated in one place
+- Cleaner separation of concerns and stage boundaries
+
+### Current State
+
+`paw-impl-review` currently handles both review AND git operations:
+- Reviews code for quality and maintainability
+- Adds documentation/docstrings
+- **Pushes branches and opens PRs** ← This should be separate
+
+Execution model inconsistency:
+| Skill | Current Execution | Should Be |
+|-------|-------------------|-----------|
+| `paw-spec-review` | Subagent | Subagent ✓ |
+| `paw-plan-review` | Subagent | Subagent ✓ |
+| `paw-impl-review` | Direct | **Subagent** |
+
+### Desired End State
+
+1. **`paw-impl-review`** becomes pure review:
+   - Execution Context: Subagent (matches other reviews)
+   - Reviews code quality, adds documentation
+   - Returns structured verdict (pass/fail + issues)
+   - Does NOT push or create PRs
+
+2. **New `paw-phase-pr` skill** (or extend `paw-git-operations`):
+   - Handles pushing phase branch
+   - Creates Phase PR (GitHub) or equivalent (Azure DevOps)
+   - Platform detection based on remote URL or WorkflowContext
+
+3. **Updated workflow transitions**:
+   ```
+   Before: implement → impl-review (does review + PR)
+   After:  implement → impl-review (review only) → phase-pr (creates PR)
+   ```
+
+4. **PAW agent Mandatory Transitions updated**:
+   | After Activity | Required Next | Skippable? |
+   |----------------|---------------|------------|
+   | paw-implement | paw-impl-review | NO |
+   | paw-impl-review (passes) | paw-phase-pr | NO |
+   | paw-phase-pr | paw-implement (next) or paw-pr | Per Review Policy |
+
+### Changes Required
+
+#### 1. Refactor `paw-impl-review` to Pure Review
+**File**: `skills/paw-impl-review/SKILL.md`
+**Changes**:
+- Update Execution Context to subagent
+- Remove all push/PR creation capabilities
+- Remove branch verification (handled by git-ops)
+- Return structured verdict like other review skills
+- Update Completion Response to match subagent pattern
+
+#### 2. Create Phase PR Skill (or Extend Git Operations)
+**File**: `skills/paw-phase-pr/SKILL.md` (new) OR extend `skills/paw-git-operations/SKILL.md`
+**Changes**:
+- Push phase branch to remote
+- Detect platform (GitHub vs Azure DevOps) from remote URL
+- Create PR with appropriate API (gh CLI vs az CLI)
+- Return PR URL and status
+
+#### 3. Update PAW Agent Workflow Rules
+**File**: `agents/PAW.agent.md`
+**Changes**:
+- Update Mandatory Transitions table
+- Move `paw-impl-review` from Direct to Subagent execution
+- Add `paw-phase-pr` to workflow
+
+#### 4. Update Workflow Skill
+**File**: `skills/paw-workflow/SKILL.md`
+**Changes**:
+- Update Activities table
+- Update Default Flow Guidance
+- Document new stage boundary
+
+### Platform Detection Strategy
+
+```
+1. Check WorkflowContext.md for explicit platform setting (if added)
+2. Parse git remote URL:
+   - github.com → GitHub (use `gh` CLI)
+   - dev.azure.com or *.visualstudio.com → Azure DevOps (use `az` CLI)
+   - Other → Local strategy only (no PR creation)
+3. Fall back to local strategy if CLI not available
+```
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `npm run lint` passes
+- [ ] `npm run lint:skills` passes
+- [ ] All review skills have consistent Execution Context (subagent)
+
+#### Manual Verification:
+- [ ] `paw-impl-review` returns verdict without creating PR
+- [ ] Phase PR created correctly after review passes
+- [ ] Workflow transitions work: implement → review → phase-pr → next
+- [ ] GitHub PR creation works via `gh` CLI
+- [ ] Graceful handling when platform CLI not available
+
+### Dependencies
+
+- Requires Phases 1-8 complete (current architecture in place)
+- Independent of Phases 9-11
+
+### Open Questions
+
+1. **New skill vs extend existing?**
+   - Option A: New `paw-phase-pr` skill (cleaner separation)
+   - Option B: Extend `paw-git-operations` (fewer skills)
+   - Recommendation: New skill - git-operations is a utility, phase-pr is an activity
+
+2. **Azure DevOps support scope?**
+   - Option A: Full parity with GitHub (PR creation, status checks)
+   - Option B: Basic support (PR creation only)
+   - Option C: Detect and document as unsupported initially
+   - Recommendation: Option C for initial implementation, Option B as follow-up
+
+3. **Should local strategy skip phase-pr entirely?**
+   - Local strategy has no PRs, just direct commits to target branch
+   - phase-pr would be a no-op or skipped
+   - Recommendation: Skip phase-pr for local strategy (no PR to create)
+
+### Phase 12 Completion Notes
 
 *To be filled in after implementation*

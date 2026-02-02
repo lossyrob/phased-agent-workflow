@@ -62,13 +62,20 @@ When calling `paw_new_session`, include resume hint: intended next activity + re
 **Note**: CLI operates in single-session mode. Stage boundaries proceed directly to next activity without session reset.
 {{/cli}}
 
-## Workflow Tracking
+## Workflow Tracking (MANDATORY)
 
-Use TODOs to externalize mandatory workflow steps. After completing ANY activity:
+**TODO list is your external memory.** Without it, you will forget mandatory steps.
 
-1. Mark the activity TODO as complete
-2. Add `[ ] paw-transition` TODO
-3. Continue to next TODO
+**On first activity**: Create TODO list with current activity and `paw-transition`:
+```
+[ ] <current-activity> (<context>)
+[ ] paw-transition
+```
+
+**After completing ANY activity**:
+1. Mark the activity TODO as `[x]`
+2. If no `paw-transition` TODO exists, add one
+3. Continue to next unchecked TODO
 
 **Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response:
 {{#vscode}}
@@ -81,7 +88,7 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 - `artifact_tracking`: Pass to activity (if `disabled`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
 
-**TODO format**: `[ ] <activity-name> (<context>)`
+**TODO format**: `[ ] <activity-name> (<context>)` or `[x] <activity-name> (done)`
 
 ## Before Yielding Control
 
@@ -89,13 +96,14 @@ When **stopping work or pausing the workflow** (not on every response), verify:
 
 1. **Check TODOs**—Are there unchecked workflow items?
 2. **If yes**—Execute them (don't yield yet)
-3. **If no**—Safe to yield
+3. **If no TODOs exist**—You forgot to track. Create them now.
+4. **If all complete**—Safe to yield
 
 **Valid reasons to yield:**
-- Pausing per Review Policy at a milestone
+- Pausing per Review Policy at a milestone (transition returned `pause_at_milestone: true`)
 - Blocked and need user decision
 - User explicitly requested pause or redirected workflow
-- All workflow TODOs completed
+- All workflow TODOs completed (including `paw-transition`)
 
 **NEVER yield with pending workflow TODOs**—complete them or create a PAUSE TODO explaining why.
 

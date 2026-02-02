@@ -110,7 +110,11 @@ When **stopping work or pausing the workflow**, verify:
 
 ### Handoff Messaging
 
-When pausing at a milestone, tell the user **one simple word** to continue:
+When pausing at a milestone, provide:
+1. **Brief status** of what was completed
+2. **Review notes** (if any observations worth mentioning—keep concise)
+3. **Invitation to discuss** or request changes
+4. **How to proceed** when ready
 
 | After | Default next action | User says |
 |-------|---------------------|-----------|
@@ -119,9 +123,12 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 | Phase N complete | Phase N+1 or review | `continue` |
 | All phases complete | Final PR | `continue` or `pr` |
 
-**Format**: Brief status + "Say `continue` to proceed." Don't mention tool names, work IDs, or phase numbers in the default prompt—the agent knows the context.
+**Example handoff**:
+> Spec complete. I noted X might need clarification with stakeholders. Feel free to review, ask questions, or request changes. Say `continue` when ready.
 
-**IMPORTANT**: `continue` means "proceed through the workflow"—NOT "skip workflow rules." Always check Session Policy before proceeding.
+**User requests changes**: If user asks to modify the artifact (not `continue`), make the changes while staying at the same workflow stage—this is review, not a redirect. Only proceed to next stage when user says `continue`.
+
+**IMPORTANT**: `continue` means "proceed through the workflow"—NOT "skip workflow rules."
 
 ## Hybrid Execution Model
 

@@ -117,6 +117,8 @@ Return structured feedback to PAW agent:
 - Specify what Implementer needs to change
 - Note test failures or missing tests
 
+> **After returning PASS**: The PAW orchestrator will handle push/PR creation (via `paw-git-operations`) and then invoke `paw-transition`. This skill does NOT push or create PRs—it only returns the verdict.
+
 ### Response Format
 
 ```

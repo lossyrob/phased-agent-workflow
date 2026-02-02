@@ -124,8 +124,10 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 - `paw-transition`
 
-**Orchestrator-handled** (after subagent returns):
-- Push and Phase PR creation (after `paw-impl-review` passes, using `paw-git-operations`)
+**Orchestrator-handled** (MANDATORY after subagent returns):
+- After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR, then `paw-transition`
+- After any review subagent: Check result, handle accordingly, then `paw-transition`
+- **DO NOT yield control after subagent returns**—complete orchestrator tasks first
 
 ### Work Shaping Detection
 

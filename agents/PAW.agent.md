@@ -56,7 +56,7 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 1. Identify last completed activity
 2. Look up mandatory next step in Workflow Rules
 3. Check Prerequisites table—prepend any required prerequisites
-4. **MANDATORY session boundary check**: If Session Policy is `per-stage` AND next activity crosses a stage boundary → call `paw_new_session` immediately. Do NOT add more TODOs, do NOT proceed with next activity in this session.
+4. **Check session boundary**: If Session Policy is `per-stage` AND next activity crosses a stage boundary, call `paw_new_session`
 5. Add TODO for next activity, followed by another `reconcile-workflow`
 
 **TODO format**: `[ ] <activity-name> (<context>)`

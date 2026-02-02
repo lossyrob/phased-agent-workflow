@@ -75,7 +75,7 @@ When plan conflicts with codebase reality or leaves critical gaps: **STOP immedi
 
 **Constraints**:
 - All verification commands from CodeResearch.md must pass before committing
-- Update ImplementationPlan.md with phase status and check off completed items
+- Update ImplementationPlan.md: mark phase complete in Phase Status (`- [ ]` → `- [x]`)
 - Commit locally with descriptive message
 - **DO NOT push** — `paw-impl-review` handles that
 
@@ -131,7 +131,7 @@ If the plan has existing checkmarks:
 ### Initial Phase Implementation
 
 - [ ] All automated success criteria green
-- [ ] ImplementationPlan.md updated with phase status
+- [ ] Phase Status checkbox marked complete in ImplementationPlan.md
 - [ ] Changes committed locally (NOT pushed)
 
 ### PR Review Comment Response

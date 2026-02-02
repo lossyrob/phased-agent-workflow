@@ -5,7 +5,7 @@ description: Workflow transition gate for PAW. Handles stage boundaries, session
 
 # Workflow Transition
 
-> **Execution Context**: This skill runs **directly** in the PAW session when processing a `transition` TODO. It determines what happens next and whether a session boundary should be crossed.
+> **Execution Context**: This skill runs **directly** in the PAW session when processing a `paw-transition` TODO. It determines what happens next and whether a session boundary should be crossed.
 
 ## Purpose
 
@@ -83,11 +83,11 @@ If any check fails, report blocker and stop.
 
 Add TODO for next activity:
 - `[ ] <activity-name> (<context>)`
-- Follow with `[ ] transition`
+- `[ ] paw-transition`
 
 ## Completion
 
-After completing all steps (or calling `paw_new_session`), mark the `transition` TODO complete.
+After completing all steps (or calling `paw_new_session`), mark the `paw-transition` TODO complete.
 
 **Normal completion output**:
 ```

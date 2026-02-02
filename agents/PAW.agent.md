@@ -51,10 +51,10 @@ When calling `paw_new_session`, include resume hint: intended next activity + re
 Use TODOs to externalize mandatory workflow steps. After completing ANY activity:
 
 1. Mark the activity TODO as complete
-2. Add `[ ] transition` TODO
+2. Add `[ ] paw-transition` TODO
 3. Continue to next TODO
 
-**Transition** (when processing `transition` TODO): Load `paw-transition` skill and execute its procedure. The skill handles stage boundaries, session policy, preflight checks, and queuing the next activity.
+**Transition** (when processing `paw-transition` TODO): Load `paw-transition` skill and execute its procedure. The skill handles stage boundaries, session policy, preflight checks, and queuing the next activity.
 
 **TODO format**: `[ ] <activity-name> (<context>)`
 

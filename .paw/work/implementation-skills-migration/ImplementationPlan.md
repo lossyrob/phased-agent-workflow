@@ -85,23 +85,20 @@ Activity skills will provide:
 
 ## Phase Summary
 
-1. **Phase 1: Create Workflow Skill** - Build `paw-workflow` skill with skill usage patterns, default flow guidance, validation gates, default transition guidance, and PR comment response guidance (PAW agent discovers skills dynamically via `paw_get_skills`)
-2. **Phase 2: Create Activity and Utility Skills** - Extract domain content into skills, split into sub-phases for context management:
-   - **Phase 2A: Utility Skills** - Create `paw-git-operations` and `paw-review-response` foundation skills that other skills reference
-   - **Phase 2B: Bootstrap & Specification Skills** - Create `paw-init` (bootstrap skill), `paw-spec`, `paw-spec-research`, `paw-spec-review` for early workflow stages
-   - **Phase 2C: Planning Skills** - Create `paw-code-research`, `paw-planning`, `paw-plan-review` for the planning stage
-   - **Phase 2D: Implementation Skills** - Create `paw-implement`, `paw-impl-review` for core execution
-   - **Phase 2E: Finalization Skills** - Create `paw-pr`, `paw-status` for final workflow stages
-3. **Phase 3: Create PAW Agent and Entry Point** - Build compact orchestrator agent that reasons about intent and delegates activities; create `/paw` entry point prompt
-4. **Phase 4: Update Extension Tooling** - Modify handoff tool, VS Code initialization command, and installer to support the new architecture
-5. **Phase 5: Deprecate Legacy Agents** - Remove individual implementation agents and old initialization template, update documentation
-6. **Phase 6: Work Shaping Utility Skill** - Create `paw-work-shaping` utility skill for interactive pre-spec ideation sessions
-7. **Phase 7: Deprecate Custom Instructions and Prompt Generation** - Remove legacy custom instruction templates
-8. **Phase 8: Hybrid Execution Model** - Refactor PAW agent to execute interactive activities directly (spec, planning, implement) while delegating research/review activities to subagents
-9. **Phase 9: Remove paw_get_context Tool** - Remove tool, handoff templates, and component files; agents read WorkflowContext.md directly
-10. **Phase 10: TODO-Based Workflow Enforcement** - Use TODO lists as externalized memory for mandatory workflow steps; move compact workflow rules into agent; solve the "forgetting" problem without custom tooling
-11. **Phase 11: CLI-Compatible Templating** - Add conditional blocks for VS Code vs CLI environments; create export script for GitHub Copilot CLI testing
-12. **Phase 12: Separate Review from Git Operations** - Refactor `paw-impl-review` to be pure review (subagent), extract PR/push operations into workflow-level git-ops step for platform portability (GitHub, Azure DevOps)
+| # | Phase | Status |
+|---|-------|--------|
+| 1 | Create Workflow Skill | ✅ Complete |
+| 2 | Create Activity and Utility Skills | ✅ Complete |
+| 3 | Create PAW Agent and Entry Point | ✅ Complete |
+| 4 | Update Extension Tooling | ✅ Complete |
+| 5 | Deprecate Legacy Agents | ✅ Complete |
+| 6 | Work Shaping Utility Skill | ✅ Complete |
+| 7 | Deprecate Custom Instructions and Prompt Generation | ✅ Complete |
+| 8 | Hybrid Execution Model | ✅ Complete |
+| 9 | Remove paw_get_context Tool | ✅ Complete |
+| 10 | TODO-Based Workflow Enforcement | ✅ Complete |
+| 11 | CLI-Compatible Templating | 📋 Planned |
+| 12 | Separate Review from Git Operations | 📋 Planned |
 
 ---
 

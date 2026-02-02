@@ -76,6 +76,11 @@ Before the next activity can start, verify:
 - [ ] All phases complete
 - [ ] On target branch or ready to merge
 
+**Artifact Tracking Check** (for all activities):
+- Check if `.paw/work/<work-id>/.gitignore` exists
+- If exists with `*` pattern: artifact_tracking = `disabled`
+- Otherwise: artifact_tracking = `enabled`
+
 If any check fails, report blocker and stop.
 
 ### Step 5: Queue Next Activity
@@ -92,6 +97,7 @@ After completing all steps, return structured output:
 TRANSITION RESULT:
 - session_action: [continue | new_session]
 - next_activity: [activity name and context]
+- artifact_tracking: [enabled | disabled]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]

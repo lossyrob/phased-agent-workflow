@@ -54,7 +54,10 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 2. Add `[ ] paw-transition` TODO
 3. Continue to next TODO
 
-**Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response (session_action, next_activity, preflight status).
+**Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response:
+- `session_action`: Call `paw_new_session` if `new_session`
+- `artifact_tracking`: Pass to activity (if `disabled`, don't stage `.paw/` files)
+- `preflight`: Report blocker if not `passed`
 
 **TODO format**: `[ ] <activity-name> (<context>)`
 

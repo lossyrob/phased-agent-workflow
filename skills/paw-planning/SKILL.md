@@ -90,10 +90,10 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 ## What We're NOT Doing
 [Out-of-scope items]
 
-## Phase Summary
-1. **Phase 1: [Name]** - [Objective]
-2. **Phase 2: [Name]** - [Objective]
-...
+## Phase Status
+- [ ] **Phase 1: [Name]** - [Objective]
+- [ ] **Phase 2: [Name]** - [Objective]
+- [ ] **Phase N: Documentation** - [If warranted]
 
 ---
 
@@ -132,6 +132,8 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 - Spec: `.paw/work/<work-id>/Spec.md`
 - Research: `.paw/work/<work-id>/SpecResearch.md`, `.paw/work/<work-id>/CodeResearch.md`
 ```
+
+**Phase Status format**: Use checkboxes `- [ ]` for pending, `- [x]` for complete. This provides at-a-glance status without heavy tables.
 
 ## Execution Contexts
 
@@ -185,7 +187,7 @@ When revising based on paw-plan-review feedback:
 - [ ] "What We're NOT Doing" section prevents scope creep
 - [ ] Code blocks absent or limited to <10 lines for architectural concepts
 - [ ] Documentation phase included (or explicitly omitted with reason)
-- [ ] Phase Summary exists with numbered phases and one-sentence objectives
+- [ ] Phase Status exists with checkbox phases and one-sentence objectives
 
 ## Completion Response
 

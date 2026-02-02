@@ -76,6 +76,19 @@ When **stopping work or pausing the workflow** (not on every response), verify:
 
 **NEVER yield with pending workflow TODOs**—complete them or create a PAUSE TODO explaining why.
 
+### Handoff Messaging
+
+When pausing at a milestone, tell the user **one simple word** to continue:
+
+| After | Default next action | User says |
+|-------|---------------------|-----------|
+| Spec complete | Code research | `continue` or `research` |
+| Plan complete | Implementation | `continue` or `implement` |
+| Phase N complete | Phase N+1 or review | `continue` |
+| All phases complete | Final PR | `continue` or `pr` |
+
+**Format**: Brief status + "Say `continue` to proceed." Don't mention tool names, work IDs, or phase numbers in the default prompt—the agent knows the context.
+
 ## Hybrid Execution Model
 
 **Direct execution** (load skill, execute in this session):

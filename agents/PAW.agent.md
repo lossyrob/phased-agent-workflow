@@ -19,11 +19,23 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
 | paw-impl-review (passes) | Push & Phase PR (prs strategy) | NO |
-| Phase PR created | paw-implement (next phase) or paw-pr | Check Milestone Pause |
+| Phase PR created | paw-transition → paw-implement (next) or paw-pr | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 
 **Post impl-review flow** (PRs strategy): After `paw-impl-review` returns PASS, load `paw-git-operations` and create Phase PR. For local strategy, push to target branch (no PR).
+
+### Stage Boundary Rule (CRITICAL)
+
+**After EVERY stage boundary, delegate to `paw-transition` before proceeding.**
+
+Stage boundaries:
+- spec-review passes
+- plan-review passes  
+- Phase PR created (PRs strategy) or push complete (local strategy)
+- All phases complete
+
+The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for user. This is how milestone pauses happen—without the transition call, you will skip pauses.
 
 ### Prerequisites
 | Before Activity | Required Prerequisite |
@@ -62,50 +74,39 @@ When calling `paw_new_session`, include resume hint: intended next activity + re
 **Note**: CLI operates in single-session mode. Stage boundaries proceed directly to next activity without session reset.
 {{/cli}}
 
-## Workflow Tracking (MANDATORY)
+## Workflow Tracking
 
-**TODO list is your external memory.** Without it, you will forget mandatory steps.
+Use TODOs to externalize workflow steps.
 
-**On first activity**: Create TODO list with current activity and `paw-transition`:
-```
-[ ] <current-activity> (<context>)
-[ ] paw-transition
-```
+**Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 
-**After completing ANY activity**:
-1. Mark the activity TODO as `[x]`
-2. If no `paw-transition` TODO exists, add one
-3. Continue to next unchecked TODO
-
-**Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response:
+**Transition response handling**:
+- `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation
+- `artifact_tracking`: Pass to next activity (if `disabled`, don't stage `.paw/` files)
+- `preflight`: Report blocker if not `passed`
 {{#vscode}}
 - `session_action`: Call `paw_new_session` if `new_session`
 {{/vscode}}
 {{#cli}}
 - `session_action`: Ignored in CLI (single-session mode)
 {{/cli}}
-- `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation before proceeding
-- `artifact_tracking`: Pass to activity (if `disabled`, don't stage `.paw/` files)
-- `preflight`: Report blocker if not `passed`
-
-**TODO format**: `[ ] <activity-name> (<context>)` or `[x] <activity-name> (done)`
 
 ## Before Yielding Control
 
-When **stopping work or pausing the workflow** (not on every response), verify:
+When **stopping work or pausing the workflow**, verify:
 
-1. **Check TODOs**—Are there unchecked workflow items?
-2. **If yes**—Execute them (don't yield yet)
-3. **If no TODOs exist**—You forgot to track. Create them now.
-4. **If all complete**—Safe to yield
+1. **Check stage boundary**—Did you just complete an activity at a stage boundary?
+2. **If yes**—Run `paw-transition` first (don't yield yet)
+3. **If transition returned `pause_at_milestone: true`**—Safe to yield (milestone pause)
+4. **If transition returned `pause_at_milestone: false`**—Continue to next activity
 
 **Valid reasons to yield:**
-- Pausing per Review Policy at a milestone (transition returned `pause_at_milestone: true`)
+- Transition returned `pause_at_milestone: true`
 - Blocked and need user decision
-- User explicitly requested pause or redirected workflow
-- All workflow TODOs completed (including `paw-transition`)
+- User explicitly requested pause
+- Workflow complete
 
-**NEVER yield with pending workflow TODOs**—complete them or create a PAUSE TODO explaining why.
+**NEVER yield after a stage boundary without running paw-transition first.**
 
 ### Handoff Messaging
 
@@ -132,10 +133,10 @@ When pausing at a milestone, tell the user **one simple word** to continue:
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 - `paw-transition`
 
-**Orchestrator-handled** (MANDATORY after subagent returns):
-- After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR, then `paw-transition`
-- After any review subagent: Check result, handle accordingly, then `paw-transition`
-- **DO NOT yield control after subagent returns**—complete orchestrator tasks first
+**Orchestrator-handled** (after subagent returns):
+- After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR
+- After Phase PR created or push complete: **Delegate to `paw-transition`** (this is a stage boundary)
+- After any review subagent: Check result, handle accordingly, then `paw-transition` if at stage boundary
 
 ### Work Shaping Detection
 

@@ -2017,3 +2017,183 @@ Normal mid-task responses (tool output, progress updates) don't require this che
 ### Phase 10 Completion Notes
 
 *To be filled in after implementation*
+
+## Phase 11: CLI-Compatible Templating for Skills and Agents
+
+### Overview
+
+Enable PAW skills and agents to be used in both VS Code (with LMTs) and GitHub Copilot CLI (without LMTs) by introducing environment-specific templating. The VS Code extension's `paw_get_skill` tool will render VS Code variants, while an export script will generate CLI-compatible versions.
+
+### Problem Statement
+
+PAW skills and agents reference VS Code-specific Language Model Tools (LMTs):
+- `paw_get_skill('name')` - load skill content
+- `paw_get_skills` - discover available skills  
+- `paw_new_session` - fresh chat at stage boundaries
+
+These tools don't exist in GitHub Copilot CLI. To test and use PAW workflows in CLI environments, we need environment-specific rendering of instructions.
+
+### Current LMT References
+
+| Location | Tool | Count |
+|----------|------|-------|
+| `skills/paw-review-workflow/SKILL.md` | `paw_get_skill` | 2 |
+| `agents/PAW.agent.md` | `paw_get_skills`, `paw_get_skill`, `paw_new_session` | 4 |
+| `agents/PAW Review.agent.md` | `paw_get_skills`, `paw_get_skill` | ~2 |
+
+### Design
+
+#### Template Syntax
+
+Extend existing `{{PLACEHOLDER}}` pattern with conditional blocks:
+
+```markdown
+{{#vscode}}
+Call `paw_get_skill('paw-review-understanding')` to load the skill.
+{{/vscode}}
+{{#cli}}
+Read the skill file at `skills/paw-review-understanding/SKILL.md`.
+{{/cli}}
+```
+
+#### Environment Translations
+
+| VS Code | CLI Equivalent |
+|---------|----------------|
+| `paw_get_skill('name')` | `view skills/<name>/SKILL.md` |
+| `paw_get_skills` | Skill list embedded in agent instructions or read from catalog file |
+| `paw_new_session` | N/A - CLI is single-session; `session_policy` always effectively `continuous` |
+
+#### Processing
+
+1. **VS Code**: `paw_get_skill` tool processes templates, outputs `{{#vscode}}` blocks, strips `{{#cli}}` blocks
+2. **CLI Export**: Script processes templates, outputs `{{#cli}}` blocks, strips `{{#vscode}}` blocks
+3. **Agent installer**: `processAgentTemplate()` in `agentTemplateRenderer.ts` extended to handle conditionals
+
+### Export Script
+
+**File**: `scripts/export-for-cli.sh`
+
+**Usage**:
+```bash
+# Export single skill to default CLI skills directory
+./scripts/export-for-cli.sh skill paw-review-workflow
+
+# Export single agent to default CLI agents directory  
+./scripts/export-for-cli.sh agent PAW
+
+# Export to custom directory
+./scripts/export-for-cli.sh skill paw-review-workflow ~/my-skills/
+
+# Export all skills
+./scripts/export-for-cli.sh skills
+
+# Export all agents
+./scripts/export-for-cli.sh agents
+```
+
+**Default directories** (GitHub Copilot CLI user-level locations):
+- Skills: `~/.config/github-copilot/skills/` (Linux/macOS) or `%APPDATA%\github-copilot\skills\` (Windows)
+- Agents: `~/.config/github-copilot/agents/` (Linux/macOS) or `%APPDATA%\github-copilot\agents\` (Windows)
+
+**Script responsibilities**:
+1. Read source file (skill SKILL.md or agent .agent.md)
+2. Process template conditionals (keep `{{#cli}}`, strip `{{#vscode}}`)
+3. Write to target directory with appropriate structure
+4. Report success/failure
+
+### Changes Required
+
+#### 1. Extend Template Renderer
+**File**: `src/agents/agentTemplateRenderer.ts`
+**Changes**:
+- Add `processConditionalBlocks(content: string, environment: 'vscode' | 'cli'): string`
+- Keep blocks matching environment, strip blocks for other environment
+- Integrate into `processAgentTemplate()` for VS Code rendering
+
+#### 2. Update Skill Tool
+**File**: `src/tools/skillTool.ts`  
+**Changes**:
+- After loading skill content, process conditional blocks for 'vscode' environment
+- Ensure `{{#cli}}` blocks are stripped before returning to agent
+
+#### 3. Add Template Conditionals to Skills
+**File**: `skills/paw-review-workflow/SKILL.md`
+**Changes**:
+- Wrap `paw_get_skill` references in `{{#vscode}}...{{/vscode}}`
+- Add `{{#cli}}...{{/cli}}` alternatives with `view` instructions
+
+#### 4. Add Template Conditionals to Agents
+**Files**: `agents/PAW.agent.md`, `agents/PAW Review.agent.md`
+**Changes**:
+- Wrap LMT references in `{{#vscode}}...{{/vscode}}`
+- Add `{{#cli}}...{{/cli}}` alternatives
+- For `paw_new_session`: CLI block explains session is always continuous
+- For `paw_get_skills`: CLI block lists available skills inline or references catalog file
+
+#### 5. Create Export Script
+**File**: `scripts/export-for-cli.sh`
+**Changes**:
+- Implement template processing (simple sed/awk or node script)
+- Handle skill and agent exports
+- Detect platform for default directory
+- Preserve directory structure for skills
+
+#### 6. Create CLI Skills Catalog (Optional)
+**File**: `skills/CATALOG.md` or generated during export
+**Purpose**: Static list of available skills for CLI agents to reference (replaces `paw_get_skills` functionality)
+
+### Dependencies
+
+- **Builds on existing templating**: Extends `{{PLACEHOLDER}}` pattern from `agentTemplateRenderer.ts`
+- **Independent of other phases**: Can be implemented in parallel with Phase 10
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `npm run lint` passes
+- [ ] `npm run lint:skills` passes  
+- [ ] `./scripts/lint-prompting.sh agents/PAW.agent.md` passes
+- [ ] Export script runs without errors
+- [ ] Exported files contain no `{{#vscode}}` or `{{#cli}}` markers
+
+#### Manual Verification:
+- [ ] VS Code: `paw_get_skill` returns content with CLI blocks stripped
+- [ ] VS Code: Agent instructions show LMT references (not `view` commands)
+- [ ] CLI Export: Skills contain `view` instructions instead of `paw_get_skill`
+- [ ] CLI Export: Agents reference skills via file paths
+- [ ] CLI Export: No `paw_new_session` references in exported agents
+
+#### Integration Testing:
+- [ ] Exported PAW agent loads successfully in GitHub Copilot CLI
+- [ ] Exported skills can be read and followed by CLI agent
+- [ ] Basic PAW workflow (init → spec → plan) works in CLI environment
+
+### Tradeoffs
+
+| Gain | Cost |
+|------|------|
+| Test PAW in CLI environment | Template markers add visual noise to source files |
+| Single source of truth for skills/agents | Small maintenance overhead for conditional blocks |
+| No duplication or drift between environments | Export script is manual (not auto-sync) |
+| Extends existing pattern (low learning curve) | May need full templating library if needs grow |
+
+### Open Questions
+
+1. **Should CLI skill catalog be static or generated?**
+   - Option A: Static `CATALOG.md` maintained manually
+   - Option B: Export script generates catalog from skill frontmatter
+   - Recommendation: Generated during export (single source of truth)
+
+2. **How to handle `paw_new_session` stage boundaries in CLI?**
+   - CLI is single-session, so stage boundaries become "proceed to next activity"
+   - Document this behavioral difference in CLI agent instructions
+   - Recommendation: CLI block says "Stage boundaries: proceed directly to next activity (single-session mode)"
+
+3. **Should we support a `--watch` mode for development?**
+   - Auto-export on file changes during development
+   - Recommendation: Out of scope for initial implementation; add if workflow proves useful
+
+### Phase 11 Completion Notes
+
+*To be filled in after implementation*

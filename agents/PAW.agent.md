@@ -29,12 +29,20 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
 ### Review Policy Behavior
 - `always`: Pause after every artifact for user confirmation
-- `milestones`: Pause at Spec.md, ImplementationPlan.md, Phase PR completion, Final PR
+- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
 - `never`: Auto-proceed unless blocked
 
 ### Session Policy Behavior
 - `per-stage`: Use `paw_new_session` at stage boundaries for fresh context
 - `continuous`: Single session throughout workflow
+
+**Stage boundaries** (when to use `paw_new_session` for `per-stage`):
+- spec-review passes → code-research
+- plan-review passes → implement
+- phase N complete → phase N+1
+- all phases complete → final-pr
+
+When calling `paw_new_session`, include resume hint: intended next activity + relevant artifact paths.
 
 ## Workflow Tracking
 

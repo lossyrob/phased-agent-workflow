@@ -46,6 +46,23 @@ Act as a critical PR reviewer, not just a documentation pass:
 **Small refactors** (do yourself): Remove unused parameters, dead code, extract duplicate utilities
 **Large refactors** (coordinate): Restructuring, major changes → return `blocked` with reason, specific changes needed, and evidence (file:line references, test output)
 
+## Project Instructions Adherence
+
+Discover and enforce project-specific coding conventions from instruction files.
+
+**Discovery**: Search for instruction files at repo root and `.github/`:
+- `AGENTS.md`, `.github/AGENTS.md`
+- `.github/copilot-instructions.md`
+- `*.agent.md` in project root or `agents/` directory
+- `.cursor/rules` or similar convention files
+
+**Extract and verify**:
+- Required commands (lint, build, test) → run them, must pass
+- Coding patterns and conventions → verify in changed code
+- Project-specific standards → check adherence
+
+**Enforcement**: Non-adherence is a **blocking issue**, not a suggestion. If instructions specify a required command, failure = BLOCKED.
+
 ## Desired End State
 
 After review, the PAW agent receives:
@@ -97,6 +114,9 @@ When reviewing Implementer's response to PR comments:
 
 ## Quality Checklist
 
+- [ ] Project instruction files discovered and reviewed
+- [ ] Required commands from instructions pass (lint, build, test)
+- [ ] Changes follow documented coding conventions
 - [ ] All tests pass
 - [ ] Reviewed for code necessity and duplication
 - [ ] Docstrings added to public functions/classes
@@ -116,6 +136,7 @@ Return structured feedback to PAW agent:
 - List blocking issues with file:line references
 - Specify what Implementer needs to change
 - Note test failures or missing tests
+- Note violations of project instruction conventions
 
 > **After returning PASS**: The PAW orchestrator will handle push/PR creation (via `paw-git-operations`) and then invoke `paw-transition`. This skill does NOT push or create PRs—it only returns the verdict.
 

@@ -35,6 +35,7 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 - `never`: Auto-proceed unless blocked
 
 ### Session Policy Behavior
+{{#vscode}}
 - `per-stage`: Use `paw_new_session` at stage boundaries for fresh context
 - `continuous`: Single session throughout workflow
 
@@ -45,6 +46,13 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 - all phases complete → final-pr
 
 When calling `paw_new_session`, include resume hint: intended next activity + relevant artifact paths.
+{{/vscode}}
+{{#cli}}
+- `per-stage`: N/A in CLI (single-session mode)
+- `continuous`: Single session throughout workflow (default in CLI)
+
+**Note**: CLI operates in single-session mode. Stage boundaries proceed directly to next activity without session reset.
+{{/cli}}
 
 ## Workflow Tracking
 
@@ -55,7 +63,12 @@ Use TODOs to externalize mandatory workflow steps. After completing ANY activity
 3. Continue to next TODO
 
 **Transition** (when processing `paw-transition` TODO): Delegate to subagent with `paw-transition` skill. Act on the structured response:
+{{#vscode}}
 - `session_action`: Call `paw_new_session` if `new_session`
+{{/vscode}}
+{{#cli}}
+- `session_action`: Ignored in CLI (single-session mode)
+{{/cli}}
 - `artifact_tracking`: Pass to activity (if `disabled`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
 
@@ -110,7 +123,12 @@ Detect when pre-spec ideation would be beneficial (exploratory language, explici
 
 For each user request:
 1. **Reason about intent**: What does the user want to accomplish?
+{{#vscode}}
 2. **Consult skills catalog** via `paw_get_skills`: Which skill has this capability?
+{{/vscode}}
+{{#cli}}
+2. **Consult skills catalog**: Identify skill from `skills/*/SKILL.md` directories
+{{/cli}}
 3. **Determine execution model**: Direct or subagent (see Hybrid Execution Model)
 4. **Execute appropriately**
 5. **Update TODOs** per Workflow Tracking

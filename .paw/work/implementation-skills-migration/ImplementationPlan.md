@@ -97,7 +97,7 @@ Activity skills will provide:
 | 8 | Hybrid Execution Model | ✅ Complete |
 | 9 | Remove paw_get_context Tool | ✅ Complete |
 | 10 | TODO-Based Workflow Enforcement | ✅ Complete |
-| 11 | CLI-Compatible Templating | 📋 Planned |
+| 11 | CLI-Compatible Templating | ✅ Complete |
 | 12 | Separate Review from Git Operations | 📋 Planned |
 
 ---
@@ -2195,7 +2195,26 @@ Read the skill file at `skills/paw-review-understanding/SKILL.md`.
 
 ### Phase 11 Completion Notes
 
-*To be filled in after implementation*
+**Implemented**:
+1. Extended `agentTemplateRenderer.ts` with `processConditionalBlocks(content, environment)` function
+2. Updated `skillTool.ts` to process conditional blocks for 'vscode' environment when loading skills
+3. Added `{{#vscode}}...{{/vscode}}` and `{{#cli}}...{{/cli}}` blocks to:
+   - `skills/paw-review-workflow/SKILL.md` (Subagent Contract section)
+   - `agents/PAW.agent.md` (Session Policy, Workflow Tracking, Request Handling sections)
+   - `agents/PAW Review.agent.md` (Initialization, Skill-Based Execution sections)
+4. Created `scripts/export-for-cli.sh` with support for:
+   - Single skill/agent export: `./scripts/export-for-cli.sh skill paw-workflow`
+   - Bulk export: `./scripts/export-for-cli.sh skills`, `./scripts/export-for-cli.sh agents`
+   - Auto-generated skills catalog: `./scripts/export-for-cli.sh catalog`
+
+**CLI adaptations**:
+- `paw_get_skill('name')` → `Read skills/<name>/SKILL.md`
+- `paw_get_skills` → `Identify skill from skills/*/SKILL.md directories`
+- `paw_new_session` → N/A (CLI operates in single-session mode)
+
+**Verification**:
+- All linting passes: `npm run lint`, `npm run lint:skills`, agent linting
+- Export script tested: correctly strips `{{#vscode}}` blocks and keeps `{{#cli}}` content
 
 
 ---

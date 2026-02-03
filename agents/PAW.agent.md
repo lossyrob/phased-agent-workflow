@@ -18,10 +18,14 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-implement (any phase) | paw-impl-review | NO |
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
+| paw-plan-review (passes) | Planning PR (prs strategy) | NO |
+| Planning PR created | paw-transition → paw-implement | NO |
 | paw-impl-review (passes) | Push & Phase PR (prs strategy) | NO |
 | Phase PR created | paw-transition → paw-implement (next) or paw-pr | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
+
+**Post plan-review flow** (PRs strategy): After `paw-plan-review` returns PASS, load `paw-git-operations` and create Planning PR (`_plan` → target branch). For local strategy, commit to target branch (no PR).
 
 **Post impl-review flow** (PRs strategy): After `paw-impl-review` returns PASS, load `paw-git-operations` and create Phase PR. For local strategy, push to target branch (no PR).
 
@@ -31,7 +35,8 @@ On first request, identify work context from environment (current branch, `.paw/
 
 Stage boundaries:
 - spec-review passes
-- plan-review passes  
+- plan-review passes
+- Planning PR created (PRs strategy)
 - Phase PR created (PRs strategy) or push complete (local strategy)
 - All phases complete
 
@@ -141,6 +146,8 @@ When pausing at a milestone, provide:
 - `paw-transition`
 
 **Orchestrator-handled** (after subagent returns):
+- After `paw-plan-review` returns PASS (PRs strategy): Load `paw-git-operations`, create Planning PR
+- After Planning PR created: **Delegate to `paw-transition`** (this is a stage boundary)
 - After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR
 - After Phase PR created or push complete: **Delegate to `paw-transition`** (this is a stage boundary)
 - After any review subagent: Check result, handle accordingly, then `paw-transition` if at stage boundary

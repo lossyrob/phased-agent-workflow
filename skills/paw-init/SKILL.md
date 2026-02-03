@@ -23,6 +23,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 
 | Parameter | Required | Default | Values |
 |-----------|----------|---------|--------|
+| `base_branch` | No | `main` | branch name |
 | `target_branch` | No | auto-derive from work ID | branch name |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
@@ -75,6 +76,7 @@ Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
 
 Work Title: <generated_work_title>
 Work ID: <generated_work_id>
+Base Branch: <base_branch>
 Target Branch: <target_branch>
 Workflow Mode: <workflow_mode>
 Review Strategy: <review_strategy>
@@ -90,6 +92,13 @@ Additional Inputs: none
 
 ### Git Branch
 > Branch creation and checkout follows `paw-git-operations` patterns.
+
+**Branch creation sequence** (REQUIRED):
+1. Checkout base branch: `git checkout <base_branch>`
+2. Update base: `git pull origin <base_branch> --ff-only`
+3. Create feature branch: `git checkout -b <target_branch>`
+
+Never create feature branch from current HEAD without explicit checkout of base.
 
 - Target branch exists and is checked out
 - If explicit branch provided: use as-is (prompt if exists)

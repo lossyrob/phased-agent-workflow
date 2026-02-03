@@ -41,8 +41,12 @@ export async function upgradeCommand(_flags = {}) {
     return;
   }
   
-  console.log(`Current version: ${manifest.version}`);
-  console.log('Checking for updates...');
+  const currentVersion = manifest.version;
+  const target = manifest.target;
+  
+  console.log(`Installed version: ${currentVersion}`);
+  console.log(`Target: ${target}`);
+  console.log('Checking npm registry for updates...\n');
   
   let latestVersion;
   try {
@@ -54,19 +58,19 @@ export async function upgradeCommand(_flags = {}) {
   }
   
   if (!latestVersion) {
-    console.log('Could not determine latest version.');
+    console.log('Could not determine latest version from npm registry.');
     return;
   }
   
   console.log(`Latest version: ${latestVersion}`);
   
-  if (latestVersion === manifest.version) {
-    console.log('You are already on the latest version.');
+  if (latestVersion === currentVersion) {
+    console.log('\n✓ You are already on the latest version.');
     return;
   }
   
   // Compare versions (simple comparison, assumes semver-like format)
-  const current = manifest.version.split('.').map(Number);
+  const current = currentVersion.split('.').map(Number);
   const latest = latestVersion.split('.').map(Number);
   
   let isNewer = false;
@@ -81,32 +85,35 @@ export async function upgradeCommand(_flags = {}) {
   }
   
   if (!isNewer) {
-    console.log('You are already on the latest version.');
+    console.log('\n✓ You are already on the latest version.');
     return;
   }
   
-  console.log(`\nUpgrading from ${manifest.version} to ${latestVersion}...`);
+  console.log(`\n→ Upgrading: ${currentVersion} → ${latestVersion}\n`);
   
   const isGlobal = isGlobalInstall();
   
   if (isGlobal) {
     // Upgrade global CLI installation first
-    console.log('Upgrading global CLI installation...\n');
-    await runCommand('npm', ['install', '-g', '@paw-workflow/cli@latest']);
+    console.log('Step 1/2: Upgrading @paw-workflow/cli globally...\n');
+    await runCommand('npm', ['install', '-g', `@paw-workflow/cli@${latestVersion}`]);
     
     // Then reinstall agents/skills using the new CLI
-    console.log('\nReinstalling agents and skills...\n');
-    await runCommand('paw', ['install', manifest.target, '--force']);
+    console.log('\nStep 2/2: Installing PAW agents and skills to', target, '...\n');
+    await runCommand('paw', ['install', target, '--force']);
   } else {
     // Running via npx or local - just use npx to get latest
-    console.log('Downloading latest CLI and reinstalling...\n');
+    console.log('Downloading @paw-workflow/cli@' + latestVersion + ' and installing to', target, '...\n');
     await runCommand('npx', [
-      '@paw-workflow/cli@latest',
+      `@paw-workflow/cli@${latestVersion}`,
       'install',
-      manifest.target,
+      target,
       '--force',
     ]);
   }
   
-  console.log('\nUpgrade complete!');
+  console.log('\n' + '─'.repeat(50));
+  console.log('✓ Upgrade complete!');
+  console.log(`  CLI version: ${latestVersion}`);
+  console.log(`  Agents and skills installed to: ${target}`);
 }

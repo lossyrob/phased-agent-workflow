@@ -2,7 +2,7 @@
   "name": "paw-workflow",
   "displayName": "PAW Workflow",
   "description": "Phased Agent Workflow tooling for VS Code - streamlines work item initialization",
-  "version": "0.0.1-dev",
+  "version": "0.0.2-dev",
   "publisher": "paw-workflow",
   "repository": {
     "type": "git",

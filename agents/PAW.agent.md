@@ -52,6 +52,7 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 ### Review Policy Behavior
 - `always`: Pause after every artifact for user confirmation
 - `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
+- `planning-only`: Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phase completions (local strategy required)
 - `never`: Auto-proceed unless blocked
 
 **Legacy Handoff Mode mapping** (for older WorkflowContext.md files):

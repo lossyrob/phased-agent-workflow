@@ -10,7 +10,7 @@ Install PAW agents and skills to your GitHub Copilot CLI configuration.
 ## Quick Start
 
 ```bash
-npx @paw/cli install copilot
+npx @paw-workflow/cli install copilot
 ```
 
 This installs PAW agents and skills to `~/.copilot/`, making them available in your Copilot CLI sessions.
@@ -65,13 +65,13 @@ See [Two Workflows](two-workflows.md) for detailed usage instructions.
 Check for updates and upgrade:
 
 ```bash
-npx @paw/cli upgrade
+npx @paw-workflow/cli upgrade
 ```
 
 Or reinstall to get the latest version:
 
 ```bash
-npx @paw/cli install copilot --force
+npx @paw-workflow/cli install copilot --force
 ```
 
 ## Uninstalling
@@ -79,7 +79,7 @@ npx @paw/cli install copilot --force
 Remove all PAW files:
 
 ```bash
-npx @paw/cli uninstall
+npx @paw-workflow/cli uninstall
 ```
 
 This removes installed agents, skills, and the manifest file.
@@ -92,7 +92,7 @@ The package may be corrupted. Try reinstalling:
 
 ```bash
 npm cache clean --force
-npx @paw/cli install copilot
+npx @paw-workflow/cli install copilot
 ```
 
 ### Files not showing in Copilot CLI

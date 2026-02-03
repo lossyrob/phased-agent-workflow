@@ -1,5 +1,5 @@
 {
-  "name": "@paw/cli",
+  "name": "@paw-workflow/cli",
   "version": "0.0.1",
   "description": "CLI installer for Phased Agent Workflow (PAW) agents and skills",
   "type": "module",

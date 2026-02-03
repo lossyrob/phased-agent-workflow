@@ -1,6 +1,6 @@
 import { get } from 'https';
 
-const REGISTRY_URL = 'https://registry.npmjs.org/@paw/cli';
+const REGISTRY_URL = 'https://registry.npmjs.org/@paw-workflow/cli';
 const TIMEOUT_MS = 10000;
 
 export async function getLatestVersion() {

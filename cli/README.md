@@ -1,11 +1,11 @@
-# @paw/cli
+# @paw-workflow/cli
 
 CLI installer for [Phased Agent Workflow (PAW)](https://github.com/lossyrob/phased-agent-workflow) agents and skills.
 
 ## Installation
 
 ```bash
-npx @paw/cli install copilot
+npx @paw-workflow/cli install copilot
 ```
 
 This installs PAW agents and skills to your GitHub Copilot CLI configuration directory (`~/.copilot/`).

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `@paw/cli` npm package provides a command-line installer for Phased Agent Workflow (PAW) agents and skills. It enables GitHub Copilot CLI users to install, update, and manage PAW components in their user-level configuration directory (`~/.copilot/`).
+The `@paw-workflow/cli` npm package provides a command-line installer for Phased Agent Workflow (PAW) agents and skills. It enables GitHub Copilot CLI users to install, update, and manage PAW components in their user-level configuration directory (`~/.copilot/`).
 
 The package uses a build-time conditional processing approach: agents and skills with environment-specific blocks (`{{#cli}}`, `{{#vscode}}`) are pre-processed during `npm publish`, resulting in a clean distribution that works without runtime processing.
 
@@ -11,7 +11,7 @@ The package uses a build-time conditional processing approach: agents and skills
 ### High-Level Architecture
 
 ```
-@paw/cli package
+@paw-workflow/cli package
 ├── bin/paw.js           # CLI entry point, command router
 ├── lib/
 │   ├── commands/        # Command implementations
@@ -56,22 +56,22 @@ The package uses a build-time conditional processing approach: agents and skills
 
 **Install PAW to GitHub Copilot CLI:**
 ```bash
-npx @paw/cli install copilot
+npx @paw-workflow/cli install copilot
 ```
 
 **Check installation status:**
 ```bash
-npx @paw/cli list
+npx @paw-workflow/cli list
 ```
 
 **Upgrade to latest version:**
 ```bash
-npx @paw/cli upgrade
+npx @paw-workflow/cli upgrade
 ```
 
 **Remove PAW installation:**
 ```bash
-npx @paw/cli uninstall
+npx @paw-workflow/cli uninstall
 ```
 
 ### Flags

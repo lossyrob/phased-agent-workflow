@@ -5,6 +5,10 @@ on:
     tags:
       - 'cli-v*'
 
+permissions:
+  id-token: write  # Required for OIDC trusted publishing
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -21,6 +25,9 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
       
+      - name: Set version from tag
+        run: npm version ${GITHUB_REF_NAME#cli-v} --no-git-tag-version
+      
       - name: Install dependencies
         run: npm ci
       
@@ -32,5 +39,3 @@ jobs:
       
       - name: Publish to npm
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

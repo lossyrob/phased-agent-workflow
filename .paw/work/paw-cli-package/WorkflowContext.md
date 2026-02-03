@@ -4,8 +4,8 @@ Work Title: PAW CLI Package
 Work ID: paw-cli-package
 Target Branch: feature/paw-cli-package
 Workflow Mode: full
-Review Strategy: prs
-Review Policy: milestones
+Review Strategy: local
+Review Policy: never
 Session Policy: per-stage
 Custom Workflow Instructions: none
 Initial Prompt: none

@@ -8,10 +8,10 @@ You execute the PAW Review workflow by loading the workflow skill and following 
 ## Initialization
 
 {{#vscode}}
-Load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
+Load the `paw-review-workflow` skill using `paw_get_skill` to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
 {{/vscode}}
 {{#cli}}
-Read the `skills/paw-review-workflow/SKILL.md` file to understand orchestration, principles, and artifact structure. If the file cannot be read, report the error and stop.
+Load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
 {{/cli}}
 
 ## Context Detection
@@ -43,15 +43,15 @@ When cross-repository conditions are detected:
 ## Skill-Based Execution
 
 {{#vscode}}
-Use the skills catalog to discover available review skills, then execute each activity by delegating to a separate agent session. Each delegated agent:
+Use `paw_get_skills` to discover available review skills (`paw-review-*`), then execute each activity by delegating to a separate agent session. Each delegated agent:
 - Receives the skill name, PR context, and artifact path
-- Loads and executes the specified skill
+- Loads the skill using `paw_get_skill` and executes it
 - Returns a completion status with artifact confirmation
 {{/vscode}}
 {{#cli}}
-Discover available review skills from `skills/paw-review-*/SKILL.md` directories, then execute each activity by delegating to a separate agent session. Each delegated agent:
-- Receives the skill file path, PR context, and artifact path
-- Reads and executes the specified skill
+Discover available review skills (`paw-review-*`) from the skills catalog, then execute each activity by delegating to a separate agent session. Each delegated agent:
+- Receives the skill name, PR context, and artifact path
+- Loads and executes the specified skill
 - Returns a completion status with artifact confirmation
 {{/cli}}
 

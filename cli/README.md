@@ -65,3 +65,60 @@ A manifest is written to `~/.paw/copilot-cli/manifest.json` to track installed f
 ## License
 
 MIT
+
+## Development
+
+### Setup
+
+```bash
+cd cli
+npm install
+```
+
+### Build
+
+Build the distribution (processes conditionals, injects version metadata):
+
+```bash
+npm run build
+```
+
+This creates `dist/` with processed agents and skills.
+
+### Test locally
+
+Run the CLI directly without installing:
+
+```bash
+# Show help
+node bin/paw.js --help
+
+# Install to Copilot CLI (from local build)
+node bin/paw.js install copilot
+
+# List installed version
+node bin/paw.js list
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+### Lint
+
+```bash
+npm run lint
+```
+
+### Publishing
+
+Publishing is automated via GitHub Actions on tag push:
+
+```bash
+git tag cli-v0.0.1
+git push origin cli-v0.0.1
+```
+
+Requires `NPM_TOKEN` secret configured in the repository.

@@ -89,9 +89,11 @@ related_prs:
    - **GitHub**: Use GitHub tools to retrieve PR details (number, title, author, state, description, labels, reviewers, CI status, changed files)
    - **Non-GitHub**: Use git to determine commits and changed files between base and head
 
-3. **Resolve Base Commit** (Non-GitHub only):
-   - Prefer the remote tracking branch reference
-   - Record source (remote|local|github-api) in ReviewContext.md
+3. **Resolve Base Commit**:
+   - **GitHub**: Use `base.sha` from PR metadata (GitHub returns the merge-base)
+   - **Non-GitHub**: Run `git merge-base <head-branch> origin/<base-branch>` to find common ancestor
+   - **CRITICAL**: The base commit must be the merge-base (common ancestor), NOT the current tip of the base branch. Using the tip causes files added to main after branching to appear as "deletions."
+   - Record in ReviewContext.md: `Base Commit: <sha>` and `Base Commit Source: github-api | merge-base`
 
 4. **Create ReviewContext.md**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`

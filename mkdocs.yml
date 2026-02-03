@@ -63,6 +63,7 @@ nav:
   - User Guide:
     - Getting Started: guide/index.md
     - VS Code Extension: guide/vscode-extension.md
+    - CLI Installation: guide/cli-installation.md
     - Workflow Modes: guide/workflow-modes.md
     - Stage Transitions: guide/stage-transitions.md
     - Two Workflows: guide/two-workflows.md

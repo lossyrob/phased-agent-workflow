@@ -111,7 +111,6 @@ This is useful for:
 
 - Troubleshooting initialization issues
 - Seeing detailed progress during agent operations
-- Debugging custom instruction loading
 
 ## Agent Installation
 

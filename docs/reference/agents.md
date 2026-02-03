@@ -1,123 +1,83 @@
 # PAW Agents Reference
 
-PAW uses specialized AI chat modes ("agents") to handle different stages of the workflow. Each agent has a specific purpose and produces defined outputs.
+PAW uses two AI chat modes ("agents") that orchestrate workflow activities through dynamically loaded skills. Each agent is a compact orchestrator that reasons about user intent and delegates to specialized skills.
 
-## Agent Naming Convention
+## Agents Overview
 
-Agents follow the `PAW-XX` naming scheme:
+| Agent | Purpose | Architecture |
+|-------|---------|--------------|
+| **PAW** | Implementation workflow orchestrator | Skills-based |
+| **PAW Review** | PR review workflow orchestrator | Skills-based |
 
-- **PAW-01x** — Specification stage agents
-- **PAW-02x** — Planning stage agents
-- **PAW-03x** — Implementation stage agents
-- **PAW-04** — Documentation agent
-- **PAW-05** — PR agent
-- **PAW Review** — Review workflow agent (skills-based)
-- **PAW-X** — Utility agents
+Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
 
 ---
 
-## Implementation Workflow Agents
+## Implementation Workflow
 
-### PAW-01A Specification
+### PAW Agent
 
-**Purpose:** Turn an issue or brief into a testable specification.
+**Purpose:** Execute the complete PAW implementation workflow—from specification through final PR—using dynamically loaded skills.
 
-**Produces:**
+**Invocation:** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
 
-- `Spec.md` — Testable requirements document
-- `prompts/spec-research.prompt.md` — Research questions
+**Architecture:** The PAW agent uses a skills-based architecture:
 
-**Focus:** What the feature must do (requirements, acceptance criteria). Avoids implementation details.
+1. Loads the `paw-workflow` skill for orchestration guidance
+2. Discovers available skills dynamically via `paw_get_skills`
+3. Delegates activities to specialized skills via subagents
+4. Applies Review Policy and Session Policy for workflow control
 
-### PAW-01B Spec Researcher
+**Activity Skills:**
 
-**Purpose:** Answer factual questions about the current system.
+| Skill | Capabilities | Primary Artifacts |
+|-------|--------------|-------------------|
+| `paw-init` | Bootstrap workflow, create WorkflowContext.md | WorkflowContext.md |
+| `paw-spec` | Create/revise specifications | Spec.md |
+| `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
+| `paw-spec-review` | Validate spec quality and completeness | Structured feedback |
+| `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
+| `paw-planning` | Create implementation plans with phases | ImplementationPlan.md |
+| `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
+| `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
+| `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
+| `paw-pr` | Pre-flight validation, create final PR | Final PR |
+| `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
 
-**Produces:**
+**Utility Skills:**
 
-- `SpecResearch.md` — Factual documentation of current system behavior
+| Skill | Purpose |
+|-------|---------|
+| `paw-git-operations` | Branch naming, strategy-based branching, selective staging |
+| `paw-review-response` | PR comment mechanics (read, TODO, commit, reply) |
+| `paw-docs-guidance` | Documentation templates and project doc update patterns |
 
-**Focus:** Behavioral documentation at a conceptual level (no file paths).
+**Workflow Stages:**
 
-### PAW-02A Code Researcher
+1. **Specification Stage**
+   - `paw-spec` → `paw-spec-research` (if needed) → `paw-spec` (resume)
+   - Produces: Spec.md, SpecResearch.md
 
-**Purpose:** Map where and how relevant code works today.
+2. **Planning Stage**
+   - `paw-code-research` → `paw-planning`
+   - Produces: CodeResearch.md, ImplementationPlan.md, Planning PR (prs strategy)
 
-**Produces:**
+3. **Implementation Stage**
+   - For each phase: `paw-implement` → `paw-impl-review`
+   - Produces: Code changes, Phase PRs (prs strategy)
 
-- `CodeResearch.md` — Technical mapping with file paths and patterns
+4. **Finalization Stage**
+   - `paw-pr`
+   - Produces: Final PR to main
 
-**Focus:** Implementation details for planning.
+**Policy Configuration:**
 
-### PAW-02B Impl Planner
-
-**Purpose:** Create detailed implementation plans through interactive iteration.
-
-**Produces:**
-
-- `ImplementationPlan.md` — Detailed plan with discrete phases
-
-**Opens:** Planning PR (`<target>_plan` → `<target>`)
-
-### PAW-03A Implementer
-
-**Purpose:** Execute plan phases and address review comments.
-
-**Actions:**
-
-- Creates phase branches
-- Makes code changes
-- Runs automated checks
-- Commits locally (does not push)
-
-**Focus:** Forward momentum—making code work.
-
-### PAW-03B Impl Reviewer
-
-**Purpose:** Review changes, add documentation, open PRs.
-
-**Actions:**
-
-- Reviews Implementation Agent's changes
-- Generates docstrings and code comments
-- Pushes branches and opens PRs
-- Replies to PR review comments
-
-**Opens:** Phase PRs (`<target>_phase<N>` → `<target>`)
-
-**Focus:** Quality gate—making code reviewable.
-
-### PAW-04 Documenter
-
-**Purpose:** Produce comprehensive technical documentation.
-
-**Produces:**
-
-- `Docs.md` — Authoritative technical reference
-
-**Opens:** Docs PR (`<target>_docs` → `<target>`)
-
-### PAW-05 PR
-
-**Purpose:** Open the final PR with comprehensive description.
-
-**Actions:**
-
-- Verifies all prerequisites
-- Crafts PR description with links to artifacts
-- Opens final PR
-
-**Opens:** Final PR (`<target>` → `main`)
-
-### PAW-X Status
-
-**Purpose:** Maintain issues and PRs, keeping links and checklists up to date.
-
-**Actions:**
-
-- Updates issue status and links
-- Maintains checklists across workflow stages
-- Provides workflow status and next-step guidance
+| Policy | Values | Description |
+|--------|--------|-------------|
+| Review Policy | `always` / `milestones` / `never` | When to pause for human review |
+| Session Policy | `per-stage` / `continuous` | Chat context management |
+| Workflow Mode | `full` / `minimal` / `custom` | Workflow complexity |
+| Review Strategy | `prs` / `local` | PR-based or direct commits |
 
 ---
 
@@ -178,33 +138,35 @@ Agents follow the `PAW-XX` naming scheme:
 
 ## Agent Invocation
 
-### Using Commands
+### Starting Workflows
 
-In chat, use short commands to invoke agents:
+| Workflow | Command | Prompt |
+|----------|---------|--------|
+| Implementation | `PAW: New PAW Workflow` | `/paw` |
+| Review | — | `/paw-review <PR>` |
 
-| Command | Agent |
-|---------|-------|
-| `spec` | PAW-01A Specification |
-| `research` | PAW-01B or PAW-02A (context-dependent) |
-| `plan` | PAW-02B Impl Planner |
-| `implement` | PAW-03A Implementer |
-| `review` | PAW-03B Impl Reviewer |
-| `docs` | PAW-04 Documenter |
-| `pr` | PAW-05 PR |
-| `status` | PAW-X Status |
+### Navigation Within Workflows
 
-### Handoff Modes
+The PAW agent understands natural language requests and routes them to appropriate skills. Common patterns:
 
-PAW supports three handoff modes that control stage transitions:
+- "Create a spec for..." → `paw-spec` skill
+- "Research how X works" → `paw-spec-research` or `paw-code-research`
+- "Create an implementation plan" → `paw-planning` skill
+- "Implement phase N" → `paw-implement` skill
+- "What's the status?" → `paw-status` skill
 
-| Mode | Behavior |
-|------|----------|
-| **Manual** | Always wait for user command |
-| **Semi-Auto** | Auto-proceed at routine transitions |
-| **Auto** | Always auto-proceed to next stage |
+### Review Policy Modes
+
+PAW supports three review policies that control when the workflow pauses for human review:
+
+| Policy | Behavior |
+|--------|----------|
+| **always** | Pause after every artifact is produced |
+| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| **never** | Proceed continuously without review pauses |
 
 ## Next Steps
 
 - [Artifacts Reference](artifacts.md) — Artifact descriptions
-- [Implementation Workflow](../specification/implementation.md) — How agents work together
+- [Implementation Workflow](../specification/implementation.md) — How the workflow stages work
 - [Review Workflow](../specification/review.md) — Skills-based review workflow

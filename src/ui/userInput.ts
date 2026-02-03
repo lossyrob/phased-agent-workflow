@@ -1,4 +1,8 @@
 import * as vscode from 'vscode';
+import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
+
+// Re-export types for consumers that import from userInput.ts
+export type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 
 /**
  * Workflow mode determines which stages are included in the workflow.
@@ -16,22 +20,14 @@ export type WorkflowMode = 'full' | 'minimal' | 'custom';
 export type ReviewStrategy = 'prs' | 'local';
 
 /**
- * Handoff mode determines how stage transitions are handled.
- * - manual: User explicitly commands each stage transition
- * - semi-auto: Automatic at research/review transitions, pause at decision points
- * - auto: Full automation through all stages with only tool approvals
- */
-export type HandoffMode = 'manual' | 'semi-auto' | 'auto';
-
-/**
  * Workflow mode selection including optional custom instructions.
  */
 export interface WorkflowModeSelection {
   /** The selected workflow mode */
   mode: WorkflowMode;
   
-  /** Custom instructions for workflow stages (required when mode is 'custom') */
-  customInstructions?: string;
+  /** Custom workflow stage instructions (required when mode is 'custom') */
+  workflowCustomization?: string;
 }
 
 /**
@@ -57,8 +53,11 @@ export interface WorkItemInputs {
   /** Review strategy for how work is reviewed and merged */
   reviewStrategy: ReviewStrategy;
   
-  /** Handoff mode for stage transition handling */
-  handoffMode: HandoffMode;
+  /** Review policy for artifact-level pause decisions */
+  reviewPolicy: ReviewPolicy;
+  
+  /** Session policy for context management */
+  sessionPolicy: SessionPolicy;
 
   /**
    * Whether to track workflow artifacts in git.
@@ -139,7 +138,7 @@ export async function collectWorkflowMode(
   // If custom mode selected, prompt for custom workflow instructions
   // These instructions help agents determine which stages to include
   if (modeSelection.value === 'custom') {
-    const customInstructions = await vscode.window.showInputBox({
+    const workflowCustomization = await vscode.window.showInputBox({
       prompt: 'Describe your desired workflow stages (e.g., "skip docs, single branch, multi-phase plan")',
       placeHolder: 'skip spec and docs, use local review strategy',
       validateInput: (value: string) => {
@@ -150,14 +149,14 @@ export async function collectWorkflowMode(
       }
     });
 
-    if (customInstructions === undefined) {
-      outputChannel.appendLine('[INFO] Custom instructions input cancelled');
+    if (workflowCustomization === undefined) {
+      outputChannel.appendLine('[INFO] Custom workflow input cancelled');
       return undefined;
     }
 
     return {
       mode: 'custom',
-      customInstructions: customInstructions.trim()
+      workflowCustomization: workflowCustomization.trim()
     };
   }
 
@@ -218,66 +217,109 @@ export async function collectReviewStrategy(
 }
 
 /**
- * Collect handoff mode selection from user.
+ * Collect review policy selection from user.
  * 
- * Presents a Quick Pick menu with three handoff mode options:
- * - Manual: User commands each stage transition
- * - Semi-Auto: Automatic at research/review, pause at decisions
- * - Auto: Full automation with only tool approvals
+ * Presents a Quick Pick menu with three review policy options:
+ * - Always: Pause for user review after every stage
+ * - Milestones: Pause at key decision points (planning, final PR)
+ * - Never: Full automation with no review pauses
  * 
- * If auto mode is selected with prs strategy, shows error and returns undefined.
+ * 'Never' option is only available with local review strategy.
  * 
  * @param outputChannel - Output channel for logging user interaction events
- * @param reviewStrategy - The selected review strategy (affects validation)
- * @returns Promise resolving to handoff mode, or undefined if user cancelled or validation failed
+ * @param reviewStrategy - The selected review strategy (affects available options)
+ * @returns Promise resolving to review policy, or undefined if user cancelled
  */
-export async function collectHandoffMode(
+export async function collectReviewPolicy(
   outputChannel: vscode.OutputChannel,
   reviewStrategy: ReviewStrategy
-): Promise<HandoffMode | undefined> {
-  // Build handoff mode options based on review strategy
-  // Auto mode is only available with local strategy (PRs require human review)
-  const handoffOptions = [
+): Promise<ReviewPolicy | undefined> {
+  // Build review policy options based on review strategy
+  // 'Never' option is only available with local strategy (PRs require human review)
+  const policyOptions = [
     {
-      label: "Manual",
-      description: "Full control - you command each stage transition",
+      label: "Always",
+      description: "Pause for user review after every stage",
       detail:
         "Best for learning PAW or when you want to review and decide at each step",
-      value: "manual" as HandoffMode,
+      value: "always" as ReviewPolicy,
     },
     {
-      label: "Semi-Auto",
-      description:
-        "Thoughtful automation - automatic at research/review, pause at decisions",
+      label: "Milestones",
+      description: "Pause at key decision points (planning, final PR)",
       detail:
-        "Best for experienced users who want speed with control at key decision points",
-      value: "semi-auto" as HandoffMode,
+        "Best for experienced users who want speed with control at key milestones",
+      value: "milestones" as ReviewPolicy,
     },
   ];
 
-  // Only include Auto option when using local review strategy
+  // Only include 'Never' option when using local review strategy
   if (reviewStrategy === "local") {
-    handoffOptions.push({
-      label: "Auto",
-      description: "Full automation - agents chain through all stages",
+    policyOptions.push({
+      label: "Never",
+      description: "Full automation - no review pauses",
       detail:
         "Best for routine work where you trust the agents to complete the workflow",
-      value: "auto" as HandoffMode,
+      value: "never" as ReviewPolicy,
     });
   }
 
-  // Present Quick Pick menu with handoff mode options
-  const modeSelection = await vscode.window.showQuickPick(handoffOptions, {
-    placeHolder: "Select handoff mode",
-    title: "Handoff Mode Selection",
+  // Present Quick Pick menu with review policy options
+  const policySelection = await vscode.window.showQuickPick(policyOptions, {
+    placeHolder: "Select review policy",
+    title: "Review Policy Selection",
   });
 
-  if (!modeSelection) {
-    outputChannel.appendLine("[INFO] Handoff mode selection cancelled");
+  if (!policySelection) {
+    outputChannel.appendLine("[INFO] Review policy selection cancelled");
     return undefined;
   }
 
-  return modeSelection.value;
+  return policySelection.value;
+}
+
+/**
+ * Collect session policy selection from user.
+ * 
+ * Presents a Quick Pick menu with two session policy options:
+ * - Per-Stage: Each stage runs in a new chat session
+ * - Continuous: Single continuous chat session across stages
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to session policy, or undefined if user cancelled
+ */
+export async function collectSessionPolicy(
+  outputChannel: vscode.OutputChannel
+): Promise<SessionPolicy | undefined> {
+  const policyOptions = [
+    {
+      label: "Per-Stage",
+      description: "Each stage runs in a new chat session",
+      detail:
+        "Recommended - keeps context focused and reduces token usage",
+      value: "per-stage" as SessionPolicy,
+    },
+    {
+      label: "Continuous",
+      description: "Single continuous chat session across stages",
+      detail:
+        "Preserves full conversation history but uses more tokens",
+      value: "continuous" as SessionPolicy,
+    },
+  ];
+
+  // Present Quick Pick menu with session policy options
+  const policySelection = await vscode.window.showQuickPick(policyOptions, {
+    placeHolder: "Select session policy",
+    title: "Session Policy Selection",
+  });
+
+  if (!policySelection) {
+    outputChannel.appendLine("[INFO] Session policy selection cancelled");
+    return undefined;
+  }
+
+  return policySelection.value;
 }
 
 /**
@@ -397,9 +439,15 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  // Collect handoff mode (validates auto mode + prs strategy combination)
-  const handoffMode = await collectHandoffMode(outputChannel, reviewStrategy);
-  if (!handoffMode) {
+  // Collect review policy (validates 'never' + prs strategy combination)
+  const reviewPolicy = await collectReviewPolicy(outputChannel, reviewStrategy);
+  if (!reviewPolicy) {
+    return undefined;
+  }
+
+  // Collect session policy
+  const sessionPolicy = await collectSessionPolicy(outputChannel);
+  if (!sessionPolicy) {
     return undefined;
   }
 
@@ -413,7 +461,8 @@ export async function collectUserInputs(
     targetBranch: targetBranch.trim(),
     workflowMode,
     reviewStrategy,
-    handoffMode,
+    reviewPolicy,
+    sessionPolicy,
     trackArtifacts,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };

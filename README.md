@@ -17,22 +17,37 @@
 
 **Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. Built on GitHub Copilot Agent Mode in VS Code, PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts. PAW empowers engineers to deliver fast, high-quality contributions by focusing human attention on high-leverage decision points—refining specifications, reviewing implementation plans, and guiding code at critical junctures—while AI agents handle the systematic execution.
 
-PAW is a system of *collaborating AI chat modes* that emulate the human software development lifecycle — each agent produces durable artifacts (specs, research docs, plans, PRs, and documentation).
-The process emphasizes **clarity, traceability, and recoverability**, letting developers iterate intelligently and “rewind” if context or quality drift occurs.
+PAW uses a **skills-based architecture** where compact orchestrator agents delegate to specialized activity skills. This enables efficient token usage while maintaining comprehensive workflow capabilities.
 
-### Implementation Workflow Agents
+### Implementation Workflow
 
-1. **Spec Agent** — turns a rough issue or work item into a refined feature specification and prompts for system research.
-2. **Spec Research Agent** — documents how the current system behaves (facts only, no design).
-3. **Code Research Agent** — maps relevant code areas and dependencies.
-4. **Implementation Plan Agent** — writes a detailed, multi-phase plan of work.
-5. **Implementation Agents** — executes plan phases, managing commits, PRs, and review loops. Split into two steps to allow agentic review and documentation improvements.
-6. **Documenter Agent** — produces comprehensive technical documentation (`Docs.md`) that serves as the authoritative reference for understanding what was built, how it works, and how to use it. Updates project documentation according to project guidance.
-7. **PR/Status Agent** — maintains issue/work item and PR descriptions, ensuring everything stays in sync and clear.
+The **PAW agent** orchestrates the implementation workflow by loading the `paw-workflow` skill and delegating to activity skills:
+
+**Invocation:** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
+
+**Activity Skills:**
+
+| Skill | Purpose |
+|-------|---------|
+| `paw-init` | Bootstrap workflow, create WorkflowContext.md |
+| `paw-spec` | Create specifications from issues/briefs |
+| `paw-spec-research` | Document current system behavior |
+| `paw-code-research` | Map code areas and dependencies |
+| `paw-planning` | Create phased implementation plans |
+| `paw-implement` | Execute plan phases, make code changes |
+| `paw-impl-review` | Review changes, add docs, open PRs |
+| `paw-pr` | Open final PR to main |
+| `paw-status` | Check progress, recommend next steps |
+
+**Key benefits:**
+- Single orchestrator agent (~4KB) + on-demand skill loading
+- Intelligent routing based on user intent
+- Flexible execution—skills adapt to delegation context
+- Full workflow mode support (full/minimal/custom)
 
 ### Review Workflow
 
-PAW Review uses a **skills-based architecture** for dynamic, maintainable code review orchestration.
+The **PAW Review** agent orchestrates the review workflow using `paw-review-workflow` skill.
 
 **Invocation:** `/paw-review <PR-number-or-URL>` in Copilot Chat
 
@@ -131,7 +146,6 @@ The **PAW Workflow Extension** automates PAW agent installation and work item in
   - Creates and checks out git branch
   - Opens WorkflowContext.md for immediate editing
   - Navigate stages using simple commands; prompt files generated on-demand when customization needed
-- **Custom instructions support**: Tailor the initialization workflow for your project
 
 #### Installation
 
@@ -166,43 +180,9 @@ By default, PAW commits workflow artifacts (Spec.md, ImplementationPlan.md, etc.
 
 When excluded, artifacts stay local for your reference but don't appear in commits or PRs.
 
-#### Custom Instructions (Optional)
+#### Customization
 
-##### Workflow Initialization Instructions
-
-You can tailor the initialization workflow for your project:
-
-1. Create the directory and file:
-   ```bash
-   mkdir -p .paw/instructions
-   touch .paw/instructions/init-instructions.md
-   ```
-
-2. Add your project-specific guidance using Markdown format:
-   - Naming conventions for feature slugs and branches
-   - Required metadata that must appear in `WorkflowContext.md`
-   - Stage transition preferences and handoff mode defaults
-   - Integration requirements (e.g., mandatory issue URLs)
-
-When present, the extension injects these instructions into the agent prompt so GitHub Copilot follows both PAW defaults and your project rules. If the file is missing or empty, initialization proceeds with standard behavior.
-
-##### Agent Behavior Customization
-
-You can customize how PAW agents behave during workflows at both project and user levels:
-
-**Project-level (workspace) instructions** (`.paw/instructions/<agent-name>-instructions.md`):
-- Apply to all users working in the project
-- Override user-level instructions when present
-- Should be committed to version control for team-wide standards
-- Example: `.paw/instructions/PAW-02B Impl Planner-instructions.md` for project planning conventions
-
-**User-level instructions** (`~/.paw/instructions/<agent-name>-instructions.md`):
-- Apply across all PAW workflows for a specific user
-- Respected unless overridden by workspace instructions
-- Personal preferences that follow you across projects
-- Example: `~/.paw/instructions/PAW-01A Specification-instructions.md` for your spec format preferences
-
-Agents call the `paw_get_context` tool at startup to retrieve custom instructions and workflow metadata dynamically. This enables workspace-aware agent behavior while keeping agent files globally installed and unchanged.
+For agent customization, use VS Code's standard `copilot-instructions.md` (project-level) or `AGENTS.md` files rather than PAW-specific instructions. These integrate with all VS Code agents and skills.
 
 #### Requirements
 
@@ -288,13 +268,6 @@ research but skip external dependencies
 ```
 
 The inline instruction is passed directly to the target agent alongside the Work ID, allowing for quick customization without filesystem management.
-
-### Dynamic Prompt Generation
-
-To generate a prompt file for editing before execution:
-```
-generate prompt for implementer Phase 3
-```
 
 For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
 

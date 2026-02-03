@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
 import { loadSkillContent, SkillContent } from '../skills/skillLoader';
+import { processConditionalBlocks } from '../agents/agentTemplateRenderer';
 
 export function formatSkillContentResult(result: SkillContent): string {
   if (result.error) {
     return `Error retrieving skill '${result.name}': ${result.error}`;
   }
 
-  return result.content;
+  // Process conditional blocks for VS Code environment
+  return processConditionalBlocks(result.content, 'vscode');
 }
 
 export function registerSkillTool(

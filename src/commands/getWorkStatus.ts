@@ -91,16 +91,16 @@ export async function getWorkStatusCommand(
       `[INFO] Opening Status Agent${selection.value ? ` for ${selection.value}` : ' (auto-detect)'}`
     );
 
-    // Open new chat with Status Agent
+    // Open new chat with PAW agent (handles status via paw-status skill)
     await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async value => {
       outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
       await vscode.commands.executeCommand('workbench.action.chat.open', {
         query,
-        mode: 'PAW-X Status'
+        mode: 'PAW'
       });
     });
 
-    outputChannel.appendLine('[INFO] Status Agent invoked');
+    outputChannel.appendLine('[INFO] PAW agent invoked for status');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     outputChannel.appendLine(`[ERROR] Get work status failed: ${errorMessage}`);

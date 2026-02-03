@@ -67,11 +67,20 @@ Activity skills are executed via delegated agent sessions.
 
 **Every subagent MUST load their skill FIRST before executing any work**:
 
+{{#vscode}}
 1. Call `paw_get_skill` with the skill name (e.g., `paw-review-understanding`)
 2. Read and internalize the skill instructions
 3. Only then begin executing the activity
 
 **Delegation prompt must include**: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
+{{/vscode}}
+{{#cli}}
+1. Read the skill file at `skills/paw-review-<skill-name>/SKILL.md`
+2. Read and internalize the skill instructions
+3. Only then begin executing the activity
+
+**Delegation prompt must include**: "First read your skill from `skills/paw-review-<skill-name>/SKILL.md`, then execute the activity."
+{{/cli}}
 
 ### Response Format
 
@@ -112,7 +121,7 @@ All review artifacts are stored in a consistent directory structure:
 **Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
 Example: `acme-corp/my-api-service` → `my-api-service`
 
-**Multi-repo detection**: Use when `paw_get_context` returns `isMultiRootWorkspace: true` OR multiple PRs provided.
+**Multi-repo detection**: Use when multiple workspace folders are open in VS Code OR multiple PRs provided.
 
 ## Workflow Orchestration
 
@@ -161,7 +170,7 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Detection Criteria** (any of):
 - Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
-- `paw_get_context` returned `isMultiRootWorkspace: true`
+- Multiple workspace folders open (detected via multiple `.git` directories)
 - ReviewContext.md contains `related_prs` entries
 
 **Sequence**:

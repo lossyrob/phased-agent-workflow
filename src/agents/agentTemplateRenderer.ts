@@ -2,6 +2,53 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * Environment type for conditional block processing.
+ * - 'vscode': VS Code extension with Language Model Tools
+ * - 'cli': GitHub Copilot CLI without LMTs
+ */
+export type TemplateEnvironment = 'vscode' | 'cli';
+
+/**
+ * Processes conditional blocks in template content based on target environment.
+ * 
+ * Syntax:
+ *   {{#vscode}}...content for VS Code...{{/vscode}}
+ *   {{#cli}}...content for CLI...{{/cli}}
+ * 
+ * @param content Template content with conditional blocks
+ * @param environment Target environment ('vscode' or 'cli')
+ * @returns Content with matching blocks preserved and other blocks removed
+ */
+export function processConditionalBlocks(
+  content: string,
+  environment: TemplateEnvironment
+): string {
+  let result = content;
+
+  // Process each environment type
+  const environments: TemplateEnvironment[] = ['vscode', 'cli'];
+  
+  for (const env of environments) {
+    const openTag = `{{#${env}}}`;
+    const closeTag = `{{/${env}}}`;
+    const regex = new RegExp(
+      `${openTag.replace(/[{}#]/g, '\\$&')}([\\s\\S]*?)${closeTag.replace(/[{}/]/g, '\\$&')}`,
+      'g'
+    );
+
+    if (env === environment) {
+      // Keep the content, remove the tags
+      result = result.replace(regex, '$1');
+    } else {
+      // Remove the entire block including tags
+      result = result.replace(regex, '');
+    }
+  }
+
+  return result;
+}
+
+/**
  * Loads component templates from the provided directory.
  *
  * @param componentsDir Absolute path to the components directory (agents/components)
@@ -49,11 +96,12 @@ function substituteVariables(content: string, variables: Map<string, string>): s
 
 /**
  * Expands component placeholders within an agent template using the provided component map.
+ * Also processes environment-specific conditional blocks for VS Code.
  *
  * @param content Raw agent markdown with component placeholders
- * @param agentIdentifier Agent identifier (e.g., 'PAW-01A Specification')
+ * @param agentIdentifier Agent identifier (e.g., 'PAW', 'PAW Review')
  * @param components Map of component names to their markdown content
- * @returns Agent markdown with all known components expanded
+ * @returns Agent markdown with all known components expanded and VS Code blocks preserved
  */
 export function processAgentTemplate(
   content: string,
@@ -75,6 +123,9 @@ export function processAgentTemplate(
 
     result = result.split(componentPlaceholder).join(expandedComponent);
   }
+
+  // Process conditional blocks for VS Code environment
+  result = processConditionalBlocks(result, 'vscode');
 
   return result;
 }

@@ -1,46 +1,46 @@
 # Stage Transitions
 
-PAW workflows consist of multiple stages, and navigating between them is a key part of the development process. This guide explains how to transition between stages using commands, how handoff modes affect the flow, and how to check your progress.
+PAW workflows consist of multiple stages, and navigating between them is a key part of the development process. This guide explains how to work with the PAW agent for stage transitions, how review policies affect the flow, and how to check your progress.
 
-## Stage Transition Commands
+## Working with the PAW Agent
 
-When a PAW agent completes its work, it presents actionable next steps. Use these commands to navigate:
+The PAW agent is an intelligent orchestrator that understands natural language requests and routes them to appropriate skills. You can navigate stages using natural requests:
 
-| Command | Target Agent | When to Use |
-|---------|--------------|-------------|
-| `spec` | Specification Agent | Start or refine a specification |
-| `research` | Spec Researcher or Code Researcher | Answer research questions (context-dependent) |
-| `plan` | Implementation Planner | Create an implementation plan |
-| `implement` | Implementer | Execute an implementation phase |
-| `review` | Implementation Reviewer | Verify and push implementation |
-| `docs` | Documenter | Create documentation |
-| `pr` | Final PR Agent | Create the final pull request |
-| `status` | Status Agent | Check workflow progress |
+| Request Pattern | Skill Used | When to Use |
+|-----------------|------------|-------------|
+| "Create a spec for..." | `paw-spec` | Start or refine a specification |
+| "Research how X works" | `paw-spec-research` or `paw-code-research` | Answer research questions (context-dependent) |
+| "Create an implementation plan" | `paw-planning` | Create an implementation plan |
+| "Implement phase N" | `paw-implement` | Execute an implementation phase |
+| "Review my changes" | `paw-impl-review` | Verify and push implementation |
+| "Create the final PR" | `paw-pr` | Create the final pull request |
+| "What's the status?" | `paw-status` | Check workflow progress |
 
-### Context-Sensitive Commands
+### Context-Sensitive Routing
 
-Some commands adapt to your current workflow position:
+The PAW agent adapts based on your current workflow position:
 
-- **`research`**: Maps to Spec Researcher from the Spec stage, or Code Researcher from planning stages
-- **`implement`**: Auto-detects the current phase from `ImplementationPlan.md`
+- **Research requests**: Routes to spec research from the Spec stage, or code research from planning stages
+- **Implement requests**: Auto-detects the current phase from `ImplementationPlan.md`
+- **Non-linear requests**: "Update spec to align with plan changes" routes appropriately
 
 ### The `continue` Command
 
-When you want to proceed to the default next stage (what auto mode would do), simply type:
+When you want to proceed to the default next stage, simply type:
 
 ```
 continue
 ```
 
-This is useful in Manual mode when the recommended next step is obvious and you don't want to type the full command.
+This tells the PAW agent to proceed to the recommended next activity.
 
-## Handoff Modes
+## Review Policies
 
-PAW supports three handoff modes that control how stage transitions are handled:
+PAW supports three review policies that control when the workflow pauses for human review at artifact boundaries:
 
-### Manual Mode (Default)
+### Always Review Policy
 
-In Manual mode, you have full control over every transition. After each stage completes, the agent presents options and waits for your command.
+In `always` mode, the workflow pauses after every artifact is produced for potential iteration.
 
 **Best for:**
 
@@ -48,62 +48,64 @@ In Manual mode, you have full control over every transition. After each stage co
 - Complex work requiring careful review between stages
 - Situations where you want to pause and think between stages
 
-### Semi-Auto Mode
+### Milestones Review Policy (Default)
 
-Semi-Auto mode automatically proceeds at routine transitions but pauses at decision points:
+In `milestones` mode, the workflow pauses only at key milestone artifacts:
 
-**Auto-proceeds at:**
+**Pauses at (milestone artifacts):**
 
-- Spec → Spec Research (when research is needed)
-- Spec Research → back to Spec Agent
-- Code Research → Implementation Planner
+- Spec.md (after specification is created)
+- ImplementationPlan.md (after plan is created)
+- Phase PR completion (after each phase PR is opened)
+- Final PR creation
 
-**Pauses at:**
+**Auto-proceeds at (non-milestone artifacts):**
 
-- Before Code Research (after Spec is finalized)
-- Before Implementation Phase 1
-- Before each subsequent Phase (N+1)
-- Before Documentation
-- Before Final PR
+- WorkflowContext.md
+- SpecResearch.md
+- CodeResearch.md
+- Docs.md (part of implementation phase)
+- Intermediate commits
 
 **Best for:**
 
 - Experienced PAW users who want speed with control at key points
 - Most production workflows
 
-### Auto Mode
+### Never Review Policy
 
-Auto mode chains through all stages automatically, only stopping for tool approvals.
+In `never` mode, the workflow proceeds continuously without review pauses.
 
 !!! warning "Local Strategy Required"
-    Auto mode requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
+    The `never` review policy requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
 
 **Best for:**
 
 - Routine, well-understood tasks
 - When you trust the workflow to proceed without intervention
 
-## Setting Your Handoff Mode
+## Setting Your Review Policy
 
-Handoff mode is set during workflow initialization and stored in `WorkflowContext.md`:
+Review policy is set during workflow initialization and stored in `WorkflowContext.md`:
 
 ```markdown
 # WorkflowContext
 
 Work Title: Auth System
-Feature Slug: auth-system
+Work ID: auth-system
 Target Branch: feature/auth-system
 Workflow Mode: full
 Review Strategy: prs
-Handoff Mode: semi-auto    # ← Your handoff mode
+Review Policy: milestones    # ← Your review policy
+Session Policy: per-stage
 ...
 ```
 
-To change the mode for an existing workflow, edit `WorkflowContext.md` directly.
+To change the policy for an existing workflow, edit `WorkflowContext.md` directly.
 
 ## Inline Instructions
 
-You can customize stage behavior without creating prompt files by adding instructions inline:
+You can customize activity behavior by adding instructions to your requests:
 
 ```
 implement Phase 2 but add rate limiting
@@ -117,15 +119,15 @@ continue but focus on error handling
 research but skip external dependencies
 ```
 
-The text after "but" or "with" is passed to the target agent as additional context.
+The additional context is passed to the target skill as part of the delegation.
 
 ## Checking Workflow Status
 
 At any point, you can check your workflow progress:
 
-### Via Command
+### Via Natural Request
 
-Type `status` or ask "where am I?" to get a comprehensive report:
+Ask "what's the status?" or "where am I?" to get a comprehensive report:
 
 - Completed artifacts
 - Current phase progress
@@ -139,7 +141,7 @@ Use **PAW: Get Work Status** for a quick status check with work item selection.
 
 ### What Status Reports Include
 
-The Status Agent analyzes:
+The `paw-status` skill analyzes:
 
 1. **Artifact Inventory**: Which files exist (Spec.md, ImplementationPlan.md, etc.)
 2. **Phase Progress**: Current implementation phase and completion status
@@ -151,24 +153,13 @@ The Status Agent analyzes:
 
 When using the **PRs strategy**, pull requests may receive review comments that need addressing:
 
-| PR Type | Command | Agents Involved |
+| PR Type | Request | Skills Involved |
 |---------|---------|-----------------|
-| Planning PR | `address comments` | Implementation Planner |
-| Phase PR | `address comments` | Implementer → Reviewer |
-| Docs PR | `address comments` | Documenter |
-| Final PR | `address comments` | Implementer → Reviewer |
+| Planning PR | "address PR comments" | `paw-planning` |
+| Phase PR | "address PR comments" | `paw-implement` → `paw-impl-review` |
+| Final PR | "address PR comments" | `paw-implement` → `paw-impl-review` |
 
-The system routes you to the appropriate agent based on which PR has pending comments.
-
-## Generating Custom Prompts
-
-When you need deep customization for a specific stage, generate a prompt file:
-
-```
-generate prompt for implementer Phase 3
-```
-
-This creates a file at `.paw/work/<slug>/prompts/03A-implement-phase3.prompt.md` that you can edit before executing.
+The PAW agent routes to the appropriate skill based on which PR has pending comments.
 
 ## Multi-Work-Item Management
 
@@ -178,9 +169,10 @@ When working on multiple features simultaneously:
 What PAW work items do I have?
 ```
 
-The Status Agent lists all workflows sorted by most recently modified, showing:
+The `paw-status` skill lists all workflows sorted by most recently modified, showing:
 
 - Work Title
-- Work ID (feature slug)
+- Work ID
 - Last modified time
 - Current stage
+

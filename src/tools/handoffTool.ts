@@ -2,17 +2,11 @@ import * as vscode from "vscode";
 
 /**
  * Valid PAW agent names that can be targeted for handoff.
+ * 
+ * - "PAW" is the unified implementation workflow orchestrator
+ * - "PAW Review" is the PR review workflow agent
  */
-export type AgentName =
-  | "PAW-01A Specification"
-  | "PAW-01B Spec Researcher"
-  | "PAW-02A Code Researcher"
-  | "PAW-02B Impl Planner"
-  | "PAW-03A Implementer"
-  | "PAW-03B Impl Reviewer"
-  | "PAW-04 Documenter"
-  | "PAW-05 PR"
-  | "PAW-X Status";
+export type AgentName = "PAW" | "PAW Review";
 
 /**
  * Parameters for calling a PAW agent.
@@ -110,7 +104,7 @@ export function registerHandoffTool(
   context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): void {
-  const tool = vscode.lm.registerTool<HandoffParams>("paw_call_agent", {
+  const tool = vscode.lm.registerTool<HandoffParams>("paw_new_session", {
     async prepareInvocation(options, _token) {
       const { target_agent, work_id, inline_instruction } = options.input;
 

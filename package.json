@@ -55,33 +55,9 @@
     ],
     "languageModelTools": [
       {
-        "name": "paw_get_context",
-        "displayName": "Get PAW Context",
-        "modelDescription": "Retrieve workspace-specific custom instructions, user-level custom instructions (if they exist), and workflow context for PAW agents. Returns formatted text with sections wrapped in XML tags: <workspace_instructions> for workspace .paw/instructions/, <user_instructions> for user ~/.paw/instructions/, and <workflow_context> for raw WorkflowContext.md content.",
-        "toolReferenceName": "pawContext",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "feature_slug": {
-              "type": "string",
-              "description": "The normalized Work ID (also called feature slug, e.g., 'auth-system')"
-            },
-            "agent_name": {
-              "type": "string",
-              "description": "The name of the calling agent (e.g., 'PAW-02B Impl Planner')"
-            }
-          },
-          "required": [
-            "feature_slug",
-            "agent_name"
-          ]
-        }
-      },
-      {
-        "name": "paw_call_agent",
-        "displayName": "Call PAW Agent",
-        "modelDescription": "Invoke a PAW agent in a new chat session with Work ID context. Agents should intelligently map user requests to exact agent names (e.g., 'research' → 'PAW-01B Spec Researcher', 'implement Phase 2' → 'PAW-03A Implementer'). Supports inline instructions for customizing agent behavior without creating prompt files.",
+        "name": "paw_new_session",
+        "displayName": "Start New PAW Session",
+        "modelDescription": "Start a fresh PAW agent chat session with cleared context. Use for session resets, stage transitions, or when user requests 'clear context' / 'new session'. Includes Work ID context and optional inline instructions.",
         "toolReferenceName": "pawHandoff",
         "canBeReferencedInPrompt": true,
         "inputSchema": {
@@ -91,15 +67,7 @@
               "type": "string",
               "description": "The exact name of the PAW agent to invoke",
               "enum": [
-                "PAW-01A Specification",
-                "PAW-01B Spec Researcher",
-                "PAW-02A Code Researcher",
-                "PAW-02B Impl Planner",
-                "PAW-03A Implementer",
-                "PAW-03B Impl Reviewer",
-                "PAW-04 Documenter",
-                "PAW-05 PR",
-                "PAW-X Status",
+                "PAW",
                 "PAW Review"
               ]
             },
@@ -115,56 +83,6 @@
           "required": [
             "target_agent",
             "work_id"
-          ]
-        }
-      },
-      {
-        "name": "paw_generate_prompt",
-        "displayName": "Generate PAW Prompt",
-        "modelDescription": "Create a customizable prompt file for a PAW agent on demand. The agent must specify: 1) template_key - the base template to use (e.g., '03A-implement', '03C-pr-review'), and 2) filename - the exact output filename (e.g., '03A-implement-phase3.prompt.md'). Valid template keys: 01A-spec, 02A-code-research, 02B-impl-plan, 02C-planning-pr-review, 03A-implement, 03B-review, 03C-pr-review, 03D-review-pr-review, 04-docs, 04B-docs-pr-review, 04C-docs-review-pr-review, 05-pr, 05B-final-pr-review, 05C-final-review-pr-review, 0X-status. The agent determines the appropriate template and filename based on user intent.",
-        "toolReferenceName": "pawPromptGenerator",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "work_id": {
-              "type": "string",
-              "description": "The normalized Work ID (feature slug, e.g., 'auth-system')"
-            },
-            "template_key": {
-              "type": "string",
-              "description": "The template key identifying which prompt template to use. This is the base filename without .prompt.md extension.",
-              "enum": [
-                "01A-spec",
-                "02A-code-research",
-                "02B-impl-plan",
-                "02C-planning-pr-review",
-                "03A-implement",
-                "03B-review",
-                "03C-pr-review",
-                "03D-review-pr-review",
-                "04-docs",
-                "04B-docs-pr-review",
-                "04C-docs-review-pr-review",
-                "05-pr",
-                "05B-final-pr-review",
-                "05C-final-review-pr-review",
-                "0X-status"
-              ]
-            },
-            "filename": {
-              "type": "string",
-              "description": "The exact filename to use for the generated prompt file. Must end with .prompt.md extension. For standard prompts use template filename (e.g., '03A-implement.prompt.md'). For phase-specific append context (e.g., '03A-implement-phase3.prompt.md')."
-            },
-            "additional_content": {
-              "type": "string",
-              "description": "Optional instructions to append to the prompt (e.g., 'Focus on Phase 3', 'add rate limiting')."
-            }
-          },
-          "required": [
-            "work_id",
-            "template_key",
-            "filename"
           ]
         }
       },
@@ -209,8 +127,9 @@
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src --ext ts",
     "package": "vsce package",
-    "lint:agent": "./scripts/lint-agent.sh",
-    "lint:agent:all": "./scripts/lint-agent.sh",
+    "lint:agent": "./scripts/lint-prompting.sh",
+    "lint:agent:all": "./scripts/lint-prompting.sh --all",
+    "lint:skills": "./scripts/lint-prompting.sh --skills",
     "build-vsix": "./scripts/build-vsix.sh",
     "count-tokens": "node ./scripts/count-tokens.js"
   },

@@ -70,7 +70,7 @@ When reviewing PRs across multiple repositories:
 Cross-repo impact analysis applies when:
 - Multiple PRs are being reviewed (separate artifact directories exist)
 - ReviewContext.md contains `related_prs` entries
-- `paw_get_context` returned `isMultiRootWorkspace: true`
+- Multiple workspace folders open (detected via multiple `.git` directories)
 
 ### API Contract Identification
 

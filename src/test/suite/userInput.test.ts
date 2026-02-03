@@ -77,17 +77,17 @@ suite('Workflow Mode Types', () => {
     };
     
     assert.strictEqual(selection.mode, 'full');
-    assert.strictEqual(selection.customInstructions, undefined);
+    assert.strictEqual(selection.workflowCustomization, undefined);
   });
 
-  test('WorkflowModeSelection works with custom instructions', () => {
+  test('WorkflowModeSelection works with workflow customization', () => {
     const selection: WorkflowModeSelection = {
       mode: 'custom',
-      customInstructions: 'skip docs, single branch'
+      workflowCustomization: 'skip docs, single branch'
     };
     
     assert.strictEqual(selection.mode, 'custom');
-    assert.strictEqual(selection.customInstructions, 'skip docs, single branch');
+    assert.strictEqual(selection.workflowCustomization, 'skip docs, single branch');
   });
 });
 

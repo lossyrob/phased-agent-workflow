@@ -12,10 +12,28 @@ npm run lint
 
 ## Agent Development
 
-When creating or modifying agent files in `agents/`, ALWAYS run the agent linter script:
+When creating or modifying agent files in `agents/`, ALWAYS run the prompting linter script:
 
 ```bash
-./scripts/lint-agent.sh agents/<filename>.agent.md
+./scripts/lint-prompting.sh agents/<filename>.agent.md
+```
+
+When creating or modifying skill files in `skills/`, ALWAYS run the prompting linter script:
+
+```bash
+./scripts/lint-prompting.sh skills/<skillname>/SKILL.md
+```
+
+To lint all agents and skills at once:
+
+```bash
+npm run lint:agent:all
+```
+
+To lint only skills:
+
+```bash
+npm run lint:skills
 ```
 
 
@@ -46,6 +64,21 @@ All pull requests to `main` must be labeled with one of the following labels:
 - `maintenance` - For maintenance, refactoring, or chores
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
+
+## Skill Development
+
+This project has two skill locations with different capabilities:
+
+| Location | Loaded Via | Bundled Resources |
+|----------|------------|-------------------|
+| `.github/skills/` | VS Code skills system | ✅ Supported (`scripts/`, `references/`, `assets/`) |
+| `skills/` | `paw_get_skill` tool | ❌ **Not supported** - SKILL.md only |
+
+**When creating skills in `skills/`**: Only create the SKILL.md file. The `paw_get_skill` tool returns SKILL.md content as text—it cannot access bundled resources. Do not create `scripts/`, `references/`, or `assets/` subdirectories.
+
+**When creating skills in `.github/skills/`**: Full Agent Skills spec is supported, including bundled resources that Claude can read or execute.
+
+**For skill creation guidance**: Load the `skill-creator` skill at `.github/skills/skill-creator/SKILL.md` for comprehensive guidance on skill design principles, anatomy, and creation process.
 
 ## Shell Commands
 
@@ -167,3 +200,13 @@ When prompts reference other agents, skills, or components, verify they still ex
 ### Don't Waste Context on Error Handling
 
 Let agents determine how to handle errors and report to users. Explicit error handling instructions consume tokens without adding value—agents can reason about appropriate error responses contextually.
+
+## Implementation Review Guidelines
+
+When reviewing implementation changes, verify cross-artifact consistency:
+
+- Changes to `paw-specification.md` → verify `paw-status` skill reflects updated stages, modes, or strategies
+- Changes to `paw-status` skill → verify it aligns with specification definitions
+- Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match specification
+
+**Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.

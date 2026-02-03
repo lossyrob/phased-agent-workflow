@@ -1,18 +1,55 @@
 import * as vscode from 'vscode';
-import { collectUserInputs } from '../ui/userInput';
-import { validateGitRepository } from '../git/validation';
-import { constructAgentPrompt } from '../prompts/workflowInitPrompt';
-import * as path from 'path';
-import * as fs from 'fs';
+import { collectUserInputs } from "../ui/userInput";
+import type { ReviewPolicy, SessionPolicy } from "../types/workflow";
+import { validateGitRepository } from "../git/validation";
 
 /**
- * Relative path from workspace root to workflow initialization custom instructions file.
+ * Constructs the configuration prompt arguments for the PAW agent.
+ * 
+ * @param inputs - User inputs collected from quick picks
+ * @param workspacePath - Absolute path to the workspace root directory
+ * @returns Formatted prompt arguments string for the PAW agent
  */
-const WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH = path.join(
-  '.paw',
-  'instructions',
-  'init-instructions.md'
-);
+function constructPawPromptArguments(
+  inputs: {
+    targetBranch: string;
+    workflowMode: { mode: string; workflowCustomization?: string };
+    reviewStrategy: string;
+    reviewPolicy: ReviewPolicy;
+    sessionPolicy: SessionPolicy;
+    trackArtifacts: boolean;
+    issueUrl?: string;
+  },
+  _workspacePath: string
+): string {
+  // Build configuration object for paw-init skill
+  const config: Record<string, string | boolean> = {
+    target_branch: inputs.targetBranch.trim() || 'auto',
+    workflow_mode: inputs.workflowMode.mode,
+    review_strategy: inputs.reviewStrategy,
+    review_policy: inputs.reviewPolicy,
+    session_policy: inputs.sessionPolicy,
+    track_artifacts: inputs.trackArtifacts,
+  };
+
+  // Add optional fields
+  if (inputs.issueUrl) {
+    config.issue_url = inputs.issueUrl;
+  }
+
+  if (inputs.workflowMode.workflowCustomization) {
+    config.custom_instructions = inputs.workflowMode.workflowCustomization;
+  }
+
+  // Format as structured prompt arguments
+  let args = `## Initialization Parameters\n\n`;
+
+  for (const [key, value] of Object.entries(config)) {
+    args += `- **${key}**: ${value}\n`;
+  }
+
+  return args;
+}
 
 /**
  * Main command handler for initializing a PAW workflow.
@@ -60,21 +97,6 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Git repository validated');
-
-    // Check for custom instructions
-    outputChannel.appendLine('[INFO] Checking for custom instructions...');
-    const customInstructionsPath = path.join(
-      workspaceFolder.uri.fsPath,
-      WORKFLOW_INIT_CUSTOM_INSTRUCTIONS_PATH
-    );
-    const hasCustomInstructions = fs.existsSync(customInstructionsPath);
-    
-    if (hasCustomInstructions) {
-      outputChannel.appendLine('[INFO] Custom instructions found at .paw/instructions/init-instructions.md');
-    } else {
-      outputChannel.appendLine('[INFO] No custom instructions found (optional)');
-    }
-
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
     const inputs = await collectUserInputs(outputChannel);
@@ -85,41 +107,34 @@ export async function initializeWorkItemCommand(
 
     outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
     outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
-    if (inputs.workflowMode.customInstructions) {
-      outputChannel.appendLine(`[INFO] Custom instructions: ${inputs.workflowMode.customInstructions}`);
+    if (inputs.workflowMode.workflowCustomization) {
+      outputChannel.appendLine(`[INFO] Workflow customization: ${inputs.workflowMode.workflowCustomization}`);
     }
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
-    outputChannel.appendLine(`[INFO] Handoff mode: ${inputs.handoffMode}`);
+    outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
+    outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
     outputChannel.appendLine(`[INFO] Track artifacts: ${inputs.trackArtifacts}`);
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }
 
-    outputChannel.appendLine('[INFO] Constructing agent prompt...');
-    const prompt = constructAgentPrompt(
-      inputs.targetBranch,
-      inputs.workflowMode,
-      inputs.reviewStrategy,
-      inputs.handoffMode,
-      inputs.issueUrl,
-      workspaceFolder.uri.fsPath,
-      inputs.trackArtifacts
-    );
+    outputChannel.appendLine('[INFO] Constructing PAW agent prompt arguments...');
+    const promptArgs = constructPawPromptArguments(inputs, workspaceFolder.uri.fsPath);
 
-    outputChannel.appendLine('[INFO] Invoking GitHub Copilot agent mode...');
+    outputChannel.appendLine('[INFO] Invoking PAW agent...');
     outputChannel.show(true);
 
-    // Create a new chat
+    // Create a new chat and invoke the PAW agent with initialization parameters
     await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async value => {
       outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
-      // Opens chat in the new thread 
+      // Opens chat with PAW agent mode and initialization parameters
       await vscode.commands.executeCommand('workbench.action.chat.open', {
-        query: prompt,
-        mode: 'agent'
+        query: promptArgs,
+        mode: 'PAW'
       });
     });
 
-    outputChannel.appendLine('[INFO] Agent invoked - check chat panel for progress');
+    outputChannel.appendLine('[INFO] PAW agent invoked - check chat panel for progress');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     outputChannel.appendLine(`[ERROR] Initialization failed: ${errorMessage}`);

@@ -72,6 +72,30 @@ In `milestones` mode, the workflow pauses only at key milestone artifacts:
 - Experienced PAW users who want speed with control at key points
 - Most production workflows
 
+### Planning-Only Review Policy
+
+In `planning-only` mode, the workflow pauses at specification and implementation plan milestones, then proceeds autonomously through all implementation phases until the final PR.
+
+**Pauses at:**
+
+- Spec.md (after specification is created)
+- ImplementationPlan.md (after plan is created)
+- Final PR creation
+
+**Auto-proceeds at:**
+
+- Phase completions (unlike `milestones` policy)
+- All non-milestone artifacts
+
+!!! warning "Local Strategy Required"
+    The `planning-only` review policy requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
+
+**Best for:**
+
+- Users who want to review plans upfront, then trust autonomous execution
+- Well-specified work where planning review is sufficient
+- Workflows where phase-level interruptions slow progress unnecessarily
+
 ### Never Review Policy
 
 In `never` mode, the workflow proceeds continuously without review pauses.

@@ -25,7 +25,7 @@ Read WorkflowContext.md to determine:
 - Work ID and target branch
 - Session Policy (`per-stage` | `continuous`)
 - Review Strategy (`prs` | `local`)
-- Review Policy (`always` | `milestones` | `never`)
+- Review Policy (`always` | `milestones` | `planning-only` | `never`)
   - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
   - If neither present, default to `milestones`
 
@@ -57,6 +57,9 @@ Use the Mandatory Transitions table:
 
 **Determine pause_at_milestone**:
 - If at a milestone AND Review Policy ∈ {`always`, `milestones`}: set `pause_at_milestone = true`
+- If Review Policy = `planning-only`:
+  - If milestone is Spec.md, ImplementationPlan.md, or Final PR: set `pause_at_milestone = true`
+  - If milestone is Phase PR/phase completion: set `pause_at_milestone = false`
 - If Review Policy = `never`: set `pause_at_milestone = false`
 - If not at a milestone: set `pause_at_milestone = false`
 

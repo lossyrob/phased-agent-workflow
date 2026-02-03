@@ -26,7 +26,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `target_branch` | No | auto-derive from work ID | branch name |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
-| `review_policy` | No | `milestones` | `always`, `milestones`, `never` |
+| `review_policy` | No | `milestones` | `always`, `milestones`, `planning-only`, `never` |
 | `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
 | `track_artifacts` | No | `true` | boolean |
 | `issue_url` | No | none | URL |
@@ -58,6 +58,7 @@ This mirrors the VS Code command flow which prompts sequentially but allows skip
 
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
+- If `review_policy` is `planning-only` or `never`, `review_strategy` MUST be `local`
 - Invalid combinations: STOP and report error
 
 ### Directory Structure

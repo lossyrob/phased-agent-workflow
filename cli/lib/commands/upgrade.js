@@ -1,6 +1,37 @@
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { readManifest } from '../manifest.js';
 import { getLatestVersion } from '../registry.js';
+
+function isGlobalInstall() {
+  try {
+    // Check if this script is running from global node_modules
+    const globalRoot = execSync('npm root -g', { encoding: 'utf-8' }).trim();
+    return process.argv[1].startsWith(globalRoot);
+  } catch {
+    return false;
+  }
+}
+
+function runCommand(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: 'inherit',
+      shell: true,
+    });
+    
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`Command failed with exit code ${code}`));
+      }
+    });
+    
+    child.on('error', (err) => {
+      reject(new Error(`Failed to run command: ${err.message}`));
+    });
+  });
+}
 
 export async function upgradeCommand(_flags = {}) {
   const manifest = readManifest();
@@ -55,33 +86,27 @@ export async function upgradeCommand(_flags = {}) {
   }
   
   console.log(`\nUpgrading from ${manifest.version} to ${latestVersion}...`);
-  console.log('Downloading latest CLI and reinstalling...\n');
   
-  // Run npx to get latest CLI and reinstall
-  const args = [
-    '@paw-workflow/cli@latest',
-    'install',
-    manifest.target,
-    '--force',
-  ];
+  const isGlobal = isGlobalInstall();
   
-  return new Promise((resolve, reject) => {
-    const child = spawn('npx', args, {
-      stdio: 'inherit',
-      shell: true,
-    });
+  if (isGlobal) {
+    // Upgrade global CLI installation first
+    console.log('Upgrading global CLI installation...\n');
+    await runCommand('npm', ['install', '-g', '@paw-workflow/cli@latest']);
     
-    child.on('close', (code) => {
-      if (code === 0) {
-        console.log('\nUpgrade complete!');
-        resolve();
-      } else {
-        reject(new Error(`Upgrade failed with exit code ${code}`));
-      }
-    });
-    
-    child.on('error', (err) => {
-      reject(new Error(`Failed to run npx: ${err.message}`));
-    });
-  });
+    // Then reinstall agents/skills using the new CLI
+    console.log('\nReinstalling agents and skills...\n');
+    await runCommand('paw', ['install', manifest.target, '--force']);
+  } else {
+    // Running via npx or local - just use npx to get latest
+    console.log('Downloading latest CLI and reinstalling...\n');
+    await runCommand('npx', [
+      '@paw-workflow/cli@latest',
+      'install',
+      manifest.target,
+      '--force',
+    ]);
+  }
+  
+  console.log('\nUpgrade complete!');
 }

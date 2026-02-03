@@ -1,13 +1,13 @@
 ---
 name: paw-pr
-description: Final PR activity skill for PAW workflow. Creates comprehensive final PR to main with pre-flight validation, scaled descriptions, and merge guidance.
+description: Final PR activity skill for PAW workflow. Creates comprehensive final PR to base branch with pre-flight validation, scaled descriptions, and merge guidance.
 ---
 
 # Final PR
 
 > **Execution Context**: This skill runs **directly** in the PAW session (not a subagent), allowing user interaction for PR description and final checks.
 
-Create the final PR merging all implementation work to main branch after pre-flight validation.
+Create the final PR merging all implementation work to the base branch (from WorkflowContext.md) after pre-flight validation.
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.
 
@@ -37,7 +37,7 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - Docs.md (required: full mode; optional: minimal/custom)
 
 **Branch Status**:
-- Target branch up to date with base branch (main)
+- Target branch up to date with base branch (from WorkflowContext.md, defaults to `main`)
 - No merge conflicts
 
 **Build/Tests**:
@@ -115,8 +115,8 @@ When no intermediate PRs:
 ## PR Creation
 
 **Final PR context requirements**:
-- Source: `<target_branch>`
-- Target: `main` (or specified base branch)
+- Source: `<target_branch>` (from WorkflowContext.md)
+- Target: `<base_branch>` (from WorkflowContext.md, defaults to `main`)
 - Title format: `[<Work Title>] <description>`
 - Body: Scaled description per formats above
 - Issue linking: Include Issue URL from WorkflowContext.md

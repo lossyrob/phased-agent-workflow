@@ -1,8 +1,8 @@
+import { spawn } from 'child_process';
 import { readManifest } from '../manifest.js';
 import { getLatestVersion } from '../registry.js';
-import { installCommand } from './install.js';
 
-export async function upgradeCommand(flags = {}) {
+export async function upgradeCommand(_flags = {}) {
   const manifest = readManifest();
   
   if (!manifest) {
@@ -55,9 +55,33 @@ export async function upgradeCommand(flags = {}) {
   }
   
   console.log(`\nUpgrading from ${manifest.version} to ${latestVersion}...`);
+  console.log('Downloading latest CLI and reinstalling...\n');
   
-  // Re-run install with force flag
-  await installCommand(manifest.target, { ...flags, force: true });
+  // Run npx to get latest CLI and reinstall
+  const args = [
+    '@paw-workflow/cli@latest',
+    'install',
+    manifest.target,
+    '--force',
+  ];
   
-  console.log('\nUpgrade complete!');
+  return new Promise((resolve, reject) => {
+    const child = spawn('npx', args, {
+      stdio: 'inherit',
+      shell: true,
+    });
+    
+    child.on('close', (code) => {
+      if (code === 0) {
+        console.log('\nUpgrade complete!');
+        resolve();
+      } else {
+        reject(new Error(`Upgrade failed with exit code ${code}`));
+      }
+    });
+    
+    child.on('error', (err) => {
+      reject(new Error(`Failed to run npx: ${err.message}`));
+    });
+  });
 }

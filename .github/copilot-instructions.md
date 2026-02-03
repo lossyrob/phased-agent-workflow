@@ -57,11 +57,17 @@ This validates all internal links and catches configuration errors.
 
 ## Pull Request Labels
 
-All pull requests to `main` must be labeled with one of the following labels:
+All pull requests to `main` must be labeled with one of the following category labels:
 - `enhancement` - For new features
 - `bug` - For bug fixes
 - `documentation` - For documentation changes
 - `maintenance` - For maintenance, refactoring, or chores
+
+### CLI Label
+
+PRs that affect CLI code (`cli/` directory, `publish-cli.yml`, etc.) should also have the `cli` label. This label is **applied at release-prep time** using the `prepare-cli-release.prompt.md` prompt—you don't need to remember to add it during development. The prompt assesses each PR and applies the label if it affects CLI code.
+
+VS Code extension PRs don't need a special label (the extension changelog includes all PRs to main).
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 

@@ -7,7 +7,7 @@ on:
 
 permissions:
   id-token: write  # Required for OIDC trusted publishing
-  contents: read
+  contents: write  # Required to create GitHub releases
 
 jobs:
   publish:
@@ -18,6 +18,8 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for changelog generation
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,8 +27,31 @@ jobs:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
       
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION="${TAG_NAME#cli-v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: ${VERSION}"
+      
+      - name: Determine pre-release status
+        id: prerelease
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Check for pre-release suffixes: -alpha, -beta, -rc
+          if [[ "$VERSION" =~ -(alpha|beta|rc) ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "npm_tag=beta" >> $GITHUB_OUTPUT
+            echo "This is a pre-release version"
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "npm_tag=latest" >> $GITHUB_OUTPUT
+            echo "This is a stable release version"
+          fi
+      
       - name: Set version from tag
-        run: npm version ${GITHUB_REF_NAME#cli-v} --no-git-tag-version
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
       
       - name: Install dependencies
         run: npm ci
@@ -38,4 +63,50 @@ jobs:
         run: npm test
       
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --tag ${{ steps.prerelease.outputs.npm_tag }}
+      
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: .github/cli-release-changelog-config.json
+          failOnError: false
+          toTag: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Check if release exists
+        id: check_release
+        working-directory: ${{ github.workspace }}
+        run: |
+          RELEASE_EXISTS=$(gh release view "${{ github.ref_name }}" --json id 2>/dev/null || echo "")
+          if [ -n "$RELEASE_EXISTS" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Release already exists for tag ${{ github.ref_name }}, skipping"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No existing release found, will create new release"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: CLI ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Release summary
+        if: steps.check_release.outputs.exists == 'false'
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "✅ Release created successfully!"
+          echo "Version: ${{ steps.version.outputs.version }}"
+          echo "Pre-release: ${{ steps.prerelease.outputs.is_prerelease }}"
+          echo "npm tag: ${{ steps.prerelease.outputs.npm_tag }}"
+          echo "View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

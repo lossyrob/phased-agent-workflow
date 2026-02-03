@@ -1,0 +1,40 @@
+{
+  "name": "@paw/cli",
+  "version": "0.0.1",
+  "description": "CLI installer for Phased Agent Workflow (PAW) agents and skills",
+  "type": "module",
+  "bin": {
+    "paw": "bin/paw.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "dist/"
+  ],
+  "scripts": {
+    "build": "node scripts/build-dist.js",
+    "test": "node --test test/*.test.js",
+    "lint": "eslint .",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "paw",
+    "copilot",
+    "agent",
+    "workflow",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lossyrob/phased-agent-workflow.git",
+    "directory": "cli"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

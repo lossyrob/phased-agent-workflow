@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Build script for @paw/cli distribution.
+ * Build script for @paw-workflow/cli distribution.
  * Processes conditional blocks and prepares agents/skills for npm package.
  * 
  * - Keeps content inside {{#cli}}...{{/cli}}
  * - Removes content inside {{#vscode}}...{{/vscode}}
  * - Normalizes agent filenames (spaces → hyphens)
+ * - Injects version metadata into skills and agents
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync } from 'fs';
@@ -20,6 +21,10 @@ const SKILLS_SRC = join(PROJECT_ROOT, 'skills');
 const DIST_DIR = join(CLI_ROOT, 'dist');
 const DIST_AGENTS = join(DIST_DIR, 'agents');
 const DIST_SKILLS = join(DIST_DIR, 'skills');
+
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync(join(CLI_ROOT, 'package.json'), 'utf-8'));
+const VERSION = packageJson.version;
 
 /**
  * Process conditional blocks for CLI environment.
@@ -42,6 +47,44 @@ function normalizeFilename(name) {
 }
 
 /**
+ * Inject version into skill YAML frontmatter.
+ * Adds metadata.version per Agent Skills spec.
+ */
+function injectSkillVersion(content, version) {
+  // Match YAML frontmatter
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!frontmatterMatch) {
+    return content;
+  }
+  
+  const frontmatter = frontmatterMatch[1];
+  const afterFrontmatter = content.slice(frontmatterMatch[0].length);
+  
+  // Check if metadata section exists
+  if (frontmatter.includes('metadata:')) {
+    // Add version to existing metadata
+    const updatedFrontmatter = frontmatter.replace(
+      /metadata:\n/,
+      `metadata:\n  version: "${version}"\n`
+    );
+    return `---\n${updatedFrontmatter}\n---${afterFrontmatter}`;
+  } else {
+    // Add new metadata section before closing ---
+    const updatedFrontmatter = `${frontmatter}\nmetadata:\n  version: "${version}"`;
+    return `---\n${updatedFrontmatter}\n---${afterFrontmatter}`;
+  }
+}
+
+/**
+ * Inject version footer into agent file.
+ */
+function injectAgentVersion(content, version) {
+  // Add version as HTML comment footer
+  const footer = `\n\n<!-- @paw-workflow/cli v${version} -->`;
+  return content.trimEnd() + footer + '\n';
+}
+
+/**
  * Build agents to dist.
  */
 function buildAgents() {
@@ -53,15 +96,16 @@ function buildAgents() {
   
   for (const file of agentFiles) {
     const srcPath = join(AGENTS_SRC, file);
-    const content = readFileSync(srcPath, 'utf-8');
-    const processed = processConditionals(content);
+    let content = readFileSync(srcPath, 'utf-8');
+    content = processConditionals(content);
+    content = injectAgentVersion(content, VERSION);
     
     // Normalize filename
     const baseName = file.replace('.agent.md', '');
     const normalizedName = normalizeFilename(baseName);
     const destPath = join(DIST_AGENTS, `${normalizedName}.agent.md`);
     
-    writeFileSync(destPath, processed);
+    writeFileSync(destPath, content);
     count++;
     console.log(`  ${file} -> ${normalizedName}.agent.md`);
   }
@@ -86,12 +130,13 @@ function buildSkills() {
     const srcPath = join(SKILLS_SRC, skillName, 'SKILL.md');
     if (!existsSync(srcPath)) continue;
     
-    const content = readFileSync(srcPath, 'utf-8');
-    const processed = processConditionals(content);
+    let content = readFileSync(srcPath, 'utf-8');
+    content = processConditionals(content);
+    content = injectSkillVersion(content, VERSION);
     
     const destDir = join(DIST_SKILLS, skillName);
     mkdirSync(destDir, { recursive: true });
-    writeFileSync(join(destDir, 'SKILL.md'), processed);
+    writeFileSync(join(destDir, 'SKILL.md'), content);
     count++;
     console.log(`  ${skillName}/SKILL.md`);
   }
@@ -103,7 +148,7 @@ function buildSkills() {
  * Main build function.
  */
 function build() {
-  console.log('Building @paw/cli distribution...\n');
+  console.log(`Building @paw-workflow/cli v${VERSION} distribution...\n`);
   
   // Clean dist directory
   if (existsSync(DIST_DIR)) {
@@ -114,7 +159,7 @@ function build() {
   console.log('');
   const skillCount = buildSkills();
   
-  console.log(`\nBuild complete: ${agentCount} agents, ${skillCount} skills`);
+  console.log(`\nBuild complete: ${agentCount} agents, ${skillCount} skills (v${VERSION})`);
   console.log(`Output: ${DIST_DIR}`);
 }
 

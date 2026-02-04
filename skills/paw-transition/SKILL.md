@@ -42,6 +42,7 @@ Use the Mandatory Transitions table:
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
 | paw-impl-review (passes) | paw-implement (next phase) or paw-pr | Per Review Policy |
+| paw-pr | workflow complete | N/A |
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
 

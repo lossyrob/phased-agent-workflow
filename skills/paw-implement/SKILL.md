@@ -130,8 +130,8 @@ If the plan has existing checkmarks:
 ### Capturing Phase Candidates
 
 When related work surfaces during implementation (e.g., "this would be cleaner if we also refactored X"):
-1. Append a one-liner to `## Phase Candidates` in ImplementationPlan.md
-2. Format: `- [ ] Brief description of potential work`
+1. If `## Phase Candidates` section missing, create it after `## Phase Status`
+2. Append `- [ ] Brief description of potential work`
 3. Continue current phase immediately—no context-switch
 
 Candidates are elaborated into full phases later via the promotion flow in `paw-transition`.

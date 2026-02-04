@@ -50,10 +50,11 @@ Use the Mandatory Transitions table:
 When next activity would be `paw-pr` (all planned phases complete), check for phase candidates:
 
 1. Read ImplementationPlan.md `## Phase Candidates` section
-2. If unchecked candidates exist (`- [ ]` items): set `promotion_pending = true`
-3. If no candidates or all checked/skipped: set `promotion_pending = false`
+2. Count **unresolved** candidates: `- [ ]` items WITHOUT terminal tags (`[skipped]`, `[deferred]`, `[not feasible]`)
+3. If unresolved candidates exist: set `promotion_pending = true` and extract candidate descriptions
+4. Otherwise: set `promotion_pending = false`
 
-If `promotion_pending = true`, do NOT proceed to paw-pr. Instead, enter Promotion Flow (see below).
+If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction.
 
 ### Step 3: Check Stage Boundary and Milestone Pause
 
@@ -124,6 +125,8 @@ TRANSITION RESULT:
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
+- promotion_pending: [true | false] (only when next would be paw-pr)
+- candidates: [list of unresolved candidate descriptions] (only if promotion_pending)
 ```
 
 **If pause_at_milestone = true**: The PAW agent must PAUSE and wait for user confirmation before proceeding.
@@ -136,25 +139,19 @@ Mark the `paw-transition` TODO complete after returning this output.
 
 ## Promotion Flow
 
-When `promotion_pending = true`, present each candidate to user before proceeding to paw-pr:
+When `promotion_pending = true`, PAW orchestrator handles candidate decisions (paw-transition only returns data).
 
-1. **Present candidate**: Show the one-liner description
-2. **Await decision**: User chooses:
-   - **Promote**: Elaborate candidate into a full phase
-   - **Skip**: Mark candidate `[skipped]` but keep in section
-   - **Defer**: Leave as-is for future work (outside current workflow)
-3. **Handle decision**:
-   - Promoted: Invoke `paw-code-research` + `paw-planning` for the new phase, then return to implementation
-   - Skipped: Update candidate to `- [x] [skipped] <description>`, continue to next candidate
-   - Deferred: Leave unchanged, continue to next candidate
-4. **After all candidates processed**:
-   - If any were promoted: next_activity = `paw-implement` (new phase)
-   - If all skipped/deferred: proceed to `paw-pr`
+**Terminal markers** (resolve a candidate):
+- `- [x] [skipped] <desc>` — User chose not to pursue
+- `- [x] [deferred] <desc>` — Future work outside current workflow
+- `- [x] [not feasible] <desc>` — Code research revealed infeasibility
 
-**Edge cases**:
-- Empty Phase Candidates section: Skip promotion flow entirely
-- Promotion failure (code research reveals infeasibility): Mark as `[not feasible]`, continue with remaining candidates
-- User abandons mid-flow: Candidates retain their state; can resume later
+**Decision outcomes**:
+- **Promote**: Invoke `paw-code-research` + `paw-planning` to create new phase, then implement
+- **Skip/Defer**: Update candidate with terminal marker, continue to next
+- **All resolved**: Proceed to `paw-pr`
+
+**Edge cases**: Empty section skips flow; user abandonment preserves state for later.
 
 ## Guardrails
 

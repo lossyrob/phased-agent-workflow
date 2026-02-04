@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { collectUserInputs } from "../ui/userInput";
+import { collectUserInputs, FinalReviewConfig } from "../ui/userInput";
 import type { ReviewPolicy, SessionPolicy } from "../types/workflow";
 import { validateGitRepository } from "../git/validation";
 
@@ -18,6 +18,7 @@ function constructPawPromptArguments(
     reviewPolicy: ReviewPolicy;
     sessionPolicy: SessionPolicy;
     trackArtifacts: boolean;
+    finalReview: FinalReviewConfig;
     issueUrl?: string;
   },
   _workspacePath: string
@@ -30,7 +31,14 @@ function constructPawPromptArguments(
     review_policy: inputs.reviewPolicy,
     session_policy: inputs.sessionPolicy,
     track_artifacts: inputs.trackArtifacts,
+    final_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
+
+  // Add Final Review mode and interactive settings if enabled
+  if (inputs.finalReview.enabled) {
+    config.final_review_mode = inputs.finalReview.mode;
+    config.final_review_interactive = inputs.finalReview.interactive;
+  }
 
   // Add optional fields
   if (inputs.issueUrl) {
@@ -114,6 +122,11 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
     outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
     outputChannel.appendLine(`[INFO] Track artifacts: ${inputs.trackArtifacts}`);
+    outputChannel.appendLine(`[INFO] Final Review: ${inputs.finalReview.enabled ? 'enabled' : 'disabled'}`);
+    if (inputs.finalReview.enabled) {
+      outputChannel.appendLine(`[INFO] Final Review mode: ${inputs.finalReview.mode}`);
+      outputChannel.appendLine(`[INFO] Final Review interactive: ${inputs.finalReview.interactive}`);
+    }
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }

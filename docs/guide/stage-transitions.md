@@ -145,6 +145,30 @@ research but skip external dependencies
 
 The additional context is passed to the target skill as part of the delegation.
 
+## Capturing Phase Candidates
+
+During implementation, you may realize additional work is needed that wasn't in the original plan. Instead of stopping to define a full phase, you can quickly capture the idea:
+
+```
+note: we should also refactor the auth module
+```
+
+```
+capture candidate: add caching for the API responses
+```
+
+```
+this would be cleaner if we extracted a helper function - add that as a candidate
+```
+
+The agent appends a one-liner to the `## Phase Candidates` section in `ImplementationPlan.md` and continues the current phase without interruption.
+
+When all planned phases complete, you'll be prompted to decide on each candidate:
+
+- **Promote** — Elaborate into a full phase with code research and planning
+- **Skip** — Mark as skipped and proceed to Final PR
+- **Defer** — Mark as deferred for future work outside this workflow
+
 ## Checking Workflow Status
 
 At any point, you can check your workflow progress:

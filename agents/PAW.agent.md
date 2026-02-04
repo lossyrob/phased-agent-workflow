@@ -90,12 +90,24 @@ Use TODOs to externalize workflow steps.
 - `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation
 - `artifact_tracking`: Pass to next activity (if `disabled`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
+- `promotion_pending`: If `true`, run Candidate Promotion Flow (see below)
 {{#vscode}}
 - `session_action`: Call `paw_new_session` if `new_session`
 {{/vscode}}
 {{#cli}}
 - `session_action`: Ignored in CLI (single-session mode)
 {{/cli}}
+
+### Candidate Promotion Flow
+
+When `paw-transition` returns `promotion_pending = true` with a `candidates` list:
+
+1. Present each candidate to user with options: **Promote**, **Skip**, **Defer**
+2. For each decision:
+   - **Promote**: Run `paw-code-research` + `paw-planning` to create new phase, then `paw-implement`
+   - **Skip**: Update candidate to `- [x] [skipped] <desc>` in ImplementationPlan.md
+   - **Defer**: Update candidate to `- [x] [deferred] <desc>` in ImplementationPlan.md
+3. After all candidates resolved: proceed to `paw-pr`
 
 ## Before Yielding Control
 

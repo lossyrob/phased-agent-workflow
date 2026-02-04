@@ -52,16 +52,24 @@ Use the Mandatory Transitions table:
 - plan-review passes → implement (Phase 1)
 - phase N complete → phase N+1
 - all phases complete → final-pr
+- paw-pr complete → workflow complete
 
-**Milestones** (require pause check): Spec.md complete, ImplementationPlan.md complete, Phase PR completion, Final PR
+**Stage-to-milestone mapping** (determines which milestone is reached at each boundary):
+
+| Stage Boundary | Milestone Reached |
+|----------------|-------------------|
+| spec-review passes | Spec.md complete |
+| plan-review passes | ImplementationPlan.md complete |
+| phase N complete (not last) | Phase completion |
+| all phases complete | Phase completion (last phase) |
+| paw-pr complete | Final PR |
 
 **Determine pause_at_milestone**:
-- If at a milestone AND Review Policy ∈ {`always`, `milestones`}: set `pause_at_milestone = true`
+- If Review Policy ∈ {`always`, `milestones`}: pause at ALL milestones
 - If Review Policy = `planning-only`:
-  - If milestone is Spec.md, ImplementationPlan.md, or Final PR: set `pause_at_milestone = true`
-  - If milestone is Phase PR/phase completion: set `pause_at_milestone = false`
-- If Review Policy = `never`: set `pause_at_milestone = false`
-- If not at a milestone: set `pause_at_milestone = false`
+  - Spec.md, ImplementationPlan.md, Final PR: `pause_at_milestone = true`
+  - Phase completion (including last phase): `pause_at_milestone = false`
+- If Review Policy = `never`: `pause_at_milestone = false`
 
 **Determine session_action**:
 - If crossing a stage boundary AND Session Policy = `per-stage`: set `session_action = new_session`

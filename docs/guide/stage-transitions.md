@@ -15,6 +15,7 @@ The PAW agent is an intelligent orchestrator that understands natural language r
 | "Review my changes" | `paw-impl-review` | Verify and push implementation |
 | "Create the final PR" | `paw-pr` | Create the final pull request |
 | "What's the status?" | `paw-status` | Check workflow progress |
+| "Rewind to planning" | `paw-rewind` | Roll back to a previous stage or phase |
 
 ### Context-Sensitive Routing
 

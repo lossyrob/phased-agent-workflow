@@ -141,7 +141,7 @@ When pausing at a milestone, provide:
 
 **Direct execution** (load skill, execute in this session):
 - `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`
-- `paw-init`, `paw-status`, `paw-work-shaping`
+- `paw-init`, `paw-status`, `paw-work-shaping`, `paw-rewind`
 
 **Subagent delegation** (delegate via `runSubagent`):
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
@@ -179,6 +179,7 @@ For each user request:
 - PR comment responses → `paw-review-response`
 - Documentation conventions → `paw-docs-guidance`
 - Status/help → `paw-status`
+- Workflow rollback → `paw-rewind`
 
 ## Error Handling
 

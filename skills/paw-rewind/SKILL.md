@@ -96,9 +96,9 @@ If non-empty, list files and require confirmation.
 
 **Unpushed commits**:
 ```bash
-git rev-list @{u}..HEAD --count 2>/dev/null || echo "0"
+git rev-list @{u}..HEAD --count
 ```
-If > 0, report count and require confirmation.
+If upstream not set, treat as 0 unpushed. If > 0, report count and require confirmation.
 
 **Orphaned PRs** (PRs strategy only):
 Query PRs with head branches matching `<target>_phase*` patterns that would be orphaned by rewind. List PR numbers/URLs.

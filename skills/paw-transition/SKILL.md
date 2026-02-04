@@ -45,6 +45,16 @@ Use the Mandatory Transitions table:
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
 
+### Step 2.5: Candidate Promotion Check
+
+When next activity would be `paw-pr` (all planned phases complete), check for phase candidates:
+
+1. Read ImplementationPlan.md `## Phase Candidates` section
+2. If unchecked candidates exist (`- [ ]` items): set `promotion_pending = true`
+3. If no candidates or all checked/skipped: set `promotion_pending = false`
+
+If `promotion_pending = true`, do NOT proceed to paw-pr. Instead, enter Promotion Flow (see below).
+
 ### Step 3: Check Stage Boundary and Milestone Pause
 
 **Stage boundaries** occur when moving between these stages:
@@ -123,6 +133,28 @@ TRANSITION RESULT:
 **If preflight = blocked**: The PAW agent must report the blocker to the user.
 
 Mark the `paw-transition` TODO complete after returning this output.
+
+## Promotion Flow
+
+When `promotion_pending = true`, present each candidate to user before proceeding to paw-pr:
+
+1. **Present candidate**: Show the one-liner description
+2. **Await decision**: User chooses:
+   - **Promote**: Elaborate candidate into a full phase
+   - **Skip**: Mark candidate `[skipped]` but keep in section
+   - **Defer**: Leave as-is for future work (outside current workflow)
+3. **Handle decision**:
+   - Promoted: Invoke `paw-code-research` + `paw-planning` for the new phase, then return to implementation
+   - Skipped: Update candidate to `- [x] [skipped] <description>`, continue to next candidate
+   - Deferred: Leave unchanged, continue to next candidate
+4. **After all candidates processed**:
+   - If any were promoted: next_activity = `paw-implement` (new phase)
+   - If all skipped/deferred: proceed to `paw-pr`
+
+**Edge cases**:
+- Empty Phase Candidates section: Skip promotion flow entirely
+- Promotion failure (code research reveals infeasibility): Mark as `[not feasible]`, continue with remaining candidates
+- User abandons mid-flow: Candidates retain their state; can resume later
 
 ## Guardrails
 

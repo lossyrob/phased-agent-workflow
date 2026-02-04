@@ -99,6 +99,10 @@ For each phase:
 7. `paw-impl-review` verifies and pushes updates
 8. Merge when approved, repeat for next phase
 
+**Phase Candidates:**
+
+During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in the `## Phase Candidates` section of `ImplementationPlan.md`. When all planned phases complete, `paw-transition` presents each candidate for user decision: promote to a full phase, skip, or defer.
+
 **Documentation Phase:**
 
 When the implementation plan includes a documentation phase:

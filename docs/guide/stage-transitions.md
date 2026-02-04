@@ -80,7 +80,7 @@ In `planning-only` mode, the workflow pauses at specification and implementation
 
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
-- Final PR creation
+- Final PR (after paw-pr creates it)
 
 **Auto-proceeds at:**
 

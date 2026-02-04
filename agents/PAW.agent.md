@@ -39,6 +39,7 @@ Stage boundaries:
 - Planning PR created (PRs strategy)
 - Phase PR created (PRs strategy) or push complete (local strategy)
 - All phases complete
+- paw-pr complete (Final PR created)
 
 The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for user. This is how milestone pauses happen—without the transition call, you will skip pauses.
 

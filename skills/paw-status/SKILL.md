@@ -33,8 +33,17 @@ Check `.paw/work/<work-id>/` for:
 - CodeResearch.md (research stage)
 - ImplementationPlan.md (planning stage)
 - Docs.md (documentation if separate from implementation)
+- `reviews/` directory (Final Agent Review artifacts)
 
 Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
+
+### Configuration Detection
+
+Read WorkflowContext.md for:
+- Workflow Mode, Review Strategy, Review Policy
+- Final Agent Review: `enabled` | `disabled`
+- Final Review Mode: `single-model` | `multi-model`
+- Final Review Interactive: `true` | `false`
 
 ### Phase Counting
 
@@ -78,12 +87,13 @@ Map state to guidance:
 | CodeResearch.md exists, no Plan | "Create plan: `plan`" |
 | Plan exists, no phase work | "Begin Phase 1: `implement`" |
 | Phase N complete, Phase N+1 exists | "Continue Phase N+1: `implement`" |
-| All complete | "Create final PR: `pr`" |
+| All phases complete, review enabled | "Run final review: `review`" |
+| All complete (or review disabled/done) | "Create final PR: `pr`" |
 
 ## Workflow Mode Behavior
 
 ### Full Mode
-Expect: Spec → Spec Research (optional) → Code Research → Plan → Implementation (multi-phase) → Docs → Final PR
+Expect: Spec → Spec Research (optional) → Code Research → Plan → Implementation (multi-phase) → Final Review (if enabled) → Docs → Final PR
 
 ### Minimal Mode
 Expect: Code Research → Plan → Implementation (single phase) → Final PR

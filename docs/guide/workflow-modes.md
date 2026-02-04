@@ -12,9 +12,9 @@ PAW supports three workflow modes to match your task scope and development style
 
 ## Full Mode
 
-**Stages Included:** Spec → Spec Research → Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included:** Spec → Spec Research → Code Research → Implementation Plan → Implementation → Final Review (if enabled) → Documentation → Final PR → Status
 
-Full mode is the complete PAW workflow with all stages from initial specification through comprehensive documentation.
+Full mode is the complete PAW workflow with all stages from initial specification through comprehensive documentation. When Final Agent Review is enabled (default), an automated review step runs after implementation phases to catch issues before the Final PR.
 
 ### When to Use Full Mode
 
@@ -34,7 +34,7 @@ Full mode supports both review strategies:
 
 ## Minimal Mode
 
-**Stages Included:** Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included:** Code Research → Implementation Plan → Implementation → Final Review (if enabled) → Documentation → Final PR → Status
 
 **Stages Skipped:** Specification stage
 

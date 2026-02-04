@@ -21,9 +21,9 @@ PAW supports three workflow modes that determine which stages are included and h
 
 ### Full Mode
 
-**Stages Included**: Spec → Spec Research → Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included**: Spec → Spec Research → Code Research → Implementation Plan → Implementation → Final Review (if enabled) → Documentation → Final PR → Status
 
-**Description**: The complete PAW workflow with all stages from initial specification through comprehensive documentation.
+**Description**: The complete PAW workflow with all stages from initial specification through comprehensive documentation. Final Agent Review runs after all implementation phases to catch issues before the Final PR.
 
 **Best for**:
 - Large features requiring comprehensive documentation
@@ -38,7 +38,7 @@ PAW supports three workflow modes that determine which stages are included and h
 
 ### Minimal Mode
 
-**Stages Included**: Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included**: Code Research → Implementation Plan → Implementation → Final Review (if enabled) → Documentation → Final PR → Status
 
 **Stages Skipped**: Specification stage
 

@@ -27,7 +27,7 @@ PAW provides two complementary workflows:
 
 The core workflow for building features: turns GitHub Issues into production-ready code through structured phases. Each phase produces durable artifacts that feed the next, with human oversight at critical decision points.
 
-**Stages:** Specification → Research → Planning → Implementation → Documentation → Final PR
+**Stages:** Specification → Research → Planning → Implementation → Final Review → Documentation → Final PR
 
 [Learn more about the Implementation Workflow →](implementation.md)
 

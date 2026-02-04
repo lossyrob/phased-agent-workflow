@@ -101,7 +101,13 @@ For each phase:
 
 **Phase Candidates:**
 
-During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in the `## Phase Candidates` section of `ImplementationPlan.md`. When all planned phases complete, `paw-transition` presents each candidate for user decision: promote to a full phase, skip, or defer.
+During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in the `## Phase Candidates` section of `ImplementationPlan.md`. When all planned phases complete, `paw-transition` detects unresolved candidates and prompts for decisions:
+
+- **Promote**: Elaborate into a full phase (code research + planning)
+- **Skip**: Mark as `[skipped]` and proceed
+- **Defer**: Mark as `[deferred]` for future work
+
+Promoted candidates become new phases and are implemented before the Final PR. This decouples intent capture from phase elaboration—ideas aren't lost, but implementation momentum is preserved.
 
 **Documentation Phase:**
 

@@ -1,7 +1,7 @@
 <div align="center">
 	<img src="./img/paw-logo.png" alt="PAW Logo" />
     <h1>Phased Agent Workflow (PAW)</h1>
-    <h3>A Coding Agent Development Workflow</h3>
+    <h3>Context-Driven Development for GitHub Copilot</h3>
 </div>
 
 ## Try It Now
@@ -25,9 +25,11 @@ Or use `/agent` inside your session to switch agents.
 
 ## What is PAW?
 
-**Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts.
+**Phased Agent Workflow** (PAW) enables **Context-Driven Development**—a practice where AI agents build understanding through structured research and planning phases before writing code. Each phase produces durable artifacts (specs, research docs, implementation plans) that accumulate context and feed the next phase. By the time code is written, both agent and human share deep, documented understanding of what's being built and why.
 
-PAW uses a **skills-based architecture** where compact orchestrator agents delegate to specialized activity skills. This enables efficient token usage while maintaining comprehensive workflow capabilities.
+PAW integrates with GitHub Pull Requests at every implementation step, enabling human review and iteration on AI-generated code. Every phase is traceable, rewindable, and version-controlled.
+
+**Why context-driven?** AI agents work best when given clear, accumulated context rather than open-ended prompts. PAW's phased approach ensures agents have the specification, codebase understanding, and implementation plan they need before touching code—reducing hallucination, improving quality, and making the work auditable.
 
 ## Two Platforms
 

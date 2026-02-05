@@ -66,72 +66,22 @@ The **PAW agent** orchestrates the implementation workflow by loading the `paw-w
 - Flexible execution—skills adapt to delegation context
 - Full workflow mode support (full/minimal/custom)
 
-### Review Workflow
+## Review Workflow
 
-The **PAW Review** agent orchestrates the review workflow using `paw-review-workflow` skill.
+The **PAW Review** agent reviews pull requests through three automated stages:
 
-**How it works:**
+1. **Understanding** - Analyzes PR changes, researches pre-change baseline
+2. **Evaluation** - Identifies impacts, breaking changes, and gaps
+3. **Feedback** - Generates structured review comments with rationale
 
-1. The **PAW Review** agent loads the `paw-review-workflow` skill
-2. The workflow skill orchestrates activity skills via subagent execution
-3. Complete review runs automatically through all three stages
-4. Human reviews and submits the pending review at the end
+Human reviews and submits the pending review at the end. See [Review Workflow Documentation](docs/specification/review.md) for details.
 
-**Three stages:**
-1. **Understanding (R1)** - Analyzes PR changes, researches pre-change baseline, derives specification from implementation
-2. **Evaluation (R2)** - Identifies system-wide impacts, breaking changes, and gaps across correctness/safety/testing/quality with Must/Should/Could categorization
-3. **Feedback Generation (R3)** - Transforms findings into structured review comments with rationale, creates GitHub pending reviews (or manual posting instructions for non-GitHub contexts)
-
-**Key benefits:**
-- Automated workflow - no manual pauses between stages
-- Understand before critiquing - research pre-change system behavior first
-- Comprehensive findings - generate all issues, human filters based on context
-- Evidence-based feedback - every finding includes file:line references and rationale
-- Cross-repository support - review related PRs across multiple repositories together
-- Full human control - nothing posted automatically, edit/delete comments before submitting
-
-See [Review Workflow Documentation](docs/specification/review.md) for detailed usage guide.
-
-### Characteristics
+## Characteristics
 
 * **Layered, iterative flow** — each artifact feeds the next.
 * **Rewindable** — any phase can restart cleanly if an upstream document is wrong or incomplete.
 * **Transparent** — every output is text-based and version-controlled in Git.
 * **Collaborative** — humans guide, agents execute and record progress.
-* **Toolchain** — Git (GitHub or Azure DevOps), VS Code, GitHub Copilot Agent Mode, markdown artifacts.
-
-## Two Workflows: Implementation and Review
-
-PAW provides two complementary workflows:
-
-### PAW Implementation Workflow
-
-The core workflow for building features: turns GitHub Issues into production-ready code through structured phases (Specification → Research → Planning → Implementation → Documentation → Final PR). Each phase produces durable artifacts that feed the next, with human oversight at critical decision points.
-
-**Use for**: Building new features, enhancements, refactors, and bug fixes.
-
-### PAW Review Workflow
-
-A structured three-stage process for thorough code review using a **skills-based architecture**: systematically understands PR changes, evaluates impacts and gaps, and generates comprehensive evidence-based feedback with full human control over what gets posted.
-
-**Use for**: Reviewing any pull request—especially valuable for large or poorly-documented PRs.
-
-**Invocation:** `/paw-review <PR-number-or-URL>`
-
-**Three stages** (automated via skill orchestration):
-1. **Understanding (R1)** - Analyzes PR metadata, researches pre-change baseline, and derives specification from implementation
-2. **Evaluation (R2)** - Identifies system-wide impacts, breaking changes, and gaps across correctness/safety/testing/quality with Must/Should/Could categorization
-3. **Feedback Generation (R3)** - Transforms findings into structured review comments with rationale, creates GitHub pending reviews (or manual posting instructions for non-GitHub contexts)
-
-**Key benefits**:
-- Automated workflow - no manual pauses between stages
-- Understand before critiquing - research pre-change system behavior first
-- Comprehensive findings - generate all issues, human filters based on context
-- Evidence-based feedback - every finding includes file:line references and rationale
-- Cross-repository support - review related PRs across multiple repositories together
-- Full human control - nothing posted automatically, edit/delete comments before submitting
-
-See [PAW Review Workflow Documentation](docs/specification/review.md) for detailed usage guide.
 
 ## Requirements
 

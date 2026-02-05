@@ -4,26 +4,45 @@
     <h3>A Coding Agent Development Workflow</h3>
 </div>
 
-## Quickstart
+## Try It Now
 
-1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
-2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette ([detailed instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix))
-3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/github/github-mcp-server) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) in VS Code for optimal agent integration with your platform. While PAW can fall back to GitHub CLI, the MCP servers provide significantly better functionality and reliability. See the server project READMEs for configuration instructions.
-4. **Open** the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `PAW` to see available commands
-5. **Start new work** with `PAW: New PAW Workflow`
-6. **Get help** anytime with `PAW: Get Work Status`
+```bash
+npx @paw-workflow/cli install copilot
+```
+
+This installs PAW agents and skills to your [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line). Then start a workflow:
+
+```bash
+cd your-repo
+ghcs "start a new PAW workflow for issue #123"
+```
+
+**Requirements**: Node.js 18+ and GitHub Copilot CLI installed.
 
 ---
 
-**Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. Built on GitHub Copilot Agent Mode in VS Code, PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts. PAW empowers engineers to deliver fast, high-quality contributions by focusing human attention on high-leverage decision points—refining specifications, reviewing implementation plans, and guiding code at critical junctures—while AI agents handle the systematic execution.
+## What is PAW?
+
+**Phased Agent Workflow** (PAW) is a structured, multi-phase development practice that transforms feature ideas into production-ready code using AI coding agents with human oversight at critical decision points. PAW guides you from initial specification through research, planning, implementation, and documentation—with each phase producing durable artifacts that feed the next. By leveraging GitHub Pull Requests at every implementation step, PAW enables efficient human review and iteration on AI-generated code, helping you maintain high quality standards and avoid AI slop. Every phase is traceable, rewindable, and version-controlled, giving you the clarity to iterate intelligently and the confidence to restart from any layer when context drifts.
 
 PAW uses a **skills-based architecture** where compact orchestrator agents delegate to specialized activity skills. This enables efficient token usage while maintaining comprehensive workflow capabilities.
 
-### Implementation Workflow
+## Two Platforms
+
+PAW works with both **GitHub Copilot CLI** (terminal) and **VS Code** (GUI):
+
+| Platform | Installation | Best For |
+|----------|--------------|----------|
+| **Copilot CLI** | `npx @paw-workflow/cli install copilot` | Terminal workflows, quick iteration |
+| **VS Code Extension** | Download `.vsix` from [Releases](https://github.com/lossyrob/phased-agent-workflow/releases) | IDE integration, visual workflow |
+
+Both platforms use the same PAW agents and skills—choose based on your preferred workflow.
+
+---
+
+## Implementation Workflow
 
 The **PAW agent** orchestrates the implementation workflow by loading the `paw-workflow` skill and delegating to activity skills:
-
-**Invocation:** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
 
 **Activity Skills:**
 
@@ -48,8 +67,6 @@ The **PAW agent** orchestrates the implementation workflow by loading the `paw-w
 ### Review Workflow
 
 The **PAW Review** agent orchestrates the review workflow using `paw-review-workflow` skill.
-
-**Invocation:** `/paw-review <PR-number-or-URL>` in Copilot Chat
 
 **How it works:**
 
@@ -116,6 +133,13 @@ See [PAW Review Workflow Documentation](docs/specification/review.md) for detail
 
 ## Requirements
 
+### For Copilot CLI (Recommended)
+
+- Node.js 18.0.0 or later
+- [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line)
+
+### For VS Code Extension
+
 - VS Code with GitHub Copilot
 - One of the following platform integrations (authenticated and configured):
   - **GitHub** with GitHub MCP Tools
@@ -123,22 +147,47 @@ See [PAW Review Workflow Documentation](docs/specification/review.md) for detail
 
 ## Getting Started
 
-### Installing PAW Agents
+### Using the CLI (Recommended)
 
-PAW agents are automatically installed when you install the PAW Workflow VS Code extension (see below). Agents will appear in GitHub Copilot Chat after installation.
+```bash
+# Install PAW to Copilot CLI
+npx @paw-workflow/cli install copilot
 
-For manual installation, copy the `agents/` folder contents to VS Code's global prompts directory:
+# Manage your installation
+npx @paw-workflow/cli list      # Show installed version
+npx @paw-workflow/cli upgrade   # Check for updates
+npx @paw-workflow/cli uninstall # Remove PAW
+```
+
+Files are installed to:
+- `~/.copilot/agents/` - Agent files
+- `~/.copilot/skills/` - Skill directories
+
+Then use PAW with any `ghcs` session:
+```bash
+ghcs "start a new PAW workflow"
+ghcs "review PR #42"
+```
+
+### Using VS Code Extension
+
+1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
+2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette ([detailed instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix))
+3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/github/github-mcp-server) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) in VS Code for optimal agent integration
+4. **Open** the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `PAW` to see available commands
+5. **Start new work** with `PAW: New PAW Workflow`
+6. **Get help** anytime with `PAW: Get Work Status`
+
+For manual agent installation, copy the `agents/` folder contents to VS Code's global prompts directory:
 - **Windows**: `%APPDATA%\Code\User\prompts`
 - **macOS**: `~/Library/Application Support/Code/User/prompts`
 - **Linux**: `~/.config/Code/User/prompts`
 
 Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
 
-### VS Code Extension
+### VS Code Extension Features
 
 The **PAW Workflow Extension** automates PAW agent installation and work item initialization.
-
-#### Features
 
 - **Automatic agent installation**: PAW agents install to VS Code prompts directory on first activation and appear in GitHub Copilot Chat
 - **New PAW Workflow command**: One command to create complete `.paw/work/<feature-slug>/` directory structure
@@ -147,13 +196,7 @@ The **PAW Workflow Extension** automates PAW agent installation and work item in
   - Opens WorkflowContext.md for immediate editing
   - Navigate stages using simple commands; prompt files generated on-demand when customization needed
 
-#### Installation
-
-Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossyrob/phased-agent-workflow/releases) and install it in VS Code via:
-- `Extensions: Install from VSIX...` command, or
-- `code --install-extension paw-workflow-0.0.1.vsix` from command line
-
-#### Usage
+**Usage:**
 
 1. Open a git repository in VS Code
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
@@ -162,38 +205,17 @@ Download the latest `.vsix` file from [GitHub Releases](https://github.com/lossy
 5. Enter branch name (optional - press Enter to auto-derive from issue or description)
 6. Watch as your workflow structure is created automatically
 
-#### Getting Workflow Status
+**Workflow Status:** At any time, run "PAW: Get Work Status" to check progress and get next-step recommendations.
 
-At any time during a PAW workflow, you can check your progress and get guidance on next steps:
+**Artifact Tracking:** PAW commits workflow artifacts to git by default. Select "Don't Track" at initialization, or run "PAW: Stop Tracking Artifacts" mid-workflow to exclude artifacts from commits.
 
-1. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
-2. Type "PAW: Get Work Status"
-3. Select a work item from the list (sorted by most recently modified) or choose "Auto-detect from context"
-4. The Status Agent will analyze your workflow state and provide actionable next-step recommendations
+**Customization:** Use VS Code's standard `copilot-instructions.md` (project-level) or `AGENTS.md` files rather than PAW-specific instructions.
 
-#### Artifact Tracking
-
-By default, PAW commits workflow artifacts (Spec.md, ImplementationPlan.md, etc.) to git. You can exclude artifacts when contributing to non-PAW repositories or making lightweight changes:
-
-- **At initialization**: Select "Don't Track" at the artifact tracking prompt
-- **Mid-workflow**: Run "PAW: Stop Tracking Artifacts" to untrack already-committed artifacts
-
-When excluded, artifacts stay local for your reference but don't appear in commits or PRs.
-
-#### Customization
-
-For agent customization, use VS Code's standard `copilot-instructions.md` (project-level) or `AGENTS.md` files rather than PAW-specific instructions. These integrate with all VS Code agents and skills.
-
-#### Requirements
-
-- Git repository
-- GitHub Copilot extension installed and active
+**Requirements:** Git repository and GitHub Copilot extension installed and active.
 
 The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
 
-#### Uninstalling the Extension
-
-After uninstalling the extension, use the configure agents UI in GitHub Copilot Chat to remove the PAW agents.
+**Uninstalling:** After uninstalling the extension, use the configure agents UI in GitHub Copilot Chat to remove the PAW agents.
 
 ## Workflow Modes
 

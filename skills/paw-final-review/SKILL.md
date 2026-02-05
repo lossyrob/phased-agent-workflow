@@ -93,14 +93,14 @@ Write findings in structured markdown.
 
 **If multi-model mode**:
 
-First, resolve model intents to actual model names (e.g., "latest GPT" → "GPT-5.2").
+First, resolve model intents to actual model names (e.g., "latest GPT" → current GPT model).
 
-**If Interactive = true**: Present resolved models for confirmation:
+**If Interactive = true**: Present the resolved models for confirmation:
 ```
 About to run multi-model review with:
-- GPT-5.2
-- Gemini 3 Pro Preview  
-- Claude Opus 4.5
+- [resolved model 1]
+- [resolved model 2]
+- [resolved model 3]
 
 Proceed with these models, or specify different ones?
 ```

@@ -34,7 +34,7 @@ PAW provides:
 Build features from scratch through structured phases:
 
 ```
-Issue → Specification → Research → Planning → Implementation → Documentation → Final PR
+Specification → Planning → Implementation → Finalization
 ```
 
 **Use for:** New features, enhancements, refactors, and bug fixes.
@@ -57,7 +57,7 @@ PR → Understanding → Evaluation → Feedback Generation
 
 | Concept | Description |
 |---------|-------------|
-| **Stages** | Workflow milestones (Specification, Planning, Implementation, etc.) |
+| **Stages** | Workflow milestones (Specification, Planning, Implementation, Finalization) |
 | **Phases** | Discrete implementation chunks within the Implementation stage |
 | **Agents** | Specialized AI chat modes that handle specific stages |
 | **Artifacts** | Durable Markdown documents produced at each stage |

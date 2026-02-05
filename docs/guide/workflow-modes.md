@@ -12,9 +12,9 @@ PAW supports three workflow modes to match your task scope and development style
 
 ## Full Mode
 
-**Stages Included:** Spec → Spec Research → Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included:** Spec → Spec Research → Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status
 
-Full mode is the complete PAW workflow with all stages from initial specification through comprehensive documentation.
+Full mode is the complete PAW workflow with all stages from initial specification through comprehensive documentation. When Final Agent Review is enabled (default), an automated review step runs after implementation phases to catch issues before the Final PR.
 
 ### When to Use Full Mode
 
@@ -34,7 +34,7 @@ Full mode supports both review strategies:
 
 ## Minimal Mode
 
-**Stages Included:** Code Research → Implementation Plan → Implementation → Documentation → Final PR → Status
+**Stages Included:** Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status
 
 **Stages Skipped:** Specification stage
 
@@ -145,6 +145,24 @@ All automated verification criteria in implementation plans must pass before wor
 - Linting must pass
 - Type checking must pass
 - Build verification must pass
+
+## Final Agent Review Configuration
+
+Final Agent Review runs after all implementation phases complete, before the Final PR is created. It catches issues before external review. Configuration is stored in `WorkflowContext.md`.
+
+| Field | Default | Options | Description |
+|-------|---------|---------|-------------|
+| Final Agent Review | enabled | `enabled`, `disabled` | Whether to run the review step |
+| Final Review Mode | multi-model | `single-model`, `multi-model` | Single model or parallel multi-model review |
+| Final Review Interactive | true | `true`, `false` | Present findings for apply/skip/discuss, or auto-apply |
+| Final Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model review (CLI only) |
+
+**Notes:**
+
+- **VS Code** only supports single-model mode (multi-model falls back to single-model)
+- **CLI** supports both modes; multi-model spawns parallel reviews and synthesizes findings
+- In **interactive mode**, you confirm each finding before changes are made
+- In **auto-apply mode**, must-fix and should-fix recommendations are applied automatically
 
 ## Selecting Your Mode
 

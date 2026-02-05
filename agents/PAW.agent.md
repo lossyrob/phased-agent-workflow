@@ -20,8 +20,11 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-planning | paw-plan-review | NO |
 | paw-plan-review (passes) | Planning PR (prs strategy) | NO |
 | Planning PR created | paw-transition → paw-implement | NO |
-| paw-impl-review (passes) | Push & Phase PR (prs strategy) | NO |
-| Phase PR created | paw-transition → paw-implement (next) or paw-pr | NO |
+| paw-impl-review (passes, more phases) | Push & Phase PR (prs strategy) | NO |
+| paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
+| paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
+| paw-final-review | paw-pr | NO |
+| Phase PR created | paw-transition → paw-implement (next) or paw-final-review or paw-pr | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 
@@ -39,6 +42,8 @@ Stage boundaries:
 - Planning PR created (PRs strategy)
 - Phase PR created (PRs strategy) or push complete (local strategy)
 - All phases complete
+- paw-final-review complete
+- paw-pr complete (Final PR created)
 
 The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for user. This is how milestone pauses happen—without the transition call, you will skip pauses.
 
@@ -151,8 +156,8 @@ When pausing at a milestone, provide:
 ## Hybrid Execution Model
 
 **Direct execution** (load skill, execute in this session):
-- `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`
-- `paw-init`, `paw-status`, `paw-work-shaping`
+- `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-final-review`
+- `paw-init`, `paw-status`, `paw-work-shaping`, `paw-rewind`
 
 **Subagent delegation** (delegate via `runSubagent`):
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
@@ -163,6 +168,7 @@ When pausing at a milestone, provide:
 - After Planning PR created: **Delegate to `paw-transition`** (this is a stage boundary)
 - After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR
 - After Phase PR created or push complete: **Delegate to `paw-transition`** (this is a stage boundary)
+- After `paw-final-review` completes: **Delegate to `paw-transition`** (this is a stage boundary)
 - After any review subagent: Check result, handle accordingly, then `paw-transition` if at stage boundary
 
 ### Work Shaping Detection
@@ -190,6 +196,7 @@ For each user request:
 - PR comment responses → `paw-review-response`
 - Documentation conventions → `paw-docs-guidance`
 - Status/help → `paw-status`
+- Workflow rollback → `paw-rewind`
 
 ## Error Handling
 

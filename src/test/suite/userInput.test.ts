@@ -3,7 +3,8 @@ import {
   isValidBranchName, 
   WorkflowMode,
   ReviewStrategy,
-  WorkflowModeSelection
+  WorkflowModeSelection,
+  FinalReviewConfig
 } from '../../ui/userInput';
 
 /**
@@ -103,5 +104,47 @@ suite('Review Strategy Types', () => {
     
     assert.strictEqual(prsStrategy, 'prs');
     assert.strictEqual(localStrategy, 'local');
+  });
+});
+
+/**
+ * Final Review configuration type tests.
+ * 
+ * Verify that FinalReviewConfig interface accepts valid configurations.
+ */
+suite('Final Review Config Types', () => {
+  test('FinalReviewConfig works when disabled', () => {
+    const config: FinalReviewConfig = {
+      enabled: false,
+      mode: 'single-model',
+      interactive: true
+    };
+    
+    assert.strictEqual(config.enabled, false);
+    assert.strictEqual(config.mode, 'single-model');
+    assert.strictEqual(config.interactive, true);
+  });
+
+  test('FinalReviewConfig works with single-model mode', () => {
+    const config: FinalReviewConfig = {
+      enabled: true,
+      mode: 'single-model',
+      interactive: true
+    };
+    
+    assert.strictEqual(config.enabled, true);
+    assert.strictEqual(config.mode, 'single-model');
+  });
+
+  test('FinalReviewConfig works with multi-model mode', () => {
+    const config: FinalReviewConfig = {
+      enabled: true,
+      mode: 'multi-model',
+      interactive: false
+    };
+    
+    assert.strictEqual(config.enabled, true);
+    assert.strictEqual(config.mode, 'multi-model');
+    assert.strictEqual(config.interactive, false);
   });
 });

@@ -6,7 +6,7 @@ The PAW Implementation Workflow transforms feature ideas into production-ready c
 
 The implementation workflow uses a **skills-based architecture**:
 
-- **PAW Agent**: Compact orchestrator (~4KB) that reasons about user intent
+- **PAW Agent**: Compact orchestrator that reasons about user intent
 - **Workflow Skill**: `paw-workflow` provides guidance on activities, transitions, and policies
 - **Activity Skills**: Specialized skills for each workflow stage
 - **Utility Skills**: Shared mechanics for git operations, PR comments, and documentation
@@ -14,8 +14,29 @@ The implementation workflow uses a **skills-based architecture**:
 ## Workflow Stages
 
 ```
-Issue → Specification → Research → Planning → Implementation → Final PR
+Issue → Specification → Planning → Implementation → Finalization
 ```
+
+### Pre-Specification: Work Shaping (Optional)
+
+**Skill:** `paw-work-shaping`
+
+When starting with a vague idea rather than a clear issue, the Work Shaping utility helps clarify requirements before specification begins.
+
+**When to Use:**
+
+- Exploratory requests ("I want to improve performance...")
+- Vague or open-ended ideas
+- Multiple possible approaches that need narrowing
+
+**Process:**
+
+1. Agent-led Q&A to progressively clarify the idea
+2. Research codebase context as needed
+3. Produce structured `WorkShaping.md` artifact
+4. Feed clarified requirements into `paw-spec`
+
+**Note:** Work Shaping is automatically triggered when the PAW agent detects exploratory language or explicit uncertainty.
 
 ### Stage 01 — Specification
 
@@ -41,7 +62,7 @@ Turn an issue or brief into a testable specification with factual research about
 2. `paw-spec` generates research questions about the current system
 3. `paw-spec-research` answers questions and produces factual documentation
 4. Iterate until spec is clear, complete, and testable
-5. `paw-spec-review` validates spec quality (optional)
+5. `paw-spec-review` validates spec quality **(mandatory)**
 
 ### Stage 02 — Implementation Plan
 
@@ -65,7 +86,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 1. `paw-code-research` maps relevant code areas, dependencies, and documentation infrastructure
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
-4. `paw-plan-review` validates plan feasibility (optional)
+4. `paw-plan-review` validates plan feasibility **(mandatory)**
 5. Open Planning PR for review (PRs strategy)
 
 ### Stage 03 — Phased Implementation
@@ -117,6 +138,40 @@ When the implementation plan includes a documentation phase:
 2. Creates `Docs.md` comprehensive technical documentation
 3. Updates project documentation (README, CHANGELOG, guides) per project conventions
 4. Verifies documentation builds correctly (if framework discovered in research)
+
+### Stage 03.5 — Final Review (Optional)
+
+**Skill:** `paw-final-review`
+
+Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext.
+
+**Inputs:**
+
+- Full diff (target branch vs base branch)
+- Spec.md requirements and success criteria
+- CodeResearch.md patterns
+
+**Outputs:**
+
+- Review artifacts in `.paw/work/<work-id>/reviews/` (gitignored)
+- Applied fixes (interactive or auto-apply based on configuration)
+
+**Process:**
+
+1. `paw-final-review` reads configuration from WorkflowContext (mode, interactive, models)
+2. Executes review (single-model or multi-model based on config)
+3. For multi-model: synthesizes findings across models
+4. Presents findings for resolution (interactive) or auto-applies (non-interactive)
+5. Proceeds to `paw-pr` when complete
+
+**Configuration:**
+
+- `Final Agent Review`: `enabled` | `disabled` (default: enabled)
+- `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Final Review Interactive`: `true` | `false` (default: true)
+- `Final Review Models`: comma-separated model names (for multi-model)
+
+**Note:** VS Code only supports single-model mode due to environment limitations.
 
 ### Stage 04 — Final PR
 
@@ -178,6 +233,12 @@ Executes plan phases by making code changes and ensures quality by running autom
 Reviews code changes, generates docstrings and comments, commits improvements, pushes branches, and opens PRs. Verifies review comment responses and replies to reviewers.
 
 **Focus:** Quality gate—making code reviewable.
+
+### paw-final-review
+
+Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
+
+**Focus:** Catch issues before external PR review.
 
 ### paw-status
 

@@ -17,7 +17,7 @@ Creates a complete PAW workflow structure with all necessary files and directori
     - **Branch name** (optional): Target branch name, or auto-derive from issue
     - **Workflow mode**: Full, Minimal, or Custom
     - **Review strategy**: PRs or Local (Minimal enforces Local)
-    - **Handoff mode**: Manual, Semi-Auto, or Auto
+    - **Review policy**: Always, Milestones, Planning-Only, or Never
     - **Artifact tracking**: Track (default) or Don't Track
 
 **What gets created:**
@@ -150,3 +150,17 @@ If workflow initialization fails:
 2. Check for uncommitted changes that might block branch creation
 3. Review the **PAW Workflow** output channel for detailed errors
 4. Verify disk permissions for the `.paw/` directory
+
+### WSL (Windows Subsystem for Linux)
+
+When using VS Code with WSL:
+
+- **Prompts directory**: The extension resolves the Windows-side path automatically (`/mnt/c/Users/<username>/AppData/Roaming/Code/User/prompts/`)
+- **File permissions**: Ensure the WSL user has write access to the Windows prompts directory
+- **Git operations**: Git runs in the WSL environment; ensure git is installed in WSL
+
+If agents aren't found, verify the prompts directory exists:
+
+```bash
+ls /mnt/c/Users/$USER/AppData/Roaming/Code/User/prompts/
+```

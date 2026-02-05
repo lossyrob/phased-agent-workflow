@@ -33,13 +33,18 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `issue_url` | No | none | URL |
 | `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |
 | `work_description` | No | none | text |
+| `final_agent_review` | No | `enabled` | `enabled`, `disabled` |
+| `final_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
+| `final_review_interactive` | No | `true` | boolean |
+| `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 
 ### Handling Missing Parameters
 
 When parameters are not provided:
 1. Apply defaults from the table above
-2. **Present configuration summary** and ask for confirmation before proceeding
-3. If user requests changes, update values and re-confirm
+2. Check user-level defaults in `copilot-instructions.md` or `AGENTS.md` (these override table defaults)
+3. **Present configuration summary** and ask for confirmation before proceeding
+4. If user requests changes, update values and re-confirm
 
 This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
 
@@ -82,6 +87,10 @@ Workflow Mode: <workflow_mode>
 Review Strategy: <review_strategy>
 Review Policy: <review_policy>
 Session Policy: <session_policy>
+Final Agent Review: <final_agent_review>
+Final Review Mode: <final_review_mode>
+Final Review Interactive: <final_review_interactive>
+Final Review Models: <final_review_models>
 Custom Workflow Instructions: <custom_instructions or "none">
 Initial Prompt: <work_description or "none">
 Issue URL: <issue_url or "none">

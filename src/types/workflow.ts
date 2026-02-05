@@ -20,6 +20,6 @@ export type ReviewPolicy = "always" | "milestones" | "planning-only" | "never";
 export type SessionPolicy = "per-stage" | "continuous";
 
 /**
- * Final Agent Review mode - determines whether and how pre-PR review runs.
+ * Final Agent Review mode - determines how pre-PR review runs when enabled.
  */
-export type FinalReviewMode = "disabled" | "single-model" | "multi-model";
+export type FinalReviewMode = "single-model" | "multi-model";

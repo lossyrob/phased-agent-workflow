@@ -28,7 +28,7 @@ Read WorkflowContext.md for:
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 {{#cli}}
-If mode is `multi-model`, parse the models list. Default: `gpt-5.2, gemini-3-pro, claude-opus-4.5`.
+If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
 {{/cli}}
 {{#vscode}}
 **Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
@@ -50,21 +50,12 @@ git diff <base-branch>...<target-branch>
 ### Step 3: Create Reviews Directory
 
 Create `.paw/work/<work-id>/reviews/` if it doesn't exist.
-Create `.paw/work/<work-id>/reviews/.gitignore` with content: `*`
+Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already present).
 
-{{#cli}}
-### Step 4: Execute Review (CLI)
+### Review Prompt (shared)
 
-**If single-model mode**:
-- Execute review using current session model
-- Save to `REVIEW.md`
+Use this prompt for all review executions (single-model or each multi-model subagent):
 
-**If multi-model mode**:
-- Spawn parallel subagents using `task` tool with `model` parameter for each configured model
-- Each subagent receives identical review prompt
-- Save per-model reviews to `REVIEW-{MODEL}.md`
-
-**Review prompt** (for each model):
 ```
 Review this implementation against the specification. Be critical and thorough.
 
@@ -93,7 +84,33 @@ For each finding, provide:
 Write findings in structured markdown.
 ```
 
-**After multi-model reviews complete**, generate synthesis:
+{{#cli}}
+### Step 4: Execute Review (CLI)
+
+**If single-model mode**:
+- Execute review using the prompt above
+- Save to `REVIEW.md`
+
+**If multi-model mode**:
+
+First, resolve model intents to actual model names (e.g., "latest GPT" → "GPT-5.2").
+
+**If Interactive = true**: Present resolved models for confirmation:
+```
+About to run multi-model review with:
+- GPT-5.2
+- Gemini 3 Pro Preview  
+- Claude Opus 4.5
+
+Proceed with these models, or specify different ones?
+```
+Allow user to confirm or provide alternative model list.
+
+Then spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the review prompt above. Save per-model reviews to `REVIEW-{MODEL}.md`.
+
+**After multi-model reviews complete**, generate synthesis.
+
+**Important**: If any findings involve interface changes, API modifications, or data flow updates, populate the Verification Checklist with specific components that need coordinated updates. This prevents half-fixes where only one side of an interface is updated.
 
 **REVIEW-SYNTHESIS.md structure**:
 ```markdown
@@ -113,10 +130,10 @@ Write findings in structured markdown.
 [Unique findings worth considering]
 
 ## Verification Checklist
-[For interface/data-flow changes, trace end-to-end]
-- [ ] Source component updated
-- [ ] Target component updated
-- [ ] Data flows complete
+[Populate with specific touchpoints for interface/data-flow changes]
+- [ ] [Component A] updated
+- [ ] [Component B] updated  
+- [ ] Data flows end-to-end from [source] → [target]
 
 ## Priority Actions
 ### Must Fix
@@ -133,38 +150,9 @@ Write findings in structured markdown.
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
-Execute single-model review using current session's model.
+**Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
 
-**Review prompt**:
-```
-Review this implementation against the specification. Be critical and thorough.
-
-## Specification
-[Include Spec.md content]
-
-## Implementation Diff
-[Include full diff]
-
-## Codebase Patterns
-[Include relevant patterns from CodeResearch.md]
-
-## Review Criteria
-1. **Correctness**: Do changes implement all spec requirements? Any gaps?
-2. **Pattern Consistency**: Does implementation follow established codebase patterns?
-3. **Bugs and Issues**: Logic errors, edge cases, race conditions, error handling gaps
-4. **Token Efficiency**: For prompts/skills, opportunities to reduce verbosity
-5. **Documentation**: Missing or outdated documentation
-
-For each finding, provide:
-- Issue description
-- Current code/text
-- Proposed fix
-- Severity: must-fix | should-fix | consider
-
-Write findings in structured markdown.
-```
-
-Save review to `REVIEW.md`.
+Execute single-model review using the shared review prompt above. Save to `REVIEW.md`.
 {{/vscode}}
 
 ### Step 5: Resolution

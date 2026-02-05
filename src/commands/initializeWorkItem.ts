@@ -31,13 +31,15 @@ function constructPawPromptArguments(
     review_policy: inputs.reviewPolicy,
     session_policy: inputs.sessionPolicy,
     track_artifacts: inputs.trackArtifacts,
-    final_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
+    final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
 
   // Add Final Review mode and interactive settings if enabled
   if (inputs.finalReview.enabled) {
     config.final_review_mode = inputs.finalReview.mode;
     config.final_review_interactive = inputs.finalReview.interactive;
+    // Include models for CLI compatibility (uses intent-based defaults)
+    config.final_review_models = 'latest GPT, latest Gemini, latest Claude Opus';
   }
 
   // Add optional fields

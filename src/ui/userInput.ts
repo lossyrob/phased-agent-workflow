@@ -436,34 +436,10 @@ export async function collectFinalReviewConfig(
     };
   }
 
-  // Step 2: Review mode (only if enabled)
-  const modeSelection = await vscode.window.showQuickPick(
-    [
-      {
-        label: "Single-Model",
-        description: "Current session model reviews (default for VS Code)",
-        detail: "Lower cost, faster execution",
-        value: 'single-model' as const,
-      },
-      {
-        label: "Multi-Model",
-        description: "Multiple models review in parallel (CLI only)",
-        detail: "Higher cost but catches more issues. Falls back to single in VS Code.",
-        value: 'multi-model' as const,
-      },
-    ],
-    {
-      placeHolder: "Select review mode",
-      title: "Final Review Mode",
-    }
-  );
+  // VS Code only supports single-model (multi-model requires parallel subagents)
+  // Skip mode selection - always use single-model
 
-  if (!modeSelection) {
-    outputChannel.appendLine("[INFO] Final review mode selection cancelled");
-    return undefined;
-  }
-
-  // Step 3: Interactive mode (only if enabled)
+  // Step 2: Interactive mode (only if enabled)
   const interactiveSelection = await vscode.window.showQuickPick(
     [
       {
@@ -492,7 +468,7 @@ export async function collectFinalReviewConfig(
 
   return {
     enabled: true,
-    mode: modeSelection.value,
+    mode: 'single-model',
     interactive: interactiveSelection.value,
   };
 }

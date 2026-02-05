@@ -36,7 +36,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_agent_review` | No | `enabled` | `enabled`, `disabled` |
 | `final_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
 | `final_review_interactive` | No | `true` | boolean |
-| `final_review_models` | No | `gpt-5.2, gemini-3-pro, claude-opus-4.5` | comma-separated model names |
+| `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 
 ### Handling Missing Parameters
 

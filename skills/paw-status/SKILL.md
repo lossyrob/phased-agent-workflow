@@ -87,16 +87,17 @@ Map state to guidance:
 | CodeResearch.md exists, no Plan | "Create plan: `plan`" |
 | Plan exists, no phase work | "Begin Phase 1: `implement`" |
 | Phase N complete, Phase N+1 exists | "Continue Phase N+1: `implement`" |
-| All phases complete, review enabled | "Run final review: `review`" |
-| All complete (or review disabled/done) | "Create final PR: `pr`" |
+| All phases complete, review enabled, no reviews/ | "Run final review: `final-review`" |
+| All phases complete, reviews/ exists | "Create final PR: `pr`" |
+| All phases complete, review disabled | "Create final PR: `pr`" |
 
 ## Workflow Mode Behavior
 
 ### Full Mode
-Expect: Spec → Spec Research (optional) → Code Research → Plan → Implementation (multi-phase) → Final Review (if enabled) → Docs → Final PR
+Expect: Spec → Spec Research (optional) → Code Research → Plan → Implementation (multi-phase, including Documentation phase) → Final Review (if enabled) → Final PR
 
 ### Minimal Mode
-Expect: Code Research → Plan → Implementation (single phase) → Final PR
+Expect: Code Research → Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR
 Skips: Spec, Spec Research (local strategy enforced)
 
 ### Custom Mode

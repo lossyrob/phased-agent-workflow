@@ -14,8 +14,10 @@ This installs PAW agents and skills to your [GitHub Copilot CLI](https://docs.gi
 
 ```bash
 cd your-repo
-ghcs "start a new PAW workflow for issue #123"
+copilot
 ```
+
+Use `/agent` to select **PAW** for implementation workflows or **PAW Review** for PR reviews.
 
 **Requirements**: Node.js 18+ and GitHub Copilot CLI installed.
 
@@ -163,10 +165,10 @@ Files are installed to:
 - `~/.copilot/agents/` - Agent files
 - `~/.copilot/skills/` - Skill directories
 
-Then use PAW with any `ghcs` session:
+Then use PAW in any `copilot` session:
 ```bash
-ghcs "start a new PAW workflow"
-ghcs "review PR #42"
+copilot
+# Use /agent to select PAW or PAW Review
 ```
 
 ### Using VS Code Extension

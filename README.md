@@ -10,16 +10,15 @@
 npx @paw-workflow/cli install copilot
 ```
 
-This installs PAW agents and skills to your [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line). Then start a workflow:
+This installs PAW agents and skills to your [GitHub Copilot CLI](https://github.com/github/copilot-cli). Then start a workflow:
 
 ```bash
-cd your-repo
 copilot
 ```
 
 Use `/agent` to select **PAW** for implementation workflows or **PAW Review** for PR reviews.
 
-**Requirements**: Node.js 18+ and GitHub Copilot CLI installed.
+**Requirements**: Node.js 18+ and [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed.
 
 ---
 

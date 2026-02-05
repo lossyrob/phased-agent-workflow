@@ -88,7 +88,7 @@ Human reviews and submits the pending review at the end. See [Review Workflow Do
 ### For Copilot CLI (Recommended)
 
 - Node.js 18.0.0 or later
-- [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line)
+- [GitHub Copilot CLI](https://github.com/github/copilot-cli)
 
 ### For VS Code Extension
 
@@ -124,50 +124,14 @@ copilot
 ### Using VS Code Extension
 
 1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
-2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette ([detailed instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix))
-3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/github/github-mcp-server) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) in VS Code for optimal agent integration
-4. **Open** the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and type `PAW` to see available commands
-5. **Start new work** with `PAW: New PAW Workflow`
-6. **Get help** anytime with `PAW: Get Work Status`
+2. **Install** in VS Code: `Extensions: Install from VSIX...` from the Command Palette
+3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/github/github-mcp-server) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
+4. **Start new work** with `PAW: New PAW Workflow` command
+5. **Check status** with `PAW: Get Work Status` command
 
-For manual agent installation, copy the `agents/` folder contents to VS Code's global prompts directory:
-- **Windows**: `%APPDATA%\Code\User\prompts`
-- **macOS**: `~/Library/Application Support/Code/User/prompts`
-- **Linux**: `~/.config/Code/User/prompts`
+The extension creates `.paw/work/<feature-slug>/` directories, manages git branches, and provides commands for workflow navigation. Use `copilot-instructions.md` or `AGENTS.md` for customization.
 
-Follow the workflow as described below and detailed in the [PAW Specification](paw-specification.md).
-
-### VS Code Extension Features
-
-The **PAW Workflow Extension** automates PAW agent installation and work item initialization.
-
-- **Automatic agent installation**: PAW agents install to VS Code prompts directory on first activation and appear in GitHub Copilot Chat
-- **New PAW Workflow command**: One command to create complete `.paw/work/<feature-slug>/` directory structure
-  - Creates `.paw/work/<feature-slug>/` with WorkflowContext.md
-  - Creates and checks out git branch
-  - Opens WorkflowContext.md for immediate editing
-  - Navigate stages using simple commands; prompt files generated on-demand when customization needed
-
-**Usage:**
-
-1. Open a git repository in VS Code
-2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
-3. Type "PAW: New PAW Workflow"
-4. Enter issue or work item URL (optional - press Enter to skip)
-5. Enter branch name (optional - press Enter to auto-derive from issue or description)
-6. Watch as your workflow structure is created automatically
-
-**Workflow Status:** At any time, run "PAW: Get Work Status" to check progress and get next-step recommendations.
-
-**Artifact Tracking:** PAW commits workflow artifacts to git by default. Select "Don't Track" at initialization, or run "PAW: Stop Tracking Artifacts" mid-workflow to exclude artifacts from commits.
-
-**Customization:** Use VS Code's standard `copilot-instructions.md` (project-level) or `AGENTS.md` files rather than PAW-specific instructions.
-
-**Requirements:** Git repository and GitHub Copilot extension installed and active.
-
-The extension streamlines initialization but is not required—you can create the directory structure manually following the [PAW Specification](paw-specification.md).
-
-**Uninstalling:** After uninstalling the extension, use the configure agents UI in GitHub Copilot Chat to remove the PAW agents.
+For manual installation without the extension, copy `agents/` to VS Code's prompts directory or follow the [PAW Specification](paw-specification.md).
 
 ## Workflow Modes
 

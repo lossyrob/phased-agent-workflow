@@ -28,6 +28,7 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - All phases in ImplementationPlan.md marked complete
 - All phase PRs merged (prs strategy) or commits pushed (local strategy)
 - Target branch exists with implementation commits
+- No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`)
 
 **Artifacts Exist** (check existence per Workflow Mode):
 - CodeResearch.md (required: all modes)

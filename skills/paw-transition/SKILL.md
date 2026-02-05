@@ -137,21 +137,15 @@ TRANSITION RESULT:
 
 Mark the `paw-transition` TODO complete after returning this output.
 
-## Promotion Flow
+## Candidate Resolution Markers
 
-When `promotion_pending = true`, PAW orchestrator handles candidate decisions (paw-transition only returns data).
-
-**Terminal markers** (resolve a candidate):
+Terminal markers used in Step 2.5 to identify resolved candidates:
+- `- [x] [promoted] <desc>` — Elaborated into a full phase
 - `- [x] [skipped] <desc>` — User chose not to pursue
 - `- [x] [deferred] <desc>` — Future work outside current workflow
 - `- [x] [not feasible] <desc>` — Code research revealed infeasibility
 
-**Decision outcomes**:
-- **Promote**: Invoke `paw-code-research` + `paw-planning` to create new phase, then implement
-- **Skip/Defer**: Update candidate with terminal marker, continue to next
-- **All resolved**: Proceed to `paw-pr`
-
-**Edge cases**: Empty section skips flow; user abandonment preserves state for later.
+Unresolved: `- [ ]` items without terminal tags. Empty section or all-resolved → `promotion_pending = false`.
 
 ## Guardrails
 

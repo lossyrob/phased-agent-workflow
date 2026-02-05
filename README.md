@@ -31,6 +31,14 @@ PAW integrates with GitHub Pull Requests at every implementation step, enabling 
 
 **Why context-driven?** AI agents work best when given clear, accumulated context rather than open-ended prompts. PAW's phased approach ensures agents have the specification, codebase understanding, and implementation plan they need before touching code—reducing hallucination, improving quality, and making the work auditable.
 
+## Key Benefits
+
+- **PR-integrated workflow** — Every implementation phase can create a PR for human review. Unlike local-only approaches, PAW fits into real team code review workflows.
+- **Dedicated research phases** — Spec Research and Code Research skills build documented understanding of existing behavior and code before planning begins.
+- **Rewindable at any layer** — Artifacts are checkpoints. If context drifts or requirements change, restart from spec, plan, or any phase.
+- **AI-powered PR review** — The Review workflow analyzes PRs through understanding → evaluation → feedback stages, generating evidence-based comments.
+- **Extensible skills architecture** — Compact orchestrator agents delegate to specialized skills. Add or customize skills for your workflow.
+
 ## Two Platforms
 
 PAW works with both **GitHub Copilot CLI** (terminal) and **VS Code** (GUI):
@@ -62,12 +70,6 @@ The **PAW agent** orchestrates the implementation workflow by loading the `paw-w
 | `paw-pr` | Open final PR to main |
 | `paw-status` | Check progress, recommend next steps |
 
-**Key benefits:**
-- Single orchestrator agent (~4KB) + on-demand skill loading
-- Intelligent routing based on user intent
-- Flexible execution—skills adapt to delegation context
-- Full workflow mode support (full/minimal/custom)
-
 ## Review Workflow
 
 The **PAW Review** agent reviews pull requests through three automated stages:
@@ -77,13 +79,6 @@ The **PAW Review** agent reviews pull requests through three automated stages:
 3. **Feedback** - Generates structured review comments with rationale
 
 Human reviews and submits the pending review at the end. See [Review Workflow Documentation](docs/specification/review.md) for details.
-
-## Characteristics
-
-* **Layered, iterative flow** — each artifact feeds the next.
-* **Rewindable** — any phase can restart cleanly if an upstream document is wrong or incomplete.
-* **Transparent** — every output is text-based and version-controlled in Git.
-* **Collaborative** — humans guide, agents execute and record progress.
 
 ## Requirements
 

@@ -155,12 +155,12 @@ If workflow initialization fails:
 
 When using VS Code with WSL:
 
-- **Prompts directory**: Uses Linux paths (`~/.config/Code/User/prompts/`)
-- **File permissions**: Ensure the WSL user has write access to prompts directory
+- **Prompts directory**: The extension resolves the Windows-side path automatically (`/mnt/c/Users/<username>/AppData/Roaming/Code/User/prompts/`)
+- **File permissions**: Ensure the WSL user has write access to the Windows prompts directory
 - **Git operations**: Git runs in the WSL environment; ensure git is installed in WSL
 
-If agents aren't found, verify the prompts directory exists in your WSL home directory:
+If agents aren't found, verify the prompts directory exists:
 
 ```bash
-ls ~/.config/Code/User/prompts/
+ls /mnt/c/Users/$USER/AppData/Roaming/Code/User/prompts/
 ```

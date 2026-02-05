@@ -1,6 +1,8 @@
 ## Overview
 
-The **Phased Agent Workflow (PAW)** streamlines development of GitHub Copilot chat modes and features by moving work through **staged, reviewable milestones** with **clear artifacts**. PAW separates the lifecycle into **workflow stages** (Specification → Planning → Implementation → Documentation → Integration) and, inside the Implementation stage, **implementation phases** (Phase 1…N) that ship incremental, reviewable PRs.
+**Phased Agent Workflow (PAW)** enables **Context-Driven Development**—a practice where AI agents build understanding through structured research and planning phases before writing code. Each phase produces durable artifacts that accumulate context and feed the next phase.
+
+PAW separates the lifecycle into **workflow stages** (Specification → Planning → Implementation → Finalization) and, inside the Implementation stage, **implementation phases** (Phase 1…N) that ship incremental, reviewable PRs.
 
 **Key properties**
 
@@ -169,7 +171,7 @@ Agents will log an informational message when using default values to indicate t
 ```
 agents/                         # orchestrator agent prompts (2 agents)
   PAW.agent.md                  # Implementation workflow orchestrator
-  PAW-Review.agent.md           # Review workflow orchestrator
+  PAW Review.agent.md           # Review workflow orchestrator
 
 skills/                         # activity and utility skills (27 skills)
   paw-spec/SKILL.md
@@ -222,7 +224,7 @@ Auto-generated from Work Title or issue title when not explicitly provided. Rema
 PAW uses a **2-agent + skills** architecture:
 
 - **PAW Agent** (`agents/PAW.agent.md`): Orchestrates implementation workflows
-- **PAW Review Agent** (`agents/PAW-Review.agent.md`): Orchestrates review workflows
+- **PAW Review Agent** (`agents/PAW Review.agent.md`): Orchestrates review workflows
 - **27 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
 
 ### Hybrid Execution Model
@@ -277,257 +279,128 @@ This preserves user collaboration for interactive work while leveraging context 
 
 ## Stages
 
-Below describes each **Stage** of the PAW process, including agents involved, inputs, outputs, and human workflow.
+Below describes each **Stage** of the PAW process, including skills involved, inputs, outputs, and workflow.
 
 ### Prerequisites
 
-**Inputs:** 
+**Inputs:**
 
-* Issue or work item if available, otherwise rough brief about the goals of the work.
-* A clean branch to track work (e.g., `feature/paw-prompts` or `user/rde/bugfix-123`).
+* Issue or work item (if available), or a brief describing the goals of the work
+* A clean branch to track work (e.g., `feature/paw-prompts` or `user/rde/bugfix-123`)
 
-**Human Prerequisite Actions:**
+**Skills:** `paw-init`
 
-* Create an issue or work item if none exists (title, description, links), or write up a brief description of the work that can be pasted into chat.
-* Create branch to track work; e.g., `feature/paw-prompts` or `user/rde/bugfix-123`.
-* **(Optional)** Create WorkflowContext.md to centralize parameters and eliminate repetition across stages. Refer to the minimal inline format provided in each agent instruction for the structure.
-
-**Artifacts:** issue link (optional), branches created, WorkflowContext.md (optional).
+The PAW agent bootstraps the workflow by creating `WorkflowContext.md` with all parameters (work ID, target branch, workflow mode, review strategy, review policy). For the PRs strategy, the planning branch (`<target_branch>_plan`) is also created.
 
 ---
 
-### Stage 01 - Specification
+### Stage 01 — Specification
 
-**Agents:** 
-
-* Spec Agent
-* Spec Research Agent
-
-**Inputs**:
-
-* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, Issue URL, remote, and additional inputs automatically. Otherwise:
-  * Issue URL (or brief describing the work)
-  * Target branch name (agent can also discover this from the current branch)
-  * Any design documents or traditional feature specs that provide additional context for this or a broader set of related work.
-
-**Outputs**:
-
-* `/.paw/work/<feature-slug>/Spec.md`
-* `/.paw/work/<feature-slug>/prompts/spec-research.prompt.md`
-* `/.paw/work/<feature-slug>/SpecResearch.md` containing System Behavior answers and a "User-Provided External Knowledge" section listing any optional unanswered external/context questions and user-provided context.
-
-**Human Workflow:**
-
-* Ensure a clean and up-to-date feature branch is checked out locally.
-* (Optional) If WorkflowContext.md exists, include it in the chat context when invoking the Spec Agent.
-* Ask the Spec Agent to draft the spec, providing the Issue link/ID (or brief describing the work), feature branch name, and any hard constraints.
-* The Spec Agent will interactively refine the spec with the developer. It will also provide the `spec-research.prompt.md` file with factual questions about the current system.
-* Review and refine `spec-research.prompt.md` to add any additional clarifying questions.
-* Run the Spec Research Agent to answer the questions in `spec-research.prompt.md` and produce `SpecResearch.md`. If external research tooling is unavailable, fill (or consciously skip) the "External Knowledge" checklist the agent outputs.
-* Iterate with the Spec Agent to refine the spec based on findings from `SpecResearch.md`.
-* Continue iterating with the above steps until the spec is clear, complete, and testable.
-
-Note the spec will be committed and pushed to the planning branch (`<target_branch>_plan`) at the end of the next stage.
-
----
-
-### Stage 02 - Implementation Plan
-
-**Agents:**
-
-* Code Research Agent
-* Implementation Plan Agent
+**Skills:** `paw-spec`, `paw-spec-research`, `paw-spec-review`
 
 **Inputs:**
 
-* **WorkflowContext.md** (optional): If present at `.paw/work/<feature-slug>/WorkflowContext.md`, provides target branch, Issue URL, remote, and artifact paths automatically. Otherwise:
-  * Target branch name (agent can also discover this from the current branch)
-  * `Spec.md` and `SpecResearch.md` from Stage 01 must be available in the expected location (`/.paw/work/<feature-slug>/`), or have their paths provided.
-
-**Outputs:**
-* `/.paw/work/<feature-slug>/CodeResearch.md`
-* `/.paw/work/<feature-slug>/ImplementationPlan.md`
-* `/.paw/work/<feature-slug>/prompts/code-research.prompt.md` (optional)
-* Planning PR opened/updated (`<target_branch>_plan` → `<target_branch>`)
-
-**Human Workflow:**
-- Ensure feature branch is checked out locally and updated with merged planning branch.
-- (Optional) If WorkflowContext.md exists, include it in the chat context when invoking agents.
-- Ask the Code Research Agent to map relevant code areas and dependencies based on the Spec and Spec Research documents, producing `CodeResearch.md`.
-- Review `CodeResearch.md` for completeness and accuracy. If necessary, create `prompts/code-research.prompt.md` with guidance and run it with the Code Research Agent to regenerate `CodeResearch.md`.
-- Ask the Implementation Plan Agent to draft a detailed implementation plan based on the Spec, Spec Research, and Code Research documents.
-- Collaborate with the Implementation Plan Agent to refine the plan and answer open questions.
-- If the Implementation Plan Agent makes requests for additional research via edits or creation of `code-research.prompt.md`, run the Code Research Agent as needed.
-- Continue iterating with the above steps until the plan is clear, complete, and broken into discrete Implementation Phases.
-- The Implementation Plan Agent will open or update the Planning PR with the final output documents from Stage 01 and Stage 02.
-- The developer will then review the PR and provide feedback or request changes as needed.
-- The developer will ask the Implementation Plan Agent to address any review comments.
-- The Implementation Plan Agent will address each comment with focused commits.
-- The developer will then review the PR again to ensure all comments have been addressed satisfactorily.
-- Once the Planning PR is approved, the developer will merge it and update the local target branch.
-- If tracking with an issue or work item, use the Status Agent to update the issue with status and links. This can occur when the Planning PR is opened, updated, or merged.
-
-**Optional Secondary Review:**
-
-- The developer may request another developer to review the Phase PR before merging. That review will be handled the same way as above, with the developer asking the Implementation Agent to address any review comments, and then asking the Implementation Review Agent to review the changes.
-
----
-
-### Stage 03 — Phased Implementation
-
-**Agents:** 
-
-* Implementation Agent
-* Implementation Review Agent
-
-**Inputs:**
-
-* **WorkflowContext.md** (optional): If present, provides target branch, remote, and ImplementationPlan.md path automatically. Otherwise:
-  * Target branch name (agent can also discover this from the current branch)
-  * `ImplementationPlan.md` from Stage 02 must be available in the expected location (`/.paw/work/<feature-slug>/`), or have its path provided. This provides paths to `Spec.md`, `SpecResearch.md`, along with other related context.
-  * The `CodeResearch.md` file.
-
+* Issue URL or brief describing the work
+* Target branch name
+* Design documents or additional context (optional)
 
 **Outputs:**
 
-* Phase PRs opened/updated (`<target_branch>_phase<N>` → `<target_branch>`)
+* `.paw/work/<work-id>/Spec.md` — Testable requirements document
+* `.paw/work/<work-id>/ResearchQuestions.md` — Research questions for fact-finding
+* `.paw/work/<work-id>/SpecResearch.md` — Factual documentation of current system behavior
 
-**Human Workflow:**
+**Workflow:**
 
-The implementation process follows a cycle for each phase: Implementation Agent makes changes → Implementation Review Agent reviews and enhances → developer reviews PR → address feedback → repeat until approved and merged.
+1. `paw-spec` drafts requirements from the issue/brief, focusing on what the feature must do (not how)
+2. `paw-spec` generates `ResearchQuestions.md` with factual questions about the current system
+3. `paw-spec-research` answers the questions and produces `SpecResearch.md` (behavioral, not code-level)
+4. Iterate with `paw-spec` to refine the spec based on research findings
+5. `paw-spec-review` validates spec quality and completeness **(mandatory)**
 
-- Ensure the target branch is checked out locally and updated with merged planning branch.
-- Ask the Implementation Agent to start implementing the first phase of the plan.
-- The Implementation Agent will create and checkout the implementation branch locally if it does not already exist.
-- The Implementation Agent will ask clarifying questions as needed. If more information about the current system is required, it may request that the Code Research Agent be run again with an updated prompt, in which case it will create or update `prompts/code-research.prompt.md` and ask the developer to run the Code Research Agent. At that time, the developer should review and refine the prompt to add any additional clarifying questions, and restart the process with the Code Research Agent.
-- Once there are no more clarifying questions, the Implementation Agent will proceed to implement the phase.
-- The Implementation Agent will run automated checks and ensure they pass.
-- Once completed, it will indicate that the local changes are ready for review.
-- The developer will then ask the Implementation Review Agent to review the changes made by the Implementation Agent.
-- The Implementation Review Agent will review the changes, suggest improvements, generate docstrings and code comments.
-- If the suggested changes are approved, the Implementation Review Agent will make those changes.
-- Once the review is complete, the Implementation Review Agent will push the changes to the implementation branch and open or update the Phase PR.
-- The developer will review the Phase PR and provide feedback or request changes as needed.
-- The developer will ask the Implementation Agent to address any review comments.
-- The Implementation Agent will first update the local branch from the remote to pull any commits added by reviewers, then read all review comments and determine which still need work (by checking commit history and conversation threads). It groups related comments that need addressing and addresses each group sequentially with focused commits that link to the comments. Commits are made locally only.
-- The developer will then ask the Implementation Review Agent to review the changes made by the Implementation Agent.
-- The Implementation Review Agent will review each change to ensure it addresses the comments, add any needed improvements, push all commits to the branch, and post a comprehensive summary comment documenting which review comments were addressed with which commits.
-- The developer will review the PR, use the summary to manually resolve addressed comments in the GitHub UI, and either approve or request further changes.
-- The developer will review the PR again and either approve it or request further changes.
-- This process will continue until the Phase PR is approved and ready to merge.
-- Once the Phase PR is approved, the developer will merge it and update the local target branch.
-- The developer will then ask the Implementation Agent to start implementing the next phase of the plan, and the process repeats until all phases are complete.
-
-**Optional Secondary Review:**
-- The developer may request another developer to review the Phase PR before merging. That review will be handled the same way as above, with the developer asking the Implementation Agent to address any review comments, and then asking the Implementation Review Agent to review the changes.
-
-**Flow Diagrams**
-
-Initial Phase Development:
-┌─────────────────────────┐
-│ Implementation Agent    │ Makes changes, commits locally
-│ (Forward Momentum)      │ ↓ Signals ready
-└─────────────────────────┘
-
-┌─────────────────────────┐
-│ Implementation Review   │ Reviews, adds docs, commits
-│ (Quality Gate)          │ ↓ Pushes both commits, opens PR
-└─────────────────────────┘
-
-┌─────────────────────────┐
-│ Human Review            │
-└─────────────────────────┘
-
-Review Comment Follow-up:
-┌─────────────────────────┐
-│ Implementation Agent    │ Determines which comments need work
-│ (Forward Momentum)      │ Groups comments, addresses each group
-└─────────────────────────┘ ↓ Commits locally, signals ready
-
-┌─────────────────────────┐
-│ Implementation Review   │ Verifies changes, adds improvements
-│ (Quality Gate)          │ Pushes all commits
-└─────────────────────────┘ ↓ Posts summary of addressed comments
-
-┌─────────────────────────┐
-│ Human Re-review         │ Uses summary to resolve comments in UI
-└─────────────────────────┘
+The specification focuses on functional/non-functional requirements, acceptance criteria, and measurable success conditions. It avoids implementation details.
 
 ---
 
-### Stage 04 — Documentation
+### Stage 02 — Planning
 
-**Agent:** Documenter Agent
-
-**Inputs:**
-
-* **WorkflowContext.md** (optional): If present, provides target branch, remote, and ImplementationPlan.md path automatically. Otherwise:
-  * `ImplementationPlan.md` from Stage 02 must be available in the expected location (`/.paw/work/<feature-slug>/`), or have its path provided. All Phases must be complete and merged to the target branch, with status updated in the plan.
-  * All PRs from the implementation phases (agent can search for these or refer to the issue/work item).
-
-**Outputs:** * `/.paw/work/<feature-slug>/Docs.md` + project specific documentation
-
-**Human Workflow:**
-- Ensure the target branch is checked out locally and up to date.
-- Ask the Documenter Agent to create documentation, giving references to all relevant inputs. Also provide any specific documentation guidelines or templates that should be followed if not already documented in copilot-instructions.md or other project docs guidance the agent can refer to.
-- The Documenter Agent will produce `Docs.md` and open a docs PR (`<target_branch>_docs` → `<target_branch>`).
-- The developer will review the docs PR and provide feedback or request changes as needed.
-- The developer will ask the Documenter Agent to address any review comments.
-- The Documenter Agent will address each comment with focused commits.
-- The developer will then review the PR again to ensure all comments have been addressed satisfactorily.
-- Once the docs PR is approved, the developer will merge it and update the local target branch.
-- If tracking with an issue or work item, use the Status Agent to update the issue with status and links. This can occur when the docs PR is opened, updated, or merged.
-
----
-
-### Stage 05 — Final PR to `main`
-
-**Agents:** 
-
-* PR Agent
-* Implementation Agent
-* Implementation Review Agent
+**Skills:** `paw-code-research`, `paw-planning`, `paw-plan-review`
 
 **Inputs:**
 
-* **WorkflowContext.md** (optional): If present, provides target branch, remote, and all artifact paths automatically. Otherwise:
-  * Target branch name (agent can also discover this from the current branch)
-  * All inputs and outputs from the Stage 04 Documentation stage
+* `Spec.md` and `SpecResearch.md` from Stage 01
+* Target branch name
 
 **Outputs:**
 
-* Final PR opened (`<target_branch>` → `main`)
+* `.paw/work/<work-id>/CodeResearch.md` — Technical mapping of relevant code with file:line references
+* `.paw/work/<work-id>/ImplementationPlan.md` — Detailed plan with discrete phases
+* Planning PR (`<target_branch>_plan` → `<target_branch>`) — PRs strategy only
 
-**Human Workflow:**
-- Ensure the target branch is checked out locally and up to date.
-- Ask the PR Agent to open the final PR to `main`.
-- The PR Agent will craft the PR description, including links to all relevant artifacts and a summary of changes, and create the final PR.
-- The developer will review the final PR and provide feedback or request changes as needed.
-- If review comments exist:
-  - Ask the Implementation Agent to address review comments on the final PR.
-  - Ask the Implementation Review Agent to verify changes and reply to reviewers.
-  - Repeat until approved.
-- Merge the final PR once approved.
-- If tracking with an issue or work item, use the Status Agent to update the issue. This can occur when the final PR is opened, updated, or merged.
+**Workflow:**
 
-**Flow Diagram**
+1. `paw-code-research` maps relevant code areas, dependencies, patterns, and documentation infrastructure
+2. `paw-planning` creates a detailed plan broken into discrete implementation phases
+3. Iterate collaboratively to refine the plan
+4. `paw-plan-review` validates plan feasibility and spec alignment **(mandatory)**
+5. For PRs strategy: commit artifacts and open Planning PR for review
 
-Final PR Review Comment Follow-up:
-┌─────────────────────────┐
-│ Implementation Agent    │ Determines which comments need work
-│ (Forward Momentum)      │ Groups comments, addresses on target branch
-└─────────────────────────┘ ↓ Commits locally, signals ready
-
-┌─────────────────────────┐
-│ Implementation Review   │ Verifies changes, adds improvements
-│ (Quality Gate)          │ Pushes all commits
-└─────────────────────────┘ ↓ Posts summary of addressed comments
-
-┌─────────────────────────┐
-│ Human Re-review         │
-└─────────────────────────┘
+Each implementation phase in the plan is a discrete chunk of work that can be reviewed and merged independently.
 
 ---
+
+### Stage 03 — Implementation
+
+**Skills:** `paw-implement`, `paw-impl-review`, `paw-docs-guidance`
+
+**Inputs:**
+
+* `ImplementationPlan.md` from Stage 02
+* `CodeResearch.md` for reference
+
+**Outputs:**
+
+* Code changes implementing each phase
+* Phase PRs (`<target_branch>_phase<N>` → `<target_branch>`) — PRs strategy only
+* `Docs.md` — Technical documentation (when plan includes documentation phase)
+
+**Workflow:**
+
+For each phase:
+
+1. `paw-implement` creates phase branch (PRs strategy) and implements changes
+2. `paw-implement` runs automated checks (tests, linting, type checking, build)
+3. `paw-impl-review` reviews changes, adds documentation improvements, pushes and opens Phase PR
+4. Developer reviews PR and provides feedback
+5. `paw-implement` addresses review comments with focused commits
+6. `paw-impl-review` verifies changes and pushes updates
+7. Merge when approved, repeat for next phase
+
+When the plan includes a documentation phase, `paw-implement` loads the `paw-docs-guidance` utility skill, creates `Docs.md`, and updates project documentation per project conventions.
+
+---
+
+### Stage 04 — Finalization
+
+**Skills:** `paw-final-review` (optional), `paw-pr`
+
+**Inputs:**
+
+* All artifacts from previous stages
+* All merged PRs (planning, phases) — PRs strategy
+
+**Outputs:**
+
+* Final PR (`<target_branch>` → `main`)
+
+**Workflow:**
+
+1. `paw-final-review` reviews the full implementation diff against spec (if review enabled)
+2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
+3. `paw-pr` crafts comprehensive PR description with decision audit trail
+4. `paw-pr` opens the final PR
+5. Address any review comments using `paw-implement` → `paw-impl-review` cycle
+6. Merge when approved
 
 ## Artifacts
 

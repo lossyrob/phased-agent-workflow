@@ -53,12 +53,10 @@ The Status Agent will analyze your progress and provide actionable next-step rec
 
 PAW guides you through structured phases:
 
-1. **Specification** — Turn rough ideas into testable requirements
-2. **Research** — Understand the codebase and system behavior
-3. **Planning** — Create detailed implementation plans
-4. **Implementation** — Execute plans with automated verification
-5. **Documentation** — Generate comprehensive docs
-6. **Final PR** — Open the pull request to main
+1. **Specification** — Turn ideas into testable requirements; research existing system behavior
+2. **Planning** — Map relevant code areas; create phased implementation plans
+3. **Implementation** — Execute plans with optional PR review at each phase
+4. **Finalization** — Open final PR to main with comprehensive description
 
 Each phase produces durable artifacts that feed the next, ensuring nothing falls through the cracks.
 

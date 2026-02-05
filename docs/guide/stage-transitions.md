@@ -208,18 +208,18 @@ The `paw-rewind` skill allows rolling back to a previous workflow state when you
 
 ### Available Rewind Targets
 
-| Target | Effect |
-|--------|--------|
-| `spec` | Clear SpecResearch.md, CodeResearch.md, ImplementationPlan.md |
-| `research` | Clear CodeResearch.md, ImplementationPlan.md |
-| `planning` | Clear ImplementationPlan.md, reset to pre-planning state |
-| `phase N` | Clear changes from phase N onwards |
+| Target | Effect | Restore Point |
+|--------|--------|---------------|
+| `start` | Reset to initialization | After WorkflowContext.md |
+| `spec` | Reset to post-specification (full mode only) | After Spec.md |
+| `planning` | Reset to post-research | After CodeResearch.md |
+| `phase N` | Reset to post-phase N | After Phase N completed |
 
 ### Safeguards
 
 - Rewind requires explicit confirmation
-- Git history is preserved (artifacts are restored, not deleted)
-- Cannot rewind past committed/pushed work without additional steps
+- Uses git reset to restore previous state; pushed history is preserved
+- If commits are pushed or PRs exist, additional manual steps may be required
 
 ### Example Usage
 

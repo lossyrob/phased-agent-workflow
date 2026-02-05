@@ -34,7 +34,7 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 
 | Execution Type | Skills | Why |
 |----------------|--------|-----|
-| **Direct** (in-session) | `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
+| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
 | **Subagent** (isolated) | `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`, `paw-transition` | Research and review activities that benefit from context isolation |
 
 This preserves conversation flow for interactive work while leveraging fresh context for focused research and review.

@@ -14,7 +14,7 @@ The implementation workflow uses a **skills-based architecture**:
 ## Workflow Stages
 
 ```
-Issue → Specification → Research → Planning → Implementation → Final PR
+Issue → Specification → Planning → Implementation → Finalization
 ```
 
 ### Pre-Specification: Work Shaping (Optional)

@@ -46,7 +46,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Target Branch | Branch where implementation merges |
 | Workflow Mode | `full`, `minimal`, or `custom` |
 | Review Strategy | `prs` or `local` |
-| Handoff Mode | `manual`, `semi-auto`, or `auto` |
+| Review Policy | `always`, `milestones`, `planning-only`, or `never` |
+| Session Policy | `per-stage` or `continuous` |
 | Issue URL | GitHub Issue or Azure DevOps Work Item |
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |

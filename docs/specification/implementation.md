@@ -6,7 +6,7 @@ The PAW Implementation Workflow transforms feature ideas into production-ready c
 
 The implementation workflow uses a **skills-based architecture**:
 
-- **PAW Agent**: Compact orchestrator (~4KB) that reasons about user intent
+- **PAW Agent**: Compact orchestrator that reasons about user intent
 - **Workflow Skill**: `paw-workflow` provides guidance on activities, transitions, and policies
 - **Activity Skills**: Specialized skills for each workflow stage
 - **Utility Skills**: Shared mechanics for git operations, PR comments, and documentation
@@ -14,8 +14,29 @@ The implementation workflow uses a **skills-based architecture**:
 ## Workflow Stages
 
 ```
-Issue → Specification → Research → Planning → Implementation → Final PR
+Issue → Specification → Planning → Implementation → Finalization
 ```
+
+### Pre-Specification: Work Shaping (Optional)
+
+**Skill:** `paw-work-shaping`
+
+When starting with a vague idea rather than a clear issue, the Work Shaping utility helps clarify requirements before specification begins.
+
+**When to Use:**
+
+- Exploratory requests ("I want to improve performance...")
+- Vague or open-ended ideas
+- Multiple possible approaches that need narrowing
+
+**Process:**
+
+1. Agent-led Q&A to progressively clarify the idea
+2. Research codebase context as needed
+3. Produce structured `WorkShaping.md` artifact
+4. Feed clarified requirements into `paw-spec`
+
+**Note:** Work Shaping is automatically triggered when the PAW agent detects exploratory language or explicit uncertainty.
 
 ### Stage 01 — Specification
 
@@ -41,7 +62,7 @@ Turn an issue or brief into a testable specification with factual research about
 2. `paw-spec` generates research questions about the current system
 3. `paw-spec-research` answers questions and produces factual documentation
 4. Iterate until spec is clear, complete, and testable
-5. `paw-spec-review` validates spec quality (optional)
+5. `paw-spec-review` validates spec quality **(mandatory)**
 
 ### Stage 02 — Implementation Plan
 
@@ -65,7 +86,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 1. `paw-code-research` maps relevant code areas, dependencies, and documentation infrastructure
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
-4. `paw-plan-review` validates plan feasibility (optional)
+4. `paw-plan-review` validates plan feasibility **(mandatory)**
 5. Open Planning PR for review (PRs strategy)
 
 ### Stage 03 — Phased Implementation

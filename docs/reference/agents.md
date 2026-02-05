@@ -9,7 +9,7 @@ PAW uses two AI chat modes ("agents") that orchestrate workflow activities throu
 | **PAW** | Implementation workflow orchestrator | Skills-based |
 | **PAW Review** | PR review workflow orchestrator | Skills-based |
 
-Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
+Both agents follow the same pattern: a compact orchestrator that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
 
 ---
 
@@ -19,14 +19,25 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
 
 **Purpose:** Execute the complete PAW implementation workflow—from specification through final PR—using dynamically loaded skills.
 
-**Invocation:** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
+**Invocation (VS Code):** `PAW: New PAW Workflow` command or `/paw` in Copilot Chat
 
-**Architecture:** The PAW agent uses a skills-based architecture:
+**Invocation (Copilot CLI):** `copilot --agent PAW` or use `/agent` to select PAW inside a session
+
+**Architecture:** The PAW agent uses a skills-based architecture with a **hybrid execution model**:
 
 1. Loads the `paw-workflow` skill for orchestration guidance
 2. Discovers available skills dynamically via `paw_get_skills`
-3. Delegates activities to specialized skills via subagents
+3. Delegates activities to specialized skills
 4. Applies Review Policy and Session Policy for workflow control
+
+**Hybrid Execution Model:**
+
+| Execution Type | Skills | Why |
+|----------------|--------|-----|
+| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
+| **Subagent** (isolated) | `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`, `paw-transition` | Research and review activities that benefit from context isolation |
+
+This preserves conversation flow for interactive work while leveraging fresh context for focused research and review.
 
 **Activity Skills:**
 
@@ -79,10 +90,19 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
 
 | Policy | Values | Description |
 |--------|--------|-------------|
-| Review Policy | `always` / `milestones` / `never` | When to pause for human review |
-| Session Policy | `per-stage` / `continuous` | Chat context management |
+| Review Policy | `always` / `milestones` / `planning-only` / `never` | When to pause for human review |
+| Session Policy | `per-stage` / `continuous` | Chat context management (CLI always uses `continuous`) |
 | Workflow Mode | `full` / `minimal` / `custom` | Workflow complexity |
 | Review Strategy | `prs` / `local` | PR-based or direct commits |
+
+**Review Policy Details:**
+
+| Policy | Behavior |
+|--------|----------|
+| `always` | Pause after every artifact is produced |
+| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
+| `never` | Proceed continuously without review pauses |
 
 ---
 
@@ -92,7 +112,9 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
 
 **Purpose:** Execute the complete PAW Review workflow using dynamically loaded skills.
 
-**Invocation:** `/paw-review <PR-number-or-URL>`
+**Invocation (VS Code):** `/paw-review <PR-number-or-URL>`
+
+**Invocation (Copilot CLI):** `copilot --agent PAW-Review` then provide the PR number or URL
 
 **Architecture:** The PAW Review agent uses a skills-based architecture:
 
@@ -145,10 +167,23 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
 
 ### Starting Workflows
 
+**GitHub Copilot CLI:**
+
+```bash
+copilot --agent PAW        # Start implementation workflow
+copilot --agent PAW-Review # Start review workflow
+```
+
+Or use `/agent` inside an existing session to switch to a PAW agent.
+
+**VS Code (Copilot Chat):**
+
 | Workflow | Command | Prompt |
 |----------|---------|--------|
 | Implementation | `PAW: New PAW Workflow` | `/paw` |
 | Review | — | `/paw-review <PR>` |
+
+**Note:** Slash commands like `/paw` and `/paw-review` are VS Code-specific prompt templates.
 
 ### Navigation Within Workflows
 
@@ -162,13 +197,16 @@ The PAW agent understands natural language requests and routes them to appropria
 
 ### Review Policy Modes
 
-PAW supports three review policies that control when the workflow pauses for human review:
+PAW supports four review policies that control when the workflow pauses for human review:
 
 | Policy | Behavior |
 |--------|----------|
 | **always** | Pause after every artifact is produced |
 | **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
 | **never** | Proceed continuously without review pauses |
+
+**Legacy Handoff Mode Mapping:** Older WorkflowContext.md files may use `Handoff Mode` instead of `Review Policy`. The mapping is: `manual` → `always`, `semi-auto` → `milestones`, `auto` → `never`.
 
 ## Next Steps
 

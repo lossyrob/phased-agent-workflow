@@ -9,24 +9,24 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
   work/                         # Implementation workflow
     <work-id>/
       WorkflowContext.md        # Required: workflow parameters
-      prompts/
-        spec-research.prompt.md # Research questions
-        code-research.prompt.md # Code research guidance
+      ResearchQuestions.md      # Research questions for spec research
       Spec.md                   # Feature specification
       SpecResearch.md           # Spec research findings
       CodeResearch.md           # Code research findings
       ImplementationPlan.md     # Implementation plan
       Docs.md                   # Documentation
+      WorkShaping.md            # Pre-spec ideation (optional)
   
   reviews/                      # Review workflow
-    PR-<number>/
+    PR-<number>/                # Single-repo: PR-123
+    PR-<number>-<repo-slug>/    # Multi-repo: PR-123-my-repo
       ReviewContext.md          # Review parameters
       ResearchQuestions.md      # Research questions for baseline analysis
       CodeResearch.md           # Pre-change baseline
-      DerivedSpec.md           # Reverse-engineered spec
-      ImpactAnalysis.md        # Impact analysis
-      GapAnalysis.md           # Gap analysis
-      ReviewComments.md        # Review comments
+      DerivedSpec.md            # Reverse-engineered spec
+      ImpactAnalysis.md         # Impact analysis
+      GapAnalysis.md            # Gap analysis
+      ReviewComments.md         # Review comments
 ```
 
 ---
@@ -46,7 +46,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Target Branch | Branch where implementation merges |
 | Workflow Mode | `full`, `minimal`, or `custom` |
 | Review Strategy | `prs` or `local` |
-| Handoff Mode | `manual`, `semi-auto`, or `auto` |
+| Review Policy | `always`, `milestones`, `planning-only`, or `never` |
+| Session Policy | `per-stage` or `continuous` |
 | Issue URL | GitHub Issue or Azure DevOps Work Item |
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
@@ -69,6 +70,18 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Quality Standard:** Every requirement must be testable—measurable, observable, unambiguous.
 
+### ResearchQuestions.md
+
+**Purpose:** Research questions to guide spec research.
+
+**Created by:** `paw-spec` skill
+
+**Contents:**
+
+- Questions about current system behavior
+- Areas needing clarification for specification
+- Optional external/context questions for user input
+
 ### SpecResearch.md
 
 **Purpose:** Factual documentation of how the current system works.
@@ -77,7 +90,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Contents:**
 
-- Answers to questions from `spec-research.prompt.md`
+- Answers to questions from `ResearchQuestions.md`
 - Current system behavior (conceptual, not code-level)
 - Component interactions and data flows
 - User-facing workflows and business rules
@@ -239,34 +252,6 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 - **Comment text** — What gets posted
 - **Rationale** — Evidence, baseline pattern, impact, best practice
 - **Assessment** — Usefulness, accuracy, trade-offs (never posted)
-
----
-
-## Prompt Files
-
-### spec-research.prompt.md
-
-**Purpose:** Guide Spec Research Agent on what to investigate.
-
-**Created by:** `paw-spec` skill
-
-**Contents:**
-
-- Questions about current system behavior
-- Areas needing clarification
-- Optional external/context questions
-
-### code-research.prompt.md
-
-**Purpose:** Guide Code Research Agent on what to map.
-
-**Created by:** `paw-planning` skill
-
-**Contents:**
-
-- Specific areas to investigate
-- Questions about code structure
-- Integration points to document
 
 ---
 

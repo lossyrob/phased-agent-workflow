@@ -56,10 +56,10 @@ Both platforms use the same PAW agents and skills—choose based on your preferr
 
 The **PAW agent** guides features from issue to merged PR through four stages:
 
-1. **Specification** — Translates issues into measurable specs with user stories and success criteria
-2. **Research** — Documents existing system behavior and maps relevant code areas
-3. **Planning** — Creates phased implementation plans breaking work into reviewable increments
-4. **Implementation** — Executes each phase, with optional PRs for human review at each step
+1. **Specification** — Translates issues into measurable specs; researches existing system behavior
+2. **Planning** — Maps relevant code areas; creates phased implementation plans
+3. **Implementation** — Executes each phase, with optional PRs for human review at each step
+4. **Finalization** — Opens final PR to main with comprehensive description
 
 ## Review Workflow
 

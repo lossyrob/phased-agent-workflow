@@ -202,3 +202,45 @@ The `paw-status` skill lists all workflows sorted by most recently modified, sho
 - Last modified time
 - Current stage
 
+## Rewinding the Workflow
+
+The `paw-rewind` skill allows rolling back to a previous workflow state when you need to make corrections.
+
+### Available Rewind Targets
+
+| Target | Effect | Restore Point |
+|--------|--------|---------------|
+| `start` | Reset to initialization | After WorkflowContext.md |
+| `spec` | Reset to post-specification (full mode only) | After Spec.md |
+| `planning` | Reset to post-research | After CodeResearch.md |
+| `phase N` | Reset to post-phase N | After Phase N completed |
+
+### Safeguards
+
+- Rewind requires explicit confirmation
+- Uses git reset to restore previous state; pushed history is preserved
+- If commits are pushed or PRs exist, additional manual steps may be required
+
+### Example Usage
+
+```
+Rewind to planning
+```
+
+```
+Rewind to phase 2
+```
+
+## Session Policy
+
+Session Policy controls chat context management. This is primarily relevant for VS Code, where long workflows may benefit from context resets.
+
+| Policy | Behavior |
+|--------|----------|
+| `per-stage` | Reset context at stage boundaries (VS Code only) |
+| `continuous` | Single session throughout workflow |
+
+**Note:** GitHub Copilot CLI always uses `continuous` mode (single-session).
+
+Session Policy is stored in `WorkflowContext.md` and can be changed by editing the file directly.
+

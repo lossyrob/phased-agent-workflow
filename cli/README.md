@@ -53,8 +53,8 @@ paw uninstall --force  # Skip confirmation prompt
 
 ## What Gets Installed
 
-- **Agents**: PAW workflow orchestrators (`PAW.agent.md`, `PAW-Review.agent.md`)
-- **Skills**: 26 activity skills for specification, planning, implementation, and review workflows
+- **Agents**: PAW workflow orchestrators (`PAW.agent.md`, `PAW Review.agent.md`)
+- **Skills**: Activity and utility skills for specification, planning, implementation, and review workflows
 
 Files are installed to:
 - `~/.copilot/agents/` - Agent files

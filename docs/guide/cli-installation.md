@@ -37,13 +37,13 @@ Two agent files are installed to `~/.copilot/agents/`:
 
 ### Skills
 
-26 activity skills are installed to `~/.copilot/skills/`, including:
+Activity and utility skills are installed to `~/.copilot/skills/`, including:
 
 - Specification skills: `paw-spec`, `paw-spec-research`, `paw-spec-review`
 - Planning skills: `paw-planning`, `paw-plan-review`, `paw-code-research`
 - Implementation skills: `paw-implement`, `paw-impl-review`, `paw-git-operations`
 - Review skills: `paw-review-*` (9 skills for the review workflow)
-- Utility skills: `paw-status`, `paw-workflow`, `paw-docs-guidance`
+- Utility skills: `paw-status`, `paw-workflow`, `paw-docs-guidance`, `paw-rewind`, `paw-work-shaping`, `paw-transition`
 
 ## Using PAW After Installation
 
@@ -51,12 +51,13 @@ After installation, start a Copilot CLI session and invoke PAW:
 
 ```bash
 # Start implementation workflow
-gh copilot chat
-> @PAW start work on issue #123
+copilot --agent PAW
 
 # Start review workflow  
-> @PAW-Review review PR #456
+copilot --agent PAW-Review
 ```
+
+Or use `/agent` inside an existing session to select a PAW agent.
 
 See [Two Workflows](two-workflows.md) for detailed usage instructions.
 
@@ -108,4 +109,6 @@ Restart your Copilot CLI session after installation.
 
 ### Permission errors
 
-Ensure you have write access to `~/.copilot/` and `~/.paw/` directories.
+Ensure you have write access to:
+- `~/.copilot/` — where agents and skills are installed
+- `~/.paw/copilot-cli/` — where the manifest file is stored

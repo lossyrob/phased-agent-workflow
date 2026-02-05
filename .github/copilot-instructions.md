@@ -207,6 +207,10 @@ description: Brief description for catalog display
 
 When prompts reference other agents, skills, or components, verify they still exist. Remove references to deleted agents or deprecated components.
 
+### Avoid Cross-File References Agents Can't Resolve
+
+Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-transition/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
+
 ### Don't Waste Context on Error Handling
 
 Let agents determine how to handle errors and report to users. Explicit error handling instructions consume tokens without adding value—agents can reason about appropriate error responses contextually.

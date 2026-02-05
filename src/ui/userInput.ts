@@ -31,6 +31,20 @@ export interface WorkflowModeSelection {
 }
 
 /**
+ * Final Agent Review configuration for pre-PR review step.
+ */
+export interface FinalReviewConfig {
+  /** Whether Final Agent Review is enabled */
+  enabled: boolean;
+  
+  /** Review mode: single-model or multi-model (only applies if enabled) */
+  mode: 'single-model' | 'multi-model';
+  
+  /** Whether review is interactive (apply/skip/discuss) or auto-apply */
+  interactive: boolean;
+}
+
+/**
  * User inputs collected for work item initialization.
  * 
  * This interface represents the minimal set of parameters required to initialize
@@ -66,6 +80,9 @@ export interface WorkItemInputs {
    * When false, a .gitignore is created to exclude artifacts from version control.
    */
   trackArtifacts: boolean;
+  
+  /** Final Agent Review configuration for pre-PR review step */
+  finalReview: FinalReviewConfig;
   
   /**
    * Optional issue or work item URL to associate with the work item.
@@ -367,6 +384,96 @@ export async function collectArtifactTracking(
 }
 
 /**
+ * Collect Final Agent Review configuration from user.
+ * 
+ * Presents Quick Pick menus for:
+ * 1. Enable/disable Final Agent Review
+ * 2. If enabled: Review mode (single-model or multi-model)
+ * 3. If enabled: Interactive mode (apply/skip/discuss vs auto-apply)
+ * 
+ * Note: VS Code can only execute single-model mode. Multi-model is CLI-only
+ * and will fall back to single-model in VS Code.
+ * 
+ * @param outputChannel - Output channel for logging user interaction events
+ * @returns Promise resolving to FinalReviewConfig, or undefined if user cancelled
+ */
+export async function collectFinalReviewConfig(
+  outputChannel: vscode.OutputChannel
+): Promise<FinalReviewConfig | undefined> {
+  // Step 1: Enable/disable Final Agent Review
+  const enabledSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: "Enabled",
+        description: "Run automated review before Final PR (default)",
+        detail: "Catches issues before external PR review",
+        value: true,
+      },
+      {
+        label: "Disabled",
+        description: "Skip pre-PR review step",
+        detail: "Go directly from implementation to Final PR",
+        value: false,
+      },
+    ],
+    {
+      placeHolder: "Enable Final Agent Review?",
+      title: "Final Agent Review",
+    }
+  );
+
+  if (!enabledSelection) {
+    outputChannel.appendLine("[INFO] Final Agent Review selection cancelled");
+    return undefined;
+  }
+
+  // If disabled, return config with defaults for mode/interactive
+  if (!enabledSelection.value) {
+    return {
+      enabled: false,
+      mode: 'single-model',
+      interactive: true,
+    };
+  }
+
+  // VS Code only supports single-model (multi-model requires parallel subagents)
+  // Skip mode selection - always use single-model
+
+  // Step 2: Interactive mode (only if enabled)
+  const interactiveSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: "Interactive",
+        description: "Review each finding: apply, skip, or discuss (default)",
+        detail: "You control what gets changed",
+        value: true,
+      },
+      {
+        label: "Auto-Apply",
+        description: "Automatically apply recommended fixes",
+        detail: "Faster but less control over changes",
+        value: false,
+      },
+    ],
+    {
+      placeHolder: "Select interaction mode",
+      title: "Final Review Interaction",
+    }
+  );
+
+  if (!interactiveSelection) {
+    outputChannel.appendLine("[INFO] Final review interaction selection cancelled");
+    return undefined;
+  }
+
+  return {
+    enabled: true,
+    mode: 'single-model',
+    interactive: interactiveSelection.value,
+  };
+}
+
+/**
  * Collect user inputs for work item initialization.
  * 
  * Presents sequential input prompts to the user:
@@ -457,6 +564,12 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  // Collect Final Agent Review configuration
+  const finalReview = await collectFinalReviewConfig(outputChannel);
+  if (finalReview === undefined) {
+    return undefined;
+  }
+
   return {
     targetBranch: targetBranch.trim(),
     workflowMode,
@@ -464,6 +577,7 @@ export async function collectUserInputs(
     reviewPolicy,
     sessionPolicy,
     trackArtifacts,
+    finalReview,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };
 }

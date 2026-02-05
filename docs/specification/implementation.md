@@ -108,6 +108,40 @@ When the implementation plan includes a documentation phase:
 3. Updates project documentation (README, CHANGELOG, guides) per project conventions
 4. Verifies documentation builds correctly (if framework discovered in research)
 
+### Stage 03.5 — Final Review (Optional)
+
+**Skill:** `paw-final-review`
+
+Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext.
+
+**Inputs:**
+
+- Full diff (target branch vs base branch)
+- Spec.md requirements and success criteria
+- CodeResearch.md patterns
+
+**Outputs:**
+
+- Review artifacts in `.paw/work/<work-id>/reviews/` (gitignored)
+- Applied fixes (interactive or auto-apply based on configuration)
+
+**Process:**
+
+1. `paw-final-review` reads configuration from WorkflowContext (mode, interactive, models)
+2. Executes review (single-model or multi-model based on config)
+3. For multi-model: synthesizes findings across models
+4. Presents findings for resolution (interactive) or auto-applies (non-interactive)
+5. Proceeds to `paw-pr` when complete
+
+**Configuration:**
+
+- `Final Agent Review`: `enabled` | `disabled` (default: enabled)
+- `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Final Review Interactive`: `true` | `false` (default: true)
+- `Final Review Models`: comma-separated model names (for multi-model)
+
+**Note:** VS Code only supports single-model mode due to environment limitations.
+
 ### Stage 04 — Final PR
 
 **Skill:** `paw-pr`
@@ -168,6 +202,12 @@ Executes plan phases by making code changes and ensures quality by running autom
 Reviews code changes, generates docstrings and comments, commits improvements, pushes branches, and opens PRs. Verifies review comment responses and replies to reviewers.
 
 **Focus:** Quality gate—making code reviewable.
+
+### paw-final-review
+
+Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
+
+**Focus:** Catch issues before external PR review.
 
 ### paw-status
 

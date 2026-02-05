@@ -34,7 +34,7 @@ PAW provides:
 Build features from scratch through structured phases:
 
 ```
-Issue → Specification → Research → Planning → Implementation → Documentation → Final PR
+Issue → Specification → Research → Planning → Implementation (incl. Documentation) → Final Review → Final PR
 ```
 
 **Use for:** New features, enhancements, refactors, and bug fixes.

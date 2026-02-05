@@ -18,3 +18,8 @@ export type ReviewPolicy = "always" | "milestones" | "planning-only" | "never";
  * Valid Session Policy values for context management.
  */
 export type SessionPolicy = "per-stage" | "continuous";
+
+/**
+ * Final Agent Review mode - determines how pre-PR review runs when enabled.
+ */
+export type FinalReviewMode = "single-model" | "multi-model";

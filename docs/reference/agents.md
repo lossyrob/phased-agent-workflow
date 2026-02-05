@@ -41,6 +41,7 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
 | `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
+| `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
 
@@ -66,7 +67,11 @@ Both agents follow the same pattern: a compact orchestrator (~4KB) that loads a 
    - For each phase: `paw-implement` → `paw-impl-review`
    - Produces: Code changes, Phase PRs (prs strategy)
 
-4. **Finalization Stage**
+4. **Final Review Stage** (if enabled)
+   - `paw-final-review`
+   - Produces: Review artifacts in `.paw/work/<work-id>/reviews/`
+
+5. **Finalization Stage**
    - `paw-pr`
    - Produces: Final PR to main
 

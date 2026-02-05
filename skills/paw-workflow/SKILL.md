@@ -64,6 +64,7 @@ Humans have final authority over all workflow decisions:
 | `paw-plan-review` | Review plan for feasibility, spec alignment | Review feedback |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
+| `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 
 **Note**: Phase PR creation is handled by PAW agent (using `paw-git-operations`) after `paw-impl-review` passes.
@@ -83,7 +84,11 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── CodeResearch.md         # Implementation details with file:line refs
 ├── ImplementationPlan.md   # Phased implementation plan
 ├── Docs.md                 # Technical documentation (created during final implementation phase)
-└── prompts/                # Generated prompt files (optional)
+├── prompts/                # Generated prompt files (optional)
+└── reviews/                # Final Agent Review artifacts (gitignored)
+    ├── REVIEW.md           # Single-model review
+    ├── REVIEW-{MODEL}.md   # Per-model reviews (multi-model)
+    └── REVIEW-SYNTHESIS.md # Synthesis (multi-model)
 ```
 
 **Work ID Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
@@ -110,6 +115,10 @@ Per phase in ImplementationPlan.md:
 
 Final phase typically includes documentation (Docs.md, README, CHANGELOG).
 
+### Final Review Stage (if enabled)
+1. `paw-final-review`: Review full implementation against spec
+2. Interactive: apply/skip/discuss findings; Non-interactive: auto-apply
+
 ### Finalization Stage
 1. `paw-pr`: Pre-flight validation, create final PR
 
@@ -125,7 +134,7 @@ Load `paw-review-response` utility skill for comment mechanics.
 
 ## Execution Model
 
-**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
+**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-final-review`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
 
 **Subagent delegation**: `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 

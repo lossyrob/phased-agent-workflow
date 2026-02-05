@@ -2,28 +2,39 @@
 
 <div align="center" style="margin: 2em 0;">
 <img src="https://raw.githubusercontent.com/lossyrob/phased-agent-workflow/main/img/paw-logo.png" alt="PAW Logo" width="200"/>
+<h3>Context-Driven Development for GitHub Copilot</h3>
 </div>
 
-**PAW** is a VS Code extension that coordinates multi-stage AI agent workflows for feature implementation and code review. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
+**PAW** enables **Context-Driven Development**—a practice where AI agents build understanding through structured research and planning phases before writing code. Each phase produces durable artifacts that accumulate context and feed the next phase.
 
 ## Why PAW?
 
-Building features with AI coding agents is powerful, but without structure, it's easy to lose track of decisions, introduce inconsistencies, or struggle to iterate when things go wrong.
+AI agents work best when given clear, accumulated context rather than open-ended prompts. Without structure, it's easy to lose track of decisions, introduce inconsistencies, or struggle to iterate when things go wrong.
 
 PAW provides:
 
-- **Structured phases** — Move from spec to implementation to docs with clear checkpoints
-- **Durable artifacts** — Every decision is captured in version-controlled Markdown
-- **Rewindability** — Fix upstream problems and regenerate downstream work
-- **Human oversight** — You approve specs, plans, and PRs at critical decision points
-- **Two workflows** — Build new features OR review existing pull requests
+- **PR-integrated workflow** — Every implementation phase can create a PR for human review
+- **Dedicated research phases** — Build documented understanding before planning begins
+- **Rewindable at any layer** — Artifacts are checkpoints; restart from spec, plan, or any phase
+- **AI-assisted code review** — Review workflow helps human reviewers by surfacing impacts and drafting feedback
+- **Extensible skills architecture** — Compact orchestrator agents delegate to specialized skills
 
 ## Quick Start
 
-1. [Install the extension](guide/index.md#quick-install) from GitHub Releases
-2. Open a Git repository in VS Code
+### Copilot CLI (Recommended)
+
+```bash
+npx @paw-workflow/cli install copilot
+copilot --agent PAW
+```
+
+### VS Code Extension
+
+1. [Download the extension](https://github.com/lossyrob/phased-agent-workflow/releases) from GitHub Releases
+2. Install via `Extensions: Install from VSIX...`
 3. Run `PAW: New PAW Workflow` from the Command Palette
-4. Follow the guided workflow through each stage
+
+Both platforms use the same PAW agents and skills.
 
 [Get Started →](guide/index.md){ .md-button .md-button--primary }
 
@@ -31,10 +42,10 @@ PAW provides:
 
 ### Implementation Workflow
 
-Build features from scratch through structured phases:
+Build features from issue to merged PR through four stages:
 
 ```
-Issue → Specification → Research → Planning → Implementation → Documentation → Final PR
+Specification → Research → Planning → Implementation
 ```
 
 **Use for:** New features, enhancements, refactors, and bug fixes.
@@ -43,10 +54,10 @@ Issue → Specification → Research → Planning → Implementation → Documen
 
 ### Review Workflow
 
-Thoroughly review pull requests with evidence-based feedback:
+Assist human reviewers with evidence-based feedback:
 
 ```
-PR → Understanding → Evaluation → Feedback Generation
+Understanding → Evaluation → Feedback
 ```
 
 **Use for:** Reviewing any PR—especially large or poorly-documented ones.
@@ -57,20 +68,20 @@ PR → Understanding → Evaluation → Feedback Generation
 
 | Concept | Description |
 |---------|-------------|
-| **Stages** | Workflow milestones (Specification, Planning, Implementation, etc.) |
+| **Stages** | Workflow milestones (Specification, Planning, Implementation) |
 | **Phases** | Discrete implementation chunks within the Implementation stage |
-| **Agents** | Specialized AI chat modes that handle specific stages |
+| **Skills** | Specialized capabilities loaded by orchestrator agents |
 | **Artifacts** | Durable Markdown documents produced at each stage |
 
 ## Documentation
 
 - **[Getting Started](guide/index.md)** — Install PAW and start your first workflow
-- **[Workflow Modes](guide/workflow-modes.md)** — Configure Full, Minimal, or Custom modes
+- **[Workflow Modes](guide/workflow-modes.md)** — Configure Full or Minimal modes
 - **[Specification](specification/index.md)** — Deep dive into PAW's workflow design
-- **[Agents Reference](reference/agents.md)** — All PAW agents and their purposes
+- **[Reference](reference/agents.md)** — PAW agents and skills
 
 ## Requirements
 
-- VS Code with GitHub Copilot
+- [GitHub Copilot CLI](https://github.com/github/copilot-cli) or VS Code with GitHub Copilot
+- Node.js 18+ (for CLI installation)
 - Git repository
-- GitHub MCP Tools or Azure DevOps MCP Tools (recommended)

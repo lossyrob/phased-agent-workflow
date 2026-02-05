@@ -1,19 +1,19 @@
 ## Overview
 
-The **Phased Agent Workflow (PAW)** streamlines development of GitHub Copilot chat modes and features by moving work through **staged, reviewable milestones** with **clear artifacts**. PAW separates the lifecycle into **workflow stages** (Specification → Planning → Implementation → Documentation → Integration) and, inside the Implementation stage, **implementation phases** (Phase 1…N) that ship incremental, reviewable PRs.
+**Phased Agent Workflow (PAW)** enables **Context-Driven Development**—a practice where AI agents build understanding through structured research and planning phases before writing code. Each phase produces durable artifacts that accumulate context and feed the next phase.
+
+PAW separates the lifecycle into **workflow stages** (Specification → Research → Planning → Implementation) and, inside the Implementation stage, **implementation phases** (Phase 1…N) that ship incremental, reviewable PRs.
 
 **Key properties**
 
+* **Context-Driven** – Research and planning phases build documented understanding before code is written.
 * **Traceable** – Every stage produces durable Markdown artifacts committed to Git and reviewed via PRs.
-* **Rewindable** – Any stage can restart. If you see the agents are implementing incorrectly, you can always go back to the spec or plan and fix it, and then re-run downstream stages.
-* **Agentic** – Purpose‑built chat modes (“agents”) own the work of each stage.
-* **Human‑in‑the‑loop** – Humans approve specs/plans, review PRs, and decide when to rewind.
-* **Consistent surfaces** – Issues and PRs stay in sync via a lightweight Status agent.
+* **Rewindable** – Any stage can restart. If context drifts or requirements change, go back to spec or plan and re-run downstream stages.
+* **PR-Integrated** – Every implementation phase can create a PR for human review, fitting into real team code review workflows.
+* **Human-in-the-loop** – Humans approve specs/plans, review PRs, and decide when to rewind.
 
 > **Terminology note:** In PAW, **Stages** refer to workflow milestones (e.g., Specification Stage). Within the **Implementation Stage**, work is split into **Implementation Phases** (Phase 1, Phase 2, …) to keep PRs small and reviewable.
 > *PAW is staged, and its implementation is phased.*
-
----
 
 ## Workflow Modes
 

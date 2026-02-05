@@ -4,66 +4,70 @@ This guide will help you get up and running with **Phased Agent Workflow (PAW)**
 
 ## Prerequisites
 
-Before you begin, ensure you have:
-
-- **VS Code** with GitHub Copilot installed and active
 - **Git repository** for your project
-- One of the following platform integrations (authenticated and configured):
-    - **GitHub** with GitHub MCP Tools
-    - **Azure DevOps** with Azure DevOps MCP Tools
+- One of:
+    - [GitHub Copilot CLI](https://github.com/github/copilot-cli) + Node.js 18+
+    - VS Code with GitHub Copilot
 
-## Quick Install
+## Installation
+
+### Option 1: Copilot CLI (Recommended)
+
+```bash
+npx @paw-workflow/cli install copilot
+```
+
+Then start a workflow:
+
+```bash
+copilot --agent PAW
+```
+
+### Option 2: VS Code Extension
 
 1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
+2. **Install** via Command Palette: `Extensions: Install from VSIX...`
+3. Run `PAW: New PAW Workflow` to start
 
-2. **Install** in VS Code using one of these methods:
-    - Command Palette: `Extensions: Install from VSIX...`
-    - Command line: `code --install-extension paw-workflow-X.X.X.vsix`
-
-3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/github) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp-server) in VS Code for optimal agent integration. See the [MCP Server Setup Guide](https://modelcontextprotocol.io/quickstart/user) for configuration instructions.
+Both options use the same PAW agents and skills—choose based on your preferred interface.
 
 ## Starting Your First Workflow
 
-### Create a New PAW Workflow
+### With Copilot CLI
+
+```bash
+copilot --agent PAW
+# Then tell PAW what you want to build, e.g.:
+# "Start a new workflow for adding user authentication"
+```
+
+### With VS Code
 
 1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 2. Type **"PAW: New PAW Workflow"**
-3. Enter the issue or work item URL (optional—press Enter to skip)
-4. Enter a branch name (optional—press Enter to auto-derive from issue or description)
-5. Select your workflow mode and review strategy
+3. Enter the issue URL or description
+4. Select your workflow mode
 
-PAW will create your workflow structure automatically:
+PAW will create your workflow structure:
 
 ```
 .paw/work/<feature-slug>/
   WorkflowContext.md    # Your workflow parameters
 ```
 
-### Check Workflow Status
-
-At any time during a workflow:
-
-1. Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
-2. Type **"PAW: Get Work Status"**
-3. Select your work item or choose "Auto-detect from context"
-
-The Status Agent will analyze your progress and provide actionable next-step recommendations.
-
 ## Workflow Overview
 
-PAW guides you through structured phases:
+PAW guides you through structured stages:
 
-1. **Specification** — Turn rough ideas into testable requirements
+1. **Specification** — Turn ideas into testable requirements
 2. **Research** — Understand the codebase and system behavior
-3. **Planning** — Create detailed implementation plans
-4. **Implementation** — Execute plans with automated verification
-5. **Documentation** — Generate comprehensive docs
-6. **Final PR** — Open the pull request to main
+3. **Planning** — Create phased implementation plans
+4. **Implementation** — Execute plans with optional PR review at each phase
 
-Each phase produces durable artifacts that feed the next, ensuring nothing falls through the cracks.
+Each stage produces durable artifacts that accumulate context and feed the next.
 
 ## Next Steps
 
-- [Workflow Modes](workflow-modes.md) — Learn about Full, Minimal, and Custom modes
+- [Workflow Modes](workflow-modes.md) — Learn about Full and Minimal modes
 - [Two Workflows](two-workflows.md) — Understand Implementation vs Review workflows
-- [Specification](../specification/index.md) — Deep dive into the PAW specification
+- [CLI Installation](cli-installation.md) — Detailed CLI setup and management

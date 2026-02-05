@@ -221,123 +221,42 @@ The extension streamlines initialization but is not required—you can create th
 
 ## Workflow Modes
 
-PAW supports three workflow modes—**Full**, **Minimal**, and **Custom**—to match your task scope and development style. Each mode determines which workflow stages are included and how work is reviewed (via intermediate PRs or locally on a single branch).
+PAW supports three workflow modes to match your task scope:
 
-**Quick Overview:**
-- **Full Mode**: All stages from Spec through Documentation. Supports both PRs (intermediate reviews) and Local (single branch) strategies.
-- **Minimal Mode**: Core stages only (Code Research → Implementation → Final PR). Enforces Local strategy for simplicity.
-- **Custom Mode**: User-defined stages and review strategy based on your specific workflow needs.
+- **Full Mode**: All stages (Spec → Research → Planning → Implementation → Final PR). Supports both PRs strategy (intermediate reviews) and Local strategy (single branch).
+- **Minimal Mode**: Core stages only (Code Research → Implementation → Final PR). Uses Local strategy.
+- **Custom Mode**: User-defined stages and strategy.
 
-When using the VS Code extension's `PAW: New PAW Workflow` command, you'll select your workflow mode and review strategy during initialization. Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.
+Mode and strategy are set in `WorkflowContext.md` during initialization. See the [PAW Specification](paw-specification.md#workflow-modes) for details.
 
-For detailed information about each mode, when to use them, and how review strategies work, see the [PAW Specification](paw-specification.md#workflow-modes).
+## Review Policy
 
-## Workflow Handoffs
+PAW supports different review policies controlling when the workflow pauses for human input:
 
-PAW supports intelligent stage navigation through three handoff modes—**Manual**, **Semi-Auto**, and **Auto**—to adapt to your experience level and the nature of your work.
+- **always**: Pause after every artifact
+- **milestones**: Pause at Spec.md, ImplementationPlan.md, Phase PR completion, and Final PR
+- **planning-only**: Pause at Spec.md, ImplementationPlan.md, and Final PR only (requires Local strategy)
+- **never**: Auto-proceed unless blocked
 
-### Handoff Modes
-
-**Manual Mode** (Default)
-- Full control over stage transitions
-- Agents present next-step options at completion
-- You explicitly command each transition
-- Best for learning PAW or when you want to review and decide at each step
-
-**Semi-Auto Mode**
-- Thoughtful automation at research and review transitions
-- Automatic handoffs at designated points (Spec → Research → Spec, Phase → Review)
-- Pauses at key decision points (after Planning, before Implementation)
-- Best for experienced users who want speed with control at critical moments
-
-**Auto Mode**
-- Full automation through all workflow stages
-- Agents chain automatically with only tool approval interactions
-- Requires local review strategy (incompatible with intermediate PRs)
-- Best for routine work where you trust agents to complete the workflow
-
-### Stage Transition Commands
-
-After completing a stage, agents present contextual next-step options. Use simple commands to transition:
-
-- `research` or `start research` → Move to Spec Research Agent
-- `code` or `code research` → Move to Code Research Agent
-- `plan` → Move to Implementation Plan Agent
-- `implement Phase 2` → Start Implementation Agent for Phase 2
-- `review` → Move to Implementation Review Agent
-- `docs` → Move to Documenter Agent
-- `pr` → Move to PR Agent
-- `status` → Check workflow status
-
-**Important:** Commands starting with specific keywords (like `feedback:`, `address comments`, `check pr`) are recognized as handoff triggers. Agents will transition to the appropriate stage rather than acting on the command themselves. For example, saying `feedback: add error handling` in local strategy hands off to the Implementation Agent instead of having the current agent make the change.
-
-### The Continue Command
-
-When agents complete their work, they present a handoff message with "Next Steps" listing available commands. Saying `continue` proceeds to the **first option** in that list (the recommended default action). The agent's guidance line explicitly states what `continue` will do:
-
-```
-You can ask me to generate a prompt file for the next stage, ask for 'status' or 'help', or say 'continue' to proceed to review.
-```
-
-This makes continue behavior predictable—you always know which agent will be invoked next.
-
-### Inline Instructions
-
-Customize agent behavior without creating prompt files by providing inline instructions:
-
-```
-implement Phase 2 but add rate limiting
-continue but focus on error handling
-research but skip external dependencies
-```
-
-The inline instruction is passed directly to the target agent alongside the Work ID, allowing for quick customization without filesystem management.
-
-For detailed information about handoff modes, transition patterns, and customization options, see the [PAW Specification](paw-specification.md#workflow-handoffs).
+Say `continue` to proceed after any pause, or make changes to the current artifact before continuing.
 
 ## Workflow
 
-![full workflow](./img/full-workflow.png)
+### Stage 1: Specification
 
-### Stage 1: Creating the spec
+The Spec skill translates an issue or brief into a measurable `Spec.md` with user stories, requirements, and success criteria. The Spec Research skill captures system-behavior facts in `SpecResearch.md` so downstream stages start with shared context.
 
-Spec and Spec Research agents collaborate to translate an issue into a measurable `Spec.md`, capture system-behavior facts in `SpecResearch.md` (with a section for optional user-provided external knowledge), and surface any remaining questions so downstream agents start with shared, testable requirements. Each spec includes Overview and Objectives narrative sections that provide big-picture context before diving into detailed user stories and requirements.
+### Stage 2: Planning
 
-![stage 1](./img/workflow-stage-1.png)
+The Code Research skill maps relevant code areas and dependencies into `CodeResearch.md`. The Planning skill then creates a phased `ImplementationPlan.md` breaking work into reviewable increments.
 
-### Stage 2: Creating the Implementation Plan
+### Stage 3: Implementation
 
-Code Research and Implementation Plan agents map the current codebase, break the work into reviewable phases, and stage the planning branch/PR so every later change traces back to clear technical intentions.
+The Implementation skill executes each phase, making code changes and running checks. The Implementation Review skill reviews changes, adds documentation, and (with PRs strategy) opens Phase PRs for human review before merging to the target branch.
 
-![stage 2](./img/workflow-stage-2.png)
+### Stage 4: Final PR
 
-### Stage 3: Phased implementation
-
-Implementation and Implementation Review agents deliver each phase on its own branch, running checks, iterating on feedback, and keeping phase PRs small, auditable, and rewindable before they merge into the target branch.
-
-The implementation process uses a two-agent workflow:
-
-**Implementation Agent** — Makes code changes, runs automated checks, and addresses review comments by grouping related feedback into logical units and committing locally with messages that link to the comments being addressed.
-
-**Implementation Review Agent** — Reviews the Implementation Agent's work, suggests improvements, generates docstrings and code comments, pushes changes to open Phase PRs, and posts comprehensive summary comments documenting which review comments were addressed with which commits (enabling humans to manually resolve comments in the GitHub UI).
-
-This two-agent cycle continues until each Phase PR is approved and merged to the target branch.
-
-![stage 3](./img/workflow-stage-3.png)
-
-### Stage 4: Documentation
-
-The Documenter agent produces comprehensive technical documentation in `Docs.md` that explains what was built, how it works, why design decisions were made, and how to use it. It also updates project-specific documentation according to project guidance and opens a docs PR so documentation evolves in lockstep with the code.
-
-![stage 4](./img/workflow-stage-4.png)
-
-### Stage 5: Final PR
-
-The PR agent performs comprehensive pre-flight readiness checks (verifying all phase and docs PRs are merged, artifacts are current, and the target branch is up to date), crafts the final PR description with links to all artifacts and merged PRs, testing evidence, and deployment considerations, then creates the final PR and provides guidance on the merge process.
-
-If review comments exist on the final PR, the same two-agent workflow from Stage 3 applies: the Implementation Agent addresses comments with local commits on the target branch, and the Implementation Review Agent verifies changes, adds improvements, pushes commits, and posts summary comments for human reviewers.
-
-![stage 5](./img/workflow-stage-5.png)
+The PR skill performs pre-flight checks, crafts the final PR description with links to artifacts and testing evidence, and creates the PR to main.
 
 ## Credits
 

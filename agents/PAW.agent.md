@@ -92,15 +92,27 @@ Use TODOs to externalize workflow steps.
 **Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 
 **Transition response handling**:
-- `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation
+- `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation. Applies at every phase boundary, including before entering candidate promotion and after each promoted phase.
 - `artifact_tracking`: Pass to next activity (if `disabled`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
+- `promotion_pending`: If `true` **and not paused**, run Candidate Promotion Flow (see below)
 {{#vscode}}
 - `session_action`: Call `paw_new_session` if `new_session`
 {{/vscode}}
 {{#cli}}
 - `session_action`: Ignored in CLI (single-session mode)
 {{/cli}}
+
+### Candidate Promotion Flow
+
+When `paw-transition` returns `promotion_pending = true` with a `candidates` list:
+
+1. Present each candidate to user with options: **Promote**, **Skip**, **Defer**
+2. For each decision:
+   - **Promote**: Update candidate to `- [x] [promoted] <desc>` in ImplementationPlan.md. Run `paw-code-research` + `paw-planning` to elaborate into a full phase, then follow standard mandatory transitions (plan-review → implement → impl-review). If research reveals infeasibility, update to `- [x] [not feasible] <desc>` and continue with remaining candidates. User may request a lightweight promote (skip plan-review) for trivial changes.
+   - **Skip**: Update candidate to `- [x] [skipped] <desc>` in ImplementationPlan.md
+   - **Defer**: Update candidate to `- [x] [deferred] <desc>` in ImplementationPlan.md
+3. After all candidates resolved: proceed to `paw-pr`
 
 ## Before Yielding Control
 

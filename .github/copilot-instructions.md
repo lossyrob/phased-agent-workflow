@@ -107,7 +107,9 @@ When writing agent prompts, skills, or instructions, follow these guidelines to 
 
 ### Describe End States, Not Procedures
 
-**Anti-pattern**: Prescriptive step-by-step commands
+For autonomous agent tasks, describe desired outcomes rather than prescriptive steps—let the agent reason about how to achieve them. However, keep explicit steps for interactive protocols (user-facing flows where order and presentation matter).
+
+**Anti-pattern**: Prescriptive step-by-step commands for autonomous work
 ```markdown
 ## Execution Steps
 1. Run `git fetch origin <base-branch>`
@@ -121,6 +123,8 @@ When writing agent prompts, skills, or instructions, follow these guidelines to 
 - The base commit SHA is locally available
 - The working directory reflects the pre-change state
 ```
+
+**Exception**: Interactive user protocols where the sequence *is* the spec (e.g., "present options → get user decision → apply") should retain explicit steps.
 
 ### Avoid Over-Instruction
 
@@ -202,6 +206,10 @@ description: Brief description for catalog display
 ### Don't Reference Removed Components
 
 When prompts reference other agents, skills, or components, verify they still exist. Remove references to deleted agents or deprecated components.
+
+### Avoid Cross-File References Agents Can't Resolve
+
+Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-transition/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
 
 ### Don't Waste Context on Error Handling
 

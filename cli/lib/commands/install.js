@@ -8,8 +8,7 @@ import {
   getDistSkillsDir,
 } from '../paths.js';
 import { readManifest, writeManifest, createManifest } from '../manifest.js';
-
-const VERSION = '0.0.1';
+import { VERSION } from '../version.js';
 
 const SUPPORTED_TARGETS = ['copilot'];
 

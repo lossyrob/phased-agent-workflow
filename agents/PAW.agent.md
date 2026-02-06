@@ -19,7 +19,7 @@ On first request, identify work context from environment (current branch, `.paw/
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
 | paw-plan-review (passes) | paw-planning-docs-review (if enabled) or Planning PR (prs) | NO |
-| paw-planning-docs-review | Planning PR (prs strategy) | NO |
+| paw-planning-docs-review | Planning PR (prs strategy) or paw-transition → paw-implement (local) | NO |
 | Planning PR created | paw-transition → paw-implement | NO |
 | paw-impl-review (passes, more phases) | Push & Phase PR (prs strategy) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
@@ -58,8 +58,8 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
 ### Review Policy Behavior
 - `always`: Pause after every artifact for user confirmation
-- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
-- `planning-only`: Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phase completions (local strategy required)
+- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
+- `planning-only`: Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion, and Final PR only; auto-proceed at phase completions (local strategy required)
 - `never`: Auto-proceed unless blocked
 
 **Legacy Handoff Mode mapping** (for older WorkflowContext.md files):
@@ -156,7 +156,7 @@ When pausing at a milestone, provide:
 
 **Orchestrator-handled** (after subagent returns):
 - After `paw-plan-review` returns PASS: Check Planning Docs Review config. If enabled, load `paw-planning-docs-review` directly. If disabled, load `paw-git-operations`, create Planning PR (PRs) or commit (local).
-- After `paw-planning-docs-review` completes: **Delegate to `paw-transition`** (this is a stage boundary). Then proceed to Planning PR (PRs) or implementation (local).
+- After `paw-planning-docs-review` completes: **Delegate to `paw-transition`** (this is a stage boundary). Then load `paw-git-operations`, create Planning PR (PRs) or proceed to implementation (local).
 - After Planning PR created: **Delegate to `paw-transition`** (this is a stage boundary)
 - After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR
 - After Phase PR created or push complete: **Delegate to `paw-transition`** (this is a stage boundary)

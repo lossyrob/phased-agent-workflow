@@ -173,7 +173,7 @@ agents/                         # orchestrator agent prompts (2 agents)
   PAW.agent.md                  # Implementation workflow orchestrator
   PAW Review.agent.md           # Review workflow orchestrator
 
-skills/                         # activity and utility skills (27 skills)
+skills/                         # activity and utility skills (29 skills)
   paw-spec/SKILL.md
   paw-spec-research/SKILL.md
   paw-planning/SKILL.md

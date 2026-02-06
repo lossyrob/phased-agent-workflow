@@ -41,13 +41,15 @@ If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Ge
 ### Step 2: Gather Review Context
 
 **Required context**:
-- Spec.md — requirements, user stories, success criteria, scope boundaries
 - ImplementationPlan.md — phases, architecture, file paths, success criteria
+
+**Contextual**:
+- Spec.md — requirements, user stories, success criteria, scope boundaries (absent in minimal mode — note reduced scope in review output)
 
 **Optional context**:
 - CodeResearch.md — existing patterns, conventions, system behavior
 
-If CodeResearch.md is missing, proceed with Spec.md and ImplementationPlan.md only. Note reduced coverage in the review output.
+If Spec.md or CodeResearch.md is missing, proceed with available artifacts. Note reduced coverage in the review output.
 
 ### Step 3: Create Reviews Directory
 

@@ -143,7 +143,6 @@ In Scope:
 Out of Scope:
 - Renaming existing `paw-plan-review` skill (follow-up issue)
 - Society-of-Thought review mode (future evolution, issue #201)
-- Non-interactive auto-apply mode for planning documents (future — unlike code fixes, planning revisions need human judgment)
 - Changes to existing spec-review or plan-review behavior
 - VS Code extension command updates (CLI-first, VS Code adapts separately)
 

@@ -72,7 +72,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
    - Produces: Spec.md, SpecResearch.md
 
 2. **Planning Stage**
-   - `paw-code-research` → `paw-planning`
+   - `paw-code-research` → `paw-planning` → `paw-plan-review` → `paw-planning-docs-review` (if enabled)
    - Produces: CodeResearch.md, ImplementationPlan.md, Planning PR (prs strategy)
 
 3. **Implementation Stage**

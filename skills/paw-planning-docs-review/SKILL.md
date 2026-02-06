@@ -105,20 +105,7 @@ Write findings in structured markdown.
 
 **If multi-model mode**:
 
-First, resolve model intents to actual model names (e.g., "latest GPT" → current GPT model).
-
-**If Interactive = true**: Present the resolved models for confirmation:
-```
-About to run multi-model planning documents review with:
-- [resolved model 1]
-- [resolved model 2]
-- [resolved model 3]
-
-Proceed with these models, or specify different ones?
-```
-Allow user to confirm or provide alternative model list.
-
-Then spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the review prompt above. Save per-model reviews to `reviews/planning/REVIEW-{MODEL}.md`.
+Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model). Log resolved models, then spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the review prompt above. Save per-model reviews to `reviews/planning/REVIEW-{MODEL}.md`.
 
 **After multi-model reviews complete**, generate synthesis.
 

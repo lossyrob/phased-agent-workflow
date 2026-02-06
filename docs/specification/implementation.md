@@ -66,7 +66,7 @@ Turn an issue or brief into a testable specification with factual research about
 
 ### Stage 02 — Implementation Plan
 
-**Skills:** `paw-code-research`, `paw-planning`, `paw-plan-review`
+**Skills:** `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-planning-docs-review`
 
 Map relevant code areas and create a detailed implementation plan broken into phases.
 
@@ -87,7 +87,8 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
-5. Open Planning PR for review (PRs strategy)
+5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
+6. Open Planning PR for review (PRs strategy)
 
 ### Stage 03 — Phased Implementation
 
@@ -229,6 +230,12 @@ Reviews code changes, generates docstrings and comments, commits improvements, p
 Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
 
 **Focus:** Catch issues before external PR review.
+
+### paw-planning-docs-review
+
+Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md) as a holistic bundle after plan-review passes. Supports multi-model parallel review (CLI) or single-model review (VS Code). Catches cross-artifact consistency issues before implementation begins.
+
+**Focus:** Cross-artifact consistency gate before implementation.
 
 ### paw-status
 

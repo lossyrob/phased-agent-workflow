@@ -34,7 +34,7 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 
 | Execution Type | Skills | Why |
 |----------------|--------|-----|
-| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
+| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-final-review`, `paw-planning-docs-review`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
 | **Subagent** (isolated) | `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`, `paw-transition` | Research and review activities that benefit from context isolation |
 
 This preserves conversation flow for interactive work while leveraging fresh context for focused research and review.
@@ -50,6 +50,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
 | `paw-planning` | Create implementation plans with phases | ImplementationPlan.md |
 | `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
+| `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
 | `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |

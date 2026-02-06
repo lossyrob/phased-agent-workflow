@@ -58,6 +58,7 @@ In `milestones` mode, the workflow pauses only at key milestone artifacts:
 
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
+- Planning Documents Review completion (if enabled)
 - Phase PR completion (after each phase PR is opened)
 - Final PR creation
 
@@ -82,6 +83,7 @@ In `planning-only` mode, the workflow pauses at specification and implementation
 
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
+- Planning Documents Review completion (if enabled)
 - Final PR creation
 
 **Auto-proceeds at:**

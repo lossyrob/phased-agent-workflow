@@ -16,6 +16,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       ImplementationPlan.md     # Implementation plan
       Docs.md                   # Documentation
       WorkShaping.md            # Pre-spec ideation (optional)
+      reviews/                  # Review artifacts (gitignored)
+        planning/               # Planning Documents Review artifacts
   
   reviews/                      # Review workflow
     PR-<number>/                # Single-repo: PR-123
@@ -52,6 +54,14 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
 | Additional Inputs | Extra parameters |
+| Final Agent Review | `enabled` or `disabled` |
+| Final Review Mode | `single-model` or `multi-model` |
+| Final Review Interactive | `true` or `false` |
+| Final Review Models | Comma-separated model names |
+| Planning Docs Review | `enabled` or `disabled` |
+| Planning Review Mode | `single-model` or `multi-model` |
+| Planning Review Interactive | `true` or `false` |
+| Planning Review Models | Comma-separated model names |
 
 ### Spec.md
 

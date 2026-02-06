@@ -163,6 +163,64 @@ When pausing at a milestone, provide:
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 - `paw-transition`
 
+**Multi-model plan review** (orchestrator-managed, CLI only):
+When `Plan Review Mode` is `multi-model` in WorkflowContext.md, the orchestrator handles plan review differently since `paw-plan-review` runs as a subagent and cannot spawn sub-subagents:
+
+1. Read `Plan Review Mode` and `Plan Review Models` from WorkflowContext.md. If fields are missing, default to `single-model`.
+2. If `single-model`: Delegate to `paw-plan-review` as a single subagent (current behavior).
+3. If `multi-model` (CLI only):
+   a. Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model)
+   b. Present resolved models for confirmation:
+      ```
+      About to run multi-model plan review with:
+      - [resolved model 1]
+      - [resolved model 2]
+      - [resolved model 3]
+
+      Proceed?
+      ```
+   c. Create `.paw/work/<work-id>/planning/` directory and `.gitignore` with `*` if not already present
+   c. Spawn N parallel `paw-plan-review` subagents using `task` tool with `model` parameter (one per model), each receiving the same plan review inputs (ImplementationPlan.md, Spec.md, CodeResearch.md)
+   d. Save per-model verdicts as `PLAN-REVIEW-{MODEL}.md` in the `planning/` subfolder
+   e. Synthesize verdicts into `PLAN-REVIEW-SYNTHESIS.md` in the `planning/` subfolder using weighted verdict:
+      - **PASS** if majority of models return PASS
+      - **FAIL** if majority return FAIL
+      - All BLOCKING and IMPROVE items from ALL models surfaced regardless of overall verdict
+      - Organized by agreement: consensus issues (all models), partial agreement (2+ models), single-model findings
+   f. Use the synthesized verdict to determine next action (same as single-model: PASS → Planning PR, FAIL → plan revision)
+   g. If a model fails, proceed with remaining results if at least 2 models completed successfully. If fewer than 2 succeed, offer user the choice to retry or fall back to single-model plan review.
+
+**PLAN-REVIEW-SYNTHESIS.md template**:
+```markdown
+# Plan Review Synthesis
+
+**Date**: [date]
+**Reviewers**: [model list]
+**Plan**: `.paw/work/<work-id>/ImplementationPlan.md`
+
+## Overall Verdict: [PASS | FAIL]
+Majority: [N/M] models returned [PASS|FAIL]
+
+## Consensus Issues (All Models Agree)
+[Highest priority - all models flagged these]
+
+## Partial Agreement (2+ Models)
+[High priority - multiple models flagged]
+
+## Single-Model Findings
+[Unique findings worth considering]
+
+## Consolidated Feedback
+### BLOCKING
+[All blocking issues from all models, deduplicated]
+
+### IMPROVE
+[All improve suggestions, deduplicated]
+
+### NOTE
+[All notes, deduplicated]
+```
+
 **Orchestrator-handled** (after subagent returns):
 - After `paw-plan-review` returns PASS (PRs strategy): Load `paw-git-operations`, create Planning PR
 - After Planning PR created: **Delegate to `paw-transition`** (this is a stage boundary)

@@ -164,6 +164,29 @@ Final Agent Review runs after all implementation phases complete, before the Fin
 - In **interactive mode**, you confirm each finding before changes are made
 - In **auto-apply mode**, must-fix and should-fix recommendations are applied automatically
 
+## Multi-Model Planning Configuration
+
+Planning can use multiple AI models to independently create competing implementation plans, then synthesize the best elements. This brings the multi-model pattern to where it has the highest leverage — design decisions.
+
+| Field | Default | Options | Description |
+|-------|---------|---------|-------------|
+| Planning Mode | single-model | `single-model`, `multi-model`, `multi-model-deep` | Planning execution mode |
+| Planning Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model planning (CLI only) |
+| Plan Review Mode | single-model | `single-model`, `multi-model` | Plan review execution mode |
+| Plan Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model plan review (CLI only) |
+
+**Modes:**
+
+- **`single-model`** — Current behavior. One model creates the plan. (Default)
+- **`multi-model`** — Three models independently create plans in parallel, then a synthesis step merges them. (4 LLM calls)
+- **`multi-model-deep`** — Same as multi-model, plus a debate round where each model critiques all plans before synthesis. (7 LLM calls)
+
+**Notes:**
+
+- Multi-model planning is **CLI only** — VS Code falls back to single-model
+- Multi-model plan review uses a **weighted verdict**: PASS if majority passes, all concerns surfaced regardless
+- Per-model artifacts are saved in a gitignored `planning/` subfolder
+
 ## Selecting Your Mode
 
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:

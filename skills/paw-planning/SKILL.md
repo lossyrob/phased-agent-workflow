@@ -11,6 +11,24 @@ Create detailed implementation plans through interactive refinement. Plans descr
 
 > **Reference**: Follow Core Implementation Principles from `paw-workflow` skill.
 
+## Configuration
+
+### Step 1: Read Planning Mode
+
+Read WorkflowContext.md for:
+- Work ID and target branch
+- `Planning Mode`: `single-model` | `multi-model` | `multi-model-deep`
+- `Planning Models`: comma-separated model names (for multi-model modes)
+
+The planning mode is set during `paw-init`. If the field is missing (legacy workflow), default to `single-model` (backwards compatibility).
+
+{{#cli}}
+If mode is `multi-model` or `multi-model-deep`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
+{{/cli}}
+{{#vscode}}
+**Note**: VS Code only supports `single-model` mode. If `multi-model` or `multi-model-deep` is configured, report to user: "Multi-model planning not available in VS Code; running single-model planning." Proceed with single-model.
+{{/vscode}}
+
 ## Capabilities
 
 - Create implementation plan from spec and research
@@ -145,12 +163,84 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 
 **Desired end state**: Complete ImplementationPlan.md with all phases defined
 
+**If single-model mode** (default):
 1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
 2. Analyze and verify requirements against actual code
 3. Present understanding and resolve blocking questions
 4. Research patterns and design options (if significant choices exist)
 5. Write plan incrementally (outline, then phase by phase)
 6. Handle branching per Review Strategy (see below)
+
+{{#cli}}
+**If multi-model or multi-model-deep mode**:
+
+1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
+2. Create `.paw/work/<work-id>/planning/` directory if it doesn't exist
+3. Create `.paw/work/<work-id>/planning/.gitignore` with content `*` (if not already present)
+4. Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model)
+5. Present resolved models for confirmation:
+   ```
+   About to run multi-model planning with:
+   - [resolved model 1]
+   - [resolved model 2]
+   - [resolved model 3]
+
+   Mode: [multi-model | multi-model-deep]
+   Estimated LLM calls: [N+1 for multi-model | 2N+1 for multi-model-deep] (N = number of models)
+
+   Proceed?
+   ```
+
+6. **Round 1 — Independent Plans (parallel)**: Spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the planning subagent prompt below along with the full contents of Spec.md, CodeResearch.md, and SpecResearch.md. Save per-model plans to `PLAN-{MODEL}.md` in the `planning/` subfolder.
+
+7. **If multi-model-deep — Round 2 — Critique/Debate (parallel)**: Spawn parallel subagents again. Each model receives all plan drafts (all `PLAN-{MODEL}.md` files) and the critique prompt below. Save critiques to `CRITIQUE-{MODEL}.md` in the `planning/` subfolder.
+
+8. **Synthesis**: Read all per-model plans (and critiques in deep mode). Produce the final `ImplementationPlan.md` using the synthesis prompt below, selecting the best phase structure, architecture decisions, and catching blind spots.
+
+**Failure handling**: If a subagent fails, proceed with remaining results if at least 2 models completed successfully. If fewer than 2 succeed, offer user the choice to retry or fall back to single-model planning. Configurations with exactly 2 models are valid — synthesis works with any count ≥ 2.
+
+#### Planning Subagent Prompt
+
+Each subagent receives this prompt (self-contained, since subagents cannot load skills):
+
+> You are creating an implementation plan. You will receive a feature specification (Spec.md), codebase research (CodeResearch.md), and optionally spec research (SpecResearch.md).
+>
+> Create a complete implementation plan following this template structure: Overview, Current State Analysis, Desired End State, What We're NOT Doing, Phase Status (checkboxes), Phase Candidates, then detailed phases with Changes Required (file paths, components, tests) and Success Criteria (automated and manual verification).
+>
+> Guidelines:
+> - Operate at the C4 container/component abstraction level — describe WHAT to build, not HOW
+> - Reference specific file paths, module names, and existing patterns from CodeResearch.md
+> - Each phase should be independently reviewable with clear success criteria
+> - Include a Documentation phase as the final phase
+> - Limit code snippets to 3-10 lines for critical architectural concepts only
+> - Zero TBDs — all decisions must be made
+> - Include "What We're NOT Doing" to prevent scope creep
+
+#### Critique Prompt (deep mode only)
+
+Each model receives all plan drafts and this prompt:
+
+> You are reviewing multiple independently-created implementation plans for the same feature. Each plan is provided as PLAN-{MODEL}.md. You have access to all plans including your own.
+>
+> Analyze all plans and produce a structured critique covering:
+> 1. **Strengths per plan** — best ideas worth keeping from each approach
+> 2. **Where plans disagree** — different phasing strategies, architecture choices, component boundaries, and reasoning for which approach is better
+> 3. **Risks and gaps** — issues any plan missed that others caught, or that all plans missed
+> 4. **Recommended synthesis** — specific advice on which elements to take from each plan (e.g., "take phasing from Plan A, architecture from Plan B, edge case handling from Plan C")
+
+#### Synthesis Prompt
+
+The session's agent reads all per-model plans (and critiques in deep mode) and applies this approach:
+
+> Synthesize the best elements from all plan drafts into a single final ImplementationPlan.md. Compare section-by-section across all plans:
+> - **Phase structure**: Choose the best decomposition — consider granularity, independence, and logical ordering
+> - **Architecture decisions**: Pick the strongest approach, noting where plans converged (high confidence) vs. diverged (needs careful selection)
+> - **Success criteria**: Merge the most comprehensive and measurable criteria from all plans
+> - **Scope boundaries**: Union of all "What We're NOT Doing" items
+> - If critiques are available (deep mode), incorporate debate insights and address identified risks
+>
+> The output must follow the standard ImplementationPlan.md template format exactly.
+{{/cli}}
 
 ### PR Review Response
 
@@ -198,6 +288,8 @@ When revising based on paw-plan-review feedback:
 
 Report to PAW agent:
 - Artifact path: `.paw/work/<work-id>/ImplementationPlan.md`
+- **Planning mode used**: single-model, multi-model, or multi-model-deep
+- **Models** (if multi-model): list of models used and any failures
 - **Plan summary** for quick review:
   - Architecture approach (1-2 sentences)
   - Phase overview (numbered list with one-line objective each)

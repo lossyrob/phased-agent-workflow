@@ -54,6 +54,12 @@ Parse ImplementationPlan.md with regex: `^## Phase \d+:`
 - Report: "Phase N of M" or "Phase N (plan shows M phases total)"
 - Never assume total—always verify
 
+### Phase Candidates
+
+Check `## Phase Candidates` section in ImplementationPlan.md:
+- Count unresolved (`- [ ]`), promoted (`[promoted]`), skipped (`[skipped]`), deferred (`[deferred]`), not feasible (`[not feasible]`)
+- If unresolved exist after last phase: report "N phase candidates pending review"
+
 ### Git Status
 
 Determine:
@@ -93,6 +99,7 @@ Map state to guidance:
 | All phases complete, review enabled, no reviews/ | "Run final review: `final-review`" |
 | All phases complete, reviews/ exists | "Create final PR: `pr`" |
 | All phases complete, review disabled | "Create final PR: `pr`" |
+| All complete + unresolved candidates | "Review phase candidates before PR" |
 
 ## Workflow Mode Behavior
 
@@ -151,6 +158,7 @@ For "How do I start?", explain:
 Synthesize findings into sections:
 - **Artifacts**: Existence and status
 - **Phases**: Current progress (N of M)
+- **Phase Candidates**: Pending/resolved candidate counts (if any exist)
 - **Branch & Git**: Current state, divergence
 - **PRs**: Open/merged status, review comments
 - **Next Actions**: Recommended commands

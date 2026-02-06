@@ -119,6 +119,8 @@ Per phase in ImplementationPlan.md:
 2. `paw-impl-review`: Review changes (returns verdict)
 3. Phase PR created (PRs strategy) or push (local strategy)
 
+**Phase Candidates**: During implementation, new ideas can be captured in the `## Phase Candidates` section of ImplementationPlan.md. When all planned phases complete, `paw-transition` returns `promotion_pending = true` if unresolved candidates exist. The orchestrator presents each candidate to the user with options: Promote (elaborate into a full phase), Skip, or Defer. Terminal markers (`[promoted]`, `[skipped]`, `[deferred]`, `[not feasible]`) resolve candidates.
+
 Final phase typically includes documentation (Docs.md, README, CHANGELOG).
 
 ### Final Review Stage (if enabled)

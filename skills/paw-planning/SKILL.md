@@ -95,6 +95,10 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 - [ ] **Phase 2: [Name]** - [Objective]
 - [ ] **Phase N: Documentation** - [If warranted]
 
+## Phase Candidates
+<!-- Lightweight capture of potential phases identified during implementation.
+     Add one-liner descriptions here; elaborate into full phases later via promotion. -->
+
 ---
 
 ## Phase 1: [Name]
@@ -188,6 +192,7 @@ When revising based on paw-plan-review feedback:
 - [ ] Code blocks absent or limited to <10 lines for architectural concepts
 - [ ] Documentation phase included (or explicitly omitted with reason)
 - [ ] Phase Status exists with checkbox phases and one-sentence objectives
+- [ ] Phase Candidates section present (may be empty initially)
 
 ## Completion Response
 

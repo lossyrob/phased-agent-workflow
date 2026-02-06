@@ -65,9 +65,13 @@ All pull requests to `main` must be labeled with one of the following category l
 
 ### CLI Label
 
-PRs that affect CLI code (`cli/` directory, `publish-cli.yml`, etc.) should also have the `cli` label. This label is **applied at release-prep time** using the `prepare-cli-release.prompt.md` prompt—you don't need to remember to add it during development. The prompt assesses each PR and applies the label if it affects CLI code.
+PRs that **only** affect CLI-specific code (`cli/` directory, `publish-cli.yml`, etc.) should have the `cli` label. These won't appear in the VS Code extension changelog.
 
-VS Code extension PRs don't need a special label (the extension changelog includes all PRs to main).
+### VS Code Label
+
+PRs that **only** affect VS Code extension code should have the `vscode` label. These are excluded from the CLI release changelog.
+
+PRs that touch agents, skills, prompts, or shared code don't need a platform label—they're included in both changelogs by default. Platform labels are applied at release-prep time using `prepare-cli-release.prompt.md`.
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 
@@ -107,7 +111,9 @@ When writing agent prompts, skills, or instructions, follow these guidelines to 
 
 ### Describe End States, Not Procedures
 
-**Anti-pattern**: Prescriptive step-by-step commands
+For autonomous agent tasks, describe desired outcomes rather than prescriptive steps—let the agent reason about how to achieve them. However, keep explicit steps for interactive protocols (user-facing flows where order and presentation matter).
+
+**Anti-pattern**: Prescriptive step-by-step commands for autonomous work
 ```markdown
 ## Execution Steps
 1. Run `git fetch origin <base-branch>`
@@ -121,6 +127,8 @@ When writing agent prompts, skills, or instructions, follow these guidelines to 
 - The base commit SHA is locally available
 - The working directory reflects the pre-change state
 ```
+
+**Exception**: Interactive user protocols where the sequence *is* the spec (e.g., "present options → get user decision → apply") should retain explicit steps.
 
 ### Avoid Over-Instruction
 
@@ -202,6 +210,10 @@ description: Brief description for catalog display
 ### Don't Reference Removed Components
 
 When prompts reference other agents, skills, or components, verify they still exist. Remove references to deleted agents or deprecated components.
+
+### Avoid Cross-File References Agents Can't Resolve
+
+Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-transition/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
 
 ### Don't Waste Context on Error Handling
 

@@ -132,13 +132,35 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 - **Overview** — What the plan accomplishes
 - **Current State Analysis** — Relevant findings from research
-- **Phase Summary** — High-level overview of all phases
+- **Phase Status** — Checkbox list of all phases with objectives
+- **Phase Candidates** — Lightweight capture of potential phases (see below)
 - **Phase Details** — For each phase:
     - Changes required (files, components)
     - Success criteria (automated and manual)
     - Implementation notes (after completion)
 
 **Checkboxes:** Implementer marks items complete as work progresses.
+
+**Phase Candidates Section:**
+
+During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in this section:
+
+```markdown
+## Phase Candidates
+
+- [ ] Refactor X to use new pattern
+- [ ] Add caching for frequently accessed data
+```
+
+When all planned phases complete, `paw-transition` detects unresolved candidates and the orchestrator presents each for user decision:
+
+| Decision | Result |
+|----------|--------|
+| **Promote** | Candidate elaborated into full phase via code research + planning |
+| **Skip** | Marked `- [x] [skipped]`, excluded from future checks |
+| **Defer** | Marked `- [x] [deferred]`, excluded from future checks |
+
+This decouples intent capture from phase elaboration, preserving implementer momentum while ensuring ideas aren't lost.
 
 ### Docs.md
 

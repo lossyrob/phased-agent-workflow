@@ -50,6 +50,17 @@ Use the Mandatory Transitions table:
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
 
+### Step 2.5: Candidate Promotion Check
+
+When next activity would be `paw-pr` (all planned phases complete), check for phase candidates:
+
+1. Read ImplementationPlan.md `## Phase Candidates` section
+2. Count **unresolved** candidates: `- [ ]` items WITHOUT terminal tags (`[skipped]`, `[deferred]`, `[not feasible]`)
+3. If unresolved candidates exist: set `promotion_pending = true` and extract candidate descriptions
+4. Otherwise: set `promotion_pending = false`
+
+If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction.
+
 ### Step 3: Check Stage Boundary and Milestone Pause
 
 **Stage boundaries** occur when moving between these stages:
@@ -140,6 +151,8 @@ TRANSITION RESULT:
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
+- promotion_pending: [true | false] (only when next would be paw-pr)
+- candidates: [list of unresolved candidate descriptions] (only if promotion_pending)
 ```
 
 **If pause_at_milestone = true**: The PAW agent must PAUSE and wait for user confirmation before proceeding.
@@ -149,6 +162,16 @@ TRANSITION RESULT:
 **If preflight = blocked**: The PAW agent must report the blocker to the user.
 
 Mark the `paw-transition` TODO complete after returning this output.
+
+## Candidate Resolution Markers
+
+Terminal markers used in Step 2.5 to identify resolved candidates:
+- `- [x] [promoted] <desc>` — Elaborated into a full phase
+- `- [x] [skipped] <desc>` — User chose not to pursue
+- `- [x] [deferred] <desc>` — Future work outside current workflow
+- `- [x] [not feasible] <desc>` — Code research revealed infeasibility
+
+Unresolved: `- [ ]` items without terminal tags. Empty section or all-resolved → `promotion_pending = false`.
 
 ## Guardrails
 

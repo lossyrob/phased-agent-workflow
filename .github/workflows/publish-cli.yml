@@ -18,8 +18,6 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Required for changelog generation
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,16 +63,6 @@ jobs:
       - name: Publish to npm
         run: npm publish --access public --tag ${{ steps.prerelease.outputs.npm_tag }}
       
-      - name: Generate changelog
-        id: changelog
-        uses: mikepenz/release-changelog-builder-action@v4
-        with:
-          configuration: .github/cli-release-changelog-config.json
-          failOnError: false
-          toTag: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Check if release exists
         id: check_release
         working-directory: ${{ github.workspace }}
@@ -82,10 +70,8 @@ jobs:
           RELEASE_EXISTS=$(gh release view "${{ github.ref_name }}" --json id 2>/dev/null || echo "")
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Release already exists for tag ${{ github.ref_name }}, skipping"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "No existing release found, will create new release"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,17 +82,10 @@ jobs:
         with:
           name: CLI ${{ steps.version.outputs.version }}
           tag_name: ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: |
+            Published to npm: `@paw-workflow/cli@${{ steps.version.outputs.version }}`
+
+            Release notes will be added by the release preparation process.
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Release summary
-        if: steps.check_release.outputs.exists == 'false'
-        working-directory: ${{ github.workspace }}
-        run: |
-          echo "✅ Release created successfully!"
-          echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Pre-release: ${{ steps.prerelease.outputs.is_prerelease }}"
-          echo "npm tag: ${{ steps.prerelease.outputs.npm_tag }}"
-          echo "View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

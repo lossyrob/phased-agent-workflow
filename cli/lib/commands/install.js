@@ -8,8 +8,7 @@ import {
   getDistSkillsDir,
 } from '../paths.js';
 import { readManifest, writeManifest, createManifest } from '../manifest.js';
-
-const VERSION = '0.0.1';
+import { VERSION } from '../version.js';
 
 const SUPPORTED_TARGETS = ['copilot'];
 
@@ -98,6 +97,23 @@ export async function installCommand(target, flags = {}) {
   const skillCount = readdirSync(distSkillsDir, { withFileTypes: true })
     .filter(e => e.isDirectory()).length;
   
-  console.log(`\nInstalled ${agentCount} agents and ${skillCount} skills to ~/.copilot/`);
-  console.log('Manifest written to ~/.paw/copilot-cli/manifest.json');
+  console.log(`\n✓ Installed ${agentCount} agents and ${skillCount} skills to ~/.copilot/`);
+
+  if (!hasExistingFiles) {
+    console.log(`
+🚀 Quick Start
+  Start a workflow:    copilot --agent PAW
+  Review a PR:         copilot --agent PAW-Review
+  Or use /agent inside any copilot session to switch agents.
+
+💡 Try saying:
+  "I want to add a feature for..."
+  "Help me refactor the auth module"
+  "Review PR #100" (with PAW-Review agent)
+
+📦 Manage your installation:
+  npx @paw-workflow/cli list       Show installed version
+  npx @paw-workflow/cli upgrade    Check for updates
+  npx @paw-workflow/cli uninstall  Cleanly remove PAW`);
+  }
 }

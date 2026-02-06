@@ -27,6 +27,7 @@ Execute implementation plan phases by making code changes, running verification,
 - Execute documentation phases (create/update Docs.md, update project documentation)
 - Address PR review comments on implementation work (load `paw-review-response` for mechanics)
 - Handle non-linear requests (e.g., "adjust implementation to match updated spec") when delegated by PAW agent
+- Capture phase candidates mid-implementation for later elaboration
 
 ## Role: Forward Momentum
 
@@ -125,6 +126,15 @@ If the plan has existing checkmarks:
 - Preserve prior notes; append new summaries
 - Limit edits to sections affected by current phase
 - Re-running same phase should produce no additional plan changes
+
+### Capturing Phase Candidates
+
+When related work surfaces during implementation (e.g., "this would be cleaner if we also refactored X"):
+1. If `## Phase Candidates` section missing, create it after `## Phase Status`
+2. Append `- [ ] Brief description of potential work`
+3. Continue current phase immediately—no context-switch
+
+Candidates are elaborated into full phases later via the promotion flow in `paw-transition`.
 
 ## Quality Checklist
 

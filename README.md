@@ -19,6 +19,8 @@ copilot --agent PAW-Review   # PR review workflow
 
 Or use `/agent` inside your session to switch agents.
 
+Upgrade with `npx @paw-workflow/cli upgrade`, uninstall with `npx @paw-workflow/cli uninstall`.
+
 **Requirements**: Node.js 18+ and [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed.
 
 ---

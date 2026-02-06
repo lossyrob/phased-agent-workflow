@@ -4,8 +4,7 @@ import { installCommand } from '../lib/commands/install.js';
 import { listCommand } from '../lib/commands/list.js';
 import { uninstallCommand } from '../lib/commands/uninstall.js';
 import { upgradeCommand } from '../lib/commands/upgrade.js';
-
-const VERSION = '0.0.1';
+import { VERSION } from '../lib/version.js';
 
 const HELP = `
 paw - Phased Agent Workflow CLI

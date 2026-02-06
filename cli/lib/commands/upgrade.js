@@ -1,6 +1,7 @@
 import { spawn, execSync } from 'child_process';
 import { readManifest } from '../manifest.js';
 import { getLatestVersion } from '../registry.js';
+import { installCommand } from './install.js';
 
 function isGlobalInstall() {
   try {
@@ -94,22 +95,15 @@ export async function upgradeCommand(_flags = {}) {
   const isGlobal = isGlobalInstall();
   
   if (isGlobal) {
-    // Upgrade global CLI installation first
-    console.log('Step 1/2: Upgrading @paw-workflow/cli globally...\n');
+    // Global: update the package, then shell out to the NEW paw binary
+    // (the running process still has old code/version in memory)
+    console.log('Updating @paw-workflow/cli globally...\n');
     await runCommand('npm', ['install', '-g', `@paw-workflow/cli@${latestVersion}`]);
-    
-    // Then reinstall agents/skills using the new CLI
-    console.log('\nStep 2/2: Installing PAW agents and skills to', target, '...\n');
+    console.log('');
     await runCommand('paw', ['install', target, '--force']);
   } else {
-    // Running via npx or local - just use npx to get latest
-    console.log('Downloading @paw-workflow/cli@' + latestVersion + ' and installing to', target, '...\n');
-    await runCommand('npx', [
-      `@paw-workflow/cli@${latestVersion}`,
-      'install',
-      target,
-      '--force',
-    ]);
+    // npx: the running process IS the latest version already
+    await installCommand(target, { force: true });
   }
   
   console.log('\n' + '─'.repeat(50));

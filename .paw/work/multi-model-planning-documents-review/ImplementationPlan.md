@@ -25,7 +25,7 @@ Add a new `paw-planning-docs-review` skill and integrate it into the PAW workflo
 
 ## Phase Status
 - [x] **Phase 1: Core Skill** - Create paw-planning-docs-review SKILL.md
-- [ ] **Phase 2: Workflow Integration** - Update paw-init, paw-transition, PAW agent, paw-status, paw-workflow for new gate
+- [x] **Phase 2: Workflow Integration** - Update paw-init, paw-transition, PAW agent, paw-status, paw-workflow for new gate
 - [ ] **Phase 3: Specification & Documentation** - Update paw-specification.md and docs/
 
 ---

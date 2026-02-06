@@ -37,6 +37,10 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
 | `final_review_interactive` | No | `true` | boolean |
 | `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
+| `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
+| `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
+| `planning_review_interactive` | No | `true` | boolean |
+| `planning_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 
 ### Handling Missing Parameters
 
@@ -91,6 +95,10 @@ Final Agent Review: <final_agent_review>
 Final Review Mode: <final_review_mode>
 Final Review Interactive: <final_review_interactive>
 Final Review Models: <final_review_models>
+Planning Docs Review: <planning_docs_review>
+Planning Review Mode: <planning_review_mode>
+Planning Review Interactive: <planning_review_interactive>
+Planning Review Models: <planning_review_models>
 Custom Workflow Instructions: <custom_instructions or "none">
 Initial Prompt: <work_description or "none">
 Issue URL: <issue_url or "none">

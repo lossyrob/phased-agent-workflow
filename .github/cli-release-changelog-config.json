@@ -29,7 +29,8 @@
     "ignore",
     "wontfix",
     "duplicate",
-    "invalid"
+    "invalid",
+    "vscode"
   ],
   "sort": {
     "order": "ASC",
@@ -39,5 +40,11 @@
   "pr_template": "- #{{TITLE}} (#{{NUMBER}})",
   "empty_template": "No CLI changes in this release",
   "max_pull_requests": 200,
-  "max_back_track_time_days": 365
+  "max_back_track_time_days": 365,
+  "tag_resolver": {
+    "method": "semver",
+    "filter": {
+      "pattern": "cli-v(.*)"
+    }
+  }
 }

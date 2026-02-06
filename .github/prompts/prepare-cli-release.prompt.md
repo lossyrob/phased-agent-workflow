@@ -61,25 +61,35 @@ For each PR, review its changed files and apply labels:
 - `documentation` — Documentation changes
 - `maintenance` — Refactoring, CI/CD, dependency updates
 
-### 4. Generate Changelog Preview
+### 4. Generate and Post Release Notes
 
-Generate a changelog from all PRs since the last release, **excluding** any labeled `vscode`. Organize by category:
+Write a changelog from all PRs since the last release, **excluding** any labeled `vscode`. Organize by category:
 
-```
+```markdown
 ## 🚀 Features
-- Feature description (#123)
+- Brief description ([#123](PR_URL))
 
 ## 🐛 Bug Fixes
-- Bug description (#124)
+- Brief description ([#124](PR_URL))
 
 ## 📚 Documentation
-- Doc description (#125)
+- Brief description ([#125](PR_URL))
 
 ## 🔧 Maintenance
-- Maintenance description (#126)
+- Brief description ([#126](PR_URL))
 ```
 
-Present this changelog to the user for review.
+Guidelines:
+- Write concise descriptions (don't just copy PR titles verbatim — clean up brackets, prefixes, etc.)
+- Link PR numbers to their URLs
+- Omit empty categories
+- Add an installation section at the end with `npx @paw-workflow/cli@<version>` and `npm install -g` options
+
+Present the changelog to the user for review. After approval, post it to the GitHub release:
+
+```bash
+gh release edit cli-v<version> --notes-file <changelog-file>
+```
 
 ### 5. Create and Push Tag
 
@@ -89,11 +99,12 @@ After the user approves:
 2. Create the annotated tag: `git tag -a cli-v<version> -m "CLI release <version>"`
 3. Push the tag: `git push origin cli-v<version>`
 
-The tag push triggers `publish-cli.yml` which publishes to npm and creates a GitHub Release.
+The tag push triggers `publish-cli.yml` which publishes to npm and creates a placeholder GitHub Release.
 
-### 6. Verify Release
+### 6. Post Release Notes
 
-Check that:
-1. The GitHub Actions workflow started
-2. The npm package was published
-3. The GitHub Release was created with the changelog
+After the workflow completes and the release exists:
+
+1. Write the changelog to a temp file
+2. Update the release: `gh release edit cli-v<version> --notes-file <file>`
+3. Verify the release looks correct: `gh release view cli-v<version>`

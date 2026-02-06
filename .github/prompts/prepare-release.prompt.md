@@ -1,15 +1,21 @@
 # Prepare Release
 
-This prompt guides the GitHub Copilot agent through creating a new release tag and ensuring all PRs are properly labeled before pushing the tag, which triggers the automated release workflow.
+This prompt guides the agent through creating a VS Code extension release with curated release notes.
 
 ## Overview
 
 You will:
 1. Identify PRs merged since the last release
-2. Verify all PRs have appropriate labels
-3. Label any unlabeled PRs
-4. Generate a changelog preview
-5. Create and push the release tag
+2. Verify all PRs have category labels
+3. Write curated release notes
+4. Create and push the release tag
+5. Post release notes to the GitHub Release
+
+## Label Model
+
+- **No platform label** — Relevant to both CLI and VS Code (default)
+- **`cli`** — CLI-only changes (excluded from VS Code changelog)
+- **`vscode`** — VS Code-only changes (not in CLI changelog)
 
 ## Prerequisites
 
@@ -20,78 +26,78 @@ You will:
 
 ### 1. Determine Release Version
 
-First, check the latest release tags to determine the next version by listing recent tags.
+Check the latest release tags (`v*`, excluding `cli-v*`) to determine the next version.
 
-Follow semantic versioning conventions for this project:
-- **Even minor versions** (0.2.x, 0.4.x, 1.0.x, 1.2.x): **Stable releases**
-- **Odd minor versions** (0.1.x, 0.3.x, 1.1.x, 1.3.x): **Pre-releases**
+VS Code extension versioning convention:
+- **Even minor** (0.2.x, 0.4.x): Stable releases
+- **Odd minor** (0.1.x, 0.3.x): Pre-releases
 
-Choose the appropriate next version based on the changes:
-- **Patch release** (0.4.0 → 0.4.1): Bug fixes and minor updates
-- **Minor release** (0.4.0 → 0.6.0): New features (use even number for stable)
-- **Major release** (0.4.0 → 1.0.0): Breaking changes
+Choose based on changes:
+- **Patch** (0.10.0 → 0.10.1): Bug fixes
+- **Minor** (0.10.0 → 0.12.0): New features (even = stable)
+- **Major** (0.10.0 → 1.0.0): Breaking changes
 
 Ask the user to confirm the version number before proceeding.
 
 ### 2. Identify PRs for Release
 
-Find the last release tag and its commit date. Then search for all merged PRs **that target the main branch** since that date. You should get the PR number, title, labels, base branch, and merge date for each PR.
+Find the last `v*` release tag (excluding `cli-v*`) and its date. Search for all merged PRs **targeting `main`** since that date.
 
-**IMPORTANT:** Only include PRs where the base/target branch is `main`. Exclude PRs that targeted feature branches (these are intermediate phase PRs that were merged into a feature branch before the final PR merged to main).
+Exclude PRs that targeted feature branches (not `main`).
 
-Review the results to identify PRs that need labels.
+### 3. Label PRs
 
-### 3. Review and Label PRs
+For each PR, ensure it has a category label:
+- `enhancement` — New features
+- `bug` — Bug fixes
+- `documentation` — Documentation changes
+- `maintenance` — Refactoring, CI/CD, dependency updates
 
-According to `.github/copilot-instructions.md`, all PRs must have one of these labels:
-- `enhancement` - For new features
-- `bug` - For bug fixes  
-- `documentation` - For documentation changes
-- `maintenance` - For maintenance, refactoring, or chores
+Also apply platform labels where needed:
+- `cli` if the PR **only** affects CLI-specific code
+- `vscode` if the PR **only** affects VS Code extension code
+- No platform label if the PR touches shared code (agents, skills, prompts, docs)
 
-**Labeling Guidelines:**
-- New features, major enhancements → `enhancement`
-- Bug fixes, error corrections → `bug`
-- README updates, documentation improvements → `documentation`
-- Refactoring, code cleanup, dependency updates, CI/CD changes → `maintenance`
+### 4. Generate and Post Release Notes
 
-For each unlabeled PR:
-1. Review the PR title and description to determine the appropriate label
-2. Add the label to the PR/issue
+Write a changelog from all PRs since the last release, **excluding** any labeled `cli`. Organize by category:
 
-Continue until all PRs have labels.
-
-### 4. Verify All PRs Are Labeled
-
-Re-check that all PRs now have labels by searching for merged PRs since the last release again.
-
-Ensure no PRs are missing labels. If any are still unlabeled, repeat step 3.
-
-### 5. Generate Changelog Preview
-
-Generate a changelog preview organized by label category. Only include PRs that were identified in step 2 (i.e., PRs that target `main` branch).
-
-Search for merged PRs since the last release filtered by each label:
-- `enhancement` for Features
-- `bug` for Bug Fixes
-- `documentation` for Documentation
-- `maintenance` for Maintenance
-
-Format the output as a complete changelog following the project's format:
-
-```
+```markdown
 ## 🚀 Features
-- [Feature Title] Feature description (#123)
+- Brief description ([#123](PR_URL))
 
 ## 🐛 Bug Fixes
-- [Bug Title] Bug description (#124)
+- Brief description ([#124](PR_URL))
 
 ## 📚 Documentation
-- [Doc Title] Doc description (#125)
+- Brief description ([#125](PR_URL))
 
 ## 🔧 Maintenance
-- [Maintenance Title] Maintenance description (#126)
+- Brief description ([#126](PR_URL))
 ```
 
-Present this changelog to the user for review.
+Guidelines:
+- Write concise descriptions (don't just copy PR titles — clean up brackets, prefixes)
+- Link PR numbers to their URLs
+- Omit empty categories
+- Add an installation section at the end with VSIX download and install instructions
 
+Present the changelog to the user for review.
+
+### 5. Create and Push Tag
+
+After the user approves:
+
+1. Ensure you're on `main` with a clean working directory
+2. Create the annotated tag: `git tag -a v<version> -m "Release <version>"`
+3. Push the tag: `git push origin v<version>`
+
+The tag push triggers `release.yml` which builds the VSIX, publishes it, and creates a placeholder GitHub Release.
+
+### 6. Post Release Notes
+
+After the workflow completes and the release exists:
+
+1. Write the changelog to a temp file
+2. Update the release: `gh release edit v<version> --notes-file <file>`
+3. Verify the release looks correct: `gh release view v<version>`

@@ -88,27 +88,14 @@ jobs:
           echo "vsix_name=${VSIX_FILE}" >> $GITHUB_OUTPUT
           echo "VSIX created successfully: $VSIX_FILE"
       
-      - name: Generate changelog
-        id: changelog
-        uses: mikepenz/release-changelog-builder-action@v4
-        with:
-          configuration: .github/release-changelog-config.json
-          failOnError: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Check if release exists
         id: check_release
         run: |
-          # Check for existing release to provide idempotency
-          # Re-running the workflow won't fail or create duplicates if release already exists
           RELEASE_EXISTS=$(gh release view "${{ github.ref_name }}" --json id 2>/dev/null || echo "")
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
-            echo "Release already exists for tag ${{ github.ref_name }}, skipping"
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-            echo "No existing release found, will create new release"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -119,18 +106,10 @@ jobs:
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: |
+            Release notes will be added by the release preparation process.
           files: ${{ steps.vsix.outputs.vsix_path }}
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Release summary
-        if: steps.check_release.outputs.exists == 'false'
-        run: |
-          echo "✅ Release created successfully!"
-          echo "Version: ${{ steps.version.outputs.version }}"
-          echo "Pre-release: ${{ steps.prerelease.outputs.is_prerelease }}"
-          echo "VSIX: ${{ steps.vsix.outputs.vsix_name }}"
-          echo "View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

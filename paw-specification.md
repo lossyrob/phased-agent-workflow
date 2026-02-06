@@ -225,7 +225,7 @@ PAW uses a **2-agent + skills** architecture:
 
 - **PAW Agent** (`agents/PAW.agent.md`): Orchestrates implementation workflows
 - **PAW Review Agent** (`agents/PAW Review.agent.md`): Orchestrates review workflows
-- **28 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
+- **29 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
 
 ### Hybrid Execution Model
 

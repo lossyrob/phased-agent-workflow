@@ -89,12 +89,13 @@ Acceptance Scenarios:
 - FR-006: Interactive mode presents findings individually with apply/skip/discuss options (Stories: P3)
 - FR-007: Apply actions route to the appropriate planning skill (paw-spec for spec issues, paw-planning for plan issues) with finding context (Stories: P3)
 - FR-008: After revisions, planning-docs-review re-runs to verify consistency without re-running individual reviews (Stories: P4)
-- FR-009: WorkflowContext.md configuration fields control enablement, mode, and model selection (Stories: P1, P2)
-- FR-010: The `paw-transition` skill routes through planning-docs-review after plan-review passes when enabled (Stories: P1)
+- FR-009: WorkflowContext.md configuration fields control enablement, mode, interactivity, and model selection (Planning Docs Review, Planning Review Mode, Planning Review Interactive, Planning Review Models) (Stories: P1, P2)
+- FR-010: The PAW agent routes through planning-docs-review after plan-review passes when enabled; `paw-transition` handles stage boundary enforcement and milestone pauses for the new gate (Stories: P1)
 - FR-011: Review artifacts are written to `.paw/work/<work-id>/reviews/planning/` (Stories: P1, P2)
 - FR-012: For PRs strategy, planning-docs-review executes before Planning PR creation (Stories: P1)
 - FR-013: The feature is enabled by default in Full workflow mode, disabled in Minimal mode, and configurable in Custom mode (Stories: P1)
 - FR-014: Existing spec-review and plan-review skills operate unchanged (Stories: P1)
+- FR-015: Workflow reference skills (paw-status, paw-workflow) reflect the new review gate in stage progression and activity tables (Stories: P1)
 
 ### Key Entities
 
@@ -133,7 +134,7 @@ In Scope:
 - Cross-artifact review criteria (traceability, consistency, coherence, feasibility, completeness)
 - Interactive resolution routing findings to paw-spec or paw-planning
 - Re-review loop after revisions (planning-docs-review only, not individual reviews)
-- WorkflowContext.md configuration fields (Planning Review, Planning Review Mode, Planning Review Models)
+- WorkflowContext.md configuration fields (Planning Docs Review, Planning Review Mode, Planning Review Interactive, Planning Review Models)
 - `paw-transition` routing updates for the new gate
 - `paw-init` defaults for new configuration fields
 - PAW agent orchestration updates for the new workflow position

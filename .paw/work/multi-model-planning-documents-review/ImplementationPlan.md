@@ -45,6 +45,7 @@ Add a new `paw-planning-docs-review` skill and integrate it into the PAW workflo
   - Interactive resolution: present findings with apply-to-spec / apply-to-plan / apply-to-both / skip / discuss options
   - Resolution routing: paw-spec (Revise Specification mode) for spec issues, paw-planning (Plan Revision mode) for plan issues
   - Re-review loop: after revisions, re-run review; 2-cycle limit before presenting remaining as informational
+  - Edge case handling: CodeResearch.md missing → proceed with reduced coverage; VS Code → single-model only; model failure during multi-model → synthesize with available results, noting gap
   - Artifacts go to `.paw/work/<work-id>/reviews/planning/`
   - Completion report with findings counts and resolution summary
 
@@ -58,6 +59,7 @@ Add a new `paw-planning-docs-review` skill and integrate it into the PAW workflo
 - [ ] Review criteria focus on cross-artifact analysis (not implementation quality)
 - [ ] Resolution routing differentiates spec vs plan vs both
 - [ ] Artifact paths use `reviews/planning/` subdirectory
+- [ ] Re-review loop respects 2-cycle limit before proceeding with informational findings
 
 ---
 
@@ -67,7 +69,7 @@ Add a new `paw-planning-docs-review` skill and integrate it into the PAW workflo
 
 - **`skills/paw-init/SKILL.md`**: Add 4 new input parameters (planning_docs_review, planning_review_mode, planning_review_interactive, planning_review_models) with defaults mirroring Final Review fields. Add 4 new lines to WorkflowContext.md template. Add validation: Full mode defaults to enabled, Minimal mode defaults to disabled.
 
-- **`skills/paw-transition/SKILL.md`**: Add new routing after plan-review passes — if planning-docs-review enabled, next activity is `paw-planning-docs-review` instead of implement/Planning PR. Add `paw-planning-docs-review complete` as a stage boundary. Add stage-to-milestone mapping entry. Add preflight checks (Spec.md exists, ImplementationPlan.md exists). Update pause determination: planning-docs-review milestone follows ImplementationPlan.md pause rules (pauses for `always`, `milestones`, `planning-only`; skips for `never`).
+- **`skills/paw-transition/SKILL.md`**: Add `paw-planning-docs-review complete` as a stage boundary. Add stage-to-milestone mapping entry. Add preflight checks (Spec.md exists, ImplementationPlan.md exists). Update pause determination: planning-docs-review milestone follows ImplementationPlan.md pause rules (pauses for `always`, `milestones`, `planning-only`; skips for `never`). Note: routing through planning-docs-review is handled by the PAW agent (matching existing post-plan-review pattern), not the transition table.
 
 - **`agents/PAW.agent.md`**: Update Mandatory Transitions table — insert `paw-plan-review (passes, planning-docs-review enabled)` → `paw-planning-docs-review` row. Add `paw-planning-docs-review` → `Planning PR (prs strategy)` row. Update Stage Boundary list to include `paw-planning-docs-review complete`. Add to Direct execution list. Update Handoff Messaging table with planning docs review entry. Update post-plan-review flow description to include conditional gate.
 

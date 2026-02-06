@@ -65,9 +65,13 @@ All pull requests to `main` must be labeled with one of the following category l
 
 ### CLI Label
 
-PRs that affect CLI code (`cli/` directory, `publish-cli.yml`, etc.) should also have the `cli` label. This label is **applied at release-prep time** using the `prepare-cli-release.prompt.md` prompt—you don't need to remember to add it during development. The prompt assesses each PR and applies the label if it affects CLI code.
+PRs that **only** affect CLI-specific code (`cli/` directory, `publish-cli.yml`, etc.) should have the `cli` label. These won't appear in the VS Code extension changelog.
 
-VS Code extension PRs don't need a special label (the extension changelog includes all PRs to main).
+### VS Code Label
+
+PRs that **only** affect VS Code extension code should have the `vscode` label. These are excluded from the CLI release changelog.
+
+PRs that touch agents, skills, prompts, or shared code don't need a platform label—they're included in both changelogs by default. Platform labels are applied at release-prep time using `prepare-cli-release.prompt.md`.
 
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 

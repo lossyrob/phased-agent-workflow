@@ -29,11 +29,14 @@ export class ToolCallLog {
     call.error = error instanceof Error ? error.message : String(error);
   }
 
-  /** Find the most recent pending (unfinished) call matching a tool name. */
-  findPending(name: string): ToolCall | undefined {
+  /** Find the most recent pending (unfinished) call matching a tool name and optional input ref. */
+  findPending(name: string, inputRef?: unknown): ToolCall | undefined {
     for (let i = this.calls.length - 1; i >= 0; i--) {
-      if (this.calls[i].name === name && this.calls[i].endedAt == null) {
-        return this.calls[i];
+      const c = this.calls[i];
+      if (c.name === name && c.endedAt == null) {
+        if (inputRef === undefined || c.input === inputRef) {
+          return c;
+        }
       }
     }
     return undefined;

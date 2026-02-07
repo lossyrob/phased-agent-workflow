@@ -1,7 +1,7 @@
 export interface UserInputRequest {
   question: string;
   choices?: string[];
-  allow_freeform?: boolean;
+  allowFreeform?: boolean;
 }
 
 export interface AnswerResult {

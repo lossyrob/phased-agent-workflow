@@ -41,6 +41,22 @@ describe("ToolPolicy", () => {
     assert.strictEqual(result.action, "deny");
   });
 
+  it("denies rm -fr outside workspace", () => {
+    const result = policy.check({
+      toolName: "bash",
+      input: { command: "rm -fr /home/user/important" },
+    });
+    assert.strictEqual(result.action, "deny");
+  });
+
+  it("denies rm -r -f outside workspace", () => {
+    const result = policy.check({
+      toolName: "bash",
+      input: { command: "rm -r -f /home/user/important" },
+    });
+    assert.strictEqual(result.action, "deny");
+  });
+
   it("allows rm -rf inside workspace", () => {
     const result = policy.check({
       toolName: "bash",
@@ -53,6 +69,14 @@ describe("ToolPolicy", () => {
     const result = policy.check({
       toolName: "create",
       input: { path: "/home/user/malicious.txt" },
+    });
+    assert.strictEqual(result.action, "deny");
+  });
+
+  it("denies path traversal via ..", () => {
+    const result = policy.check({
+      toolName: "create",
+      input: { path: "/tmp/paw-test-workspace/../../../etc/passwd" },
     });
     assert.strictEqual(result.action, "deny");
   });

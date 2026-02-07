@@ -64,6 +64,7 @@ export async function createTestContext(opts: {
       ...(model ? { model } : {}),
       ...(provider ? { provider } : {}),
       systemMessage: { content: opts.systemPrompt },
+      workingDirectory: fixture.workDir,
 
       onUserInputRequest: async (req) => {
         if (DEBUG) {

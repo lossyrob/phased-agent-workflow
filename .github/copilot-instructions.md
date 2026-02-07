@@ -228,3 +228,37 @@ When reviewing implementation changes, verify cross-artifact consistency:
 - Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match specification
 
 **Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.
+
+## Integration Testing
+
+When modifying skills (`skills/`), agents (`agents/`), or workflow behavior, consider whether integration tests should be added or updated.
+
+### When to Add/Update Tests
+
+- **New or changed skill behavior** → Add or update a workflow test in `tests/integration/tests/workflows/`
+- **New harness capability** (answerer, policy, assertion) → Add skill-level test in `tests/integration/tests/skills/`
+- **Bug fix in workflow behavior** → Add regression test covering the fix
+- **Pure prompt wording changes** with no behavioral change → No test needed
+- **Documentation-only changes** → No test needed
+
+### Test Types
+
+- **Skill-level tests** (`tests/integration/tests/skills/`): No LLM, fast. Test harness components (answerer rules, tool policy, assertions).
+- **Workflow tests** (`tests/integration/tests/workflows/`): Drive SDK sessions against skills. Use `createTestContext()`, `RuleBasedAnswerer`, structural assertions, and optionally `Judge` for qualitative evaluation.
+
+### Key Patterns
+
+- Import with `.js` extensions (ESM package)
+- Use `TestFixture.clone("minimal-ts")` for isolated temp repos
+- Use `seedWorkflowState(workId, stage)` to start from a known point
+- Use `assertSpecStructure`, `assertPlanStructure`, `assertToolCalls` for structural checks
+- Use `Judge` with rubrics for qualitative artifact evaluation
+- `toolArgs` from SDK hooks are JSON strings — use `parseInput()` helpers
+
+### Running Tests
+
+```bash
+cd tests/integration && npm install  # first time only
+npm run test:integration:skills      # fast, no LLM
+npm run test:integration:workflows   # slow, requires Copilot auth
+```

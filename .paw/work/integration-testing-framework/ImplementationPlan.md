@@ -85,7 +85,9 @@ Create the test fixture and write 3+ integration tests.
 
 - **`tests/integration/tests/skills/negative.test.ts`**: Tests fail-closed answerer behavior (unmatched question throws) and tool policy behavior (git push denied).
 
-- **`package.json` (root)**: Add `test:integration` script that runs `cd tests/integration && npm test`.
+- **`package.json` (root)**: Add `test:integration`, `test:integration:skills`, `test:integration:workflows` scripts that delegate to the integration package.
+
+- **`tests/integration/lib/harness.ts`** (additions): Read `PAW_TEST_DEBUG` env var — when set, pipe session events to `console.log`. Read `PAW_TEST_TIMEOUT` env var (default 120000ms) and pass as timeout to `sendAndWait`. In `destroyTestContext`, check `PAW_TEST_KEEP_WORKSPACE` — if set, skip cleanup and log workspace path.
 
 ### Success Criteria:
 

@@ -4,7 +4,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert";
-import { RuleBasedAnswerer, pawCommonRules } from "../../lib/answerer.js";
+import { RuleBasedAnswerer, HybridAnswerer, pawCommonRules } from "../../lib/answerer.js";
 
 describe("RuleBasedAnswerer", () => {
   it("throws on unmatched question when fail-closed", () => {
@@ -77,5 +77,39 @@ describe("pawCommonRules", () => {
       choices: ["yes", "no"],
     });
     assert.strictEqual(result.answer, "yes");
+  });
+});
+
+describe("HybridAnswerer", () => {
+  it("uses rules when they match (no LLM needed)", async () => {
+    const hybrid = new HybridAnswerer(
+      [(req) => /color/i.test(req.question) ? "blue" : null],
+      "Test context: pick colors",
+    );
+    // No start() needed — rules don't need the LLM session
+
+    const result = await hybrid.answer({ question: "What color?" });
+    assert.strictEqual(result.answer, "blue");
+    assert.strictEqual(hybrid.log[0].source, "rule");
+  });
+
+  it("throws if LLM fallback needed but not started", async () => {
+    const hybrid = new HybridAnswerer([], "Test context");
+
+    await assert.rejects(
+      () => hybrid.answer({ question: "Unmatched question?" }),
+      /HybridAnswerer not started/,
+    );
+  });
+
+  it("logs source as rule for rule-matched answers", async () => {
+    const hybrid = new HybridAnswerer(
+      [(req) => req.choices?.[0] ?? null],
+      "Test context",
+    );
+
+    await hybrid.answer({ question: "Pick", choices: ["alpha", "beta"] });
+    assert.strictEqual(hybrid.log[0].source, "rule");
+    assert.strictEqual(hybrid.log[0].answer, "alpha");
   });
 });

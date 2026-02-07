@@ -291,12 +291,16 @@ PAW includes an integration testing framework that programmatically drives Copil
 
 ### Setup
 
+Install integration test dependencies:
+
 ```bash
 cd tests/integration
 npm install
 ```
 
 ### Running Tests
+
+From the **repository root**:
 
 ```bash
 # All integration tests
@@ -316,10 +320,13 @@ The framework provides five core components:
 | Component | Purpose |
 |-----------|---------|
 | **TestFixture** | Clones template repos into temp directories for test isolation |
-| **RuleBasedAnswerer** | Auto-responds to agent questions with configurable rules (fail-closed by default) |
+| **RuleBasedAnswerer** | Deterministic auto-responder with configurable rules (fail-closed by default) |
+| **HybridAnswerer** | Rules-first answerer that falls back to an LLM session for unmatched questions |
 | **ToolPolicy** | Sandboxes tool execution—blocks git push, GitHub writes, filesystem escapes |
 | **ToolCallLog** | Records all tool invocations for assertion |
 | **Assertions** | Helpers for artifact existence, spec/plan structure, tool call patterns |
+
+`HybridAnswerer` tries deterministic rules first (fast, free). If no rule matches, it asks a separate Copilot SDK session to answer the question — or reject it if the question seems off-track. This avoids the brittleness of pure regex matching while keeping the fail-closed safety net.
 
 ### Debug Mode
 

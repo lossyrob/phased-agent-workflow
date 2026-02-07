@@ -39,6 +39,7 @@ export class Judge {
     context: string;
     artifact: string;
     rubric: string;
+    timeout?: number;
   }): Promise<JudgeVerdict> {
     if (!this.session) {
       throw new Error("Judge not started — call start() before evaluate()");
@@ -55,7 +56,7 @@ export class Judge {
       "RATIONALE: Brief explanation for any score < 4",
     ].join("\n\n");
 
-    const response = await this.session.sendAndWait({ prompt }, 60_000);
+    const response = await this.session.sendAndWait({ prompt }, opts.timeout ?? 120_000);
     const text = response?.data?.content ?? "";
 
     if (DEBUG) {

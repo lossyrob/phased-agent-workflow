@@ -18,8 +18,15 @@ export class ToolPolicy {
     return resolved === this.workspaceRoot || resolved.startsWith(this.normalizedRoot);
   }
 
+  private parseInput(raw: unknown): Record<string, unknown> {
+    if (typeof raw === "string") {
+      try { return JSON.parse(raw); } catch { return {}; }
+    }
+    return (raw as Record<string, unknown>) ?? {};
+  }
+
   check(call: { toolName: string; input: unknown }): Decision {
-    const input = call.input as Record<string, unknown>;
+    const input = this.parseInput(call.input);
 
     if (call.toolName === "bash") {
       const cmd = String(input?.command ?? "");

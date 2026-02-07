@@ -47,9 +47,17 @@ export class ToolCallLog {
     return this.calls.filter((c) => c.name === name);
   }
 
+  /** Parse tool input — SDK may pass toolArgs as JSON string or object. */
+  private parseInput(input: unknown): Record<string, unknown> {
+    if (typeof input === "string") {
+      try { return JSON.parse(input); } catch { return {}; }
+    }
+    return (input as Record<string, unknown>) ?? {};
+  }
+
   /** Get bash commands executed. */
   bashCommands(): string[] {
     return this.callsTo("bash")
-      .map((c) => String((c.input as Record<string, unknown>)?.command ?? ""));
+      .map((c) => String(this.parseInput(c.input)?.command ?? ""));
   }
 }

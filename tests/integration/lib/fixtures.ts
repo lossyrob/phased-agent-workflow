@@ -35,7 +35,7 @@ export class TestFixture {
   }
 
   /** Seed pre-built workflow artifacts into the work directory. */
-  async seedWorkflowState(workId: string, stage: "spec" | "plan" | "phase1"): Promise<void> {
+  async seedWorkflowState(workId: string, stage: "spec" | "plan" | "planning-review" | "phase1"): Promise<void> {
     const seedDir = join(FIXTURES_DIR, "seeds", stage);
     const targetDir = join(this.workDir, ".paw/work", workId);
     await mkdir(targetDir, { recursive: true });

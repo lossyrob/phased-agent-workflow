@@ -131,7 +131,10 @@
     "lint:agent:all": "./scripts/lint-prompting.sh --all",
     "lint:skills": "./scripts/lint-prompting.sh --skills",
     "build-vsix": "./scripts/build-vsix.sh",
-    "count-tokens": "node ./scripts/count-tokens.js"
+    "count-tokens": "node ./scripts/count-tokens.js",
+    "test:integration": "cd tests/integration && npx tsx --test tests/**/*.test.ts",
+    "test:integration:skills": "cd tests/integration && npx tsx --test tests/skills/*.test.ts",
+    "test:integration:workflows": "cd tests/integration && npx tsx --test tests/workflows/*.test.ts"
   },
   "devDependencies": {
     "@dqbd/tiktoken": "^1.0.0",

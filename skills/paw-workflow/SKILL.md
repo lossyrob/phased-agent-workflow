@@ -65,6 +65,7 @@ Humans have final authority over all workflow decisions:
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
 | `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
+| `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 
 **Note**: Phase PR creation is handled by PAW agent (using `paw-git-operations`) after `paw-impl-review` passes.
@@ -85,10 +86,14 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── ImplementationPlan.md   # Phased implementation plan
 ├── Docs.md                 # Technical documentation (created during final implementation phase)
 ├── prompts/                # Generated prompt files (optional)
-└── reviews/                # Final Agent Review artifacts (gitignored)
-    ├── REVIEW.md           # Single-model review
-    ├── REVIEW-{MODEL}.md   # Per-model reviews (multi-model)
-    └── REVIEW-SYNTHESIS.md # Synthesis (multi-model)
+└── reviews/                # Review artifacts (gitignored)
+    ├── planning/           # Planning Documents Review artifacts
+    │   ├── REVIEW.md
+    │   ├── REVIEW-{MODEL}.md
+    │   └── REVIEW-SYNTHESIS.md
+    ├── REVIEW.md           # Final Agent Review: single-model
+    ├── REVIEW-{MODEL}.md   # Final Agent Review: per-model (multi-model)
+    └── REVIEW-SYNTHESIS.md # Final Agent Review: synthesis (multi-model)
 ```
 
 **Work ID Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
@@ -106,6 +111,7 @@ Typical greenfield progression (adapt based on user intent and workflow state):
 1. `paw-code-research`: Document implementation details with file:line references
 2. `paw-planning`: Create phased implementation plan
 3. `paw-plan-review`: Review plan feasibility
+4. `paw-planning-docs-review` (if enabled): Holistic review of planning bundle
 
 ### Implementation Stage
 Per phase in ImplementationPlan.md:
@@ -136,7 +142,7 @@ Load `paw-review-response` utility skill for comment mechanics.
 
 ## Execution Model
 
-**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-final-review`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
+**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-final-review`, `paw-planning-docs-review`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
 
 **Subagent delegation**: `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 

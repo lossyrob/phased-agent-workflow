@@ -23,7 +23,7 @@ PAW supports three workflow modes that determine which stages are included and h
 
 ### Full Mode
 
-**Stages Included**: Spec → Spec Research → Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status
+**Stages Included**: Spec → Spec Research → Code Research → Implementation Plan → Planning Docs Review (if enabled) → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status
 
 **Description**: The complete PAW workflow with all stages from initial specification through comprehensive documentation. The Documentation phase is the final implementation phase. Final Agent Review runs after all implementation phases (including docs) to catch issues before the Final PR.
 
@@ -173,7 +173,7 @@ agents/                         # orchestrator agent prompts (2 agents)
   PAW.agent.md                  # Implementation workflow orchestrator
   PAW Review.agent.md           # Review workflow orchestrator
 
-skills/                         # activity and utility skills (27 skills)
+skills/                         # activity and utility skills (29 skills)
   paw-spec/SKILL.md
   paw-spec-research/SKILL.md
   paw-planning/SKILL.md
@@ -225,7 +225,7 @@ PAW uses a **2-agent + skills** architecture:
 
 - **PAW Agent** (`agents/PAW.agent.md`): Orchestrates implementation workflows
 - **PAW Review Agent** (`agents/PAW Review.agent.md`): Orchestrates review workflows
-- **27 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
+- **29 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
 
 ### Hybrid Execution Model
 
@@ -246,6 +246,7 @@ This preserves user collaboration for interactive work while leveraging context 
 | `paw-code-research` | Map relevant code with file:line references | CodeResearch.md |
 | `paw-planning` | Create phased implementation plans | ImplementationPlan.md |
 | `paw-plan-review` | Validate plan feasibility | Structured feedback |
+| `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code changes |
 | `paw-impl-review` | Review implementation, open PRs | Phase PRs, Docs.md |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
@@ -324,7 +325,7 @@ The specification focuses on functional/non-functional requirements, acceptance 
 
 ### Stage 02 — Planning
 
-**Skills:** `paw-code-research`, `paw-planning`, `paw-plan-review`
+**Skills:** `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-planning-docs-review`
 
 **Inputs:**
 
@@ -343,7 +344,8 @@ The specification focuses on functional/non-functional requirements, acceptance 
 2. `paw-planning` creates a detailed plan broken into discrete implementation phases
 3. Iterate collaboratively to refine the plan
 4. `paw-plan-review` validates plan feasibility and spec alignment **(mandatory)**
-5. For PRs strategy: commit artifacts and open Planning PR for review
+5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
+6. For PRs strategy: commit artifacts and open Planning PR for review
 
 Each implementation phase in the plan is a discrete chunk of work that can be reviewed and merged independently.
 

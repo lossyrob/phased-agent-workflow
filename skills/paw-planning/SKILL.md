@@ -215,6 +215,6 @@ If planning encounters questions that cannot be answered from existing artifacts
    - List of specific open questions
    - What research or clarification would resolve each question
 3. **PAW agent handles resolution** based on Review Policy:
-   - `never`: PAW agent conducts additional research to resolve questions autonomously
-   - `always`/`milestones`: PAW agent asks user for clarification
+   - `final-pr-only`: PAW agent conducts additional research to resolve questions autonomously
+   - `every-stage`/`milestones`: PAW agent asks user for clarification
 4. **Re-invocation**: PAW agent calls planning again with answers provided in the delegation prompt

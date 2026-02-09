@@ -12,7 +12,7 @@ export type HandoffMode = "manual" | "semi-auto" | "auto";
 /**
  * Valid Review Policy values for artifact-level pause decisions.
  */
-export type ReviewPolicy = "always" | "milestones" | "planning-only" | "never";
+export type ReviewPolicy = "every-stage" | "milestones" | "planning-only" | "final-pr-only";
 
 /**
  * Valid Session Policy values for context management.

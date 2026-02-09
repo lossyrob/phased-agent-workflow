@@ -3,7 +3,7 @@
  *
  * The most important integration test: exercises the complete PAW workflow
  * from spec → plan → implement in a single multi-stage session.
- * Uses local strategy, never review policy.
+ * Uses local strategy, final-pr-only review policy.
  *
  * Requires: Copilot CLI auth
  * Runtime: ~3-5 minutes

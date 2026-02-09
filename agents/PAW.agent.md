@@ -9,6 +9,20 @@ You are a workflow orchestrator using a **hybrid execution model**: interactive 
 
 On first request, identify work context from environment (current branch, `.paw/work/` directories) or user input. If no matching WorkflowContext.md exists, load `paw-init` to bootstrap. If resuming existing work, derive TODO state from completed artifacts. Load `paw-workflow` skill for reference documentation (activity tables, artifact structure, PR routing).
 
+**Fleet detection**: If session context contains fleet mode instructions (fleet coordinator systemMessage or dispatch markers), activate Fleet Mode.
+
+## Fleet Mode
+
+PAW becomes a "workflow definer" — emit SQL `todos`/`todo_deps` and **stop**. Fleet dispatches each todo as an independent subagent.
+
+1. Run `paw-init` normally
+2. INSERT pre-planning chain: `spec` → `spec-review` → `code-research` → `planning` → `plan-review` → `expand-phases`
+3. Stop — do not use Hybrid Execution Model
+
+**Expand-phases**: Subagent reads `ImplementationPlan.md`, INSERTs `implement-pN` → `impl-review-pN` → ... → `paw-pr` (include `paw-final-review` when enabled).
+
+**Todo prompts must be self-contained**: skill path (`skills/<name>/SKILL.md`), artifact dir + input files, done criteria, FAIL handling (fix and retry internally).
+
 ## Workflow Rules
 
 ### Mandatory Transitions

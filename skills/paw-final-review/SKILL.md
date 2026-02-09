@@ -93,18 +93,7 @@ Write findings in structured markdown.
 
 **If multi-model mode**:
 
-First, resolve model intents to actual model names (e.g., "latest GPT" → current GPT model).
-
-**If Interactive = true**: Present the resolved models for confirmation:
-```
-About to run multi-model review with:
-- [resolved model 1]
-- [resolved model 2]
-- [resolved model 3]
-
-Proceed with these models, or specify different ones?
-```
-Allow user to confirm or provide alternative model list.
+Read the resolved model names from WorkflowContext.md. Log the models being used, then start immediately — models were already confirmed during `paw-init`.
 
 Then spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the review prompt above. Save per-model reviews to `REVIEW-{MODEL}.md`.
 

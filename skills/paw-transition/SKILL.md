@@ -25,8 +25,9 @@ Read WorkflowContext.md to determine:
 - Work ID and target branch
 - Session Policy (`per-stage` | `continuous`)
 - Review Strategy (`prs` | `local`)
-- Review Policy (`always` | `milestones` | `planning-only` | `never`)
-  - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
+- Review Policy (`every-stage` | `milestones` | `planning-only` | `final-pr-only`)
+  - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`every-stage`, `semi-auto`→`milestones`, `auto`→`final-pr-only`
+  - Also map legacy Review Policy values: `always`→`every-stage`, `never`→`final-pr-only`
   - If neither present, default to `milestones`
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
@@ -85,11 +86,13 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 | paw-pr complete | Final PR |
 
 **Determine pause_at_milestone**:
-- If Review Policy ∈ {`always`, `milestones`}: pause at ALL milestones
+- If Review Policy ∈ {`every-stage`, `milestones`}: pause at ALL milestones
 - If Review Policy = `planning-only`:
   - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Final PR: `pause_at_milestone = true`
   - Phase completion (including last phase): `pause_at_milestone = false`
-- If Review Policy = `never`: `pause_at_milestone = false`
+- If Review Policy = `final-pr-only`:
+  - Final PR: `pause_at_milestone = true`
+  - All other milestones: `pause_at_milestone = false`
 
 **Determine session_action**:
 - If crossing a stage boundary AND Session Policy = `per-stage`: set `session_action = new_session`

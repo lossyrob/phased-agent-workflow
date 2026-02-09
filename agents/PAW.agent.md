@@ -57,15 +57,22 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
 ### Review Policy Behavior
-- `always`: Pause after every artifact for user confirmation
+
+**IMPORTANT**: Review Policy controls HUMAN review pauses only. It does NOT affect automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review). Those are mandatory per the Mandatory Transitions table regardless of Review Policy setting.
+
+- `every-stage`: Pause after every artifact for user confirmation
 - `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
 - `planning-only`: Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion, and Final PR only; auto-proceed at phase completions (local strategy required)
-- `never`: Auto-proceed unless blocked
+- `final-pr-only`: Only pause at final PR — auto-proceed through all intermediate stages
+
+**Legacy Review Policy mapping** (for older WorkflowContext.md files):
+- `never` → `final-pr-only`
+- `always` → `every-stage`
 
 **Legacy Handoff Mode mapping** (for older WorkflowContext.md files):
-- `manual` → `always`
+- `manual` → `every-stage`
 - `semi-auto` → `milestones`
-- `auto` → `never`
+- `auto` → `final-pr-only`
 
 ### Session Policy Behavior
 {{#vscode}}

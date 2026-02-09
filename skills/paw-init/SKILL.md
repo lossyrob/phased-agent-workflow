@@ -27,7 +27,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `target_branch` | No | auto-derive from work ID | branch name |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
-| `review_policy` | No | `milestones` | `always`, `milestones`, `planning-only`, `never` |
+| `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
 | `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
 | `track_artifacts` | No | `true` | boolean |
 | `issue_url` | No | none | URL |
@@ -68,8 +68,17 @@ This mirrors the VS Code command flow which prompts sequentially but allows skip
 
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
-- If `review_policy` is `planning-only` or `never`, `review_strategy` MUST be `local`
+- If `review_policy` is `planning-only` or `final-pr-only`, `review_strategy` MUST be `local`
 - Invalid combinations: STOP and report error
+
+### Model Resolution (multi-model only)
+When `final_review_mode` is `multi-model`:
+- Resolve model intents to concrete model names (e.g., "latest GPT" → `gpt-5.2`, "latest Gemini" → `gemini-3-pro-preview`, "latest Claude Opus" → `claude-opus-4.6`)
+- Present the resolved models for user confirmation as part of the configuration summary
+- If user requests changes, update the model list accordingly
+- Store the **resolved concrete model names** in WorkflowContext.md (not the intent strings)
+
+This ensures model selection is a one-time upfront decision during init, not a per-review-gate interruption.
 
 ### Directory Structure
 ```

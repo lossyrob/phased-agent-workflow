@@ -1,11 +1,6 @@
 ---
 name: paw-review-github
 description: Posts finalized review comments to GitHub as a pending review after critique iteration is complete.
-metadata:
-  type: activity
-  artifacts: none
-  updates: ReviewComments.md
-  stage: output
 ---
 
 # PAW Review GitHub Skill

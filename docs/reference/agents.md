@@ -90,7 +90,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 | Policy | Values | Description |
 |--------|--------|-------------|
-| Review Policy | `always` / `milestones` / `planning-only` / `never` | When to pause for human review |
+| Review Policy | `every-stage` / `milestones` / `planning-only` / `final-pr-only` | When to pause for human review |
 | Session Policy | `per-stage` / `continuous` | Chat context management (CLI always uses `continuous`) |
 | Workflow Mode | `full` / `minimal` / `custom` | Workflow complexity |
 | Review Strategy | `prs` / `local` | PR-based or direct commits |
@@ -99,10 +99,10 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 | Policy | Behavior |
 |--------|----------|
-| `always` | Pause after every artifact is produced |
+| `every-stage` | Pause after every artifact is produced |
 | `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
 | `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| `never` | Proceed continuously without review pauses |
+| `final-pr-only` | Only pause at final PR — auto-proceed through all intermediate stages |
 
 ---
 
@@ -201,12 +201,14 @@ PAW supports four review policies that control when the workflow pauses for huma
 
 | Policy | Behavior |
 |--------|----------|
-| **always** | Pause after every artifact is produced |
+| **every-stage** | Pause after every artifact is produced |
 | **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
 | **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| **never** | Proceed continuously without review pauses |
+| **final-pr-only** | Only pause at final PR — auto-proceed through all intermediate stages |
 
-**Legacy Handoff Mode Mapping:** Older WorkflowContext.md files may use `Handoff Mode` instead of `Review Policy`. The mapping is: `manual` → `always`, `semi-auto` → `milestones`, `auto` → `never`.
+**Legacy Review Policy Mapping:** Older WorkflowContext.md files may use `never` or `always`. The mapping is: `never` → `final-pr-only`, `always` → `every-stage`.
+
+**Legacy Handoff Mode Mapping:** Older WorkflowContext.md files may use `Handoff Mode` instead of `Review Policy`. The mapping is: `manual` → `every-stage`, `semi-auto` → `milestones`, `auto` → `final-pr-only`.
 
 ## Next Steps
 

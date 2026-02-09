@@ -110,8 +110,9 @@ The extension manages workflow directories, git branches, and provides status co
 
 **Review Policies** control when the workflow pauses for human input:
 - **milestones** — Pause at spec, plan, and PR completion (recommended)
-- **always** — Pause after every artifact
-- **never** — Auto-proceed through all stages
+- **every-stage** — Pause after every artifact
+- **planning-only** — Pause at spec and plan only
+- **final-pr-only** — Auto-proceed through all stages, pause at final PR
 
 Configuration is set in `WorkflowContext.md` during initialization. See the [PAW Specification](paw-specification.md) for details.
 

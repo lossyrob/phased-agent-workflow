@@ -142,7 +142,7 @@ Load `paw-review-response` utility skill for comment mechanics.
 
 **Orchestrator-handled**: Push and Phase PR creation (after `paw-impl-review` passes, using `paw-git-operations`)
 
-Activities may return `blocked` status with open questions. Apply Review Policy to determine resolution approach (`never`: research autonomously; `always`/`milestones`: ask user).
+Activities may return `blocked` status with open questions. Apply Review Policy to determine resolution approach (`final-pr-only`: research autonomously; `every-stage`/`milestones`: ask user).
 
 ## Workflow Mode
 

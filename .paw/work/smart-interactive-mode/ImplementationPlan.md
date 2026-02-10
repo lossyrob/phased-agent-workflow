@@ -28,7 +28,7 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 - [x] **Phase 1: Core Review Skills** - Add smart mode resolution logic to paw-final-review and paw-planning-docs-review
 - [x] **Phase 2: Configuration Chain** - Update paw-init defaults, paw-status display, VS Code extension types/UI, and unit tests
 - [x] **Phase 3: Documentation** - Update specification, guide, reference docs, and create Docs.md
-- [ ] **Phase 4: Integration Test** - Add workflow test verifying smart mode classification heuristic
+- [x] **Phase 4: Integration Test** - Add workflow test verifying smart mode classification heuristic
 
 ## Phase Candidates
 <!-- Lightweight capture of potential phases identified during implementation. -->

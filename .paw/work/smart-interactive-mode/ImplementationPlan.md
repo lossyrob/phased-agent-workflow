@@ -41,17 +41,17 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 
 - **`skills/paw-final-review/SKILL.md`**:
   - Update config reading (line 27) to accept `true` | `false` | `smart`
-  - Add `If Interactive = smart` branch in Step 5: Resolution (between current `true` and `false` branches, lines 151-184)
+  - Add `If Interactive = smart` branch in Step 5: Resolution (between current `true` and `false` branches, lines 151-184). Place the synthesis-dependent classification logic within `{{#cli}}` conditionals, consistent with existing multi-model sections. For `{{#vscode}}`, smart mode degrades to `true` (interactive) behavior since single-model has no agreement signal
   - Smart mode logic: classify each synthesis finding using the heuristic matrix (agreement × severity × fix clarity), then execute in two phases: (1) batch auto-apply classified `auto-apply` findings, display summary, (2) present classified `interactive` findings one-at-a-time using existing interactive format
-  - Define the classification heuristic inline: consensus + must-fix/should-fix + single clear proposed fix → auto-apply; consider → report-only; everything else → interactive
-  - Define "fix clarity" criteria: when synthesis shows all agreeing models propose the same fix content, the fix is clear; if models disagree on the fix approach, it's unclear
+  - Define the classification heuristic inline: consensus + must-fix/should-fix → auto-apply; partial/single-model → interactive; consider (any agreement) → report-only. Consensus agreement in the synthesis implies models converged on the fix — no per-model cross-referencing needed
   - Add batch summary format and final summary format showing all finding dispositions
 
 - **`skills/paw-planning-docs-review/SKILL.md`**:
   - Update config reading (line 29) to accept `true` | `false` | `smart`
-  - Add `If Interactive = smart` branch in Step 5: Resolution (between current `true` and `false` branches, lines 155-194)
-  - Same classification heuristic as final-review, with additional routing awareness: single-artifact consensus findings are auto-routed to the appropriate skill (paw-spec or paw-planning); multi-artifact (`both`) findings always pause for user routing decision regardless of classification
+  - Add `If Interactive = smart` branch in Step 5: Resolution (between current `true` and `false` branches, lines 155-194). Place within `{{#cli}}` conditionals. For `{{#vscode}}`, smart mode degrades to `true` (interactive) behavior
+  - Same classification heuristic as final-review, with additional routing awareness: single-artifact consensus must-fix/should-fix findings are auto-routed to the appropriate skill (paw-spec or paw-planning); multi-artifact (`both`) must-fix/should-fix findings always pause for user routing decision; consider-severity findings are report-only regardless of artifact scope
   - Same batch/final summary format
+  - Note: smart mode classification applies independently per re-review cycle (Step 6) since synthesis is regenerated from modified artifacts each cycle
 
 ### Success Criteria:
 
@@ -67,6 +67,8 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 - [ ] Final summary format covers all dispositions: auto-applied, user-applied, user-skipped, reported (SC-004, SC-005)
 - [ ] Single-artifact consensus findings in planning-docs-review are auto-routed without user interaction (SC-006)
 - [ ] `consider` findings are explicitly handled as report-only in smart mode
+- [ ] Edge case: all findings auto-applicable → no interactive phase, batch summary only
+- [ ] Edge case: single-model mode → smart degrades to fully interactive (no auto-apply)
 
 ---
 
@@ -85,8 +87,7 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 
 - **`src/ui/userInput.ts`**:
   - Change `FinalReviewConfig.interactive` type from `boolean` to `boolean | 'smart'` (line 44)
-  - Add "Smart (Recommended)" option to quick pick (lines 441-455) as the first/default item, with description explaining auto-apply consensus + pause for decisions
-  - Keep existing "Interactive" and "Auto-Apply" options for backward compatibility
+  - VS Code quick pick (lines 441-455): keep existing "Interactive" and "Auto-Apply" options only. Do NOT add "Smart" — VS Code only supports single-model mode where smart degrades to interactive, making the option misleading. Smart is available via CLI paw-init only.
 
 - **`src/commands/initializeWorkItem.ts`**:
   - Verify config passthrough (line 40) doesn't coerce `'smart'` to boolean — no change expected since value is passed directly to config object

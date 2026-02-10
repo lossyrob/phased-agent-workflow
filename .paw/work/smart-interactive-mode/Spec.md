@@ -73,7 +73,7 @@ Acceptance Scenarios:
 - FR-007: Smart routing in planning-docs-review: auto-route single-artifact consensus findings, pause for multi-artifact or ambiguous findings (Stories: P4)
 - FR-008: Update default value for `Final Review Interactive` and `Planning Review Interactive` from `true` to `smart` in paw-init (Stories: P5)
 - FR-009: Backward compatibility — existing `true` and `false` values continue to work with current behavior (Stories: P5)
-- FR-010: Fix clarity detection — determine whether models agree on the specific fix (not just the issue) by comparing proposed changes across model responses (Stories: P1)
+- FR-010: Fix clarity determination — consensus agreement in the synthesis implies models converged on the fix; partial or single-model agreement signals ambiguity requiring user input (Stories: P1)
 
 ### Key Entities
 - **Finding Classification**: The result of applying the smart heuristic to a synthesis finding — either `auto-apply`, `interactive`, or `report-only`
@@ -94,8 +94,8 @@ Acceptance Scenarios:
 - SC-008: Workflows configured with `true` or `false` interactive values behave identically to current behavior (FR-009)
 
 ## Assumptions
-- The multi-model synthesis output already contains sufficient structure (agreement level sections, severity labels, proposed changes) to determine classification without modifying the synthesis skill itself
-- "Fix clarity" can be determined by comparing the proposed changes across model responses within the synthesis — if all agreeing models propose substantively the same change, the fix is clear
+- The multi-model synthesis merges per-model proposals into consensus findings; consensus agreement level is sufficient to determine fix clarity without cross-referencing individual model review files
+- "Fix clarity" is determined by agreement level: consensus = clear fix, partial/single-model = ambiguous
 - Single-model review mode (1 model) will treat all findings as interactive since there's no agreement signal
 
 ## Scope
@@ -112,6 +112,7 @@ Out of Scope:
 - Changes to the individual model review prompts
 - Smart mode for any future review skills not yet implemented
 - User-configurable heuristic thresholds (the heuristic is fixed per the decision matrix)
+- Integration tests for smart mode — deferred to follow-up work item; manual verification is sufficient for prompt-only changes
 
 ## Dependencies
 - Multi-model-review skill synthesis output structure (existing)

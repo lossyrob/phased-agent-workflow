@@ -247,6 +247,13 @@ Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md)
 
 **Focus:** Cross-artifact consistency gate before implementation.
 
+**Configuration:**
+
+- `Planning Docs Review`: `enabled` | `disabled` (default: enabled, disabled in minimal)
+- `Planning Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Planning Review Interactive`: `true` | `false` | `smart` (default: smart)
+- `Planning Review Models`: comma-separated model names (for multi-model)
+
 ### paw-status
 
 Diagnoses current workflow state, recommends next steps, explains PAW process, and posts status updates to Issues/PRs.

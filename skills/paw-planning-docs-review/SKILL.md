@@ -192,7 +192,9 @@ For multi-model mode, process synthesis first (consensus → partial → single-
 **If Interactive = smart**:
 
 {{#cli}}
-Classify each synthesis finding, then resolve in phases:
+If `Planning Review Mode` is `single-model`, smart degrades to interactive behavior (no synthesis to classify). Follow the `Interactive = true` flow.
+
+If `Planning Review Mode` is `multi-model`, classify each synthesis finding, then resolve in phases:
 
 **Classification heuristic** (applied per finding):
 

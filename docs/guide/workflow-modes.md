@@ -165,6 +165,17 @@ Final Agent Review runs after all implementation phases complete, before the Fin
 - In **interactive mode**, you confirm each finding before changes are made
 - In **auto-apply mode**, must-fix and should-fix recommendations are applied automatically
 
+## Planning Docs Review Configuration
+
+Planning Docs Review runs during planning (Stage 02) to validate cross-artifact consistency before implementation begins. Configuration is stored in `WorkflowContext.md`.
+
+| Field | Default | Options | Description |
+|-------|---------|---------|-------------|
+| Planning Docs Review | enabled | `enabled`, `disabled` | Whether to run the review step |
+| Planning Review Mode | multi-model | `single-model`, `multi-model` | Single model or parallel multi-model review |
+| Planning Review Interactive | smart | `true`, `false`, `smart` | `true`: confirm each finding; `false`: auto-apply; `smart`: auto-apply consensus, interactive for ambiguous |
+| Planning Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model review (CLI only) |
+
 ## Selecting Your Mode
 
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:

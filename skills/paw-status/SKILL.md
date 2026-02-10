@@ -46,6 +46,8 @@ Read WorkflowContext.md for:
 - Planning Docs Review: `enabled` | `disabled`
 - Final Review Mode: `single-model` | `multi-model`
 - Final Review Interactive: `true` | `false` | `smart`
+- Planning Review Mode: `single-model` | `multi-model`
+- Planning Review Interactive: `true` | `false` | `smart`
 
 ### Phase Counting
 

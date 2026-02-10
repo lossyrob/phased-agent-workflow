@@ -441,16 +441,22 @@ export async function collectFinalReviewConfig(
   const interactiveSelection = await vscode.window.showQuickPick(
     [
       {
+        label: "Smart",
+        description: "Auto-apply consensus fixes, interactive for ambiguous (default)",
+        detail: "In multi-model (CLI): obvious fixes applied automatically. In single-model: interactive",
+        value: 'smart' as boolean | 'smart',
+      },
+      {
         label: "Interactive",
-        description: "Review each finding: apply, skip, or discuss (default)",
+        description: "Review each finding: apply, skip, or discuss",
         detail: "You control what gets changed",
-        value: true,
+        value: true as boolean | 'smart',
       },
       {
         label: "Auto-Apply",
         description: "Automatically apply recommended fixes",
         detail: "Faster but less control over changes",
-        value: false,
+        value: false as boolean | 'smart',
       },
     ],
     {

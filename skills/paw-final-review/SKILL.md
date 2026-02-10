@@ -14,7 +14,7 @@ Automated review step that runs after all implementation phases complete, before
 - Review implementation against spec for correctness, patterns, and issues
 - Multi-model parallel review with synthesis (CLI only)
 - Single-model review (CLI and VS Code)
-- Interactive or auto-apply resolution modes
+- Interactive, smart, or auto-apply resolution modes
 - Generate review artifacts in `.paw/work/<work-id>/reviews/`
 
 ## Procedure
@@ -182,7 +182,9 @@ For multi-model mode, process synthesis first (consensus → partial → single-
 **If Interactive = smart**:
 
 {{#cli}}
-Classify each synthesis finding, then resolve in phases:
+If `Final Review Mode` is `single-model`, smart degrades to interactive behavior (no synthesis to classify). Follow the `Interactive = true` flow.
+
+If `Final Review Mode` is `multi-model`, classify each synthesis finding, then resolve in phases:
 
 **Classification heuristic** (applied per finding):
 

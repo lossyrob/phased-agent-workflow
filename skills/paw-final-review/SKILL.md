@@ -24,7 +24,7 @@ Automated review step that runs after all implementation phases complete, before
 Read WorkflowContext.md for:
 - Work ID and target branch
 - `Final Review Mode`: `single-model` | `multi-model`
-- `Final Review Interactive`: `true` | `false`
+- `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 {{#cli}}
@@ -178,6 +178,53 @@ Track status for each finding:
 {{#cli}}
 For multi-model mode, process synthesis first (consensus → partial → single-model). Track cross-finding duplicates to avoid re-presenting already-addressed issues.
 {{/cli}}
+
+**If Interactive = smart**:
+
+{{#cli}}
+Classify each synthesis finding, then resolve in phases:
+
+**Classification heuristic** (applied per finding):
+
+| Agreement Level | Severity | Classification |
+|----------------|----------|----------------|
+| Consensus | must-fix | `auto-apply` |
+| Consensus | should-fix | `auto-apply` |
+| Consensus | consider | `report-only` |
+| Partial | any | `interactive` |
+| Single-model | any | `interactive` |
+| Any | consider | `report-only` |
+
+Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.
+
+**Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction. Display batch summary:
+
+```
+## Auto-Applied Findings (N items)
+
+1. **[Title]** (must-fix) — [one-line description]
+2. **[Title]** (should-fix) — [one-line description]
+...
+```
+
+**Phase 2 — Interactive**: Present each `interactive` finding using the same format as `Interactive = true` (apply, skip, or discuss).
+
+**Phase 3 — Summary**: Display final summary of all dispositions:
+
+```
+## Resolution Summary
+
+**Auto-applied**: N findings (consensus fixes)
+**User-applied**: N findings
+**User-skipped**: N findings
+**Reported only**: N findings (consider-severity)
+```
+
+If all findings are `auto-apply` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
+{{/cli}}
+{{#vscode}}
+Smart mode degrades to interactive behavior in VS Code (single-model has no agreement signal). Follow the `Interactive = true` flow above.
+{{/vscode}}
 
 **If Interactive = false**:
 

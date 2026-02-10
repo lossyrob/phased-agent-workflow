@@ -63,11 +63,16 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 - [ ] Smart mode branch is clearly distinct from `true` and `false` branches
 - [ ] Classification heuristic is unambiguous — each finding maps to exactly one classification
 - [ ] Existing `true`/`false` behavior is unchanged
+- [ ] Batch summary of auto-applied findings is specified before interactive findings begin (SC-003)
+- [ ] Final summary format covers all dispositions: auto-applied, user-applied, user-skipped, reported (SC-004, SC-005)
+- [ ] Single-artifact consensus findings in planning-docs-review are auto-routed without user interaction (SC-006)
 - [ ] `consider` findings are explicitly handled as report-only in smart mode
 
 ---
 
 ## Phase 2: Configuration Chain
+
+> Depends on Phase 1: consuming skills must recognize `smart` before the config chain pipes it.
 
 ### Changes Required:
 
@@ -84,7 +89,7 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
   - Keep existing "Interactive" and "Auto-Apply" options for backward compatibility
 
 - **`src/commands/initializeWorkItem.ts`**:
-  - Config passthrough (line 40) already passes value directly — should work with `'smart'` string. Verify no boolean coercion occurs.
+  - Verify config passthrough (line 40) doesn't coerce `'smart'` to boolean — no change expected since value is passed directly to config object
 
 - **`src/test/suite/userInput.test.ts`**:
   - Add test case for `interactive: 'smart'` value
@@ -106,6 +111,8 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 ---
 
 ## Phase 3: Documentation
+
+> Depends on Phase 1 and 2: document final behavior and configuration after implementation is stable.
 
 ### Changes Required:
 

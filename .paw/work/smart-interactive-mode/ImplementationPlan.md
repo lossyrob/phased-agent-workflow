@@ -28,10 +28,11 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 - [x] **Phase 1: Core Review Skills** - Add smart mode resolution logic to paw-final-review and paw-planning-docs-review
 - [x] **Phase 2: Configuration Chain** - Update paw-init defaults, paw-status display, VS Code extension types/UI, and unit tests
 - [x] **Phase 3: Documentation** - Update specification, guide, reference docs, and create Docs.md
+- [ ] **Phase 4: Integration Test** - Add workflow test verifying smart mode classification heuristic
 
 ## Phase Candidates
 <!-- Lightweight capture of potential phases identified during implementation. -->
-- [ ] Integration test for smart mode classification behavior
+- [x] [promoted] Integration test for smart mode classification behavior
 
 ---
 
@@ -132,6 +133,45 @@ Add a `smart` value to the `Final Review Interactive` and `Planning Review Inter
 - [ ] Docs build: `source .venv/bin/activate && mkdocs build --strict`
 - [ ] Content accurately describes smart mode behavior, heuristic, and configuration
 - [ ] All three mode values documented consistently across all doc files
+
+---
+
+## Phase 4: Integration Test
+
+### Objective
+Verify that `paw-planning-docs-review` with `Interactive = smart` correctly classifies synthesis findings and resolves them in phases (auto-apply consensus, interactive for partial/single, report-only for consider).
+
+### Changes Required
+
+**New file: `tests/integration/tests/workflows/smart-interactive-mode.test.ts`**
+
+Test drives `paw-planning-docs-review` skill with smart mode config. Uses the existing `planning-review` seed (Spec.md + ImplementationPlan.md + CodeResearch.md) with a WorkflowContext.md seeded to `Planning Review Interactive: smart` and `Planning Review Mode: multi-model`.
+
+**Test scenarios:**
+1. Agent response references smart mode classification (consensus/partial/single agreement levels)
+2. Auto-applied findings appear in batch summary (Phase 1)
+3. Consider-severity findings are report-only (not applied or prompted)
+4. Resolution summary includes expected disposition categories
+
+**Answerer rules:**
+- For interactive findings (partial/single agreement): answer "apply" to exercise the interactive path
+- Default first-choice for any other questions
+
+**Assertions:**
+- Review artifact created at expected path
+- Response text contains "Auto-Applied" or equivalent batch summary language
+- Response text contains "Resolution Summary" or equivalent
+- Response text references agreement levels (consensus, partial)
+- `assertToolCalls`: no git push/commit (review skill shouldn't commit)
+
+**Seed data:**
+- Reuse existing `planning-review` seed for Spec/Plan/CodeResearch
+- Add WorkflowContext.md with smart config via `writeFile` in test setup
+
+### Success Criteria
+- [ ] Test passes with `npx tsx --test tests/workflows/smart-interactive-mode.test.ts`
+- [ ] No modifications to existing tests
+- [ ] Test exercises smart classification heuristic (not just interactive=true behavior)
 
 ---
 

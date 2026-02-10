@@ -45,7 +45,7 @@ Read WorkflowContext.md for:
 - Final Agent Review: `enabled` | `disabled`
 - Planning Docs Review: `enabled` | `disabled`
 - Final Review Mode: `single-model` | `multi-model`
-- Final Review Interactive: `true` | `false`
+- Final Review Interactive: `true` | `false` | `smart`
 
 ### Phase Counting
 

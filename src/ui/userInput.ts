@@ -40,8 +40,8 @@ export interface FinalReviewConfig {
   /** Review mode: single-model or multi-model (only applies if enabled) */
   mode: 'single-model' | 'multi-model';
   
-  /** Whether review is interactive (apply/skip/discuss) or auto-apply */
-  interactive: boolean;
+  /** Whether review is interactive (apply/skip/discuss), auto-apply, or smart (auto-apply consensus, interactive for ambiguous) */
+  interactive: boolean | 'smart';
 }
 
 /**

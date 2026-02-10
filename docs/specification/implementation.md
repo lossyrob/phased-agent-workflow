@@ -169,7 +169,7 @@ Automated review of the complete implementation against specification before Fin
 
 - `Final Agent Review`: `enabled` | `disabled` (default: enabled)
 - `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
-- `Final Review Interactive`: `true` | `false` (default: true)
+- `Final Review Interactive`: `true` | `false` | `smart` (default: smart)
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 **Note:** VS Code only supports single-model mode due to environment limitations.

@@ -56,11 +56,11 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Additional Inputs | Extra parameters |
 | Final Agent Review | `enabled` or `disabled` |
 | Final Review Mode | `single-model` or `multi-model` |
-| Final Review Interactive | `true` or `false` |
+| Final Review Interactive | `true`, `false`, or `smart` |
 | Final Review Models | Comma-separated model names |
 | Planning Docs Review | `enabled` or `disabled` |
 | Planning Review Mode | `single-model` or `multi-model` |
-| Planning Review Interactive | `true` or `false` |
+| Planning Review Interactive | `true`, `false`, or `smart` |
 | Planning Review Models | Comma-separated model names |
 
 ### Spec.md

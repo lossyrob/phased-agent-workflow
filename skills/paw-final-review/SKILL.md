@@ -190,9 +190,8 @@ Classify each synthesis finding, then resolve in phases:
 |----------------|----------|----------------|
 | Consensus | must-fix | `auto-apply` |
 | Consensus | should-fix | `auto-apply` |
-| Consensus | consider | `report-only` |
-| Partial | any | `interactive` |
-| Single-model | any | `interactive` |
+| Partial | must-fix/should-fix | `interactive` |
+| Single-model | must-fix/should-fix | `interactive` |
 | Any | consider | `report-only` |
 
 Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.

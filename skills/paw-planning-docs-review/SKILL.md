@@ -200,9 +200,8 @@ Classify each synthesis finding, then resolve in phases:
 |----------------|----------|-------------------|----------------|
 | Consensus | must-fix/should-fix | spec or plan (single) | `auto-apply` → auto-route to appropriate skill |
 | Consensus | must-fix/should-fix | both | `interactive` → user chooses routing |
-| Consensus | consider | any | `report-only` |
-| Partial | any | any | `interactive` |
-| Single-model | any | any | `interactive` |
+| Partial | must-fix/should-fix | any | `interactive` |
+| Single-model | must-fix/should-fix | any | `interactive` |
 | Any | consider | any | `report-only` |
 
 Consensus agreement implies models converged on the fix. Single-artifact consensus findings are auto-routed: `spec` → paw-spec (Revise), `plan` → paw-planning (Revision). Multi-artifact findings always pause for user routing even at consensus.

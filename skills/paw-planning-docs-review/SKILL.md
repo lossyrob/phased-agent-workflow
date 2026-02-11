@@ -26,7 +26,7 @@ Read WorkflowContext.md for:
 - Work ID and target branch
 - `Planning Docs Review`: `enabled` | `disabled`
 - `Planning Review Mode`: `single-model` | `multi-model`
-- `Planning Review Interactive`: `true` | `false`
+- `Planning Review Interactive`: `true` | `false` | `smart`
 - `Planning Review Models`: comma-separated model names (for multi-model)
 
 If `Planning Docs Review` is `disabled`, report skip and return `complete`.
@@ -188,6 +188,56 @@ Track status for each finding: `applied-to-spec`, `applied-to-plan`, `applied-to
 {{#cli}}
 For multi-model mode, process synthesis first (consensus → partial → single-model). Track cross-finding duplicates to avoid re-presenting already-addressed issues.
 {{/cli}}
+
+**If Interactive = smart**:
+
+{{#cli}}
+If `Planning Review Mode` is `single-model`, smart degrades to interactive behavior (no synthesis to classify). Follow the `Interactive = true` flow.
+
+If `Planning Review Mode` is `multi-model`, classify each synthesis finding, then resolve in phases:
+
+**Classification heuristic** (applied per finding):
+
+| Agreement Level | Severity | Affected Artifact | Classification |
+|----------------|----------|-------------------|----------------|
+| Consensus | must-fix/should-fix | spec or plan (single) | `auto-apply` → auto-route to appropriate skill |
+| Consensus | must-fix/should-fix | both | `interactive` → user chooses routing |
+| Partial | must-fix/should-fix | any | `interactive` |
+| Single-model | must-fix/should-fix | any | `interactive` |
+| Any | consider | any | `report-only` |
+
+Consensus agreement implies models converged on the fix. Single-artifact consensus findings are auto-routed: `spec` → paw-spec (Revise), `plan` → paw-planning (Revision). Multi-artifact findings always pause for user routing even at consensus.
+
+**Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction, routing each to the appropriate skill. Display batch summary:
+
+```
+## Auto-Applied Findings (N items)
+
+1. **[Title]** (must-fix) → applied to spec — [one-line description]
+2. **[Title]** (should-fix) → applied to plan — [one-line description]
+...
+```
+
+**Phase 2 — Interactive**: Present each `interactive` finding using the same format as `Interactive = true` (apply-to-spec, apply-to-plan, apply-to-both, skip, or discuss).
+
+**Phase 3 — Summary**: Display final summary of all dispositions:
+
+```
+## Resolution Summary
+
+**Auto-applied**: N findings (consensus single-artifact fixes)
+**User-applied**: N findings (to-spec: X, to-plan: Y, to-both: Z)
+**User-skipped**: N findings
+**Reported only**: N findings (consider-severity)
+```
+
+If all findings are `auto-apply` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
+
+Smart mode classification applies independently per re-review cycle (Step 6) since synthesis is regenerated from modified artifacts each cycle.
+{{/cli}}
+{{#vscode}}
+Smart mode degrades to interactive behavior in VS Code (single-model has no agreement signal). Follow the `Interactive = true` flow above.
+{{/vscode}}
 
 **If Interactive = false**:
 

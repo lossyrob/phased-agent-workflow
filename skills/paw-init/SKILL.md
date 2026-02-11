@@ -35,11 +35,11 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `work_description` | No | none | text |
 | `final_agent_review` | No | `enabled` | `enabled`, `disabled` |
 | `final_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
-| `final_review_interactive` | No | `true` | boolean |
+| `final_review_interactive` | No | `smart` | `true`, `false`, `smart` |
 | `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
-| `planning_review_interactive` | No | `true` | boolean |
+| `planning_review_interactive` | No | `smart` | `true`, `false`, `smart` |
 | `planning_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 
 ### Handling Missing Parameters

@@ -169,7 +169,7 @@ Automated review of the complete implementation against specification before Fin
 
 - `Final Agent Review`: `enabled` | `disabled` (default: enabled)
 - `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
-- `Final Review Interactive`: `true` | `false` (default: true)
+- `Final Review Interactive`: `true` | `false` | `smart` (default: smart)
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 **Note:** VS Code only supports single-model mode due to environment limitations.
@@ -246,6 +246,13 @@ Reviews implementation against specification after all phases complete. Supports
 Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md) as a holistic bundle after plan-review passes. Supports multi-model parallel review (CLI) or single-model review (VS Code). Catches cross-artifact consistency issues before implementation begins.
 
 **Focus:** Cross-artifact consistency gate before implementation.
+
+**Configuration:**
+
+- `Planning Docs Review`: `enabled` | `disabled` (default: enabled, disabled in minimal)
+- `Planning Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Planning Review Interactive`: `true` | `false` | `smart` (default: smart)
+- `Planning Review Models`: comma-separated model names (for multi-model)
 
 ### paw-status
 

@@ -6,7 +6,7 @@ Replace the binary `artifact_tracking` toggle with a three-mode `artifact_lifecy
 
 ## Current State Analysis
 
-Artifact tracking is a scattered binary toggle with no explicit state field. Detection relies on checking for `.paw/work/<work-id>/.gitignore` containing `*`. Five skills independently implement this check. The VS Code extension presents a boolean Track/Don't Track picker. The specification doesn't mention artifact tracking at all.
+Artifact tracking is a scattered binary toggle with no explicit state field. Detection relies on checking for `.paw/work/<work-id>/.gitignore` containing `*`. Five skills independently implement this check. The VS Code extension presents a boolean Track/Don't Track picker. The project specification (`paw-specification.md`) doesn't mention artifact tracking at all.
 
 Key gaps: no centralized lifecycle field in WorkflowContext.md, `paw-pr` doesn't perform any git operations for artifacts, and `paw-impl-review` commits without checking tracking state.
 
@@ -35,7 +35,7 @@ Key gaps: no centralized lifecycle field in WorkflowContext.md, `paw-pr` doesn't
 - [ ] **Phase 5: Documentation** - Create Docs.md and cleanup recipe
 
 ## Phase Candidates
-<!-- None identified yet -->
+- [ ] Integration tests for artifact lifecycle behavior (default mode at init, `commit-and-clean` stop-tracking at paw-pr, `never-commit` prevents staging, legacy backward compatibility)
 
 ---
 
@@ -111,6 +111,7 @@ Add the `commit-and-clean` stop-tracking operation to `paw-pr` and update PR des
 - [ ] Idempotency handling is explicit (what happens if already untracked)
 - [ ] Artifact link generation for `commit-and-clean` is clear (uses pre-stop-tracking commit SHA)
 - [ ] All three lifecycle modes have defined PR description behavior
+- [ ] After stop-tracking, `git diff <base-branch>` shows zero `.paw/` file changes (validates SC-001)
 
 ---
 
@@ -173,6 +174,7 @@ Update the specification and user-facing docs to reflect the new lifecycle model
 - **`docs/guide/vscode-extension.md`**:
   - Update init flow parameter (line 21): replace "Artifact tracking: Track/Don't Track" with lifecycle mode selection
   - Update "Stop Tracking Artifacts" section (lines 59-80): explain it now switches lifecycle to `never-commit`, note that `commit-and-clean` handles cleanup automatically at PR time
+  - Add manual cleanup recipe for bulk-removing old `.paw/work/` directories from `main` with `git rm -r .paw/work/`
 
 - **`docs/reference/artifacts.md`**:
   - Add `Artifact Lifecycle` row to WorkflowContext.md field table (~lines 44-64)
@@ -194,7 +196,6 @@ Update the specification and user-facing docs to reflect the new lifecycle model
 
 ### Changes Required:
 - **`.paw/work/artifact-lifecycle-management/Docs.md`**: Technical reference covering the implementation (load `paw-docs-guidance`)
-- **Manual cleanup recipe**: Add to `docs/guide/vscode-extension.md` in the Stop Tracking Artifacts section, documenting how to bulk-remove old `.paw/work/` directories from `main` with `git rm -r .paw/work/`
 
 ### Success Criteria:
 - [ ] Docs build passes: `source .venv/bin/activate && mkdocs build --strict`

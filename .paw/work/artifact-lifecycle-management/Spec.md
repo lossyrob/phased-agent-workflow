@@ -94,7 +94,7 @@ Acceptance Scenarios:
 ### Functional Requirements
 
 - FR-001: Replace the `track_artifacts` boolean with a three-mode `artifact_lifecycle` setting accepting values `commit-and-clean`, `commit-and-persist`, and `never-commit` (Stories: P3, P4, P5)
-- FR-002: Default `artifact_lifecycle` to `commit-and-clean` in `paw-init` without prompting the user (Stories: P3)
+- FR-002: Default `artifact_lifecycle` to `commit-and-clean` in `paw-init` without requiring explicit user choice — the skill default handles CLI mode; VS Code pre-selects `commit-and-clean` in its picker so users can accept with Enter (Stories: P3)
 - FR-003: Store `Artifact Lifecycle` as an explicit field in WorkflowContext.md (replacing the implicit `.gitignore`-based detection for new workflows) (Stories: P3, P4, P5)
 - FR-004: At `paw-pr` time for `commit-and-clean` mode, execute stop-tracking: remove `.paw/work/<work-id>/` from git index with `git rm --cached -r` and commit the removal; then create a local `.gitignore` with `*` that remains untracked to prevent re-staging (Stories: P1)
 - FR-005: The `.gitignore` file created during stop-tracking must NOT be added to git — it exists only locally, preventing `git add` from re-tracking artifacts (Stories: P1)
@@ -131,7 +131,7 @@ Acceptance Scenarios:
 ## Assumptions
 
 - The `.gitignore` containing `*` pattern ignoring itself is reliable across all supported git versions (verified in existing stop-tracking implementation)
-- Users who need `commit-and-persist` or `never-commit` are comfortable editing WorkflowContext.md or setting custom instructions — no init-time prompt is needed
+- Users who need `commit-and-persist` or `never-commit` can select it in the VS Code picker or edit WorkflowContext.md; CLI users rely on the skill default or custom instructions
 - The stop-tracking commit as part of `paw-pr` is acceptable as a separate commit on the feature branch (not squashed into the PR commit)
 - Review artifacts (in `.paw/work/<work-id>/reviews/`) are already always untracked via their own `.gitignore` — this behavior is unchanged
 
@@ -142,7 +142,7 @@ In Scope:
 - Automatic stop-tracking at `paw-pr` time for `commit-and-clean`
 - Artifact commit link in final PR description for `commit-and-clean`
 - Backward compatibility mapping for legacy `artifact_tracking` values
-- Updates to all affected skills (paw-init, paw-git-operations, paw-transition, paw-pr)
+- Updates to all affected skills (paw-init, paw-git-operations, paw-transition, paw-pr, paw-impl-review)
 - Updates to PAW agent orchestrator
 - VS Code extension UI updates (init picker, stop-tracking command)
 - Documentation updates (specification, user guide, reference)

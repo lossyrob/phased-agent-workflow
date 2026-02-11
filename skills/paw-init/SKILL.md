@@ -16,7 +16,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 - Create `.paw/work/<work-id>/` directory structure
 - Generate WorkflowContext.md with all configuration fields
 - Create and checkout git branch (explicit or auto-derived)
-- Commit initial artifacts if tracking is enabled
+- Commit initial artifacts if lifecycle mode allows it
 - Open WorkflowContext.md for review
 
 ## Input Parameters

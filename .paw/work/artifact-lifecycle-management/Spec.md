@@ -87,7 +87,7 @@ Acceptance Scenarios:
 - **Lifecycle field missing entirely (legacy)**: Fall back to `.gitignore` detection (current behavior) — `.gitignore` present → `never-commit`, absent → `commit-and-clean`
 - **Stop-tracking already performed mid-workflow**: If a user manually ran "Stop Tracking Artifacts" before `paw-pr`, the stop-tracking step is idempotent and skips gracefully
 - **No artifacts to clean**: If the work directory has no tracked files (e.g., all were already untracked), the stop-tracking operation succeeds as a no-op
-- **Concurrent changes**: If user has uncommitted changes to `.paw/` files at PR time, stop-tracking should handle gracefully (unstaged local changes are preserved)
+- **Concurrent changes**: If user has uncommitted changes to `.paw/` files at PR time, stop-tracking preserves local files on disk — only the git index is modified via `git rm --cached`
 
 ## Requirements
 
@@ -96,8 +96,8 @@ Acceptance Scenarios:
 - FR-001: Replace the `track_artifacts` boolean with a three-mode `artifact_lifecycle` setting accepting values `commit-and-clean`, `commit-and-persist`, and `never-commit` (Stories: P3, P4, P5)
 - FR-002: Default `artifact_lifecycle` to `commit-and-clean` in `paw-init` without prompting the user (Stories: P3)
 - FR-003: Store `Artifact Lifecycle` as an explicit field in WorkflowContext.md (replacing the implicit `.gitignore`-based detection for new workflows) (Stories: P3, P4, P5)
-- FR-004: At `paw-pr` time for `commit-and-clean` mode, execute stop-tracking: remove `.paw/work/<work-id>/` from git index with `git rm --cached -r`, create local `.gitignore` with `*` (untracked), and commit the removal (Stories: P1)
-- FR-005: The `.gitignore` file created during stop-tracking must NOT be committed — it remains untracked locally to prevent re-staging (Stories: P1)
+- FR-004: At `paw-pr` time for `commit-and-clean` mode, execute stop-tracking: remove `.paw/work/<work-id>/` from git index with `git rm --cached -r` and commit the removal; then create a local `.gitignore` with `*` that remains untracked to prevent re-staging (Stories: P1)
+- FR-005: The `.gitignore` file created during stop-tracking must NOT be added to git — it exists only locally, preventing `git add` from re-tracking artifacts (Stories: P1)
 - FR-006: In the final PR description for `commit-and-clean` mode, include a link to the last commit where artifacts were tracked (Stories: P2)
 - FR-007: Map legacy `artifact_tracking: enabled` (or `track_artifacts: true`) to `commit-and-clean` behavior, and `artifact_tracking: disabled` (or `track_artifacts: false`) to `never-commit` behavior (Stories: P6)
 - FR-008: Maintain `.gitignore`-based detection as a fallback for WorkflowContexts without an explicit `Artifact Lifecycle` field (Stories: P6)
@@ -107,6 +107,7 @@ Acceptance Scenarios:
 - FR-012: Update the VS Code extension `paw-init` UI to replace the Track/Don't Track picker with lifecycle mode selection (Stories: P3, P4, P5)
 - FR-013: Update the VS Code "Stop Tracking Artifacts" command to be lifecycle-aware — it remains available as a mid-workflow escape hatch for switching from `commit-and-clean` or `commit-and-persist` to `never-commit` (Stories: P5)
 - FR-014: The stop-tracking operation in `paw-pr` must be idempotent — if artifacts are already untracked, the operation succeeds without error (Stories: P1)
+- FR-015: Update `paw-impl-review` to respect artifact lifecycle state — when committing changes, do not stage `.paw/` files if lifecycle is `never-commit` (delegate staging to `paw-git-operations` patterns) (Stories: P1, P4, P5)
 
 ### Key Entities
 
@@ -124,7 +125,7 @@ Acceptance Scenarios:
 - SC-002: The final PR description for `commit-and-clean` workflows includes a navigable link to artifacts at their last tracked commit (FR-006)
 - SC-003: `paw-init` applies `commit-and-clean` as the default without prompting, and the mode is stored as an explicit field in WorkflowContext.md (FR-002, FR-003)
 - SC-004: Existing workflows with legacy `artifact_tracking` values continue to function without modification (FR-007, FR-008)
-- SC-005: All five affected skills (`paw-init`, `paw-git-operations`, `paw-transition`, `paw-pr`, `paw-impl-review`) correctly respect the three lifecycle modes (FR-009, FR-010, FR-011)
+- SC-005: All five affected skills (`paw-init`, `paw-git-operations`, `paw-transition`, `paw-pr`, `paw-impl-review`) correctly respect the three lifecycle modes (FR-009, FR-010, FR-011, FR-015)
 - SC-006: The VS Code extension UI reflects the new lifecycle modes in both init and stop-tracking flows (FR-012, FR-013)
 
 ## Assumptions
@@ -152,7 +153,6 @@ Out of Scope:
 - Self-healing cleanup of old artifact directories when a new PR is created
 - "Start Tracking" reverse operation (re-enabling tracking after stopping)
 - Changes to review artifact handling (already always untracked)
-- Integration tests for artifact lifecycle behavior
 
 ## Dependencies
 

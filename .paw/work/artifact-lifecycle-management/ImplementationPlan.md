@@ -32,7 +32,7 @@ Key gaps: no centralized lifecycle field in WorkflowContext.md, `paw-pr` doesn't
 - [x] **Phase 2: paw-pr stop-tracking** - Add stop-tracking operation and artifact links to paw-pr
 - [x] **Phase 3: VS Code extension** - Update init UI, initializeWorkItem, and stop-tracking command for lifecycle modes
 - [x] **Phase 4: Specification and documentation** - Update paw-specification.md, user guide, and reference docs
-- [ ] **Phase 5: Documentation** - Create Docs.md and cleanup recipe
+- [x] **Phase 5: Documentation** - Create Docs.md and cleanup recipe
 
 ## Phase Candidates
 - [ ] Integration tests for artifact lifecycle behavior (default mode at init, `commit-and-clean` stop-tracking at paw-pr, `never-commit` prevents staging, legacy backward compatibility)

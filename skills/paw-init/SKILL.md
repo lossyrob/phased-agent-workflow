@@ -29,7 +29,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
 | `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
 | `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
-| `track_artifacts` | No | `true` | boolean |
+| `artifact_lifecycle` | No | `commit-and-clean` | `commit-and-clean`, `commit-and-persist`, `never-commit` |
 | `issue_url` | No | none | URL |
 | `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |
 | `work_description` | No | none | text |
@@ -112,6 +112,7 @@ Custom Workflow Instructions: <custom_instructions or "none">
 Initial Prompt: <work_description or "none">
 Issue URL: <issue_url or "none">
 Remote: origin
+Artifact Lifecycle: <artifact_lifecycle>
 Artifact Paths: auto-derived
 Additional Inputs: none
 ```
@@ -130,9 +131,9 @@ Never create feature branch from current HEAD without explicit checkout of base.
 - If explicit branch provided: use as-is (prompt if exists)
 - If auto-derive: `feature/<work-id>`
 
-### Artifact Tracking
-- **If tracking enabled**: WorkflowContext.md committed with message `Initialize PAW workflow for <Work Title>`
-- **If tracking disabled**: `.gitignore` with `*` created in work directory
+### Artifact Lifecycle
+- **`commit-and-clean` or `commit-and-persist`**: WorkflowContext.md committed with message `Initialize PAW workflow for <Work Title>`
+- **`never-commit`**: `.gitignore` with `*` created in work directory; WorkflowContext.md is NOT committed
 
 ### User Review
 - WorkflowContext.md presented for user review/confirmation
@@ -147,5 +148,5 @@ Report initialization results to PAW agent including: work ID, workflow mode, ta
 - [ ] Review strategy valid for workflow mode
 - [ ] WorkflowContext.md created with all fields
 - [ ] Git branch created and checked out
-- [ ] Artifacts committed (if tracking enabled)
+- [ ] Artifacts committed (if lifecycle is `commit-and-clean` or `commit-and-persist`)
 - [ ] WorkflowContext.md opened for review

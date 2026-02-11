@@ -83,20 +83,21 @@ git diff --cached
 
 ### PAW Artifact Staging
 
-Before staging `.paw/` files, check if artifact tracking is disabled:
+Before staging `.paw/` files, determine the artifact lifecycle mode:
+
+1. Check WorkflowContext.md for `Artifact Lifecycle:` field
+2. If absent, check for `.paw/work/<feature-slug>/.gitignore` — if exists with `*`: treat as `never-commit`
+3. If neither: default to `commit-and-clean`
 
 ```bash
-# Check for .gitignore in work directory
-if [ -f ".paw/work/<feature-slug>/.gitignore" ]; then
-  # Tracking disabled - skip .paw/ artifacts
-  git add <non-paw-files-only>
-else
-  # Tracking enabled - stage all changed files
-  git add <all-changed-files>
-fi
+# commit-and-clean or commit-and-persist: stage .paw/ files
+git add <all-changed-files>
+
+# never-commit: skip .paw/ files
+git add <non-paw-files-only>
 ```
 
-**Why**: Users can disable artifact tracking via `.gitignore`. Respect this by checking before staging `.paw/` files.
+**Why**: Artifact lifecycle mode controls whether `.paw/` files are committed. `commit-and-clean` and `commit-and-persist` stage artifacts during development; `never-commit` keeps them local-only.
 
 ## Branch Verification
 
@@ -119,7 +120,7 @@ git branch --show-current
 
 1. ✓ Verify current branch matches expected pattern
 2. ✓ Stage only related files (no `git add .`)
-3. ✓ Check `.paw/work/<slug>/.gitignore` before staging `.paw/` artifacts
+3. ✓ Check artifact lifecycle mode before staging `.paw/` artifacts
 4. ✓ Review staged changes: `git diff --cached`
 5. ✓ Commit with descriptive message
 

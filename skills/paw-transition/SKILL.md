@@ -128,10 +128,11 @@ Before the next activity can start, verify:
 - [ ] paw-final-review complete (if enabled) or skipped (if disabled)
 - [ ] On target branch or ready to merge
 
-**Artifact Tracking Check** (for all activities):
-- Check if `.paw/work/<work-id>/.gitignore` exists
-- If exists with `*` pattern: artifact_tracking = `disabled`
-- Otherwise: artifact_tracking = `enabled`
+**Artifact Lifecycle Check** (for all activities):
+- Check WorkflowContext.md for `Artifact Lifecycle:` field
+- If field exists: use its value (`commit-and-clean`, `commit-and-persist`, or `never-commit`)
+- If field absent: check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`; otherwise: `commit-and-clean`
+- Legacy mapping: `artifact_tracking: enabled` → `commit-and-clean`; `artifact_tracking: disabled` → `never-commit`
 
 If any check fails, report blocker and stop.
 
@@ -150,7 +151,7 @@ TRANSITION RESULT:
 - session_action: [continue | new_session]
 - pause_at_milestone: [true | false]
 - next_activity: [activity name and context]
-- artifact_tracking: [enabled | disabled]
+- artifact_lifecycle: [commit-and-clean | commit-and-persist | never-commit]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]

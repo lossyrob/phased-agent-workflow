@@ -35,7 +35,7 @@ Key gaps: no centralized lifecycle field in WorkflowContext.md, `paw-pr` doesn't
 - [x] **Phase 5: Documentation** - Create Docs.md and cleanup recipe
 
 ## Phase Candidates
-- [ ] Integration tests for artifact lifecycle behavior (default mode at init, `commit-and-clean` stop-tracking at paw-pr, `never-commit` prevents staging, legacy backward compatibility)
+- [x] Integration tests for artifact lifecycle behavior (default mode at init, `commit-and-clean` stop-tracking at paw-pr, `never-commit` prevents staging, legacy backward compatibility)
 
 ---
 

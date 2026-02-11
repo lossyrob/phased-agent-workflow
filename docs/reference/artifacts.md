@@ -54,6 +54,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
 | Additional Inputs | Extra parameters |
+| Artifact Lifecycle | `commit-and-clean`, `commit-and-persist`, or `never-commit` |
 | Final Agent Review | `enabled` or `disabled` |
 | Final Review Mode | `single-model` or `multi-model` |
 | Final Review Interactive | `true`, `false`, or `smart` |

@@ -164,6 +164,33 @@ When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowConte
 
 Agents will log an informational message when using default values to indicate that these fields were not explicitly specified.
 
+### Artifact Lifecycle
+
+The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts are handled in git throughout the workflow.
+
+**Modes:**
+
+| Mode | During Development | At PR Time |
+|------|-------------------|------------|
+| `commit-and-clean` (default) | Artifacts committed to git | Artifacts removed from git index; final PR shows zero `.paw/` changes |
+| `commit-and-persist` | Artifacts committed to git | Artifacts remain in the repository permanently |
+| `never-commit` | Artifacts stay local only | No git operations needed |
+
+**Detection Hierarchy:** Agents detect lifecycle mode via: WorkflowContext.md `Artifact Lifecycle:` field → `.paw/work/<work-id>/.gitignore` with `*` fallback → default `commit-and-clean`.
+
+**Legacy Compatibility:** `artifact_tracking: enabled` or `track_artifacts: true` maps to `commit-and-clean`; `disabled` or `false` maps to `never-commit`.
+
+**Stop-Tracking Operation** (`commit-and-clean` at PR time):
+
+1. Record current HEAD commit SHA (for artifact links in PR description)
+2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
+3. Create `.paw/work/<work-id>/.gitignore` containing `*` — self-ignoring, never committed
+4. Commit the removal
+
+The final PR diff against `main` shows zero `.paw/` file changes. The PR description links to artifacts at the recorded commit SHA.
+
+**VS Code Integration:** The "Stop Tracking Artifacts" command provides a mid-workflow escape hatch, switching any tracked workflow to `never-commit`.
+
 ---
 
 ## Repository Layout & Naming
@@ -1000,6 +1027,10 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 
 **Additional Inputs** (Optional)
 - Supplementary documents for research (e.g., `paw-specification.md`)
+
+**Artifact Lifecycle** (Optional, defaults to `commit-and-clean`)
+- Controls how workflow artifacts are handled in git: `commit-and-clean`, `commit-and-persist`, or `never-commit`
+- See [Artifact Lifecycle](#artifact-lifecycle) section for mode descriptions and detection hierarchy
 
 #### Usage
 

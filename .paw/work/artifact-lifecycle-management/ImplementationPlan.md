@@ -31,7 +31,7 @@ Key gaps: no centralized lifecycle field in WorkflowContext.md, `paw-pr` doesn't
 - [x] **Phase 1: Core skill updates** - Update paw-init, paw-git-operations, paw-transition, paw-impl-review, and PAW agent for three-mode lifecycle
 - [x] **Phase 2: paw-pr stop-tracking** - Add stop-tracking operation and artifact links to paw-pr
 - [x] **Phase 3: VS Code extension** - Update init UI, initializeWorkItem, and stop-tracking command for lifecycle modes
-- [ ] **Phase 4: Specification and documentation** - Update paw-specification.md, user guide, and reference docs
+- [x] **Phase 4: Specification and documentation** - Update paw-specification.md, user guide, and reference docs
 - [ ] **Phase 5: Documentation** - Create Docs.md and cleanup recipe
 
 ## Phase Candidates

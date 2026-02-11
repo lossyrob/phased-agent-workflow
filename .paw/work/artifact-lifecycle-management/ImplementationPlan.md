@@ -50,6 +50,7 @@ Update the four skills and PAW agent that read/communicate artifact tracking sta
   - Add `Artifact Lifecycle: <mode>` field to WorkflowContext.md template (between Remote and Artifact Paths, ~line 114)
   - Replace "Artifact Tracking" section (lines 133-135) with "Artifact Lifecycle" section: `commit-and-clean`/`commit-and-persist` → commit WorkflowContext.md; `never-commit` → create `.gitignore` with `*`
   - Update validation checklist (line 150) to reference lifecycle modes
+  - **CLI note**: `cli/dist/` contains copies of skill/agent files and will be updated at release time. No CLI-specific code passes `track_artifacts` — CLI relies on the skill's default value.
 
 - **`skills/paw-git-operations/SKILL.md`**:
   - Replace "PAW Artifact Staging" section (lines 84-99) with lifecycle-aware detection: first check WorkflowContext.md `Artifact Lifecycle` field, fall back to `.gitignore` for legacy. `commit-and-clean`/`commit-and-persist` → stage `.paw/` files; `never-commit` → skip
@@ -92,8 +93,8 @@ Add the `commit-and-clean` stop-tracking operation to `paw-pr` and update PR des
     - For `commit-and-clean`: describes the stop-tracking operation to execute before PR creation:
       1. Record the current HEAD commit SHA (this is the "last artifact commit")
       2. `git rm --cached -r .paw/work/<work-id>/` (remove from index, preserve local)
-      3. Create `.paw/work/<work-id>/.gitignore` with `*` (do NOT stage this file)
-      4. `git commit -m "Stop tracking PAW artifacts for <work-id>"`
+      3. Create `.paw/work/<work-id>/.gitignore` with `*` — this file self-ignores (the `*` pattern matches the `.gitignore` itself), so it cannot be accidentally staged
+      4. `git commit -m "Stop tracking PAW artifacts for <work-id>"` — only the deletions from step 2 are committed
       5. Operation is idempotent — skip gracefully if no tracked `.paw/` files exist
     - For `commit-and-persist`: no stop-tracking, include artifact links in PR description (current behavior)
     - For `never-commit`: no stop-tracking, omit artifact section from PR description (current behavior)
@@ -141,7 +142,8 @@ Update the VS Code extension UI and command handler for the new lifecycle modes.
   - Update pre-check warning message (~line 116-129) to mention lifecycle mode context
 
 - **`src/test/suite/userInput.test.ts`**:
-  - Add test for `ArtifactLifecycle` type validation (if type is exported with validator)
+  - Add test validating `ArtifactLifecycle` type values are the three expected modes
+  - Add test verifying the exported type/constant covers all three lifecycle options
 
 ### Success Criteria:
 
@@ -165,8 +167,8 @@ Update the specification and user-facing docs to reflect the new lifecycle model
 ### Changes Required:
 
 - **`paw-specification.md`**:
-  - Add Artifact Lifecycle section defining the three modes, default behavior, stop-tracking mechanism, and backward compatibility mapping
-  - Add `Artifact Lifecycle` to WorkflowContext.md parameters section (~lines 966-1003)
+  - Add Artifact Lifecycle section covering: parameter definition with three modes, behavioral description for each mode during development and at PR time, the stop-tracking operation sequence, backward compatibility mapping table (`enabled` → `commit-and-clean`, `disabled` → `never-commit`), and interaction with VS Code stop-tracking command
+  - Add `Artifact Lifecycle` to WorkflowContext.md parameters section (~lines 966-1003) with description, valid values, and default
 
 - **`docs/guide/vscode-extension.md`**:
   - Update init flow parameter (line 21): replace "Artifact tracking: Track/Don't Track" with lifecycle mode selection
@@ -192,7 +194,7 @@ Update the specification and user-facing docs to reflect the new lifecycle model
 
 ### Changes Required:
 - **`.paw/work/artifact-lifecycle-management/Docs.md`**: Technical reference covering the implementation (load `paw-docs-guidance`)
-- **Manual cleanup recipe**: Document in appropriate docs location how to bulk-remove old `.paw/work/` directories from `main`
+- **Manual cleanup recipe**: Add to `docs/guide/vscode-extension.md` in the Stop Tracking Artifacts section, documenting how to bulk-remove old `.paw/work/` directories from `main` with `git rm -r .paw/work/`
 
 ### Success Criteria:
 - [ ] Docs build passes: `source .venv/bin/activate && mkdocs build --strict`

@@ -43,7 +43,7 @@ This pattern ignores all files in the directory, including the `.gitignore` itse
 
 ### 3. Update WorkflowContext.md Lifecycle Field
 
-If `.paw/work/{{WORK_ID}}/WorkflowContext.md` contains an `Artifact Lifecycle:` field, update its value to `never-commit`. This makes the lifecycle change durable for any agent that reads the workflow context.
+Update the `Artifact Lifecycle:` field in `.paw/work/{{WORK_ID}}/WorkflowContext.md` to `never-commit`. If the field doesn't exist, add `Artifact Lifecycle: never-commit` near other configuration fields. This makes the lifecycle change durable for any agent that reads the workflow context.
 
 ### 4. Commit the Removal
 

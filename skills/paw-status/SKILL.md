@@ -42,6 +42,7 @@ Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
 
 Read WorkflowContext.md for:
 - Workflow Mode, Review Strategy, Review Policy
+- Artifact Lifecycle: `commit-and-clean` | `commit-and-persist` | `never-commit`
 - Final Agent Review: `enabled` | `disabled`
 - Planning Docs Review: `enabled` | `disabled`
 - Final Review Mode: `single-model` | `multi-model`

@@ -79,7 +79,7 @@ Execute **before** PR creation. Skip gracefully if no tracked `.paw/` files exis
 1. Record the current HEAD commit SHA — this is the "last artifact commit" for PR description links
 2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
 3. Create `.paw/work/<work-id>/.gitignore` containing `*` — this file self-ignores (the `*` matches the `.gitignore` itself), so it stays untracked
-4. `git commit -m "Stop tracking PAW artifacts for <work-id>"` — only the index deletions from step 2 are committed
+4. `git commit -m "Stop tracking PAW artifacts for <work-id>"` — only the index deletions from step 2 are committed. Do NOT stage the `.gitignore` file.
 5. Verify: `git status` shows no `.paw/` files; `.gitignore` exists locally but is not tracked
 
 Log each step so the user sees what's happening.

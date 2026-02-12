@@ -6,7 +6,7 @@ PAW separates the lifecycle into **workflow stages** (Specification → Planning
 
 **Key properties**
 
-* **Traceable** – Every stage produces durable Markdown artifacts committed to Git and reviewed via PRs.
+* **Traceable** – Every stage produces durable Markdown artifacts; by default committed to Git during development and cleaned at PR time (see [Artifact Lifecycle](#artifact-lifecycle)).
 * **Rewindable** – Any stage can restart. If you see the agents are implementing incorrectly, you can always go back to the spec or plan and fix it, and then re-run downstream stages.
 * **Agentic** – Purpose‑built chat modes (“agents”) own the work of each stage.
 * **Human‑in‑the‑loop** – Humans approve specs/plans, review PRs, and decide when to rewind.

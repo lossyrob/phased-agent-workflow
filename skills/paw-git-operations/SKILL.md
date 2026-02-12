@@ -86,8 +86,9 @@ git diff --cached
 Before staging `.paw/` files, determine the artifact lifecycle mode:
 
 1. Check WorkflowContext.md for `Artifact Lifecycle:` field
-2. If absent, check for `.paw/work/<feature-slug>/.gitignore` — if exists with `*`: treat as `never-commit`
-3. If neither: default to `commit-and-clean`
+2. If absent, check for legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. If absent, check for `.paw/work/<feature-slug>/.gitignore` — if exists with `*`: treat as `never-commit`
+4. If none: default to `commit-and-clean`
 
 ```bash
 # commit-and-clean or commit-and-persist: stage .paw/ files

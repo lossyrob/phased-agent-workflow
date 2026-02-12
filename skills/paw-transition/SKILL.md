@@ -132,7 +132,7 @@ Before the next activity can start, verify:
 - Check WorkflowContext.md for `Artifact Lifecycle:` field
 - If field exists: use its value (`commit-and-clean`, `commit-and-persist`, or `never-commit`)
 - If field absent: check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`; otherwise: `commit-and-clean`
-- Legacy mapping: `artifact_tracking: enabled` → `commit-and-clean`; `artifact_tracking: disabled` → `never-commit`
+- Legacy mapping: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `artifact_tracking: disabled` or `track_artifacts: false` → `never-commit`
 
 If any check fails, report blocker and stop.
 

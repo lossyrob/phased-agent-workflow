@@ -29,6 +29,8 @@ export function getClaudeSkillsDir() {
   return join(getClaudeDir(), 'skills');
 }
 
+export const SUPPORTED_TARGETS = ['copilot', 'claude'];
+
 /**
  * Returns agents and skills directories for the given target.
  */
@@ -39,10 +41,13 @@ export function getTargetDirs(target) {
       skillsDir: getClaudeSkillsDir(),
     };
   }
-  return {
-    agentsDir: getCopilotAgentsDir(),
-    skillsDir: getCopilotSkillsDir(),
-  };
+  if (target === 'copilot') {
+    return {
+      agentsDir: getCopilotAgentsDir(),
+      skillsDir: getCopilotSkillsDir(),
+    };
+  }
+  throw new Error(`Unknown target: ${target}. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
 }
 
 export function getPawDir() {

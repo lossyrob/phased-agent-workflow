@@ -2,6 +2,7 @@ import { spawn, execSync } from 'child_process';
 import { readManifest } from '../manifest.js';
 import { getLatestVersion } from '../registry.js';
 import { installCommand } from './install.js';
+import { SUPPORTED_TARGETS } from '../paths.js';
 
 function isGlobalInstall() {
   try {
@@ -35,22 +36,23 @@ function runCommand(command, args) {
 }
 
 export async function upgradeCommand(_flags = {}) {
-  // Check both targets for installations
-  const copilotManifest = readManifest('copilot');
-  const claudeManifest = readManifest('claude');
+  // Check all targets for installations
+  const targets = [];
+  let primaryManifest = null;
+  for (const target of SUPPORTED_TARGETS) {
+    const manifest = readManifest(target);
+    if (manifest) {
+      targets.push(target);
+      if (!primaryManifest) primaryManifest = manifest;
+    }
+  }
   
-  if (!copilotManifest && !claudeManifest) {
-    console.log('PAW is not installed. Run "paw install copilot" or "paw install claude" first.');
+  if (targets.length === 0) {
+    console.log(`PAW is not installed. Run "paw install <target>" first. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
     return;
   }
   
-  // Use the first found manifest for version info
-  const primaryManifest = copilotManifest || claudeManifest;
   const currentVersion = primaryManifest.version;
-  
-  const targets = [];
-  if (copilotManifest) targets.push('copilot');
-  if (claudeManifest) targets.push('claude');
   
   console.log(`Installed version: ${currentVersion}`);
   console.log(`Targets: ${targets.join(', ')}`);

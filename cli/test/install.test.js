@@ -87,6 +87,12 @@ describe('paths module', () => {
     
     assert.strictEqual(manifestPath, join(homeDir, '.paw', 'claude-cli', 'manifest.json'));
   });
+
+  test('getTargetDirs throws for unknown target', async () => {
+    const { getTargetDirs } = await import('../lib/paths.js');
+    
+    assert.throws(() => getTargetDirs('invalid'), /Unknown target/);
+  });
 });
 
 describe('CLI entry point', () => {
@@ -294,5 +300,58 @@ describe('list command', () => {
     });
     
     assert.ok(output.includes('not installed'));
+  });
+});
+
+describe('uninstall command', () => {
+  test('uninstall removes claude installation', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const uninstallHome = join(TEST_DIR, 'uninstall-claude');
+    mkdirSync(uninstallHome, { recursive: true });
+
+    // Install claude
+    execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: uninstallHome },
+    });
+    assert.ok(existsSync(join(uninstallHome, '.claude', 'agents')), 'agents should exist after install');
+
+    // Uninstall
+    const output = execSync(`node ${cliPath} uninstall --force`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: uninstallHome },
+    });
+
+    assert.ok(output.includes('Removed'), 'should show removal summary');
+    assert.ok(!existsSync(join(uninstallHome, '.paw', 'claude-cli', 'manifest.json')), 'manifest should be removed');
+  });
+
+  test('uninstall removes both targets when both installed', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const dualHome = join(TEST_DIR, 'uninstall-dual');
+    mkdirSync(dualHome, { recursive: true });
+
+    // Install both
+    execSync(`node ${cliPath} install copilot`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+    execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+
+    // Uninstall
+    execSync(`node ${cliPath} uninstall --force`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+
+    assert.ok(!existsSync(join(dualHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should be removed');
+    assert.ok(!existsSync(join(dualHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should be removed');
   });
 });

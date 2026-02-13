@@ -1,29 +1,14 @@
 import { existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
 import { join } from 'path';
-import { createInterface } from 'readline';
 import {
   getTargetDirs,
   getDistAgentsDir,
   getDistSkillsDir,
+  SUPPORTED_TARGETS,
 } from '../paths.js';
 import { readManifest, writeManifest, createManifest } from '../manifest.js';
 import { VERSION } from '../version.js';
-
-const SUPPORTED_TARGETS = ['copilot', 'claude'];
-
-async function confirm(message) {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  
-  return new Promise((resolve) => {
-    rl.question(`${message} (y/N) `, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-    });
-  });
-}
+import { confirm } from '../utils.js';
 
 function copyDirectory(srcDir, destDir, fileList) {
   if (!existsSync(destDir)) {

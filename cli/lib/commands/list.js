@@ -1,19 +1,18 @@
 import { readManifest } from '../manifest.js';
+import { SUPPORTED_TARGETS } from '../paths.js';
 
 export async function listCommand() {
-  // Check both targets
-  const copilotManifest = readManifest('copilot');
-  const claudeManifest = readManifest('claude');
-  
-  if (!copilotManifest && !claudeManifest) {
-    console.log('PAW is not installed.');
-    console.log('Run "paw install copilot" or "paw install claude" to install.');
-    return;
+  const manifests = [];
+  for (const target of SUPPORTED_TARGETS) {
+    const manifest = readManifest(target);
+    if (manifest) manifests.push(manifest);
   }
   
-  const manifests = [];
-  if (copilotManifest) manifests.push(copilotManifest);
-  if (claudeManifest) manifests.push(claudeManifest);
+  if (manifests.length === 0) {
+    console.log('PAW is not installed.');
+    console.log(`Run "paw install <target>" to install. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
+    return;
+  }
   
   for (const manifest of manifests) {
     console.log(`PAW v${manifest.version}`);

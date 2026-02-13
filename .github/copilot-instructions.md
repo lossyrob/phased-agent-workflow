@@ -228,3 +228,68 @@ When reviewing implementation changes, verify cross-artifact consistency:
 - Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match specification
 
 **Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.
+
+## Integration Testing
+
+Integration tests validate that skills and agents produce correct behavior when driven through the Copilot SDK. They replace manual "try it and see" validation.
+
+### Strategy
+
+Not every change needs its own integration test. The goal is to **run the test that validates your change**:
+
+1. **Identify the relevant existing test** that covers the behavior you changed
+2. **Modify it** if the change alters expected behavior (e.g., renamed values, new assertions)
+3. **Create a new test** only when no existing test covers the affected behavior
+4. **Run the relevant test(s)** before finalizing PRs — this replaces manual workflow validation
+
+### When to Add/Update Tests
+
+- **New or changed skill behavior** → Add or update a workflow test in `tests/integration/tests/workflows/`
+- **New harness capability** (answerer, policy, assertion) → Add skill-level test in `tests/integration/tests/skills/`
+- **Bug fix in workflow behavior** → Add regression test covering the fix
+- **Behavioral rename or value change** → Add or update test validating both old (backward compat) and new values
+- **Pure prompt wording changes** with no behavioral change → No test needed
+- **Documentation-only changes** → No test needed
+
+### Test Types
+
+- **Skill-level tests** (`tests/integration/tests/skills/`): No LLM, fast. Test harness components (answerer rules, tool policy, assertions).
+- **Workflow tests** (`tests/integration/tests/workflows/`): Drive SDK sessions against skills. Use `createTestContext()`, `RuleBasedAnswerer`, structural assertions, and optionally `Judge` for qualitative evaluation.
+
+### Key Patterns
+
+- Import with `.js` extensions (ESM package)
+- Use `TestFixture.clone("minimal-ts")` for isolated temp repos
+- Use `seedWorkflowState(workId, stage)` to start from a known point
+- Seed custom artifacts (e.g., WorkflowContext.md) with `writeFile` + `mkdir` for targeted scenarios
+- Use `assertSpecStructure`, `assertPlanStructure`, `assertToolCalls` for structural checks
+- Use `response?.data?.content` to get agent response text for assertion
+- Use `Judge` with rubrics for qualitative artifact evaluation
+- `toolArgs` from SDK hooks are JSON strings — use `parseInput()` helpers
+
+### Running Tests
+
+```bash
+cd tests/integration && npm install  # first time only
+npm run test:integration:skills      # fast, no LLM
+npm run test:integration:workflows   # slow, requires Copilot auth
+
+# Run a specific test file
+cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
+```
+
+### Existing Test Coverage
+
+| Test | What it validates | Runtime |
+|------|-------------------|---------|
+| `full-local-workflow` | Golden path: spec → plan → implement (local strategy) | ~3-5 min |
+| `minimal-workflow` | Minimal mode: plan → implement (no spec) | ~2-3 min |
+| `transition-review-policy` | Review policy values (legacy + current) and pause behavior | ~1-2 min |
+| `paw-spec` | Spec creation from brief | ~1-2 min |
+| `paw-planning` | Plan creation from seeded spec | ~1-2 min |
+| `paw-implement` | Implementation from seeded plan | ~2-3 min |
+| `spec-review` | Spec review verdict | ~1-2 min |
+| `code-research` | Code research artifact creation | ~1-2 min |
+| `work-shaping` | Work shaping Q&A flow | ~1-2 min |
+| `git-branching` | Branch operations | ~1-2 min |
+| `tool-policy` | Tool policy enforcement | ~30s |

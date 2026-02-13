@@ -1,0 +1,21 @@
+{
+  "name": "@paw/integration-tests",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Integration tests for PAW using Copilot SDK",
+  "scripts": {
+    "test": "npx tsx --test tests/**/*.test.ts",
+    "test:skills": "npx tsx --test tests/skills/*.test.ts",
+    "test:workflows": "npx tsx --test tests/workflows/*.test.ts"
+  },
+  "dependencies": {
+    "@github/copilot-sdk": "^0.1.20",
+    "simple-git": "^3.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

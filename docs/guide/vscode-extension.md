@@ -17,7 +17,7 @@ Creates a complete PAW workflow structure with all necessary files and directori
     - **Branch name** (optional): Target branch name, or auto-derive from issue
     - **Workflow mode**: Full, Minimal, or Custom
     - **Review strategy**: PRs or Local (Minimal enforces Local)
-    - **Review policy**: Always, Milestones, Planning-Only, or Never
+    - **Review policy**: Every Stage, Milestones, Planning-Only, or Final PR Only
     - **Artifact tracking**: Track (default) or Don't Track
 
 **What gets created:**

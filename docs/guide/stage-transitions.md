@@ -38,11 +38,11 @@ This tells the PAW agent to proceed to the recommended next activity.
 
 ## Review Policies
 
-PAW supports three review policies that control when the workflow pauses for human review at artifact boundaries:
+PAW supports four review policies that control when the workflow pauses for human review at artifact boundaries:
 
-### Always Review Policy
+### Every-Stage Review Policy
 
-In `always` mode, the workflow pauses after every artifact is produced for potential iteration.
+In `every-stage` mode, the workflow pauses after every artifact is produced for potential iteration.
 
 **Best for:**
 
@@ -58,6 +58,7 @@ In `milestones` mode, the workflow pauses only at key milestone artifacts:
 
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
+- Planning Documents Review completion (if enabled)
 - Phase PR completion (after each phase PR is opened)
 - Final PR creation
 
@@ -82,6 +83,7 @@ In `planning-only` mode, the workflow pauses at specification and implementation
 
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
+- Planning Documents Review completion (if enabled)
 - Final PR creation
 
 **Auto-proceeds at:**
@@ -98,12 +100,15 @@ In `planning-only` mode, the workflow pauses at specification and implementation
 - Well-specified work where planning review is sufficient
 - Workflows where phase-level interruptions slow progress unnecessarily
 
-### Never Review Policy
+### Final-PR-Only Review Policy
 
-In `never` mode, the workflow proceeds continuously without review pauses.
+In `final-pr-only` mode, the workflow only pauses at the final PR — auto-proceeding through all intermediate stages.
 
 !!! warning "Local Strategy Required"
-    The `never` review policy requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
+    The `final-pr-only` review policy requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
+
+!!! note "Automated Quality Gates Still Run"
+    Review Policy controls HUMAN review pauses only. Automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review) are mandatory regardless of Review Policy setting.
 
 **Best for:**
 

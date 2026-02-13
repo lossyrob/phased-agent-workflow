@@ -16,6 +16,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       ImplementationPlan.md     # Implementation plan
       Docs.md                   # Documentation
       WorkShaping.md            # Pre-spec ideation (optional)
+      reviews/                  # Review artifacts (gitignored)
+        planning/               # Planning Documents Review artifacts
   
   reviews/                      # Review workflow
     PR-<number>/                # Single-repo: PR-123
@@ -46,12 +48,20 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Target Branch | Branch where implementation merges |
 | Workflow Mode | `full`, `minimal`, or `custom` |
 | Review Strategy | `prs` or `local` |
-| Review Policy | `always`, `milestones`, `planning-only`, or `never` |
+| Review Policy | `every-stage`, `milestones`, `planning-only`, or `final-pr-only` |
 | Session Policy | `per-stage` or `continuous` |
 | Issue URL | GitHub Issue or Azure DevOps Work Item |
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
 | Additional Inputs | Extra parameters |
+| Final Agent Review | `enabled` or `disabled` |
+| Final Review Mode | `single-model` or `multi-model` |
+| Final Review Interactive | `true`, `false`, or `smart` |
+| Final Review Models | Comma-separated model names |
+| Planning Docs Review | `enabled` or `disabled` |
+| Planning Review Mode | `single-model` or `multi-model` |
+| Planning Review Interactive | `true`, `false`, or `smart` |
+| Planning Review Models | Comma-separated model names |
 
 ### Spec.md
 

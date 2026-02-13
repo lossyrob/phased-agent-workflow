@@ -5,52 +5,57 @@ import { listCommand } from '../lib/commands/list.js';
 import { uninstallCommand } from '../lib/commands/uninstall.js';
 import { upgradeCommand } from '../lib/commands/upgrade.js';
 import { VERSION } from '../lib/version.js';
+import { bold, dim, cyan, green, printLogo } from '../lib/color.js';
 
-const HELP = `
-paw - Phased Agent Workflow CLI
+function helpText() {
+  return `
+  ${bold('Usage:')} ${cyan('paw')} <command> [options]
 
-Usage: paw <command> [options]
+  ${bold('Commands:')}
+    ${green('install')} <target>   Install PAW agents and skills
+    ${green('upgrade')}            Check for updates and upgrade
+    ${green('list')}               Show installed version and components
+    ${green('uninstall')}          Remove PAW agents and skills
 
-Commands:
-  install <target>   Install PAW agents and skills
-  upgrade            Check for updates and upgrade
-  list               Show installed version and components
-  uninstall          Remove PAW agents and skills
+  ${bold('Options:')}
+    ${dim('--help, -h')}         Show this help message
+    ${dim('--version, -v')}      Show version number
+    ${dim('--force, -f')}        Skip confirmation prompts
+    ${dim('--no-banner')}        Suppress the logo banner
 
-Options:
-  --help, -h         Show this help message
-  --version, -v      Show version number
-  --force, -f        Skip confirmation prompts
-
-Examples:
-  paw install copilot    Install to GitHub Copilot CLI
-  paw list               Show installation status
-  paw upgrade            Upgrade to latest version
-  paw uninstall          Remove all PAW files
+  ${bold('Examples:')}
+    ${dim('$')} paw install copilot
+    ${dim('$')} paw list
+    ${dim('$')} paw upgrade
 `;
+}
 
 async function main() {
   const args = process.argv.slice(2);
-  
-  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
-    console.log(HELP);
-    process.exit(0);
-  }
   
   if (args.includes('--version') || args.includes('-v')) {
     console.log(VERSION);
     process.exit(0);
   }
-  
-  const command = args[0];
+
+  if (!args.includes('--no-banner')) {
+    printLogo();
+  }
+
+  const command = args.find(a => !a.startsWith('-'));
   const flags = {
     force: args.includes('--force') || args.includes('-f'),
   };
-  
+
+  if (!command || args.includes('--help') || args.includes('-h')) {
+    console.log(helpText());
+    process.exit(0);
+  }
+
   try {
     switch (command) {
       case 'install': {
-        const target = args[1];
+        const target = args.find(a => !a.startsWith('-') && a !== 'install');
         if (!target) {
           console.error('Error: install requires a target (e.g., "copilot")');
           process.exit(1);
@@ -69,7 +74,7 @@ async function main() {
         break;
       default:
         console.error(`Unknown command: ${command}`);
-        console.log(HELP);
+        console.log(helpText());
         process.exit(1);
     }
   } catch (error) {

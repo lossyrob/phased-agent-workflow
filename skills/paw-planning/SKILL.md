@@ -13,20 +13,20 @@ Create detailed implementation plans through interactive refinement. Plans descr
 
 ## Configuration
 
-### Step 1: Read Planning Mode
+### Step 1: Read Plan Generation Mode
 
 Read WorkflowContext.md for:
 - Work ID and target branch
-- `Planning Mode`: `single-model` | `multi-model` | `multi-model-deep`
-- `Planning Models`: comma-separated model names (for multi-model modes)
+- `Plan Generation Mode`: `single-model` | `multi-model` | `multi-model-deep`
+- `Plan Generation Models`: comma-separated model names (for multi-model modes)
 
-The planning mode is set during `paw-init`. If the field is missing (legacy workflow), default to `single-model` (backwards compatibility).
+The plan generation mode is set during `paw-init`. If the field is missing (legacy workflow), default to `single-model` (backwards compatibility).
 
 {{#cli}}
 If mode is `multi-model` or `multi-model-deep`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
 {{/cli}}
 {{#vscode}}
-**Note**: VS Code only supports `single-model` mode. If `multi-model` or `multi-model-deep` is configured, report to user: "Multi-model planning not available in VS Code; running single-model planning." Proceed with single-model.
+**Note**: VS Code only supports `single-model` mode. If `multi-model` or `multi-model-deep` is configured, report to user: "Multi-model plan generation not available in VS Code; running single-model planning." Proceed with single-model.
 {{/vscode}}
 
 ## Capabilities
@@ -163,7 +163,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 
 **Desired end state**: Complete ImplementationPlan.md with all phases defined
 
-**If single-model mode** (default):
+**If single-model plan generation mode** (default):
 1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
 2. Analyze and verify requirements against actual code
 3. Present understanding and resolve blocking questions
@@ -172,7 +172,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 6. Handle branching per Review Strategy (see below)
 
 {{#cli}}
-**If multi-model or multi-model-deep mode**:
+**If multi-model or multi-model-deep plan generation mode**:
 
 1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
 2. Create `.paw/work/<work-id>/planning/` directory if it doesn't exist
@@ -180,7 +180,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 4. Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model)
 5. Present resolved models for confirmation:
    ```
-   About to run multi-model planning with:
+   About to run multi-model plan generation with:
    - [resolved model 1]
    - [resolved model 2]
    - [resolved model 3]
@@ -197,7 +197,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 
 8. **Synthesis**: Read all per-model plans (and critiques in deep mode). Produce the final `ImplementationPlan.md` using the synthesis prompt below, selecting the best phase structure, architecture decisions, and catching blind spots.
 
-**Failure handling**: If a subagent fails, proceed with remaining results if at least 2 models completed successfully. If fewer than 2 succeed, offer user the choice to retry or fall back to single-model planning. Configurations with exactly 2 models are valid — synthesis works with any count ≥ 2.
+**Failure handling**: If a subagent fails, proceed with remaining results if at least 2 models completed successfully. If fewer than 2 succeed, offer user the choice to retry or fall back to single-model plan generation. Configurations with exactly 2 models are valid — synthesis works with any count ≥ 2.
 
 #### Planning Subagent Prompt
 
@@ -307,6 +307,6 @@ If planning encounters questions that cannot be answered from existing artifacts
    - List of specific open questions
    - What research or clarification would resolve each question
 3. **PAW agent handles resolution** based on Review Policy:
-   - `never`: PAW agent conducts additional research to resolve questions autonomously
-   - `always`/`milestones`: PAW agent asks user for clarification
+   - `final-pr-only`: PAW agent conducts additional research to resolve questions autonomously
+   - `every-stage`/`milestones`: PAW agent asks user for clarification
 4. **Re-invocation**: PAW agent calls planning again with answers provided in the delegation prompt

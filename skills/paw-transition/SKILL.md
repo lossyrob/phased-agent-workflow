@@ -25,8 +25,9 @@ Read WorkflowContext.md to determine:
 - Work ID and target branch
 - Session Policy (`per-stage` | `continuous`)
 - Review Strategy (`prs` | `local`)
-- Review Policy (`always` | `milestones` | `planning-only` | `never`)
-  - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`always`, `semi-auto`→`milestones`, `auto`→`never`
+- Review Policy (`every-stage` | `milestones` | `planning-only` | `final-pr-only`)
+  - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`every-stage`, `semi-auto`→`milestones`, `auto`→`final-pr-only`
+  - Also map legacy Review Policy values: `always`→`every-stage`, `never`→`final-pr-only`
   - If neither present, default to `milestones`
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
@@ -66,6 +67,7 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 **Stage boundaries** occur when moving between these stages:
 - spec-review passes → code-research
 - plan-review passes → implement (Phase 1)
+- paw-planning-docs-review complete → implement (Phase 1)
 - phase N complete → phase N+1
 - all phases complete → paw-final-review (if enabled) or paw-pr (if disabled)
 - paw-final-review complete → paw-pr
@@ -77,17 +79,20 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 |----------------|-------------------|
 | spec-review passes | Spec.md complete |
 | plan-review passes | ImplementationPlan.md complete |
+| paw-planning-docs-review complete | Planning Documents Review complete |
 | phase N complete (not last) | Phase completion |
 | all phases complete | Phase completion (last phase) |
 | paw-final-review complete | Final Review complete |
 | paw-pr complete | Final PR |
 
 **Determine pause_at_milestone**:
-- If Review Policy ∈ {`always`, `milestones`}: pause at ALL milestones
+- If Review Policy ∈ {`every-stage`, `milestones`}: pause at ALL milestones
 - If Review Policy = `planning-only`:
-  - Spec.md, ImplementationPlan.md, Final PR: `pause_at_milestone = true`
+  - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Final PR: `pause_at_milestone = true`
   - Phase completion (including last phase): `pause_at_milestone = false`
-- If Review Policy = `never`: `pause_at_milestone = false`
+- If Review Policy = `final-pr-only`:
+  - Final PR: `pause_at_milestone = true`
+  - All other milestones: `pause_at_milestone = false`
 
 **Determine session_action**:
 - If crossing a stage boundary AND Session Policy = `per-stage`: set `session_action = new_session`
@@ -109,6 +114,10 @@ Before the next activity can start, verify:
 
 **For paw-code-research**:
 - [ ] Spec.md exists (unless minimal mode)
+
+**For paw-planning-docs-review**:
+- [ ] Spec.md exists (unless minimal mode)
+- [ ] ImplementationPlan.md exists
 
 **For paw-final-review**:
 - [ ] All implementation phases complete

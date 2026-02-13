@@ -34,7 +34,7 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 
 | Execution Type | Skills | Why |
 |----------------|--------|-----|
-| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
+| **Direct** (in-session) | `paw-init`, `paw-spec`, `paw-planning`, `paw-implement`, `paw-pr`, `paw-final-review`, `paw-planning-docs-review`, `paw-status`, `paw-work-shaping`, `paw-rewind` | Interactive activities that benefit from user collaboration |
 | **Subagent** (isolated) | `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`, `paw-transition` | Research and review activities that benefit from context isolation |
 
 This preserves conversation flow for interactive work while leveraging fresh context for focused research and review.
@@ -50,6 +50,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
 | `paw-planning` | Create implementation plans with phases | ImplementationPlan.md |
 | `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
+| `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
 | `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
@@ -71,7 +72,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
    - Produces: Spec.md, SpecResearch.md
 
 2. **Planning Stage**
-   - `paw-code-research` → `paw-planning`
+   - `paw-code-research` → `paw-planning` → `paw-plan-review` → `paw-planning-docs-review` (if enabled)
    - Produces: CodeResearch.md, ImplementationPlan.md, Planning PR (prs strategy)
 
 3. **Implementation Stage**
@@ -90,7 +91,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 | Policy | Values | Description |
 |--------|--------|-------------|
-| Review Policy | `always` / `milestones` / `planning-only` / `never` | When to pause for human review |
+| Review Policy | `every-stage` / `milestones` / `planning-only` / `final-pr-only` | When to pause for human review |
 | Session Policy | `per-stage` / `continuous` | Chat context management (CLI always uses `continuous`) |
 | Workflow Mode | `full` / `minimal` / `custom` | Workflow complexity |
 | Review Strategy | `prs` / `local` | PR-based or direct commits |
@@ -99,10 +100,10 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 | Policy | Behavior |
 |--------|----------|
-| `always` | Pause after every artifact is produced |
+| `every-stage` | Pause after every artifact is produced |
 | `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
 | `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| `never` | Proceed continuously without review pauses |
+| `final-pr-only` | Only pause at final PR — auto-proceed through all intermediate stages |
 
 ---
 
@@ -201,12 +202,14 @@ PAW supports four review policies that control when the workflow pauses for huma
 
 | Policy | Behavior |
 |--------|----------|
-| **always** | Pause after every artifact is produced |
+| **every-stage** | Pause after every artifact is produced |
 | **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
 | **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| **never** | Proceed continuously without review pauses |
+| **final-pr-only** | Only pause at final PR — auto-proceed through all intermediate stages |
 
-**Legacy Handoff Mode Mapping:** Older WorkflowContext.md files may use `Handoff Mode` instead of `Review Policy`. The mapping is: `manual` → `always`, `semi-auto` → `milestones`, `auto` → `never`.
+**Legacy Review Policy Mapping:** Older WorkflowContext.md files may use `never` or `always`. The mapping is: `never` → `final-pr-only`, `always` → `every-stage`.
+
+**Legacy Handoff Mode Mapping:** Older WorkflowContext.md files may use `Handoff Mode` instead of `Review Policy`. The mapping is: `manual` → `every-stage`, `semi-auto` → `milestones`, `auto` → `final-pr-only`.
 
 ## Next Steps
 

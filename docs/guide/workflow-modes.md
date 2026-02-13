@@ -154,13 +154,14 @@ Final Agent Review runs after all implementation phases complete, before the Fin
 |-------|---------|---------|-------------|
 | Final Agent Review | enabled | `enabled`, `disabled` | Whether to run the review step |
 | Final Review Mode | multi-model | `single-model`, `multi-model` | Single model or parallel multi-model review |
-| Final Review Interactive | true | `true`, `false` | Present findings for apply/skip/discuss, or auto-apply |
+| Final Review Interactive | smart | `true`, `false`, `smart` | `true`: confirm each finding; `false`: auto-apply; `smart`: auto-apply consensus, interactive for ambiguous |
 | Final Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model review (CLI only) |
 
 **Notes:**
 
 - **VS Code** only supports single-model mode (multi-model falls back to single-model)
 - **CLI** supports both modes; multi-model spawns parallel reviews and synthesizes findings
+- In **smart mode** (default), consensus fixes are auto-applied and ambiguous findings prompt for your decision
 - In **interactive mode**, you confirm each finding before changes are made
 - In **auto-apply mode**, must-fix and should-fix recommendations are applied automatically
 
@@ -170,8 +171,8 @@ Planning can use multiple AI models to independently create competing implementa
 
 | Field | Default | Options | Description |
 |-------|---------|---------|-------------|
-| Planning Mode | single-model | `single-model`, `multi-model`, `multi-model-deep` | Planning execution mode |
-| Planning Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model planning (CLI only) |
+| Plan Generation Mode | single-model | `single-model`, `multi-model`, `multi-model-deep` | Plan generation execution mode |
+| Plan Generation Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model plan generation (CLI only) |
 | Plan Review Mode | single-model | `single-model`, `multi-model` | Plan review execution mode |
 | Plan Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model plan review (CLI only) |
 
@@ -185,7 +186,19 @@ Planning can use multiple AI models to independently create competing implementa
 
 - Multi-model planning is **CLI only** — VS Code falls back to single-model
 - Multi-model plan review uses a **weighted verdict**: PASS if majority passes, all concerns surfaced regardless
-- Per-model artifacts are saved in a gitignored `planning/` subfolder
+- Per-model artifacts are saved in a gitignored `planning/` subfolder (distinct from `reviews/` which holds final review artifacts)
+- With all multi-model options enabled (plan generation + plan review + final review), expect 9-13 LLM calls before any code is written. This is the max-quality configuration, not the default.
+
+## Planning Docs Review Configuration
+
+Planning Docs Review runs during planning (Stage 02) to validate cross-artifact consistency before implementation begins. Configuration is stored in `WorkflowContext.md`.
+
+| Field | Default | Options | Description |
+|-------|---------|---------|-------------|
+| Planning Docs Review | enabled | `enabled`, `disabled` | Whether to run the review step |
+| Planning Review Mode | multi-model | `single-model`, `multi-model` | Single model or parallel multi-model review |
+| Planning Review Interactive | smart | `true`, `false`, `smart` | `true`: confirm each finding; `false`: auto-apply; `smart`: auto-apply consensus, interactive for ambiguous |
+| Planning Review Models | latest GPT, latest Gemini, latest Claude Opus | comma-separated | Models for multi-model review (CLI only) |
 
 ## Selecting Your Mode
 

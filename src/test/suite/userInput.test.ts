@@ -147,4 +147,16 @@ suite('Final Review Config Types', () => {
     assert.strictEqual(config.mode, 'multi-model');
     assert.strictEqual(config.interactive, false);
   });
+
+  test('FinalReviewConfig works with smart interactive mode', () => {
+    const config: FinalReviewConfig = {
+      enabled: true,
+      mode: 'multi-model',
+      interactive: 'smart'
+    };
+    
+    assert.strictEqual(config.enabled, true);
+    assert.strictEqual(config.mode, 'multi-model');
+    assert.strictEqual(config.interactive, 'smart');
+  });
 });

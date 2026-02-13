@@ -40,8 +40,8 @@ export interface FinalReviewConfig {
   /** Review mode: single-model or multi-model (only applies if enabled) */
   mode: 'single-model' | 'multi-model';
   
-  /** Whether review is interactive (apply/skip/discuss) or auto-apply */
-  interactive: boolean;
+  /** Whether review is interactive (apply/skip/discuss), auto-apply, or smart (auto-apply consensus, interactive for ambiguous) */
+  interactive: boolean | 'smart';
 }
 
 /**
@@ -236,12 +236,10 @@ export async function collectReviewStrategy(
 /**
  * Collect review policy selection from user.
  * 
- * Presents a Quick Pick menu with three review policy options:
- * - Always: Pause for user review after every stage
+ * Presents a Quick Pick menu with review policy options:
+ * - Every Stage: Pause for user review after every stage
  * - Milestones: Pause at key decision points (planning, final PR)
- * - Never: Full automation with no review pauses
- * 
- * 'Never' option is only available with local review strategy.
+ * - Final PR Only: Only pause at final PR (local strategy only)
  * 
  * @param outputChannel - Output channel for logging user interaction events
  * @param reviewStrategy - The selected review strategy (affects available options)
@@ -252,14 +250,14 @@ export async function collectReviewPolicy(
   reviewStrategy: ReviewStrategy
 ): Promise<ReviewPolicy | undefined> {
   // Build review policy options based on review strategy
-  // 'Never' option is only available with local strategy (PRs require human review)
+  // 'Final PR Only' option is only available with local strategy (PRs require human review)
   const policyOptions = [
     {
-      label: "Always",
+      label: "Every Stage",
       description: "Pause for user review after every stage",
       detail:
         "Best for learning PAW or when you want to review and decide at each step",
-      value: "always" as ReviewPolicy,
+      value: "every-stage" as ReviewPolicy,
     },
     {
       label: "Milestones",
@@ -270,14 +268,14 @@ export async function collectReviewPolicy(
     },
   ];
 
-  // Only include 'Never' option when using local review strategy
+  // Only include 'Final PR Only' option when using local review strategy
   if (reviewStrategy === "local") {
     policyOptions.push({
-      label: "Never",
-      description: "Full automation - no review pauses",
+      label: "Final PR Only",
+      description: "Full automation - only pause at final PR",
       detail:
         "Best for routine work where you trust the agents to complete the workflow",
-      value: "never" as ReviewPolicy,
+      value: "final-pr-only" as ReviewPolicy,
     });
   }
 
@@ -443,16 +441,22 @@ export async function collectFinalReviewConfig(
   const interactiveSelection = await vscode.window.showQuickPick(
     [
       {
+        label: "Smart",
+        description: "Auto-apply consensus fixes, interactive for ambiguous (default)",
+        detail: "In multi-model (CLI): obvious fixes applied automatically. In single-model: interactive",
+        value: 'smart' as boolean | 'smart',
+      },
+      {
         label: "Interactive",
-        description: "Review each finding: apply, skip, or discuss (default)",
+        description: "Review each finding: apply, skip, or discuss",
         detail: "You control what gets changed",
-        value: true,
+        value: true as boolean | 'smart',
       },
       {
         label: "Auto-Apply",
         description: "Automatically apply recommended fixes",
         detail: "Faster but less control over changes",
-        value: false,
+        value: false as boolean | 'smart',
       },
     ],
     {
@@ -546,7 +550,7 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  // Collect review policy (validates 'never' + prs strategy combination)
+  // Collect review policy (validates 'final-pr-only' + prs strategy combination)
   const reviewPolicy = await collectReviewPolicy(outputChannel, reviewStrategy);
   if (!reviewPolicy) {
     return undefined;

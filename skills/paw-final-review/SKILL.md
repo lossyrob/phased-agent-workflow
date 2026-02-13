@@ -14,7 +14,7 @@ Automated review step that runs after all implementation phases complete, before
 - Review implementation against spec for correctness, patterns, and issues
 - Multi-model parallel review with synthesis (CLI only)
 - Single-model review (CLI and VS Code)
-- Interactive or auto-apply resolution modes
+- Interactive, smart, or auto-apply resolution modes
 - Generate review artifacts in `.paw/work/<work-id>/reviews/`
 
 ## Procedure
@@ -24,7 +24,7 @@ Automated review step that runs after all implementation phases complete, before
 Read WorkflowContext.md for:
 - Work ID and target branch
 - `Final Review Mode`: `single-model` | `multi-model`
-- `Final Review Interactive`: `true` | `false`
+- `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 {{#cli}}
@@ -93,18 +93,7 @@ Write findings in structured markdown.
 
 **If multi-model mode**:
 
-First, resolve model intents to actual model names (e.g., "latest GPT" → current GPT model).
-
-**If Interactive = true**: Present the resolved models for confirmation:
-```
-About to run multi-model review with:
-- [resolved model 1]
-- [resolved model 2]
-- [resolved model 3]
-
-Proceed with these models, or specify different ones?
-```
-Allow user to confirm or provide alternative model list.
+Read the resolved model names from WorkflowContext.md. Log the models being used, then start immediately — models were already confirmed during `paw-init`.
 
 Then spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the review prompt above. Save per-model reviews to `REVIEW-{MODEL}.md`.
 
@@ -189,6 +178,54 @@ Track status for each finding:
 {{#cli}}
 For multi-model mode, process synthesis first (consensus → partial → single-model). Track cross-finding duplicates to avoid re-presenting already-addressed issues.
 {{/cli}}
+
+**If Interactive = smart**:
+
+{{#cli}}
+If `Final Review Mode` is `single-model`, smart degrades to interactive behavior (no synthesis to classify). Follow the `Interactive = true` flow.
+
+If `Final Review Mode` is `multi-model`, classify each synthesis finding, then resolve in phases:
+
+**Classification heuristic** (applied per finding):
+
+| Agreement Level | Severity | Classification |
+|----------------|----------|----------------|
+| Consensus | must-fix | `auto-apply` |
+| Consensus | should-fix | `auto-apply` |
+| Partial | must-fix/should-fix | `interactive` |
+| Single-model | must-fix/should-fix | `interactive` |
+| Any | consider | `report-only` |
+
+Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.
+
+**Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction. Display batch summary:
+
+```
+## Auto-Applied Findings (N items)
+
+1. **[Title]** (must-fix) — [one-line description]
+2. **[Title]** (should-fix) — [one-line description]
+...
+```
+
+**Phase 2 — Interactive**: Present each `interactive` finding using the same format as `Interactive = true` (apply, skip, or discuss).
+
+**Phase 3 — Summary**: Display final summary of all dispositions:
+
+```
+## Resolution Summary
+
+**Auto-applied**: N findings (consensus fixes)
+**User-applied**: N findings
+**User-skipped**: N findings
+**Reported only**: N findings (consider-severity)
+```
+
+If all findings are `auto-apply` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
+{{/cli}}
+{{#vscode}}
+Smart mode degrades to interactive behavior in VS Code (single-model has no agreement signal). Follow the `Interactive = true` flow above.
+{{/vscode}}
 
 **If Interactive = false**:
 

@@ -34,6 +34,7 @@ Check `.paw/work/<work-id>/` for:
 - ImplementationPlan.md (planning stage)
 - Docs.md (documentation if separate from implementation)
 - `reviews/` directory (Final Agent Review artifacts)
+- `reviews/planning/` directory (Planning Documents Review artifacts)
 
 Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
 
@@ -42,8 +43,11 @@ Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
 Read WorkflowContext.md for:
 - Workflow Mode, Review Strategy, Review Policy
 - Final Agent Review: `enabled` | `disabled`
+- Planning Docs Review: `enabled` | `disabled`
 - Final Review Mode: `single-model` | `multi-model`
-- Final Review Interactive: `true` | `false`
+- Final Review Interactive: `true` | `false` | `smart`
+- Planning Review Mode: `single-model` | `multi-model`
+- Planning Review Interactive: `true` | `false` | `smart`
 
 ### Phase Counting
 
@@ -91,6 +95,7 @@ Map state to guidance:
 | Missing Spec.md + full mode | "Start specification: `spec`" |
 | Spec.md exists, no CodeResearch.md | "Run code research: `research`" |
 | CodeResearch.md exists, no Plan | "Create plan: `plan`" |
+| Plan exists, planning-docs-review enabled, no reviews/planning/ | "Run planning docs review" |
 | Plan exists, no phase work | "Begin Phase 1: `implement`" |
 | Phase N complete, Phase N+1 exists | "Continue Phase N+1: `implement`" |
 | All phases complete, review enabled, no reviews/ | "Run final review: `final-review`" |
@@ -101,7 +106,7 @@ Map state to guidance:
 ## Workflow Mode Behavior
 
 ### Full Mode
-Expect: Spec → Spec Research (optional) → Code Research → Plan → Implementation (multi-phase, including Documentation phase) → Final Review (if enabled) → Final PR
+Expect: Spec → Spec Research (optional) → Code Research → Plan → Planning Docs Review (if enabled) → Implementation (multi-phase, including Documentation phase) → Final Review (if enabled) → Final PR
 
 ### Minimal Mode
 Expect: Code Research → Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR

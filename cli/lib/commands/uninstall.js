@@ -50,19 +50,25 @@ function uninstallTarget(manifest, target) {
   return { removedAgents, removedSkills };
 }
 
-export async function uninstallCommand(flags = {}) {
-  // Check all targets
+export async function uninstallCommand(flags = {}, targetFilter = null) {
+  // Validate target filter if provided
+  if (targetFilter && !SUPPORTED_TARGETS.includes(targetFilter)) {
+    throw new Error(`Unsupported target: ${targetFilter}. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
+  }
+
+  // Check targets (filtered or all)
+  const targetsToCheck = targetFilter ? [targetFilter] : SUPPORTED_TARGETS;
   const installed = [];
-  for (const target of SUPPORTED_TARGETS) {
+  for (const target of targetsToCheck) {
     const manifest = readManifest(target);
     if (manifest) installed.push({ target, manifest });
   }
   
   if (installed.length === 0) {
-    // Check for orphaned files in all locations
+    // Check for orphaned files
     let foundOrphans = false;
     
-    for (const target of SUPPORTED_TARGETS) {
+    for (const target of targetsToCheck) {
       const { agentsDir, skillsDir } = getTargetDirs(target);
       const hasPawAgents = existsSync(agentsDir) && 
         readdirSync(agentsDir).some(f => f.includes('PAW'));
@@ -78,13 +84,15 @@ export async function uninstallCommand(flags = {}) {
     }
     
     if (!foundOrphans) {
-      console.log('PAW is not installed.');
+      const label = targetFilter ? `PAW is not installed for ${targetFilter}.` : 'PAW is not installed.';
+      console.log(label);
     }
     return;
   }
   
+  const targetNames = installed.map(i => i.target).join(', ');
   if (!flags.force) {
-    const proceed = await confirm('Remove all PAW agents and skills?');
+    const proceed = await confirm(`Remove PAW agents and skills from ${targetNames}?`);
     if (!proceed) {
       console.log('Uninstall cancelled.');
       return;

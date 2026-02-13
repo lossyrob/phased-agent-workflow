@@ -15,7 +15,7 @@ Commands:
   install <target>   Install PAW agents and skills
   upgrade            Check for updates and upgrade
   list               Show installed version and components
-  uninstall          Remove PAW agents and skills
+  uninstall [target]   Remove PAW agents and skills
 
 Options:
   --help, -h         Show this help message
@@ -28,6 +28,7 @@ Examples:
   paw list               Show installation status
   paw upgrade            Upgrade to latest version
   paw uninstall          Remove all PAW files
+  paw uninstall claude   Remove PAW from Claude only
 `;
 
 async function main() {
@@ -65,9 +66,11 @@ async function main() {
       case 'list':
         await listCommand();
         break;
-      case 'uninstall':
-        await uninstallCommand(flags);
+      case 'uninstall': {
+        const uninstallTarget = args.find((a, i) => i > 0 && !a.startsWith('-'));
+        await uninstallCommand(flags, uninstallTarget || null);
         break;
+      }
       default:
         console.error(`Unknown command: ${command}`);
         console.log(HELP);

@@ -354,4 +354,39 @@ describe('uninstall command', () => {
     assert.ok(!existsSync(join(dualHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should be removed');
     assert.ok(!existsSync(join(dualHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should be removed');
   });
+
+  test('uninstall with target only removes that target', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const selectiveHome = join(TEST_DIR, 'uninstall-selective');
+    mkdirSync(selectiveHome, { recursive: true });
+
+    // Install both
+    execSync(`node ${cliPath} install copilot`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: selectiveHome },
+    });
+    execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: selectiveHome },
+    });
+
+    // Uninstall only claude
+    execSync(`node ${cliPath} uninstall claude --force`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: selectiveHome },
+    });
+
+    assert.ok(existsSync(join(selectiveHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should still exist');
+    assert.ok(!existsSync(join(selectiveHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should be removed');
+
+    // List should only show copilot
+    const listOutput = execSync(`node ${cliPath} list`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: selectiveHome },
+    });
+    assert.ok(listOutput.includes('copilot'), 'list should still show copilot');
+    assert.ok(!listOutput.includes('claude'), 'list should not show claude');
+  });
 });

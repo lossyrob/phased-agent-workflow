@@ -20,6 +20,17 @@ describe('manifest module', () => {
     assert.ok(manifest.installedAt);
     assert.deepStrictEqual(manifest.files.agents, ['/path/to/agent.md']);
   });
+
+  test('createManifest works with claude target', async () => {
+    const { createManifest } = await import('../lib/manifest.js');
+    
+    const manifest = createManifest('1.0.0', 'claude', {
+      agents: ['/path/to/agent.md'],
+      skills: ['/path/to/skill/SKILL.md'],
+    });
+    
+    assert.strictEqual(manifest.target, 'claude');
+  });
 });
 
 describe('paths module', () => {
@@ -31,14 +42,50 @@ describe('paths module', () => {
     
     assert.strictEqual(copilotDir, join(homeDir, '.copilot'));
   });
+
+  test('getClaudeDir returns .claude path', async () => {
+    const { getClaudeDir, getHomeDir } = await import('../lib/paths.js');
+    
+    const claudeDir = getClaudeDir();
+    const homeDir = getHomeDir();
+    
+    assert.strictEqual(claudeDir, join(homeDir, '.claude'));
+  });
+
+  test('getTargetDirs returns copilot dirs by default', async () => {
+    const { getTargetDirs, getCopilotAgentsDir, getCopilotSkillsDir } = await import('../lib/paths.js');
+    
+    const { agentsDir, skillsDir } = getTargetDirs('copilot');
+    
+    assert.strictEqual(agentsDir, getCopilotAgentsDir());
+    assert.strictEqual(skillsDir, getCopilotSkillsDir());
+  });
+
+  test('getTargetDirs returns claude dirs for claude target', async () => {
+    const { getTargetDirs, getClaudeAgentsDir, getClaudeSkillsDir } = await import('../lib/paths.js');
+    
+    const { agentsDir, skillsDir } = getTargetDirs('claude');
+    
+    assert.strictEqual(agentsDir, getClaudeAgentsDir());
+    assert.strictEqual(skillsDir, getClaudeSkillsDir());
+  });
   
-  test('getManifestPath returns correct path', async () => {
+  test('getManifestPath returns correct path for copilot', async () => {
     const { getManifestPath, getHomeDir } = await import('../lib/paths.js');
     
     const manifestPath = getManifestPath();
     const homeDir = getHomeDir();
     
     assert.strictEqual(manifestPath, join(homeDir, '.paw', 'copilot-cli', 'manifest.json'));
+  });
+
+  test('getManifestPath returns correct path for claude', async () => {
+    const { getManifestPath, getHomeDir } = await import('../lib/paths.js');
+    
+    const manifestPath = getManifestPath('claude');
+    const homeDir = getHomeDir();
+    
+    assert.strictEqual(manifestPath, join(homeDir, '.paw', 'claude-cli', 'manifest.json'));
   });
 });
 
@@ -53,6 +100,7 @@ describe('CLI entry point', () => {
     assert.ok(output.includes('upgrade'));
     assert.ok(output.includes('list'));
     assert.ok(output.includes('uninstall'));
+    assert.ok(output.includes('claude'), 'help should mention claude target');
   });
   
   test('version output shows version', async () => {
@@ -90,7 +138,7 @@ describe('CLI entry point', () => {
 });
 
 describe('install output', () => {
-  test('fresh install shows quickstart guide', async () => {
+  test('fresh copilot install shows quickstart guide', async () => {
     const { execSync } = await import('child_process');
     const { mkdirSync } = await import('fs');
     const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
@@ -108,6 +156,24 @@ describe('install output', () => {
     assert.ok(output.includes('/agent'), 'should mention /agent');
     assert.ok(output.includes('Try saying'), 'should show Try saying section');
     assert.ok(output.includes('uninstall'), 'should mention uninstall');
+  });
+
+  test('fresh claude install shows claude quickstart guide', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const freshHome = join(TEST_DIR, 'fresh-claude-install');
+    mkdirSync(freshHome, { recursive: true });
+    
+    const output = execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: freshHome },
+    });
+    
+    assert.ok(output.includes('Quick Start'), 'should show Quick Start section');
+    assert.ok(output.includes('/agents'), 'should mention /agents command');
+    assert.ok(output.includes('~/.claude/'), 'should reference ~/.claude/ directory');
+    assert.ok(output.includes('Try saying'), 'should show Try saying section');
   });
 
   test('repeat install does not show quickstart guide', async () => {
@@ -167,6 +233,52 @@ describe('install output', () => {
 
     assert.strictEqual(output.trim(), pkgJson.version,
       'CLI --version should match package.json version');
+  });
+
+  test('claude install creates files in .claude directory', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const claudeHome = join(TEST_DIR, 'claude-dirs');
+    mkdirSync(claudeHome, { recursive: true });
+
+    execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: claudeHome },
+    });
+
+    assert.ok(existsSync(join(claudeHome, '.claude', 'agents')), '.claude/agents should exist');
+    assert.ok(existsSync(join(claudeHome, '.claude', 'skills')), '.claude/skills should exist');
+    assert.ok(existsSync(join(claudeHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should exist');
+  });
+
+  test('copilot and claude can be installed side by side', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const dualHome = join(TEST_DIR, 'dual-install');
+    mkdirSync(dualHome, { recursive: true });
+
+    execSync(`node ${cliPath} install copilot`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+    execSync(`node ${cliPath} install claude`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+
+    // Both should exist
+    assert.ok(existsSync(join(dualHome, '.copilot', 'agents')), '.copilot/agents should exist');
+    assert.ok(existsSync(join(dualHome, '.claude', 'agents')), '.claude/agents should exist');
+
+    // List should show both
+    const listOutput = execSync(`node ${cliPath} list`, {
+      encoding: 'utf-8',
+      env: { ...process.env, HOME: dualHome },
+    });
+    assert.ok(listOutput.includes('copilot'), 'list should show copilot target');
+    assert.ok(listOutput.includes('claude'), 'list should show claude target');
   });
 });
 

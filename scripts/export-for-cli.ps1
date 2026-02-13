@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Export PAW skills and agents for GitHub Copilot CLI usage.
+    Export PAW skills and agents for CLI usage.
 
 .DESCRIPTION
     Processes template conditionals: keeps {{#cli}}...{{/cli}} blocks,
@@ -15,11 +15,15 @@
 .PARAMETER OutputDir
     Optional output directory override
 
+.PARAMETER Target
+    Target CLI: copilot (default) or claude
+
 .EXAMPLE
     .\export-for-cli.ps1 skill paw-workflow
     .\export-for-cli.ps1 agent PAW
     .\export-for-cli.ps1 skills
     .\export-for-cli.ps1 agents
+    .\export-for-cli.ps1 -Target claude
     .\export-for-cli.ps1  # Export all skills and agents
 #>
 
@@ -31,7 +35,10 @@ param(
     [string]$Name,
     
     [Parameter(Position = 2)]
-    [string]$OutputDir
+    [string]$OutputDir,
+    
+    [ValidateSet("copilot", "claude")]
+    [string]$Target = "copilot"
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,9 +48,14 @@ $ProjectRoot = Split-Path -Parent $ScriptDir
 $SkillsDir = Join-Path $ProjectRoot "skills"
 $AgentsDir = Join-Path $ProjectRoot "agents"
 
-# Default CLI config directories
-$DefaultSkillsOut = Join-Path $env:USERPROFILE ".copilot\skills"
-$DefaultAgentsOut = Join-Path $env:USERPROFILE ".copilot\agents"
+# Set output directories based on target
+if ($Target -eq "claude") {
+    $DefaultSkillsOut = Join-Path $env:USERPROFILE ".claude\skills"
+    $DefaultAgentsOut = Join-Path $env:USERPROFILE ".claude\agents"
+} else {
+    $DefaultSkillsOut = Join-Path $env:USERPROFILE ".copilot\skills"
+    $DefaultAgentsOut = Join-Path $env:USERPROFILE ".copilot\agents"
+}
 
 function Process-Conditionals {
     param([string]$Content)
@@ -152,8 +164,12 @@ function Show-Help {
     Write-Host "  .\export-for-cli.ps1 agent <agent-name> [output-dir]  - Export single agent"
     Write-Host "  .\export-for-cli.ps1 skills [output-dir]              - Export all skills"
     Write-Host "  .\export-for-cli.ps1 agents [output-dir]              - Export all agents"
+    Write-Host "  .\export-for-cli.ps1 -Target claude                   - Export all to Claude CLI dirs"
     Write-Host ""
-    Write-Host "Default output directories:"
+    Write-Host "Options:"
+    Write-Host "  -Target <copilot|claude>  Set target CLI (default: copilot)"
+    Write-Host ""
+    Write-Host "Default output directories (Target=$Target):"
     Write-Host "  Skills: $DefaultSkillsOut"
     Write-Host "  Agents: $DefaultAgentsOut"
 }

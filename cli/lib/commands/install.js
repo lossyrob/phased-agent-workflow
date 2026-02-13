@@ -2,15 +2,14 @@ import { existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
 import { join } from 'path';
 import { createInterface } from 'readline';
 import {
-  getCopilotAgentsDir,
-  getCopilotSkillsDir,
+  getTargetDirs,
   getDistAgentsDir,
   getDistSkillsDir,
 } from '../paths.js';
 import { readManifest, writeManifest, createManifest } from '../manifest.js';
 import { VERSION } from '../version.js';
 
-const SUPPORTED_TARGETS = ['copilot'];
+const SUPPORTED_TARGETS = ['copilot', 'claude'];
 
 async function confirm(message) {
   const rl = createInterface({
@@ -58,13 +57,12 @@ export async function installCommand(target, flags = {}) {
     throw new Error('Distribution files not found. Package may be corrupted.');
   }
   
-  const existingManifest = readManifest();
-  const copilotAgentsDir = getCopilotAgentsDir();
-  const copilotSkillsDir = getCopilotSkillsDir();
+  const existingManifest = readManifest(target);
+  const { agentsDir, skillsDir } = getTargetDirs(target);
   
   // Check for existing installation
   const hasExistingFiles = existingManifest || 
-    existsSync(copilotAgentsDir) && readdirSync(copilotAgentsDir).some(f => f.includes('PAW'));
+    existsSync(agentsDir) && readdirSync(agentsDir).some(f => f.includes('PAW'));
   
   if (hasExistingFiles && !flags.force) {
     const proceed = await confirm('PAW files already exist. Overwrite?');
@@ -83,11 +81,11 @@ export async function installCommand(target, flags = {}) {
   
   // Copy agents
   console.log('  Copying agents...');
-  copyDirectory(distAgentsDir, copilotAgentsDir, installedFiles.agents);
+  copyDirectory(distAgentsDir, agentsDir, installedFiles.agents);
   
   // Copy skills
   console.log('  Copying skills...');
-  copyDirectory(distSkillsDir, copilotSkillsDir, installedFiles.skills);
+  copyDirectory(distSkillsDir, skillsDir, installedFiles.skills);
   
   // Write manifest
   const manifest = createManifest(VERSION, target, installedFiles);
@@ -97,10 +95,27 @@ export async function installCommand(target, flags = {}) {
   const skillCount = readdirSync(distSkillsDir, { withFileTypes: true })
     .filter(e => e.isDirectory()).length;
   
-  console.log(`\n✓ Installed ${agentCount} agents and ${skillCount} skills to ~/.copilot/`);
+  const targetLabel = target === 'claude' ? '~/.claude/' : '~/.copilot/';
+  console.log(`\n✓ Installed ${agentCount} agents and ${skillCount} skills to ${targetLabel}`);
 
   if (!hasExistingFiles) {
-    console.log(`
+    if (target === 'claude') {
+      console.log(`
+🚀 Quick Start
+  Start a workflow:    claude /agents then select PAW
+  Review a PR:         claude /agents then select PAW-Review
+
+💡 Try saying:
+  "I want to add a feature for..."
+  "Help me refactor the auth module"
+  "Review PR #100" (with PAW-Review agent)
+
+📦 Manage your installation:
+  npx @paw-workflow/cli list       Show installed version
+  npx @paw-workflow/cli upgrade    Check for updates
+  npx @paw-workflow/cli uninstall  Cleanly remove PAW`);
+    } else {
+      console.log(`
 🚀 Quick Start
   Start a workflow:    copilot --agent PAW
   Review a PR:         copilot --agent PAW-Review
@@ -115,5 +130,6 @@ export async function installCommand(target, flags = {}) {
   npx @paw-workflow/cli list       Show installed version
   npx @paw-workflow/cli upgrade    Check for updates
   npx @paw-workflow/cli uninstall  Cleanly remove PAW`);
+    }
   }
 }

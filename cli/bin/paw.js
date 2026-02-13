@@ -24,6 +24,7 @@ Options:
 
 Examples:
   paw install copilot    Install to GitHub Copilot CLI
+  paw install claude     Install to Claude Code CLI
   paw list               Show installation status
   paw upgrade            Upgrade to latest version
   paw uninstall          Remove all PAW files

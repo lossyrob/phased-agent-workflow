@@ -2,7 +2,7 @@ import { existsSync, unlinkSync, rmdirSync, readdirSync } from 'fs';
 import { dirname } from 'path';
 import { createInterface } from 'readline';
 import { readManifest } from '../manifest.js';
-import { getCopilotAgentsDir, getCopilotSkillsDir, getManifestPath } from '../paths.js';
+import { getTargetDirs, getManifestPath } from '../paths.js';
 
 async function confirm(message) {
   const rl = createInterface({
@@ -32,38 +32,7 @@ function removeEmptyDirs(dir) {
   }
 }
 
-export async function uninstallCommand(flags = {}) {
-  const manifest = readManifest();
-  
-  if (!manifest) {
-    // Check for orphaned files
-    const agentsDir = getCopilotAgentsDir();
-    const skillsDir = getCopilotSkillsDir();
-    const hasPawAgents = existsSync(agentsDir) && 
-      readdirSync(agentsDir).some(f => f.includes('PAW'));
-    const hasPawSkills = existsSync(skillsDir) &&
-      readdirSync(skillsDir).some(f => f.startsWith('paw-'));
-    
-    if (!hasPawAgents && !hasPawSkills) {
-      console.log('PAW is not installed.');
-      return;
-    }
-    
-    console.log('Warning: PAW files found but no manifest. Cannot determine exact files to remove.');
-    console.log('Please manually remove PAW files from ~/.copilot/agents/ and ~/.copilot/skills/');
-    return;
-  }
-  
-  if (!flags.force) {
-    const proceed = await confirm('Remove all PAW agents and skills?');
-    if (!proceed) {
-      console.log('Uninstall cancelled.');
-      return;
-    }
-  }
-  
-  console.log('Uninstalling PAW...');
-  
+function uninstallTarget(manifest, target) {
   let removedAgents = 0;
   let removedSkills = 0;
   
@@ -85,11 +54,70 @@ export async function uninstallCommand(flags = {}) {
   }
   
   // Remove manifest
-  const manifestPath = getManifestPath();
+  const manifestPath = getManifestPath(target);
   if (existsSync(manifestPath)) {
     unlinkSync(manifestPath);
   }
   
-  console.log(`Removed ${removedAgents} agent files and ${removedSkills} skill files.`);
+  return { removedAgents, removedSkills };
+}
+
+export async function uninstallCommand(flags = {}) {
+  // Check both targets
+  const copilotManifest = readManifest('copilot');
+  const claudeManifest = readManifest('claude');
+  
+  if (!copilotManifest && !claudeManifest) {
+    // Check for orphaned files in both locations
+    const targets = ['copilot', 'claude'];
+    let foundOrphans = false;
+    
+    for (const target of targets) {
+      const { agentsDir, skillsDir } = getTargetDirs(target);
+      const hasPawAgents = existsSync(agentsDir) && 
+        readdirSync(agentsDir).some(f => f.includes('PAW'));
+      const hasPawSkills = existsSync(skillsDir) &&
+        readdirSync(skillsDir).some(f => f.startsWith('paw-'));
+      
+      if (hasPawAgents || hasPawSkills) {
+        const dirLabel = target === 'claude' ? '~/.claude/' : '~/.copilot/';
+        console.log(`Warning: PAW files found in ${dirLabel} but no manifest. Cannot determine exact files to remove.`);
+        console.log(`Please manually remove PAW files from ${dirLabel}agents/ and ${dirLabel}skills/`);
+        foundOrphans = true;
+      }
+    }
+    
+    if (!foundOrphans) {
+      console.log('PAW is not installed.');
+    }
+    return;
+  }
+  
+  if (!flags.force) {
+    const proceed = await confirm('Remove all PAW agents and skills?');
+    if (!proceed) {
+      console.log('Uninstall cancelled.');
+      return;
+    }
+  }
+  
+  console.log('Uninstalling PAW...');
+  
+  let totalAgents = 0;
+  let totalSkills = 0;
+  
+  if (copilotManifest) {
+    const { removedAgents, removedSkills } = uninstallTarget(copilotManifest, 'copilot');
+    totalAgents += removedAgents;
+    totalSkills += removedSkills;
+  }
+  
+  if (claudeManifest) {
+    const { removedAgents, removedSkills } = uninstallTarget(claudeManifest, 'claude');
+    totalAgents += removedAgents;
+    totalSkills += removedSkills;
+  }
+  
+  console.log(`Removed ${totalAgents} agent files and ${totalSkills} skill files.`);
   console.log('PAW has been uninstalled.');
 }

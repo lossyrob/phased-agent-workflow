@@ -35,18 +35,25 @@ function runCommand(command, args) {
 }
 
 export async function upgradeCommand(_flags = {}) {
-  const manifest = readManifest();
+  // Check both targets for installations
+  const copilotManifest = readManifest('copilot');
+  const claudeManifest = readManifest('claude');
   
-  if (!manifest) {
-    console.log('PAW is not installed. Run "paw install copilot" first.');
+  if (!copilotManifest && !claudeManifest) {
+    console.log('PAW is not installed. Run "paw install copilot" or "paw install claude" first.');
     return;
   }
   
-  const currentVersion = manifest.version;
-  const target = manifest.target;
+  // Use the first found manifest for version info
+  const primaryManifest = copilotManifest || claudeManifest;
+  const currentVersion = primaryManifest.version;
+  
+  const targets = [];
+  if (copilotManifest) targets.push('copilot');
+  if (claudeManifest) targets.push('claude');
   
   console.log(`Installed version: ${currentVersion}`);
-  console.log(`Target: ${target}`);
+  console.log(`Targets: ${targets.join(', ')}`);
   console.log('Checking npm registry for updates...\n');
   
   let latestVersion;
@@ -100,14 +107,18 @@ export async function upgradeCommand(_flags = {}) {
     console.log('Updating @paw-workflow/cli globally...\n');
     await runCommand('npm', ['install', '-g', `@paw-workflow/cli@${latestVersion}`]);
     console.log('');
-    await runCommand('paw', ['install', target, '--force']);
+    for (const target of targets) {
+      await runCommand('paw', ['install', target, '--force']);
+    }
   } else {
     // npx: the running process IS the latest version already
-    await installCommand(target, { force: true });
+    for (const target of targets) {
+      await installCommand(target, { force: true });
+    }
   }
   
   console.log('\n' + '─'.repeat(50));
   console.log('✓ Upgrade complete!');
   console.log(`  CLI version: ${latestVersion}`);
-  console.log(`  Agents and skills installed to: ${target}`);
+  console.log(`  Agents and skills installed to: ${targets.join(', ')}`);
 }

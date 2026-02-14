@@ -21,8 +21,8 @@ Fix the Candidate Promotion Flow bypass (issue #234) using defense-in-depth (Opt
 - Changing how `paw-transition` is delegated (the inline-transition root cause is a context compaction behavior, not a prompt gap)
 
 ## Phase Status
-- [ ] **Phase 1: Defense in Depth** - Harden paw-pr pre-flight and add PAW.agent.md guardrail
-- [ ] **Phase 2: Documentation** - Create Docs.md for the fix
+- [x] **Phase 1: Defense in Depth** - Harden paw-pr pre-flight and add PAW.agent.md guardrail
+- [x] **Phase 2: Documentation** - Create Docs.md for the fix
 
 ## Phase Candidates
 <!-- None identified yet -->

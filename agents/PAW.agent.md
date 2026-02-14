@@ -23,7 +23,7 @@ On first request, identify work context from environment (current branch, `.paw/
 | Planning PR created | paw-transition → paw-implement | NO |
 | paw-impl-review (passes, more phases) | Push & Phase PR (prs strategy) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
-| paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
+| paw-impl-review (passes, last phase, review disabled) | paw-transition → paw-pr | Per Review Policy |
 | paw-final-review | paw-transition → paw-pr | NO |
 | Phase PR created | paw-transition → paw-implement (next) or paw-final-review or paw-pr | NO |
 

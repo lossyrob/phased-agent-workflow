@@ -126,6 +126,7 @@ Before the next activity can start, verify:
 **For paw-pr**:
 - [ ] All phases complete
 - [ ] paw-final-review complete (if enabled) or skipped (if disabled)
+- [ ] No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`)
 - [ ] On target branch or ready to merge
 
 **Artifact Tracking Check** (for all activities):

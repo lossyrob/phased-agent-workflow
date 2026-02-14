@@ -20,7 +20,7 @@ Create the final PR merging all implementation work to the base branch (from Wor
 
 ## Pre-flight Validation
 
-Before creating the PR, verify and report status. Block on failures unless user explicitly confirms.
+Before creating the PR, verify and report status. Block on failures unless user explicitly confirms (except hard blockers — those cannot be overridden).
 
 ### Required Checks
 

@@ -60,8 +60,8 @@ Humans have final authority over all workflow decisions:
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
 | `paw-spec-review` | Review spec for quality, completeness, clarity | Review feedback |
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
-| `paw-planning` | Create implementation plan, revise plan | ImplementationPlan.md |
-| `paw-plan-review` | Review plan for feasibility, spec alignment | Review feedback |
+| `paw-planning` | Create implementation plan, revise plan (single/multi-model) | ImplementationPlan.md, planning/ |
+| `paw-plan-review` | Review plan for feasibility, spec alignment (single/multi-model) | Review feedback, PLAN-REVIEW-*.md in planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
 | `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
@@ -86,6 +86,11 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── ImplementationPlan.md   # Phased implementation plan
 ├── Docs.md                 # Technical documentation (created during final implementation phase)
 ├── prompts/                # Generated prompt files (optional)
+├── planning/              # Multi-model planning artifacts (gitignored)
+│   ├── PLAN-{MODEL}.md          # Per-model plan drafts
+│   ├── CRITIQUE-{MODEL}.md      # Debate artifacts (deep mode only)
+│   ├── PLAN-REVIEW-{MODEL}.md   # Per-model review verdicts
+│   └── PLAN-REVIEW-SYNTHESIS.md # Weighted review synthesis
 └── reviews/                # Review artifacts (gitignored)
     ├── planning/           # Planning Documents Review artifacts
     │   ├── REVIEW.md
@@ -97,6 +102,40 @@ All implementation artifacts are stored in a consistent directory structure:
 ```
 
 **Work ID Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
+
+## PLAN-REVIEW-SYNTHESIS.md Template
+
+Used by the PAW orchestrator when multi-model plan review is enabled. Save to `.paw/work/<work-id>/planning/PLAN-REVIEW-SYNTHESIS.md`.
+
+```markdown
+# Plan Review Synthesis
+
+**Date**: [date]
+**Reviewers**: [model list]
+**Plan**: `.paw/work/<work-id>/ImplementationPlan.md`
+
+## Overall Verdict: [PASS | FAIL]
+Majority: [N/M] models returned [PASS|FAIL]
+
+## Consensus Issues (All Models Agree)
+[Highest priority - all models flagged these]
+
+## Partial Agreement (2+ Models)
+[High priority - multiple models flagged]
+
+## Single-Model Findings
+[Unique findings worth considering]
+
+## Consolidated Feedback
+### BLOCKING
+[All blocking issues from all models, deduplicated]
+
+### IMPROVE
+[All improve suggestions, deduplicated]
+
+### NOTE
+[All notes, deduplicated]
+```
 
 ## Default Flow Guidance
 

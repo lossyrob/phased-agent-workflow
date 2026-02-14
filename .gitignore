@@ -76,3 +76,4 @@ Thumbs.db
 # Application specific
 output/
 .paw/reviews/
+.paw/work/*/planning/

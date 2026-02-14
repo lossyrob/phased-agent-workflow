@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Export PAW skills and agents for GitHub Copilot CLI usage.
+# Export PAW skills and agents for CLI usage.
 # Processes template conditionals: keeps {{#cli}}...{{/cli}} blocks, 
 # removes {{#vscode}}...{{/vscode}} blocks.
 #
@@ -9,10 +9,15 @@
 #   ./scripts/export-for-cli.sh agent <agent-name> [output-dir]
 #   ./scripts/export-for-cli.sh skills [output-dir]   # Export all skills
 #   ./scripts/export-for-cli.sh agents [output-dir]   # Export all agents
+#   ./scripts/export-for-cli.sh --target claude        # Export all to Claude CLI dirs
 #
 # Default output directories (GitHub Copilot CLI user-level locations):
 #   Skills: ~/.copilot/skills/
 #   Agents: ~/.copilot/agents/
+#
+# With --target claude:
+#   Skills: ~/.claude/skills/
+#   Agents: ~/.claude/agents/
 
 set -e
 
@@ -21,13 +26,41 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SKILLS_DIR="$PROJECT_ROOT/skills"
 AGENTS_DIR="$PROJECT_ROOT/agents"
 
-# Default CLI config directories (matches GitHub CLI custom agents/skills locations)
+# Default target
+TARGET="copilot"
+
+# Parse --target flag from any position in args
+FILTERED_ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == "--target" ]]; then
+        TARGET_NEXT=true
+        continue
+    fi
+    if [[ "$TARGET_NEXT" == true ]]; then
+        TARGET="$arg"
+        TARGET_NEXT=false
+        continue
+    fi
+    FILTERED_ARGS+=("$arg")
+done
+set -- "${FILTERED_ARGS[@]}"
+
+# Set output directories based on target
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
-    DEFAULT_SKILLS_OUT="$USERPROFILE/.copilot/skills"
-    DEFAULT_AGENTS_OUT="$USERPROFILE/.copilot/agents"
+    HOME_BASE="$USERPROFILE"
 else
-    DEFAULT_SKILLS_OUT="$HOME/.copilot/skills"
-    DEFAULT_AGENTS_OUT="$HOME/.copilot/agents"
+    HOME_BASE="$HOME"
+fi
+
+if [[ "$TARGET" == "claude" ]]; then
+    DEFAULT_SKILLS_OUT="$HOME_BASE/.claude/skills"
+    DEFAULT_AGENTS_OUT="$HOME_BASE/.claude/agents"
+elif [[ "$TARGET" == "copilot" ]]; then
+    DEFAULT_SKILLS_OUT="$HOME_BASE/.copilot/skills"
+    DEFAULT_AGENTS_OUT="$HOME_BASE/.copilot/agents"
+else
+    echo "Error: Unknown target '$TARGET'. Supported: copilot, claude" >&2
+    exit 1
 fi
 
 # Process conditional blocks for CLI environment
@@ -160,8 +193,12 @@ case "${1:-}" in
         echo "  $0 agent <agent-name> [output-dir]  - Export single agent"
         echo "  $0 skills [output-dir]              - Export all skills"
         echo "  $0 agents [output-dir]              - Export all agents"
+        echo "  $0 --target claude                  - Export all to Claude CLI dirs"
         echo ""
-        echo "Default output directories:"
+        echo "Options:"
+        echo "  --target <copilot|claude>  Set target CLI (default: copilot)"
+        echo ""
+        echo "Default output directories (target=$TARGET):"
         echo "  Skills: $DEFAULT_SKILLS_OUT"
         echo "  Agents: $DEFAULT_AGENTS_OUT"
         ;;

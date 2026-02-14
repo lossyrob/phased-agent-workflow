@@ -5,6 +5,7 @@ import { listCommand } from '../lib/commands/list.js';
 import { uninstallCommand } from '../lib/commands/uninstall.js';
 import { upgradeCommand } from '../lib/commands/upgrade.js';
 import { VERSION } from '../lib/version.js';
+import { SUPPORTED_TARGETS } from '../lib/paths.js';
 
 const HELP = `
 paw - Phased Agent Workflow CLI
@@ -15,7 +16,7 @@ Commands:
   install <target>   Install PAW agents and skills
   upgrade            Check for updates and upgrade
   list               Show installed version and components
-  uninstall          Remove PAW agents and skills
+  uninstall [target]   Remove PAW agents and skills
 
 Options:
   --help, -h         Show this help message
@@ -24,9 +25,11 @@ Options:
 
 Examples:
   paw install copilot    Install to GitHub Copilot CLI
+  paw install claude     Install to Claude Code CLI
   paw list               Show installation status
   paw upgrade            Upgrade to latest version
   paw uninstall          Remove all PAW files
+  paw uninstall claude   Remove PAW from Claude only
 `;
 
 async function main() {
@@ -52,7 +55,7 @@ async function main() {
       case 'install': {
         const target = args[1];
         if (!target) {
-          console.error('Error: install requires a target (e.g., "copilot")');
+          console.error(`Error: install requires a target. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
           process.exit(1);
         }
         await installCommand(target, flags);
@@ -64,9 +67,11 @@ async function main() {
       case 'list':
         await listCommand();
         break;
-      case 'uninstall':
-        await uninstallCommand(flags);
+      case 'uninstall': {
+        const uninstallTarget = args.find((a, i) => i > 0 && !a.startsWith('-'));
+        await uninstallCommand(flags, uninstallTarget || null);
         break;
+      }
       default:
         console.error(`Unknown command: ${command}`);
         console.log(HELP);

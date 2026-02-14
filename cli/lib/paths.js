@@ -55,6 +55,9 @@ export function getPawDir() {
 }
 
 export function getManifestDir(target = 'copilot') {
+  if (!SUPPORTED_TARGETS.includes(target)) {
+    throw new Error(`Unknown target: ${target}. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
+  }
   return join(getPawDir(), `${target}-cli`);
 }
 

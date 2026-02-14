@@ -5,6 +5,7 @@ import { listCommand } from '../lib/commands/list.js';
 import { uninstallCommand } from '../lib/commands/uninstall.js';
 import { upgradeCommand } from '../lib/commands/upgrade.js';
 import { VERSION } from '../lib/version.js';
+import { SUPPORTED_TARGETS } from '../lib/paths.js';
 
 const HELP = `
 paw - Phased Agent Workflow CLI
@@ -54,7 +55,7 @@ async function main() {
       case 'install': {
         const target = args[1];
         if (!target) {
-          console.error('Error: install requires a target (e.g., "copilot")');
+          console.error(`Error: install requires a target. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
           process.exit(1);
         }
         await installCommand(target, flags);

@@ -326,6 +326,8 @@ describe('uninstall command', () => {
 
     assert.ok(output.includes('Removed'), 'should show removal summary');
     assert.ok(!existsSync(join(uninstallHome, '.paw', 'claude-cli', 'manifest.json')), 'manifest should be removed');
+    assert.ok(!existsSync(join(uninstallHome, '.claude', 'agents', 'PAW.agent.md')), 'agent files should be removed');
+    assert.ok(!existsSync(join(uninstallHome, '.claude', 'skills', 'paw-workflow', 'SKILL.md')), 'skill files should be removed');
   });
 
   test('uninstall removes both targets when both installed', async () => {
@@ -353,6 +355,10 @@ describe('uninstall command', () => {
 
     assert.ok(!existsSync(join(dualHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should be removed');
     assert.ok(!existsSync(join(dualHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should be removed');
+    assert.ok(!existsSync(join(dualHome, '.copilot', 'agents', 'PAW.agent.md')), 'copilot agent files should be removed');
+    assert.ok(!existsSync(join(dualHome, '.copilot', 'skills', 'paw-workflow', 'SKILL.md')), 'copilot skill files should be removed');
+    assert.ok(!existsSync(join(dualHome, '.claude', 'agents', 'PAW.agent.md')), 'claude agent files should be removed');
+    assert.ok(!existsSync(join(dualHome, '.claude', 'skills', 'paw-workflow', 'SKILL.md')), 'claude skill files should be removed');
   });
 
   test('uninstall with target only removes that target', async () => {
@@ -380,6 +386,10 @@ describe('uninstall command', () => {
 
     assert.ok(existsSync(join(selectiveHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should still exist');
     assert.ok(!existsSync(join(selectiveHome, '.paw', 'claude-cli', 'manifest.json')), 'claude manifest should be removed');
+    assert.ok(!existsSync(join(selectiveHome, '.claude', 'agents', 'PAW.agent.md')), 'claude agent files should be removed');
+    assert.ok(!existsSync(join(selectiveHome, '.claude', 'skills', 'paw-workflow', 'SKILL.md')), 'claude skill files should be removed');
+    assert.ok(existsSync(join(selectiveHome, '.copilot', 'agents', 'PAW.agent.md')), 'copilot agent files should still exist');
+    assert.ok(existsSync(join(selectiveHome, '.copilot', 'skills', 'paw-workflow', 'SKILL.md')), 'copilot skill files should still exist');
 
     // List should only show copilot
     const listOutput = execSync(`node ${cliPath} list`, {

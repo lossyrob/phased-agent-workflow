@@ -38,12 +38,10 @@ function runCommand(command, args) {
 export async function upgradeCommand(_flags = {}) {
   // Check all targets for installations
   const targets = [];
-  let primaryManifest = null;
   for (const target of SUPPORTED_TARGETS) {
     const manifest = readManifest(target);
     if (manifest) {
       targets.push(target);
-      if (!primaryManifest) primaryManifest = manifest;
     }
   }
   
@@ -52,10 +50,18 @@ export async function upgradeCommand(_flags = {}) {
     return;
   }
   
-  const currentVersion = primaryManifest.version;
-  
-  console.log(`Installed version: ${currentVersion}`);
+  const versions = targets.map(t => ({ target: t, version: readManifest(t).version }));
+  const unique = [...new Set(versions.map(v => v.version))];
+  if (unique.length > 1) {
+    console.log('Installed versions:');
+    for (const v of versions) {
+      console.log(`  ${v.target}: ${v.version}`);
+    }
+  } else {
+    console.log(`Installed version: ${unique[0]}`);
+  }
   console.log(`Targets: ${targets.join(', ')}`);
+  const currentVersion = unique[0];
   console.log('Checking npm registry for updates...\n');
   
   let latestVersion;

@@ -17,7 +17,7 @@ Fix the Candidate Promotion Flow bypass (issue #234) using defense-in-depth (Opt
 
 ## What We're NOT Doing
 - Modifying `paw-transition` SKILL.md — Step 2.5 works correctly when properly delegated
-- Adding integration tests for candidate promotion (separate work item — no test infrastructure exists for this flow)
+- Adding integration tests for candidate promotion (out of scope — tracked as separate work item)
 - Changing how `paw-transition` is delegated (the inline-transition root cause is a context compaction behavior, not a prompt gap)
 
 ## Phase Status
@@ -38,9 +38,12 @@ Fix the Candidate Promotion Flow bypass (issue #234) using defense-in-depth (Opt
   - Add a dedicated subsection or callout making unresolved candidates a **hard blocker** that requires the orchestrator to run Candidate Promotion Flow — not a user-confirmable skip
   - Keep change minimal: 1-2 bullet points or a brief callout block
 
-- **`agents/PAW.agent.md`** (Mandatory Transitions table, around line 27):
-  - Add a prerequisite row or guardrail note: before `paw-pr`, verify all phase candidates are resolved; if unresolved, run Candidate Promotion Flow first
+- **`agents/PAW.agent.md`** (Mandatory Transitions table, line 27):
+  - Fix row 27 to read `paw-transition → paw-pr` (matching the `paw-transition →` prefix pattern used by rows 22, 23, 28) — this inconsistency contributed to the original root cause
+- **`agents/PAW.agent.md`** (Prerequisites table, lines 52-56):
+  - Add prerequisite row: `| paw-pr | All phase candidates resolved (run Candidate Promotion Flow if not) |`
   - This creates an independent safety net that doesn't depend on `paw-transition` having run correctly
+  - Follow same logic as paw-transition Step 2.5: missing `## Phase Candidates` section or all-resolved = pass
 
 ### Success Criteria:
 
@@ -52,7 +55,8 @@ Fix the Candidate Promotion Flow bypass (issue #234) using defense-in-depth (Opt
 #### Manual Verification:
 - [ ] `paw-pr` SKILL.md pre-flight explicitly names Candidate Promotion Flow as the resolution path for unresolved candidates
 - [ ] `paw-pr` SKILL.md does NOT allow user confirmation to bypass unresolved candidates
-- [ ] `PAW.agent.md` contains an independent pre-paw-pr candidate check that doesn't depend on `paw-transition` output
+- [ ] `PAW.agent.md` Mandatory Transitions table row 27 includes `paw-transition →` prefix
+- [ ] `PAW.agent.md` Prerequisites table contains a pre-paw-pr candidate check that doesn't depend on `paw-transition` output
 - [ ] Token delta is <5% per file vs baseline (paw-pr: 1138, PAW.agent.md: 2437)
 
 ---

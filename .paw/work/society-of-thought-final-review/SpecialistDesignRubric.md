@@ -42,7 +42,7 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 - The strategy should be distinct enough that applying it to the same code produces different observations than other strategies
 - Strategies should be complementary — they should have different failure modes (Swiss-cheese model, AI Office Architecture paper)
 
-**The 6 built-in strategies and why they were chosen**:
+**The 7 built-in strategies and why they were chosen**:
 | Specialist | Strategy | Reasoning |
 |---|---|---|
 | security | Threat modeling / attack-tree decomposition | Traces data flows through trust boundaries — a structured methodology, not ad-hoc "looks for vulnerabilities" |

@@ -145,7 +145,7 @@ Acceptance Scenarios:
 
 - The existing `task` tool infrastructure supports launching 7 concurrent subagents with different prompts and optional model overrides (validated by spec research — multi-model already does this with 3)
 - Free-form markdown is sufficient for persona specification without requiring structured YAML frontmatter (validated during work shaping — user preference for flexibility)
-- 7 built-in specialists is the default roster size (5 per DeepMind scaling study sweet spot, plus architecture for codebase pattern fit)
+- 7 built-in specialists is the default roster size (5 per DeepMind scaling study sweet spot, plus architecture for codebase pattern fit and testing for coverage gap analysis)
 - Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern — loaded on demand when society-of-thought mode is active
 - The synthesis agent does not need its own persona (user decision during work shaping — neutral analysis avoids introducing bias)
 

@@ -17,7 +17,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 ## Desired End State
 
 - `society-of-thought` is a valid value for `Final Review Mode` in WorkflowContext.md
-- 5 built-in specialist personas with full narrative backstories, cognitive strategies, behavioral rules, example outputs, and anti-sycophancy structural rules are defined in paw-final-review
+- 7 built-in specialist personas with full narrative backstories, cognitive strategies, behavioral rules, example outputs, and anti-sycophancy structural rules are defined in paw-final-review
 - Specialist discovery works at 4 precedence levels (workflow > project > user > built-in)
 - Both parallel and debate interaction modes function
 - GapAnalysis.md produced with specialist attribution, confidence levels, severity classifications, and grounding validation

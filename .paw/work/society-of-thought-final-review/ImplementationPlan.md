@@ -61,17 +61,9 @@ Define the security specialist persona. Cognitive strategy: threat modeling / at
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/security.md`**: Create the specialist file with:
-  - Full persona narrative (identity, background, what they've seen, what drives them)
-  - Cognitive strategy description (how they analyze, not just what they look for)
-  - Behavioral rules (specific analytical moves this persona always makes)
-  - Anti-sycophancy structural rules: "You MUST identify at least one substantive concern. You MUST present independent evidence before agreeing. Prioritize finding real issues over maintaining harmony."
-  - Cross-cutting rule: "Before evaluating code, assess whether you understand WHY this change was made. If rationale is unclear, flag it."
-  - Confidence scoring instruction: "For each finding, state your confidence (HIGH/MEDIUM/LOW) and what evidence supports it."
-  - 2-3 example review comments demonstrating threat modeling cognitive strategy
-  - Optional `model:` field (unset for built-in defaults)
+- **`skills/paw-final-review/references/specialists/security.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements. The rubric defines all required sections (identity/narrative, cognitive strategy, behavioral rules, anti-sycophancy rules, demand-rationale rule, confidence scoring, example comments) with research-backed guidance on what makes each section effective.
 
-- Create `skills/paw-final-review/references/` directory if it doesn't exist
+- Create `skills/paw-final-review/references/` and `skills/paw-final-review/references/specialists/` directories if they don't exist
 
 - **Tests**: Lint with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/security.md` (if applicable)
 
@@ -79,13 +71,15 @@ Define the security specialist persona. Cognitive strategy: threat modeling / at
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/security.md` exists
-- [ ] File contains required sections (identity, cognitive strategy, behavioral rules, anti-sycophancy rules, examples)
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate threat modeling / attack-tree decomposition
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (threat modeling) is clearly different from all other specialists; review comments are identifiably from this persona
+- [ ] **Depth**: Narrative backstory connects specific security incidents/experiences to specific review behaviors; behavioral rules are concrete actions
+- [ ] **Anti-sycophancy**: Structural rules make it difficult to produce "all clear"; at least one example demonstrates identifying a non-obvious concern
+- [ ] **Grounding**: Example comments reference specific code constructs, not abstract security concerns
+- [ ] **Complementarity**: Covers attack surfaces and trust boundaries that other specialists would miss
 
 ---
 
@@ -96,19 +90,21 @@ Define the performance specialist persona. Cognitive strategy: quantitative back
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/performance.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating quantitative estimation cognitive strategy.
+- **`skills/paw-final-review/references/specialists/performance.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/performance.md` exists
-- [ ] File contains required sections
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate quantitative back-of-envelope estimation
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (quantitative estimation) produces concrete numbers, not vague "might be slow" concerns
+- [ ] **Depth**: Behavioral rules specify when and how to estimate (e.g., "before commenting on any data structure, estimate cardinality at production scale")
+- [ ] **Anti-sycophancy**: Examples show identifying performance concerns even in seemingly clean code
+- [ ] **Grounding**: Example comments include specific calculations or O(n) analysis tied to code
+- [ ] **Complementarity**: Covers quantitative performance reasoning that other specialists would miss
 
 ---
 
@@ -119,19 +115,21 @@ Define the assumptions specialist persona. Cognitive strategy: Socratic first-pr
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/assumptions.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating Socratic questioning cognitive strategy.
+- **`skills/paw-final-review/references/specialists/assumptions.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/assumptions.md` exists
-- [ ] File contains required sections
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate Socratic first-principles questioning
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (Socratic questioning) asks questions rather than making assertions; challenges fundamental premises
+- [ ] **Depth**: Behavioral rules specify escalation pattern — each round introduces NEW challenges, not restated objections (per IUI 2024 finding)
+- [ ] **Anti-sycophancy**: This persona should have the strongest anti-convergence posture per the rubric calibration note
+- [ ] **Grounding**: Questions are anchored in specific code decisions, not abstract philosophy
+- [ ] **Complementarity**: Exposes unstated assumptions that domain-focused specialists take for granted
 
 ---
 
@@ -142,19 +140,21 @@ Define the edge-cases specialist persona. Cognitive strategy: systematic boundar
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/edge-cases.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating boundary enumeration cognitive strategy.
+- **`skills/paw-final-review/references/specialists/edge-cases.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/edge-cases.md` exists
-- [ ] File contains required sections
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate systematic boundary enumeration
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (boundary enumeration) is systematic and exhaustive, not intuitive
+- [ ] **Depth**: Behavioral rules enumerate specific boundary categories to check (null, empty, max, concurrent, interrupted, partial failure, timeout, duplicate, out-of-order)
+- [ ] **Anti-sycophancy**: Examples show identifying edge cases even in seemingly straightforward code
+- [ ] **Grounding**: Example comments reference specific code paths and inputs, not hypothetical scenarios
+- [ ] **Complementarity**: Systematic enumeration catches boundaries that intuition-based review misses
 
 ---
 
@@ -165,19 +165,21 @@ Define the maintainability specialist persona. Cognitive strategy: narrative cod
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/maintainability.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating narrative code walkthrough cognitive strategy.
+- **`skills/paw-final-review/references/specialists/maintainability.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/maintainability.md` exists
-- [ ] File contains required sections
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate narrative code walkthrough
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (narrative walkthrough) reads code as a story experienced by a future developer
+- [ ] **Depth**: Behavioral rules address naming, structure, documentation, and whether abstractions earn their complexity — the highest-volume review category (75% per Mäntylä & Lassenius)
+- [ ] **Anti-sycophancy**: Per rubric calibration note, can be slightly more constructive since role includes suggesting improvements, but must still identify real concerns
+- [ ] **Grounding**: Example comments reference specific naming choices, structural decisions, or documentation gaps in code
+- [ ] **Complementarity**: Covers readability and future maintenance burden that domain-focused specialists overlook
 
 ---
 
@@ -188,19 +190,21 @@ Define the architecture specialist persona. Cognitive strategy: pattern recognit
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/architecture.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating pattern recognition and structural analysis cognitive strategy.
+- **`skills/paw-final-review/references/specialists/architecture.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] `skills/paw-final-review/references/specialists/architecture.md` exists
-- [ ] File contains required sections
+- [ ] File contains all required sections per SpecialistDesignRubric.md
 - [ ] Lint passes: `npm run lint`
 
-#### Manual Verification:
-- [ ] Persona reads as a distinct character with a unique voice
-- [ ] Example review comments clearly demonstrate pattern recognition and structural analysis
-- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (pattern recognition) evaluates structural fit with existing codebase, not just the code in isolation
+- [ ] **Depth**: Behavioral rules address convention adherence, abstraction level appropriateness, and extensibility vs YAGNI tradeoffs
+- [ ] **Anti-sycophancy**: Examples show identifying architectural mismatches even when code is functionally correct
+- [ ] **Grounding**: Example comments reference specific patterns from the codebase and explain why divergence matters
+- [ ] **Complementarity**: Covers codebase-level structural concerns that code-focused specialists miss
 
 ---
 

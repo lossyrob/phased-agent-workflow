@@ -6,7 +6,7 @@ Base Branch: main
 Target Branch: feature/society-of-thought-final-review
 Workflow Mode: full
 Review Strategy: local
-Review Policy: final-pr-only
+Review Policy: planning-only
 Session Policy: continuous
 Final Agent Review: enabled
 Final Review Mode: multi-model

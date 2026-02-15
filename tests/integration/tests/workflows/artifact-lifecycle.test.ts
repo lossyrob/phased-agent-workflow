@@ -228,6 +228,25 @@ describe("artifact lifecycle detection", { timeout: 600_000 }, () => {
     );
   });
 
+  it("gitignore fallback (no lifecycle or legacy fields): resolves to never-commit", async () => {
+    const response = await runTransition(
+      "gitignore-fallback",
+      async (workDir, workId) => {
+        await seedWorkflowContext(workDir, workId, null);
+        await writeFile(
+          join(workDir, `.paw/work/${workId}/.gitignore`),
+          "*\n"
+        );
+      },
+    );
+
+    assert.match(
+      response,
+      /artifact_lifecycle:\s*never-commit/i,
+      `Expected artifact_lifecycle: never-commit for .gitignore fallback.\nResponse: ${response.slice(0, 500)}`,
+    );
+  });
+
   it("legacy 'disabled': maps to never-commit", async () => {
     const response = await runTransition(
       "legacy-disabled",

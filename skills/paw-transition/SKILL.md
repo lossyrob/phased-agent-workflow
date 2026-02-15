@@ -129,10 +129,10 @@ Before the next activity can start, verify:
 - [ ] On target branch or ready to merge
 
 **Artifact Lifecycle Check** (for all activities):
-- Check WorkflowContext.md for `Artifact Lifecycle:` field
-- If field exists: use its value (`commit-and-clean`, `commit-and-persist`, or `never-commit`)
-- If field absent: check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`; otherwise: `commit-and-clean`
-- Legacy mapping: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `artifact_tracking: disabled` or `track_artifacts: false` → `never-commit`
+1. Check WorkflowContext.md for `Artifact Lifecycle:` field → use value
+2. If absent, check for legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. If absent, check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`
+4. Default: `commit-and-clean`
 
 If any check fails, report blocker and stop.
 

@@ -176,9 +176,12 @@ The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts
 | `commit-and-persist` | Artifacts committed to git | Artifacts remain in the repository permanently |
 | `never-commit` | Artifacts stay local only | No git operations needed |
 
-**Detection Hierarchy:** Agents detect lifecycle mode via: WorkflowContext.md `Artifact Lifecycle:` field → `.paw/work/<work-id>/.gitignore` with `*` fallback → default `commit-and-clean`.
+**Detection Hierarchy** (in priority order):
 
-**Legacy Compatibility:** `artifact_tracking: enabled` or `track_artifacts: true` maps to `commit-and-clean`; `disabled` or `false` maps to `never-commit`.
+1. WorkflowContext.md `Artifact Lifecycle:` field → use value directly
+2. Legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. `.paw/work/<work-id>/.gitignore` with `*` content → `never-commit`
+4. Default: `commit-and-clean`
 
 **Stop-Tracking Operation** (`commit-and-clean` at PR time):
 
@@ -186,6 +189,8 @@ The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts
 2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
 3. Create `.paw/work/<work-id>/.gitignore` containing `*` — self-ignoring, never committed
 4. Commit the removal
+
+The WorkflowContext.md `Artifact Lifecycle:` field is not updated during PR-time stop-tracking because the workflow is completing. For mid-workflow stop-tracking (VS Code command), the field is updated to `never-commit`.
 
 The final PR diff against `main` shows zero `.paw/` file changes. The PR description links to artifacts at the recorded commit SHA.
 

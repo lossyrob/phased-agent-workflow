@@ -57,11 +57,11 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 ### Changes Required
 
 - **`skills/paw-final-review/references/specialists/`**: Create a directory containing 5 built-in specialist files, following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern:
-  - `security-paranoid.md` — Cognitive strategy: threat modeling / attack-tree decomposition. Identity: former incident responder. Traces data flows from untrusted boundaries through trust boundaries to sinks.
-  - `scalability-skeptic.md` — Cognitive strategy: quantitative back-of-envelope estimation. Identity: performance engineer. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
-  - `devils-advocate.md` — Cognitive strategy: Socratic first-principles questioning. Identity: distinguished engineer. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
-  - `edge-case-bloodhound.md` — Cognitive strategy: systematic boundary enumeration. Identity: obsessive about boundaries. Methodically enumerates: null, empty, max, concurrent, interrupted, partially failed, timed out, duplicate, out of order.
-  - `empathetic-maintainer.md` — Cognitive strategy: narrative code walkthrough. Identity: thinks about future-you reading this at 2 AM. Addresses the largest category of real review findings (75% maintainability per research).
+  - `security.md` — Cognitive strategy: threat modeling / attack-tree decomposition. Traces data flows from untrusted boundaries through trust boundaries to sinks.
+  - `performance.md` — Cognitive strategy: quantitative back-of-envelope estimation. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
+  - `assumptions.md` — Cognitive strategy: Socratic first-principles questioning. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
+  - `edge-cases.md` — Cognitive strategy: systematic boundary enumeration. Methodically enumerates: null, empty, max, concurrent, interrupted, partially failed, timed out, duplicate, out of order.
+  - `maintainability.md` — Cognitive strategy: narrative code walkthrough. Addresses the largest category of real review findings (75% maintainability per research).
 
 - Each specialist file includes:
   - Full persona narrative (identity, background, what they've seen, what drives them)

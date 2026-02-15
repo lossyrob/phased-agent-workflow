@@ -42,10 +42,10 @@ Independent Test: Create a custom specialist markdown file at the project level,
 Acceptance Scenarios:
 1. Given a custom specialist file at the project level (`.paw/specialists/<name>.md`), When final review runs, Then the custom specialist is included in the review panel alongside built-in defaults.
 2. Given a user-level specialist at `~/.paw/specialists/<name>.md` and a project-level specialist with the same filename, When final review runs, Then the project-level specialist takes precedence (project overrides user).
-3. Given a WorkflowContext.md that specifies `Final Review Specialists: security-paranoid, edge-case-bloodhound`, When final review runs in fixed selection mode, Then only those two specialists participate.
+3. Given a WorkflowContext.md that specifies `Final Review Specialists: security, edge-cases`, When final review runs in fixed selection mode, Then only those two specialists participate.
 
 ### User Story P3 – Adaptive Specialist Selection
-Narrative: A developer runs final review on a change that primarily affects database queries and API endpoints. The agent analyzes the diff and selects the most relevant specialists (Security Paranoid, Scalability Skeptic, Edge Case Bloodhound) from the available roster, up to the configured maximum.
+Narrative: A developer runs final review on a change that primarily affects database queries and API endpoints. The agent analyzes the diff and selects the most relevant specialists (security, performance, edge-cases) from the available roster, up to the configured maximum.
 
 Independent Test: Run final review in adaptive mode on a focused change and verify that the selected specialists are relevant to the change content, and the selection rationale is documented in the output.
 
@@ -74,7 +74,7 @@ Acceptance Scenarios:
 3. Given `Final Review Interactive: smart`, When findings contain must-fix items, Then interactive mode activates; when only consider items exist, Then the review completes without interactive session.
 
 ### User Story P6 – Model-per-Specialist Configuration
-Narrative: A power user assigns different models to different specialists to combine perspective diversity with model-architecture diversity. The Security Paranoid runs on Claude Opus (careful reasoning), the Scalability Skeptic on GPT (quantitative analysis).
+Narrative: A power user assigns different models to different specialists to combine perspective diversity with model-architecture diversity. The security specialist runs on Claude Opus (careful reasoning), the performance specialist on GPT (quantitative analysis).
 
 Independent Test: Configure a specialist with a `model:` field in its markdown file, run final review, and verify that specialist runs on the specified model.
 

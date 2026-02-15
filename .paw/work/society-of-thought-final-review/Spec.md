@@ -146,7 +146,7 @@ Acceptance Scenarios:
 - The existing `task` tool infrastructure supports launching 5 concurrent subagents with different prompts and optional model overrides (validated by spec research — multi-model already does this with 3)
 - Free-form markdown is sufficient for persona specification without requiring structured YAML frontmatter (validated during work shaping — user preference for flexibility)
 - 5 built-in specialists is the correct default roster size (backed by DeepMind scaling study showing diminishing returns beyond 5)
-- Built-in specialist definitions are embedded directly in the paw-final-review SKILL.md rather than separate files (simplest approach for built-in level)
+- Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/specialists/` rather than embedded in SKILL.md (consistent format across all precedence levels, discoverable, editable)
 - The synthesis agent does not need its own persona (user decision during work shaping — neutral analysis avoids introducing bias)
 
 ## Scope

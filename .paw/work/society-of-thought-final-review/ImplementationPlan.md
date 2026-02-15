@@ -38,9 +38,11 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 ## Phase Status
 
 - [ ] **Phase 1: Built-in Specialist Personas** - Define 5 specialist personas with full narratives, cognitive strategies, behavioral rules, and example outputs
-- [ ] **Phase 2: Core Society-of-Thought Mode** - Extend paw-final-review with society-of-thought execution, specialist discovery, synthesis, and GapAnalysis.md generation
-- [ ] **Phase 3: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
-- [ ] **Phase 4: Documentation** - User guide, specialist template scaffold, specification updates
+- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis, and VS Code fallback
+- [ ] **Phase 3: Debate Mode & Adaptive Selection** - Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection
+- [ ] **Phase 4: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
+- [ ] **Phase 5: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
+- [ ] **Phase 6: Documentation** - User guide, specialist template scaffold, specification updates
 
 ## Phase Candidates
 <!-- None identified yet -->
@@ -87,46 +89,40 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 
 ---
 
-## Phase 2: Core Society-of-Thought Mode
+## Phase 2: Parallel Society-of-Thought Mode
 
 ### Objective
-Extend paw-final-review SKILL.md to support `society-of-thought` as a third review mode. This includes specialist discovery at 4 precedence levels, parallel and debate interaction modes, GapAnalysis.md synthesis with confidence weighting and grounding validation, and interactive moderator mode.
+Extend paw-final-review SKILL.md to support `society-of-thought` as a third review mode with specialist discovery at 4 precedence levels, parallel execution, and GapAnalysis.md synthesis with confidence weighting and grounding validation. This is the core execution path — debate, adaptive selection, and interactive moderator are added in subsequent phases.
+
+### Design Decision: Specialist Storage
+Built-in specialists are stored as separate markdown files in `skills/paw-final-review/specialists/` (not embedded in SKILL.md). This keeps the format consistent across all precedence levels (project, user, built-in all use the same file format), makes specialists discoverable and editable, and aligns with the custom instructions precedence pattern from PR #113.
 
 ### Changes Required
 
-- **`skills/paw-final-review/SKILL.md`**: Major extension — this is the core implementation. Changes include:
+- **`skills/paw-final-review/SKILL.md`**: Core extension with the following new/modified sections:
 
-  - **Step 1 (Configuration)**: Extend to read new fields: `Final Review Mode: society-of-thought`, `Final Review Specialists` (fixed list or `adaptive:<N>`), `Final Review Interaction Mode` (`parallel` | `debate`), `Final Review Interactive` (reused for moderator mode)
-  
-  - **New section: Specialist Discovery**: Define 4-level precedence discovery:
-    1. Workflow: Parse `Final Review Specialists` from WorkflowContext.md — if fixed list, resolve names against all levels; if adaptive, discover all available
+  - **Step 1 (Configuration)**: Extend to read new fields when mode is `society-of-thought`:
+    - `Final Review Specialists`: fixed list (comma-separated names) or `adaptive:<N>` — defaults to `all` (all discovered specialists)
+    - `Final Review Interaction Mode`: `parallel` | `debate` — defaults to `parallel`
+    - `Final Review Interactive`: reused for moderator mode behavior (existing field)
+
+  - **New section: Specialist Discovery**: Define 4-level precedence discovery algorithm:
+    1. Workflow: Parse `Final Review Specialists` from WorkflowContext.md — if explicit list, use only those names
     2. Project: Scan `.paw/specialists/<name>.md` files
     3. User: Scan `~/.paw/specialists/<name>.md` files
-    4. Built-in: Load from `skills/paw-final-review/specialists/` directory
-    - Most-specific-wins for name conflicts (same filename at workflow > project > user > built-in)
-    - Skip malformed/empty specialist files with warning
-  
-  - **New section: Adaptive Selection**: When `Final Review Specialists` is `adaptive:<N>`:
-    - Agent analyzes the diff to determine which specialists are most relevant
-    - Selects up to N specialists from the discovered roster
-    - Documents selection rationale in GapAnalysis.md header
-    - No user confirmation required (auto-selects silently)
-  
-  - **Step 4 (Execute Review)**: Add society-of-thought execution alongside existing single-model/multi-model:
-    
-    **Parallel mode** (default):
-    - For each selected specialist: compose prompt = specialist persona content + shared review context (diff, spec, plan, CodeResearch patterns)
-    - Spawn parallel subagents using `task` tool. If specialist has `model:` field, use that model; otherwise use session default
-    - Save per-specialist output to `REVIEW-{SPECIALIST-NAME}.md`
-    - After all complete, run neutral synthesis agent
-    
-    **Debate mode** (opt-in):
-    - Round 1: Run all specialists in parallel (same as parallel mode)
-    - Synthesis: Generate round summary highlighting agreements, disagreements, and open questions
-    - Round 2+: Feed round summary (not raw findings) to each specialist. Specialists can refine, challenge, or add new findings.
-    - Adaptive termination: If round N produces no new substantive findings, stop. Hard cap at 3 rounds.
-    - Final synthesis produces GapAnalysis.md
-  
+    4. Built-in: Scan `skills/paw-final-review/specialists/<name>.md` files
+    - Most-specific-wins for name conflicts (same filename at project overrides user overrides built-in)
+    - If `Final Review Specialists` is `all`: include all discovered specialists from all levels
+    - If fixed list: resolve each name against discovered specialists at all levels (most-specific-wins)
+    - Skip malformed/empty specialist files with warning; continue with remaining roster
+    - If no specialists found at any level, fall back to built-in defaults (guard against misconfiguration)
+
+  - **Step 4 (Execute Review)**: Add society-of-thought parallel execution alongside existing single-model/multi-model:
+    - For each selected specialist: compose prompt = specialist file content + shared review context (diff, spec, plan, CodeResearch patterns)
+    - Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. If specialist file contains a `model:` field, use that model; otherwise use session default
+    - Save per-specialist output to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
+    - After all specialists complete, run neutral synthesis
+
   - **New section: Synthesis (society-of-thought)**: Define GapAnalysis.md generation:
     - Neutral agent (no persona) performs synthesis
     - Confidence-weighted aggregation: weigh findings by stated confidence and evidence quality, not count of specialists
@@ -134,22 +130,20 @@ Extend paw-final-review SKILL.md to support `society-of-thought` as a third revi
     - Evidence-based adjudication: examine reasoning traces, not just conclusions
     - Severity classification: must-fix, should-fix, consider (consistent with existing review format)
     - Specialist attribution: each finding attributed to originating specialist(s)
-    - Adaptive selection rationale (if adaptive mode): document which specialists were chosen and why
-    - Debate trace (if debate mode): show how disagreements were resolved across rounds
-  
-  - **GapAnalysis.md structure**: Define the artifact format (new artifact alongside REVIEW.md and REVIEW-SYNTHESIS.md)
-  
-  - **Step 5 (Resolution)**: Extend interactive resolution for society-of-thought:
-    - `interactive: false` → auto-apply must-fix and should-fix, skip consider
-    - `interactive: true` → present findings from GapAnalysis.md, then enter moderator mode
-    - `interactive: smart` → auto-apply high-confidence consensus must-fix/should-fix, interactive for contested findings, then moderator mode if significant findings exist
-    - Moderator mode hooks: user can summon specialist by name ("@security-paranoid why did you flag X?"), request deeper analysis on an area, or challenge a finding (specialist responds with independent evidence maintaining persona)
-  
-  - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `GapAnalysis.md`
-  
-  - **VS Code handling**: If mode is `society-of-thought` in VS Code, fall back to `multi-model` (or `single-model` if multi-model also unavailable) with notification
 
-- **Tests**: 
+  - **GapAnalysis.md structure**: Define the artifact format as a new artifact type
+
+  - **Step 5 (Resolution)**: Extend for society-of-thought:
+    - `interactive: false` → auto-apply must-fix and should-fix, skip consider (same as existing)
+    - `interactive: true` → present findings from GapAnalysis.md using existing finding presentation format
+    - `interactive: smart` → auto-apply high-confidence consensus must-fix/should-fix, interactive for contested findings
+    - Note: Interactive moderator mode (summon/challenge) added in Phase 4
+
+  - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `GapAnalysis.md`
+
+  - **VS Code handling**: If mode is `society-of-thought` in VS Code, fall back to `multi-model` (or `single-model` if multi-model also unavailable) with notification to user
+
+- **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
 
@@ -158,20 +152,102 @@ Extend paw-final-review SKILL.md to support `society-of-thought` as a third revi
 #### Automated Verification:
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
 - [ ] Lint passes: `npm run lint`
-- [ ] SKILL.md contains society-of-thought execution path with parallel and debate modes
-- [ ] GapAnalysis.md structure defined in SKILL.md
 
 #### Manual Verification:
-- [ ] Specialist discovery instructions cover all 4 precedence levels with clear override semantics
-- [ ] Parallel mode execution path is clear: discover specialists → compose prompts → spawn parallel → synthesize
-- [ ] Debate mode execution path is clear: round 1 parallel → synthesis summary → round 2+ with summaries only → adaptive termination
-- [ ] Interactive moderator mode hooks are described (summon, challenge, deeper analysis)
-- [ ] VS Code fallback behavior documented
-- [ ] GapAnalysis.md format includes specialist attribution, confidence levels, severity, and grounding validation status
+- [ ] SKILL.md contains society-of-thought execution path for parallel mode
+- [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
+- [ ] GapAnalysis.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status
+- [ ] Synthesis instructions specify confidence-weighted aggregation (not majority voting) and grounding validation against actual diff
+- [ ] VS Code fallback behavior documented with user notification
 
 ---
 
-## Phase 3: Configuration & Status
+## Phase 3: Debate Mode & Adaptive Selection
+
+### Objective
+Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection to the society-of-thought mode established in Phase 2.
+
+### Changes Required
+
+- **`skills/paw-final-review/SKILL.md`**: Add two new capabilities:
+
+  - **Debate mode execution** (when `Final Review Interaction Mode: debate`):
+    - Round 1: Run all selected specialists in parallel (reuse Phase 2 parallel execution)
+    - After round 1: Neutral synthesis agent generates a round summary highlighting agreements, disagreements, and open questions — this summary is the only inter-specialist communication (hub-and-spoke, not full visibility)
+    - Round 2+: Feed round summary (not raw findings from other specialists) to each specialist as additional context alongside original diff. Specialists can refine positions, challenge summarized claims, or add new findings.
+    - Adaptive termination: After each round, synthesis agent evaluates whether new substantive findings emerged. If not, debate terminates early. Hard cap at 3 rounds regardless.
+    - Final synthesis: Produce GapAnalysis.md with all rounds' findings merged, including a debate trace section showing how disagreements were resolved
+
+  - **GapAnalysis.md debate trace section**: When debate mode was used, include:
+    - Round progression summary
+    - Disagreements identified and how they were resolved
+    - Findings that evolved across rounds with specialist attribution
+
+  - **Adaptive specialist selection** (when `Final Review Specialists: adaptive:<N>`):
+    - After discovering all available specialists (Phase 2 discovery algorithm), agent analyzes the diff content
+    - Agent selects up to N specialists most relevant to the changes
+    - Selection rationale documented in GapAnalysis.md header ("Selected specialists: X, Y, Z because the diff primarily affects [areas]")
+    - No user confirmation required (auto-selects silently per spec)
+    - Edge case: If diff is too small/trivial for meaningful selection, report and suggest single-model mode
+
+- **Tests**:
+  - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+  - Lint: `npm run lint`
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+
+#### Manual Verification:
+- [ ] Debate mode instructions clearly describe hub-and-spoke: specialists see synthesis summaries, not each other's raw findings
+- [ ] Adaptive termination criteria are clear: "no new substantive findings" + hard cap at 3 rounds
+- [ ] GapAnalysis.md debate trace format shows round progression and disagreement resolution
+- [ ] Adaptive selection instructions describe diff analysis approach and rationale documentation
+- [ ] Edge cases covered: debate with 1 specialist (skip debate, use parallel), adaptive selects 0 (suggest single-model)
+
+---
+
+## Phase 4: Interactive Moderator Mode
+
+### Objective
+Add post-review interactive moderator mode where users can summon specialists, challenge findings, and request deeper analysis. Specialists maintain their persona when responding.
+
+### Changes Required
+
+- **`skills/paw-final-review/SKILL.md`**: Extend the Resolution section:
+
+  - **Moderator mode activation**: After initial finding resolution (Phase 2 flow), if `Final Review Interactive` is `true` or (`smart` and significant findings exist):
+    - Present a brief prompt indicating moderator mode is active and what commands are available
+    - User enters an interactive loop where they can engage with the specialist panel
+
+  - **Moderator hooks** (3 interaction patterns):
+    1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the Security Paranoid think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and GapAnalysis.md context.
+    2. **Challenge finding**: User disagrees with a specific finding and provides reasoning. The originating specialist must respond with independent evidence (not just agree), maintaining anti-sycophancy behavioral rules.
+    3. **Request deeper analysis**: User asks for more detailed analysis on a specific code area. The most relevant specialist (or user-specified specialist) provides focused analysis using its cognitive strategy.
+
+  - **Moderator exit**: User says "done", "continue", or "proceed" to exit moderator mode and continue to paw-pr
+
+  - **Specialist persona maintenance**: When responding in moderator mode, each specialist's full persona file is included in the prompt to maintain character consistency
+
+- **Tests**:
+  - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+  - Lint: `npm run lint`
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+
+#### Manual Verification:
+- [ ] Moderator mode entry/exit conditions clearly defined
+- [ ] Three interaction patterns described with examples: summon by name, challenge with reasoning, request deeper analysis
+- [ ] Anti-sycophancy maintained during challenges (specialist must provide independent evidence)
+- [ ] Specialist persona loading described for maintaining character consistency
+
+---
+
+## Phase 5: Configuration & Status
 
 ### Objective
 Extend paw-init to collect society-of-thought configuration during workflow setup and paw-status to display it. Also update the paw-specification.md to reference the new review mode.
@@ -220,7 +296,7 @@ Extend paw-init to collect society-of-thought configuration during workflow setu
 
 ---
 
-## Phase 4: Documentation
+## Phase 6: Documentation
 
 ### Objective
 Create user-facing documentation explaining society-of-thought review, custom specialist creation, and persona template guidance. Update project documentation to reference the new feature.

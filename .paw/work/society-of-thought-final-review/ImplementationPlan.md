@@ -56,12 +56,13 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/`**: Create a directory containing 5 built-in specialist files, following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern:
+- **`skills/paw-final-review/references/specialists/`**: Create a directory containing 6 built-in specialist files, following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern:
   - `security.md` — Cognitive strategy: threat modeling / attack-tree decomposition. Traces data flows from untrusted boundaries through trust boundaries to sinks.
   - `performance.md` — Cognitive strategy: quantitative back-of-envelope estimation. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
   - `assumptions.md` — Cognitive strategy: Socratic first-principles questioning. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
   - `edge-cases.md` — Cognitive strategy: systematic boundary enumeration. Methodically enumerates: null, empty, max, concurrent, interrupted, partially failed, timed out, duplicate, out of order.
   - `maintainability.md` — Cognitive strategy: narrative code walkthrough. Addresses the largest category of real review findings (75% maintainability per research).
+  - `architecture.md` — Cognitive strategy: pattern recognition and structural analysis. Evaluates fit with existing codebase conventions, abstraction levels, and extensibility without violating YAGNI.
 
 - Each specialist file includes:
   - Full persona narrative (identity, background, what they've seen, what drives them)
@@ -78,7 +79,7 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All 5 specialist files exist in `skills/paw-final-review/references/specialists/`
+- [ ] All 6 specialist files exist in `skills/paw-final-review/references/specialists/`
 - [ ] Each file contains required sections (identity, cognitive strategy, behavioral rules, anti-sycophancy rules, examples)
 - [ ] Lint passes: `npm run lint`
 

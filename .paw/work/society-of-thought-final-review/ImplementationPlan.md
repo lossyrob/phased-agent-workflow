@@ -37,7 +37,12 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 
 ## Phase Status
 
-- [ ] **Phase 1: Built-in Specialist Personas** - Define 5 specialist personas with full narratives, cognitive strategies, behavioral rules, and example outputs
+- [ ] **Phase 1a: Security Specialist** - Define security specialist persona with threat modeling cognitive strategy
+- [ ] **Phase 1b: Performance Specialist** - Define performance specialist persona with quantitative estimation cognitive strategy
+- [ ] **Phase 1c: Assumptions Specialist** - Define assumptions specialist persona with Socratic questioning cognitive strategy
+- [ ] **Phase 1d: Edge Cases Specialist** - Define edge-cases specialist persona with boundary enumeration cognitive strategy
+- [ ] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
+- [ ] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
 - [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis, and VS Code fallback
 - [ ] **Phase 3: Debate Mode & Adaptive Selection** - Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection
 - [ ] **Phase 4: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
@@ -49,43 +54,152 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 
 ---
 
-## Phase 1: Built-in Specialist Personas
+## Phase 1a: Security Specialist
 
 ### Objective
-Define the 5 built-in specialist personas as complete persona specifications that can be embedded in paw-final-review. Each persona needs a narrative backstory (500-2000 words per research recommendation), distinct cognitive strategy, behavioral rules, anti-sycophancy structural rules, cross-cutting "demand rationale" rule, and 2-3 example review comments.
+Define the security specialist persona. Cognitive strategy: threat modeling / attack-tree decomposition. Traces data flows from untrusted boundaries through trust boundaries to sinks.
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/`**: Create a directory containing 6 built-in specialist files, following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern:
-  - `security.md` — Cognitive strategy: threat modeling / attack-tree decomposition. Traces data flows from untrusted boundaries through trust boundaries to sinks.
-  - `performance.md` — Cognitive strategy: quantitative back-of-envelope estimation. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
-  - `assumptions.md` — Cognitive strategy: Socratic first-principles questioning. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
-  - `edge-cases.md` — Cognitive strategy: systematic boundary enumeration. Methodically enumerates: null, empty, max, concurrent, interrupted, partially failed, timed out, duplicate, out of order.
-  - `maintainability.md` — Cognitive strategy: narrative code walkthrough. Addresses the largest category of real review findings (75% maintainability per research).
-  - `architecture.md` — Cognitive strategy: pattern recognition and structural analysis. Evaluates fit with existing codebase conventions, abstraction levels, and extensibility without violating YAGNI.
-
-- Each specialist file includes:
+- **`skills/paw-final-review/references/specialists/security.md`**: Create the specialist file with:
   - Full persona narrative (identity, background, what they've seen, what drives them)
   - Cognitive strategy description (how they analyze, not just what they look for)
   - Behavioral rules (specific analytical moves this persona always makes)
   - Anti-sycophancy structural rules: "You MUST identify at least one substantive concern. You MUST present independent evidence before agreeing. Prioritize finding real issues over maintaining harmony."
   - Cross-cutting rule: "Before evaluating code, assess whether you understand WHY this change was made. If rationale is unclear, flag it."
   - Confidence scoring instruction: "For each finding, state your confidence (HIGH/MEDIUM/LOW) and what evidence supports it."
-  - 2-3 example review comments demonstrating the persona's cognitive strategy and communication style
+  - 2-3 example review comments demonstrating threat modeling cognitive strategy
   - Optional `model:` field (unset for built-in defaults)
 
-- **Tests**: Lint specialist files with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/*.md` (if applicable, or verify markdown is well-formed)
+- Create `skills/paw-final-review/references/` directory if it doesn't exist
+
+- **Tests**: Lint with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/security.md` (if applicable)
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All 6 specialist files exist in `skills/paw-final-review/references/specialists/`
-- [ ] Each file contains required sections (identity, cognitive strategy, behavioral rules, anti-sycophancy rules, examples)
+- [ ] `skills/paw-final-review/references/specialists/security.md` exists
+- [ ] File contains required sections (identity, cognitive strategy, behavioral rules, anti-sycophancy rules, examples)
 - [ ] Lint passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Each persona reads as a distinct character with a unique voice and analytical approach
-- [ ] Example review comments clearly demonstrate different cognitive strategies (not just different topics)
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate threat modeling / attack-tree decomposition
+- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+
+---
+
+## Phase 1b: Performance Specialist
+
+### Objective
+Define the performance specialist persona. Cognitive strategy: quantitative back-of-envelope estimation. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/performance.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating quantitative estimation cognitive strategy.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/performance.md` exists
+- [ ] File contains required sections
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate quantitative back-of-envelope estimation
+- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+
+---
+
+## Phase 1c: Assumptions Specialist
+
+### Objective
+Define the assumptions specialist persona. Cognitive strategy: Socratic first-principles questioning. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/assumptions.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating Socratic questioning cognitive strategy.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/assumptions.md` exists
+- [ ] File contains required sections
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate Socratic first-principles questioning
+- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+
+---
+
+## Phase 1d: Edge Cases Specialist
+
+### Objective
+Define the edge-cases specialist persona. Cognitive strategy: systematic boundary enumeration. Methodically enumerates: null, empty, max, concurrent, interrupted, partially failed, timed out, duplicate, out of order.
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/edge-cases.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating boundary enumeration cognitive strategy.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/edge-cases.md` exists
+- [ ] File contains required sections
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate systematic boundary enumeration
+- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+
+---
+
+## Phase 1e: Maintainability Specialist
+
+### Objective
+Define the maintainability specialist persona. Cognitive strategy: narrative code walkthrough. Addresses the largest category of real review findings (75% maintainability per research).
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/maintainability.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating narrative code walkthrough cognitive strategy.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/maintainability.md` exists
+- [ ] File contains required sections
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate narrative code walkthrough
+- [ ] Anti-sycophancy rules are structural constraints, not suggestions
+
+---
+
+## Phase 1f: Architecture Specialist
+
+### Objective
+Define the architecture specialist persona. Cognitive strategy: pattern recognition and structural analysis. Evaluates fit with existing codebase conventions, abstraction levels, and extensibility without violating YAGNI.
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/architecture.md`**: Create the specialist file with the same structure as Phase 1a, with 2-3 example review comments demonstrating pattern recognition and structural analysis cognitive strategy.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/architecture.md` exists
+- [ ] File contains required sections
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification:
+- [ ] Persona reads as a distinct character with a unique voice
+- [ ] Example review comments clearly demonstrate pattern recognition and structural analysis
 - [ ] Anti-sycophancy rules are structural constraints, not suggestions
 
 ---

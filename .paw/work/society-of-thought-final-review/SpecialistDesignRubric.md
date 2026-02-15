@@ -51,6 +51,7 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 | edge-cases | Systematic boundary enumeration | Methodically enumerates categories (null, empty, max, concurrent, interrupted, partial failure, timeout, duplicate, out-of-order) — exhaustive, not intuitive |
 | maintainability | Narrative code walkthrough | Reads code as a story ("imagine encountering this at 2 AM during an incident") — addresses 75% of real review findings (Mäntylä & Lassenius) |
 | architecture | Pattern recognition and structural analysis | Evaluates fit with existing codebase conventions, abstraction levels, and extensibility — balances future-proofing with YAGNI |
+| testing | Coverage gap analysis and test design reasoning | Evaluates whether tests verify behavior contracts (not implementation details), identifies highest-risk untested scenarios |
 
 ### 3. Behavioral Rules
 

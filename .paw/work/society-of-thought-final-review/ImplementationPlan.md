@@ -43,6 +43,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [ ] **Phase 1d: Edge Cases Specialist** - Define edge-cases specialist persona with boundary enumeration cognitive strategy
 - [ ] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
 - [ ] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
+- [ ] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
 - [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis, and VS Code fallback
 - [ ] **Phase 3: Debate Mode & Adaptive Selection** - Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection
 - [ ] **Phase 4: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
@@ -205,6 +206,31 @@ Define the architecture specialist persona. Cognitive strategy: pattern recognit
 - [ ] **Anti-sycophancy**: Examples show identifying architectural mismatches even when code is functionally correct
 - [ ] **Grounding**: Example comments reference specific patterns from the codebase and explain why divergence matters
 - [ ] **Complementarity**: Covers codebase-level structural concerns that code-focused specialists miss
+
+---
+
+## Phase 1g: Testing Specialist
+
+### Objective
+Define the testing specialist persona. Cognitive strategy: coverage gap analysis and test design reasoning. Evaluates whether tests verify behavior contracts (not implementation details), identifies untested scenarios most likely to break in production, and assesses whether code is structured to be testable.
+
+### Changes Required
+
+- **`skills/paw-final-review/references/specialists/testing.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements.
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] `skills/paw-final-review/references/specialists/testing.md` exists
+- [ ] File contains all required sections per SpecialistDesignRubric.md
+- [ ] Lint passes: `npm run lint`
+
+#### Manual Verification (per SpecialistDesignRubric.md Quality Criteria):
+- [ ] **Distinctiveness**: Cognitive strategy (coverage gap analysis) reasons about what tests *should* exist, not just whether code is correct
+- [ ] **Depth**: Behavioral rules distinguish behavior-verifying tests from implementation-verifying tests; identify the highest-risk untested scenario
+- [ ] **Anti-sycophancy**: Examples show identifying testing gaps even when tests exist and pass
+- [ ] **Grounding**: Example comments reference specific functions/scenarios and explain what test coverage is missing and why it matters
+- [ ] **Complementarity**: Covers test quality and testability concerns that code-focused specialists overlook
 
 ---
 

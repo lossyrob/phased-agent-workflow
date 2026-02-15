@@ -31,7 +31,7 @@ Independent Test: Run final review with `society-of-thought` mode on a completed
 
 Acceptance Scenarios:
 1. Given a completed implementation with Final Review Mode set to `society-of-thought`, When final review runs, Then each enabled specialist produces findings independently, and a synthesis step merges them into a single GapAnalysis.md with specialist attribution, confidence levels, and severity classifications (must-fix, should-fix, consider).
-2. Given the default built-in roster with no customization, When final review runs in parallel mode, Then all 6 built-in specialists participate and the GapAnalysis.md includes findings from multiple cognitive strategies (threat modeling, quantitative estimation, Socratic questioning, boundary enumeration, narrative walkthrough, pattern recognition).
+2. Given the default built-in roster with no customization, When final review runs in parallel mode, Then all 7 built-in specialists participate and the GapAnalysis.md includes findings from multiple cognitive strategies (threat modeling, quantitative estimation, Socratic questioning, boundary enumeration, narrative walkthrough, pattern recognition, coverage gap analysis).
 3. Given specialist findings that reference code not present in the diff, When synthesis runs, Then those findings are flagged as ungrounded and excluded or demoted in the final output.
 
 ### User Story P2 – Custom Specialist Roster
@@ -96,7 +96,7 @@ Acceptance Scenarios:
 ### Functional Requirements
 
 - FR-001: Support `society-of-thought` as a third value for the `Final Review Mode` configuration field in WorkflowContext.md (Stories: P1)
-- FR-002: Ship 6 built-in specialist personas, each with a distinct cognitive strategy, narrative backstory, behavioral rules, anti-sycophancy structural rules, and 2-3 example review comments (Stories: P1, P2)
+- FR-002: Ship 7 built-in specialist personas, each with a distinct cognitive strategy, narrative backstory, behavioral rules, anti-sycophancy structural rules, and 2-3 example review comments (Stories: P1, P2)
 - FR-003: Discover specialist files at 4 precedence levels — workflow (WorkflowContext.md field), project (`.paw/specialists/`), user (`~/.paw/specialists/`), built-in (skill-embedded) — with most-specific-wins override semantics (Stories: P2)
 - FR-004: Support two specialist selection modes — fixed (explicit list) and adaptive (agent auto-selects up to N based on diff analysis) — configurable via WorkflowContext.md (Stories: P1, P3)
 - FR-005: In adaptive mode, auto-select specialists without user confirmation and document selection rationale in the output artifact (Stories: P3)
@@ -143,9 +143,9 @@ Acceptance Scenarios:
 
 ## Assumptions
 
-- The existing `task` tool infrastructure supports launching 6 concurrent subagents with different prompts and optional model overrides (validated by spec research — multi-model already does this with 3)
+- The existing `task` tool infrastructure supports launching 7 concurrent subagents with different prompts and optional model overrides (validated by spec research — multi-model already does this with 3)
 - Free-form markdown is sufficient for persona specification without requiring structured YAML frontmatter (validated during work shaping — user preference for flexibility)
-- 6 built-in specialists is the default roster size (5 per DeepMind scaling study sweet spot, plus architecture for codebase pattern fit)
+- 7 built-in specialists is the default roster size (5 per DeepMind scaling study sweet spot, plus architecture for codebase pattern fit)
 - Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern — loaded on demand when society-of-thought mode is active
 - The synthesis agent does not need its own persona (user decision during work shaping — neutral analysis avoids introducing bias)
 
@@ -153,7 +153,7 @@ Acceptance Scenarios:
 
 In Scope:
 - Third Final Review mode (`society-of-thought`) in paw-final-review skill
-- 6 built-in specialist personas with full narrative backstories, cognitive strategies, behavioral rules, and example outputs
+- 7 built-in specialist personas with full narrative backstories, cognitive strategies, behavioral rules, and example outputs
 - 4-level specialist precedence discovery (workflow, project, user, built-in)
 - Fixed and adaptive specialist selection modes
 - Parallel and debate interaction modes

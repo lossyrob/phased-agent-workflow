@@ -1,6 +1,6 @@
 # PAW Artifacts Reference
 
-PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. All artifacts are committed to Git and version-controlled.
+PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. By default (`commit-and-clean` lifecycle), artifacts are committed during development and removed at PR time.
 
 ## Directory Structure
 
@@ -54,6 +54,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
 | Additional Inputs | Extra parameters |
+| Artifact Lifecycle | `commit-and-clean`, `commit-and-persist`, or `never-commit` |
 | Final Agent Review | `enabled` or `disabled` |
 | Final Review Mode | `single-model` or `multi-model` |
 | Final Review Interactive | `true`, `false`, or `smart` |
@@ -298,7 +299,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### Version Control
 
-- All artifacts committed to Git
+- Artifacts committed to Git during development (unless `never-commit` lifecycle)
 - Changes tracked through PRs
 - History preserved for traceability
 

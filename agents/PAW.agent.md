@@ -102,7 +102,7 @@ Use TODOs to externalize workflow steps.
 
 **Transition response handling**:
 - `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation. Applies at every phase boundary, including before entering candidate promotion and after each promoted phase.
-- `artifact_tracking`: Pass to next activity (if `disabled`, don't stage `.paw/` files)
+- `artifact_lifecycle`: Pass to next activity (if `never-commit`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
 - `promotion_pending`: If `true` **and not paused**, run Candidate Promotion Flow (see below)
 {{#vscode}}

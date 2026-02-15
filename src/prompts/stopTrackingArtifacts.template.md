@@ -41,7 +41,11 @@ Create a `.gitignore` file in the workflow directory containing `*` to exclude a
 
 This pattern ignores all files in the directory, including the `.gitignore` itself. This is intentional—we don't want the `.gitignore` committed either, so the entire workflow directory stays completely out of the repository.
 
-### 3. Commit the Removal
+### 3. Update WorkflowContext.md Lifecycle Field
+
+Update the `Artifact Lifecycle:` field in `.paw/work/{{WORK_ID}}/WorkflowContext.md` to `never-commit`. If the field doesn't exist, add `Artifact Lifecycle: never-commit` near other configuration fields. This makes the lifecycle change durable for any agent that reads the workflow context.
+
+### 4. Commit the Removal
 
 Commit the deletion of the previously tracked artifacts:
 
@@ -51,7 +55,7 @@ git commit -m "Stop tracking PAW artifacts for {{WORK_ID}}"
 
 **Important**: Do NOT stage the `.gitignore` file. It should remain local and untracked (ignored by itself). The commit should only contain the deletion of previously tracked files.
 
-### 4. Verify Changes
+### 5. Verify Changes
 
 Confirm the operation succeeded:
 - Run `git status` to verify artifacts are no longer tracked and the commit was successful

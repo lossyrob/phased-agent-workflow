@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { collectUserInputs, FinalReviewConfig } from "../ui/userInput";
+import { collectUserInputs, FinalReviewConfig, ArtifactLifecycle } from "../ui/userInput";
 import type { ReviewPolicy, SessionPolicy } from "../types/workflow";
 import { validateGitRepository } from "../git/validation";
 
@@ -17,7 +17,7 @@ function constructPawPromptArguments(
     reviewStrategy: string;
     reviewPolicy: ReviewPolicy;
     sessionPolicy: SessionPolicy;
-    trackArtifacts: boolean;
+    artifactLifecycle: ArtifactLifecycle;
     finalReview: FinalReviewConfig;
     issueUrl?: string;
   },
@@ -30,7 +30,7 @@ function constructPawPromptArguments(
     review_strategy: inputs.reviewStrategy,
     review_policy: inputs.reviewPolicy,
     session_policy: inputs.sessionPolicy,
-    track_artifacts: inputs.trackArtifacts,
+    artifact_lifecycle: inputs.artifactLifecycle,
     final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
 
@@ -123,7 +123,7 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
     outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
     outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
-    outputChannel.appendLine(`[INFO] Track artifacts: ${inputs.trackArtifacts}`);
+    outputChannel.appendLine(`[INFO] Artifact lifecycle: ${inputs.artifactLifecycle}`);
     outputChannel.appendLine(`[INFO] Final Review: ${inputs.finalReview.enabled ? 'enabled' : 'disabled'}`);
     if (inputs.finalReview.enabled) {
       outputChannel.appendLine(`[INFO] Final Review mode: ${inputs.finalReview.mode}`);

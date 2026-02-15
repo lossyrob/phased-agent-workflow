@@ -28,7 +28,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 
 ## What We're NOT Doing
 
-- VS Code support (CLI only for v1; VS Code falls back to multi-model with notification)
+- VS Code support (CLI only for v1; VS Code disables society-of-thought with fallback to multi-model — see #240 for chatSkills migration)
 - Society-of-thought for paw-impl-review, paw-planning-docs-review, or PAW Review workflow
 - Per-specialist output files (single GapAnalysis.md only)
 - Automated persona drift detection or re-injection
@@ -56,7 +56,7 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 
 ### Changes Required
 
-- **`skills/paw-final-review/specialists/`**: Create a directory containing 5 built-in specialist files:
+- **`skills/paw-final-review/references/specialists/`**: Create a directory containing 5 built-in specialist files, following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern:
   - `security-paranoid.md` — Cognitive strategy: threat modeling / attack-tree decomposition. Identity: former incident responder. Traces data flows from untrusted boundaries through trust boundaries to sinks.
   - `scalability-skeptic.md` — Cognitive strategy: quantitative back-of-envelope estimation. Identity: performance engineer. Calculates actual impact at projected scale, pragmatic about current vs future concerns.
   - `devils-advocate.md` — Cognitive strategy: Socratic first-principles questioning. Identity: distinguished engineer. Asks questions that expose assumptions, escalates with new challenges each round, acts as rationale auditor.
@@ -73,12 +73,12 @@ Define the 5 built-in specialist personas as complete persona specifications tha
   - 2-3 example review comments demonstrating the persona's cognitive strategy and communication style
   - Optional `model:` field (unset for built-in defaults)
 
-- **Tests**: Lint specialist files with `./scripts/lint-prompting.sh skills/paw-final-review/specialists/*.md` (if applicable, or verify markdown is well-formed)
+- **Tests**: Lint specialist files with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/*.md` (if applicable, or verify markdown is well-formed)
 
 ### Success Criteria
 
 #### Automated Verification:
-- [ ] All 5 specialist files exist in `skills/paw-final-review/specialists/`
+- [ ] All 5 specialist files exist in `skills/paw-final-review/references/specialists/`
 - [ ] Each file contains required sections (identity, cognitive strategy, behavioral rules, anti-sycophancy rules, examples)
 - [ ] Lint passes: `npm run lint`
 
@@ -95,7 +95,7 @@ Define the 5 built-in specialist personas as complete persona specifications tha
 Extend paw-final-review SKILL.md to support `society-of-thought` as a third review mode with specialist discovery at 4 precedence levels, parallel execution, and GapAnalysis.md synthesis with confidence weighting and grounding validation. This is the core execution path — debate, adaptive selection, and interactive moderator are added in subsequent phases.
 
 ### Design Decision: Specialist Storage
-Built-in specialists are stored as separate markdown files in `skills/paw-final-review/specialists/` (not embedded in SKILL.md). This keeps the format consistent across all precedence levels (project, user, built-in all use the same file format), makes specialists discoverable and editable, and aligns with the custom instructions precedence pattern from PR #113.
+Built-in specialists are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern. This keeps the format consistent across all precedence levels (project, user, built-in all use the same file format), makes specialists discoverable and editable, loads them on demand (not with every SKILL.md load), and aligns with the custom instructions precedence pattern from PR #113.
 
 ### Changes Required
 
@@ -110,7 +110,7 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
     1. Workflow: Parse `Final Review Specialists` from WorkflowContext.md — if explicit list, use only those names
     2. Project: Scan `.paw/specialists/<name>.md` files
     3. User: Scan `~/.paw/specialists/<name>.md` files
-    4. Built-in: Scan `skills/paw-final-review/specialists/<name>.md` files
+    4. Built-in: Scan `skills/paw-final-review/references/specialists/<name>.md` files
     - Most-specific-wins for name conflicts (same filename at project overrides user overrides built-in)
     - If `Final Review Specialists` is `all`: include all discovered specialists from all levels
     - If fixed list: resolve each name against discovered specialists at all levels (most-specific-wins)
@@ -140,8 +140,9 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
     - Note: Interactive moderator mode (summon/challenge) added in Phase 4
 
   - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `GapAnalysis.md`
+    - Note: FR-019 (gitignore review artifacts) is satisfied by existing `.gitignore` with `*` pattern in `reviews/` — no new work needed
 
-  - **VS Code handling**: If mode is `society-of-thought` in VS Code, fall back to `multi-model` (or `single-model` if multi-model also unavailable) with notification to user
+  - **VS Code handling**: If mode is `society-of-thought` in VS Code, disable society-of-thought and fall back to `multi-model` (or `single-model` if multi-model also unavailable) with notification directing users to issue #240 (VS Code chatSkills migration needed for `references/` directory access)
 
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
@@ -158,7 +159,7 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
 - [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
 - [ ] GapAnalysis.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status
 - [ ] Synthesis instructions specify confidence-weighted aggregation (not majority voting) and grounding validation against actual diff
-- [ ] VS Code fallback behavior documented with user notification
+- [ ] VS Code fallback disables society-of-thought with notification referencing issue #240
 
 ---
 
@@ -217,9 +218,9 @@ Add post-review interactive moderator mode where users can summon specialists, c
 
 - **`skills/paw-final-review/SKILL.md`**: Extend the Resolution section:
 
-  - **Moderator mode activation**: After initial finding resolution (Phase 2 flow), if `Final Review Interactive` is `true` or (`smart` and significant findings exist):
-    - Present a brief prompt indicating moderator mode is active and what commands are available
-    - User enters an interactive loop where they can engage with the specialist panel
+  - **Moderator mode activation**: After initial finding resolution completes (the existing Step 5 flow from Phase 2 — auto-apply/present/smart), if `Final Review Interactive` is `true` or (`smart` and significant findings exist):
+    - Moderator mode *extends* existing interactive resolution — it does not replace it
+    - Sequence: findings resolution → moderator loop → exit to paw-pr
 
   - **Moderator hooks** (3 interaction patterns):
     1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the Security Paranoid think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and GapAnalysis.md context.

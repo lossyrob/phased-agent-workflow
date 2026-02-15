@@ -102,7 +102,7 @@ Acceptance Scenarios:
 - FR-005: In adaptive mode, auto-select specialists without user confirmation and document selection rationale in the output artifact (Stories: P3)
 - FR-006: Support two interaction modes — parallel (all specialists run independently, then synthesize) and debate (sequential rounds with hub-and-spoke mediation via synthesis agent) — configurable via WorkflowContext.md (Stories: P1, P4)
 - FR-007: In parallel mode, launch specialist subagents concurrently using the `task` tool, each with its persona prompt and the shared review context (diff, spec, plan) (Stories: P1)
-- FR-008: In debate mode, run sequential rounds where specialists see only the synthesis agent's round summary, not raw findings from other specialists (Stories: P4)
+- FR-008: In debate mode, run rounds sequentially — specialists within each round run in parallel, but each round's findings are synthesized before the next round begins. Specialists see only the synthesis agent's round summary, not raw findings from other specialists (Stories: P4)
 - FR-009: In debate mode, implement adaptive termination — stop when no new substantive findings emerge, with a hard cap of 3 rounds (Stories: P4)
 - FR-010: Produce a single synthesized `GapAnalysis.md` artifact in `.paw/work/<work-id>/reviews/` with specialist attribution, confidence levels, and severity classifications (Stories: P1)
 - FR-011: Synthesis agent runs neutral (no persona) and performs confidence-weighted aggregation, grounding validation against the actual diff, and evidence-based adjudication examining reasoning traces (Stories: P1)
@@ -124,7 +124,7 @@ Acceptance Scenarios:
 
 ### Cross-Cutting / Non-Functional
 
-- Society-of-thought mode is CLI-only for v1; VS Code environment gracefully falls back to multi-model mode with a notification
+- Society-of-thought mode is CLI-only for v1; VS Code environment disables society-of-thought mode with a notification directing users to issue #240 (VS Code chatSkills contribution point migration). VS Code falls back to multi-model mode when society-of-thought is configured.
 - Specialist subagent execution should be parallel where possible (parallel mode) to minimize wall-clock time
 - Anti-sycophancy rules are structural (mandatory behavioral constraints) not stylistic (personality suggestions)
 
@@ -146,7 +146,7 @@ Acceptance Scenarios:
 - The existing `task` tool infrastructure supports launching 5 concurrent subagents with different prompts and optional model overrides (validated by spec research — multi-model already does this with 3)
 - Free-form markdown is sufficient for persona specification without requiring structured YAML frontmatter (validated during work shaping — user preference for flexibility)
 - 5 built-in specialists is the correct default roster size (backed by DeepMind scaling study showing diminishing returns beyond 5)
-- Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/specialists/` rather than embedded in SKILL.md (consistent format across all precedence levels, discoverable, editable)
+- Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern — loaded on demand when society-of-thought mode is active
 - The synthesis agent does not need its own persona (user decision during work shaping — neutral analysis avoids introducing bias)
 
 ## Scope
@@ -167,9 +167,9 @@ In Scope:
 - Documentation for custom specialist creation (template/scaffold guidance)
 
 Out of Scope:
-- VS Code support (future follow-up — CLI only for v1)
+- VS Code native society-of-thought execution (future follow-up — CLI only for v1; graceful fallback to multi-model with notification is in scope as a guard clause)
 - Society-of-thought for other review points (paw-impl-review, paw-planning-docs-review, PAW Review workflow)
-- Per-specialist output files (single GapAnalysis.md for v1, may iterate later)
+- Per-specialist output files as final deliverables (single GapAnalysis.md for v1; intermediate per-specialist files used during synthesis are implementation artifacts, not user-facing outputs)
 - Automated persona drift detection or re-injection
 - Combining society-of-thought with multi-model as a single mode (they remain separate modes; model-per-specialist provides partial combination)
 - Specialist effectiveness metrics or scoring

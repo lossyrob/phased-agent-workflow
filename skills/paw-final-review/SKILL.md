@@ -1,6 +1,6 @@
 ---
 name: paw-final-review
-description: Pre-PR review activity skill for PAW workflow. Reviews implementation against spec before Final PR creation with configurable multi-model or single-model execution.
+description: Pre-PR review activity skill for PAW workflow. Reviews implementation against spec before Final PR creation with configurable single-model, multi-model, or society-of-thought execution.
 ---
 
 # Final Agent Review
@@ -13,6 +13,7 @@ Automated review step that runs after all implementation phases complete, before
 
 - Review implementation against spec for correctness, patterns, and issues
 - Multi-model parallel review with synthesis (CLI only)
+- Society-of-thought review with specialist personas, parallel execution, and confidence-weighted synthesis (CLI only)
 - Single-model review (CLI and VS Code)
 - Interactive, smart, or auto-apply resolution modes
 - Generate review artifacts in `.paw/work/<work-id>/reviews/`
@@ -23,12 +24,16 @@ Automated review step that runs after all implementation phases complete, before
 
 Read WorkflowContext.md for:
 - Work ID and target branch
-- `Final Review Mode`: `single-model` | `multi-model`
+- `Final Review Mode`: `single-model` | `multi-model` | `society-of-thought`
 - `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 {{#cli}}
 If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
+
+If mode is `society-of-thought`, also read:
+- `Final Review Specialists`: `all` (default) | comma-separated specialist names | `adaptive:<N>`
+- `Final Review Interaction Mode`: `parallel` (default) | `debate`
 {{/cli}}
 {{#vscode}}
 **Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
@@ -134,12 +139,107 @@ Then spawn parallel subagents using `task` tool with `model` parameter for each 
 ### Consider
 [Nice-to-haves]
 ```
+
+**If society-of-thought mode**:
+
+#### Specialist Discovery
+
+Discover specialist personas at 4 precedence levels (most-specific-wins for name conflicts):
+
+1. **Workflow**: Parse `Final Review Specialists` from WorkflowContext.md — if an explicit comma-separated list, resolve only those names
+2. **Project**: Scan `.paw/personas/<name>.md` files in the repository
+3. **User**: Scan `~/.paw/personas/<name>.md` files
+4. **Built-in**: Scan `references/specialists/<name>.md` files (excluding `_shared-rules.md`)
+
+Resolution rules:
+- If `Final Review Specialists` is `all` (default): include all discovered specialists from all levels
+- If a fixed list (e.g., `security, performance, testing`): resolve each name against discovered specialists, most-specific-wins
+- If `adaptive:<N>`: discover all, then select N most relevant (see Adaptive Selection below)
+- Same filename at project level overrides user level overrides built-in
+- Skip malformed or empty specialist files with a warning; continue with remaining roster
+- If zero specialists found after discovery, fall back to built-in defaults with a warning
+
+#### Prompt Composition
+
+Compose the review prompt for each specialist subagent from three layers:
+
+1. **Shared rules** — load `references/specialists/_shared-rules.md` once per review run (anti-sycophancy rules, confidence scoring, Toulmin output format)
+2. **Specialist content** — load the discovered specialist `.md` file (identity, cognitive strategy, behavioral rules, demand rationale, examples)
+3. **Review context** — the diff, Spec.md, ImplementationPlan.md, and CodeResearch.md patterns
+
+If a specialist file already contains the shared sections (custom specialist from project/user level), skip shared rules injection to avoid duplication. Detect by checking whether the file contains an `## Anti-Sycophancy Rules` heading.
+
+Replace `[specialist-name]` in the shared rules output format with the specialist's actual name (e.g., `security`, `performance`).
+
+#### Parallel Execution
+
+Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist:
+- Compose prompt: shared rules + specialist content + review context
+- If the specialist file contains a `model:` field in YAML frontmatter, use that model; otherwise use session default
+- Instruct the subagent to write its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
+- The orchestrator receives only a brief completion status (success/failure, finding count) — NOT the full findings content
+
+**Large diff handling**: If the diff exceeds a size that would crowd out persona and review context (~100KB), chunk by file or logical grouping. Note the chunking in each specialist prompt. All specialists receive the same chunk set for consistency.
+
+After all specialists complete, proceed to synthesis.
+
+#### Synthesis
+
+Spawn a synthesis subagent (`agent_type: "general-purpose"`) that reads all `REVIEW-{SPECIALIST}.md` files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output.
+
+The synthesis agent operates as a **PR triage lead** with these structural constraints:
+- **May only** merge, deduplicate, classify conflicts, and flag trade-offs
+- **Must NOT** generate new findings — it is not an additional reviewer
+- **Must** link every output claim to a specific specialist finding with evidence
+- **Must** randomize specialist input ordering to prevent position bias
+
+Synthesis requirements:
+- **Cluster by code location** before merging — group findings by shared file + line range across specialists
+- **Classify disagreements**: factual dispute (one is wrong — resolve with evidence and rebuttal conditions) vs. trade-off (different quality objectives, both valid — escalate or flag)
+- **Validate grounding** for every finding: Direct (cites specific diff lines — full inclusion), Inferential (anchored in diff but requires reasoning — include with chain shown), Contextual (beyond the diff — demote to observations)
+- **Confidence-weighted aggregation**: weigh by stated confidence AND evidence quality, not count of specialists
+- **Merge agreements, preserve dissent**: compatible claims → single finding with combined evidence; unresolved disagreements → include both positions with "unresolved" flag
+- **Proportional output**: weight by evidence quality, not word count or finding count
+- **Trade-off handling**: in `interactive`/`smart` mode, escalate to user with shared facts, decision axis, options, and recommendation per priority hierarchy. In `auto` mode, apply priority hierarchy (`Correctness > Security > Reliability > Performance > Maintainability > Developer Experience`), document the decision, flag prominently
+
+**REVIEW-SYNTHESIS.md structure (society-of-thought)**:
+```markdown
+# REVIEW-SYNTHESIS.md
+
+## Review Summary
+- Mode: society-of-thought (parallel)
+- Specialists: [list of participating specialists]
+- Selection rationale: [if adaptive mode was used]
+
+## Must-Fix Findings
+[Findings with severity: must-fix, each with specialist attribution, confidence, grounding tier]
+
+## Should-Fix Findings
+[Findings with severity: should-fix]
+
+## Consider
+[Findings with severity: consider]
+
+## Trade-offs Requiring Decision
+[Unresolved trade-offs with both sides' evidence and recommendation per priority hierarchy]
+
+## Observations
+[Contextual-tier findings — require knowledge beyond this diff]
+
+## Dissent Log
+[Findings where specialists disagreed and how the disagreement was resolved]
+
+## Synthesis Trace
+[For each finding: source specialist(s), grounding tier, conflict resolution method if any]
+```
 {{/cli}}
 
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
 **Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
+
+If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240 for VS Code chatSkills migration). Falling back to multi-model." Then apply multi-model fallback — if multi-model is also unavailable, fall back to single-model.
 
 Execute single-model review using the shared review prompt above. Save to `REVIEW.md`.
 {{/vscode}}
@@ -177,6 +277,8 @@ Track status for each finding:
 
 {{#cli}}
 For multi-model mode, process synthesis first (consensus → partial → single-model). Track cross-finding duplicates to avoid re-presenting already-addressed issues.
+
+For society-of-thought mode, process REVIEW-SYNTHESIS.md findings by severity (must-fix → should-fix → consider). Present trade-offs from the "Trade-offs Requiring Decision" section for user decision. Track cross-finding duplicates.
 {{/cli}}
 
 **If Interactive = smart**:
@@ -197,6 +299,17 @@ If `Final Review Mode` is `multi-model`, classify each synthesis finding, then r
 | Any | consider | `report-only` |
 
 Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.
+
+If `Final Review Mode` is `society-of-thought`, classify each REVIEW-SYNTHESIS.md finding:
+
+| Confidence | Grounding | Severity | Classification |
+|------------|-----------|----------|----------------|
+| HIGH | Direct | must-fix | `auto-apply` |
+| HIGH | Direct | should-fix | `auto-apply` |
+| HIGH | Inferential | must-fix/should-fix | `interactive` |
+| MEDIUM/LOW | any | must-fix/should-fix | `interactive` |
+| Any | any | consider | `report-only` |
+| — | — | trade-off | `interactive` (always) |
 
 **Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction. Display batch summary:
 
@@ -250,6 +363,7 @@ Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` item
 |------|---------------|
 | single-model | `REVIEW.md` |
 | multi-model | `REVIEW-{MODEL}.md` per model, `REVIEW-SYNTHESIS.md` |
+| society-of-thought | `REVIEW-{SPECIALIST}.md` per specialist, `REVIEW-SYNTHESIS.md` |
 
 Location: `.paw/work/<work-id>/reviews/`
 All files gitignored via `.gitignore` with `*` pattern.

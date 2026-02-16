@@ -114,6 +114,29 @@ function buildAgents() {
 }
 
 /**
+ * Recursively copy a directory, skipping hidden files.
+ * Returns the number of files copied.
+ */
+function copyReferencesDir(srcDir, destDir) {
+  let count = 0;
+  const entries = readdirSync(srcDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.name.startsWith('.')) continue;
+    const srcPath = join(srcDir, entry.name);
+    const destPath = join(destDir, entry.name);
+    if (entry.isDirectory()) {
+      mkdirSync(destPath, { recursive: true });
+      count += copyReferencesDir(srcPath, destPath);
+    } else {
+      mkdirSync(destDir, { recursive: true });
+      writeFileSync(destPath, readFileSync(srcPath));
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
  * Build skills to dist.
  */
 function buildSkills() {
@@ -139,6 +162,14 @@ function buildSkills() {
     writeFileSync(join(destDir, 'SKILL.md'), content);
     count++;
     console.log(`  ${skillName}/SKILL.md`);
+
+    // Copy references/ directory if it exists
+    const refsSrc = join(SKILLS_SRC, skillName, 'references');
+    if (existsSync(refsSrc)) {
+      const refsDest = join(destDir, 'references');
+      const refCount = copyReferencesDir(refsSrc, refsDest);
+      console.log(`  ${skillName}/references/ (${refCount} files)`);
+    }
   }
   
   return count;

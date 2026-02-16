@@ -77,7 +77,7 @@ Define the security specialist persona. Cognitive strategy: threat modeling / at
 
 ### Changes Required
 
-- **`skills/paw-final-review/references/specialists/security.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements. The rubric defines all required sections (identity/narrative 500-2000 words, cognitive strategy, behavioral rules, anti-sycophancy rules, demand-rationale rule, confidence scoring, example comments) with research-backed guidance on what makes each section effective.
+- **`skills/paw-final-review/references/specialists/security.md`**: Create the specialist file following the **SpecialistDesignRubric.md** requirements. The rubric defines all required sections (identity/narrative 500-2000 words, cognitive strategy, behavioral rules, anti-sycophancy rules, demand-rationale rule, confidence scoring, required output format/Toulmin structure, example comments in Toulmin format) with research-backed guidance on what makes each section effective.
 
 - Create `skills/paw-final-review/references/` and `skills/paw-final-review/references/specialists/` directories if they don't exist
 
@@ -648,5 +648,7 @@ Create user-facing documentation explaining society-of-thought review, custom sp
 - Issue: https://github.com/lossyrob/phased-agent-workflow/issues/201
 - Spec: `.paw/work/society-of-thought-final-review/Spec.md`
 - Research: `.paw/work/society-of-thought-final-review/SpecResearch.md`, `.paw/work/society-of-thought-final-review/CodeResearch.md`
+- Synthesis Research: `.paw/work/society-of-thought-final-review/research/claude-research-synthesis.md`, `.paw/work/society-of-thought-final-review/research/gpt-research-synthesis.md`
+- Design References: `.paw/work/society-of-thought-final-review/SpecialistDesignRubric.md`, `.paw/work/society-of-thought-final-review/SynthesisProtocol.md`
 - Work Shaping: `.paw/work/society-of-thought-final-review/WorkShaping.md`
 - Research Sources: `.paw/work/society-of-thought-final-review/ResearchSources.md`

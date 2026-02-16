@@ -125,15 +125,46 @@ For each finding, state your confidence level:
 State what specific evidence supports your confidence level.
 ```
 
-### 7. Example Review Comments (2–3)
+### 7. Required Output Format (Toulmin Structure)
 
-**What**: Concrete examples of review comments this persona would write, demonstrating its cognitive strategy, voice, and analytical depth.
+**What**: Instructions directing the specialist to emit each finding in a structured Toulmin argument format: Claim, Grounds, Warrant, Rebuttal Conditions, Confidence, and Suggested Verification.
+
+**Why**: Structured output makes disagreements between specialists *diagnosable* — the synthesis agent can identify whether specialists disagree on observed data (Grounds), inference rules (Warrant), or exception conditions (Rebuttal). Without structure, the synthesis agent is reduced to comparing opaque conclusions. Toulmin argumentation has been formalized for AI systems (Verheij 2009, ASPIC+) and validated in multi-agent adjudication contexts. Both research syntheses independently recommended this as the single most important enabler of effective synthesis.
+
+**Every specialist must include these output instructions**:
+
+```
+## Required Output Format
+
+For each finding, use this structure:
+
+### Finding: [one-sentence claim]
+
+**Severity**: must-fix | should-fix | consider
+**Confidence**: HIGH | MEDIUM | LOW
+
+#### Grounds (Evidence)
+[Diff-anchored evidence: file, line numbers, quoted code snippets that support this claim]
+
+#### Warrant (Rule)
+[The rule connecting your evidence to your conclusion — why does this evidence support this claim?]
+
+#### Rebuttal Conditions
+[What would falsify this finding? Under what conditions is this NOT a concern?]
+
+#### Suggested Verification
+[How could this finding be verified? Static check, test, runtime assertion?]
+```
+
+### 8. Example Review Comments (2–3)
+
+**What**: Concrete examples of review comments this persona would write, demonstrating its cognitive strategy, voice, and analytical depth. Examples MUST use the Toulmin output format above.
 
 **Why**: Few-shot examples are the most effective calibration mechanism for persona behavior (deep research synthesis: "narrative backstory + behavioral rules + 2-3 example outputs" is the optimal three-layer approach). Examples show the model what quality and depth is expected and demonstrate the cognitive strategy in action rather than just describing it.
 
 **Design principles**:
 - Each example should demonstrate the cognitive strategy, not just the topic area
-- Examples should show the full analytical process: observation → analysis via cognitive strategy → finding → confidence → evidence
+- Examples MUST use the Toulmin structure (Finding → Grounds → Warrant → Rebuttal → Verification)
 - At least one example should demonstrate the anti-sycophancy rules in action (pushing back, identifying a real concern)
 - Examples should be realistic code review comments, not academic exercises
 - Include the confidence level in each example
@@ -144,8 +175,9 @@ State what specific evidence supports your confidence level.
 - Examples that only show the persona's topic but not its cognitive strategy
 - Examples without evidence or specificity
 - All examples at the same severity/confidence level
+- Examples that don't use the Toulmin structure
 
-### 8. Optional: Model Field
+### 9. Optional: Model Field
 
 **What**: An optional `model:` field specifying a preferred AI model for this specialist.
 

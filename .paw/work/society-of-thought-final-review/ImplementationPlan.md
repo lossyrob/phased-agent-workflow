@@ -44,8 +44,8 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [x] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
 - [x] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
 - [x] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
-- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, REVIEW-SYNTHESIS.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
-- [ ] **Phase 3: Debate Mode** - Add thread-based debate with per-thread continuation, trade-off escalation to users in interactive mode, and hub-and-spoke mediation
+- [x] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, REVIEW-SYNTHESIS.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
+- [x] **Phase 3: Debate Mode** - Add thread-based debate with per-thread continuation, trade-off escalation to users in interactive mode, and hub-and-spoke mediation
 - [ ] **Phase 4: Adaptive Specialist Selection** - Add adaptive selection mode (diff analysis to select most relevant N specialists)
 - [ ] **Phase 5: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
 - [ ] **Phase 6: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display

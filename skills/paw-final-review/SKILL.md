@@ -171,7 +171,11 @@ If a specialist file already contains the shared sections (custom specialist fro
 
 Replace `[specialist-name]` in the shared rules output format with the specialist's actual name (e.g., `security`, `performance`).
 
-#### Parallel Execution
+#### Execution
+
+Execution depends on `Final Review Interaction Mode`:
+
+##### Parallel Mode (default)
 
 Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist:
 - Compose prompt: shared rules + specialist content + review context
@@ -182,6 +186,40 @@ Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`.
 **Large diff handling**: If the diff exceeds a size that would crowd out persona and review context (~100KB), chunk by file or logical grouping. Note the chunking in each specialist prompt. All specialists receive the same chunk set for consistency.
 
 After all specialists complete, proceed to synthesis.
+
+##### Debate Mode
+
+Thread-based multi-round debate where findings become discussion threads with point/counterpoint exchanges. Produces richer evidence than parallel mode at the cost of more subagent calls.
+
+**Edge case**: If only 1 specialist is selected, skip debate and use parallel mode (debate requires ≥2 specialists).
+
+**Round 1 (Initial sweep)**: Run all specialists in parallel (same as parallel mode). Each finding becomes a **thread** with state `open`.
+
+**Rounds 2–3 (Threaded responses)**: After each round, the synthesis agent (operating as "PR triage lead" per SynthesisProtocol.md) generates a **round summary** organized by thread:
+- For each thread: current state (`open`, `agreed`, `contested`), summary of positions, open questions
+- This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
+
+Re-run specialists with: shared rules + specialist content + review context + round summary. Specialists can:
+- Refine their position on existing threads (cite thread ID)
+- Respond to summarized counterarguments
+- Add new threads (new findings become new `open` threads)
+
+Each specialist appends round output to its existing `REVIEW-{SPECIALIST-NAME}.md`.
+
+**Adaptive termination**: After each round, the synthesis agent evaluates whether new substantive findings emerged. If no new threads and no position changes on existing threads, global rounds terminate early. Hard cap: 3 global rounds.
+
+**Per-thread continuation** (contested threads only): After global rounds close, threads still marked `contested` enter targeted continuation:
+- Only the specialists involved in the contested thread participate (2–3 specialists, not the full roster)
+- Max 2 additional exchanges per thread (total cap: 5 exchanges including global rounds)
+- **Aggregate budget**: Max 30 subagent calls across all continuation threads
+- Synthesis agent monitors each thread for convergence, deadlock, or trade-off identification
+- **Trade-off detection**: If a contested thread represents a genuine design trade-off (not a factual dispute), classify as `trade-off` and exit continuation — flag for user decision (interactive) or conservative default resolution (auto)
+
+**Thread states**: `open` → `agreed` | `contested` | `trade-off` | `resolved`
+
+**User escalation** (interactive/smart mode): When the synthesis agent identifies a trade-off thread during debate, pause and present the trade-off to the user with both sides' evidence and positions, ask for a decision, then continue with the user's decision as context. In auto mode, apply conservative defaults per SynthesisProtocol.md and flag in REVIEW-SYNTHESIS.md.
+
+After all threads resolve or budget is exhausted, proceed to synthesis.
 
 #### Synthesis
 
@@ -207,9 +245,11 @@ Synthesis requirements:
 # REVIEW-SYNTHESIS.md
 
 ## Review Summary
-- Mode: society-of-thought (parallel)
+- Mode: society-of-thought (parallel | debate)
 - Specialists: [list of participating specialists]
 - Selection rationale: [if adaptive mode was used]
+- Rounds: [number of rounds completed, debate mode only]
+- Threads: [total threads, agreed/contested/trade-off/resolved counts, debate mode only]
 
 ## Must-Fix Findings
 [Findings with severity: must-fix, each with specialist attribution, confidence, grounding tier]
@@ -228,6 +268,14 @@ Synthesis requirements:
 
 ## Dissent Log
 [Findings where specialists disagreed and how the disagreement was resolved]
+
+## Debate Trace
+[Debate mode only — thread-by-thread progression]
+For each thread:
+- Thread ID and initial finding
+- Round-by-round responses from participating specialists
+- Thread state at completion (agreed/contested/trade-off/resolved)
+- Resolution method (evidence, user decision, conservative default, or budget exhaustion)
 
 ## Synthesis Trace
 [For each finding: source specialist(s), grounding tier, conflict resolution method if any]

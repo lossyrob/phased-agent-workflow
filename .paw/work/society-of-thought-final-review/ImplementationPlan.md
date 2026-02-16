@@ -30,7 +30,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 
 - VS Code support (CLI only for v1; VS Code disables society-of-thought with fallback to multi-model — see #240 for chatSkills migration)
 - Society-of-thought for paw-impl-review, paw-planning-docs-review, or PAW Review workflow
-- Per-specialist output files (single REVIEW-SYNTHESIS.md only)
+- Per-specialist output files as user-facing artifacts (intermediate `REVIEW-{SPECIALIST}.md` files are internal handoff artifacts, gitignored; the user-facing artifact is `REVIEW-SYNTHESIS.md` only)
 - Automated persona drift detection or re-injection
 - Specialist effectiveness metrics or scoring
 - TypeScript code changes (this is a skill/prompt-level feature)
@@ -344,16 +344,18 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
 ### Design Decision: Synthesis Protocol
 The synthesis agent is the most critical component of society-of-thought — it determines whether the multi-agent approach produces better results than a single reviewer. The synthesis protocol is defined in **SynthesisProtocol.md** as a **design-time reference** — it informs the synthesis instructions written into SKILL.md but is NOT loaded at runtime. The implementing agent should embed the key requirements (conflict classification, grounding validation, trade-off handling, proportional output) directly into SKILL.md's synthesis section. SynthesisProtocol.md remains as design documentation alongside SpecialistDesignRubric.md.
 
-### Design Decision: Layered Prompt Composition
-Multi-model review identified that ~30% of each specialist file is identical boilerplate (anti-sycophancy rules, confidence scoring, Toulmin output format). Loading 7 complete files wastes ~14,700 tokens per review run on duplicated text. Instead of treating specialist files as monolithic prompts, Phase 2 uses layered prompt composition:
+### Design Decision: Shared Rules Reference File
+Multi-model review identified that ~30% of each specialist file is identical boilerplate (anti-sycophancy rules, confidence scoring, Toulmin output format). Loading 7 complete files duplicates ~14,700 tokens per review run. Instead of stripping specialist files into incomplete fragments or duplicating content in SKILL.md, Phase 2 uses a **shared rules reference file**:
 
-1. **Shared preamble** (defined once in SKILL.md, injected by orchestrator): Anti-sycophancy rules, confidence scoring instructions, Toulmin output format template. Written once, sent to every specialist subagent.
-2. **Specialist-specific content** (from the `.md` file): Identity/backstory, cognitive strategy, domain boundary, behavioral rules, demand rationale, example comments — everything unique to that persona.
+1. **Shared rules file** (`references/specialists/_shared-rules.md`): Contains Anti-Sycophancy Rules, Confidence Scoring instructions, and Required Output Format (Toulmin template). Defined once, loaded once by the orchestrator per review run.
+2. **Specialist-specific content** (from each specialist `.md` file): Identity/backstory, cognitive strategy, domain boundary, behavioral rules, demand rationale, example comments — everything unique to that persona. Each specialist file references `_shared-rules.md` for shared sections rather than duplicating them.
 3. **Review context** (injected per-run): The diff, spec, plan, CodeResearch patterns.
 
-This means the specialist `.md` files should be **stripped of their shared sections** during Phase 2 implementation. The files retain only specialist-unique content. The SpecialistDesignRubric.md still documents all required sections (for custom specialist authors who create standalone files), but built-in specialists rely on the orchestrator to inject shared sections.
+During Phase 2 implementation, the shared sections (Anti-Sycophancy Rules, Confidence Scoring, Required Output Format) are extracted from the 7 built-in specialist files into `_shared-rules.md`. Each specialist file replaces those sections with a reference: `See _shared-rules.md for Anti-Sycophancy Rules, Confidence Scoring, and Required Output Format.` The orchestrator loads `_shared-rules.md` once and composes: shared rules + specialist content + review context for each subagent.
 
-**Token savings**: ~2,100 tokens × 7 specialists = ~14,700 tokens per review run. Custom specialists at project/user levels remain standalone (include shared sections) for portability — the discovery code detects whether shared sections are present and skips injection if so.
+**Benefits**: Specialist files remain coherent documents (they explicitly reference where shared rules live, rather than silently depending on injection). Shared rules are maintained in one place, not seven. Custom specialists at project/user levels remain standalone (include their own shared sections) for portability — the orchestrator detects whether a specialist file already contains shared sections and skips injection if so.
+
+**Token savings**: ~2,100 tokens × 6 duplicates eliminated = ~12,600 tokens per review run.
 
 ### Changes Required
 
@@ -376,12 +378,12 @@ This means the specialist `.md` files should be **stripped of their shared secti
     - If no specialists found at any level, fall back to built-in defaults (guard against misconfiguration)
 
   - **Step 4 (Execute Review)**: Add society-of-thought parallel execution alongside existing single-model/multi-model:
-    - **Prompt composition** (layered architecture):
-      1. Load shared preamble from SKILL.md (anti-sycophancy, confidence scoring, Toulmin format)
+    - **Prompt composition** (shared rules reference architecture):
+      1. Load shared rules from `references/specialists/_shared-rules.md` (anti-sycophancy, confidence scoring, Toulmin format) — loaded once per review run
       2. Load specialist-specific content from discovered `.md` file (identity, strategy, rules, examples)
-      3. Compose prompt = shared preamble + specialist content + review context (diff, spec, plan, CodeResearch)
-      4. If specialist file already contains shared sections (custom specialist), skip preamble injection to avoid duplication
-    - **Strip shared sections from built-in specialist files**: Remove Anti-Sycophancy Rules, Confidence Scoring, and Required Output Format sections from the 7 built-in files in `references/specialists/`. These are now injected by the orchestrator via the shared preamble.
+      3. Compose prompt = shared rules + specialist content + review context (diff, spec, plan, CodeResearch)
+      4. If specialist file already contains shared sections (custom specialist), skip shared rules injection to avoid duplication
+    - **Extract shared sections into `_shared-rules.md`**: Move Anti-Sycophancy Rules, Confidence Scoring, and Required Output Format from the 7 built-in specialist files into `references/specialists/_shared-rules.md`. Replace those sections in each specialist file with a reference to `_shared-rules.md`.
     - Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. If specialist file contains a `model:` field, use that model; otherwise use session default
     - **File-based handoff**: Each specialist subagent writes its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory. The orchestrating agent receives only a brief completion status (success/failure, finding count) — NOT the full findings content. This keeps specialist output out of the orchestrator's context window.
     - After all specialists complete, spawn the synthesis subagent which reads specialist files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output, not the raw specialist findings.
@@ -419,6 +421,9 @@ This means the specialist `.md` files should be **stripped of their shared secti
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
+  - Integration test: Specialist precedence — fixture with `.paw/specialists/` override, assert project-level overrides built-in for same name
+  - Integration test: Parallel society-of-thought execution — verify specialist subagents spawn and REVIEW-SYNTHESIS.md is produced with expected structure
+  - Integration test: Anti-sycophancy — trivially-correct diff, use Judge rubric to verify specialist provides examination rationale (not fabricated findings)
 
 ### Success Criteria
 
@@ -426,11 +431,13 @@ This means the specialist `.md` files should be **stripped of their shared secti
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
 - [ ] Lint passes: `npm run lint`
 - [ ] `build-dist.js` copies `references/` subdirectories for skills that have them
+- [ ] Integration tests pass: specialist precedence, parallel execution, anti-sycophancy
 
 #### Manual Verification:
 - [ ] SKILL.md contains society-of-thought execution path for parallel mode
-- [ ] SKILL.md defines shared preamble (anti-sycophancy, confidence scoring, Toulmin format) injected once per specialist subagent
-- [ ] Built-in specialist files contain only specialist-unique content (identity, strategy, domain boundary, rules, demand rationale, examples) — no duplicated shared sections
+- [ ] SKILL.md defines shared rules loading from `_shared-rules.md`, loaded once per review run and composed with each specialist prompt
+- [ ] Built-in specialist files reference `_shared-rules.md` for shared sections (anti-sycophancy, confidence scoring, output format) instead of duplicating them
+- [ ] `_shared-rules.md` exists in `references/specialists/` containing the extracted shared sections
 - [ ] Custom specialist detection: discovery code skips preamble injection when specialist file already contains shared sections
 - [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
 - [ ] REVIEW-SYNTHESIS.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status, trade-off section, dissent log
@@ -455,13 +462,13 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
 
     - **Round 1 (Global sweep)**: Run all selected specialists in parallel (reuse Phase 2 parallel execution). Each finding becomes a **thread** in the debate.
 
-    - **Round 2-3 (Global sweep with thread context)**: Neutral synthesis agent generates a round summary organized by thread — for each thread: current state (agreed, contested, new information), summary of positions, open questions. This summary is the only inter-specialist communication (hub-and-spoke). Specialists receive the thread summary alongside the original diff and can: refine their position on existing threads, respond to summarized counterarguments, add new threads.
+    - **Round 2-3 (Global sweep with thread context)**: Synthesis agent (operating as "PR triage lead" per SynthesisProtocol.md) generates a round summary organized by thread — for each thread: current state (agreed, contested, new information), summary of positions, open questions. This summary is the only inter-specialist communication (hub-and-spoke). Specialists receive the thread summary alongside the original diff and can: refine their position on existing threads, respond to summarized counterarguments, add new threads.
 
     - **Adaptive termination of global rounds**: After each round, synthesis agent evaluates whether new substantive findings emerged across all threads. If no new threads and no position changes on existing threads, global rounds terminate early. Hard cap at 3 global rounds.
 
     - **Per-thread continuation** (for contested threads): After global rounds close, threads still marked "contested" enter targeted continuation:
       - Only the specialists involved in the contested thread participate (2-3 specialists, not all 7)
-      - Max 3 additional exchanges per thread (total cap: 5 exchanges including global rounds)
+      - Max 2 additional exchanges per thread (total cap: 5 exchanges including global rounds)
       - **Aggregate budget**: Max 30 subagent calls across all continuation threads (prevents pathological case of many contested threads each consuming full per-thread budget)
       - Synthesis agent monitors each thread for convergence, deadlock, or trade-off identification
       - **Trade-off detection**: If a contested thread represents a genuine design trade-off (not a factual dispute), it's classified as a trade-off and exits continuation — flagged for user decision (interactive) or conservative default resolution (auto)
@@ -484,16 +491,19 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
+  - Integration test: Debate budget cap — verify debate terminates when subagent call count approaches aggregate budget limit
+  - Integration test: Debate thread convergence — verify threads that reach agreement close early
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+- [ ] Integration tests pass: debate budget cap, thread convergence
 
 #### Manual Verification:
 - [ ] Debate mode uses thread-based structure: findings are threads with point/counterpoint/response
 - [ ] Hub-and-spoke maintained: specialists see thread summaries, not each other's raw findings
-- [ ] Per-thread continuation described: contested threads get up to 3 additional exchanges between relevant specialists only
+- [ ] Per-thread continuation described: contested threads get up to 2 additional exchanges between relevant specialists only
 - [ ] Trade-off detection triggers thread exit to user escalation (interactive) or conservative default (auto)
 - [ ] User escalation described: debate pauses to present trade-off with both sides' evidence
 - [ ] REVIEW-SYNTHESIS.md debate trace shows thread-level progression and resolution
@@ -523,11 +533,13 @@ Add adaptive specialist selection mode (`adaptive:<N>`) that analyzes the diff t
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
+  - Integration test: Adaptive selection — verify specialist subset is selected and selection rationale appears in REVIEW-SYNTHESIS.md header
 
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+- [ ] Integration test passes: adaptive selection with rationale
 
 #### Manual Verification:
 - [ ] Adaptive selection instructions describe diff analysis approach and rationale documentation

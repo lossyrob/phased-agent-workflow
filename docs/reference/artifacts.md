@@ -18,6 +18,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       WorkShaping.md            # Pre-spec ideation (optional)
       reviews/                  # Review artifacts (gitignored)
         planning/               # Planning Documents Review artifacts
+        REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
   
   reviews/                      # Review workflow
     PR-<number>/                # Single-repo: PR-123

@@ -344,6 +344,17 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
 ### Design Decision: Synthesis Protocol
 The synthesis agent is the most critical component of society-of-thought — it determines whether the multi-agent approach produces better results than a single reviewer. The synthesis protocol is defined in **SynthesisProtocol.md** as a **design-time reference** — it informs the synthesis instructions written into SKILL.md but is NOT loaded at runtime. The implementing agent should embed the key requirements (conflict classification, grounding validation, trade-off handling, proportional output) directly into SKILL.md's synthesis section. SynthesisProtocol.md remains as design documentation alongside SpecialistDesignRubric.md.
 
+### Design Decision: Layered Prompt Composition
+Multi-model review identified that ~30% of each specialist file is identical boilerplate (anti-sycophancy rules, confidence scoring, Toulmin output format). Loading 7 complete files wastes ~14,700 tokens per review run on duplicated text. Instead of treating specialist files as monolithic prompts, Phase 2 uses layered prompt composition:
+
+1. **Shared preamble** (defined once in SKILL.md, injected by orchestrator): Anti-sycophancy rules, confidence scoring instructions, Toulmin output format template. Written once, sent to every specialist subagent.
+2. **Specialist-specific content** (from the `.md` file): Identity/backstory, cognitive strategy, domain boundary, behavioral rules, demand rationale, example comments — everything unique to that persona.
+3. **Review context** (injected per-run): The diff, spec, plan, CodeResearch patterns.
+
+This means the specialist `.md` files should be **stripped of their shared sections** during Phase 2 implementation. The files retain only specialist-unique content. The SpecialistDesignRubric.md still documents all required sections (for custom specialist authors who create standalone files), but built-in specialists rely on the orchestrator to inject shared sections.
+
+**Token savings**: ~2,100 tokens × 7 specialists = ~14,700 tokens per review run. Custom specialists at project/user levels remain standalone (include shared sections) for portability — the discovery code detects whether shared sections are present and skips injection if so.
+
 ### Changes Required
 
 - **`skills/paw-final-review/SKILL.md`**: Core extension with the following new/modified sections:
@@ -365,7 +376,12 @@ The synthesis agent is the most critical component of society-of-thought — it 
     - If no specialists found at any level, fall back to built-in defaults (guard against misconfiguration)
 
   - **Step 4 (Execute Review)**: Add society-of-thought parallel execution alongside existing single-model/multi-model:
-    - For each selected specialist: compose prompt = specialist file content + shared review context (diff, spec, plan, CodeResearch patterns)
+    - **Prompt composition** (layered architecture):
+      1. Load shared preamble from SKILL.md (anti-sycophancy, confidence scoring, Toulmin format)
+      2. Load specialist-specific content from discovered `.md` file (identity, strategy, rules, examples)
+      3. Compose prompt = shared preamble + specialist content + review context (diff, spec, plan, CodeResearch)
+      4. If specialist file already contains shared sections (custom specialist), skip preamble injection to avoid duplication
+    - **Strip shared sections from built-in specialist files**: Remove Anti-Sycophancy Rules, Confidence Scoring, and Required Output Format sections from the 7 built-in files in `references/specialists/`. These are now injected by the orchestrator via the shared preamble.
     - Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. If specialist file contains a `model:` field, use that model; otherwise use session default
     - **File-based handoff**: Each specialist subagent writes its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory. The orchestrating agent receives only a brief completion status (success/failure, finding count) — NOT the full findings content. This keeps specialist output out of the orchestrator's context window.
     - After all specialists complete, spawn the synthesis subagent which reads specialist files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output, not the raw specialist findings.
@@ -413,6 +429,9 @@ The synthesis agent is the most critical component of society-of-thought — it 
 
 #### Manual Verification:
 - [ ] SKILL.md contains society-of-thought execution path for parallel mode
+- [ ] SKILL.md defines shared preamble (anti-sycophancy, confidence scoring, Toulmin format) injected once per specialist subagent
+- [ ] Built-in specialist files contain only specialist-unique content (identity, strategy, domain boundary, rules, demand rationale, examples) — no duplicated shared sections
+- [ ] Custom specialist detection: discovery code skips preamble injection when specialist file already contains shared sections
 - [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
 - [ ] REVIEW-SYNTHESIS.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status, trade-off section, dissent log
 - [ ] Synthesis instructions implement SynthesisProtocol.md: conflict classification, evidence-based adjudication, trade-off detection and handling (interactive escalation + auto conservative defaults)

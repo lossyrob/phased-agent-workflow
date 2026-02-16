@@ -38,12 +38,12 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 ## Phase Status
 
 - [x] **Phase 1a: Security Specialist** - Define security specialist persona with threat modeling cognitive strategy
-- [ ] **Phase 1b: Performance Specialist** - Define performance specialist persona with quantitative estimation cognitive strategy
-- [ ] **Phase 1c: Assumptions Specialist** - Define assumptions specialist persona with Socratic questioning cognitive strategy
-- [ ] **Phase 1d: Edge Cases Specialist** - Define edge-cases specialist persona with boundary enumeration cognitive strategy
-- [ ] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
-- [ ] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
-- [ ] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
+- [x] **Phase 1b: Performance Specialist** - Define performance specialist persona with quantitative estimation cognitive strategy
+- [x] **Phase 1c: Assumptions Specialist** - Define assumptions specialist persona with Socratic questioning cognitive strategy
+- [x] **Phase 1d: Edge Cases Specialist** - Define edge-cases specialist persona with boundary enumeration cognitive strategy
+- [x] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
+- [x] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
+- [x] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
 - [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, REVIEW-SYNTHESIS.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
 - [ ] **Phase 3: Debate Mode** - Add thread-based debate with per-thread continuation, trade-off escalation to users in interactive mode, and hub-and-spoke mediation
 - [ ] **Phase 4: Adaptive Specialist Selection** - Add adaptive selection mode (diff analysis to select most relevant N specialists)

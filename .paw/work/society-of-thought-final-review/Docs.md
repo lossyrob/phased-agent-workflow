@@ -26,7 +26,7 @@ Society-of-thought operates in three phases:
 
 **Anti-sycophancy as structural rules**: Rather than personality suggestions ("be critical"), anti-sycophancy is enforced through mandatory behavioral constraints: every specialist must produce substantive analysis or provide a detailed examination rationale. This is grounded in research showing RLHF training pushes models toward agreement unless structurally prevented.
 
-**7 built-in specialists with distinct cognitive strategies**: The roster size (7) balances the DeepMind scaling study sweet spot (~5 agents) with coverage needs (architecture and testing fill gaps the core 5 don't cover). Each specialist uses a genuinely different analytical method, not just a different focus area — this is informed by DMAD research (ICLR 2025) showing that strategy diversity outperforms persona diversity.
+**8 built-in specialists with distinct cognitive strategies**: The roster size (8) balances the DeepMind scaling study sweet spot (~5 agents) with coverage needs (architecture, testing, and correctness fill gaps the core 5 don't cover). Each specialist uses a genuinely different analytical method, not just a different focus area — this is informed by DMAD research (ICLR 2025) showing that strategy diversity outperforms persona diversity.
 
 ### Integration Points
 

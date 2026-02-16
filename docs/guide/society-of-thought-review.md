@@ -24,7 +24,7 @@ Society-of-thought is configured during workflow initialization (`paw-init`). Th
 
 ## Built-in Specialists
 
-PAW ships with 7 built-in specialists, each using a distinct cognitive strategy:
+PAW ships with 8 built-in specialists, each using a distinct cognitive strategy:
 
 | Specialist | Cognitive Strategy | Focus |
 |-----------|-------------------|-------|
@@ -35,6 +35,7 @@ PAW ships with 7 built-in specialists, each using a distinct cognitive strategy:
 | **Maintainability** | Narrative walkthrough | Future engineer experience, cognitive load |
 | **Architecture** | Pattern recognition | System-level fit, coupling, extensibility |
 | **Testing** | Coverage gap analysis | Untested paths, assertion quality |
+| **Correctness** | Specification-implementation correspondence | Logic errors, wrong operators, default paths |
 
 Every specialist includes **anti-sycophancy rules** — structural constraints that require each specialist to either identify a substantive concern or explain what they analyzed and why they found no issues. This prevents the "looks good to me" problem common in AI reviews.
 
@@ -65,7 +66,7 @@ Debate mode uses **hub-and-spoke mediation**: specialists see only the synthesis
 
 ### All (Default)
 
-All discovered specialists participate. With only the built-in roster, this means 7 specialists.
+All discovered specialists participate. With only the built-in roster, this means 8 specialists.
 
 ### Fixed List
 

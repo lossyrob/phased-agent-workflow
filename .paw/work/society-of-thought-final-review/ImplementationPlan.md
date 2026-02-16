@@ -44,11 +44,12 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [ ] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
 - [ ] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
 - [ ] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
-- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis, and VS Code fallback
-- [ ] **Phase 3: Debate Mode & Adaptive Selection** - Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection
-- [ ] **Phase 4: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
-- [ ] **Phase 5: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
-- [ ] **Phase 6: Documentation** - User guide, specialist template scaffold, specification updates
+- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
+- [ ] **Phase 3: Debate Mode** - Add thread-based debate with per-thread continuation, trade-off escalation to users in interactive mode, and hub-and-spoke mediation
+- [ ] **Phase 4: Adaptive Specialist Selection** - Add adaptive selection mode (diff analysis to select most relevant N specialists)
+- [ ] **Phase 5: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
+- [ ] **Phase 6: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
+- [ ] **Phase 7: Documentation** - User guide, specialist template scaffold, specification updates
 
 ## Phase Candidates
 <!-- None identified yet -->
@@ -340,6 +341,9 @@ Extend paw-final-review SKILL.md to support `society-of-thought` as a third revi
 ### Design Decision: Specialist Storage
 Built-in specialists are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern. This keeps the format consistent across all precedence levels (project, user, built-in all use the same file format), makes specialists discoverable and editable, loads them on demand (not with every SKILL.md load), and aligns with the custom instructions precedence pattern from PR #113.
 
+### Design Decision: Synthesis Protocol
+The synthesis agent is the most critical component of society-of-thought — it determines whether the multi-agent approach produces better results than a single reviewer. The synthesis protocol is defined in **SynthesisProtocol.md** (a reference document alongside SpecialistDesignRubric.md) and covers: conflict resolution (factual disagreements vs genuine trade-offs), trade-off detection and escalation, evidence weighting, grounding validation, and structured output generation. This phase implements the parallel-mode subset of the protocol; debate-specific synthesis is added in Phase 3.
+
 ### Changes Required
 
 - **`skills/paw-final-review/SKILL.md`**: Core extension with the following new/modified sections:
@@ -364,23 +368,29 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
     - For each selected specialist: compose prompt = specialist file content + shared review context (diff, spec, plan, CodeResearch patterns)
     - Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. If specialist file contains a `model:` field, use that model; otherwise use session default
     - Save per-specialist output to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
-    - After all specialists complete, run neutral synthesis
+    - After all specialists complete, run synthesis per SynthesisProtocol.md
 
-  - **New section: Synthesis (society-of-thought)**: Define GapAnalysis.md generation:
-    - Neutral agent (no persona) performs synthesis
-    - Confidence-weighted aggregation: weigh findings by stated confidence and evidence quality, not count of specialists
-    - Grounding validation: verify each finding references code present in the actual diff; exclude or demote ungrounded findings
-    - Evidence-based adjudication: examine reasoning traces, not just conclusions
-    - Severity classification: must-fix, should-fix, consider (consistent with existing review format)
-    - Specialist attribution: each finding attributed to originating specialist(s)
+  - **New section: Synthesis (society-of-thought)**: Implement the parallel-mode synthesis protocol from SynthesisProtocol.md. Key responsibilities:
+    - **Conflict classification**: For each disagreement between specialists, classify as factual dispute (one is wrong — resolve with evidence) or genuine trade-off (both valid — escalate or flag)
+    - **Evidence-based adjudication**: Examine reasoning traces, not just conclusions. Assess evidence specificity, code reference precision, and confidence calibration quality
+    - **Confidence-weighted aggregation**: Weigh findings by stated confidence AND evidence quality, not count of specialists
+    - **Grounding validation**: Verify each finding references code present in the actual diff; demote (not binary exclude) ungrounded findings with explanation
+    - **Trade-off detection**: When conflict is a genuine design trade-off (security vs performance, simplicity vs extensibility), flag explicitly with both sides' evidence and rationale
+    - **Trade-off handling**: In interactive/smart mode, escalate trade-offs to user for decision. In auto mode, apply conservative defaults per SynthesisProtocol.md hierarchy and flag the decision for user awareness
+    - **Severity classification**: must-fix, should-fix, consider (consistent with existing review format)
+    - **Specialist attribution**: each finding attributed to originating specialist(s), including dissenting views
 
-  - **GapAnalysis.md structure**: Define the artifact format as a new artifact type
+  - **GapAnalysis.md structure**: Define the artifact format including:
+    - Header: review mode, specialists participated, selection rationale (if adaptive)
+    - Findings: grouped by severity, each with specialist attribution, confidence, evidence, grounding status
+    - Trade-offs: explicit section for unresolved trade-offs with both sides' arguments
+    - Dissent log: findings where specialists disagreed and how the disagreement was resolved
 
   - **Step 5 (Resolution)**: Extend for society-of-thought:
     - `interactive: false` → auto-apply must-fix and should-fix, skip consider (same as existing)
-    - `interactive: true` → present findings from GapAnalysis.md using existing finding presentation format
-    - `interactive: smart` → auto-apply high-confidence consensus must-fix/should-fix, interactive for contested findings
-    - Note: Interactive moderator mode (summon/challenge) added in Phase 4
+    - `interactive: true` → present findings from GapAnalysis.md using existing finding presentation format; present trade-offs for user decision
+    - `interactive: smart` → auto-apply high-confidence consensus must-fix/should-fix, interactive for contested findings and all trade-offs
+    - Note: Interactive moderator mode (summon/challenge) added in Phase 5
 
   - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `GapAnalysis.md`
     - Note: FR-019 (gitignore review artifacts) is satisfied by existing `.gitignore` with `*` pattern in `reviews/` — no new work needed
@@ -400,39 +410,52 @@ Built-in specialists are stored as separate markdown files in `skills/paw-final-
 #### Manual Verification:
 - [ ] SKILL.md contains society-of-thought execution path for parallel mode
 - [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
-- [ ] GapAnalysis.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status
-- [ ] Synthesis instructions specify confidence-weighted aggregation (not majority voting) and grounding validation against actual diff
+- [ ] GapAnalysis.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status, trade-off section, dissent log
+- [ ] Synthesis instructions implement SynthesisProtocol.md: conflict classification, evidence-based adjudication, trade-off detection and handling (interactive escalation + auto conservative defaults)
 - [ ] VS Code fallback disables society-of-thought with notification referencing issue #240
 
 ---
 
-## Phase 3: Debate Mode & Adaptive Selection
+## Phase 3: Debate Mode
 
 ### Objective
-Add debate interaction mode with hub-and-spoke mediation and adaptive specialist selection to the society-of-thought mode established in Phase 2.
+Add debate interaction mode with thread-based structure, per-thread continuation for contentious items, and trade-off escalation to users in interactive mode.
+
+### Design Decision: Thread-Based Debate Architecture
+Debates are structured as **threaded conversations**, not flat rounds. Each finding from Round 1 becomes a thread. Subsequent rounds add responses to existing threads and may spawn new threads. This produces a readable audit trail and enables per-thread continuation for contentious items while resolved threads close early.
 
 ### Changes Required
 
-- **`skills/paw-final-review/SKILL.md`**: Add two new capabilities:
+- **`skills/paw-final-review/SKILL.md`**: Add debate mode capability:
 
   - **Debate mode execution** (when `Final Review Interaction Mode: debate`):
-    - Round 1: Run all selected specialists in parallel (reuse Phase 2 parallel execution)
-    - After round 1: Neutral synthesis agent generates a round summary highlighting agreements, disagreements, and open questions — this summary is the only inter-specialist communication (hub-and-spoke, not full visibility)
-    - Round 2+: Feed round summary (not raw findings from other specialists) to each specialist as additional context alongside original diff. Specialists can refine positions, challenge summarized claims, or add new findings.
-    - Adaptive termination: After each round, synthesis agent evaluates whether new substantive findings emerged. If not, debate terminates early. Hard cap at 3 rounds regardless.
-    - Final synthesis: Produce GapAnalysis.md with all rounds' findings merged, including a debate trace section showing how disagreements were resolved
+
+    - **Round 1 (Global sweep)**: Run all selected specialists in parallel (reuse Phase 2 parallel execution). Each finding becomes a **thread** in the debate.
+
+    - **Round 2-3 (Global sweep with thread context)**: Neutral synthesis agent generates a round summary organized by thread — for each thread: current state (agreed, contested, new information), summary of positions, open questions. This summary is the only inter-specialist communication (hub-and-spoke). Specialists receive the thread summary alongside the original diff and can: refine their position on existing threads, respond to summarized counterarguments, add new threads.
+
+    - **Adaptive termination of global rounds**: After each round, synthesis agent evaluates whether new substantive findings emerged across all threads. If no new threads and no position changes on existing threads, global rounds terminate early. Hard cap at 3 global rounds.
+
+    - **Per-thread continuation** (for contested threads): After global rounds close, threads still marked "contested" enter targeted continuation:
+      - Only the specialists involved in the contested thread participate (2-3 specialists, not all 7)
+      - Max 3 additional exchanges per thread (total cap: 5 exchanges including global rounds)
+      - Synthesis agent monitors each thread for convergence, deadlock, or trade-off identification
+      - **Trade-off detection**: If a contested thread represents a genuine design trade-off (not a factual dispute), it's classified as a trade-off and exits continuation — flagged for user decision (interactive) or conservative default resolution (auto)
+
+    - **Thread states**: Each thread progresses through: `open` → `agreed` | `contested` | `trade-off` | `resolved`
+
+  - **User escalation in interactive mode**: During debate, when the synthesis agent identifies a trade-off thread:
+    - In `interactive: true` or `interactive: smart`: Pause debate, present the trade-off to the user with both sides' evidence and positions, ask for a decision, then continue debate with the user's decision as context
+    - In `interactive: false` (auto): Apply conservative defaults per SynthesisProtocol.md, flag the decision in GapAnalysis.md
 
   - **GapAnalysis.md debate trace section**: When debate mode was used, include:
-    - Round progression summary
-    - Disagreements identified and how they were resolved
-    - Findings that evolved across rounds with specialist attribution
+    - Thread-by-thread progression: initial finding → responses → resolution
+    - Thread state at completion (agreed/resolved/trade-off)
+    - Disagreements identified and how they were resolved (evidence, user decision, or conservative default)
+    - Trade-offs and their resolution (user decision or auto-applied default)
+    - Per-thread participant list (which specialists engaged on each thread)
 
-  - **Adaptive specialist selection** (when `Final Review Specialists: adaptive:<N>`):
-    - After discovering all available specialists (Phase 2 discovery algorithm), agent analyzes the diff content
-    - Agent selects up to N specialists most relevant to the changes
-    - Selection rationale documented in GapAnalysis.md header ("Selected specialists: X, Y, Z because the diff primarily affects [areas]")
-    - No user confirmation required (auto-selects silently per spec)
-    - Edge case: If diff is too small/trivial for meaningful selection, report and suggest single-model mode
+  - **Final synthesis**: Produce GapAnalysis.md by merging all threads' resolved state, applying same synthesis protocol as parallel mode but with richer evidence from debate exchanges
 
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
@@ -444,15 +467,53 @@ Add debate interaction mode with hub-and-spoke mediation and adaptive specialist
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
 
 #### Manual Verification:
-- [ ] Debate mode instructions clearly describe hub-and-spoke: specialists see synthesis summaries, not each other's raw findings
-- [ ] Adaptive termination criteria are clear: "no new substantive findings" + hard cap at 3 rounds
-- [ ] GapAnalysis.md debate trace format shows round progression and disagreement resolution
-- [ ] Adaptive selection instructions describe diff analysis approach and rationale documentation
-- [ ] Edge cases covered: debate with 1 specialist (skip debate, use parallel), adaptive selects 0 (suggest single-model)
+- [ ] Debate mode uses thread-based structure: findings are threads with point/counterpoint/response
+- [ ] Hub-and-spoke maintained: specialists see thread summaries, not each other's raw findings
+- [ ] Per-thread continuation described: contested threads get up to 3 additional exchanges between relevant specialists only
+- [ ] Trade-off detection triggers thread exit to user escalation (interactive) or conservative default (auto)
+- [ ] User escalation described: debate pauses to present trade-off with both sides' evidence
+- [ ] GapAnalysis.md debate trace shows thread-level progression and resolution
+- [ ] Thread states defined: open → agreed | contested | trade-off | resolved
+- [ ] Edge cases covered: debate with 1 specialist (skip debate, use parallel), all threads agree in round 1 (terminate early)
 
 ---
 
-## Phase 4: Interactive Moderator Mode
+## Phase 4: Adaptive Specialist Selection
+
+### Objective
+Add adaptive specialist selection mode (`adaptive:<N>`) that analyzes the diff to select the most relevant specialists. This is orthogonal to interaction mode — both parallel and debate can use adaptive selection.
+
+### Changes Required
+
+- **`skills/paw-final-review/SKILL.md`**: Add adaptive selection capability:
+
+  - **Adaptive selection** (when `Final Review Specialists: adaptive:<N>`):
+    - After discovering all available specialists (Phase 2 discovery algorithm), agent analyzes the diff content
+    - Agent selects up to N specialists most relevant to the changes
+    - Selection rationale documented in GapAnalysis.md header ("Selected specialists: X, Y, Z because the diff primarily affects [areas]")
+    - No user confirmation required (auto-selects silently per spec)
+    - Works with both parallel and debate interaction modes
+    - Edge case: If diff is too small/trivial for meaningful selection, report and suggest single-model mode
+    - Edge case: If N ≥ number of available specialists, include all (equivalent to `all`)
+
+- **Tests**:
+  - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+  - Lint: `npm run lint`
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
+
+#### Manual Verification:
+- [ ] Adaptive selection instructions describe diff analysis approach and rationale documentation
+- [ ] Selection rationale is documented in GapAnalysis.md header
+- [ ] Works with both parallel and debate modes
+- [ ] Edge cases covered: trivial diff (suggest single-model), N ≥ available (use all), adaptive selects 0 (suggest single-model)
+
+---
+
+## Phase 5: Interactive Moderator Mode
 
 ### Objective
 Add post-review interactive moderator mode where users can summon specialists, challenge findings, and request deeper analysis. Specialists maintain their persona when responding.
@@ -466,7 +527,7 @@ Add post-review interactive moderator mode where users can summon specialists, c
     - Sequence: findings resolution → moderator loop → exit to paw-pr
 
   - **Moderator hooks** (3 interaction patterns):
-    1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the Security Paranoid think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and GapAnalysis.md context.
+    1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the security specialist think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and GapAnalysis.md context.
     2. **Challenge finding**: User disagrees with a specific finding and provides reasoning. The originating specialist must respond with independent evidence (not just agree), maintaining anti-sycophancy behavioral rules.
     3. **Request deeper analysis**: User asks for more detailed analysis on a specific code area. The most relevant specialist (or user-specified specialist) provides focused analysis using its cognitive strategy.
 
@@ -491,7 +552,7 @@ Add post-review interactive moderator mode where users can summon specialists, c
 
 ---
 
-## Phase 5: Configuration & Status
+## Phase 6: Configuration & Status
 
 ### Objective
 Extend paw-init to collect society-of-thought configuration during workflow setup and paw-status to display it. Also update the paw-specification.md to reference the new review mode.
@@ -540,7 +601,7 @@ Extend paw-init to collect society-of-thought configuration during workflow setu
 
 ---
 
-## Phase 6: Documentation
+## Phase 7: Documentation
 
 ### Objective
 Create user-facing documentation explaining society-of-thought review, custom specialist creation, and persona template guidance. Update project documentation to reference the new feature.

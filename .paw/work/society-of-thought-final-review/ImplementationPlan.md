@@ -49,7 +49,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [x] **Phase 4: Adaptive Specialist Selection** - Add adaptive selection mode (diff analysis to select most relevant N specialists)
 - [x] **Phase 5: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
 - [x] **Phase 6: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
-- [ ] **Phase 7: Documentation** - User guide, specialist template scaffold, specification updates
+- [x] **Phase 7: Documentation** - User guide, specialist template scaffold, specification updates
 
 ## Phase Candidates
 - [ ] **Correctness/Logic Specialist** - Add an 8th specialist with a correctness verification cognitive strategy (does the algorithm implement the stated business rule? does the if/else logic match the specification?). Identified during multi-model review as the biggest gap in the roster — none of the 7 existing specialists focus on "is this algorithm correct?"

@@ -40,8 +40,8 @@ Narrative: A team working on a financial application creates a project-level spe
 Independent Test: Create a custom specialist markdown file at the project level, run final review, and verify the custom specialist participates alongside built-in defaults.
 
 Acceptance Scenarios:
-1. Given a custom specialist file at the project level (`.paw/specialists/<name>.md`), When final review runs, Then the custom specialist is included in the review panel alongside built-in defaults.
-2. Given a user-level specialist at `~/.paw/specialists/<name>.md` and a project-level specialist with the same filename, When final review runs, Then the project-level specialist takes precedence (project overrides user).
+1. Given a custom specialist file at the project level (`.paw/personas/<name>.md`), When final review runs, Then the custom specialist is included in the review panel alongside built-in defaults.
+2. Given a user-level specialist at `~/.paw/personas/<name>.md` and a project-level specialist with the same filename, When final review runs, Then the project-level specialist takes precedence (project overrides user).
 3. Given a WorkflowContext.md that specifies `Final Review Specialists: security, edge-cases`, When final review runs in fixed selection mode, Then only those two specialists participate.
 
 ### User Story P3 – Adaptive Specialist Selection
@@ -97,7 +97,7 @@ Acceptance Scenarios:
 
 - FR-001: Support `society-of-thought` as a third value for the `Final Review Mode` configuration field in WorkflowContext.md (Stories: P1)
 - FR-002: Ship 7 built-in specialist personas, each with a distinct cognitive strategy, narrative backstory, behavioral rules, anti-sycophancy structural rules, and 2-3 example review comments (Stories: P1, P2)
-- FR-003: Discover specialist files at 4 precedence levels — workflow (WorkflowContext.md field), project (`.paw/specialists/`), user (`~/.paw/specialists/`), built-in (skill-embedded) — with most-specific-wins override semantics (Stories: P2)
+- FR-003: Discover specialist files at 4 precedence levels — workflow (WorkflowContext.md field), project (`.paw/personas/`), user (`~/.paw/personas/`), built-in (skill-embedded) — with most-specific-wins override semantics (Stories: P2)
 - FR-004: Support two specialist selection modes — fixed (explicit list) and adaptive (agent auto-selects up to N based on diff analysis) — configurable via WorkflowContext.md (Stories: P1, P3)
 - FR-005: In adaptive mode, auto-select specialists without user confirmation and document selection rationale in the output artifact (Stories: P3)
 - FR-006: Support two interaction modes — parallel (all specialists run independently, then synthesize) and debate (sequential rounds with hub-and-spoke mediation via synthesis agent) — configurable via WorkflowContext.md (Stories: P1, P4)

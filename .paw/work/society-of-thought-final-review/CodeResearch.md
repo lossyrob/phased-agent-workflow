@@ -21,7 +21,7 @@ The multi-model final review infrastructure is fully functional and provides a r
 
 1. **Review execution**: paw-final-review spawns parallel subagents using the `task` tool with `model` parameter, then synthesizes findings with agreement-level classification
 2. **Configuration management**: paw-init defines config fields (lines 26-45), resolves model intents to concrete names (lines 76-83), and stores them in WorkflowContext.md
-3. **No existing specialist infrastructure**: `.paw/specialists/` and `~/.paw/specialists/` directories do not exist; precedence patterns can be modeled after skill discovery (`.github/skills/` for project, `~/.copilot/skills/` for user)
+3. **No existing specialist infrastructure**: `.paw/personas/` and `~/.paw/personas/` directories do not exist; precedence patterns can be modeled after skill discovery (`.github/skills/` for project, `~/.copilot/skills/` for user)
 4. **Status reporting**: paw-status reads Final Review Mode and Planning Review Mode from WorkflowContext.md and displays them (lines 43-52)
 5. **Documentation system**: MkDocs with Material theme, `mkdocs.yml` navigation, `docs/` directory structure
 
@@ -136,7 +136,7 @@ The multi-model final review infrastructure is fully functional and provides a r
 
 ### 4. Specialist File Discovery Paths
 
-**Current state**: No `.paw/specialists/` or `~/.paw/specialists/` directories exist in the project or user home.
+**Current state**: No `.paw/personas/` or `~/.paw/personas/` directories exist in the project or user home.
 
 **Skill discovery patterns** (observed file structure):
 - **Project-level**: `.github/skills/<skill-name>/SKILL.md` (e.g., `.github/skills/multi-model-review/SKILL.md`, `.github/skills/prompt-annotation/SKILL.md`, `.github/skills/skill-creator/SKILL.md`)
@@ -144,8 +144,8 @@ The multi-model final review infrastructure is fully functional and provides a r
 
 **Proposed specialist precedence** (modeled after skill discovery):
 1. **Workflow-level**: WorkflowContext.md field `Final Review Specialists: <list>` (explicit selection override)
-2. **Project-level**: `.paw/specialists/<name>.md` (team-specific specialists)
-3. **User-level**: `~/.paw/specialists/<name>.md` (personal specialists)
+2. **Project-level**: `.paw/personas/<name>.md` (team-specific specialists)
+3. **User-level**: `~/.paw/personas/<name>.md` (personal specialists)
 4. **Built-in**: Embedded in paw-final-review SKILL.md (default roster)
 
 **Precedence semantics**: Most-specific-wins override (workflow > project > user > built-in). If a specialist file with the same name exists at multiple levels, the most specific level takes precedence.
@@ -266,8 +266,8 @@ The multi-model final review infrastructure is fully functional and provides a r
 
 **Four-level precedence** (most-specific-wins):
 1. Workflow-level: WorkflowContext.md field (explicit list or adaptive)
-2. Project-level: `.paw/specialists/<name>.md` (discovered via file system)
-3. User-level: `~/.paw/specialists/<name>.md` (discovered via file system)
+2. Project-level: `.paw/personas/<name>.md` (discovered via file system)
+3. User-level: `~/.paw/personas/<name>.md` (discovered via file system)
 4. Built-in: Embedded in paw-final-review SKILL.md (fallback)
 
 **Discovery algorithm**:

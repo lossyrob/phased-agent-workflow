@@ -12,7 +12,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - paw-init defines Final Review config fields (Mode, Interactive, Models) with model intent resolution
 - Multi-model synthesis uses agreement-level classification (consensus/partial/single-model)
 - No specialist/persona infrastructure exists at any level
-- No `.paw/specialists/` or `~/.paw/specialists/` directories exist
+- No `.paw/personas/` or `~/.paw/personas/` directories exist
 
 ## Desired End State
 
@@ -81,7 +81,7 @@ Define the security specialist persona. Cognitive strategy: threat modeling / at
 
 - Create `skills/paw-final-review/references/` and `skills/paw-final-review/references/specialists/` directories if they don't exist
 
-- **Tests**: Lint with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/security.md` (if applicable)
+- **Verification**: Lint with `./scripts/lint-prompting.sh skills/paw-final-review/references/specialists/security.md` (if applicable)
 
 ### Success Criteria
 
@@ -368,8 +368,8 @@ During Phase 2 implementation, the shared sections (Anti-Sycophancy Rules, Confi
 
   - **New section: Specialist Discovery**: Define 4-level precedence discovery algorithm:
     1. Workflow: Parse `Final Review Specialists` from WorkflowContext.md — if explicit list, use only those names
-    2. Project: Scan `.paw/specialists/<name>.md` files
-    3. User: Scan `~/.paw/specialists/<name>.md` files
+    2. Project: Scan `.paw/personas/<name>.md` files
+    3. User: Scan `~/.paw/personas/<name>.md` files
     4. Built-in: Scan `skills/paw-final-review/references/specialists/<name>.md` files
     - Most-specific-wins for name conflicts (same filename at project overrides user overrides built-in)
     - If `Final Review Specialists` is `all`: include all discovered specialists from all levels
@@ -388,6 +388,7 @@ During Phase 2 implementation, the shared sections (Anti-Sycophancy Rules, Confi
     - **File-based handoff**: Each specialist subagent writes its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory. The orchestrating agent receives only a brief completion status (success/failure, finding count) — NOT the full findings content. This keeps specialist output out of the orchestrator's context window.
     - After all specialists complete, spawn the synthesis subagent which reads specialist files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output, not the raw specialist findings.
     - **Context budget**: The orchestrator's role is dispatch and status tracking, not content relay. Specialist persona content (potentially 7 × 2000+ words) stays in specialist subagent contexts.
+    - **Large diff handling**: If the diff exceeds a size that would crowd out the specialist persona and review context, the orchestrator should chunk the diff by file or logical grouping and note the chunking in the specialist prompt. Each specialist receives the same chunk set for consistency.
 
   - **New section: Synthesis (society-of-thought)**: Implement the parallel-mode synthesis protocol from SynthesisProtocol.md. Key responsibilities:
     - **Conflict classification**: For each disagreement between specialists, classify as factual dispute (one is wrong — resolve with evidence) or genuine trade-off (both valid — escalate or flag)
@@ -418,10 +419,10 @@ During Phase 2 implementation, the shared sections (Anti-Sycophancy Rules, Confi
 
 - **`cli/scripts/build-dist.js`**: Update build script to copy `references/` subdirectories (not just SKILL.md) when building the CLI distribution. Currently `build-dist.js` only copies SKILL.md files — specialist files in `references/specialists/` won't reach npm users without this fix.
 
-- **Tests**:
+- **Verification**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
-  - Integration test: Specialist precedence — fixture with `.paw/specialists/` override, assert project-level overrides built-in for same name
+  - Integration test: Specialist precedence — fixture with `.paw/personas/` override, assert project-level overrides built-in for same name
   - Integration test: Parallel society-of-thought execution — verify specialist subagents spawn and REVIEW-SYNTHESIS.md is produced with expected structure
   - Integration test: Anti-sycophancy — trivially-correct diff, use Judge rubric to verify specialist provides examination rationale (not fabricated findings)
 
@@ -488,7 +489,7 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
 
   - **Final synthesis**: Produce REVIEW-SYNTHESIS.md by merging all threads' resolved state, applying same synthesis protocol as parallel mode but with richer evidence from debate exchanges
 
-- **Tests**:
+- **Verification**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
   - Integration test: Debate budget cap — verify debate terminates when subagent call count approaches aggregate budget limit
@@ -530,7 +531,7 @@ Add adaptive specialist selection mode (`adaptive:<N>`) that analyzes the diff t
     - Edge case: If diff is too small/trivial for meaningful selection, report and suggest single-model mode
     - Edge case: If N ≥ number of available specialists, include all (equivalent to `all`)
 
-- **Tests**:
+- **Verification**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
   - Integration test: Adaptive selection — verify specialist subset is selected and selection rationale appears in REVIEW-SYNTHESIS.md header
@@ -571,7 +572,7 @@ Add post-review interactive moderator mode where users can summon specialists, c
 
   - **Specialist persona maintenance**: When responding in moderator mode, each specialist's full persona file is included in the prompt to maintain character consistency
 
-- **Tests**:
+- **Verification**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
   - Lint: `npm run lint`
 
@@ -620,7 +621,7 @@ Extend paw-init to collect society-of-thought configuration during workflow setu
   - Document the new configuration fields and their behavior
   - Reference specialist precedence levels
 
-- **Tests**:
+- **Verification**:
   - Lint: `npm run lint:skills`
 
 ### Success Criteria
@@ -661,7 +662,7 @@ Create user-facing documentation explaining society-of-thought review, custom sp
 
 - **`mkdocs.yml`**: Add `society-of-thought-review.md` to the Guide navigation section
 
-- **Tests**:
+- **Verification**:
   - Docs build: `source .venv/bin/activate && mkdocs build --strict`
   - Content accurate and style consistent with existing docs
 

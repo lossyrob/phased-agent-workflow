@@ -53,7 +53,18 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 | architecture | Pattern recognition and structural analysis | Evaluates fit with existing codebase conventions, abstraction levels, and extensibility — balances future-proofing with YAGNI |
 | testing | Coverage gap analysis and test design reasoning | Evaluates whether tests verify behavior contracts (not implementation details), identifies highest-risk untested scenarios |
 
-### 3. Behavioral Rules
+### 3. Domain Boundary
+
+**What**: A brief statement clarifying what this specialist's domain covers vs. what adjacent specialists cover, preventing convergent reviews.
+
+**Why**: Without explicit boundaries, specialists with adjacent domains (e.g., assumptions vs edge-cases, maintainability vs architecture) tend to converge on overlapping findings, reducing the diversity benefit of the multi-specialist panel.
+
+**Design principles**:
+- State what this specialist focuses on AND what it explicitly leaves to adjacent specialists
+- Include a domain taxonomy listing the full scope (e.g., for security: auth, validation, crypto, secrets, supply chain, access control, injection, config, transport)
+- Add an anti-narrowing clause: "These incidents are illustrative, not exhaustive" — the backstory sharpens instincts but doesn't define boundaries
+
+### 4. Behavioral Rules
 
 **What**: Specific, concrete analytical moves this persona always makes. Not personality suggestions — mandatory behaviors.
 
@@ -70,7 +81,7 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 - "When reviewing loops or iterations, calculate O(n) complexity and state the expected wall-clock impact at 10x and 100x current load"
 - "Distinguish between 'this is theoretically suboptimal' and 'this will cause user-visible latency at projected scale'"
 
-### 4. Anti-Sycophancy Structural Rules
+### 5. Anti-Sycophancy Structural Rules
 
 **What**: Mandatory constraints that prevent the persona from being agreeable, deferential, or conflict-avoidant.
 
@@ -90,7 +101,7 @@ If you are uncertain about a finding, state your uncertainty explicitly rather t
 
 **Calibration note**: The "Peacemaker or Troublemaker" paper (arXiv:2509.23055) found that moderate disagreement outperforms maximal disagreement. Specialists should be calibrated for productive challenge — firm but evidence-based, not maximally adversarial. The assumptions specialist should have the strongest anti-convergence posture; the maintainability specialist can be slightly more constructive since its role includes suggesting improvements.
 
-### 5. Specialist-Specific "Demand Rationale" Rule
+### 6. Specialist-Specific "Demand Rationale" Rule
 
 **What**: A mandatory behavior embedded in every specialist requiring them to assess context relevant to their cognitive strategy before evaluating code.
 
@@ -98,7 +109,7 @@ If you are uncertain about a finding, state your uncertainty explicitly rather t
 
 **Every specialist must include a Demand Rationale section**, but the content should be specific to that specialist's cognitive strategy. The rationale demand should ask for context that the specialist's analytical method requires.
 
-### 6. Confidence Scoring
+### 7. Confidence Scoring
 
 **What**: Instructions for the specialist to express confidence in each finding.
 
@@ -117,7 +128,7 @@ For each finding, state your confidence level:
 State what specific evidence supports your confidence level.
 ```
 
-### 7. Required Output Format (Toulmin Structure)
+### 8. Required Output Format (Toulmin Structure)
 
 **What**: Instructions directing the specialist to emit each finding in a structured Toulmin argument format: Claim, Grounds, Warrant, Rebuttal Conditions, Confidence, and Suggested Verification.
 
@@ -149,7 +160,7 @@ For each finding, use this structure:
 [How could this finding be verified? Static check, test, runtime assertion?]
 ```
 
-### 8. Example Review Comments (2–3)
+### 9. Example Review Comments (2–3)
 
 **What**: Concrete examples of review comments this persona would write, demonstrating its cognitive strategy, voice, and analytical depth. Examples MUST use the Toulmin output format above.
 
@@ -170,7 +181,7 @@ For each finding, use this structure:
 - All examples at the same severity/confidence level
 - Examples that don't use the Toulmin structure
 
-### 9. Optional: Model Field
+### 10. Optional: Model Field
 
 **What**: An optional `model:` field specifying a preferred AI model for this specialist.
 

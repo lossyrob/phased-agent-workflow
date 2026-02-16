@@ -92,6 +92,14 @@ function Export-Skill {
     
     $OutputPath = Join-Path $OutputSkillDir "SKILL.md"
     Set-Content -Path $OutputPath -Value $Content -NoNewline
+    
+    # Copy references directory if it exists (e.g., specialist personas)
+    $RefsDir = Join-Path $SkillsDir "$SkillName\references"
+    if (Test-Path $RefsDir) {
+        Copy-Item -Path $RefsDir -Destination $OutputSkillDir -Recurse -Force
+        Write-Host "  Copied references/ directory"
+    }
+    
     Write-Host "Exported skill: $SkillName -> $OutputPath"
 }
 

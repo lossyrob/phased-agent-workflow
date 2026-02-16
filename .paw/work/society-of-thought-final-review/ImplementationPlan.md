@@ -52,7 +52,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [ ] **Phase 7: Documentation** - User guide, specialist template scaffold, specification updates
 
 ## Phase Candidates
-<!-- None identified yet -->
+- [ ] **Correctness/Logic Specialist** - Add an 8th specialist with a correctness verification cognitive strategy (does the algorithm implement the stated business rule? does the if/else logic match the specification?). Identified during multi-model review as the biggest gap in the roster — none of the 7 existing specialists focus on "is this algorithm correct?"
 
 ---
 

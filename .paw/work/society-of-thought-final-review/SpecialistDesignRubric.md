@@ -81,9 +81,7 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 ```
 ## Anti-Sycophancy Rules
 
-You MUST identify at least one substantive concern in your review. If you genuinely find no issues, provide a detailed examination rationale — explain what specific aspects you analyzed using your cognitive strategy, what you looked for, and why nothing triggered a concern. A thorough "no issues found" explanation is acceptable; silence or a bare "looks good" is not.
-
-You MUST present independent evidence before agreeing with another reviewer's finding. Referencing their argument is not sufficient — provide your own analysis from your cognitive strategy.
+You MUST identify at least one substantive concern in your review. If you genuinely find no issues, state which aspects of the diff you analyzed using your cognitive strategy and why they passed. A 2-3 sentence examination summary is sufficient — forced fabrication is worse than a confident "no concerns in my domain."
 
 Prioritize finding real issues over maintaining harmony. Your value comes from surfacing what others miss, not from confirming what's already been said.
 
@@ -92,19 +90,13 @@ If you are uncertain about a finding, state your uncertainty explicitly rather t
 
 **Calibration note**: The "Peacemaker or Troublemaker" paper (arXiv:2509.23055) found that moderate disagreement outperforms maximal disagreement. Specialists should be calibrated for productive challenge — firm but evidence-based, not maximally adversarial. The assumptions specialist should have the strongest anti-convergence posture; the maintainability specialist can be slightly more constructive since its role includes suggesting improvements.
 
-### 5. Cross-Cutting "Demand Rationale" Rule
+### 5. Specialist-Specific "Demand Rationale" Rule
 
-**What**: A mandatory behavior embedded in every specialist requiring them to assess whether the change rationale is clear before evaluating code.
+**What**: A mandatory behavior embedded in every specialist requiring them to assess context relevant to their cognitive strategy before evaluating code.
 
-**Why**: Modern code review research consistently shows that understanding and context — not defect-spotting — is the central bottleneck (Bacchelli & Bird, Microsoft study). 75% of real review findings are about maintainability/evolvability, and many come from insufficient context about *why* a change was made. The Society of Thought paper's "Critical Verifier" archetype inherently demands justification. By making this cross-cutting, every specialist acts partly as a "rationale auditor."
+**Why**: Modern code review research consistently shows that understanding and context — not defect-spotting — is the central bottleneck (Bacchelli & Bird, Microsoft study). However, each specialist needs *different* context: the security specialist needs threat model context, the performance specialist needs scale context, the testing specialist needs behavioral contract context. Making this specialist-specific prevents 7 identical "rationale unclear" findings on the same PR.
 
-**Every specialist must include this rule**:
-
-```
-## Demand Rationale
-
-Before evaluating code, assess whether you understand WHY this change was made. If the rationale is unclear from the PR description, commit messages, or code comments, flag this as your first finding. Unclear rationale is itself a review concern — code that can't justify its existence is a maintenance burden regardless of its technical quality.
-```
+**Every specialist must include a Demand Rationale section**, but the content should be specific to that specialist's cognitive strategy. The rationale demand should ask for context that the specialist's analytical method requires.
 
 ### 6. Confidence Scoring
 

@@ -159,6 +159,23 @@ Resolution rules:
 - Skip malformed or empty specialist files with a warning; continue with remaining roster
 - If zero specialists found after discovery, fall back to built-in defaults with a warning
 
+#### Adaptive Selection
+
+When `Final Review Specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on diff content analysis.
+
+**Selection process**:
+1. Analyze the diff to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
+2. For each discovered specialist, assess relevance by matching the specialist's cognitive strategy and domain against the identified change categories
+3. Select up to N specialists with the highest relevance to the actual changes
+4. Document selection rationale in the REVIEW-SYNTHESIS.md `Selection rationale` field (e.g., "Selected security, performance, testing — diff adds new API endpoint with database queries and no test coverage")
+
+**Edge cases**:
+- If N ≥ number of available specialists, include all (equivalent to `all`)
+- If the diff is trivial (e.g., single typo fix, comment-only changes), report to user and suggest falling back to `single-model` mode
+- If adaptive selection would select 0 specialists (no strong relevance signal), include all specialists with a note that no strong signal was found
+
+**Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
+
 #### Prompt Composition
 
 Compose the review prompt for each specialist subagent from three layers:

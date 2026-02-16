@@ -409,6 +409,26 @@ Smart mode degrades to interactive behavior in VS Code (single-model has no agre
 
 Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` items. Report what was applied.
 
+{{#cli}}
+#### Moderator Mode (society-of-thought only)
+
+After finding resolution completes, if `Final Review Mode` is `society-of-thought` and (`Final Review Interactive` is `true`, or `smart` with significant findings remaining), enter moderator mode.
+
+Announce moderator mode with a brief prompt: available specialists, interaction options, and how to exit.
+
+**Interaction patterns**:
+
+1. **Summon specialist**: User references a specialist by name (e.g., "ask the security specialist about the auth flow"). Load the specialist's persona file, compose prompt with persona + shared rules + diff + REVIEW-SYNTHESIS.md context, and spawn a subagent that responds in-character using its cognitive strategy.
+
+2. **Challenge finding**: User disagrees with a finding and provides reasoning. Spawn the originating specialist as a subagent with its full persona, the challenged finding, and the user's counter-argument. The specialist must respond with independent evidence — anti-sycophancy rules require it to either defend with new evidence or concede with specific reasoning for why the user's argument changes the assessment.
+
+3. **Request deeper analysis**: User asks for focused analysis on a specific code area. Select the most relevant specialist (or user-specified) and spawn as subagent with focused scope.
+
+**Exit**: User says "done", "continue", or "proceed" to exit moderator mode and continue to paw-pr.
+
+**Skip condition**: If `Final Review Interactive` is `false`, or no findings exist, skip moderator mode entirely.
+{{/cli}}
+
 ### Step 6: Completion
 
 **Report back**:

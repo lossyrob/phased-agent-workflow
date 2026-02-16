@@ -1,6 +1,6 @@
 # Synthesis Protocol
 
-This document defines how the synthesis agent merges findings from multiple specialist reviewers into a single GapAnalysis.md. It is the companion to SpecialistDesignRubric.md — the rubric defines how specialists produce findings, this protocol defines how findings are merged, conflicts are resolved, and trade-offs are handled.
+This document defines how the synthesis agent merges findings from multiple specialist reviewers into a single REVIEW-SYNTHESIS.md. It is the companion to SpecialistDesignRubric.md — the rubric defines how specialists produce findings, this protocol defines how findings are merged, conflicts are resolved, and trade-offs are handled.
 
 ## Why This Matters
 
@@ -30,22 +30,22 @@ Every specialist must emit findings in Toulmin-structured format. This makes dis
 ### Required Finding Structure
 
 ```
-## Finding: [one-sentence claim]
+### Finding: [one-sentence claim]
 
 **Severity**: must-fix | should-fix | consider
 **Confidence**: HIGH | MEDIUM | LOW
 **Category**: [specialist name]
 
-### Grounds (Evidence)
+#### Grounds (Evidence)
 [Diff-anchored evidence: file, line numbers, quoted code snippets]
 
-### Warrant (Rule)
+#### Warrant (Rule)
 [The rule connecting evidence to conclusion — why does this evidence support this claim?]
 
-### Rebuttal Conditions
+#### Rebuttal Conditions
 [What would falsify this finding? Under what conditions is this NOT a concern?]
 
-### Suggested Verification
+#### Suggested Verification
 [How could this finding be verified? Static check, test, runtime assertion?]
 ```
 
@@ -53,89 +53,59 @@ This operationalizes Toulmin argumentation (Verheij 2009, ASPIC+ framework) for 
 
 ---
 
-## Synthesis Pipeline
+## Synthesis Requirements
 
-The synthesis agent follows a multi-phase pipeline. Each phase has a specific purpose and addresses a specific failure mode.
+The synthesis agent must achieve these outcomes when merging specialist findings. The specific approach is left to agent judgment, but every requirement must be met. Each requirement addresses a documented failure mode from multi-agent aggregation research.
 
-### Phase 1: Extraction & Normalization
+### Cluster by code location before merging
 
-For each specialist's output independently:
-- Extract structured findings (parsing the Toulmin format above)
-- Normalize severity and confidence scales across specialists
-- Strip specialist identity labels for internal processing (prevents position/identity bias)
-- Validate that each finding has diff-anchored grounds
+Group findings by shared code anchors (file + line range) and topic area across specialists. Process each cluster independently before cross-cluster integration. This prevents the "Lost in the Middle" problem (Liu et al., TACL 2024) — processing 7 sequential reviews degrades >30% for middle-context info; topic clustering mitigates this.
 
-### Phase 2: Category Clustering
+### Classify every inter-specialist disagreement
 
-Group findings by shared code anchors (file + line range) and topic area across all specialists. This prevents the "Lost in the Middle" problem — instead of processing 7 sequential reviews, the agent works on topic clusters.
+When specialists disagree, classify as one of:
+- **Factual dispute** (same premise, contradictory claims): One is wrong. Check rebuttal conditions against the diff — if either specialist's rebuttal holds, that finding is resolved. Otherwise assess evidence specificity (prefer diff-anchored over inferential).
+- **Trade-off** (different quality objectives, both valid): Both are right. Escalate to user (interactive/smart mode) or apply priority hierarchy (auto mode) with transparent documentation.
 
-- Findings referencing the same code location become a cluster
-- Findings addressing the same semantic concern (even at different locations) may be merged into a cluster
-- Each cluster is processed independently before cross-cluster integration
+**Heuristic**: If specialists cite different objective functions (different quality attributes), it's likely a trade-off. If they disagree about a shared premise (same property of code), it's likely a factual dispute.
 
-### Phase 3: Within-Cluster Synthesis
+### Validate grounding for every finding
 
-For each cluster:
-
-**Agreement detection**: When multiple specialists flag the same concern with compatible claims, merge into a single finding with combined evidence and increased confidence. Note which specialists agreed (for attribution).
-
-**Conflict classification**: When specialists disagree within a cluster, classify the conflict:
-
-- **Factual dispute** (same premise, contradictory claims): Specialists disagree about an observable property of the code. One is wrong. → Route to conflict resolution (see below).
-- **Trade-off** (different objectives, both valid): Specialists raise concerns that optimize for different quality attributes (e.g., security vs performance). Both are right. → Route to trade-off handling (see below).
-
-**Classification heuristic**: If two specialists disagree but cite **different objective functions** (different quality attributes), it's likely a trade-off. If they disagree about a **shared premise** (same property of the code), it's likely a factual dispute.
-
-### Phase 4: Conflict Resolution (Factual Disputes)
-
-When specialists make contradictory factual claims:
-
-1. **Extract contested premises** — identify the specific data, warrant, or rebuttal condition where they diverge
-2. **Check rebuttal conditions** — does either specialist's rebuttal condition hold in the diff? If so, the rebutted finding is resolved
-3. **Assess evidence quality** — which finding has more specific, diff-anchored evidence? Prefer findings with direct code references over inferential claims
-4. **If still unresolved** — in debate mode, this triggers a targeted debate thread. In parallel mode, include both positions in the output with an "unresolved dispute" flag and let the resolution step handle it
-
-### Phase 5: Trade-off Handling
-
-When a conflict is classified as a trade-off:
-
-**In interactive or smart mode**: Escalate to user with structured presentation:
-- **Shared facts** (what all specialists agree on, with diff anchors)
-- **Decision axis** (what quality attribute is being optimized by each side)
-- **Options** (usually 2-3) with explicit consequences
-- **Recommendation** (if auto-mode priority hierarchy is configured): "Given default priority Correctness > Security > Reliability > Performance > Maintainability, the recommended resolution is X"
-
-**In auto mode**: Apply the configured priority hierarchy and resolve:
-- Document which priority rule was applied
-- Document what trade-off was assumed
-- Flag the decision prominently in GapAnalysis.md so users are aware
-
-### Phase 6: Grounding Validation
-
-Every finding in the merged output is classified into one of three grounding tiers:
+Classify each finding into one of three tiers:
 
 | Tier | Criteria | Treatment |
 |------|----------|-----------|
-| **Direct** | Finding cites specific lines/functions visible in the diff; claims are verifiable by reading the cited code | Full inclusion, high confidence — appears in main findings |
-| **Inferential** | Finding requires reasoning about code behavior (O(n) analysis, control flow, data flow) but reasoning is sound and anchored in diff elements | Include with reasoning chain shown — appears in main findings with evidence trail |
-| **Contextual** | Finding requires knowledge beyond the diff (system architecture, deployment context, historical patterns) | Demote to "observations" section with explicit caveat: "Based on context beyond this diff" |
+| **Direct** | Cites specific lines/functions visible in the diff | Full inclusion, high confidence |
+| **Inferential** | Requires reasoning about code behavior but anchored in diff elements | Include with reasoning chain shown |
+| **Contextual** | Requires knowledge beyond the diff | Demote to "observations" with caveat |
 
-Findings that reference code NOT present in the diff (phantom line numbers, nonexistent functions) are excluded with an explanation logged in the synthesis trace.
+Findings that reference code NOT in the diff (phantom line numbers, nonexistent functions) are excluded with explanation in the synthesis trace.
 
-### Phase 7: Multi-Candidate Generation & Selection
+### Prevent position and identity bias
 
-Generate **3 candidate GapAnalysis.md merges** with different organizational strategies:
-1. **Severity-first**: Findings organized by severity (must-fix → should-fix → consider)
-2. **Category-first**: Findings organized by specialist perspective cluster
-3. **Risk-first**: Findings organized by risk impact (combining severity × confidence × blast radius)
+Strip specialist identity labels during internal processing — work with the evidence, not the source. Randomize processing order of specialist inputs. Re-attach attribution only in the final output.
 
-Score each candidate against:
-- Completeness: Does it include all non-excluded findings?
-- Evidence quality: Are evidence chains clear and traceable?
-- Actionability: Can a developer act on each finding?
-- Balance: Are specialist perspectives represented proportionally (not dominated by verbose specialists)?
+### Merge agreements, preserve dissent
 
-Select the highest-scoring candidate. This multi-candidate approach, inspired by the Habermas Machine (Tessler et al., Science 2024), outperforms single-pass synthesis by avoiding order-dependent and framing-dependent biases.
+When multiple specialists flag the same concern with compatible claims, merge into a single finding with combined evidence, increased confidence, and full attribution. When disagreements remain unresolved, include both positions with an "unresolved" flag rather than silently dropping the minority view.
+
+### Produce proportional output
+
+Verbose specialists must not dominate the output. Weight findings by evidence quality and confidence, not by word count or finding count.
+
+### Handle trade-offs with structured escalation
+
+In interactive/smart mode, present trade-offs to the user with: shared facts (diff-anchored), decision axis (which quality attributes conflict), options with consequences, and recommendation per priority hierarchy. In auto mode, apply priority hierarchy, document the decision, and flag it prominently.
+
+### Output quality checks
+
+Before emitting REVIEW-SYNTHESIS.md, verify:
+- Completeness: All non-excluded findings included
+- Evidence quality: Evidence chains clear and traceable
+- Actionability: Each finding has concrete suggested verification
+- Balance: Specialist perspectives represented proportionally
+
+**Design note**: Earlier iterations specified a rigid 7-phase pipeline. This was restructured as required outcomes because PAW's own principles favor end-state descriptions — and synthesis benefits from agent judgment about how to achieve these outcomes in different contexts.
 
 ---
 
@@ -169,7 +139,7 @@ After each debate round, the synthesis agent generates a thread-level summary:
 
 ### De-Anonymization in Final Output
 
-The final GapAnalysis.md debate trace section de-anonymizes all participants, showing full specialist attribution for transparency. Anonymization is a runtime mechanism for debate quality; the output artifact shows the complete picture.
+The final REVIEW-SYNTHESIS.md debate trace section de-anonymizes all participants, showing full specialist attribution for transparency. Anonymization is a runtime mechanism for debate quality; the output artifact shows the complete picture.
 
 ### Thread State Management
 
@@ -186,12 +156,12 @@ When 5+ specialists agree on a finding with HIGH confidence after round 1, prote
 
 ---
 
-## GapAnalysis.md Structure
+## REVIEW-SYNTHESIS.md Structure
 
 ### Parallel Mode Output
 
 ```markdown
-# GapAnalysis.md
+# REVIEW-SYNTHESIS.md
 
 ## Review Summary
 - Mode: society-of-thought (parallel)

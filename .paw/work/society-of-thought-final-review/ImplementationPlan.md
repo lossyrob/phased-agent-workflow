@@ -2,7 +2,7 @@
 
 ## Overview
 
-Add `society-of-thought` as a third Final Review mode in PAW. This extends paw-final-review to support a panel of specialist personas — each with a distinct cognitive strategy, narrative backstory, and anti-sycophancy rules — that independently review implementation changes and produce a synthesized GapAnalysis.md with specialist-attributed, confidence-weighted findings.
+Add `society-of-thought` as a third Final Review mode in PAW. This extends paw-final-review to support a panel of specialist personas — each with a distinct cognitive strategy, narrative backstory, and anti-sycophancy rules — that independently review implementation changes and produce a synthesized REVIEW-SYNTHESIS.md with specialist-attributed, confidence-weighted findings.
 
 The implementation modifies four skill files (paw-final-review, paw-init, paw-status, paw-specification) and adds documentation. No TypeScript source code changes are needed — this is entirely a skill/prompt-level feature.
 
@@ -20,7 +20,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - 7 built-in specialist personas with full narrative backstories, cognitive strategies, behavioral rules, example outputs, and anti-sycophancy structural rules are defined in paw-final-review
 - Specialist discovery works at 4 precedence levels (workflow > project > user > built-in)
 - Both parallel and debate interaction modes function
-- GapAnalysis.md produced with specialist attribution, confidence levels, severity classifications, and grounding validation
+- REVIEW-SYNTHESIS.md produced with specialist attribution, confidence levels, severity classifications, and grounding validation
 - Interactive moderator mode allows users to summon/challenge specialists post-review
 - paw-init collects society-of-thought configuration during workflow setup
 - paw-status displays society-of-thought configuration
@@ -30,7 +30,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 
 - VS Code support (CLI only for v1; VS Code disables society-of-thought with fallback to multi-model — see #240 for chatSkills migration)
 - Society-of-thought for paw-impl-review, paw-planning-docs-review, or PAW Review workflow
-- Per-specialist output files (single GapAnalysis.md only)
+- Per-specialist output files (single REVIEW-SYNTHESIS.md only)
 - Automated persona drift detection or re-injection
 - Specialist effectiveness metrics or scoring
 - TypeScript code changes (this is a skill/prompt-level feature)
@@ -44,7 +44,7 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [ ] **Phase 1e: Maintainability Specialist** - Define maintainability specialist persona with narrative walkthrough cognitive strategy
 - [ ] **Phase 1f: Architecture Specialist** - Define architecture specialist persona with pattern recognition cognitive strategy
 - [ ] **Phase 1g: Testing Specialist** - Define testing specialist persona with coverage gap analysis cognitive strategy
-- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, GapAnalysis.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
+- [ ] **Phase 2: Parallel Society-of-Thought Mode** - Extend paw-final-review with specialist discovery, parallel execution, REVIEW-SYNTHESIS.md synthesis per SynthesisProtocol.md, trade-off detection, and VS Code fallback
 - [ ] **Phase 3: Debate Mode** - Add thread-based debate with per-thread continuation, trade-off escalation to users in interactive mode, and hub-and-spoke mediation
 - [ ] **Phase 4: Adaptive Specialist Selection** - Add adaptive selection mode (diff analysis to select most relevant N specialists)
 - [ ] **Phase 5: Interactive Moderator Mode** - Add post-review moderator hooks for summoning, challenging, and requesting deeper analysis from specialists
@@ -336,13 +336,13 @@ Define the testing specialist persona. Cognitive strategy: coverage gap analysis
 ## Phase 2: Parallel Society-of-Thought Mode
 
 ### Objective
-Extend paw-final-review SKILL.md to support `society-of-thought` as a third review mode with specialist discovery at 4 precedence levels, parallel execution, and GapAnalysis.md synthesis with confidence weighting and grounding validation. This is the core execution path — debate, adaptive selection, and interactive moderator are added in subsequent phases.
+Extend paw-final-review SKILL.md to support `society-of-thought` as a third review mode with specialist discovery at 4 precedence levels, parallel execution, and REVIEW-SYNTHESIS.md synthesis with confidence weighting and grounding validation. This is the core execution path — debate, adaptive selection, and interactive moderator are added in subsequent phases.
 
 ### Design Decision: Specialist Storage
 Built-in specialists are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern. This keeps the format consistent across all precedence levels (project, user, built-in all use the same file format), makes specialists discoverable and editable, loads them on demand (not with every SKILL.md load), and aligns with the custom instructions precedence pattern from PR #113.
 
 ### Design Decision: Synthesis Protocol
-The synthesis agent is the most critical component of society-of-thought — it determines whether the multi-agent approach produces better results than a single reviewer. The synthesis protocol is defined in **SynthesisProtocol.md** (a reference document alongside SpecialistDesignRubric.md) and covers: conflict resolution (factual disagreements vs genuine trade-offs), trade-off detection and escalation, evidence weighting, grounding validation, and structured output generation. This phase implements the parallel-mode subset of the protocol; debate-specific synthesis is added in Phase 3.
+The synthesis agent is the most critical component of society-of-thought — it determines whether the multi-agent approach produces better results than a single reviewer. The synthesis protocol is defined in **SynthesisProtocol.md** as a **design-time reference** — it informs the synthesis instructions written into SKILL.md but is NOT loaded at runtime. The implementing agent should embed the key requirements (conflict classification, grounding validation, trade-off handling, proportional output) directly into SKILL.md's synthesis section. SynthesisProtocol.md remains as design documentation alongside SpecialistDesignRubric.md.
 
 ### Changes Required
 
@@ -367,8 +367,9 @@ The synthesis agent is the most critical component of society-of-thought — it 
   - **Step 4 (Execute Review)**: Add society-of-thought parallel execution alongside existing single-model/multi-model:
     - For each selected specialist: compose prompt = specialist file content + shared review context (diff, spec, plan, CodeResearch patterns)
     - Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. If specialist file contains a `model:` field, use that model; otherwise use session default
-    - Save per-specialist output to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
-    - After all specialists complete, run synthesis per SynthesisProtocol.md
+    - **File-based handoff**: Each specialist subagent writes its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory. The orchestrating agent receives only a brief completion status (success/failure, finding count) — NOT the full findings content. This keeps specialist output out of the orchestrator's context window.
+    - After all specialists complete, spawn the synthesis subagent which reads specialist files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output, not the raw specialist findings.
+    - **Context budget**: The orchestrator's role is dispatch and status tracking, not content relay. Specialist persona content (potentially 7 × 2000+ words) stays in specialist subagent contexts.
 
   - **New section: Synthesis (society-of-thought)**: Implement the parallel-mode synthesis protocol from SynthesisProtocol.md. Key responsibilities:
     - **Conflict classification**: For each disagreement between specialists, classify as factual dispute (one is wrong — resolve with evidence) or genuine trade-off (both valid — escalate or flag)
@@ -380,7 +381,7 @@ The synthesis agent is the most critical component of society-of-thought — it 
     - **Severity classification**: must-fix, should-fix, consider (consistent with existing review format)
     - **Specialist attribution**: each finding attributed to originating specialist(s), including dissenting views
 
-  - **GapAnalysis.md structure**: Define the artifact format including:
+  - **REVIEW-SYNTHESIS.md structure**: Define the artifact format including:
     - Header: review mode, specialists participated, selection rationale (if adaptive)
     - Findings: grouped by severity, each with specialist attribution, confidence, evidence, grounding status
     - Trade-offs: explicit section for unresolved trade-offs with both sides' arguments
@@ -388,14 +389,16 @@ The synthesis agent is the most critical component of society-of-thought — it 
 
   - **Step 5 (Resolution)**: Extend for society-of-thought:
     - `interactive: false` → auto-apply must-fix and should-fix, skip consider (same as existing)
-    - `interactive: true` → present findings from GapAnalysis.md using existing finding presentation format; present trade-offs for user decision
+    - `interactive: true` → present findings from REVIEW-SYNTHESIS.md using existing finding presentation format; present trade-offs for user decision
     - `interactive: smart` → auto-apply high-confidence consensus must-fix/should-fix, interactive for contested findings and all trade-offs
     - Note: Interactive moderator mode (summon/challenge) added in Phase 5
 
-  - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `GapAnalysis.md`
+  - **Review Artifacts table**: Add society-of-thought row: `REVIEW-{SPECIALIST}.md` per specialist + `REVIEW-SYNTHESIS.md`
     - Note: FR-019 (gitignore review artifacts) is satisfied by existing `.gitignore` with `*` pattern in `reviews/` — no new work needed
 
   - **VS Code handling**: If mode is `society-of-thought` in VS Code, disable society-of-thought and fall back to `multi-model` (or `single-model` if multi-model also unavailable) with notification directing users to issue #240 (VS Code chatSkills migration needed for `references/` directory access)
+
+- **`cli/scripts/build-dist.js`**: Update build script to copy `references/` subdirectories (not just SKILL.md) when building the CLI distribution. Currently `build-dist.js` only copies SKILL.md files — specialist files in `references/specialists/` won't reach npm users without this fix.
 
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
@@ -406,11 +409,12 @@ The synthesis agent is the most critical component of society-of-thought — it 
 #### Automated Verification:
 - [ ] Lint passes: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
 - [ ] Lint passes: `npm run lint`
+- [ ] `build-dist.js` copies `references/` subdirectories for skills that have them
 
 #### Manual Verification:
 - [ ] SKILL.md contains society-of-thought execution path for parallel mode
 - [ ] Specialist discovery covers all 4 precedence levels with clear override semantics and edge cases (malformed files, no specialists found)
-- [ ] GapAnalysis.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status, trade-off section, dissent log
+- [ ] REVIEW-SYNTHESIS.md format includes: specialist attribution, confidence levels per finding, severity classifications, grounding validation status, trade-off section, dissent log
 - [ ] Synthesis instructions implement SynthesisProtocol.md: conflict classification, evidence-based adjudication, trade-off detection and handling (interactive escalation + auto conservative defaults)
 - [ ] VS Code fallback disables society-of-thought with notification referencing issue #240
 
@@ -439,6 +443,7 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
     - **Per-thread continuation** (for contested threads): After global rounds close, threads still marked "contested" enter targeted continuation:
       - Only the specialists involved in the contested thread participate (2-3 specialists, not all 7)
       - Max 3 additional exchanges per thread (total cap: 5 exchanges including global rounds)
+      - **Aggregate budget**: Max 30 subagent calls across all continuation threads (prevents pathological case of many contested threads each consuming full per-thread budget)
       - Synthesis agent monitors each thread for convergence, deadlock, or trade-off identification
       - **Trade-off detection**: If a contested thread represents a genuine design trade-off (not a factual dispute), it's classified as a trade-off and exits continuation — flagged for user decision (interactive) or conservative default resolution (auto)
 
@@ -446,16 +451,16 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
 
   - **User escalation in interactive mode**: During debate, when the synthesis agent identifies a trade-off thread:
     - In `interactive: true` or `interactive: smart`: Pause debate, present the trade-off to the user with both sides' evidence and positions, ask for a decision, then continue debate with the user's decision as context
-    - In `interactive: false` (auto): Apply conservative defaults per SynthesisProtocol.md, flag the decision in GapAnalysis.md
+    - In `interactive: false` (auto): Apply conservative defaults per SynthesisProtocol.md, flag the decision in REVIEW-SYNTHESIS.md
 
-  - **GapAnalysis.md debate trace section**: When debate mode was used, include:
+  - **REVIEW-SYNTHESIS.md debate trace section**: When debate mode was used, include:
     - Thread-by-thread progression: initial finding → responses → resolution
     - Thread state at completion (agreed/resolved/trade-off)
     - Disagreements identified and how they were resolved (evidence, user decision, or conservative default)
     - Trade-offs and their resolution (user decision or auto-applied default)
     - Per-thread participant list (which specialists engaged on each thread)
 
-  - **Final synthesis**: Produce GapAnalysis.md by merging all threads' resolved state, applying same synthesis protocol as parallel mode but with richer evidence from debate exchanges
+  - **Final synthesis**: Produce REVIEW-SYNTHESIS.md by merging all threads' resolved state, applying same synthesis protocol as parallel mode but with richer evidence from debate exchanges
 
 - **Tests**:
   - Lint: `./scripts/lint-prompting.sh skills/paw-final-review/SKILL.md`
@@ -472,7 +477,7 @@ Debates are structured as **threaded conversations**, not flat rounds. Each find
 - [ ] Per-thread continuation described: contested threads get up to 3 additional exchanges between relevant specialists only
 - [ ] Trade-off detection triggers thread exit to user escalation (interactive) or conservative default (auto)
 - [ ] User escalation described: debate pauses to present trade-off with both sides' evidence
-- [ ] GapAnalysis.md debate trace shows thread-level progression and resolution
+- [ ] REVIEW-SYNTHESIS.md debate trace shows thread-level progression and resolution
 - [ ] Thread states defined: open → agreed | contested | trade-off | resolved
 - [ ] Edge cases covered: debate with 1 specialist (skip debate, use parallel), all threads agree in round 1 (terminate early)
 
@@ -490,7 +495,7 @@ Add adaptive specialist selection mode (`adaptive:<N>`) that analyzes the diff t
   - **Adaptive selection** (when `Final Review Specialists: adaptive:<N>`):
     - After discovering all available specialists (Phase 2 discovery algorithm), agent analyzes the diff content
     - Agent selects up to N specialists most relevant to the changes
-    - Selection rationale documented in GapAnalysis.md header ("Selected specialists: X, Y, Z because the diff primarily affects [areas]")
+    - Selection rationale documented in REVIEW-SYNTHESIS.md header ("Selected specialists: X, Y, Z because the diff primarily affects [areas]")
     - No user confirmation required (auto-selects silently per spec)
     - Works with both parallel and debate interaction modes
     - Edge case: If diff is too small/trivial for meaningful selection, report and suggest single-model mode
@@ -507,7 +512,7 @@ Add adaptive specialist selection mode (`adaptive:<N>`) that analyzes the diff t
 
 #### Manual Verification:
 - [ ] Adaptive selection instructions describe diff analysis approach and rationale documentation
-- [ ] Selection rationale is documented in GapAnalysis.md header
+- [ ] Selection rationale is documented in REVIEW-SYNTHESIS.md header
 - [ ] Works with both parallel and debate modes
 - [ ] Edge cases covered: trivial diff (suggest single-model), N ≥ available (use all), adaptive selects 0 (suggest single-model)
 
@@ -527,7 +532,7 @@ Add post-review interactive moderator mode where users can summon specialists, c
     - Sequence: findings resolution → moderator loop → exit to paw-pr
 
   - **Moderator hooks** (3 interaction patterns):
-    1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the security specialist think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and GapAnalysis.md context.
+    1. **Summon specialist**: User references a specialist by name for follow-up (e.g., "What does the security specialist think about the auth flow?"). The specialist's persona file is loaded and the specialist responds in-character using its cognitive strategy, with access to the full diff and REVIEW-SYNTHESIS.md context.
     2. **Challenge finding**: User disagrees with a specific finding and provides reasoning. The originating specialist must respond with independent evidence (not just agree), maintaining anti-sycophancy behavioral rules.
     3. **Request deeper analysis**: User asks for more detailed analysis on a specific code area. The most relevant specialist (or user-specified specialist) provides focused analysis using its cognitive strategy.
 
@@ -621,7 +626,7 @@ Create user-facing documentation explaining society-of-thought review, custom sp
   - Interactive moderator mode usage
   - Tips for effective custom personas (informed by research: narrative backstories, distinct cognitive strategies, anti-sycophancy rules)
 
-- **`docs/reference/artifacts.md`**: Add GapAnalysis.md to the implementation workflow artifacts table
+- **`docs/reference/artifacts.md`**: Add REVIEW-SYNTHESIS.md to the implementation workflow artifacts table
 
 - **`mkdocs.yml`**: Add `society-of-thought-review.md` to the Guide navigation section
 
@@ -638,7 +643,7 @@ Create user-facing documentation explaining society-of-thought review, custom sp
 #### Manual Verification:
 - [ ] User guide explains the feature clearly for someone who hasn't read the spec
 - [ ] Custom specialist creation guide includes persona template scaffold with examples
-- [ ] Artifacts reference updated with GapAnalysis.md
+- [ ] Artifacts reference updated with REVIEW-SYNTHESIS.md
 - [ ] Navigation updated in mkdocs.yml
 
 ---

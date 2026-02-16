@@ -25,13 +25,13 @@ The feature ships as a third Final Review mode (`society-of-thought`) alongside 
 ## User Scenarios & Testing
 
 ### User Story P1 – Parallel Society-of-Thought Review
-Narrative: A developer completes implementation and triggers final review. The system loads specialist personas, runs them in parallel against the diff, synthesizes findings with confidence weighting and grounding validation, and presents a unified GapAnalysis.md with specialist-attributed findings organized by severity.
+Narrative: A developer completes implementation and triggers final review. The system loads specialist personas, runs them in parallel against the diff, synthesizes findings with confidence weighting and grounding validation, and presents a unified REVIEW-SYNTHESIS.md with specialist-attributed findings organized by severity.
 
-Independent Test: Run final review with `society-of-thought` mode on a completed implementation and verify that the GapAnalysis.md contains findings attributed to multiple distinct specialists with confidence levels and severity classifications.
+Independent Test: Run final review with `society-of-thought` mode on a completed implementation and verify that the REVIEW-SYNTHESIS.md contains findings attributed to multiple distinct specialists with confidence levels and severity classifications.
 
 Acceptance Scenarios:
-1. Given a completed implementation with Final Review Mode set to `society-of-thought`, When final review runs, Then each enabled specialist produces findings independently, and a synthesis step merges them into a single GapAnalysis.md with specialist attribution, confidence levels, and severity classifications (must-fix, should-fix, consider).
-2. Given the default built-in roster with no customization, When final review runs in parallel mode, Then all 7 built-in specialists participate and the GapAnalysis.md includes findings from multiple cognitive strategies (threat modeling, quantitative estimation, Socratic questioning, boundary enumeration, narrative walkthrough, pattern recognition, coverage gap analysis).
+1. Given a completed implementation with Final Review Mode set to `society-of-thought`, When final review runs, Then each enabled specialist produces findings independently, and a synthesis step merges them into a single REVIEW-SYNTHESIS.md with specialist attribution, confidence levels, and severity classifications (must-fix, should-fix, consider).
+2. Given the default built-in roster with no customization, When final review runs in parallel mode, Then all 7 built-in specialists participate and the REVIEW-SYNTHESIS.md includes findings from multiple cognitive strategies (threat modeling, quantitative estimation, Socratic questioning, boundary enumeration, narrative walkthrough, pattern recognition, coverage gap analysis).
 3. Given specialist findings that reference code not present in the diff, When synthesis runs, Then those findings are flagged as ungrounded and excluded or demoted in the final output.
 
 ### User Story P2 – Custom Specialist Roster
@@ -50,18 +50,18 @@ Narrative: A developer runs final review on a change that primarily affects data
 Independent Test: Run final review in adaptive mode on a focused change and verify that the selected specialists are relevant to the change content, and the selection rationale is documented in the output.
 
 Acceptance Scenarios:
-1. Given adaptive selection mode with a max of 3 specialists, When final review runs on a diff, Then the agent selects up to 3 specialists and documents the selection rationale in GapAnalysis.md.
+1. Given adaptive selection mode with a max of 3 specialists, When final review runs on a diff, Then the agent selects up to 3 specialists and documents the selection rationale in REVIEW-SYNTHESIS.md.
 2. Given adaptive selection mode, When final review runs, Then the agent auto-selects without prompting the user for confirmation.
 
 ### User Story P4 – Debate Interaction Mode
 Narrative: A developer wants a thorough review of a critical change and enables debate mode. Specialists run sequentially; after each round, the synthesis agent summarizes findings, identifies disagreements, and poses targeted questions to specific specialists. The debate terminates when no new substantive findings emerge or after 3 rounds.
 
-Independent Test: Run final review in debate mode and verify that the GapAnalysis.md contains findings that evolved across rounds, with the synthesis showing how specialist perspectives were reconciled.
+Independent Test: Run final review in debate mode and verify that the REVIEW-SYNTHESIS.md contains findings that evolved across rounds, with the synthesis showing how specialist perspectives were reconciled.
 
 Acceptance Scenarios:
 1. Given debate interaction mode, When specialists run, Then each specialist in round 2+ sees only the synthesis agent's round summary (not raw findings from other specialists — hub-and-spoke mediation).
 2. Given debate mode with round 2 producing no new findings, When the synthesis agent evaluates, Then the debate terminates early (before reaching round 3).
-3. Given debate mode, When all rounds complete, Then GapAnalysis.md includes a section showing how disagreements between specialists were resolved.
+3. Given debate mode, When all rounds complete, Then REVIEW-SYNTHESIS.md includes a section showing how disagreements between specialists were resolved.
 
 ### User Story P5 – Interactive Moderator Mode
 Narrative: After the review panel produces its synthesis, the developer enters an interactive session where they can summon specific specialists for follow-up, challenge findings, or request deeper analysis on areas of concern. Specialists maintain their persona when responding.
@@ -89,7 +89,7 @@ Acceptance Scenarios:
 - Adaptive mode selects zero specialists (diff too small/trivial): Report that the change is too small for society-of-thought review and suggest using single-model mode.
 - Model specified in specialist file is not available: Fall back to session default model with a warning.
 - Debate mode with only 1 specialist: Skip debate, run as parallel mode (debate requires multiple perspectives).
-- Specialist produces no findings (all findings are "no concerns"): Include in synthesis as a positive signal — "Specialist X found no issues in their domain."
+- Specialist produces no findings (all findings are "no concerns"): Include in synthesis as a positive signal — specialist provides a detailed examination rationale explaining what was analyzed and why no issues were found.
 
 ## Requirements
 
@@ -103,10 +103,10 @@ Acceptance Scenarios:
 - FR-006: Support two interaction modes — parallel (all specialists run independently, then synthesize) and debate (sequential rounds with hub-and-spoke mediation via synthesis agent) — configurable via WorkflowContext.md (Stories: P1, P4)
 - FR-007: In parallel mode, launch specialist subagents concurrently using the `task` tool, each with its persona prompt and the shared review context (diff, spec, plan) (Stories: P1)
 - FR-008: In debate mode, run rounds sequentially — specialists within each round run in parallel, but each round's findings are synthesized before the next round begins. Specialists see only the synthesis agent's round summary, not raw findings from other specialists (Stories: P4)
-- FR-009: In debate mode, implement adaptive termination — stop when no new substantive findings emerge, with a hard cap of 3 rounds (Stories: P4)
-- FR-010: Produce a single synthesized `GapAnalysis.md` artifact in `.paw/work/<work-id>/reviews/` with specialist attribution, confidence levels, and severity classifications (Stories: P1)
-- FR-011: Synthesis agent runs neutral (no persona) and performs confidence-weighted aggregation, grounding validation against the actual diff, and evidence-based adjudication examining reasoning traces (Stories: P1)
-- FR-012: All specialist personas include mandatory anti-sycophancy structural rules: must identify at least one substantive concern, must present independent evidence before agreeing with another reviewer (Stories: P1, P4)
+- FR-009: In debate mode, implement adaptive termination — stop when no new substantive findings emerge, with a hard cap of 3 global rounds. Per-thread continuation for contested threads allows up to 2 additional targeted exchanges (total cap: 5 exchanges per thread including global rounds), with an aggregate budget of 30 subagent calls across all continuation threads (Stories: P4)
+- FR-010: Produce a single synthesized `REVIEW-SYNTHESIS.md` artifact in `.paw/work/<work-id>/reviews/` with specialist attribution, confidence levels, and severity classifications (Stories: P1)
+- FR-011: Synthesis agent operates as a "PR triage lead" — a functional role with structural constraints (may only merge, deduplicate, classify conflicts, and flag trade-offs; must NOT generate new findings). Performs confidence-weighted aggregation, grounding validation against the actual diff, and evidence-based adjudication examining reasoning traces (Stories: P1)
+- FR-012: All specialist personas include mandatory anti-sycophancy structural rules: must identify at least one substantive concern OR provide a detailed examination rationale explaining what was analyzed and why no issues were found (silence is not acceptable, but forced fabrication is worse than a thorough "no concerns" explanation); must present independent evidence before agreeing with another reviewer (Stories: P1, P4)
 - FR-013: All specialist personas include a cross-cutting "demand rationale" rule: assess whether the change rationale is clear before evaluating code (Stories: P1)
 - FR-014: Support optional `model:` field in specialist markdown files for per-specialist model assignment; fall back to session default when unspecified (Stories: P6)
 - FR-015: In interactive mode, support moderator-style hooks: summon a specialist by name for follow-up, request deeper analysis on a specific area, challenge a finding (specialist must respond with independent evidence) (Stories: P5)
@@ -119,8 +119,8 @@ Acceptance Scenarios:
 
 - **Specialist**: A persona definition (markdown file or built-in) containing identity, cognitive strategy, behavioral rules, anti-sycophancy rules, and optional model assignment
 - **Specialist Roster**: The resolved set of specialists for a given review, assembled from 4 precedence levels and filtered by selection mode
-- **GapAnalysis.md**: The synthesized output artifact containing specialist-attributed findings with confidence levels and severity classifications
-- **Synthesis Agent**: The neutral (no persona) agent that merges specialist findings using confidence-weighted aggregation and grounding validation
+- **REVIEW-SYNTHESIS.md**: The synthesized output artifact containing specialist-attributed findings with confidence levels and severity classifications (follows the REVIEW-* naming pattern used by all review artifacts)
+- **Synthesis Agent**: The "PR triage lead" — a functional role agent (NOT neutral/persona-less, NOT a domain specialist) that merges specialist findings using confidence-weighted aggregation and grounding validation, with structural constraints preventing it from generating new findings
 
 ### Cross-Cutting / Non-Functional
 
@@ -130,13 +130,13 @@ Acceptance Scenarios:
 
 ## Success Criteria
 
-- SC-001: Running final review with `society-of-thought` mode produces a GapAnalysis.md with findings attributed to at least 2 distinct specialists, each using their defined cognitive strategy (FR-001, FR-002, FR-007, FR-010)
+- SC-001: Running final review with `society-of-thought` mode produces a REVIEW-SYNTHESIS.md with findings attributed to at least 2 distinct specialists, each using their defined cognitive strategy (FR-001, FR-002, FR-007, FR-010)
 - SC-002: A custom specialist file placed at any of the 4 precedence levels is discovered and participates in the review when enabled (FR-003, FR-018)
 - SC-003: In adaptive mode, the agent selects relevant specialists without user prompting and documents its rationale (FR-004, FR-005)
 - SC-004: In debate mode, specialists in round 2+ demonstrate awareness of prior findings (via synthesis summary) without quoting other specialists' raw output (FR-008)
 - SC-005: Debate mode terminates before round 3 when round N produces no new findings (FR-009)
-- SC-006: GapAnalysis.md synthesis excludes or demotes findings that reference code not present in the diff (FR-011)
-- SC-007: Each specialist's output contains at least one substantive concern (anti-sycophancy structural forcing verified) (FR-012)
+- SC-006: REVIEW-SYNTHESIS.md synthesis excludes or demotes findings that reference code not present in the diff (FR-011)
+- SC-007: Each specialist's output contains at least one substantive concern OR a detailed examination rationale explaining what was analyzed and why no issues were found (anti-sycophancy structural forcing verified — silence is not acceptable, but forced fabrication is worse) (FR-012)
 - SC-008: In interactive mode, a user can summon a specialist by name and receive an in-character response with the specialist's cognitive strategy (FR-015, FR-016)
 - SC-009: A specialist with a `model:` field runs on the specified model; without it, runs on the session default (FR-014)
 - SC-010: The `paw-init` skill presents society-of-thought configuration options during workflow initialization (FR-017)
@@ -147,7 +147,7 @@ Acceptance Scenarios:
 - Free-form markdown is sufficient for persona specification without requiring structured YAML frontmatter (validated during work shaping — user preference for flexibility)
 - 7 built-in specialists is the default roster size (5 per DeepMind scaling study sweet spot, plus architecture for codebase pattern fit and testing for coverage gap analysis)
 - Built-in specialist definitions are stored as separate markdown files in `skills/paw-final-review/references/specialists/` following the [Agent Skills specification](https://agentskills.io/specification#optional-directories) `references/` directory pattern — loaded on demand when society-of-thought mode is active
-- The synthesis agent does not need its own persona (user decision during work shaping — neutral analysis avoids introducing bias)
+- The synthesis agent operates as a "PR triage lead" functional role — not persona-less (research shows true neutrality is unachievable) but structurally constrained to only merge, deduplicate, and classify (user decision informed by synthesis research)
 
 ## Scope
 
@@ -158,7 +158,7 @@ In Scope:
 - Fixed and adaptive specialist selection modes
 - Parallel and debate interaction modes
 - Hub-and-spoke debate mediation with adaptive termination
-- Synthesized GapAnalysis.md artifact with confidence weighting and grounding validation
+- Synthesized REVIEW-SYNTHESIS.md artifact with confidence weighting and grounding validation
 - Interactive moderator mode (summon, challenge, deeper analysis)
 - Optional model-per-specialist configuration
 - Anti-sycophancy structural rules in all personas
@@ -169,7 +169,7 @@ In Scope:
 Out of Scope:
 - VS Code native society-of-thought execution (future follow-up — CLI only for v1; graceful fallback to multi-model with notification is in scope as a guard clause)
 - Society-of-thought for other review points (paw-impl-review, paw-planning-docs-review, PAW Review workflow)
-- Per-specialist output files as final deliverables (single GapAnalysis.md for v1; intermediate per-specialist files used during synthesis are implementation artifacts, not user-facing outputs)
+- Per-specialist output files as final deliverables (single REVIEW-SYNTHESIS.md for v1; intermediate per-specialist files used during synthesis are implementation artifacts, not user-facing outputs)
 - Automated persona drift detection or re-injection
 - Combining society-of-thought with multi-model as a single mode (they remain separate modes; model-per-specialist provides partial combination)
 - Specialist effectiveness metrics or scoring

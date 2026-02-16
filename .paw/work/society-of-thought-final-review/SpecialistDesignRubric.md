@@ -81,7 +81,7 @@ Every specialist file must contain these sections. Order doesn't matter, but com
 ```
 ## Anti-Sycophancy Rules
 
-You MUST identify at least one substantive concern in your review. If you genuinely find no issues, explain in detail what you examined and why it passed your analysis — do not simply state "looks good."
+You MUST identify at least one substantive concern in your review. If you genuinely find no issues, provide a detailed examination rationale — explain what specific aspects you analyzed using your cognitive strategy, what you looked for, and why nothing triggered a concern. A thorough "no issues found" explanation is acceptable; silence or a bare "looks good" is not.
 
 You MUST present independent evidence before agreeing with another reviewer's finding. Referencing their argument is not sufficient — provide your own analysis from your cognitive strategy.
 
@@ -142,6 +142,7 @@ For each finding, use this structure:
 
 **Severity**: must-fix | should-fix | consider
 **Confidence**: HIGH | MEDIUM | LOW
+**Category**: [specialist name]
 
 #### Grounds (Evidence)
 [Diff-anchored evidence: file, line numbers, quoted code snippets that support this claim]

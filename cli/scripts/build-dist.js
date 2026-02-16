@@ -117,7 +117,7 @@ function buildAgents() {
  * Recursively copy a directory, skipping hidden files.
  * Returns the number of files copied.
  */
-function copyReferencesDir(srcDir, destDir) {
+function copyDir(srcDir, destDir) {
   let count = 0;
   const entries = readdirSync(srcDir, { withFileTypes: true });
   for (const entry of entries) {
@@ -126,7 +126,7 @@ function copyReferencesDir(srcDir, destDir) {
     const destPath = join(destDir, entry.name);
     if (entry.isDirectory()) {
       mkdirSync(destPath, { recursive: true });
-      count += copyReferencesDir(srcPath, destPath);
+      count += copyDir(srcPath, destPath);
     } else {
       mkdirSync(destDir, { recursive: true });
       writeFileSync(destPath, readFileSync(srcPath));
@@ -167,7 +167,7 @@ function buildSkills() {
     const refsSrc = join(SKILLS_SRC, skillName, 'references');
     if (existsSync(refsSrc)) {
       const refsDest = join(destDir, 'references');
-      const refCount = copyReferencesDir(refsSrc, refsDest);
+      const refCount = copyDir(refsSrc, refsDest);
       console.log(`  ${skillName}/references/ (${refCount} files)`);
     }
   }

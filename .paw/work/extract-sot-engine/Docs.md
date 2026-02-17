@@ -55,7 +55,7 @@ The review context is the input interface between adapters and the engine:
 - **paw-final-review** loads paw-sot for society-of-thought mode, mapping WorkflowContext.md fields to review context
 - **paw-init** writes the WorkflowContext.md configuration fields (unchanged)
 - **paw-workflow** lists paw-sot as a utility skill
-- **Specialist discovery** searches four locations: `.paw/work/` (workflow), `.paw/personas/` (project), `~/.paw/personas/` (user), `references/specialists/` (built-in)
+- **Specialist discovery** uses 4-level precedence: review context `specialists` field (workflow), `.paw/personas/` (project), `~/.paw/personas/` (user), `references/specialists/` (built-in)
 
 ## User Guide
 

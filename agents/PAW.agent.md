@@ -62,7 +62,7 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 **IMPORTANT**: Review Policy controls HUMAN review pauses only. It does NOT affect automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review). Those are mandatory per the Mandatory Transitions table regardless of Review Policy setting.
 
 - `every-stage`: Pause after every artifact for user confirmation
-- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
+- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
 - `planning-only`: Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion, and Final PR only; auto-proceed at phase completions (local strategy required)
 - `final-pr-only`: Only pause at final PR — auto-proceed through all intermediate stages
 

@@ -121,7 +121,7 @@ When `paw-transition` returns `promotion_pending = true` with a `candidates` lis
    - **Promote**: Update candidate to `- [x] [promoted] <desc>` in ImplementationPlan.md. Run `paw-code-research` + `paw-planning` to elaborate into a full phase, then follow standard mandatory transitions (plan-review → implement → impl-review). If research reveals infeasibility, update to `- [x] [not feasible] <desc>` and continue with remaining candidates. User may request a lightweight promote (skip plan-review) for trivial changes.
    - **Skip**: Update candidate to `- [x] [skipped] <desc>` in ImplementationPlan.md
    - **Defer**: Update candidate to `- [x] [deferred] <desc>` in ImplementationPlan.md
-3. After all candidates resolved: proceed to `paw-pr`
+3. After all candidates resolved: proceed to `paw-final-review` (if enabled) or `paw-pr` (if disabled)
 
 ## Before Yielding Control
 

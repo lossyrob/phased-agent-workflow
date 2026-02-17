@@ -53,14 +53,14 @@ Use the Mandatory Transitions table:
 
 ### Step 2.5: Candidate Promotion Check
 
-When next activity would be `paw-pr` (all planned phases complete), check for phase candidates:
+When all planned phases are complete (next activity would be `paw-final-review` or `paw-pr`), check for phase candidates:
 
 1. Read ImplementationPlan.md `## Phase Candidates` section
 2. Count **unresolved** candidates: `- [ ]` items WITHOUT terminal tags (`[skipped]`, `[deferred]`, `[not feasible]`)
 3. If unresolved candidates exist: set `promotion_pending = true` and extract candidate descriptions
 4. Otherwise: set `promotion_pending = false`
 
-If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction.
+If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction. Promoted candidates go through the standard flow (implement → impl-review) before final review runs, ensuring final review covers the complete implementation.
 
 ### Step 3: Check Stage Boundary and Milestone Pause
 
@@ -157,7 +157,7 @@ TRANSITION RESULT:
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
-- promotion_pending: [true | false] (only when next would be paw-pr)
+- promotion_pending: [true | false] (only when all planned phases complete)
 - candidates: [list of unresolved candidate descriptions] (only if promotion_pending)
 ```
 

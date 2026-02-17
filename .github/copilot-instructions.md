@@ -82,9 +82,9 @@ This project has two skill locations with different capabilities:
 | Location | Loaded Via | Bundled Resources |
 |----------|------------|-------------------|
 | `.github/skills/` | VS Code skills system | ✅ Supported (`scripts/`, `references/`, `assets/`) |
-| `skills/` | `paw_get_skill` tool | ❌ **Not supported** - SKILL.md only |
+| `skills/` | `paw_get_skill` tool | ⚠️ SKILL.md via tool; `references/` via filesystem |
 
-**When creating skills in `skills/`**: Only create the SKILL.md file. The `paw_get_skill` tool returns SKILL.md content as text—it cannot access bundled resources. Do not create `scripts/`, `references/`, or `assets/` subdirectories.
+**When creating skills in `skills/`**: The `paw_get_skill` tool returns only SKILL.md content as text. Skills may include a `references/` subdirectory for supplementary content that subagents load via filesystem tools (`view`, `glob`, `grep`) — these files are NOT accessible through `paw_get_skill`. Do not create `scripts/` or `assets/` subdirectories.
 
 **When creating skills in `.github/skills/`**: Full Agent Skills spec is supported, including bundled resources that Claude can read or execute.
 

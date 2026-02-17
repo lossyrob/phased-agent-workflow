@@ -6,6 +6,7 @@ import { uninstallCommand } from '../lib/commands/uninstall.js';
 import { upgradeCommand } from '../lib/commands/upgrade.js';
 import { VERSION } from '../lib/version.js';
 import { bold, dim, cyan, green, printLogo } from '../lib/color.js';
+import { SUPPORTED_TARGETS } from '../lib/paths.js';
 
 function helpText() {
   return `
@@ -15,7 +16,7 @@ function helpText() {
     ${green('install')} <target>   Install PAW agents and skills
     ${green('upgrade')}            Check for updates and upgrade
     ${green('list')}               Show installed version and components
-    ${green('uninstall')}          Remove PAW agents and skills
+    ${green('uninstall')} [target]  Remove PAW agents and skills
 
   ${bold('Options:')}
     ${dim('--help, -h')}         Show this help message
@@ -25,8 +26,11 @@ function helpText() {
 
   ${bold('Examples:')}
     ${dim('$')} paw install copilot
+    ${dim('$')} paw install claude
     ${dim('$')} paw list
     ${dim('$')} paw upgrade
+    ${dim('$')} paw uninstall
+    ${dim('$')} paw uninstall claude
 `;
 }
 
@@ -57,7 +61,7 @@ async function main() {
       case 'install': {
         const target = args.find(a => !a.startsWith('-') && a !== 'install');
         if (!target) {
-          console.error('Error: install requires a target (e.g., "copilot")');
+          console.error(`Error: install requires a target. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
           process.exit(1);
         }
         await installCommand(target, flags);
@@ -69,9 +73,11 @@ async function main() {
       case 'list':
         await listCommand();
         break;
-      case 'uninstall':
-        await uninstallCommand(flags);
+      case 'uninstall': {
+        const uninstallTarget = args.find((a, i) => i > 0 && !a.startsWith('-'));
+        await uninstallCommand(flags, uninstallTarget || null);
         break;
+      }
       default:
         console.error(`Unknown command: ${command}`);
         console.log(helpText());

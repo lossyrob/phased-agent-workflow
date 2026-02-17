@@ -34,9 +34,12 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |
 | `work_description` | No | none | text |
 | `final_agent_review` | No | `enabled` | `enabled`, `disabled` |
-| `final_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
+| `final_review_mode` | No | `multi-model` | `single-model`, `multi-model`, `society-of-thought` |
 | `final_review_interactive` | No | `smart` | `true`, `false`, `smart` |
 | `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
+| `final_review_specialists` | No | `all` | `all`, comma-separated names, or `adaptive:<N>` (e.g., `adaptive:3`) |
+| `final_review_interaction_mode` | No | `parallel` | `parallel`, `debate` |
+| `final_review_specialist_models` | No | `none` | `none`, model pool, pinned pairs, or mixed (see below) |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
 | `planning_review_interactive` | No | `smart` | `true`, `false`, `smart` |
@@ -69,6 +72,7 @@ This mirrors the VS Code command flow which prompts sequentially but allows skip
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
 - If `review_policy` is `planning-only` or `final-pr-only`, `review_strategy` MUST be `local`
+- If `final_review_mode` is `society-of-thought`, `final_agent_review` MUST be `enabled`
 - Invalid combinations: STOP and report error
 
 ### Model Resolution (multi-model only)
@@ -79,6 +83,20 @@ When `final_review_mode` is `multi-model`:
 - Store the **resolved concrete model names** in WorkflowContext.md (not the intent strings)
 
 This ensures model selection is a one-time upfront decision during init, not a per-review-gate interruption.
+
+### Society-of-Thought Configuration (society-of-thought only)
+When `final_review_mode` is `society-of-thought`:
+- `final_review_specialists` and `final_review_interaction_mode` become relevant
+- Validate specialist values: `all`, comma-separated specialist names, or `adaptive:<N>` where N is a positive integer
+- Validate interaction mode: `parallel` or `debate`
+- `final_review_specialist_models` becomes relevant — validate format:
+  - `none` (default): all specialists use session default model
+  - **Pool**: comma-separated model names (e.g., `gpt-5.3-codex, claude-opus-4.6`) — distributed round-robin across specialists
+  - **Pinning**: `specialist:model` pairs (e.g., `security:claude-opus-4.6, architecture:gpt-5.3-codex`) — explicit assignment
+  - **Mixed**: combination of pinned pairs and pool models (e.g., `security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview`) — pinned specialists get their model, unpinned draw from pool round-robin
+  - Resolve model intents (e.g., `latest GPT`) using existing model intent resolution
+- `final_review_models` is ignored (use `final_review_specialist_models` for model diversity with society-of-thought)
+- Present society-of-thought config as part of the configuration summary
 
 ### Directory Structure
 ```
@@ -104,6 +122,9 @@ Final Agent Review: <final_agent_review>
 Final Review Mode: <final_review_mode>
 Final Review Interactive: <final_review_interactive>
 Final Review Models: <final_review_models>
+Final Review Specialists: <final_review_specialists>
+Final Review Interaction Mode: <final_review_interaction_mode>
+Final Review Specialist Models: <final_review_specialist_models>
 Planning Docs Review: <planning_docs_review>
 Planning Review Mode: <planning_review_mode>
 Planning Review Interactive: <planning_review_interactive>

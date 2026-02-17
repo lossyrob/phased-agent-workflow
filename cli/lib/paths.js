@@ -17,16 +17,52 @@ export function getCopilotSkillsDir() {
   return join(getCopilotDir(), 'skills');
 }
 
+export function getClaudeDir() {
+  return join(getHomeDir(), '.claude');
+}
+
+export function getClaudeAgentsDir() {
+  return join(getClaudeDir(), 'agents');
+}
+
+export function getClaudeSkillsDir() {
+  return join(getClaudeDir(), 'skills');
+}
+
+export const SUPPORTED_TARGETS = ['copilot', 'claude'];
+
+/**
+ * Returns agents and skills directories for the given target.
+ */
+export function getTargetDirs(target) {
+  if (target === 'claude') {
+    return {
+      agentsDir: getClaudeAgentsDir(),
+      skillsDir: getClaudeSkillsDir(),
+    };
+  }
+  if (target === 'copilot') {
+    return {
+      agentsDir: getCopilotAgentsDir(),
+      skillsDir: getCopilotSkillsDir(),
+    };
+  }
+  throw new Error(`Unknown target: ${target}. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
+}
+
 export function getPawDir() {
   return join(getHomeDir(), '.paw');
 }
 
-export function getManifestDir() {
-  return join(getPawDir(), 'copilot-cli');
+export function getManifestDir(target = 'copilot') {
+  if (!SUPPORTED_TARGETS.includes(target)) {
+    throw new Error(`Unknown target: ${target}. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
+  }
+  return join(getPawDir(), `${target}-cli`);
 }
 
-export function getManifestPath() {
-  return join(getManifestDir(), 'manifest.json');
+export function getManifestPath(target = 'copilot') {
+  return join(getManifestDir(target), 'manifest.json');
 }
 
 export function getDistDir() {

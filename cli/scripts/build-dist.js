@@ -9,7 +9,7 @@
  * - Injects version metadata into skills and agents
  */
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, existsSync, cpSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -139,6 +139,14 @@ function buildSkills() {
     writeFileSync(join(destDir, 'SKILL.md'), content);
     count++;
     console.log(`  ${skillName}/SKILL.md`);
+
+    // Copy references/ directory if it exists
+    const refsSrc = join(SKILLS_SRC, skillName, 'references');
+    if (existsSync(refsSrc)) {
+      const refsDest = join(destDir, 'references');
+      cpSync(refsSrc, refsDest, { recursive: true, filter: (src) => !src.split('/').pop().startsWith('.') });
+      console.log(`  ${skillName}/references/`);
+    }
   }
   
   return count;

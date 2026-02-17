@@ -2,6 +2,7 @@ import { spawn, execSync } from 'child_process';
 import { readManifest } from '../manifest.js';
 import { getLatestVersion } from '../registry.js';
 import { installCommand } from './install.js';
+import { SUPPORTED_TARGETS } from '../paths.js';
 
 function isGlobalInstall() {
   try {
@@ -35,18 +36,32 @@ function runCommand(command, args) {
 }
 
 export async function upgradeCommand(_flags = {}) {
-  const manifest = readManifest();
+  // Check all targets for installations
+  const targets = [];
+  for (const target of SUPPORTED_TARGETS) {
+    const manifest = readManifest(target);
+    if (manifest) {
+      targets.push(target);
+    }
+  }
   
-  if (!manifest) {
-    console.log('PAW is not installed. Run "paw install copilot" first.');
+  if (targets.length === 0) {
+    console.log(`PAW is not installed. Run "paw install <target>" first. Supported: ${SUPPORTED_TARGETS.join(', ')}`);
     return;
   }
   
-  const currentVersion = manifest.version;
-  const target = manifest.target;
-  
-  console.log(`Installed version: ${currentVersion}`);
-  console.log(`Target: ${target}`);
+  const versions = targets.map(t => ({ target: t, version: readManifest(t).version }));
+  const unique = [...new Set(versions.map(v => v.version))];
+  if (unique.length > 1) {
+    console.log('Installed versions:');
+    for (const v of versions) {
+      console.log(`  ${v.target}: ${v.version}`);
+    }
+  } else {
+    console.log(`Installed version: ${unique[0]}`);
+  }
+  console.log(`Targets: ${targets.join(', ')}`);
+  const currentVersion = unique[0];
   console.log('Checking npm registry for updates...\n');
   
   let latestVersion;
@@ -100,14 +115,18 @@ export async function upgradeCommand(_flags = {}) {
     console.log('Updating @paw-workflow/cli globally...\n');
     await runCommand('npm', ['install', '-g', `@paw-workflow/cli@${latestVersion}`]);
     console.log('');
-    await runCommand('paw', ['install', target, '--force']);
+    for (const target of targets) {
+      await runCommand('paw', ['install', target, '--force']);
+    }
   } else {
     // npx: the running process IS the latest version already
-    await installCommand(target, { force: true });
+    for (const target of targets) {
+      await installCommand(target, { force: true });
+    }
   }
   
   console.log('\n' + '─'.repeat(50));
   console.log('✓ Upgrade complete!');
   console.log(`  CLI version: ${latestVersion}`);
-  console.log(`  Agents and skills installed to: ${target}`);
+  console.log(`  Agents and skills installed to: ${targets.join(', ')}`);
 }

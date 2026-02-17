@@ -82,6 +82,8 @@ Switches a workflow's artifact lifecycle to `never-commit`, removing artifacts f
 
 **Cleanup recipe:** To remove old `.paw/work/` directories from `main` after merging `commit-and-persist` workflows:
 
+> ⚠️ This permanently deletes `.paw/work/` files from both git history and your local filesystem.
+
 ```bash
 git rm -r .paw/work/ && git commit -m "Remove PAW workflow artifacts"
 ```

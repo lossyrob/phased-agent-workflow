@@ -118,7 +118,7 @@ export async function stopTrackingArtifactsCommand(
 
     if (alreadyExcluded) {
       const proceed = await vscode.window.showWarningMessage(
-        `Artifacts for "${selection.slug}" are already excluded from git tracking (lifecycle: never-commit).`,
+        `Artifacts for "${selection.slug}" are already excluded from git tracking.`,
         'OK'
       );
       if (!proceed) {

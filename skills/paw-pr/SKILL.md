@@ -70,7 +70,7 @@ Before creating the PR, verify and report status. Block on failures unless user 
 
 ## Artifact Lifecycle Handling
 
-Detect lifecycle mode using the same hierarchy as `paw-transition`: WorkflowContext.md `Artifact Lifecycle:` field → `.gitignore` with `*` fallback → default `commit-and-clean`. Map legacy values (`artifact_tracking: enabled`/`track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`).
+Detect lifecycle mode using the same hierarchy as `paw-transition`: WorkflowContext.md `Artifact Lifecycle:` field → legacy field mapping (`artifact_tracking: enabled`/`track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`) → `.gitignore` with `*` fallback → default `commit-and-clean`.
 
 ### Stop-Tracking Operation (`commit-and-clean` only)
 

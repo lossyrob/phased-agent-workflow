@@ -77,10 +77,13 @@ mcp_github_pull_request_review_write(
   owner: "<owner>",
   repo: "<repo>",
   pullNumber: <number>,
-  method: "create"
+  method: "create",
+  body: "<review-summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)"
   // Note: event omitted to create pending (draft) review
 )
 ```
+
+The review body should include a brief summary of the review (number of comments, key themes) followed by the PAW Review attribution footer.
 
 Record the pending review ID.
 
@@ -105,6 +108,7 @@ mcp_github_add_comment_to_pending_review(
 - Include code suggestion in markdown code block
 - Do NOT include rationale, assessment, or internal markers
 - Do NOT include `**Final**:` or other PAW-specific formatting
+- Do NOT include attribution footer on inline comments (attribution is on the review body only)
 
 **Example Posted Comment:**
 ```markdown
@@ -166,11 +170,11 @@ Multi-PR mode applies when:
 **GitHub Tool Calls for Multiple PRs:**
 ```
 # PR 1: repo-a
-mcp_github_pull_request_review_write(owner, "repo-a", 123, method="create")
+mcp_github_pull_request_review_write(owner, "repo-a", 123, method="create", body="<summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)")
 mcp_github_add_comment_to_pending_review(...)  # postable comments for PR-123
 
 # PR 2: repo-b  
-mcp_github_pull_request_review_write(owner, "repo-b", 456, method="create")
+mcp_github_pull_request_review_write(owner, "repo-b", 456, method="create", body="<summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)")
 mcp_github_add_comment_to_pending_review(...)  # postable comments for PR-456
 ```
 

@@ -42,16 +42,9 @@ If mode is `society-of-thought`, also read:
 
 ### Step 2: Gather Review Context
 
-**Required context**:
-- Full diff of implementation changes (target branch vs base branch)
-- Spec.md requirements and success criteria
-- ImplementationPlan.md phases and scope
-- CodeResearch.md patterns and conventions
-
-**Generate diff**:
-```bash
-git diff <base-branch>...<target-branch>
-```
+**Required context** (review subagents gather this themselves via tools):
+- Implementation diff: `git diff <base-branch>...<target-branch>`
+- Spec.md, ImplementationPlan.md, CodeResearch.md in `.paw/work/<work-id>/`
 
 ### Step 3: Create Reviews Directory
 
@@ -60,19 +53,18 @@ Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already
 
 ### Review Prompt (shared)
 
-Use this prompt for all review executions (single-model or each multi-model subagent):
+Provide this to all review subagents (single-model or each multi-model subagent). Subagents have full tool access — they gather context themselves rather than receiving it inline.
 
 ```
 Review this implementation against the specification. Be critical and thorough.
 
-## Specification
-[Include Spec.md content]
+## Context Locations
+- **Diff**: Run `git diff <base-branch>...<target-branch>` to see all changes
+- **Specification**: Read `.paw/work/<work-id>/Spec.md`
+- **Implementation Plan**: Read `.paw/work/<work-id>/ImplementationPlan.md`
+- **Codebase Patterns**: Read `.paw/work/<work-id>/CodeResearch.md`
 
-## Implementation Diff
-[Include full diff]
-
-## Codebase Patterns
-[Include relevant patterns from CodeResearch.md]
+Start by gathering the diff and reading the spec, then review against these criteria:
 
 ## Review Criteria
 1. **Correctness**: Do changes implement all spec requirements? Any gaps?
@@ -183,7 +175,7 @@ Compose the review prompt for each specialist subagent from three layers:
 
 1. **Shared rules** — load `references/specialists/_shared-rules.md` once per review run (anti-sycophancy rules, confidence scoring, Toulmin output format)
 2. **Specialist content** — load the discovered specialist `.md` file (identity, cognitive strategy, behavioral rules, demand rationale, examples)
-3. **Review context** — the diff, Spec.md, ImplementationPlan.md, and CodeResearch.md patterns
+3. **Review coordinates** — base branch, target branch, work ID, and artifact paths so the subagent can self-gather context via `git diff`, `view`, and `grep`
 
 If a specialist file already contains the shared sections (custom specialist from project/user level), skip shared rules injection to avoid duplication. Detect by checking whether the file contains an `## Anti-Sycophancy Rules` heading.
 
@@ -196,7 +188,7 @@ Execution depends on `Final Review Interaction Mode`:
 ##### Parallel Mode (default)
 
 Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist:
-- Compose prompt: shared rules + specialist content + review context
+- Compose prompt: shared rules + specialist content + review coordinates
 - Resolve model using precedence chain (see Model Assignment below)
 - Instruct the subagent to write its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
 - The orchestrator receives only a brief completion status (success/failure, finding count) — NOT the full findings content
@@ -209,8 +201,6 @@ Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`.
 4. **Session default**: If none of the above apply, use the session's default model
 
 Log the specialist→model assignment map at review start so users can verify the distribution.
-
-**Large diff handling**: If the diff exceeds a size that would crowd out persona and review context (~100KB), chunk by file or logical grouping. Note the chunking in each specialist prompt. All specialists receive the same chunk set for consistency.
 
 After all specialists complete, proceed to synthesis.
 
@@ -226,7 +216,7 @@ Thread-based multi-round debate where findings become discussion threads with po
 - For each thread: current state (`open`, `agreed`, `contested`), summary of positions, open questions
 - This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
 
-Re-run specialists with: shared rules + specialist content + review context + round summary. Specialists can:
+Re-run specialists with: shared rules + specialist content + review coordinates + round summary (embedded — this is the only new information per round). Specialists can:
 - Refine their position on existing threads (cite thread ID)
 - Respond to summarized counterarguments
 - Add new threads (new findings become new `open` threads)

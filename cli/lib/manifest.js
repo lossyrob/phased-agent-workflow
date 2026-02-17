@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, unlinkSync } from 'fs';
 import { getManifestPath, getManifestDir } from './paths.js';
 
-export function readManifest() {
-  const manifestPath = getManifestPath();
+export function readManifest(target = 'copilot') {
+  const manifestPath = getManifestPath(target);
   if (!existsSync(manifestPath)) {
     return null;
   }
@@ -15,8 +15,9 @@ export function readManifest() {
 }
 
 export function writeManifest(manifest) {
-  const manifestDir = getManifestDir();
-  const manifestPath = getManifestPath();
+  const target = manifest.target || 'copilot';
+  const manifestDir = getManifestDir(target);
+  const manifestPath = getManifestPath(target);
   
   if (!existsSync(manifestDir)) {
     mkdirSync(manifestDir, { recursive: true });
@@ -34,8 +35,8 @@ export function createManifest(version, target, files) {
   };
 }
 
-export function deleteManifest() {
-  const manifestPath = getManifestPath();
+export function deleteManifest(target = 'copilot') {
+  const manifestPath = getManifestPath(target);
   if (existsSync(manifestPath)) {
     unlinkSync(manifestPath);
   }

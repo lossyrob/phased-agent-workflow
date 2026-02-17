@@ -18,6 +18,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       WorkShaping.md            # Pre-spec ideation (optional)
       reviews/                  # Review artifacts (gitignored)
         planning/               # Planning Documents Review artifacts
+        REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
   
   reviews/                      # Review workflow
     PR-<number>/                # Single-repo: PR-123
@@ -56,9 +57,11 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Additional Inputs | Extra parameters |
 | Artifact Lifecycle | `commit-and-clean`, `commit-and-persist`, or `never-commit` |
 | Final Agent Review | `enabled` or `disabled` |
-| Final Review Mode | `single-model` or `multi-model` |
+| Final Review Mode | `single-model`, `multi-model`, or `society-of-thought` |
 | Final Review Interactive | `true`, `false`, or `smart` |
 | Final Review Models | Comma-separated model names |
+| Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` (society-of-thought only) |
+| Final Review Interaction Mode | `parallel` or `debate` (society-of-thought only) |
 | Planning Docs Review | `enabled` or `disabled` |
 | Planning Review Mode | `single-model` or `multi-model` |
 | Planning Review Interactive | `true`, `false`, or `smart` |
@@ -177,6 +180,22 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 - Integration points and dependencies
 
 **Note:** Focuses on concepts and user-facing behavior, not code reproduction.
+
+### REVIEW-SYNTHESIS.md
+
+**Purpose:** Synthesized review findings from society-of-thought or multi-model final review.
+
+**Created by:** `paw-final-review` skill (synthesis step)
+
+**Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (gitignored with other review artifacts)
+
+**Contents:**
+
+- **Review metadata** — Mode, participating specialists/models, selection rationale
+- **Prioritized findings** — Must-fix, should-fix, consider classifications with specialist attribution
+- **Confidence levels** — HIGH, MEDIUM, LOW per finding with supporting evidence
+- **Disagreement resolution** — How conflicting specialist perspectives were reconciled (society-of-thought)
+- **Grounding status** — Flags for findings referencing code not in the diff
 
 ---
 

@@ -103,7 +103,7 @@ Tests should serve as documentation. A reader examining this test to understand 
 Consider restructuring as: `test_synthesis_classifies_agreed_findings_by_highest_severity`, `test_synthesis_escalates_unresolved_disagreements_as_tradeoffs`, `test_synthesis_preserves_specialist_attribution_in_trace`. These names document the *rules* the synthesis follows, making the test suite a specification of synthesis behavior.
 
 #### Rebuttal Conditions
-This is NOT a concern if: (1) there are additional behavior-focused tests elsewhere that this structural test supplements (it's acceptable to have both structural and behavioral tests); or (2) the synthesis output format is documented in a separate spec file that this test cross-references. Check for a SynthesisProtocol.md or similar.
+This is NOT a concern if: (1) there are additional behavior-focused tests elsewhere that this structural test supplements (it's acceptable to have both structural and behavioral tests); or (2) the synthesis output format is documented in a separate spec file that this test cross-references.
 
 #### Suggested Verification
 Review the test file for behavior-documenting tests. If none exist, add tests that describe the synthesis rules in their names and assertions. Each assertion should answer "what business rule does this enforce?" not just "what data shape does this produce?"

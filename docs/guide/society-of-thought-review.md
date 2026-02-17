@@ -63,6 +63,9 @@ Debate mode uses **hub-and-spoke mediation**: specialists see only the synthesis
 !!! tip "When to Use Debate"
     Debate mode costs more tokens but produces more thorough reviews. Use it for critical changes, security-sensitive code, or architectural decisions where you want specialists to challenge each other's findings.
 
+!!! warning "Token Cost Estimates"
+    Debate mode token usage scales with specialist count and rounds. With 8 specialists and up to 3 rounds plus per-thread continuation (30-call budget), a full debate can consume 50+ subagent calls. For large diffs, consider using `adaptive:<N>` with a smaller N to control cost, or use parallel mode for routine reviews.
+
 ## Specialist Selection Modes
 
 ### All (Default)
@@ -99,11 +102,18 @@ You can create custom specialists at three levels, with most-specific-wins prece
 
 A project-level specialist with the same filename as a built-in specialist overrides the built-in version.
 
+!!! warning "Trust Model"
+    Custom specialist files are loaded as agent instructions with full tool access. Only use persona files from trusted sources. Project-level specialists (`.paw/personas/`) are committed to the repository and should be reviewed like any other code contribution.
+
 ### Creating a Custom Specialist
 
 A specialist file is a markdown document that defines a persona. The filename (without `.md`) becomes the specialist's name. Here's a scaffold:
 
 ```markdown
+---
+shared_rules_included: false
+---
+
 # Compliance Specialist
 
 ## Identity & Narrative Backstory
@@ -169,6 +179,7 @@ shared rules (Finding → Grounds → Warrant → Rebuttal Conditions
 - **Distinct cognitive strategies matter more than distinct topics.** A "database specialist" that reviews code the same way as a general reviewer adds little. A specialist that estimates query plans and calculates I/O costs adds real value.
 - **Narrative backstories improve consistency.** Research shows that detailed persona narratives help models maintain character better than bullet-point role descriptions.
 - **Anti-sycophancy is structural, not stylistic.** The shared rules enforce that every specialist must produce substantive analysis. Don't override these in custom specialists.
+- **Use `shared_rules_included` frontmatter.** Set to `true` only if your custom specialist includes its own anti-sycophancy rules, confidence scoring, and Toulmin output format. When `false` (default), shared rules are automatically injected.
 - **Include example findings.** 2-3 examples in the Toulmin format (Grounds → Warrant → Rebuttal → Verification) anchor the specialist's behavior more effectively than additional instructions.
 
 ## The Synthesis Agent

@@ -13,6 +13,7 @@ Final Review Mode: society-of-thought
 Final Review Interactive: true
 Final Review Specialists: all
 Final Review Interaction Mode: debate
+Final Review Specialist Models: security:claude-opus-4.6, architecture:claude-opus-4.6, correctness:claude-opus-4.6, performance:gpt-5.3-codex, edge-cases:gpt-5.3-codex, testing:gpt-5.3-codex, assumptions:gemini-3-pro-preview, maintainability:gemini-3-pro-preview
 Planning Docs Review: enabled
 Planning Review Mode: multi-model
 Planning Review Interactive: smart

@@ -64,4 +64,16 @@ describe('build-dist script', () => {
     assert.ok(agents.includes('PAW-Review.agent.md'), 'PAW Review should be PAW-Review');
     assert.ok(!agents.includes('PAW Review.agent.md'), 'should not have space in filename');
   });
+
+  test('copies references/ directories for skills that have them', () => {
+    const refsDir = join(DIST_DIR, 'skills', 'paw-final-review', 'references', 'specialists');
+    assert.ok(existsSync(refsDir), 'dist should include paw-final-review/references/specialists/');
+    
+    const specialists = readdirSync(refsDir);
+    assert.ok(specialists.includes('_shared-rules.md'), 'should include _shared-rules.md');
+    assert.ok(specialists.includes('security.md'), 'should include security.md');
+    assert.ok(specialists.includes('architecture.md'), 'should include architecture.md');
+    assert.ok(specialists.includes('correctness.md'), 'should include correctness.md');
+    assert.ok(specialists.length >= 9, `should have at least 9 specialist files (8 + shared rules), found ${specialists.length}`);
+  });
 });

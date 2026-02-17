@@ -101,13 +101,13 @@ No action needed. If future changes move this to a hot path, add a benchmark tes
 In `src/synthesis.ts:34-41`, the synthesis step concatenates all specialist outputs into a single string: `const combined = specialistOutputs.map(o => o.content).join('\n---\n')`. Each specialist output is uncapped — a thorough specialist reviewing a large diff could produce 3,000-5,000 tokens. With 7 specialists, that's 21,000-35,000 tokens of specialist output alone. The synthesis prompt at line 48 prepends a 2,000-token system prompt and the original diff (variable size). For a large diff (10,000 tokens) with verbose specialists, the total input to the synthesis agent could reach 45,000+ tokens.
 
 #### Warrant (Rule)
-LLM context windows have hard limits. Even with 128K-token models, the *effective* reasoning quality degrades with input length (the "Lost in the Middle" effect — Liu et al., TACL 2024, showed >30% degradation for middle-context information). At 45K tokens of specialist output, the synthesis agent will likely lose information from the middle specialists — exactly the position-bias problem the SynthesisProtocol.md warns about. The immediate risk isn't hitting the token limit; it's degraded synthesis quality for the middle specialists' findings.
+LLM context windows have hard limits. Even with 128K-token models, the *effective* reasoning quality degrades with input length (the "Lost in the Middle" effect — Liu et al., TACL 2024, showed >30% degradation for middle-context information). At 45K tokens of specialist output, the synthesis agent will likely lose information from the middle specialists — exactly the position-bias problem that randomized input ordering is designed to mitigate. The immediate risk isn't hitting the token limit; it's degraded synthesis quality for the middle specialists' findings.
 
 #### Rebuttal Conditions
-This is NOT a concern if: (1) specialist outputs are already bounded by a token limit (check the specialist invocation code for a `max_tokens` parameter), or (2) the synthesis step processes specialists in topic-clustered batches rather than as a single concatenation (which the SynthesisProtocol.md recommends but may not be implemented yet).
+This is NOT a concern if: (1) specialist outputs are already bounded by a token limit (check the specialist invocation code for a `max_tokens` parameter), or (2) the synthesis step processes specialists in topic-clustered batches rather than as a single concatenation.
 
 #### Suggested Verification
-Add instrumentation to log total token count of `combined` per synthesis run. Set an alert threshold at 30K tokens. If exceeded, implement the topic-clustering approach from SynthesisProtocol.md rather than single-pass concatenation.
+Add instrumentation to log total token count of `combined` per synthesis run. Set an alert threshold at 30K tokens. If exceeded, implement a topic-clustering approach rather than single-pass concatenation.
 
 ---
 

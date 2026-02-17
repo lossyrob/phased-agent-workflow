@@ -165,7 +165,9 @@ When `Final Review Specialists` is `adaptive:<N>`, select the N most relevant sp
 **Edge cases**:
 - If N ≥ number of available specialists, include all (equivalent to `all`)
 - If the diff is trivial (e.g., single typo fix, comment-only changes), report to user and suggest falling back to `single-model` mode
-- If adaptive selection would select 0 specialists (no strong relevance signal), include all specialists with a note that no strong signal was found
+- If adaptive selection would select 0 specialists (no strong relevance signal):
+  - **Interactive mode** (`Final Review Interactive: true`): Present the user with options — fall back to single-model, fall back to multi-model, or specify which specialists to include (including `all`)
+  - **Non-interactive mode** (`Final Review Interactive: false` or `smart`): Fall back to multi-model mode using default models, preserving multi-perspective coverage without the full SoT workflow cost
 
 **Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
 
@@ -177,7 +179,7 @@ Compose the review prompt for each specialist subagent from three layers:
 2. **Specialist content** — load the discovered specialist `.md` file (identity, cognitive strategy, behavioral rules, demand rationale, examples)
 3. **Review coordinates** — base branch, target branch, work ID, and artifact paths so the subagent can self-gather context via `git diff`, `view`, and `grep`
 
-If a specialist file already contains the shared sections (custom specialist from project/user level), skip shared rules injection to avoid duplication. Detect by checking whether the file contains an `## Anti-Sycophancy Rules` heading.
+If a specialist file contains `shared_rules_included: true` in its YAML frontmatter, skip shared rules injection to avoid duplication. Otherwise, always inject shared rules.
 
 Replace `[specialist-name]` in the shared rules output format with the specialist's actual name (e.g., `security`, `performance`).
 
@@ -200,6 +202,8 @@ Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`.
 3. **WorkflowContext pool**: If `Final Review Specialist Models` contains unpinned model names, distribute them round-robin across unpinned specialists (sort specialists alphabetically, cycle through pool list)
 4. **Session default**: If none of the above apply, use the session's default model
 
+If a specified model is unavailable or invalid, fall back to session default with a user-visible warning.
+
 Log the specialist→model assignment map at review start so users can verify the distribution.
 
 After all specialists complete, proceed to synthesis.
@@ -212,7 +216,7 @@ Thread-based multi-round debate where findings become discussion threads with po
 
 **Round 1 (Initial sweep)**: Run all specialists in parallel (same as parallel mode). Each finding becomes a **thread** with state `open`.
 
-**Rounds 2–3 (Threaded responses)**: After each round, the synthesis agent (operating as "PR triage lead" per SynthesisProtocol.md) generates a **round summary** organized by thread:
+**Rounds 2–3 (Threaded responses)**: After each round, the synthesis agent (operating as PR triage lead) generates a **round summary** organized by thread:
 - For each thread: current state (`open`, `agreed`, `contested`), summary of positions, open questions
 - This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
 
@@ -234,7 +238,7 @@ Each specialist appends round output to its existing `REVIEW-{SPECIALIST-NAME}.m
 
 **Thread states**: `open` → `agreed` | `contested` | `trade-off` | `resolved`
 
-**User escalation** (interactive/smart mode): When the synthesis agent identifies a trade-off thread during debate, pause and present the trade-off to the user with both sides' evidence and positions, ask for a decision, then continue with the user's decision as context. In auto mode, apply conservative defaults per SynthesisProtocol.md and flag in REVIEW-SYNTHESIS.md.
+**User escalation** (interactive/smart mode): When the orchestrating skill identifies a trade-off thread from the round summary, pause and present the trade-off to the user with both sides' evidence and positions, ask for a decision, then continue with the user's decision as context. In auto mode, apply conservative defaults (priority hierarchy: Correctness > Security > Reliability > Performance > Maintainability > Developer Experience) and flag in REVIEW-SYNTHESIS.md.
 
 After all threads resolve or budget is exhausted, proceed to synthesis.
 
@@ -304,7 +308,7 @@ For each thread:
 
 **Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
 
-If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240 for VS Code chatSkills migration). Falling back to multi-model." Then apply multi-model fallback — if multi-model is also unavailable, fall back to single-model.
+If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240). Running single-model review."
 
 Execute single-model review using the shared review prompt above. Save to `REVIEW.md`.
 {{/vscode}}

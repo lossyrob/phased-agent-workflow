@@ -6,7 +6,7 @@ PAW separates the lifecycle into **workflow stages** (Specification → Planning
 
 **Key properties**
 
-* **Traceable** – Every stage produces durable Markdown artifacts committed to Git and reviewed via PRs.
+* **Traceable** – Every stage produces durable Markdown artifacts; by default committed to Git during development and cleaned at PR time (see [Artifact Lifecycle](#artifact-lifecycle)).
 * **Rewindable** – Any stage can restart. If you see the agents are implementing incorrectly, you can always go back to the spec or plan and fix it, and then re-run downstream stages.
 * **Agentic** – Purpose‑built chat modes (“agents”) own the work of each stage.
 * **Human‑in‑the‑loop** – Humans approve specs/plans, review PRs, and decide when to rewind.
@@ -163,6 +163,38 @@ When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowConte
 - **Review Strategy**: `prs` (intermediate pull requests)
 
 Agents will log an informational message when using default values to indicate that these fields were not explicitly specified.
+
+### Artifact Lifecycle
+
+The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts are handled in git throughout the workflow.
+
+**Modes:**
+
+| Mode | During Development | At PR Time |
+|------|-------------------|------------|
+| `commit-and-clean` (default) | Artifacts committed to git | Artifacts removed from git index; final PR shows zero `.paw/` changes |
+| `commit-and-persist` | Artifacts committed to git | Artifacts remain in the repository permanently |
+| `never-commit` | Artifacts stay local only | No git operations needed |
+
+**Detection Hierarchy** (in priority order):
+
+1. WorkflowContext.md `Artifact Lifecycle:` field → use value directly
+2. Legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. `.paw/work/<work-id>/.gitignore` with `*` content → `never-commit`
+4. Default: `commit-and-clean`
+
+**Stop-Tracking Operation** (`commit-and-clean` at PR time):
+
+1. Record current HEAD commit SHA (for artifact links in PR description)
+2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
+3. Create `.paw/work/<work-id>/.gitignore` containing `*` — self-ignoring, never committed
+4. Commit the removal
+
+The WorkflowContext.md `Artifact Lifecycle:` field is not updated during PR-time stop-tracking because the workflow is completing. For mid-workflow stop-tracking (VS Code command), the field is updated to `never-commit`.
+
+The final PR diff against `main` shows zero `.paw/` file changes. The PR description links to artifacts at the recorded commit SHA.
+
+**VS Code Integration:** The "Stop Tracking Artifacts" command provides a mid-workflow escape hatch, switching any tracked workflow to `never-commit`.
 
 ---
 
@@ -1000,6 +1032,10 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 
 **Additional Inputs** (Optional)
 - Supplementary documents for research (e.g., `paw-specification.md`)
+
+**Artifact Lifecycle** (Optional, defaults to `commit-and-clean`)
+- Controls how workflow artifacts are handled in git: `commit-and-clean`, `commit-and-persist`, or `never-commit`
+- See [Artifact Lifecycle](#artifact-lifecycle) section for mode descriptions and detection hierarchy
 
 **Final Review Mode** (Optional, defaults to `multi-model`)
 - Controls how `paw-final-review` executes: `single-model`, `multi-model`, or `society-of-thought`

@@ -18,7 +18,7 @@ Creates a complete PAW workflow structure with all necessary files and directori
     - **Workflow mode**: Full, Minimal, or Custom
     - **Review strategy**: PRs or Local (Minimal enforces Local)
     - **Review policy**: Every Stage, Milestones, Planning-Only, or Final PR Only
-    - **Artifact tracking**: Track (default) or Don't Track
+    - **Artifact lifecycle**: Commit & Clean (default), Commit & Persist, or Never Commit
 
 **What gets created:**
 
@@ -58,7 +58,7 @@ The Status Agent analyzes your workflow and reports:
 
 ### PAW: Stop Tracking Artifacts
 
-Stops tracking workflow artifacts mid-workflow, removing them from git while keeping local copies.
+Switches a workflow's artifact lifecycle to `never-commit`, removing artifacts from git while keeping local copies. This is a mid-workflow escape hatch—note that `commit-and-clean` workflows handle cleanup automatically at PR time.
 
 **How to use:**
 
@@ -71,13 +71,22 @@ Stops tracking workflow artifacts mid-workflow, removing them from git while kee
 
 - Artifacts are untracked from git index (files remain locally)
 - A `.gitignore` file is created in the workflow directory
+- WorkflowContext.md `Artifact Lifecycle` field is updated to `never-commit`
 - Future commits won't include workflow artifacts
 
 **When to use:**
 
 - Contributing to non-PAW repositories where artifacts may be unwanted
 - Small changes where artifact overhead is disproportionate
-- Mid-workflow discovery that artifact tracking isn't needed
+- Mid-workflow decision to switch from `commit-and-persist` to local-only
+
+**Cleanup recipe:** To remove old `.paw/work/` directories from `main` after merging `commit-and-persist` workflows:
+
+> ⚠️ This permanently deletes `.paw/work/` files from both git history and your local filesystem.
+
+```bash
+git rm -r .paw/work/ && git commit -m "Remove PAW workflow artifacts"
+```
 
 ## Configuration
 

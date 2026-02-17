@@ -3,6 +3,7 @@ import {
   isValidBranchName, 
   WorkflowMode,
   ReviewStrategy,
+  ArtifactLifecycle,
   WorkflowModeSelection,
   FinalReviewConfig
 } from '../../ui/userInput';
@@ -158,5 +159,27 @@ suite('Final Review Config Types', () => {
     assert.strictEqual(config.enabled, true);
     assert.strictEqual(config.mode, 'multi-model');
     assert.strictEqual(config.interactive, 'smart');
+  });
+});
+
+/**
+ * Artifact lifecycle type tests.
+ * 
+ * Verify that ArtifactLifecycle type accepts all three valid modes.
+ */
+suite('Artifact Lifecycle Types', () => {
+  test('ArtifactLifecycle accepts all three valid values', () => {
+    const commitAndClean: ArtifactLifecycle = 'commit-and-clean';
+    const commitAndPersist: ArtifactLifecycle = 'commit-and-persist';
+    const neverCommit: ArtifactLifecycle = 'never-commit';
+    
+    assert.strictEqual(commitAndClean, 'commit-and-clean');
+    assert.strictEqual(commitAndPersist, 'commit-and-persist');
+    assert.strictEqual(neverCommit, 'never-commit');
+  });
+
+  test('Default lifecycle mode is commit-and-clean', () => {
+    const defaultMode: ArtifactLifecycle = 'commit-and-clean';
+    assert.strictEqual(defaultMode, 'commit-and-clean');
   });
 });

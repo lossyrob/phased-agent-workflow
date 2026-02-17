@@ -102,6 +102,7 @@ After review, the PAW agent receives:
 
 **Constraints**:
 - Commit improvements with clear messages
+- Follow `paw-git-operations` artifact staging discipline — check artifact lifecycle mode before staging `.paw/` files
 - Do NOT push or create PRs (orchestrator handles this)
 
 ### Review Comment Verification

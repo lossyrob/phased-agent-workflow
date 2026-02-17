@@ -185,7 +185,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 **Purpose:** Synthesized review findings from society-of-thought or multi-model final review.
 
-**Created by:** `paw-final-review` skill (synthesis step)
+**Created by:** `paw-final-review` skill (via `paw-sot` engine for society-of-thought mode, or directly for multi-model mode)
 
 **Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (gitignored with other review artifacts)
 

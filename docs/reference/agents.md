@@ -53,7 +53,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
-| `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
+| `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
 
@@ -64,6 +64,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-git-operations` | Branch naming, strategy-based branching, selective staging |
 | `paw-review-response` | PR comment mechanics (read, TODO, commit, reply) |
 | `paw-docs-guidance` | Documentation templates and project doc update patterns |
+| `paw-sot` | Society-of-thought engine (loaded by `paw-final-review`) |
 
 **Workflow Stages:**
 

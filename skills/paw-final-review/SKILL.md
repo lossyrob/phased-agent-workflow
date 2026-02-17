@@ -34,6 +34,7 @@ If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Ge
 If mode is `society-of-thought`, also read:
 - `Final Review Specialists`: `all` (default) | comma-separated specialist names | `adaptive:<N>`
 - `Final Review Interaction Mode`: `parallel` (default) | `debate`
+- `Final Review Specialist Models`: `none` (default) | model pool | pinned pairs | mixed
 {{/cli}}
 {{#vscode}}
 **Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
@@ -196,9 +197,18 @@ Execution depends on `Final Review Interaction Mode`:
 
 Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist:
 - Compose prompt: shared rules + specialist content + review context
-- If the specialist file contains a `model:` field in YAML frontmatter, use that model; otherwise use session default
+- Resolve model using precedence chain (see Model Assignment below)
 - Instruct the subagent to write its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the reviews directory
 - The orchestrator receives only a brief completion status (success/failure, finding count) — NOT the full findings content
+
+**Model Assignment**: Resolve the model for each specialist using this precedence (most-specific-wins):
+
+1. **Specialist frontmatter**: If the specialist `.md` file contains a `model:` field in YAML frontmatter, use that model
+2. **WorkflowContext pinning**: If `Final Review Specialist Models` contains a `specialist:model` pair matching this specialist name, use the pinned model
+3. **WorkflowContext pool**: If `Final Review Specialist Models` contains unpinned model names, distribute them round-robin across unpinned specialists (sort specialists alphabetically, cycle through pool list)
+4. **Session default**: If none of the above apply, use the session's default model
+
+Log the specialist→model assignment map at review start so users can verify the distribution.
 
 **Large diff handling**: If the diff exceeds a size that would crowd out persona and review context (~100KB), chunk by file or logical grouping. Note the chunking in each specialist prompt. All specialists receive the same chunk set for consistency.
 

@@ -18,6 +18,7 @@ Society-of-thought is configured during workflow initialization (`paw-init`). Th
 | Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
 | Final Review Interaction Mode | `parallel` or `debate` | `parallel` |
 | Final Review Interactive | `true`, `false`, or `smart` | `smart` |
+| Final Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
 
 !!! note "CLI Only"
     Society-of-thought is CLI-only for v1. In VS Code, configuring `society-of-thought` falls back to `multi-model` mode with a notification.
@@ -192,9 +193,37 @@ When `Final Review Interactive` is `true` or `smart`, you can interact with spec
 
 With `smart` mode, interactive sessions activate only when significant findings (must-fix or should-fix) are present. If the review produces only `consider` items, it completes without interruption.
 
-## Per-Specialist Model Assignment
+## Model Assignment
 
-Power users can assign different models to individual specialists by adding a `model:` field to the specialist's markdown frontmatter:
+By default, all specialists use the session's default model. You can add model-architecture diversity in two ways: workflow-level configuration and per-specialist frontmatter.
+
+### Workflow-Level Configuration
+
+Set `Final Review Specialist Models` in WorkflowContext.md (configured during `paw-init`):
+
+**Model pool** — distribute models round-robin across specialists:
+
+```
+Final Review Specialist Models: gpt-5.3-codex, claude-opus-4.6, gemini-3-pro-preview
+```
+
+**Explicit pinning** — assign specific models to specific specialists:
+
+```
+Final Review Specialist Models: security:claude-opus-4.6, architecture:gpt-5.3-codex
+```
+
+**Mixed** — pin some specialists, pool the rest:
+
+```
+Final Review Specialist Models: security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview
+```
+
+In mixed mode, pinned specialists get their assigned model. Unpinned specialists are sorted alphabetically and assigned models from the pool list round-robin.
+
+### Per-Specialist Frontmatter
+
+Custom specialists (in `.paw/personas/` or `~/.paw/personas/`) can specify a model in their YAML frontmatter:
 
 ```yaml
 ---
@@ -202,7 +231,14 @@ model: claude-opus-4.6
 ---
 ```
 
-This combines perspective diversity (different cognitive strategies) with model-architecture diversity (different models). Specialists without a `model:` field use the session's default model.
+### Resolution Precedence
+
+When multiple sources specify a model, the most specific wins:
+
+1. **Specialist frontmatter** `model:` field (highest priority)
+2. **WorkflowContext pinning** (`specialist:model` pair)
+3. **WorkflowContext pool** (round-robin distribution)
+4. **Session default** (fallback)
 
 ## Next Steps
 

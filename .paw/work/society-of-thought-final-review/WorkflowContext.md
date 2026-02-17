@@ -9,9 +9,10 @@ Review Strategy: local
 Review Policy: milestones
 Session Policy: continuous
 Final Agent Review: enabled
-Final Review Mode: multi-model
-Final Review Interactive: smart
-Final Review Models: gpt-5.3-codex, gemini-3-pro-preview, claude-opus-4.6
+Final Review Mode: society-of-thought
+Final Review Interactive: true
+Final Review Specialists: all
+Final Review Interaction Mode: debate
 Planning Docs Review: enabled
 Planning Review Mode: multi-model
 Planning Review Interactive: smart

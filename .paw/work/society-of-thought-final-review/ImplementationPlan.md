@@ -51,9 +51,11 @@ The implementation modifies four skill files (paw-final-review, paw-init, paw-st
 - [x] **Phase 6: Configuration & Status** - Extend paw-init with society-of-thought config fields and paw-status with display
 - [x] **Phase 7: Documentation** - User guide, specialist template scaffold, specification updates
 - [x] **Phase 8: Correctness Specialist** - Add correctness/logic specialist persona with specification-implementation correspondence cognitive strategy (promoted from Phase Candidates)
+- [x] **Phase 9: Specialist Model Assignment** - Add WorkflowContext-level model assignment for society-of-thought specialists (promoted from Phase Candidates)
 
 ## Phase Candidates
 - [x] [promoted] **Correctness/Logic Specialist** - Add an 8th specialist with a correctness verification cognitive strategy (does the algorithm implement the stated business rule? does the if/else logic match the specification?). Identified during multi-model review as the biggest gap in the roster — none of the 7 existing specialists focus on "is this algorithm correct?"
+- [x] [promoted] **Specialist Model Assignment** - Add a `Final Review Specialist Models` config field to WorkflowContext that allows assigning models to specialists. Supports two modes: (1) model pool — list models to distribute across specialists via round-robin or intelligent assignment; (2) explicit pinning — `specialist:model` pairs (e.g., `architecture:gpt-5.3-codex, security:claude-opus-4.6`). Unpinned specialists draw from the pool or fall back to session default. Requires changes to paw-init (collection), paw-final-review (consumption during specialist dispatch), and paw-status (display).
 
 ---
 
@@ -678,6 +680,66 @@ Create user-facing documentation explaining society-of-thought review, custom sp
 - [ ] Custom specialist creation guide includes persona template scaffold with examples
 - [ ] Artifacts reference updated with REVIEW-SYNTHESIS.md
 - [ ] Navigation updated in mkdocs.yml
+
+---
+
+## Phase 9: Specialist Model Assignment
+
+### Objective
+
+Add a `Final Review Specialist Models` config field to WorkflowContext that allows workflow-level model assignment for society-of-thought specialists. Supports three usage patterns: model pool (round-robin distribution), explicit pinning (specialist:model pairs), and mixed (some pinned, rest pooled). This replaces the current approach where model assignment is only possible via YAML frontmatter in custom specialist files.
+
+### Design
+
+**New WorkflowContext field**: `Final Review Specialist Models`
+
+**Syntax** (single field, three patterns):
+- **Pool**: `gpt-5.3-codex, claude-opus-4.6, gemini-3-pro-preview` — models distributed across specialists round-robin
+- **Pinning**: `security:claude-opus-4.6, architecture:gpt-5.3-codex` — explicit specialist→model mapping
+- **Mixed**: `security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview` — pinned specialists get their model, unpinned draw from remaining pool round-robin
+- **Default**: `none` — all specialists use session default (current behavior)
+
+**Model resolution precedence** (most-specific-wins):
+1. Specialist file YAML frontmatter `model:` field (custom specialist explicitly chose a model — highest priority)
+2. WorkflowContext pinning (e.g., `security:claude-opus-4.6`)
+3. WorkflowContext pool (round-robin across unpinned specialists)
+4. Session default (fallback)
+
+**Round-robin semantics**: Specialists sorted alphabetically by name, then assigned models from the pool list cyclically. Deterministic — same config always produces same assignment. The assignment is logged at review start so users can verify.
+
+### Changes Required
+
+- **`skills/paw-init/SKILL.md`**:
+  - Add `final_review_specialist_models` to parameter table (default: `none`, valid values: `none`, comma-separated model names/intents, or `specialist:model` pairs)
+  - Update Society-of-Thought Configuration section: remove "final_review_models is ignored" note, add validation rules for the new field (parse `name:model` pairs, validate model intents via existing resolution logic)
+  - Add `Final Review Specialist Models: <final_review_specialist_models>` to WorkflowContext.md template (after `Final Review Interaction Mode`)
+
+- **`skills/paw-final-review/SKILL.md`**:
+  - Update Step 1 (Read Configuration) to parse `Final Review Specialist Models` from WorkflowContext.md
+  - Update Execution section (line ~199): replace the single-line `model:` frontmatter check with the full resolution precedence chain (frontmatter → pinning → pool → session default)
+  - Add a brief "Model Assignment" subsection under Execution documenting the resolution precedence and round-robin semantics
+  - Log the specialist→model assignment map at review start
+
+- **`skills/paw-status/SKILL.md`**:
+  - Add `Final Review Specialist Models` to the WorkflowContext fields list (line ~52 area, after `Final Review Interaction Mode`)
+
+- **`docs/guide/society-of-thought-review.md`**:
+  - Expand the "Per-Specialist Model Assignment" section (line ~195): add WorkflowContext-level assignment alongside the existing frontmatter approach, document all three patterns (pool, pinning, mixed), note the resolution precedence
+  - Update the Configuration table (line ~15) to include the new field
+
+### Success Criteria
+
+#### Automated Verification:
+- [ ] Lint passes: `npm run lint`
+- [ ] Agent lint passes: `npm run lint:agent:all`
+- [ ] Docs build: `source .venv/bin/activate && mkdocs build --strict`
+
+#### Manual Verification:
+- [ ] WorkflowContext.md template includes `Final Review Specialist Models` field
+- [ ] paw-init validates pool, pinning, and mixed syntax
+- [ ] paw-final-review resolves models with correct precedence (frontmatter > pinning > pool > default)
+- [ ] paw-status displays the new field
+- [ ] User guide documents all three patterns with examples
 
 ---
 

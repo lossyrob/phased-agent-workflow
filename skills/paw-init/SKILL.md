@@ -39,6 +39,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 | `final_review_specialists` | No | `all` | `all`, comma-separated names, or `adaptive:<N>` (e.g., `adaptive:3`) |
 | `final_review_interaction_mode` | No | `parallel` | `parallel`, `debate` |
+| `final_review_specialist_models` | No | `none` | `none`, model pool, pinned pairs, or mixed (see below) |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model` |
 | `planning_review_interactive` | No | `smart` | `true`, `false`, `smart` |
@@ -88,8 +89,14 @@ When `final_review_mode` is `society-of-thought`:
 - `final_review_specialists` and `final_review_interaction_mode` become relevant
 - Validate specialist values: `all`, comma-separated specialist names, or `adaptive:<N>` where N is a positive integer
 - Validate interaction mode: `parallel` or `debate`
+- `final_review_specialist_models` becomes relevant — validate format:
+  - `none` (default): all specialists use session default model
+  - **Pool**: comma-separated model names (e.g., `gpt-5.3-codex, claude-opus-4.6`) — distributed round-robin across specialists
+  - **Pinning**: `specialist:model` pairs (e.g., `security:claude-opus-4.6, architecture:gpt-5.3-codex`) — explicit assignment
+  - **Mixed**: combination of pinned pairs and pool models (e.g., `security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview`) — pinned specialists get their model, unpinned draw from pool round-robin
+  - Resolve model intents (e.g., `latest GPT`) using existing model intent resolution
+- `final_review_models` is ignored (use `final_review_specialist_models` for model diversity with society-of-thought)
 - Present society-of-thought config as part of the configuration summary
-- `final_review_models` is ignored (society-of-thought uses specialist personas, not model diversity)
 
 ### Directory Structure
 ```
@@ -117,6 +124,7 @@ Final Review Interactive: <final_review_interactive>
 Final Review Models: <final_review_models>
 Final Review Specialists: <final_review_specialists>
 Final Review Interaction Mode: <final_review_interaction_mode>
+Final Review Specialist Models: <final_review_specialist_models>
 Planning Docs Review: <planning_docs_review>
 Planning Review Mode: <planning_review_mode>
 Planning Review Interactive: <planning_review_interactive>

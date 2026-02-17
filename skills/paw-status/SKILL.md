@@ -50,6 +50,7 @@ Read WorkflowContext.md for:
 - Planning Review Interactive: `true` | `false` | `smart`
 - Final Review Specialists: `all` | `adaptive:<N>` | comma-separated list (when society-of-thought)
 - Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)
+- Final Review Specialist Models: `none` | model pool | pinned pairs | mixed (when society-of-thought)
 
 ### Phase Counting
 

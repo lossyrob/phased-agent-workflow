@@ -101,7 +101,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | Policy | Behavior |
 |--------|----------|
 | `every-stage` | Pause after every artifact is produced |
-| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
 | `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
 | `final-pr-only` | Only pause at final PR — auto-proceed through all intermediate stages |
 
@@ -203,7 +203,7 @@ PAW supports four review policies that control when the workflow pauses for huma
 | Policy | Behavior |
 |--------|----------|
 | **every-stage** | Pause after every artifact is produced |
-| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
 | **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
 | **final-pr-only** | Only pause at final PR — auto-proceed through all intermediate stages |
 

@@ -74,6 +74,6 @@ describe('build-dist script', () => {
     assert.ok(specialists.includes('security.md'), 'should include security.md');
     assert.ok(specialists.includes('architecture.md'), 'should include architecture.md');
     assert.ok(specialists.includes('correctness.md'), 'should include correctness.md');
-    assert.ok(specialists.length >= 9, `should have at least 9 specialist files (8 + shared rules), found ${specialists.length}`);
+    assert.ok(specialists.length >= 10, `should have at least 10 specialist files (9 + shared rules), found ${specialists.length}`);
   });
 });

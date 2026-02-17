@@ -25,7 +25,7 @@ Society-of-thought is configured during workflow initialization (`paw-init`). Th
 
 ## Built-in Specialists
 
-PAW ships with 8 built-in specialists, each using a distinct cognitive strategy:
+PAW ships with 9 built-in specialists, each using a distinct cognitive strategy:
 
 | Specialist | Cognitive Strategy | Focus |
 |-----------|-------------------|-------|
@@ -37,6 +37,7 @@ PAW ships with 8 built-in specialists, each using a distinct cognitive strategy:
 | **Architecture** | Pattern recognition | System-level fit, coupling, extensibility |
 | **Testing** | Coverage gap analysis | Untested paths, assertion quality |
 | **Correctness** | Specification-implementation correspondence | Logic errors, wrong operators, default paths |
+| **Release Manager** | Release-impact analysis / deployment-path tracing | CI/CD changes, packaging, migration safety, rollback |
 
 Every specialist includes **anti-sycophancy rules** — structural constraints that require each specialist to either identify a substantive concern or explain what they analyzed and why they found no issues. This prevents the "looks good to me" problem common in AI reviews.
 
@@ -64,13 +65,13 @@ Debate mode uses **hub-and-spoke mediation**: specialists see only the synthesis
     Debate mode costs more tokens but produces more thorough reviews. Use it for critical changes, security-sensitive code, or architectural decisions where you want specialists to challenge each other's findings.
 
 !!! warning "Token Cost Estimates"
-    Debate mode token usage scales with specialist count and rounds. With 8 specialists and up to 3 rounds plus per-thread continuation (30-call budget), a full debate can consume 50+ subagent calls. For large diffs, consider using `adaptive:<N>` with a smaller N to control cost, or use parallel mode for routine reviews.
+    Debate mode token usage scales with specialist count and rounds. With 9 specialists and up to 3 rounds plus per-thread continuation (30-call budget), a full debate can consume 50+ subagent calls. For large diffs, consider using `adaptive:<N>` with a smaller N to control cost, or use parallel mode for routine reviews.
 
 ## Specialist Selection Modes
 
 ### All (Default)
 
-All discovered specialists participate. With only the built-in roster, this means 8 specialists.
+All discovered specialists participate. With only the built-in roster, this means 9 specialists.
 
 ### Fixed List
 

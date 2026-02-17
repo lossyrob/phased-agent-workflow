@@ -262,6 +262,9 @@ Synthesis requirements:
 - **Trade-off handling**: in `interactive`/`smart` mode, escalate to user with shared facts, decision axis, options, and recommendation per priority hierarchy. In `auto` mode, apply priority hierarchy (`Correctness > Security > Reliability > Performance > Maintainability > Developer Experience`), document the decision, flag prominently
 
 **REVIEW-SYNTHESIS.md structure (society-of-thought)**:
+
+The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items presented during interactive resolution. Trade-offs are resolved as part of findings when the user makes a decision. Observations, Dissent Log, Debate Trace, and Synthesis Trace are reference sections — they document the review process but are not presented as individual resolution items.
+
 ```markdown
 # REVIEW-SYNTHESIS.md
 
@@ -282,10 +285,10 @@ Synthesis requirements:
 [Findings with severity: consider]
 
 ## Trade-offs Requiring Decision
-[Unresolved trade-offs with both sides' evidence and recommendation per priority hierarchy]
+[Unresolved trade-offs — presented to user during finding resolution in interactive/smart mode, resolved via priority hierarchy in auto mode. Once resolved, the decision is recorded in the corresponding finding.]
 
 ## Observations
-[Contextual-tier findings — require knowledge beyond this diff]
+[Contextual-tier findings — beyond this diff, not presented during resolution. Retained as reference for future work.]
 
 ## Dissent Log
 [Findings where specialists disagreed and how the disagreement was resolved]

@@ -23,8 +23,8 @@ On first request, identify work context from environment (current branch, `.paw/
 | Planning PR created | paw-transition → paw-implement | NO |
 | paw-impl-review (passes, more phases) | Push & Phase PR (prs strategy) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
-| paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
-| paw-final-review | paw-pr | NO |
+| paw-impl-review (passes, last phase, review disabled) | paw-transition → paw-pr | Per Review Policy |
+| paw-final-review | paw-transition → paw-pr | NO |
 | Phase PR created | paw-transition → paw-implement (next) or paw-final-review or paw-pr | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
@@ -53,6 +53,7 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 | Before Activity | Required Prerequisite |
 |-----------------|----------------------|
 | paw-implement (any phase) | Load `paw-git-operations`, verify correct branch |
+| paw-pr | All phase candidates resolved (run Candidate Promotion Flow if any `- [ ]` items in `## Phase Candidates`) |
 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 

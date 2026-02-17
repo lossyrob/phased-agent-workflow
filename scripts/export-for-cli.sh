@@ -98,6 +98,14 @@ export_skill() {
     content=$(process_conditionals "$content")
     
     echo "$content" > "$output_skill_dir/SKILL.md"
+    
+    # Copy references directory if it exists (e.g., specialist personas)
+    local refs_dir="$SKILLS_DIR/$skill_name/references"
+    if [[ -d "$refs_dir" ]]; then
+        cp -R "$refs_dir" "$output_skill_dir/"
+        echo "  Copied references/ directory"
+    fi
+    
     echo "Exported skill: $skill_name -> $output_skill_dir/SKILL.md"
 }
 

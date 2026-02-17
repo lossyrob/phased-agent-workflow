@@ -1,0 +1,26 @@
+# WorkflowContext
+
+Work Title: Society of Thought Final Review
+Work ID: society-of-thought-final-review
+Base Branch: main
+Target Branch: feature/society-of-thought-final-review
+Workflow Mode: full
+Review Strategy: local
+Review Policy: milestones
+Session Policy: continuous
+Final Agent Review: enabled
+Final Review Mode: society-of-thought
+Final Review Interactive: true
+Final Review Specialists: all
+Final Review Interaction Mode: debate
+Final Review Specialist Models: security:claude-opus-4.6, architecture:claude-opus-4.6, correctness:claude-opus-4.6, performance:gpt-5.3-codex, edge-cases:gpt-5.3-codex, testing:gpt-5.3-codex, assumptions:gemini-3-pro-preview, maintainability:gemini-3-pro-preview
+Planning Docs Review: enabled
+Planning Review Mode: multi-model
+Planning Review Interactive: smart
+Planning Review Models: gpt-5.3-codex, gemini-3-pro-preview, claude-opus-4.6
+Custom Workflow Instructions: none
+Initial Prompt: Add society-of-thought as a third Final Review mode with specialist personas, parallel+synthesize and debate interaction modes, hybrid specialist management with 4-level precedence, and research-backed anti-sycophancy design.
+Issue URL: https://github.com/lossyrob/phased-agent-workflow/issues/201
+Remote: origin
+Artifact Paths: auto-derived
+Additional Inputs: none

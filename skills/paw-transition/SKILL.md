@@ -86,10 +86,13 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 | paw-pr complete | Final PR |
 
 **Determine pause_at_milestone**:
-- If Review Policy ∈ {`every-stage`, `milestones`}: pause at ALL milestones
+- If Review Policy = `every-stage`: pause at ALL milestones
+- If Review Policy = `milestones`:
+  - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Phase completion, Final PR: `pause_at_milestone = true`
+  - Final Review complete: `pause_at_milestone = false` (auto-proceed to paw-pr)
 - If Review Policy = `planning-only`:
   - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Final PR: `pause_at_milestone = true`
-  - Phase completion (including last phase): `pause_at_milestone = false`
+  - Phase completion (including last phase), Final Review complete: `pause_at_milestone = false`
 - If Review Policy = `final-pr-only`:
   - Final PR: `pause_at_milestone = true`
   - All other milestones: `pause_at_milestone = false`

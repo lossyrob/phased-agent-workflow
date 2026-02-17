@@ -397,7 +397,7 @@ When the plan includes a documentation phase, `paw-implement` loads the `paw-doc
 
 **Workflow:**
 
-1. `paw-final-review` reviews the full implementation diff against spec (if review enabled)
+1. `paw-final-review` reviews the full implementation diff against spec (if review enabled). Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (specialist personas with parallel or debate interaction)
 2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
 3. `paw-pr` crafts comprehensive PR description with decision audit trail
 4. `paw-pr` opens the final PR
@@ -1000,6 +1000,19 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 
 **Additional Inputs** (Optional)
 - Supplementary documents for research (e.g., `paw-specification.md`)
+
+**Final Review Mode** (Optional, defaults to `multi-model`)
+- Controls how `paw-final-review` executes: `single-model`, `multi-model`, or `society-of-thought`
+- `society-of-thought` uses specialist personas with distinct cognitive strategies for independent review and synthesis
+
+**Final Review Specialists** (Optional, defaults to `all`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- Values: `all` (all available specialists), comma-separated names, or `adaptive:<N>` (select N most relevant specialists based on diff analysis)
+
+**Final Review Interaction Mode** (Optional, defaults to `parallel`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- `parallel`: All specialists review independently, then synthesis
+- `debate`: Thread-based debate with specialist interaction
 
 #### Usage
 

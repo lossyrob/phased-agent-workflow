@@ -25,8 +25,10 @@ For each `PR-<number>-<repo-slug>/` directory in `.paw/reviews/`:
 - `ReviewContext.md` (includes `related_prs` entries)
 - `CodeResearch.md` (baseline understanding per repo)
 - `DerivedSpec.md` (intent per PR)
-- `ImpactAnalysis.md` (includes Cross-Repository Dependencies section)
-- `GapAnalysis.md` (includes Cross-Repository Consistency findings)
+- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+  - If `single-model` or absent: require `ImpactAnalysis.md` (includes Cross-Repository Dependencies section) + `GapAnalysis.md` (includes Cross-Repository Consistency findings)
+  - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
+  - If present artifacts don't match configured mode, report inconsistency
 
 If any artifact is missing, report blocked status—earlier stages must complete first.
 
@@ -50,8 +52,16 @@ If any artifact is missing, report blocked status—earlier stages must complete
 ### Step 1: Load All Per-Repo Artifacts
 
 For each PR artifact directory:
+
+**Single-model mode** (default):
 1. Read `ImpactAnalysis.md` → extract Cross-Repository Dependencies section
 2. Read `GapAnalysis.md` → extract Cross-Repository Consistency findings
+
+**Society-of-thought mode**:
+1. Read `REVIEW-SYNTHESIS.md` → extract findings that reference shared interfaces, external dependencies, breaking changes, or cross-repo concerns
+2. Specialist findings mentioning API contracts, shared types, event schemas, or consumer/producer patterns are cross-repo-relevant
+
+**Both modes**:
 3. Read `ReviewContext.md` → extract `related_prs` relationships
 4. Read `DerivedSpec.md` → understand each PR's intent
 
@@ -265,7 +275,7 @@ owner/repo-a
 ## Validation Checklist
 
 Before marking complete:
-- [ ] All per-repo artifacts loaded (ImpactAnalysis.md, GapAnalysis.md for each PR)
+- [ ] All per-repo evaluation artifacts loaded (ImpactAnalysis.md + GapAnalysis.md in single-model mode, or REVIEW-SYNTHESIS.md in SoT mode, for each PR)
 - [ ] Dependency graph includes all identified dependencies
 - [ ] All shared interfaces documented with file:line references
 - [ ] All mismatches have severity assigned (Must/Should/Could)

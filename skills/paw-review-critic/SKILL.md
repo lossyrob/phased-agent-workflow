@@ -17,8 +17,10 @@ Also verify access to all supporting artifacts:
 - `ReviewContext.md` (PR metadata)
 - `CodeResearch.md` (baseline understanding)
 - `DerivedSpec.md` (PR intent)
-- `ImpactAnalysis.md` (system-wide effects)
-- `GapAnalysis.md` (categorized findings)
+- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+  - If `single-model` or absent: require `ImpactAnalysis.md` + `GapAnalysis.md`
+  - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
+  - If present artifacts don't match configured mode, report inconsistency
 
 If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
 
@@ -44,9 +46,9 @@ Understand the complete feedback landscape:
 - Understand summary comment framing
 
 **Load Supporting Context:**
-- Review GapAnalysis.md findings that generated each comment
+- Review evaluation findings that generated each comment
 - Reference CodeResearch.md for baseline patterns
-- Check ImpactAnalysis.md for system-wide context
+- Check evaluation artifacts for system-wide context
 - Understand DerivedSpec.md intent
 
 **Identify Relationships:**
@@ -305,7 +307,7 @@ return 'Anonymous';
 - Reference all available artifacts for complete picture
 - Consider project-specific patterns from CodeResearch.md
 - Understand PR intent from DerivedSpec.md
-- Factor in system-wide impacts from ImpactAnalysis.md
+- Factor in system-wide impacts from evaluation artifacts
 
 **Balanced Perspective:**
 - Don't be reflexively negative or positive

@@ -1,8 +1,19 @@
 # Society-of-Thought Review
 
-Society-of-thought is a Final Review mode that uses **specialist personas** — each with a unique cognitive strategy and behavioral rules — to review your implementation from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes your code, then a synthesis step merges their findings into a single prioritized report.
+Society-of-thought is a review mode that uses **specialist personas** — each with a unique cognitive strategy and behavioral rules — to review code from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes the code, then a synthesis step merges their findings into a single prioritized report.
 
-The society-of-thought engine is implemented as the `paw-sot` utility skill, which `paw-final-review` delegates to when `society-of-thought` mode is configured. This three-tier design separates concerns: `paw-sot` handles specialist discovery, selection, execution, and synthesis; `paw-final-review` handles review configuration, resolution (apply/skip/discuss), and workflow integration; and the user interacts only with `paw-final-review`.
+The society-of-thought engine is implemented as the `paw-sot` utility skill, which both `paw-final-review` (implementation workflow) and `paw-review-workflow` (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.
+
+### Two Integration Points
+
+| Workflow | Calling Skill | Config Source | Post-Synthesis Flow |
+|----------|--------------|---------------|---------------------|
+| **Implementation** | `paw-final-review` | WorkflowContext.md | Apply/skip/discuss resolution |
+| **Review** | `paw-review-workflow` | ReviewContext.md | Feedback → critic → GitHub comment pipeline |
+
+In the **implementation workflow**, SoT is one of three Final Review modes (alongside single-model and multi-model). After synthesis, findings go through an interactive resolution phase where changes are applied directly.
+
+In the **review workflow**, SoT replaces the Evaluation Stage's impact analysis and gap identification with unified specialist evaluation. Findings from `REVIEW-SYNTHESIS.md` flow into the existing output pipeline for comment generation and GitHub posting.
 
 ## Why Perspective Diversity Matters
 
@@ -11,6 +22,8 @@ Traditional code review (whether human or AI) tends to look at code through one 
 Society-of-thought adds **perspective diversity**: a security specialist traces data flows through trust boundaries, a performance specialist estimates computational costs, and an assumptions specialist questions whether the code should exist at all. Research shows that inspectors using different perspectives find non-overlapping defects — each perspective surfaces issues the others miss.
 
 ## Configuration
+
+### Implementation Workflow (Final Review)
 
 Society-of-thought is configured during workflow initialization (`paw-init`). The key fields in `WorkflowContext.md`:
 
@@ -21,6 +34,20 @@ Society-of-thought is configured during workflow initialization (`paw-init`). Th
 | Final Review Interaction Mode | `parallel` or `debate` | `parallel` |
 | Final Review Interactive | `true`, `false`, or `smart` | `smart` |
 | Final Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
+
+### Review Workflow (PR Review)
+
+Society-of-thought for PR review is configured in `ReviewContext.md` (populated from invocation parameters):
+
+| Field | Values | Default |
+|-------|--------|---------|
+| Review Mode | `society-of-thought` | `single-model` |
+| Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
+| Review Interaction Mode | `parallel` or `debate` | `parallel` |
+| Review Interactive | `true`, `false`, or `smart` | `false` |
+| Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
+
+When Review Mode is `society-of-thought`, the Evaluation Stage invokes `paw-sot` instead of running `paw-review-impact` and `paw-review-gap` separately. Findings from `REVIEW-SYNTHESIS.md` are then mapped into the output pipeline with severity mapping: must-fix → Must, should-fix → Should, consider → Could.
 
 !!! note "CLI Only"
     Society-of-thought is CLI-only for v1. In VS Code, configuring `society-of-thought` falls back to `multi-model` mode with a notification.

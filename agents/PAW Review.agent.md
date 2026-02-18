@@ -40,6 +40,14 @@ When cross-repository conditions are detected:
 4. In the Output stage, correlate findings across repositories
 5. Note cross-repo dependencies in the review comments
 
+## SoT Mode Handling
+
+When the user requests society-of-thought review mode:
+- Pass `Review Mode: society-of-thought` to `paw-review-understanding` via the delegation prompt
+- Set `Review Specialists` to `all` unless the user explicitly names specific specialists
+- Pass any user-specified interaction mode, interactive setting, or model preferences
+- Do NOT select specialists yourself — let the SoT engine handle adaptive selection from the full set
+
 ## Skill-Based Execution
 
 {{#vscode}}
@@ -89,3 +97,4 @@ If any stage fails, report the error to the user and seek guidance on how to pro
 - All claims require file:line citations
 - Load skills before executing workflow logic
 - Human authority over all posted feedback
+- **NEVER manually create artifacts that belong to activity skills.** Each artifact (ReviewContext.md, ResearchQuestions.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, REVIEW-SYNTHESIS.md, CrossRepoAnalysis.md, ReviewComments.md) must be produced by its designated skill via subagent delegation. Manual population bypasses defaults, validation, and skill-specific logic.

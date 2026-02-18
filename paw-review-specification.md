@@ -208,17 +208,25 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Skills:** `paw-review-impact`, `paw-review-gap`
+**Review Modes:**
+
+* **Single-model** (default): Sequential impact analysis and gap identification via `paw-review-impact` and `paw-review-gap`
+* **Society-of-thought**: Multi-perspective specialist review via `paw-sot` engine, replacing both impact analysis and gap identification with unified specialist evaluation
 
 **Inputs:**
 * All Stage R1 artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md)
 * Repository codebase at base and head commits
+* Review Mode and SoT configuration from ReviewContext.md
 
-**Outputs:**
+**Outputs (single-model):**
 * `.paw/reviews/<identifier>/ImpactAnalysis.md` – System-wide effects, integration points, breaking changes, design/architecture assessment
 * `.paw/reviews/<identifier>/GapAnalysis.md` – Findings organized by Must/Should/Could with evidence, including positive observations
 
-**Process:**
+**Outputs (society-of-thought):**
+* `.paw/reviews/<identifier>/REVIEW-{SPECIALIST}.md` – Per-specialist findings with cognitive strategy and evidence
+* `.paw/reviews/<identifier>/REVIEW-SYNTHESIS.md` – Confidence-weighted synthesis with specialist attribution and conflict resolution
+
+**Process (single-model):**
 
 1. **Analyze impact**
    - Build integration graph: parse imports/exports, identify public API surfaces, map downstream consumers
@@ -247,13 +255,17 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
    - **Evidence required**: All findings have file:line references
    - **Not inflated**: Style preferences not elevated to Must without clear impact
 
+**Process (society-of-thought):**
+
+1. **Construct review context** from ReviewContext.md configuration fields and pass PR diff + understanding artifacts to `paw-sot`
+2. **Specialist execution** — Specialists review independently (parallel) or engage in structured debate, each applying their cognitive strategy
+3. **Synthesis** — Confidence-weighted merge of specialist findings with conflict resolution and specialist attribution
+
 **Human Workflow:**
 
 * Agent orchestrates R2 activities automatically after R1 completion
-* Review `ImpactAnalysis.md` to understand system-wide effects, design fit, user impact
-* Review `GapAnalysis.md` findings in each category
-* Review positive observations section
-* Validate categorization feels appropriate (not inflated)
+* **Single-model**: Review `ImpactAnalysis.md` and `GapAnalysis.md` findings; validate categorization
+* **Society-of-thought**: Review `REVIEW-SYNTHESIS.md` for prioritized findings with specialist attribution and confidence levels; review individual `REVIEW-{SPECIALIST}.md` for detailed perspectives
 * Add domain-specific concerns the agent might have missed
 * Proceed to Stage R3 to generate feedback
 
@@ -468,6 +480,8 @@ Findings organized by severity and category, with positive observations.
 - **Style & Conventions:** Style guide adherence (with "Nit:" labeling for preferences)
 
 **Purpose:** Provides structured, evidence-based findings with positive observations; human reviewer selects which to include in final comments.
+
+> **Note**: ImpactAnalysis.md and GapAnalysis.md are produced in **single-model mode** only. In **society-of-thought mode**, the Evaluation Stage produces `REVIEW-{SPECIALIST}.md` per specialist and `REVIEW-SYNTHESIS.md` (see [Stage R2](#stage-r2-evaluation)).
 
 ---
 

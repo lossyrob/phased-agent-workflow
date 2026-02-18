@@ -47,7 +47,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 
 ### Changes Required:
 
-- **`skills/paw-review-understanding/SKILL.md`**: Add SoT configuration fields to the ReviewContext.md template (lines ~221-277). New fields: `Review Mode` (default: single-model), `Review Specialists` (default: all), `Review Interaction Mode` (default: parallel), `Review Interactive` (default: smart), `Review Specialist Models` (default: none). Fields placed in a new "## Review Configuration" section after metadata, following the naming pattern from WorkflowContext.md's "Agent Review Configuration" section. Add guidance on how these fields are populated (from user invocation parameters or defaults).
+- **`skills/paw-review-understanding/SKILL.md`**: Add SoT configuration fields to the ReviewContext.md template (lines ~221-277). New fields: `Review Mode` (default: single-model), `Review Specialists` (default: all), `Review Interaction Mode` (default: parallel), `Review Interactive` (default: false), `Review Specialist Models` (default: none). Fields placed in a new "## Review Configuration" section after metadata, following the naming pattern from WorkflowContext.md's "Agent Review Configuration" section. Add guidance on how these fields are populated (from user invocation parameters with defaults applied by paw-review-understanding when values are not provided).
 
 - **`skills/paw-review-workflow/SKILL.md`**: 
   - **Evaluation Stage** (lines 150-163): Replace the unconditional sequence with a conditional branch. When `review_mode: society-of-thought` in ReviewContext.md: load `paw-sot` skill directly (not as subagent — per `paw-sot/SKILL.md:9`) with review context constructed from ReviewContext.md fields. Adapter mapping table follows `paw-final-review` pattern: `type: diff`, `coordinates: git diff <base>...<head>` plus understanding artifact paths, `output_dir: .paw/reviews/<identifier>/`, remaining fields from ReviewContext.md SoT config. When `review_mode` is absent or `single-model`: existing impact → gap sequence unchanged. Include error handling: if paw-sot skill cannot be loaded, report error to user — do not fall back to single-model silently.
@@ -74,6 +74,9 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 - [ ] Specialist selection config (all/list/adaptive) passes through to paw-sot contract correctly
 - [ ] Interaction mode config (parallel/debate) passes through to paw-sot contract correctly
 - [ ] Specialist models config passes through to paw-sot contract correctly
+- [ ] Edge cases delegated to paw-sot are acknowledged: adapter passes sufficient diff metadata (file types, change size) for adaptive selection to handle docs-only, small PR, and security-sensitive scenarios
+- [ ] SC-004 (debate traces) and SC-006 (model diversity) runtime validation noted as paw-sot responsibility; adapter verifies correct pass-through
+- [ ] All SoT artifact references use REVIEW-* naming convention; no GapAnalysis-* naming used for SoT mode artifacts
 
 ---
 

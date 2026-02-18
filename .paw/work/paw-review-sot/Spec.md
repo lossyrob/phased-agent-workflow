@@ -95,6 +95,7 @@ Acceptance Scenarios:
 - FR-010: When `review_mode` is not `society-of-thought`, the existing single-model pipeline runs unchanged (Stories: P1)
 - FR-011: paw-sot's built-in specialists (with 4-level discovery) are used; no PAW Review-specific specialist definitions needed (Stories: P2)
 - FR-012: The REVIEW-* artifact naming convention is adopted consistently (replacing GapAnalysis-* naming) (Stories: P1)
+- FR-013: Trade-offs from REVIEW-SYNTHESIS.md are surfaced as Should-tier review comments with a [Trade-off] prefix, enabling human reviewers to make the final decision (Stories: P4)
 
 ### Key Entities
 
@@ -131,6 +132,7 @@ In Scope:
 - ReviewContext.md field extensions for SoT configuration
 - paw-review-workflow skill updates to route through SoT when configured
 - Mapping SoT synthesis findings into paw-review-feedback input format
+- Output Stage skill prerequisite updates to accept SoT artifacts as alternative evaluation inputs
 - Artifact naming alignment (REVIEW-* convention)
 - Documentation updates for the new review mode
 
@@ -138,7 +140,7 @@ Out of Scope:
 - Changes to paw-sot engine internals (it's consumed as-is)
 - New specialist persona definitions (using built-in ones)
 - Multi-model review mode for PAW Review (separate concern; multi-model is for paw-final-review)
-- Changes to the Output Stage pipeline (feedback → critic → github) — it receives mapped input but isn't modified
+- Changes to the Output Stage pipeline logic (feedback → critic → github) — the generation/critique/posting workflow is unchanged, but skill prerequisites are updated to accept SoT artifacts as alternative inputs
 - Cross-repo correlation with SoT (paw-review-correlation remains separate)
 
 ## Dependencies

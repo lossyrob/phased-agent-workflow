@@ -96,8 +96,8 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 - [ ] **Phase N: Documentation** - [If warranted]
 
 ## Phase Candidates
-<!-- Lightweight capture of potential phases identified during implementation.
-     Add one-liner descriptions here; elaborate into full phases later via promotion. -->
+<!-- Use checkbox format for each candidate so transition checks can detect unresolved items.
+     Example: - [ ] Moderator mode support -->
 
 ---
 

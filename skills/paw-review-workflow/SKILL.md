@@ -90,6 +90,10 @@ Upon completion, respond with artifact path and status (Success, Partial, or Blo
 
 Always confirm the exact path where artifacts were written. Downstream stages depend on this.
 
+### Artifact Ownership (CRITICAL)
+
+The orchestrating agent MUST NOT manually create artifacts that belong to activity skills. Each stage's artifacts must be produced by delegating to the designated skill. Manual population bypasses defaults, validation, and skill-specific logic (e.g., specialist selection defaults, ReviewContext field normalization).
+
 ## Artifact Directory Structure
 
 All review artifacts are stored in a consistent directory structure:

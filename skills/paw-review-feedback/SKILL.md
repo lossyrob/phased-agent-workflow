@@ -15,11 +15,19 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 - `ReviewContext.md` (PR metadata and parameters)
 - `CodeResearch.md` (baseline codebase understanding)
 - `DerivedSpec.md` (what the PR is trying to achieve)
-- `ImpactAnalysis.md` (system-wide impact assessment)
-- `GapAnalysis.md` (categorized findings with evidence)
+- Evaluation artifacts — **one of**:
+  - `ImpactAnalysis.md` + `GapAnalysis.md` (single-model mode)
+  - `REVIEW-SYNTHESIS.md` (society-of-thought mode)
 - `CrossRepoAnalysis.md` (optional—only for multi-repo reviews)
 
 If any required artifact is missing, report blocked status—earlier stages must complete first.
+
+**SoT mode input mapping**: When `REVIEW-SYNTHESIS.md` is the evaluation source, map findings to the comment pipeline as follows:
+- Severity: must-fix → Must, should-fix → Should, consider → Could
+- Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix
+- Observations section → excluded from comment generation (contextual-tier, not actionable)
+- File:line references from specialist citations map to comment File+lines fields
+- Impact evidence is embedded in synthesis findings (no separate ImpactAnalysis.md)
 
 **Multi-repo detection**: Check if `CrossRepoAnalysis.md` exists. If present, incorporate cross-repo gaps into comment generation.
 
@@ -92,8 +100,8 @@ For each finding or batched group of findings, create structured comment:
 
 **Required Fields:**
 - **Type**: `inline` (line-specific) or `thread` (file/concept-level)
-- **File(s) and line range(s)**: Specific locations from GapAnalysis.md
-- **Severity**: Must/Should/Could (from GapAnalysis categorization)
+- **File(s) and line range(s)**: Specific locations from evaluation findings
+- **Severity**: Must/Should/Could (from finding categorization)
 - **Category**: Correctness, Safety, Testing, Maintainability, Performance, etc.
 - **Description**: Clear, specific explanation of the issue
 - **Suggestion**: Code example or recommended approach
@@ -120,7 +128,7 @@ Use **Thread** for:
 For EVERY comment, create comprehensive rationale with four components:
 
 **Evidence:**
-- File:line references from GapAnalysis.md findings
+- File:line references from evaluation findings
 - Specific code snippets showing the issue
 - Concrete examples of the problem
 
@@ -135,7 +143,7 @@ For EVERY comment, create comprehensive rationale with four components:
 - Describe user/system impact of not addressing
 - Note performance, security, or maintainability implications
 - Reference impact findings from analysis where applicable
-- **Important**: Do NOT reference ImpactAnalysis.md or other PAW artifacts in comments—describe impacts directly
+- **Important**: Do NOT reference ImpactAnalysis.md, REVIEW-SYNTHESIS.md, or other PAW artifacts in comments—describe impacts directly
 
 **Best Practice Citation:**
 - Reference industry best practices from review-research-notes.md (if available)
@@ -349,7 +357,7 @@ Support tone adjustments while preserving evidence and IDs:
 ## Guardrails
 
 **No PAW Artifact References in Comments:**
-- NEVER reference PAW artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, etc.) in comments
+- NEVER reference PAW artifacts (ReviewContext.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, REVIEW-SYNTHESIS.md, etc.) in comments
 - These files are NOT committed to the branch and are NOT accessible to the PR submitter
 - Instead: Cite actual codebase files with file:line references
 - PAW artifacts are for YOUR internal use and for the reviewer's understanding only
@@ -370,7 +378,7 @@ Support tone adjustments while preserving evidence and IDs:
 - Final decisions rest with human reviewer
 
 **Comprehensive Coverage:**
-- ALL findings from GapAnalysis.md must be transformed into comments
+- ALL findings from evaluation artifacts must be transformed into comments
 - No cherry-picking or filtering
 - Positive observations included in summary
 - Questions documented in dedicated section
@@ -386,7 +394,7 @@ Support tone adjustments while preserving evidence and IDs:
 
 Before completing initial pass, verify:
 
-- [ ] All GapAnalysis.md findings transformed into comments
+- [ ] All evaluation findings transformed into comments
 - [ ] Related issues batched appropriately (not scattered)
 - [ ] Every comment has complete rationale (Evidence, Baseline Pattern, Impact, Best Practice)
 - [ ] Code examples included for non-trivial suggestions

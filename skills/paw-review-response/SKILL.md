@@ -9,7 +9,7 @@ description: Shared PR review comment response mechanics for PAW activity skills
 
 ### 1. Read All Unresolved Comments
 
-- Use GitHub MCP tools to fetch PR comments and conversation threads
+- Fetch both top-level PR comments (`get_comments`) and inline review threads (`get_review_comments`)
 - Identify which comments still require work:
   - Check for follow-up commits addressing the comment
   - Check for reviewer replies indicating resolution

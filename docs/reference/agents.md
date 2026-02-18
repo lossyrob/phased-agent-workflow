@@ -134,7 +134,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md (single-model mode) |
 | `paw-review-gap` | Activity | Evaluation | GapAnalysis.md (single-model mode) |
 | `paw-sot` | Engine | Evaluation | REVIEW-{SPECIALIST}.md, REVIEW-SYNTHESIS.md (SoT mode) |
-| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo, single-model only) |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo) |
 | `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
 | `paw-review-github` | Activity | Output | GitHub pending review |

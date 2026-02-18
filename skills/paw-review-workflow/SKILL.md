@@ -194,7 +194,7 @@ After paw-sot completes orchestration and synthesis, proceed to the Output stage
 
 **Skill**: `paw-review-correlation`
 
-**Condition**: Only run when multiple PRs/repositories detected AND `Review Mode` is `single-model` (or absent). Skip for single-repo reviews. Skip when `Review Mode` is `society-of-thought` (cross-repo correlation with SoT evaluation is not yet supported).
+**Condition**: Only run when multiple PRs/repositories detected. Skip for single-repo reviews.
 
 **Detection Criteria** (any of):
 - Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
@@ -203,7 +203,7 @@ After paw-sot completes orchestration and synthesis, proceed to the Output stage
 
 **Sequence**:
 1. Run `paw-review-correlation` activity
-   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md)
+   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md in single-model mode, or REVIEW-SYNTHESIS.md in SoT mode)
    - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
 
 **Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.

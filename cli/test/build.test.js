@@ -32,7 +32,7 @@ describe('build-dist script', () => {
     assert.ok(existsSync(skillsDir), 'dist/skills should exist');
     
     const skills = readdirSync(skillsDir);
-    assert.ok(skills.length >= 26, `should have at least 26 skills, found ${skills.length}`);
+    assert.ok(skills.length >= 27, `should have at least 27 skills, found ${skills.length}`);
   });
   
   test('processes vscode conditionals correctly', () => {
@@ -66,8 +66,8 @@ describe('build-dist script', () => {
   });
 
   test('copies references/ directories for skills that have them', () => {
-    const refsDir = join(DIST_DIR, 'skills', 'paw-final-review', 'references', 'specialists');
-    assert.ok(existsSync(refsDir), 'dist should include paw-final-review/references/specialists/');
+    const refsDir = join(DIST_DIR, 'skills', 'paw-sot', 'references', 'specialists');
+    assert.ok(existsSync(refsDir), 'dist should include paw-sot/references/specialists/');
     
     const specialists = readdirSync(refsDir);
     assert.ok(specialists.includes('_shared-rules.md'), 'should include _shared-rules.md');

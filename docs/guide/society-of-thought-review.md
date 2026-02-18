@@ -2,6 +2,8 @@
 
 Society-of-thought is a Final Review mode that uses **specialist personas** — each with a unique cognitive strategy and behavioral rules — to review your implementation from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes your code, then a synthesis step merges their findings into a single prioritized report.
 
+The society-of-thought engine is implemented as the `paw-sot` utility skill, which `paw-final-review` delegates to when `society-of-thought` mode is configured. This three-tier design separates concerns: `paw-sot` handles specialist discovery, selection, execution, and synthesis; `paw-final-review` handles review configuration, resolution (apply/skip/discuss), and workflow integration; and the user interacts only with `paw-final-review`.
+
 ## Why Perspective Diversity Matters
 
 Traditional code review (whether human or AI) tends to look at code through one lens. A single reviewer might catch logic bugs but miss security implications. Multi-model review helps by adding model-architecture diversity, but every model still answers the same questions.

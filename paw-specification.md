@@ -205,7 +205,7 @@ agents/                         # orchestrator agent prompts (2 agents)
   PAW.agent.md                  # Implementation workflow orchestrator
   PAW Review.agent.md           # Review workflow orchestrator
 
-skills/                         # activity and utility skills (29 skills)
+skills/                         # activity and utility skills (30 skills)
   paw-spec/SKILL.md
   paw-spec-research/SKILL.md
   paw-planning/SKILL.md
@@ -257,7 +257,7 @@ PAW uses a **2-agent + skills** architecture:
 
 - **PAW Agent** (`agents/PAW.agent.md`): Orchestrates implementation workflows
 - **PAW Review Agent** (`agents/PAW Review.agent.md`): Orchestrates review workflows
-- **29 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
+- **30 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
 
 ### Hybrid Execution Model
 
@@ -295,6 +295,7 @@ This preserves user collaboration for interactive work while leveraging context 
 | `paw-review-response` | PR comment mechanics |
 | `paw-docs-guidance` | Documentation templates |
 | `paw-workflow` | Workflow reference documentation |
+| `paw-sot` | Society-of-thought engine (loaded by `paw-final-review`) |
 
 ### Review Workflow Skills
 
@@ -429,7 +430,7 @@ When the plan includes a documentation phase, `paw-implement` loads the `paw-doc
 
 **Workflow:**
 
-1. `paw-final-review` reviews the full implementation diff against spec (if review enabled). Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (specialist personas with parallel or debate interaction)
+1. `paw-final-review` reviews the full implementation diff against spec (if review enabled). Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (delegates to `paw-sot` for specialist personas with parallel or debate interaction)
 2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
 3. `paw-pr` crafts comprehensive PR description with decision audit trail
 4. `paw-pr` opens the final PR
@@ -1038,7 +1039,7 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 - See [Artifact Lifecycle](#artifact-lifecycle) section for mode descriptions and detection hierarchy
 
 **Final Review Mode** (Optional, defaults to `multi-model`)
-- Controls how `paw-final-review` executes: `single-model`, `multi-model`, or `society-of-thought`
+- Controls how `paw-final-review` executes: `single-model`, `multi-model`, or `society-of-thought` (delegates to `paw-sot`)
 - `society-of-thought` uses specialist personas with distinct cognitive strategies for independent review and synthesis
 
 **Final Review Specialists** (Optional, defaults to `all`)

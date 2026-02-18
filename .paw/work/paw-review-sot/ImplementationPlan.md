@@ -50,7 +50,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 - **`skills/paw-review-understanding/SKILL.md`**: Add SoT configuration fields to the ReviewContext.md template (lines ~221-277). New fields: `Review Mode` (default: single-model), `Review Specialists` (default: all), `Review Interaction Mode` (default: parallel), `Review Interactive` (default: smart), `Review Specialist Models` (default: none). Fields placed in a new "## Review Configuration" section after metadata, following the naming pattern from WorkflowContext.md's "Agent Review Configuration" section. Add guidance on how these fields are populated (from user invocation parameters or defaults).
 
 - **`skills/paw-review-workflow/SKILL.md`**: 
-  - **Evaluation Stage** (lines 150-163): Replace the unconditional sequence with a conditional branch. When `review_mode: society-of-thought` in ReviewContext.md: load `paw-sot` skill directly (not as subagent — per `paw-sot/SKILL.md:9`) with review context constructed from ReviewContext.md fields. Adapter mapping table follows `paw-final-review` pattern: `type: diff`, `coordinates: git diff <base>...<head>` plus understanding artifact paths, `output_dir: .paw/reviews/<identifier>/`, remaining fields from ReviewContext.md SoT config. When `review_mode` is absent or `single-model`: existing impact → gap sequence unchanged.
+  - **Evaluation Stage** (lines 150-163): Replace the unconditional sequence with a conditional branch. When `review_mode: society-of-thought` in ReviewContext.md: load `paw-sot` skill directly (not as subagent — per `paw-sot/SKILL.md:9`) with review context constructed from ReviewContext.md fields. Adapter mapping table follows `paw-final-review` pattern: `type: diff`, `coordinates: git diff <base>...<head>` plus understanding artifact paths, `output_dir: .paw/reviews/<identifier>/`, remaining fields from ReviewContext.md SoT config. When `review_mode` is absent or `single-model`: existing impact → gap sequence unchanged. Include error handling: if paw-sot skill cannot be loaded, report error to user — do not fall back to single-model silently.
   - **Stage Gate** (line 163): Make mode-aware — verify `REVIEW-SYNTHESIS.md` exists (SoT) OR `ImpactAnalysis.md` + `GapAnalysis.md` exist (single-model).
   - **Artifact Directory Structure** (lines 97-107): Add `REVIEW-{SPECIALIST}.md` and `REVIEW-SYNTHESIS.md` entries with "(Stage: Evaluation, SoT mode)" annotation. Keep existing `ImpactAnalysis.md` and `GapAnalysis.md` entries (used in single-model mode).
 
@@ -70,6 +70,10 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 - [ ] Stage gate is mode-aware (checks correct artifacts per mode)
 - [ ] Artifact directory structure includes SoT artifacts
 - [ ] Single-model path reads identically to current behavior
+- [ ] Error handling present: paw-sot skill load failure → error reported, no silent fallback
+- [ ] Specialist selection config (all/list/adaptive) passes through to paw-sot contract correctly
+- [ ] Interaction mode config (parallel/debate) passes through to paw-sot contract correctly
+- [ ] Specialist models config passes through to paw-sot contract correctly
 
 ---
 
@@ -77,7 +81,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 
 ### Changes Required:
 
-- **`skills/paw-review-feedback/SKILL.md`**: Update prerequisites section (lines ~14-21) to accept `REVIEW-SYNTHESIS.md` as an alternative to `ImpactAnalysis.md` + `GapAnalysis.md`. When `REVIEW-SYNTHESIS.md` exists: use it as the findings source (severity mapping: must-fix → Must, should-fix → Should, consider → Could; exclude Observations section). When it doesn't exist: require `ImpactAnalysis.md` + `GapAnalysis.md` as before. Add brief guidance on how SoT findings map to the comment generation pipeline (file:line references from specialist citations, impact from synthesis evidence).
+- **`skills/paw-review-feedback/SKILL.md`**: Update prerequisites section (lines ~14-21) to accept `REVIEW-SYNTHESIS.md` as an alternative to `ImpactAnalysis.md` + `GapAnalysis.md`. When `REVIEW-SYNTHESIS.md` exists: use it as the findings source (severity mapping: must-fix → Must, should-fix → Should, consider → Could; exclude Observations section; trade-offs from "Trade-offs Requiring Decision" section should be included as Should-tier findings with a "[Trade-off]" prefix so the human reviewer sees them). When it doesn't exist: require `ImpactAnalysis.md` + `GapAnalysis.md` as before. Add brief guidance on how SoT findings map to the comment generation pipeline (file:line references from specialist citations, impact from synthesis evidence).
 
 - **`skills/paw-review-critic/SKILL.md`**: Update prerequisites section (lines ~17-22) to accept `REVIEW-SYNTHESIS.md` as an alternative supporting artifact to `ImpactAnalysis.md` + `GapAnalysis.md`. Same conditional logic — if REVIEW-SYNTHESIS.md exists, use it; otherwise require the traditional artifacts.
 
@@ -95,6 +99,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 
 #### Manual Verification:
 - [ ] paw-review-feedback accepts REVIEW-SYNTHESIS.md as alternative input with severity mapping documented
+- [ ] Trade-offs from REVIEW-SYNTHESIS.md mapped as Should-tier with [Trade-off] prefix
 - [ ] paw-review-critic accepts REVIEW-SYNTHESIS.md as alternative supporting artifact
 - [ ] Output Stage artifact references are mode-aware
 - [ ] Single-model path prerequisites unchanged

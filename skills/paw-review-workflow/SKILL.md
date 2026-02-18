@@ -100,8 +100,10 @@ All review artifacts are stored in a consistent directory structure:
 ├── ResearchQuestions.md      # Stage: Understanding (initial)
 ├── CodeResearch.md           # Stage: Baseline Research
 ├── DerivedSpec.md            # Stage: Understanding (after research)
-├── ImpactAnalysis.md         # Stage: Evaluation (impact)
-├── GapAnalysis.md            # Stage: Evaluation (gaps)
+├── ImpactAnalysis.md         # Stage: Evaluation (single-model mode)
+├── GapAnalysis.md            # Stage: Evaluation (single-model mode)
+├── REVIEW-{SPECIALIST}.md   # Stage: Evaluation (SoT mode, per specialist)
+├── REVIEW-SYNTHESIS.md       # Stage: Evaluation (SoT mode, synthesized findings)
 ├── CrossRepoAnalysis.md      # Stage: Correlation (multi-repo only)
 └── ReviewComments.md         # Stage: Output (evolves: draft → assessed → finalized → posted)
 ```
@@ -149,6 +151,10 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 ### Evaluation Stage
 
+Read `Review Mode` from ReviewContext.md to determine the evaluation path.
+
+#### Single-Model Mode (default)
+
 **Skills**: `paw-review-impact`, `paw-review-gap`
 
 **Sequence**:
@@ -161,6 +167,28 @@ The workflow executes stages in sequence, with each stage producing artifacts co
    - Output: `GapAnalysis.md`
 
 **Stage Gate**: Verify ImpactAnalysis.md, GapAnalysis.md exist before proceeding.
+
+#### Society-of-Thought Mode
+
+**Engine**: `paw-sot` (loaded into orchestrator session, not as subagent)
+
+When `Review Mode` is `society-of-thought`, load the `paw-sot` skill directly and invoke it with a review context constructed from ReviewContext.md fields and understanding artifacts:
+
+| Review Context Field | Source |
+|---------------------|--------|
+| `type` | `diff` |
+| `coordinates` | Diff: `git diff <base-commit>...<head-commit>`; Artifacts: ReviewContext.md, CodeResearch.md, DerivedSpec.md paths |
+| `output_dir` | `.paw/reviews/<identifier>/` |
+| `specialists` | `Review Specialists` value from ReviewContext.md |
+| `interaction_mode` | `Review Interaction Mode` value from ReviewContext.md |
+| `interactive` | `Review Interactive` value from ReviewContext.md |
+| `specialist_models` | `Review Specialist Models` value from ReviewContext.md |
+
+After paw-sot completes orchestration and synthesis, proceed to the Output stage.
+
+**Error handling**: If paw-sot skill cannot be loaded, report error to user — do not fall back to single-model silently.
+
+**Stage Gate**: Verify REVIEW-SYNTHESIS.md exists before proceeding.
 
 ### Cross-Repository Correlation Stage (Multi-Repo Only)
 
@@ -175,7 +203,7 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Sequence**:
 1. Run `paw-review-correlation` activity
-   - Input: All per-repo ImpactAnalysis.md and GapAnalysis.md files
+   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md in single-model mode, or REVIEW-SYNTHESIS.md in SoT mode)
    - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
 
 **Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.
@@ -191,7 +219,7 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
 **Sequence**:
 
 1. **Run `paw-review-feedback` activity (Initial Pass)**
-   - Input: All prior artifacts (ReviewContext, CodeResearch, DerivedSpec, ImpactAnalysis, GapAnalysis, optionally CrossRepoAnalysis)
+   - Input: All prior artifacts — ReviewContext, CodeResearch, DerivedSpec, and evaluation artifacts (ImpactAnalysis + GapAnalysis in single-model mode, or REVIEW-SYNTHESIS in SoT mode), optionally CrossRepoAnalysis
    - Output: `ReviewComments.md` with draft comments (status: draft)
    - Does NOT post to GitHub in this pass
    

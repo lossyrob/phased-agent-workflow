@@ -32,7 +32,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 - Modifying paw-review-gap or paw-review-impact skills
 
 ## Phase Status
-- [ ] **Phase 1: SoT Evaluation Path** - Add SoT config to ReviewContext.md and conditional routing in Evaluation Stage
+- [x] **Phase 1: SoT Evaluation Path** - Add SoT config to ReviewContext.md and conditional routing in Evaluation Stage
 - [ ] **Phase 2: Output Stage Adaptation** - Update feedback/critic prerequisites and workflow artifact references for SoT mode
 - [ ] **Phase 3: Specification & Documentation** - Update paw-review-specification.md and user-facing documentation
 

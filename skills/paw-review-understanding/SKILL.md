@@ -252,6 +252,16 @@ status: complete
 **Changed Files**: <count> files, +<additions> -<deletions>
 **Artifact Paths**: .paw/reviews/<identifier>/
 
+## Review Configuration
+
+**Review Mode**: <single-model (default) | society-of-thought>
+**Review Specialists**: <all (default) | comma-separated names | adaptive:\<N\>>
+**Review Interaction Mode**: <parallel (default) | debate>
+**Review Interactive**: <false (default) | true | smart>
+**Review Specialist Models**: <none (default) | model pool | pinned:model pairs | mixed>
+
+*SoT configuration fields are populated from invocation parameters. When not provided, defaults are applied automatically.*
+
 ## Description
 
 <PR description text or commit message summary>

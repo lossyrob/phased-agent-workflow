@@ -27,7 +27,7 @@ The calling skill provides a **review context** describing what to review and ho
 | `type` | yes | `diff` \| `artifacts` \| `freeform` | What kind of content is being reviewed |
 | `coordinates` | yes | diff range, artifact paths, or content description | What to point specialists at |
 | `output_dir` | yes | directory path | Where to write REVIEW-*.md files |
-| `specialists` | yes | `all` \| comma-separated names \| `adaptive:<N>` | Which specialists to invoke |
+| `specialists` | no | `all` (default) \| comma-separated names \| `adaptive:<N>` | Which specialists to invoke |
 | `interaction_mode` | yes | `parallel` \| `debate` | How specialists interact |
 | `interactive` | yes | `true` \| `false` \| `smart` | Whether to pause for user decisions on trade-offs |
 | `specialist_models` | no | `none` \| model pool \| pinned pairs \| mixed | Model assignment for specialists |
@@ -75,10 +75,10 @@ When `specialists` is `adaptive:<N>`, select the N most relevant specialists fro
 
 **Edge cases**:
 - If N ≥ number of available specialists, include all (equivalent to `all`)
-- If the review target is trivial (e.g., single typo fix, comment-only changes), report to user and suggest falling back to a simpler review mode
+- If the review target is trivial (e.g., single typo fix, comment-only changes), report the condition to the calling context — the caller decides whether to proceed or fall back to a simpler review mode
 - If adaptive selection would select 0 specialists (no strong relevance signal):
-  - **Interactive mode** (`interactive: true`): Present the user with options — fall back to simpler review, or specify which specialists to include (including `all`)
-  - **Non-interactive mode** (`interactive: false` or `smart`): Fall back with a warning, preserving coverage without the full SoT workflow cost
+  - **Interactive mode** (`interactive: true`): Present the user with options — proceed with all specialists, specify which to include, or report the condition to the calling context for fallback
+  - **Non-interactive mode** (`interactive: false` or `smart`): Report the condition to the calling context — the caller decides how to proceed
 
 **Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
 
@@ -230,7 +230,7 @@ Location: review context's `output_dir`.
 
 ## Moderator Mode
 
-> **Invocation**: Moderator mode is a **separate invocation** from orchestration+synthesis. The calling skill invokes paw-sot once for orchestration and synthesis, handles its own resolution flow (apply/skip/discuss), then invokes paw-sot again for moderator mode if conditions are met. The calling skill provides the synthesis output path and review coordinates.
+> **Invocation**: Moderator mode is a **separate invocation** from orchestration+synthesis. The calling skill invokes paw-sot once for orchestration and synthesis, handles its own resolution flow (apply/skip/discuss), then invokes paw-sot again for moderator mode if conditions are met. The calling skill provides the review context `type`, `output_dir` (containing individual specialist reviews and REVIEW-SYNTHESIS.md), and review coordinates.
 
 After the calling skill completes finding resolution, moderator mode enables deeper interactive engagement with specialist personas.
 
@@ -246,4 +246,4 @@ Announce moderator mode with a brief prompt: available specialists, interaction 
 
 **Exit**: User says "done", "continue", or "proceed" to exit moderator mode.
 
-**Skip condition**: If `interactive` is `false`, or no findings exist, skip moderator mode entirely.
+**Skip condition**: If `interactive` is `false`, no findings exist, or `interactive` is `smart` with no significant findings (only `consider`-tier), skip moderator mode entirely.

@@ -264,7 +264,7 @@ Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` item
 {{#cli}}
 #### Moderator Mode (society-of-thought only)
 
-After finding resolution completes, if `Final Review Mode` is `society-of-thought` and (`Final Review Interactive` is `true`, or `smart` with significant findings remaining), invoke `paw-sot` a second time for moderator mode — pass the REVIEW-SYNTHESIS.md path and review coordinates (diff range, artifact paths).
+After finding resolution completes, if `Final Review Mode` is `society-of-thought` and (`Final Review Interactive` is `true`, or `smart` with significant findings remaining), invoke `paw-sot` a second time for moderator mode — pass the review context `type` (same as orchestration invocation, i.e., `diff`), `output_dir` (containing individual REVIEW-{SPECIALIST}.md files and REVIEW-SYNTHESIS.md), and review coordinates (diff range, artifact paths).
 
 The `paw-sot` moderator mode handles specialist summoning, finding challenges, and deeper analysis. See `paw-sot` skill for interaction patterns.
 

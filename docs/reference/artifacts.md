@@ -27,8 +27,10 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       ResearchQuestions.md      # Research questions for baseline analysis
       CodeResearch.md           # Pre-change baseline
       DerivedSpec.md            # Reverse-engineered spec
-      ImpactAnalysis.md         # Impact analysis
-      GapAnalysis.md            # Gap analysis
+      ImpactAnalysis.md         # Impact analysis (single-model mode)
+      GapAnalysis.md            # Gap analysis (single-model mode)
+      REVIEW-{SPECIALIST}.md   # Per-specialist findings (SoT mode)
+      REVIEW-SYNTHESIS.md       # Synthesized findings (SoT mode)
       ReviewComments.md         # Review comments
 ```
 
@@ -183,11 +185,11 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### REVIEW-SYNTHESIS.md
 
-**Purpose:** Synthesized review findings from society-of-thought or multi-model final review.
+**Purpose:** Synthesized review findings from society-of-thought or multi-model review.
 
-**Created by:** `paw-final-review` skill (via `paw-sot` engine for society-of-thought mode, or directly for multi-model mode)
+**Created by:** `paw-final-review` skill (implementation workflow) or `paw-review-workflow` (review workflow), both via `paw-sot` engine for society-of-thought mode
 
-**Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (gitignored with other review artifacts)
+**Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (implementation) or `.paw/reviews/<identifier>/REVIEW-SYNTHESIS.md` (review workflow)
 
 **Contents:**
 
@@ -250,7 +252,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### ImpactAnalysis.md
 
-**Purpose:** System-wide effects, integration analysis, and risk assessment.
+**Purpose:** System-wide effects, integration analysis, and risk assessment (single-model mode only; replaced by specialist evaluation in society-of-thought mode).
 
 **Created by:** `paw-review-impact` skill
 
@@ -266,7 +268,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### GapAnalysis.md
 
-**Purpose:** Categorized findings with evidence and suggestions.
+**Purpose:** Categorized findings with evidence and suggestions (single-model mode only; replaced by specialist evaluation in society-of-thought mode).
 
 **Created by:** `paw-review-gap` skill
 

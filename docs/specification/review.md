@@ -130,19 +130,27 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Goal:** Assess impact and identify what might be missing or concerning
 
-**Skills:** `paw-review-impact`, `paw-review-gap`
+**Review Modes:**
+
+- **Single-model** (default): `paw-review-impact`, `paw-review-gap`
+- **Society-of-thought**: `paw-sot` engine (replaces both impact and gap analysis)
 
 **Inputs:**
 
 - All Stage R1 artifacts
 - Repository codebase at base and head commits
 
-**Outputs:**
+**Outputs (single-model):**
 
 - `ImpactAnalysis.md` — System-wide effects, integration points, breaking changes
 - `GapAnalysis.md` — Findings organized by Must/Should/Could
 
-**Process:**
+**Outputs (society-of-thought):**
+
+- `REVIEW-{SPECIALIST}.md` — Per-specialist findings
+- `REVIEW-SYNTHESIS.md` — Confidence-weighted synthesized findings
+
+**Process (single-model):**
 
 1. **Analyze impact**
     - Build integration graph of dependencies
@@ -164,6 +172,14 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
     - **Must** — Correctness, safety, security issues with concrete impact
     - **Should** — Quality, completeness, testing gaps
     - **Could** — Optional enhancements
+
+**Process (society-of-thought):**
+
+1. Construct review context from ReviewContext.md and pass to `paw-sot`
+2. Specialists review PR diff with distinct cognitive strategies
+3. Synthesis merges findings with confidence weighting and conflict resolution
+
+See [Society-of-Thought Review](../guide/society-of-thought-review.md) for configuration details.
 
 ---
 

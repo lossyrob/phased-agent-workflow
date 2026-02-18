@@ -34,7 +34,7 @@ The implementation follows the proven adapter pattern from `paw-final-review/SKI
 ## Phase Status
 - [x] **Phase 1: SoT Evaluation Path** - Add SoT config to ReviewContext.md and conditional routing in Evaluation Stage
 - [x] **Phase 2: Output Stage Adaptation** - Update feedback/critic prerequisites and workflow artifact references for SoT mode
-- [ ] **Phase 3: Specification & Documentation** - Update paw-review-specification.md and user-facing documentation
+- [x] **Phase 3: Specification & Documentation** - Update paw-review-specification.md and user-facing documentation
 
 ## Phase Candidates
 <!-- Lightweight capture of potential phases identified during implementation. -->

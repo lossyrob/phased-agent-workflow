@@ -135,7 +135,7 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Sequence**:
 1. Run `paw-review-understanding` activity
-   - Input: PR number/URL or branch context
+   - Input: PR number/URL or branch context, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
    - Output: `ReviewContext.md`, `ResearchQuestions.md`
    
 2. Run `paw-review-baseline` activity
@@ -151,7 +151,7 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 ### Evaluation Stage
 
-Read `Review Mode` from ReviewContext.md to determine the evaluation path.
+Read `Review Mode` from ReviewContext.md to determine the evaluation path. If the value is not `single-model`, `society-of-thought`, or absent, report an error (`Unknown Review Mode: <value>`) and do not proceed.
 
 #### Single-Model Mode (default)
 
@@ -194,7 +194,7 @@ After paw-sot completes orchestration and synthesis, proceed to the Output stage
 
 **Skill**: `paw-review-correlation`
 
-**Condition**: Only run when multiple PRs/repositories detected. Skip for single-repo reviews.
+**Condition**: Only run when multiple PRs/repositories detected AND `Review Mode` is `single-model` (or absent). Skip for single-repo reviews. Skip when `Review Mode` is `society-of-thought` (cross-repo correlation with SoT evaluation is not yet supported).
 
 **Detection Criteria** (any of):
 - Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
@@ -203,7 +203,7 @@ After paw-sot completes orchestration and synthesis, proceed to the Output stage
 
 **Sequence**:
 1. Run `paw-review-correlation` activity
-   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md in single-model mode, or REVIEW-SYNTHESIS.md in SoT mode)
+   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md)
    - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
 
 **Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.

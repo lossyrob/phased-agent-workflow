@@ -481,6 +481,8 @@ Findings organized by severity and category, with positive observations.
 
 **Purpose:** Provides structured, evidence-based findings with positive observations; human reviewer selects which to include in final comments.
 
+> **Note**: ImpactAnalysis.md and GapAnalysis.md are produced in **single-model mode** only. In **society-of-thought mode**, the Evaluation Stage produces `REVIEW-{SPECIALIST}.md` per specialist and `REVIEW-SYNTHESIS.md` (see [Stage R2](#stage-r2-evaluation)).
+
 ---
 
 ### ReviewComments.md

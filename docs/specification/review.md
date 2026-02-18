@@ -306,6 +306,8 @@ Findings organized by severity.
 ...
 ```
 
+> **Note**: ImpactAnalysis.md and GapAnalysis.md are produced in **single-model mode** only. In **society-of-thought mode**, the Evaluation Stage produces `REVIEW-{SPECIALIST}.md` per specialist and `REVIEW-SYNTHESIS.md` (see [Stage R2](#stage-r2-evaluation)).
+
 ### ReviewComments.md
 
 Complete feedback with full comment history showing evolution from original to posted.

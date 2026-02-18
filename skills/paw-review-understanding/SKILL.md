@@ -184,6 +184,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - All metadata fields populated
 - Flags section identifies applicable conditions
 - Base and head commit SHAs recorded
+- Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
 
 ### ResearchQuestions.md
 - Questions are specific and answerable
@@ -260,7 +261,7 @@ status: complete
 **Review Interactive**: <false (default) | true | smart>
 **Review Specialist Models**: <none (default) | model pool | pinned:model pairs | mixed>
 
-*SoT configuration fields are populated from invocation parameters. When not provided, defaults are applied automatically.*
+*SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above.*
 
 ## Description
 

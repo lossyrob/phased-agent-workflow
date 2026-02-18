@@ -17,9 +17,10 @@ Also verify access to all supporting artifacts:
 - `ReviewContext.md` (PR metadata)
 - `CodeResearch.md` (baseline understanding)
 - `DerivedSpec.md` (PR intent)
-- Evaluation artifacts — **one of**:
-  - `ImpactAnalysis.md` + `GapAnalysis.md` (single-model mode)
-  - `REVIEW-SYNTHESIS.md` (society-of-thought mode)
+- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+  - If `single-model` or absent: require `ImpactAnalysis.md` + `GapAnalysis.md`
+  - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
+  - If present artifacts don't match configured mode, report inconsistency
 
 If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
 

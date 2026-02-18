@@ -1,11 +1,11 @@
 ---
 name: paw-review-feedback
-description: Transforms gap analysis findings into structured review comments with comprehensive rationale. Handles both initial draft generation and critique response iteration.
+description: Transforms evaluation findings into structured review comments with comprehensive rationale. Handles both initial draft generation and critique response iteration.
 ---
 
 # PAW Review Feedback Skill
 
-Transform gap analysis findings into structured review comments with comprehensive rationale sections that cite evidence, baseline patterns, impact, and best practices.
+Transform evaluation findings into structured review comments with comprehensive rationale sections that cite evidence, baseline patterns, impact, and best practices.
 
 > **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
 
@@ -15,18 +15,19 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 - `ReviewContext.md` (PR metadata and parameters)
 - `CodeResearch.md` (baseline codebase understanding)
 - `DerivedSpec.md` (what the PR is trying to achieve)
-- Evaluation artifacts — **one of**:
-  - `ImpactAnalysis.md` + `GapAnalysis.md` (single-model mode)
-  - `REVIEW-SYNTHESIS.md` (society-of-thought mode)
+- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+  - If `single-model` or absent: require `ImpactAnalysis.md` + `GapAnalysis.md`
+  - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
+  - If present artifacts don't match configured mode, report inconsistency
 - `CrossRepoAnalysis.md` (optional—only for multi-repo reviews)
 
 If any required artifact is missing, report blocked status—earlier stages must complete first.
 
 **SoT mode input mapping**: When `REVIEW-SYNTHESIS.md` is the evaluation source, map findings to the comment pipeline as follows:
 - Severity: must-fix → Must, should-fix → Should, consider → Could
-- Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix
+- Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix (note: this mapping is active only when `Review Interactive` is `true` or `smart`; with `false` default, trade-offs are auto-resolved by paw-sot and appear as regular findings)
 - Observations section → excluded from comment generation (contextual-tier, not actionable)
-- File:line references from specialist citations map to comment File+lines fields
+- File:line references from specialist citations map to comment File+lines fields. If a synthesis finding lacks specific file:line references, generate a thread-level comment instead of inline
 - Impact evidence is embedded in synthesis findings (no separate ImpactAnalysis.md)
 
 **Multi-repo detection**: Check if `CrossRepoAnalysis.md` exists. If present, incorporate cross-repo gaps into comment generation.

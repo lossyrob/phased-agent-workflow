@@ -28,7 +28,12 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
 | `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
+{{#vscode}}
 | `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
+{{/vscode}}
+{{#cli}}
+| `session_policy` | No | `continuous` | `continuous` |
+{{/cli}}
 | `artifact_lifecycle` | No | `commit-and-clean` | `commit-and-clean`, `commit-and-persist`, `never-commit` |
 | `issue_url` | No | none | URL |
 | `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |

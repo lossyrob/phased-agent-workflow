@@ -48,7 +48,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
 | `paw-spec-review` | Validate spec quality and completeness | Structured feedback |
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
-| `paw-planning` | Create implementation plans with phases | ImplementationPlan.md |
+| `paw-planning` | Create implementation plans with phases (single/multi-model) | ImplementationPlan.md, planning/ |
 | `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |

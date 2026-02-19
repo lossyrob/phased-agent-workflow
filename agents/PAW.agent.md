@@ -174,20 +174,6 @@ When pausing at a milestone, provide:
 - `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
 - `paw-transition`
 
-**Multi-model plan review** (orchestrator-managed, CLI only):
-When `Plan Review Mode` is `multi-model` in WorkflowContext.md, the orchestrator handles plan review differently since `paw-plan-review` runs as a subagent and cannot spawn sub-subagents:
-
-1. Read `Plan Review Mode` and `Plan Review Models` from WorkflowContext.md. If fields are missing, default to `single-model`.
-2. If `single-model`: Delegate to `paw-plan-review` as a single subagent (current behavior).
-3. If `multi-model` (CLI only):
-   a. Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model)
-   b. Present resolved models for confirmation before spawning
-   c. Create `.paw/work/<work-id>/planning/` directory and `.gitignore` with `*` if not already present
-   d. Spawn N parallel `paw-plan-review` subagents using `task` tool with `model` parameter
-   e. Save per-model verdicts as `PLAN-REVIEW-{MODEL}.md` in the `planning/` subfolder
-   f. Synthesize verdicts into `PLAN-REVIEW-SYNTHESIS.md` using weighted verdict: PASS if majority passes, FAIL if majority fails, all concerns surfaced regardless. Use template from `paw-workflow` reference.
-   g. If a model fails, proceed with ≥2 results; otherwise offer retry or single-model fallback.
-
 **Orchestrator-handled** (after subagent returns):
 - After `paw-plan-review` returns PASS: Check Planning Docs Review config. If enabled, load `paw-planning-docs-review` directly. If disabled, load `paw-git-operations`, create Planning PR (PRs) or commit (local).
 - After `paw-planning-docs-review` completes: **Delegate to `paw-transition`** (this is a stage boundary). Then load `paw-git-operations`, create Planning PR (PRs) or proceed to implementation (local).

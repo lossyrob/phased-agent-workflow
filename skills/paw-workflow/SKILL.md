@@ -87,8 +87,7 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── Docs.md                 # Technical documentation (created during final implementation phase)
 ├── prompts/                # Generated prompt files (optional)
 ├── planning/              # Multi-model planning artifacts (gitignored)
-│   ├── PLAN-{MODEL}.md          # Per-model plan drafts
-│   └── CRITIQUE-{MODEL}.md      # Debate artifacts (deep mode only)
+│   └── PLAN-{MODEL}.md          # Per-model plan drafts
 └── reviews/                # Review artifacts (gitignored)
     ├── planning/           # Planning Documents Review artifacts
     │   ├── REVIEW.md

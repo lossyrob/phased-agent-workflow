@@ -47,7 +47,7 @@ Read WorkflowContext.md for:
 - Planning Docs Review: `enabled` | `disabled`
 - Final Review Mode: `single-model` | `multi-model` | `society-of-thought`
 - Final Review Interactive: `true` | `false` | `smart`
-- Plan Generation Mode: `single-model` | `multi-model` | `multi-model-deep`
+- Plan Generation Mode: `single-model` | `multi-model`
 - Plan Generation Models: comma-separated model names (for multi-model modes)
 - Planning Review Mode: `single-model` | `multi-model`
 - Planning Review Interactive: `true` | `false` | `smart`

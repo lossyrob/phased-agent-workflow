@@ -17,16 +17,16 @@ Create detailed implementation plans through interactive refinement. Plans descr
 
 Read WorkflowContext.md for:
 - Work ID and target branch
-- `Plan Generation Mode`: `single-model` | `multi-model` | `multi-model-deep`
+- `Plan Generation Mode`: `single-model` | `multi-model`
 - `Plan Generation Models`: comma-separated model names (for multi-model modes)
 
 The plan generation mode is set during `paw-init`. If the field is missing (legacy workflow), default to `single-model` (backwards compatibility).
 
 {{#cli}}
-If mode is `multi-model` or `multi-model-deep`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
+If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
 {{/cli}}
 {{#vscode}}
-**Note**: VS Code only supports `single-model` mode. If `multi-model` or `multi-model-deep` is configured, report to user: "Multi-model plan generation not available in VS Code; running single-model planning." Proceed with single-model.
+**Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, report to user: "Multi-model plan generation not available in VS Code; running single-model planning." Proceed with single-model.
 {{/vscode}}
 
 ## Capabilities
@@ -172,7 +172,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 6. Handle branching per Review Strategy (see below)
 
 {{#cli}}
-**If multi-model or multi-model-deep plan generation mode**:
+**If multi-model plan generation mode**:
 
 1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
 2. Create `.paw/work/<work-id>/planning/` directory if it doesn't exist
@@ -185,17 +185,14 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
    - [resolved model 2]
    - [resolved model 3]
 
-   Mode: [multi-model | multi-model-deep]
-   Estimated LLM calls: [N+1 for multi-model | 2N+1 for multi-model-deep] (N = number of models)
+   Estimated LLM calls: N+1 (N = number of models)
 
    Proceed?
    ```
 
-6. **Round 1 — Independent Plans (parallel)**: Spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the planning subagent prompt below along with the full contents of Spec.md, CodeResearch.md, and SpecResearch.md. Save per-model plans to `PLAN-{MODEL}.md` in the `planning/` subfolder.
+6. **Independent Plans (parallel)**: Spawn parallel subagents using `task` tool with `model` parameter for each model. Each subagent receives the planning subagent prompt below along with the full contents of Spec.md, CodeResearch.md, and SpecResearch.md. Save per-model plans to `PLAN-{MODEL}.md` in the `planning/` subfolder.
 
-7. **If multi-model-deep — Round 2 — Critique/Debate (parallel)**: Spawn parallel subagents again. Each model receives all plan drafts (all `PLAN-{MODEL}.md` files) and the critique prompt below. Save critiques to `CRITIQUE-{MODEL}.md` in the `planning/` subfolder.
-
-8. **Synthesis**: Read all per-model plans (and critiques in deep mode). Produce the final `ImplementationPlan.md` using the synthesis prompt below, selecting the best phase structure, architecture decisions, and catching blind spots.
+7. **Synthesis**: Read all per-model plans. Produce the final `ImplementationPlan.md` using the synthesis prompt below, selecting the best phase structure, architecture decisions, and catching blind spots.
 
 **Failure handling**: If a subagent fails, proceed with remaining results if at least 2 models completed successfully. If fewer than 2 succeed, offer user the choice to retry or fall back to single-model plan generation. Configurations with exactly 2 models are valid — synthesis works with any count ≥ 2.
 
@@ -216,28 +213,15 @@ Each subagent receives this prompt (self-contained, since subagents cannot load 
 > - Zero TBDs — all decisions must be made
 > - Include "What We're NOT Doing" to prevent scope creep
 
-#### Critique Prompt (deep mode only)
-
-Each model receives all plan drafts and this prompt:
-
-> You are reviewing multiple independently-created implementation plans for the same feature. Each plan is provided as PLAN-{MODEL}.md. You have access to all plans including your own.
->
-> Analyze all plans and produce a structured critique covering:
-> 1. **Strengths per plan** — best ideas worth keeping from each approach
-> 2. **Where plans disagree** — different phasing strategies, architecture choices, component boundaries, and reasoning for which approach is better
-> 3. **Risks and gaps** — issues any plan missed that others caught, or that all plans missed
-> 4. **Recommended synthesis** — specific advice on which elements to take from each plan (e.g., "take phasing from Plan A, architecture from Plan B, edge case handling from Plan C")
-
 #### Synthesis Prompt
 
-The session's agent reads all per-model plans (and critiques in deep mode) and applies this approach:
+The session's agent reads all per-model plans and applies this approach:
 
 > Synthesize the best elements from all plan drafts into a single final ImplementationPlan.md. Compare section-by-section across all plans:
 > - **Phase structure**: Choose the best decomposition — consider granularity, independence, and logical ordering
 > - **Architecture decisions**: Pick the strongest approach, noting where plans converged (high confidence) vs. diverged (needs careful selection)
 > - **Success criteria**: Merge the most comprehensive and measurable criteria from all plans
 > - **Scope boundaries**: Union of all "What We're NOT Doing" items
-> - If critiques are available (deep mode), incorporate debate insights and address identified risks
 >
 > The output must follow the standard ImplementationPlan.md template format exactly.
 {{/cli}}
@@ -288,7 +272,7 @@ When revising based on paw-plan-review feedback:
 
 Report to PAW agent:
 - Artifact path: `.paw/work/<work-id>/ImplementationPlan.md`
-- **Planning mode used**: single-model, multi-model, or multi-model-deep
+- **Planning mode used**: single-model or multi-model
 - **Models** (if multi-model): list of models used and any failures
 - **Plan summary** for quick review:
   - Architecture approach (1-2 sentences)

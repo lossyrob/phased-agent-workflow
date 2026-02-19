@@ -45,7 +45,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_review_specialists` | No | `all` | `all`, comma-separated names, or `adaptive:<N>` (e.g., `adaptive:3`) |
 | `final_review_interaction_mode` | No | `parallel` | `parallel`, `debate` |
 | `final_review_specialist_models` | No | `none` | `none`, model pool, pinned pairs, or mixed (see below) |
-| `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model`, `multi-model-deep` |
+| `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model` |
 | `plan_generation_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model` |

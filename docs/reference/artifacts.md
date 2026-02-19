@@ -1,6 +1,6 @@
 # PAW Artifacts Reference
 
-PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. All artifacts are committed to Git and version-controlled.
+PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. By default (`commit-and-clean` lifecycle), artifacts are committed during development and removed at PR time.
 
 ## Directory Structure
 
@@ -18,6 +18,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       WorkShaping.md            # Pre-spec ideation (optional)
       reviews/                  # Review artifacts (gitignored)
         planning/               # Planning Documents Review artifacts
+        REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
   
   reviews/                      # Review workflow
     PR-<number>/                # Single-repo: PR-123
@@ -26,8 +27,10 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       ResearchQuestions.md      # Research questions for baseline analysis
       CodeResearch.md           # Pre-change baseline
       DerivedSpec.md            # Reverse-engineered spec
-      ImpactAnalysis.md         # Impact analysis
-      GapAnalysis.md            # Gap analysis
+      ImpactAnalysis.md         # Impact analysis (single-model mode)
+      GapAnalysis.md            # Gap analysis (single-model mode)
+      REVIEW-{SPECIALIST}.md   # Per-specialist findings (SoT mode)
+      REVIEW-SYNTHESIS.md       # Synthesized findings (SoT mode)
       ReviewComments.md         # Review comments
 ```
 
@@ -54,10 +57,13 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Remote | Git remote name (default: "origin") |
 | Artifact Paths | Usually "auto-derived" |
 | Additional Inputs | Extra parameters |
+| Artifact Lifecycle | `commit-and-clean`, `commit-and-persist`, or `never-commit` |
 | Final Agent Review | `enabled` or `disabled` |
-| Final Review Mode | `single-model` or `multi-model` |
+| Final Review Mode | `single-model`, `multi-model`, or `society-of-thought` |
 | Final Review Interactive | `true`, `false`, or `smart` |
 | Final Review Models | Comma-separated model names |
+| Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` (society-of-thought only) |
+| Final Review Interaction Mode | `parallel` or `debate` (society-of-thought only) |
 | Planning Docs Review | `enabled` or `disabled` |
 | Planning Review Mode | `single-model` or `multi-model` |
 | Planning Review Interactive | `true`, `false`, or `smart` |
@@ -177,6 +183,22 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 **Note:** Focuses on concepts and user-facing behavior, not code reproduction.
 
+### REVIEW-SYNTHESIS.md
+
+**Purpose:** Synthesized review findings from society-of-thought or multi-model review.
+
+**Created by:** `paw-final-review` skill (implementation workflow) or `paw-review-workflow` (review workflow), both via `paw-sot` engine for society-of-thought mode
+
+**Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (implementation) or `.paw/reviews/<identifier>/REVIEW-SYNTHESIS.md` (review workflow)
+
+**Contents:**
+
+- **Review metadata** — Mode, participating specialists/models, selection rationale
+- **Prioritized findings** — Must-fix, should-fix, consider classifications with specialist attribution
+- **Confidence levels** — HIGH, MEDIUM, LOW per finding with supporting evidence
+- **Disagreement resolution** — How conflicting specialist perspectives were reconciled (society-of-thought)
+- **Grounding status** — Flags for findings referencing code not in the diff
+
 ---
 
 ## Review Workflow Artifacts
@@ -230,7 +252,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### ImpactAnalysis.md
 
-**Purpose:** System-wide effects, integration analysis, and risk assessment.
+**Purpose:** System-wide effects, integration analysis, and risk assessment (single-model mode only; replaced by specialist evaluation in society-of-thought mode).
 
 **Created by:** `paw-review-impact` skill
 
@@ -246,7 +268,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### GapAnalysis.md
 
-**Purpose:** Categorized findings with evidence and suggestions.
+**Purpose:** Categorized findings with evidence and suggestions (single-model mode only; replaced by specialist evaluation in society-of-thought mode).
 
 **Created by:** `paw-review-gap` skill
 
@@ -298,7 +320,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 ### Version Control
 
-- All artifacts committed to Git
+- Artifacts committed to Git during development (unless `never-commit` lifecycle)
 - Changes tracked through PRs
 - History preserved for traceability
 

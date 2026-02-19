@@ -53,14 +53,14 @@ Use the Mandatory Transitions table:
 
 ### Step 2.5: Candidate Promotion Check
 
-When next activity would be `paw-pr` (all planned phases complete), check for phase candidates:
+When all planned phases are complete (next activity would be `paw-final-review` or `paw-pr`), check for phase candidates:
 
 1. Read ImplementationPlan.md `## Phase Candidates` section
 2. Count **unresolved** candidates: `- [ ]` items WITHOUT terminal tags (`[skipped]`, `[deferred]`, `[not feasible]`)
 3. If unresolved candidates exist: set `promotion_pending = true` and extract candidate descriptions
 4. Otherwise: set `promotion_pending = false`
 
-If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction.
+If `promotion_pending = true`, return candidates in structured output. PAW orchestrator handles user interaction. Promoted candidates go through the standard flow (implement → impl-review) before final review runs, ensuring final review covers the complete implementation.
 
 ### Step 3: Check Stage Boundary and Milestone Pause
 
@@ -86,10 +86,13 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 | paw-pr complete | Final PR |
 
 **Determine pause_at_milestone**:
-- If Review Policy ∈ {`every-stage`, `milestones`}: pause at ALL milestones
+- If Review Policy = `every-stage`: pause at ALL milestones
+- If Review Policy = `milestones`:
+  - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Phase completion, Final PR: `pause_at_milestone = true`
+  - Final Review complete: `pause_at_milestone = false` (auto-proceed to paw-pr)
 - If Review Policy = `planning-only`:
   - Spec.md, ImplementationPlan.md, Planning Documents Review complete, Final PR: `pause_at_milestone = true`
-  - Phase completion (including last phase): `pause_at_milestone = false`
+  - Phase completion (including last phase), Final Review complete: `pause_at_milestone = false`
 - If Review Policy = `final-pr-only`:
   - Final PR: `pause_at_milestone = true`
   - All other milestones: `pause_at_milestone = false`
@@ -126,12 +129,14 @@ Before the next activity can start, verify:
 **For paw-pr**:
 - [ ] All phases complete
 - [ ] paw-final-review complete (if enabled) or skipped (if disabled)
+- [ ] No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`)
 - [ ] On target branch or ready to merge
 
-**Artifact Tracking Check** (for all activities):
-- Check if `.paw/work/<work-id>/.gitignore` exists
-- If exists with `*` pattern: artifact_tracking = `disabled`
-- Otherwise: artifact_tracking = `enabled`
+**Artifact Lifecycle Check** (for all activities):
+1. Check WorkflowContext.md for `Artifact Lifecycle:` field → use value
+2. If absent, check for legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. If absent, check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`
+4. Default: `commit-and-clean`
 
 If any check fails, report blocker and stop.
 
@@ -150,11 +155,11 @@ TRANSITION RESULT:
 - session_action: [continue | new_session]
 - pause_at_milestone: [true | false]
 - next_activity: [activity name and context]
-- artifact_tracking: [enabled | disabled]
+- artifact_lifecycle: [commit-and-clean | commit-and-persist | never-commit]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
-- promotion_pending: [true | false] (only when next would be paw-pr)
+- promotion_pending: [true | false] (only when all planned phases complete)
 - candidates: [list of unresolved candidate descriptions] (only if promotion_pending)
 ```
 

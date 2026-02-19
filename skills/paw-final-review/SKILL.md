@@ -1,6 +1,6 @@
 ---
 name: paw-final-review
-description: Pre-PR review activity skill for PAW workflow. Reviews implementation against spec before Final PR creation with configurable multi-model or single-model execution.
+description: Pre-PR review activity skill for PAW workflow. Reviews implementation against spec before Final PR creation with configurable single-model, multi-model, or society-of-thought execution.
 ---
 
 # Final Agent Review
@@ -13,6 +13,7 @@ Automated review step that runs after all implementation phases complete, before
 
 - Review implementation against spec for correctness, patterns, and issues
 - Multi-model parallel review with synthesis (CLI only)
+- Society-of-thought review via `paw-sot` engine with specialist personas, parallel/debate execution, and confidence-weighted synthesis (CLI only)
 - Single-model review (CLI and VS Code)
 - Interactive, smart, or auto-apply resolution modes
 - Generate review artifacts in `.paw/work/<work-id>/reviews/`
@@ -23,12 +24,17 @@ Automated review step that runs after all implementation phases complete, before
 
 Read WorkflowContext.md for:
 - Work ID and target branch
-- `Final Review Mode`: `single-model` | `multi-model`
+- `Final Review Mode`: `single-model` | `multi-model` | `society-of-thought`
 - `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
 {{#cli}}
 If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
+
+If mode is `society-of-thought`, also read:
+- `Final Review Specialists`: `all` (default) | comma-separated specialist names | `adaptive:<N>`
+- `Final Review Interaction Mode`: `parallel` (default) | `debate`
+- `Final Review Specialist Models`: `none` (default) | model pool | pinned pairs | mixed
 {{/cli}}
 {{#vscode}}
 **Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
@@ -36,16 +42,9 @@ If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Ge
 
 ### Step 2: Gather Review Context
 
-**Required context**:
-- Full diff of implementation changes (target branch vs base branch)
-- Spec.md requirements and success criteria
-- ImplementationPlan.md phases and scope
-- CodeResearch.md patterns and conventions
-
-**Generate diff**:
-```bash
-git diff <base-branch>...<target-branch>
-```
+**Required context** (review subagents gather this themselves via tools):
+- Implementation diff: `git diff <base-branch>...<target-branch>`
+- Spec.md, ImplementationPlan.md, CodeResearch.md in `.paw/work/<work-id>/`
 
 ### Step 3: Create Reviews Directory
 
@@ -54,19 +53,18 @@ Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already
 
 ### Review Prompt (shared)
 
-Use this prompt for all review executions (single-model or each multi-model subagent):
+Provide this to all review subagents (single-model or each multi-model subagent). Subagents have full tool access — they gather context themselves rather than receiving it inline.
 
 ```
 Review this implementation against the specification. Be critical and thorough.
 
-## Specification
-[Include Spec.md content]
+## Context Locations
+- **Diff**: Run `git diff <base-branch>...<target-branch>` to see all changes
+- **Specification**: Read `.paw/work/<work-id>/Spec.md`
+- **Implementation Plan**: Read `.paw/work/<work-id>/ImplementationPlan.md`
+- **Codebase Patterns**: Read `.paw/work/<work-id>/CodeResearch.md`
 
-## Implementation Diff
-[Include full diff]
-
-## Codebase Patterns
-[Include relevant patterns from CodeResearch.md]
+Start by gathering the diff and reading the spec, then review against these criteria:
 
 ## Review Criteria
 1. **Correctness**: Do changes implement all spec requirements? Any gaps?
@@ -134,12 +132,31 @@ Then spawn parallel subagents using `task` tool with `model` parameter for each 
 ### Consider
 [Nice-to-haves]
 ```
+
+**If society-of-thought mode**:
+
+Load the `paw-sot` skill and invoke it with a review context constructed from WorkflowContext.md fields and implementation artifacts:
+
+| Review Context Field | Source |
+|---------------------|--------|
+| `type` | `diff` |
+| `coordinates` | Diff: `git diff <base-branch>...<target-branch>`; Artifacts: Spec.md, ImplementationPlan.md, CodeResearch.md paths |
+| `output_dir` | `.paw/work/<work-id>/reviews/` |
+| `specialists` | `Final Review Specialists` value from WorkflowContext.md |
+| `interaction_mode` | `Final Review Interaction Mode` value from WorkflowContext.md |
+| `interactive` | `Final Review Interactive` value from WorkflowContext.md |
+| `specialist_models` | `Final Review Specialist Models` value from WorkflowContext.md |
+
+After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resolution) to process the REVIEW-SYNTHESIS.md findings.
+
 {{/cli}}
 
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
 **Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
+
+If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240). Running single-model review."
 
 Execute single-model review using the shared review prompt above. Save to `REVIEW.md`.
 {{/vscode}}
@@ -177,6 +194,8 @@ Track status for each finding:
 
 {{#cli}}
 For multi-model mode, process synthesis first (consensus → partial → single-model). Track cross-finding duplicates to avoid re-presenting already-addressed issues.
+
+For society-of-thought mode, process REVIEW-SYNTHESIS.md findings by severity (must-fix → should-fix → consider). Present trade-offs from the "Trade-offs Requiring Decision" section for user decision. Track cross-finding duplicates.
 {{/cli}}
 
 **If Interactive = smart**:
@@ -197,6 +216,17 @@ If `Final Review Mode` is `multi-model`, classify each synthesis finding, then r
 | Any | consider | `report-only` |
 
 Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.
+
+If `Final Review Mode` is `society-of-thought`, classify each REVIEW-SYNTHESIS.md finding:
+
+| Confidence | Grounding | Severity | Classification |
+|------------|-----------|----------|----------------|
+| HIGH | Direct | must-fix | `auto-apply` |
+| HIGH | Direct | should-fix | `auto-apply` |
+| HIGH | Inferential | must-fix/should-fix | `interactive` |
+| MEDIUM/LOW | any | must-fix/should-fix | `interactive` |
+| Any | any | consider | `report-only` |
+| — | — | trade-off | `interactive` (always) |
 
 **Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction. Display batch summary:
 
@@ -231,6 +261,18 @@ Smart mode degrades to interactive behavior in VS Code (single-model has no agre
 
 Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` items. Report what was applied.
 
+{{#cli}}
+#### Moderator Mode (society-of-thought only)
+
+After finding resolution completes, if `Final Review Mode` is `society-of-thought` and (`Final Review Interactive` is `true`, or `smart` with significant findings remaining), invoke `paw-sot` a second time for moderator mode — pass the review context `type` (same as orchestration invocation, i.e., `diff`), `output_dir` (containing individual REVIEW-{SPECIALIST}.md files and REVIEW-SYNTHESIS.md), and review coordinates (diff range, artifact paths).
+
+The `paw-sot` moderator mode handles specialist summoning, finding challenges, and deeper analysis. See `paw-sot` skill for interaction patterns.
+
+**Exit**: User says "done", "continue", or "proceed" to exit moderator mode and continue to paw-pr.
+
+**Skip condition**: If `Final Review Interactive` is `false`, or no findings exist, skip moderator mode entirely.
+{{/cli}}
+
 ### Step 6: Completion
 
 **Report back**:
@@ -250,6 +292,7 @@ Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` item
 |------|---------------|
 | single-model | `REVIEW.md` |
 | multi-model | `REVIEW-{MODEL}.md` per model, `REVIEW-SYNTHESIS.md` |
+| society-of-thought | `REVIEW-{SPECIALIST}.md` per specialist, `REVIEW-SYNTHESIS.md` (produced by `paw-sot`) |
 
 Location: `.paw/work/<work-id>/reviews/`
 All files gitignored via `.gitignore` with `*` pattern.

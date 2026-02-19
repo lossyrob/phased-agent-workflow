@@ -59,7 +59,7 @@ In `milestones` mode, the workflow pauses only at key milestone artifacts:
 - Spec.md (after specification is created)
 - ImplementationPlan.md (after plan is created)
 - Planning Documents Review completion (if enabled)
-- Phase PR completion (after each phase PR is opened)
+- Phase completion (after each implementation phase completes)
 - Final PR creation
 
 **Auto-proceeds at (non-milestone artifacts):**
@@ -173,7 +173,7 @@ The agent appends a one-liner to the `## Phase Candidates` section in `Implement
 When all planned phases complete, you'll be prompted to decide on each candidate:
 
 - **Promote** — Elaborate into a full phase with code research and planning
-- **Skip** — Mark as skipped and proceed to Final PR
+- **Skip** — Mark as skipped and move on
 - **Defer** — Mark as deferred for future work outside this workflow
 
 ## Checking Workflow Status

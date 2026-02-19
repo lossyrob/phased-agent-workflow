@@ -53,7 +53,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
-| `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
+| `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
 
@@ -64,6 +64,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-git-operations` | Branch naming, strategy-based branching, selective staging |
 | `paw-review-response` | PR comment mechanics (read, TODO, commit, reply) |
 | `paw-docs-guidance` | Documentation templates and project doc update patterns |
+| `paw-sot` | Society-of-thought engine (loaded by `paw-final-review` or `paw-review-workflow`) |
 
 **Workflow Stages:**
 
@@ -101,7 +102,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | Policy | Behavior |
 |--------|----------|
 | `every-stage` | Pause after every artifact is produced |
-| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
 | `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
 | `final-pr-only` | Only pause at final PR — auto-proceed through all intermediate stages |
 
@@ -130,9 +131,10 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-review-workflow` | Workflow | — | Orchestrates all stages |
 | `paw-review-understanding` | Activity | Understanding | ReviewContext.md, DerivedSpec.md |
 | `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
-| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
-| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
-| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
+| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md (single-model mode) |
+| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md (single-model mode) |
+| `paw-sot` | Engine | Evaluation | REVIEW-{SPECIALIST}.md, REVIEW-SYNTHESIS.md (SoT mode) |
+| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo) |
 | `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
 | `paw-review-github` | Activity | Output | GitHub pending review |
@@ -145,10 +147,9 @@ This preserves conversation flow for interactive work while leveraging fresh con
    - Derives specification from implementation
 
 2. **Evaluation Stage**
-   - Identifies system-wide impacts and breaking changes
-   - Finds gaps across correctness, safety, testing, and quality
-   - Categorizes findings as Must/Should/Could
-   - Correlates findings across repositories (multi-repo reviews)
+   - **Single-model mode** (default): Identifies system-wide impacts and gaps, categorizes findings as Must/Should/Could
+   - **Society-of-thought mode**: Specialist personas evaluate in parallel or debate mode, producing synthesized findings via `paw-sot`
+   - Correlates findings across repositories (multi-repo reviews, single-model only)
 
 3. **Output Stage** (4-step feedback-critique iteration)
    - **Initial feedback**: Generates draft comments with rationale
@@ -203,7 +204,7 @@ PAW supports four review policies that control when the workflow pauses for huma
 | Policy | Behavior |
 |--------|----------|
 | **every-stage** | Pause after every artifact is produced |
-| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase PRs, Final PR) |
+| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
 | **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
 | **final-pr-only** | Only pause at final PR — auto-proceed through all intermediate stages |
 

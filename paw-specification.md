@@ -6,7 +6,7 @@ PAW separates the lifecycle into **workflow stages** (Specification → Planning
 
 **Key properties**
 
-* **Traceable** – Every stage produces durable Markdown artifacts committed to Git and reviewed via PRs.
+* **Traceable** – Every stage produces durable Markdown artifacts; by default committed to Git during development and cleaned at PR time (see [Artifact Lifecycle](#artifact-lifecycle)).
 * **Rewindable** – Any stage can restart. If you see the agents are implementing incorrectly, you can always go back to the spec or plan and fix it, and then re-run downstream stages.
 * **Agentic** – Purpose‑built chat modes (“agents”) own the work of each stage.
 * **Human‑in‑the‑loop** – Humans approve specs/plans, review PRs, and decide when to rewind.
@@ -164,6 +164,38 @@ When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowConte
 
 Agents will log an informational message when using default values to indicate that these fields were not explicitly specified.
 
+### Artifact Lifecycle
+
+The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts are handled in git throughout the workflow.
+
+**Modes:**
+
+| Mode | During Development | At PR Time |
+|------|-------------------|------------|
+| `commit-and-clean` (default) | Artifacts committed to git | Artifacts removed from git index; final PR shows zero `.paw/` changes |
+| `commit-and-persist` | Artifacts committed to git | Artifacts remain in the repository permanently |
+| `never-commit` | Artifacts stay local only | No git operations needed |
+
+**Detection Hierarchy** (in priority order):
+
+1. WorkflowContext.md `Artifact Lifecycle:` field → use value directly
+2. Legacy fields: `artifact_tracking: enabled` or `track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`
+3. `.paw/work/<work-id>/.gitignore` with `*` content → `never-commit`
+4. Default: `commit-and-clean`
+
+**Stop-Tracking Operation** (`commit-and-clean` at PR time):
+
+1. Record current HEAD commit SHA (for artifact links in PR description)
+2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
+3. Create `.paw/work/<work-id>/.gitignore` containing `*` — self-ignoring, never committed
+4. Commit the removal
+
+The WorkflowContext.md `Artifact Lifecycle:` field is not updated during PR-time stop-tracking because the workflow is completing. For mid-workflow stop-tracking (VS Code command), the field is updated to `never-commit`.
+
+The final PR diff against `main` shows zero `.paw/` file changes. The PR description links to artifacts at the recorded commit SHA.
+
+**VS Code Integration:** The "Stop Tracking Artifacts" command provides a mid-workflow escape hatch, switching any tracked workflow to `never-commit`.
+
 ---
 
 ## Repository Layout & Naming
@@ -173,7 +205,7 @@ agents/                         # orchestrator agent prompts (2 agents)
   PAW.agent.md                  # Implementation workflow orchestrator
   PAW Review.agent.md           # Review workflow orchestrator
 
-skills/                         # activity and utility skills (29 skills)
+skills/                         # activity and utility skills (30 skills)
   paw-spec/SKILL.md
   paw-spec-research/SKILL.md
   paw-planning/SKILL.md
@@ -225,7 +257,7 @@ PAW uses a **2-agent + skills** architecture:
 
 - **PAW Agent** (`agents/PAW.agent.md`): Orchestrates implementation workflows
 - **PAW Review Agent** (`agents/PAW Review.agent.md`): Orchestrates review workflows
-- **29 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
+- **30 Skills** (`skills/*/SKILL.md`): Specialized capabilities loaded dynamically
 
 ### Hybrid Execution Model
 
@@ -263,6 +295,7 @@ This preserves user collaboration for interactive work while leveraging context 
 | `paw-review-response` | PR comment mechanics |
 | `paw-docs-guidance` | Documentation templates |
 | `paw-workflow` | Workflow reference documentation |
+| `paw-sot` | Society-of-thought engine (loaded by `paw-final-review`) |
 
 ### Review Workflow Skills
 
@@ -397,7 +430,7 @@ When the plan includes a documentation phase, `paw-implement` loads the `paw-doc
 
 **Workflow:**
 
-1. `paw-final-review` reviews the full implementation diff against spec (if review enabled)
+1. `paw-final-review` reviews the full implementation diff against spec (if review enabled). Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (delegates to `paw-sot` for specialist personas with parallel or debate interaction)
 2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
 3. `paw-pr` crafts comprehensive PR description with decision audit trail
 4. `paw-pr` opens the final PR
@@ -1000,6 +1033,23 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 
 **Additional Inputs** (Optional)
 - Supplementary documents for research (e.g., `paw-specification.md`)
+
+**Artifact Lifecycle** (Optional, defaults to `commit-and-clean`)
+- Controls how workflow artifacts are handled in git: `commit-and-clean`, `commit-and-persist`, or `never-commit`
+- See [Artifact Lifecycle](#artifact-lifecycle) section for mode descriptions and detection hierarchy
+
+**Final Review Mode** (Optional, defaults to `multi-model`)
+- Controls how `paw-final-review` executes: `single-model`, `multi-model`, or `society-of-thought` (delegates to `paw-sot`)
+- `society-of-thought` uses specialist personas with distinct cognitive strategies for independent review and synthesis
+
+**Final Review Specialists** (Optional, defaults to `all`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- Values: `all` (all available specialists), comma-separated names, or `adaptive:<N>` (select N most relevant specialists based on diff analysis)
+
+**Final Review Interaction Mode** (Optional, defaults to `parallel`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- `parallel`: All specialists review independently, then synthesis
+- `debate`: Thread-based debate with specialist interaction
 
 #### Usage
 

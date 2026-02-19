@@ -184,6 +184,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - All metadata fields populated
 - Flags section identifies applicable conditions
 - Base and head commit SHAs recorded
+- Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
 
 ### ResearchQuestions.md
 - Questions are specific and answerable
@@ -251,6 +252,16 @@ status: complete
 **Linked Issues**: <issue-urls> (GitHub) OR "Inferred from commits" (non-GitHub)
 **Changed Files**: <count> files, +<additions> -<deletions>
 **Artifact Paths**: .paw/reviews/<identifier>/
+
+## Review Configuration
+
+**Review Mode**: <single-model (default) | society-of-thought>
+**Review Specialists**: <all (default) | comma-separated names | adaptive:\<N\>>
+**Review Interaction Mode**: <parallel (default) | debate>
+**Review Interactive**: <false (default) | true | smart>
+**Review Specialist Models**: <none (default) | model pool | pinned:model pairs | mixed>
+
+*SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above. In particular, if `Review Mode` is `society-of-thought` and no `Review Specialists` value is provided, default to `all` — do not select a subset.*
 
 ## Description
 

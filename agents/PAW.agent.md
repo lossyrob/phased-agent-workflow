@@ -23,8 +23,8 @@ On first request, identify work context from environment (current branch, `.paw/
 | Planning PR created | paw-transition → paw-implement | NO |
 | paw-impl-review (passes, more phases) | Push & Phase PR (prs strategy) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
-| paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
-| paw-final-review | paw-pr | NO |
+| paw-impl-review (passes, last phase, review disabled) | paw-transition → paw-pr | Per Review Policy |
+| paw-final-review | paw-transition → paw-pr | NO |
 | Phase PR created | paw-transition → paw-implement (next) or paw-final-review or paw-pr | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
@@ -53,6 +53,7 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 | Before Activity | Required Prerequisite |
 |-----------------|----------------------|
 | paw-implement (any phase) | Load `paw-git-operations`, verify correct branch |
+| paw-pr | All phase candidates resolved (run Candidate Promotion Flow if any `- [ ]` items in `## Phase Candidates`) |
 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
@@ -61,7 +62,7 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 **IMPORTANT**: Review Policy controls HUMAN review pauses only. It does NOT affect automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review). Those are mandatory per the Mandatory Transitions table regardless of Review Policy setting.
 
 - `every-stage`: Pause after every artifact for user confirmation
-- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase PR completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
+- `milestones`: Pause at milestone artifacts only (Spec.md, ImplementationPlan.md, Planning Documents Review completion, Phase completion, Final PR); auto-proceed at non-milestones (WorkflowContext.md, SpecResearch.md, CodeResearch.md, Docs.md)
 - `planning-only`: Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion, and Final PR only; auto-proceed at phase completions (local strategy required)
 - `final-pr-only`: Only pause at final PR — auto-proceed through all intermediate stages
 
@@ -102,7 +103,7 @@ Use TODOs to externalize workflow steps.
 
 **Transition response handling**:
 - `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation. Applies at every phase boundary, including before entering candidate promotion and after each promoted phase.
-- `artifact_tracking`: Pass to next activity (if `disabled`, don't stage `.paw/` files)
+- `artifact_lifecycle`: Pass to next activity (if `never-commit`, don't stage `.paw/` files)
 - `preflight`: Report blocker if not `passed`
 - `promotion_pending`: If `true` **and not paused**, run Candidate Promotion Flow (see below)
 {{#vscode}}
@@ -121,7 +122,7 @@ When `paw-transition` returns `promotion_pending = true` with a `candidates` lis
    - **Promote**: Update candidate to `- [x] [promoted] <desc>` in ImplementationPlan.md. Run `paw-code-research` + `paw-planning` to elaborate into a full phase, then follow standard mandatory transitions (plan-review → implement → impl-review). If research reveals infeasibility, update to `- [x] [not feasible] <desc>` and continue with remaining candidates. User may request a lightweight promote (skip plan-review) for trivial changes.
    - **Skip**: Update candidate to `- [x] [skipped] <desc>` in ImplementationPlan.md
    - **Defer**: Update candidate to `- [x] [deferred] <desc>` in ImplementationPlan.md
-3. After all candidates resolved: proceed to `paw-pr`
+3. After all candidates resolved: proceed to `paw-final-review` (if enabled) or `paw-pr` (if disabled)
 
 ## Before Yielding Control
 

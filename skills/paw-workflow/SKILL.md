@@ -64,13 +64,13 @@ Humans have final authority over all workflow decisions:
 | `paw-plan-review` | Review plan for feasibility, spec alignment (single/multi-model) | Review feedback, PLAN-REVIEW-*.md in planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
-| `paw-final-review` | Pre-PR review with multi-model or single-model | REVIEW*.md in reviews/ |
+| `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 
 **Note**: Phase PR creation is handled by PAW agent (using `paw-git-operations`) after `paw-impl-review` passes.
 
-**Utility skills**: `paw-git-operations` (branching, Phase PRs), `paw-review-response` (PR comments), `paw-docs-guidance` (documentation).
+**Utility skills**: `paw-git-operations` (branching, Phase PRs), `paw-review-response` (PR comments), `paw-docs-guidance` (documentation), `paw-sot` (society-of-thought engine, loaded by `paw-final-review`).
 
 ## Artifact Directory Structure
 

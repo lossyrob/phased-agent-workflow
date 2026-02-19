@@ -32,7 +32,7 @@ describe('build-dist script', () => {
     assert.ok(existsSync(skillsDir), 'dist/skills should exist');
     
     const skills = readdirSync(skillsDir);
-    assert.ok(skills.length >= 26, `should have at least 26 skills, found ${skills.length}`);
+    assert.ok(skills.length >= 27, `should have at least 27 skills, found ${skills.length}`);
   });
   
   test('processes vscode conditionals correctly', () => {
@@ -63,5 +63,17 @@ describe('build-dist script', () => {
     // Verify PAW Review was converted to PAW-Review
     assert.ok(agents.includes('PAW-Review.agent.md'), 'PAW Review should be PAW-Review');
     assert.ok(!agents.includes('PAW Review.agent.md'), 'should not have space in filename');
+  });
+
+  test('copies references/ directories for skills that have them', () => {
+    const refsDir = join(DIST_DIR, 'skills', 'paw-sot', 'references', 'specialists');
+    assert.ok(existsSync(refsDir), 'dist should include paw-sot/references/specialists/');
+    
+    const specialists = readdirSync(refsDir);
+    assert.ok(specialists.includes('_shared-rules.md'), 'should include _shared-rules.md');
+    assert.ok(specialists.includes('security.md'), 'should include security.md');
+    assert.ok(specialists.includes('architecture.md'), 'should include architecture.md');
+    assert.ok(specialists.includes('correctness.md'), 'should include correctness.md');
+    assert.ok(specialists.length >= 10, `should have at least 10 specialist files (9 + shared rules), found ${specialists.length}`);
   });
 });

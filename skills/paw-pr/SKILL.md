@@ -14,13 +14,14 @@ Create the final PR merging all implementation work to the base branch (from Wor
 ## Capabilities
 
 - Run pre-flight validation checks
+- Execute stop-tracking operation for `commit-and-clean` lifecycle mode
 - Create comprehensive PR description (scaled to complexity)
 - Open final PR from target branch to main
 - Provide merge and deployment guidance
 
 ## Pre-flight Validation
 
-Before creating the PR, verify and report status. Block on failures unless user explicitly confirms.
+Before creating the PR, verify and report status. Block on failures unless user explicitly confirms (except hard blockers — those cannot be overridden).
 
 ### Required Checks
 
@@ -28,7 +29,7 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - All phases in ImplementationPlan.md marked complete
 - All phase PRs merged (prs strategy) or commits pushed (local strategy)
 - Target branch exists with implementation commits
-- No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`)
+- No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`) — **hard blocker**: do NOT resolve or bypass; report to orchestrator to run Candidate Promotion Flow before retrying
 
 **Artifacts Exist** (check existence per Workflow Mode):
 - CodeResearch.md (required: all modes)
@@ -67,16 +68,27 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - Dynamically check which artifacts exist
 - Adapt references based on Custom Workflow Instructions
 
-## Artifact Tracking Detection
+## Artifact Lifecycle Handling
 
-Check if workflow artifacts are tracked in git:
-1. Check for `.paw/work/<work-id>/.gitignore`
-2. If contains `*` → artifacts **untracked**
-3. If no `.gitignore` → artifacts **tracked**
+Detect lifecycle mode using the same hierarchy as `paw-transition`: WorkflowContext.md `Artifact Lifecycle:` field → legacy field mapping (`artifact_tracking: enabled`/`track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`) → `.gitignore` with `*` fallback → default `commit-and-clean`.
 
-**Impact on PR Description**:
-- Tracked: Include Artifacts section with links
-- Untracked: Omit Artifacts section; summarize key information in body
+### Stop-Tracking Operation (`commit-and-clean` only)
+
+Execute **before** PR creation. Skip gracefully if no tracked `.paw/` files exist (idempotent).
+
+1. Record the current HEAD commit SHA — this is the "last artifact commit" for PR description links
+2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
+3. Create `.paw/work/<work-id>/.gitignore` containing `*` — this file self-ignores (the `*` matches the `.gitignore` itself), so it stays untracked
+4. `git commit -m "Stop tracking PAW artifacts for <work-id>"` — only the index deletions from step 2 are committed. Do NOT stage the `.gitignore` file.
+5. Verify: `git status` shows no `.paw/` files; `.gitignore` exists locally but is not tracked
+
+Log each step so the user sees what's happening.
+
+### PR Description by Lifecycle Mode
+
+- **`commit-and-clean`**: Include Artifacts section with link to the recorded last-artifact-commit SHA (e.g., `tree/<sha>/.paw/work/<work-id>/`)
+- **`commit-and-persist`**: Include Artifacts section with direct links to artifacts on the target branch
+- **`never-commit`**: Omit Artifacts section; summarize key information in PR body
 
 ## PR Description Formats
 
@@ -96,7 +108,7 @@ Include these elements as appropriate:
 - Testing: Coverage notes, verification performed
 - Breaking Changes: Migration guidance if applicable
 - Deployment: Feature flags, rollout strategy, dependencies
-- Artifacts: Links to workflow artifacts (if tracked)
+- Artifacts: Links to workflow artifacts (per lifecycle mode — see Artifact Lifecycle Handling)
 
 Footer: `🐾 Generated with [PAW](https://github.com/lossyrob/phased-agent-workflow)`
 
@@ -133,7 +145,7 @@ After PR creation, provide:
 
 - [ ] All pre-flight checks pass (or user confirmed proceed)
 - [ ] PR description complete with all relevant sections
-- [ ] All artifact links valid (if tracked)
+- [ ] All artifact links valid (per lifecycle mode)
 - [ ] Intermediate PR links included (if prs strategy)
 - [ ] Breaking changes documented (or stated "None")
 - [ ] Issue URL linked in PR body

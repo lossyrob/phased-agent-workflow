@@ -20,6 +20,14 @@ export type WorkflowMode = 'full' | 'minimal' | 'custom';
 export type ReviewStrategy = 'prs' | 'local';
 
 /**
+ * Artifact lifecycle mode determines how workflow artifacts are handled in git.
+ * - commit-and-clean: Artifacts committed during dev, removed from git at PR time (default)
+ * - commit-and-persist: Artifacts permanently committed to the repository
+ * - never-commit: Artifacts stay local only, never tracked in git
+ */
+export type ArtifactLifecycle = 'commit-and-clean' | 'commit-and-persist' | 'never-commit';
+
+/**
  * Workflow mode selection including optional custom instructions.
  */
 export interface WorkflowModeSelection {
@@ -74,12 +82,14 @@ export interface WorkItemInputs {
   sessionPolicy: SessionPolicy;
 
   /**
-   * Whether to track workflow artifacts in git.
+   * Artifact lifecycle mode for workflow artifacts.
    * 
-   * When true (default), workflow artifacts (.paw/work/<slug>/*) are committed to git.
-   * When false, a .gitignore is created to exclude artifacts from version control.
+   * Controls how .paw/work/<slug>/* files are handled in git:
+   * - commit-and-clean (default): Committed during dev, removed at PR time
+   * - commit-and-persist: Permanently committed to the repository
+   * - never-commit: Local only, never tracked in git
    */
-  trackArtifacts: boolean;
+  artifactLifecycle: ArtifactLifecycle;
   
   /** Final Agent Review configuration for pre-PR review step */
   finalReview: FinalReviewConfig;
@@ -338,47 +348,55 @@ export async function collectSessionPolicy(
 }
 
 /**
- * Collect artifact tracking preference from user.
+ * Collect artifact lifecycle mode from user.
  * 
- * Presents a Quick Pick menu with two options:
- * - Track: Workflow artifacts committed to git (default)
- * - Don't Track: Exclude workflow artifacts from git
+ * Presents a Quick Pick menu with three lifecycle options:
+ * - Commit & Clean: Artifacts committed during dev, removed at PR time (default)
+ * - Commit & Persist: Artifacts permanently committed
+ * - Never Commit: Local-only artifacts
  * 
  * @param outputChannel - Output channel for logging user interaction events
- * @returns Promise resolving to boolean (true = track, false = don't track), or undefined if cancelled
+ * @returns Promise resolving to ArtifactLifecycle, or undefined if cancelled
  */
-export async function collectArtifactTracking(
+export async function collectArtifactLifecycle(
   outputChannel: vscode.OutputChannel
-): Promise<boolean | undefined> {
-  const trackingSelection = await vscode.window.showQuickPick(
+): Promise<ArtifactLifecycle | undefined> {
+  const lifecycleSelection = await vscode.window.showQuickPick(
     [
       {
-        label: "Track",
-        description: "Workflow artifacts committed to git (default)",
+        label: "Commit & Clean",
+        description: "Artifacts committed during dev, cleaned at PR time (default)",
         detail:
-          "Standard PAW behavior—artifacts visible in PRs and version history",
-        value: true,
+          "Standard PAW behavior—artifacts visible during development, automatically removed from final PR",
+        value: 'commit-and-clean' as ArtifactLifecycle,
       },
       {
-        label: "Don't Track",
-        description: "Exclude workflow artifacts from git",
+        label: "Commit & Persist",
+        description: "Artifacts permanently committed to the repository",
         detail:
-          "For external contributions or lightweight changes—artifacts stay local only",
-        value: false,
+          "Artifacts remain in version history and are visible in PRs",
+        value: 'commit-and-persist' as ArtifactLifecycle,
+      },
+      {
+        label: "Never Commit",
+        description: "Artifacts stay local only",
+        detail:
+          "For external contributions or lightweight changes—artifacts never tracked in git",
+        value: 'never-commit' as ArtifactLifecycle,
       },
     ],
     {
-      placeHolder: "Select artifact tracking behavior",
-      title: "Artifact Tracking",
+      placeHolder: "Select artifact lifecycle mode",
+      title: "Artifact Lifecycle",
     }
   );
 
-  if (!trackingSelection) {
-    outputChannel.appendLine("[INFO] Artifact tracking selection cancelled");
+  if (!lifecycleSelection) {
+    outputChannel.appendLine("[INFO] Artifact lifecycle selection cancelled");
     return undefined;
   }
 
-  return trackingSelection.value;
+  return lifecycleSelection.value;
 }
 
 /**
@@ -562,9 +580,9 @@ export async function collectUserInputs(
     return undefined;
   }
 
-  // Collect artifact tracking preference
-  const trackArtifacts = await collectArtifactTracking(outputChannel);
-  if (trackArtifacts === undefined) {
+  // Collect artifact lifecycle mode
+  const artifactLifecycle = await collectArtifactLifecycle(outputChannel);
+  if (artifactLifecycle === undefined) {
     return undefined;
   }
 
@@ -580,7 +598,7 @@ export async function collectUserInputs(
     reviewStrategy,
     reviewPolicy,
     sessionPolicy,
-    trackArtifacts,
+    artifactLifecycle,
     finalReview,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };

@@ -42,12 +42,16 @@ Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
 
 Read WorkflowContext.md for:
 - Workflow Mode, Review Strategy, Review Policy
+- Artifact Lifecycle: `commit-and-clean` | `commit-and-persist` | `never-commit`
 - Final Agent Review: `enabled` | `disabled`
 - Planning Docs Review: `enabled` | `disabled`
-- Final Review Mode: `single-model` | `multi-model`
+- Final Review Mode: `single-model` | `multi-model` | `society-of-thought`
 - Final Review Interactive: `true` | `false` | `smart`
 - Planning Review Mode: `single-model` | `multi-model`
 - Planning Review Interactive: `true` | `false` | `smart`
+- Final Review Specialists: `all` | `adaptive:<N>` | comma-separated list (when society-of-thought)
+- Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)
+- Final Review Specialist Models: `none` | model pool | pinned pairs | mixed (when society-of-thought)
 
 ### Phase Counting
 

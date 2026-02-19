@@ -142,9 +142,9 @@ When the implementation plan includes a documentation phase:
 
 ### Stage 03.5 — Final Review (Optional)
 
-**Skill:** `paw-final-review`
+**Skill:** `paw-final-review` (delegates to `paw-sot` for society-of-thought mode)
 
-Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext.
+Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext. For society-of-thought mode, `paw-final-review` delegates SoT orchestration (specialist discovery, selection, execution, synthesis) to the `paw-sot` utility skill.
 
 **Inputs:**
 
@@ -160,7 +160,7 @@ Automated review of the complete implementation against specification before Fin
 **Process:**
 
 1. `paw-final-review` reads configuration from WorkflowContext (mode, interactive, models)
-2. Executes review (single-model or multi-model based on config)
+2. Executes review (single-model or multi-model based on config); for society-of-thought mode, delegates to `paw-sot`
 3. For multi-model: synthesizes findings across models
 4. Presents findings for resolution (interactive) or auto-applies (non-interactive)
 5. Proceeds to `paw-pr` when complete
@@ -237,7 +237,7 @@ Reviews code changes, generates docstrings and comments, commits improvements, p
 
 ### paw-final-review
 
-Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
+Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). For society-of-thought mode, delegates SoT orchestration to the `paw-sot` utility skill. Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
 
 **Focus:** Catch issues before external PR review.
 

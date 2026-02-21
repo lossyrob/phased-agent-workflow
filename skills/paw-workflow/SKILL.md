@@ -60,7 +60,7 @@ Humans have final authority over all workflow decisions:
 | `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
 | `paw-spec-review` | Review spec for quality, completeness, clarity | Review feedback |
 | `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
-| `paw-planning` | Create implementation plan, revise plan | ImplementationPlan.md |
+| `paw-planning` | Create implementation plan, revise plan (single/multi-model) | ImplementationPlan.md, planning/ |
 | `paw-plan-review` | Review plan for feasibility, spec alignment | Review feedback |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
 | `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
@@ -86,6 +86,8 @@ All implementation artifacts are stored in a consistent directory structure:
 ├── ImplementationPlan.md   # Phased implementation plan
 ├── Docs.md                 # Technical documentation (created during final implementation phase)
 ├── prompts/                # Generated prompt files (optional)
+├── planning/              # Multi-model planning artifacts (gitignored)
+│   └── PLAN-{MODEL}.md          # Per-model plan drafts
 └── reviews/                # Review artifacts (gitignored)
     ├── planning/           # Planning Documents Review artifacts
     │   ├── REVIEW.md

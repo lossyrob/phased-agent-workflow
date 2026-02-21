@@ -16,6 +16,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
       ImplementationPlan.md     # Implementation plan
       Docs.md                   # Documentation
       WorkShaping.md            # Pre-spec ideation (optional)
+      planning/                 # Multi-model planning artifacts (gitignored)
+        PLAN-{MODEL}.md         # Per-model plan drafts
       reviews/                  # Review artifacts (gitignored)
         planning/               # Planning Documents Review artifacts
         REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
@@ -65,6 +67,8 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` (society-of-thought only) |
 | Final Review Interaction Mode | `parallel` or `debate` (society-of-thought only) |
 | Planning Docs Review | `enabled` or `disabled` |
+| Plan Generation Mode | `single-model` or `multi-model` |
+| Plan Generation Models | Comma-separated model names |
 | Planning Review Mode | `single-model` or `multi-model` |
 | Planning Review Interactive | `true`, `false`, or `smart` |
 | Planning Review Models | Comma-separated model names |

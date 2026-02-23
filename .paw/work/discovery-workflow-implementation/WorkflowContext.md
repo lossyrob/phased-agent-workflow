@@ -14,7 +14,7 @@
 ## Workflow Configuration
 - **Workflow Mode**: `full`
 - **Review Strategy**: `local`
-- **Review Policy**: `final-pr-only`
+- **Review Policy**: `every-stage`
 - **Session Policy**: `continuous`
 - **Artifact Lifecycle**: `commit-and-clean`
 

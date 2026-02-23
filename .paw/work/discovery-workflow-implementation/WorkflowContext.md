@@ -41,7 +41,8 @@
 | Stage | Status | Artifact |
 |-------|--------|----------|
 | Specification | complete | Spec.md |
-| Code Research | pending | CodeResearch.md |
+| Code Research | complete | CodeResearch.md |
+| Planning | pending | ImplementationPlan.md |
 | Planning | pending | ImplementationPlan.md |
 | Planning Docs Review | pending | - |
 | Implementation | pending | - |

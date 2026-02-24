@@ -43,7 +43,7 @@ Verification: User can place heterogeneous documents in `inputs/`, invoke Discov
 ## Phase Status
 
 - [x] **Phase 1: Core Infrastructure** - Directory structure, DiscoveryContext.md, orchestrator skill
-- [ ] **Phase 2: Extraction Skill** - Document processing with docx/PDF conversion and interactive Q&A
+- [x] **Phase 2: Extraction Skill** - Document processing with docx/PDF conversion and interactive Q&A
 - [ ] **Phase 3: Extraction Review Skill** - Quality validation for Extraction.md
 - [ ] **Phase 4: Mapping Skill** - Thin wrapper delegating to paw-code-research
 - [ ] **Phase 5: Mapping Review Skill** - Quality validation for CapabilityMap.md

@@ -24,12 +24,22 @@ Process input documents and extract structured themes with source attribution. S
 
 ### Supported Formats
 
-| Format | Extension | Approach |
-|--------|-----------|----------|
-| Markdown | .md | Native read via `view` tool |
-| Plain text | .txt | Native read via `view` tool |
-| Word | .docx | Load `docx` skill or use `pandoc` |
-| PDF (text) | .pdf | Load `pdf` skill or use `pypdf` |
+| Format | Extension | Approach | Output |
+|--------|-----------|----------|--------|
+| Markdown | .md | Native read via `view` tool | - |
+| Plain text | .txt | Native read via `view` tool | - |
+| Word | .docx | Load `docx` skill or use `pandoc` | `.md` |
+| PDF (text) | .pdf | Load `pdf` skill or use `pypdf` | `.md` |
+| Images | .png, .jpg, .jpeg | Pass directly to LLM vision | - |
+
+### Image Handling
+
+PNG and JPEG images are passed directly to the LLM for visual analysis:
+- Product mockups, wireframes, diagrams
+- Screenshots of requirements or specifications
+- Architecture diagrams or flowcharts
+
+The LLM extracts themes from images using vision capabilities. Include image descriptions in theme source attribution.
 
 ### Security Note
 
@@ -53,27 +63,54 @@ If skills aren't available, use standard tools:
 
 **Word documents (.docx)**:
 ```bash
-pandoc "document.docx" -o "document.md"
-cat "document.md"
+mkdir -p "inputs/converted"
+pandoc "inputs/document.docx" -o "inputs/converted/document.md"
+cat "inputs/converted/document.md"
 ```
 
 **PDF documents (.pdf)**:
+```bash
+mkdir -p "inputs/converted"
+```
 ```python
 from pypdf import PdfReader
 
-reader = PdfReader("document.pdf")
+reader = PdfReader("inputs/document.pdf")
 text = ""
 for page in reader.pages:
-    text += page.extract_text()
-print(text)
+    text += page.extract_text() + "\n\n"
+
+with open("inputs/converted/document.md", "w") as f:
+    f.write(text)
 ```
 
 ### Conversion Process
 
 1. Scan `inputs/` folder for all files
 2. For each file, determine type by extension
-3. Convert non-native formats using commands above
-4. Combine all content for theme extraction
+3. Convert non-native formats and **save to `inputs/converted/`**:
+   - `document.docx` → `inputs/converted/document.md`
+   - `document.pdf` → `inputs/converted/document.md`
+4. Read converted files for theme extraction
+5. Pass images directly to LLM for visual analysis
+
+### Converted Output Directory
+
+Create `inputs/converted/` to store text-readable versions:
+```
+inputs/
+├── roadmap.docx          # Original
+├── requirements.pdf      # Original
+├── mockup.png            # Image (no conversion needed)
+└── converted/
+    ├── roadmap.md        # Converted from docx
+    └── requirements.md   # Converted from pdf
+```
+
+This enables:
+- Inspection of conversion quality
+- Reuse without re-conversion
+- Audit trail of what the LLM processed
 
 **Note**: Image-based PDFs are not supported. If pypdf/pdfplumber returns minimal text, warn user that the PDF may be image-based and suggest OCR or alternative format.
 
@@ -162,8 +199,12 @@ source_documents:
     type: markdown
     tokens: [approximate]
   - path: inputs/doc2.docx
-    type: docx (converted)
+    type: docx
+    converted: inputs/converted/doc2.md
     tokens: [approximate]
+  - path: inputs/mockup.png
+    type: image
+    tokens: [approximate vision tokens]
 theme_count: [N]
 conflict_count: [resolved conflicts]
 status: complete

@@ -52,7 +52,7 @@ Humans have final authority over all Discovery decisions:
 | `paw-discovery-prioritize` | Multi-factor prioritization, PAW handoff | Roadmap.md |
 | `paw-discovery-prioritize-review` | Review roadmap quality | Review feedback |
 
-**Utility skills**: `paw-code-research` (invoked by mapping), `paw-transition` (stage boundaries).
+**Utility skills**: `paw-code-research` (invoked by mapping).
 
 ## Artifact Directory Structure
 
@@ -176,4 +176,4 @@ At completion, Discovery offers to initiate PAW workflow for the top roadmap ite
 
 **Subagent delegation**: `paw-discovery-extraction-review`, `paw-discovery-mapping-review`, `paw-discovery-correlation-review`, `paw-discovery-prioritize-review`, `paw-code-research` (invoked by mapping)
 
-**Orchestrator-handled**: Stage transitions (via `paw-transition`), input change detection, artifact invalidation
+**Orchestrator-handled**: Stage transitions (inline Review Policy checks), input change detection, artifact invalidation

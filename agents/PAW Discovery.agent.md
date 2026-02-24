@@ -40,17 +40,24 @@ From user-provided title: lowercase, hyphens, 1-100 chars (e.g., "Q1 Planning" �
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 
-### Stage Boundary Rule
+### Stage Boundary Handling
 
-**After EVERY stage boundary, delegate to `paw-transition` before proceeding.**
+At each stage boundary, check the Review Policy from DiscoveryContext.md:
 
-Stage boundaries:
-- extraction-review passes → mapping
-- mapping-review passes → correlation
-- correlation-review passes → prioritization
-- prioritization-review passes → complete
+| Stage Boundary | every-stage | milestones | final-only |
+|----------------|-------------|------------|------------|
+| extraction-review → mapping | PAUSE | PAUSE (artifact) | continue |
+| mapping-review → correlation | PAUSE | PAUSE (artifact) | continue |
+| correlation-review → prioritization | PAUSE | PAUSE (artifact) | continue |
+| prioritization-review → complete | PAUSE | PAUSE (artifact) | PAUSE |
 
-The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for user.
+When pausing:
+1. Report completed stage and artifact location
+2. Invite user to review or discuss
+3. Wait for user signal to continue
+
+When continuing:
+- Proceed directly to next stage without pausing
 
 ### Review Policy Behavior
 
@@ -118,12 +125,9 @@ At Discovery completion:
 
 When stopping or pausing:
 
-1. **Check stage boundary** — Did activity just complete?
-2. **If yes** — Run `paw-transition` first
-3. **If transition returned `pause_at_milestone: true`** — Safe to yield
-4. **If transition returned `pause_at_milestone: false`** — Continue to next activity
-
-**NEVER yield after a stage boundary without running paw-transition first.**
+1. **Check Review Policy** — Consult DiscoveryContext.md
+2. **If policy requires pause** — Yield with handoff messaging
+3. **If policy allows continuation** — Proceed to next activity
 
 ### Handoff Messaging
 

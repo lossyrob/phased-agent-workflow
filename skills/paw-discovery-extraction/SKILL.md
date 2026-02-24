@@ -26,19 +26,48 @@ Process input documents and extract structured themes with source attribution. S
 
 | Format | Extension | Approach |
 |--------|-----------|----------|
-| Markdown | .md | Native read |
-| Plain text | .txt | Native read |
-| Word | .docx | mammoth → markdown |
-| PDF (text) | .pdf | pdf-parse → text (structure inferred from formatting) |
+| Markdown | .md | Native read via `view` tool |
+| Plain text | .txt | Native read via `view` tool |
+| Word | .docx | `pandoc` → markdown |
+| PDF (text) | .pdf | `pypdf` or `pdfplumber` → text |
+
+### Conversion Commands
+
+**Word documents (.docx)**:
+```bash
+pandoc document.docx -o document.md
+```
+
+**PDF documents (.pdf)**:
+```python
+from pypdf import PdfReader
+
+reader = PdfReader("document.pdf")
+text = ""
+for page in reader.pages:
+    text += page.extract_text()
+print(text)
+```
+
+Or via pdfplumber for better table extraction:
+```python
+import pdfplumber
+
+with pdfplumber.open("document.pdf") as pdf:
+    text = ""
+    for page in pdf.pages:
+        text += page.extract_text() or ""
+print(text)
+```
 
 ### Conversion Process
 
 1. Scan `inputs/` folder for all files
 2. For each file, determine type by extension
-3. Convert non-native formats to text/markdown
+3. Convert non-native formats using commands above
 4. Combine all content for theme extraction
 
-**Note**: Image-based PDFs are not supported. If pdf-parse returns minimal text, warn user that the PDF may be image-based.
+**Note**: Image-based PDFs are not supported. If pypdf/pdfplumber returns minimal text, warn user that the PDF may be image-based and suggest OCR or alternative format.
 
 ## Theme Extraction
 

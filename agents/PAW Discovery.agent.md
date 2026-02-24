@@ -108,7 +108,7 @@ User can request re-extraction:
 - `paw-discovery-prioritize-review`
 - `paw-code-research` (invoked by mapping skill)
 
-**Via paw-transition**: Stage boundary handling, pause logic
+**Note**: Stage boundary handling and pause logic are implemented inline (see "Stage Boundary Handling" section above), following the same pattern as PAW Review. This avoids dependency on paw-transition which is specific to the PAW Implementation workflow.
 
 ## PAW Handoff
 

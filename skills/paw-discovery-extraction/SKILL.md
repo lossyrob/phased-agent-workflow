@@ -28,14 +28,26 @@ Process input documents and extract structured themes with source attribution. S
 |--------|-----------|----------|
 | Markdown | .md | Native read via `view` tool |
 | Plain text | .txt | Native read via `view` tool |
-| Word | .docx | `pandoc` → markdown |
-| PDF (text) | .pdf | `pypdf` or `pdfplumber` → text |
+| Word | .docx | Load `docx` skill or use `pandoc` |
+| PDF (text) | .pdf | Load `pdf` skill or use `pypdf` |
 
-### Conversion Commands
+### Conversion Approaches
+
+**Option 1: Use installed document skills (Recommended)**
+
+If the user has the `docx` and `pdf` skills installed (from Anthropic skills package), load and invoke them:
+
+- For `.docx`: Load `docx` skill, use its `pandoc` command or unpack/read approach
+- For `.pdf`: Load `pdf` skill, use its `pypdf`/`pdfplumber` extraction patterns
+
+**Option 2: Direct CLI commands**
+
+If skills aren't available, use standard tools:
 
 **Word documents (.docx)**:
 ```bash
 pandoc document.docx -o document.md
+cat document.md
 ```
 
 **PDF documents (.pdf)**:
@@ -46,17 +58,6 @@ reader = PdfReader("document.pdf")
 text = ""
 for page in reader.pages:
     text += page.extract_text()
-print(text)
-```
-
-Or via pdfplumber for better table extraction:
-```python
-import pdfplumber
-
-with pdfplumber.open("document.pdf") as pdf:
-    text = ""
-    for page in pdf.pages:
-        text += page.extract_text() or ""
 print(text)
 ```
 

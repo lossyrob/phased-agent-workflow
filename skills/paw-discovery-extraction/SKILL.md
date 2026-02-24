@@ -244,6 +244,7 @@ When re-invoked after inputs change:
 - [ ] Scale warnings surfaced if inputs are large
 - [ ] Extraction.md has valid YAML frontmatter
 - [ ] Theme categories are populated (features, needs, constraints, vision)
+- [ ] DiscoveryContext.md updated with current inputs list
 
 ## Completion Response
 
@@ -253,3 +254,7 @@ Report to PAW Discovery agent:
 - Conflict resolutions (if any)
 - Open questions (if any)
 - Ready for extraction review
+
+**State Update**: Update DiscoveryContext.md with:
+- `last_extraction_inputs`: List of files processed (enables re-invocation detection)
+- Stage Progress table: Mark Extraction as `complete`

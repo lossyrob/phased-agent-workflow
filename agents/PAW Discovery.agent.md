@@ -106,7 +106,15 @@ User can request re-extraction:
 - `paw-discovery-mapping-review`
 - `paw-discovery-correlation-review`
 - `paw-discovery-prioritize-review`
+- `paw-discovery-final-review` (SoT-capable)
 - `paw-code-research` (invoked by mapping skill)
+
+### SoT Review Type
+
+When invoking `paw-sot` for Discovery artifacts, **always use `type: discovery-artifacts`**:
+- This selects Discovery specialists (coherence, coverage, reasoning, source-fidelity)
+- Without this type, implementation specialists (security, architecture, etc.) are selected instead
+- The `paw-discovery-final-review` skill handles this automatically
 
 **Note**: Stage boundary handling and pause logic are implemented inline (see "Stage Boundary Handling" section above), following the same pattern as PAW Review. This avoids dependency on paw-transition which is specific to the PAW Implementation workflow.
 

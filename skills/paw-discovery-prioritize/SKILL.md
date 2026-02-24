@@ -167,22 +167,28 @@ status: complete
 
 ### MVP-Critical
 
+Each MVP-Critical item includes a **self-contained handoff brief** so any item can start a PAW workflow without cross-referencing other Discovery artifacts.
+
 #### [Item Name]
-- **Theme**: [Theme ID and description]
-- **Correlation**: [Match/Gap/Combination with capabilities]
-- **Why critical**: [Rationale - value, dependency role, etc.]
-- **Scores**: Value: High | Effort: Medium | Risk: Low | Leverage: High
+- **Theme**: [Theme ID]: [Full description from Extraction.md — not just ID]
+- **What exists**: [Relevant capability summary from CapabilityMap.md]
+- **Integration path**: [From Correlation.md — Match/Extend/Gap + what's needed]
+- **Why critical**: [Rationale - value, dependency role, blockers]
+- **Constraints**: [Relevant C1-Cn constraints that apply]
+- **Success criteria**: [What "done" looks like for this item]
+- **Suggested approach**: [Implementation guidance if correlation provided insights]
 
 #### [Item Name]
 ...
 
 ### MVP-Nice-to-Have
 
+Nice-to-Have items use condensed format (full details available in Extraction/Correlation):
+
 #### [Item Name]
-- **Theme**: [Theme ID and description]
+- **Theme**: [Theme ID and brief description]
 - **Correlation**: [Match/Gap/Combination]
 - **Why nice-to-have**: [Rationale]
-- **Scores**: Value: Medium | Effort: Low | Risk: Low | Leverage: High
 
 ### Post-MVP
 
@@ -190,9 +196,23 @@ status: complete
 - **Theme**: [Theme ID and description]
 - **Why deferred**: [Rationale - high effort, risk, lower priority, etc.]
 
+## How to Use This Roadmap
+
+### For Humans
+- **Quick review**: Read Summary + MVP-Critical items
+- **Deep dive**: Each MVP-Critical item is self-contained with context, constraints, and success criteria
+- **Cross-reference**: Nice-to-Have and Post-MVP items reference theme IDs — see Extraction.md for full details
+
+### For PAW Handoff
+- **Any MVP-Critical item** can start a PAW workflow directly
+- Copy the item's content as the initial brief
+- Discovery artifacts path provided for additional context during Spec/Planning
+
 ## PAW Handoff Brief
 
 **Ready for implementation**: [Top item name]
+
+(Note: Any MVP-Critical item above can serve as a PAW handoff brief. This section highlights the recommended first item.)
 
 ### Work Title
 [Derived from top priority item]

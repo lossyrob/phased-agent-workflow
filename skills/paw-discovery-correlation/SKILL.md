@@ -92,6 +92,44 @@ If extracted themes seem unrelated to codebase domain:
 - Provide context from both artifacts
 - Offer recommendation when you have one
 
+## Open Questions Disposition
+
+Before finalizing correlation, review Open Questions from Extraction.md:
+
+For each open question:
+1. Does it affect any correlation? (theme-capability relationship)
+2. Does it affect effort assessment? (unknowns = higher risk)
+3. Should it be resolved now or tracked for later?
+
+Document disposition in Correlation.md:
+
+```markdown
+## Open Questions Status
+
+| Question | Disposition | Impact |
+|----------|-------------|--------|
+| [Q1 from Extraction] | Deferred to Planning | No impact on correlation |
+| [Q2 from Extraction] | Resolved via user | Changed F3 from Gap to Partial |
+```
+
+## Effort Sanity Check
+
+For each correlation, do a basic feasibility check:
+
+| Check | Question | If Yes |
+|-------|----------|--------|
+| **Cross-component** | Does this require changes in multiple codebases/languages? | Flag as "Medium-High" effort |
+| **Data access layer** | Does this need new database queries or API calls? | Flag as "Medium" effort minimum |
+| **New UI** | Does this need significant new user interface? | Flag as "Medium" effort minimum |
+| **External dependencies** | Does this need new services or APIs? | Flag as "High" risk |
+
+Add effort notes to correlation entries:
+```markdown
+### F2 → Gap
+- **Why Gap**: Need Query Store queries
+- **Effort Note**: Requires Python LSP changes (cross-component)
+```
+
 ## Correlation.md Artifact
 
 Save to: `.paw/discovery/<work-id>/Correlation.md`

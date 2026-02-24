@@ -258,6 +258,15 @@ status: complete
 - [Question 1] - surfaced during extraction, not resolved in Q&A
 - [Question 2]
 
+## Clarification Log
+
+Track all Q&A interactions during extraction for auditability:
+
+| # | Question Asked | User Answer | Impact on Extraction |
+|---|----------------|-------------|---------------------|
+| 1 | [Question] | [Answer] | Added constraint C3 |
+| 2 | [Question] | [Answer] | Scoped F5 to exclude X |
+
 ## Conflict Resolutions
 
 ### CR1: [Conflict Description]

@@ -40,6 +40,14 @@ The outcome may be negative (no useful correlations), but evaluation happens at 
 - Internal components ("What controllers exist?")
 - Code structure ("Where are the services located?")
 
+**Concrete examples from real output:**
+- ✅ GOOD: "CAP-1: Server Dashboard with Real-Time Metrics" — describes what users see
+- ✅ GOOD: "CAP-9: Query Plan Visualizer" — a complete feature users interact with
+- ❌ BAD: "CAP-2: Subscription-Based Metrics Streaming" — implementation detail, not a feature
+- ❌ BAD: "CAP-5: Server Configuration Detection" — internal mechanism
+
+When you find an implementation pattern, ask: "What feature does this enable?" and document THAT.
+
 ### Input Analysis
 
 Read Extraction.md and identify:

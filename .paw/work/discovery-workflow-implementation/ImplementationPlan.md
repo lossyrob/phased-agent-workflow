@@ -52,7 +52,7 @@ Verification: User can place heterogeneous documents in `inputs/`, invoke Discov
 - [x] **Phase 8: Prioritization Skill** - Multi-factor MVP ranking with PAW handoff
 - [x] **Phase 9: Prioritization Review Skill** - Quality validation for Roadmap.md
 - [x] **Phase 10: Discovery Agent** - Orchestrator agent file with workflow rules
-- [ ] **Phase 11: Documentation** - Docs.md, user guide updates
+- [x] **Phase 11: Documentation** - Docs.md, user guide updates
 - [ ] **Phase 12: Integration Testing** - Workflow test for full Discovery flow
 
 ## Phase Candidates

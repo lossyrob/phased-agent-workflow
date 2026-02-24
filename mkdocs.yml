@@ -67,6 +67,7 @@ nav:
     - Workflow Modes: guide/workflow-modes.md
     - Stage Transitions: guide/stage-transitions.md
     - Two Workflows: guide/two-workflows.md
+    - Discovery Workflow: guide/discovery-workflow.md
     - Society-of-Thought Review: guide/society-of-thought-review.md
   - Specification:
     - Overview: specification/index.md

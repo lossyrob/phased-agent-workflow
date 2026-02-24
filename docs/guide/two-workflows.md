@@ -1,11 +1,12 @@
 # Two Workflows: Implementation and Review
 
-PAW provides two complementary workflows for different development scenarios:
+PAW provides two complementary workflows for different development scenarios, plus a strategic Discovery workflow for roadmap planning:
 
 1. **Implementation Workflow** — Building new features from scratch
 2. **Review Workflow** — Thoroughly reviewing existing pull requests
+3. **Discovery Workflow** — Transforming documents into prioritized MVP roadmaps
 
-Both workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
+Both implementation workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
 
 ## PAW Implementation Workflow
 
@@ -112,5 +113,6 @@ Both workflows share PAW's core principles:
 ## Next Steps
 
 - [Workflow Modes](workflow-modes.md) — Configure Full, Minimal, or Custom modes for implementation
+- [Discovery Workflow](discovery-workflow.md) — Transform documents into prioritized roadmaps
 - [Implementation Workflow Specification](../specification/implementation.md) — Deep dive into implementation stages
 - [Review Workflow Specification](../specification/review.md) — Deep dive into review stages

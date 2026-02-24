@@ -42,7 +42,9 @@
 |-------|--------|----------|
 | Specification | complete | Spec.md |
 | Code Research | complete | CodeResearch.md |
-| Planning | pending | ImplementationPlan.md |
+| Planning | complete | ImplementationPlan.md |
+| Planning Docs Review | pending | - |
+| Implementation | pending | - |
 | Planning | pending | ImplementationPlan.md |
 | Planning Docs Review | pending | - |
 | Implementation | pending | - |

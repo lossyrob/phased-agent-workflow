@@ -48,7 +48,7 @@ Verification: User can place heterogeneous documents in `inputs/`, invoke Discov
 - [x] **Phase 4: Mapping Skill** - Thin wrapper delegating to paw-code-research
 - [x] **Phase 5: Mapping Review Skill** - Quality validation for CapabilityMap.md
 - [x] **Phase 6: Correlation Skill** - Cross-reference themes with capabilities
-- [ ] **Phase 7: Correlation Review Skill** - Quality validation for Correlation.md
+- [x] **Phase 7: Correlation Review Skill** - Quality validation for Correlation.md
 - [ ] **Phase 8: Prioritization Skill** - Multi-factor MVP ranking with PAW handoff
 - [ ] **Phase 9: Prioritization Review Skill** - Quality validation for Roadmap.md
 - [ ] **Phase 10: Discovery Agent** - Orchestrator agent file with workflow rules

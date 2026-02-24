@@ -46,7 +46,7 @@ Verification: User can place heterogeneous documents in `inputs/`, invoke Discov
 - [x] **Phase 2: Extraction Skill** - Document processing with docx/PDF conversion and interactive Q&A
 - [x] **Phase 3: Extraction Review Skill** - Quality validation for Extraction.md
 - [x] **Phase 4: Mapping Skill** - Thin wrapper delegating to paw-code-research
-- [ ] **Phase 5: Mapping Review Skill** - Quality validation for CapabilityMap.md
+- [x] **Phase 5: Mapping Review Skill** - Quality validation for CapabilityMap.md
 - [ ] **Phase 6: Correlation Skill** - Cross-reference themes with capabilities
 - [ ] **Phase 7: Correlation Review Skill** - Quality validation for Correlation.md
 - [ ] **Phase 8: Prioritization Skill** - Multi-factor MVP ranking with PAW handoff

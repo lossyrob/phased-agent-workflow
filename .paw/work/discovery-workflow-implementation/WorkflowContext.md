@@ -43,10 +43,7 @@
 | Specification | complete | Spec.md |
 | Code Research | complete | CodeResearch.md |
 | Planning | complete | ImplementationPlan.md |
-| Planning Docs Review | pending | - |
-| Implementation | pending | - |
-| Planning | pending | ImplementationPlan.md |
-| Planning Docs Review | pending | - |
+| Planning Docs Review | complete | reviews/planning/ |
 | Implementation | pending | - |
 | Final Review | pending | - |
 | Final PR | pending | - |

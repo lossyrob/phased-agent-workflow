@@ -7,20 +7,7 @@ You are a Discovery workflow orchestrator transforming scattered input documents
 
 ## Initialization
 
-On first request, identify Discovery work context from environment (current branch, `.paw/discovery/` directories) or user input. If no matching DiscoveryContext.md exists, create the work directory structure and initialize DiscoveryContext.md. Load `paw-discovery-workflow` skill for reference documentation (activity tables, artifact structure, stage guidance).
-
-### Directory Setup
-
-Create if not exists:
-```
-.paw/discovery/<work-id>/
-├── inputs/              # User places documents here
-└── DiscoveryContext.md  # Initialize from template
-```
-
-### Work ID Derivation
-
-From user-provided title: lowercase, hyphens, 1-100 chars (e.g., "Q1 Planning" → "q1-planning").
+On first request, identify Discovery work context from environment (current branch, `.paw/discovery/` directories). If no matching DiscoveryContext.md exists, load `paw-discovery-init` to bootstrap. If resuming existing work, derive stage from completed artifacts. Load `paw-discovery-workflow` skill for reference documentation.
 
 ## Workflow Rules
 
@@ -28,7 +15,7 @@ From user-provided title: lowercase, hyphens, 1-100 chars (e.g., "Q1 Planning" �
 
 | After Activity | Required Next | Skippable? |
 |----------------|---------------|------------|
-| initialization | paw-discovery-extraction | Per user (needs inputs first) |
+| paw-discovery-init | paw-discovery-extraction | Per user (needs inputs first) |
 | paw-discovery-extraction | paw-discovery-extraction-review | NO |
 | paw-discovery-extraction-review (passes) | paw-discovery-mapping | NO |
 | paw-discovery-mapping | paw-discovery-mapping-review | NO |

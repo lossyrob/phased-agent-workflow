@@ -7,39 +7,62 @@ description: Mapping activity skill for PAW Discovery workflow. Delegates codeba
 
 > **Execution Context**: This skill runs **directly** in the PAW Discovery session, coordinating delegation to `paw-code-research` subagent.
 
-Map existing codebase capabilities that may relate to extracted themes. Delegates actual codebase analysis to `paw-code-research` skill and reformats findings into a capability inventory.
+Map existing codebase **features and capabilities** that could integrate with or support extracted themes. The goal is feature-level discovery—understanding what the codebase can already do—not cataloging implementation details.
+
+## Purpose
+
+Identify **major capabilities** at the feature level:
+- What user-facing features exist?
+- What workflows are already supported?
+- What integrations or extensibility points exist?
+
+The outcome may be negative (no useful correlations), but evaluation happens at the right level: features that could integrate with themes, not low-level implementation details like "controller exists" or "uses dependency injection."
 
 ## Capabilities
 
 - Read Extraction.md to understand themes requiring capability mapping
-- Formulate research questions based on extracted themes
+- Formulate feature-focused research questions
 - Delegate to `paw-code-research` via subagent
-- Reformat research findings into CapabilityMap.md
-- Link capabilities to relevant extracted themes
+- Reformat findings into feature-level CapabilityMap.md
+- Evaluate potential integration with extracted themes
 
 ## Research Question Formulation
+
+### Focus Level
+
+**DO focus on:**
+- Major features and workflows ("What features exist for user onboarding?")
+- Integration points ("What extension mechanisms exist?")
+- Supported use cases ("What content types can the system process?")
+
+**DON'T focus on:**
+- Implementation patterns ("Does it use MVC?")
+- Internal components ("What controllers exist?")
+- Code structure ("Where are the services located?")
 
 ### Input Analysis
 
 Read Extraction.md and identify:
 1. Features that might have existing implementations
-2. User needs that existing features address
-3. Constraints that affect capability scope
-4. Technology areas implied by themes
+2. User needs that existing features could address
+3. Integration opportunities between themes and codebase
+4. Capability gaps that would require net-new work
 
 ### Question Generation
 
-For each relevant area, generate questions like:
-- "What existing features handle [theme area]?"
-- "Where is [functionality type] implemented?"
-- "What modules relate to [domain area]?"
+For each theme area, ask feature-level questions:
+- "What features exist that could support [theme]?"
+- "Can the system already [capability implied by theme]?"
+- "What would need to change to enable [theme]?"
 
 ### Example Questions
 
-Given extracted themes about "user authentication" and "session management":
-- "What authentication mechanisms exist in the codebase?"
-- "Where are session handling components located?"
-- "What patterns are used for user identity management?"
+Given extracted themes about "document analysis" and "workflow automation":
+- "What document formats can the system already process?"
+- "Are there existing workflow features that could be extended?"
+- "What integration points exist for adding new capabilities?"
+
+NOT: "Where is the DocumentController?" or "What base classes exist?"
 
 ## Delegation to paw-code-research
 
@@ -57,7 +80,7 @@ task(
 
 ### Subagent Prompt
 
-Delegate with context:
+Delegate with context emphasizing feature-level discovery:
 
 ```
 Load the paw-code-research skill and research the codebase to answer these questions:
@@ -67,10 +90,13 @@ Load the paw-code-research skill and research the codebase to answer these quest
 ...
 
 Context: This research supports a Discovery workflow analyzing [work title].
-The goal is to inventory existing capabilities that relate to proposed themes.
 
-Focus on documenting WHAT EXISTS, not recommendations or improvements.
-Return findings with file:line references.
+IMPORTANT: Focus on FEATURE-LEVEL capabilities, not implementation details.
+- Good: "The system can process PDF documents via the document processor"
+- Bad: "There's a DocumentProcessor class at src/processor.ts"
+
+Document what the codebase CAN DO as features, not how it's structured internally.
+Return findings with file:line references for verification, but describe capabilities at the feature level.
 ```
 
 ### Handling Research Results
@@ -101,43 +127,43 @@ status: complete
 
 ## Summary
 
-[2-3 sentences describing the codebase capability landscape relevant to extracted themes]
+[2-3 sentences describing what the codebase can do at a feature level, relevant to extracted themes]
 
-## Capabilities
+## Major Capabilities
 
-### CAP-1: [Capability Name]
-- **Description**: [What this capability does]
-- **Location**: `src/module.ts:45-120`
+### CAP-1: [Feature-Level Capability Name]
+- **What it does**: [User-facing feature or workflow this enables]
+- **How it could integrate**: [Potential connection to extracted themes]
+- **Evidence**: `src/module.ts:45` (reference for verification)
 - **Related Themes**: F1, N2 (references to Extraction.md)
-- **Notes**: [Any relevant context]
 
-### CAP-2: [Capability Name]
-- **Description**: [What this capability does]
-- **Location**: `src/other.ts:10-50`
+### CAP-2: [Feature-Level Capability Name]
+- **What it does**: [User-facing feature or workflow]
+- **How it could integrate**: [Potential connection to themes, or "No clear integration path"]
+- **Evidence**: `src/other.ts:10`
 - **Related Themes**: F3, C1
-- **Notes**: [Any relevant context]
 
 ...
 
-## Theme Coverage
+## Integration Potential
 
-| Theme | Related Capabilities | Coverage |
-|-------|---------------------|----------|
-| F1: [Feature] | CAP-1, CAP-3 | Partial |
-| F2: [Feature] | - | Gap |
-| N1: [Need] | CAP-2 | Full |
-| C1: [Constraint] | CAP-2 | Full |
+| Theme | Existing Capability | Integration Assessment |
+|-------|--------------------|-----------------------|
+| F1: [Feature] | CAP-1 | Could extend existing feature |
+| F2: [Feature] | - | Net-new work required |
+| N1: [Need] | CAP-2 | Already supported |
+| N2: [Need] | CAP-1, CAP-3 | Partial - gaps remain |
 
-## Gaps
+## Gaps (Net-New Work)
 
-Themes with no matching codebase capabilities (net-new work needed):
+Themes with no existing capability to build on:
 
-- **F2**: [Feature name] - No existing implementation found
-- **N3**: [Need name] - Requires new capability
+- **F2**: [Feature name] - No related capability in codebase
+- **N3**: [Need name] - Would require new subsystem
 
 ## Notes
 
-[Any observations about the capability landscape that inform correlation/prioritization]
+[Observations about integration opportunities or challenges that inform correlation/prioritization]
 ```
 
 ## Quality Threshold

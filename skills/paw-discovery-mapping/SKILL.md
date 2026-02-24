@@ -43,12 +43,24 @@ Given extracted themes about "user authentication" and "session management":
 
 ## Delegation to paw-code-research
 
+### Invocation Pattern
+
+Use the Task tool to spawn a subagent:
+
+```
+task(
+  agent_type: "general-purpose",
+  description: "Code research for Discovery mapping",
+  prompt: "[research prompt below]"
+)
+```
+
 ### Subagent Prompt
 
 Delegate with context:
 
 ```
-Research the codebase to answer these questions about existing capabilities:
+Load the paw-code-research skill and research the codebase to answer these questions:
 
 1. [Question 1]
 2. [Question 2]

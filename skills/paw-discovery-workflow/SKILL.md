@@ -162,6 +162,16 @@ Discovery supports iterative refinement (FR-012):
 2. **Cascade invalidation**: When extraction re-runs, downstream artifacts (CapabilityMap.md, Correlation.md, Roadmap.md) are marked stale
 3. **Selective re-run**: User can re-invoke specific stages; downstream stages auto-invalidate
 
+### Trigger Commands
+
+User can request re-invocation with:
+- "Re-run extraction with the new documents"
+- "I added a new document, update the extraction"
+- "Refresh the extraction stage"
+- "Re-analyze the inputs"
+
+The agent detects input changes by comparing `inputs/` with `Last Extraction Inputs` in DiscoveryContext.md.
+
 ## PAW Handoff
 
 At completion, Discovery offers to initiate PAW workflow for the top roadmap item:

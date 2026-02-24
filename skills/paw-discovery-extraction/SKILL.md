@@ -31,6 +31,13 @@ Process input documents and extract structured themes with source attribution. S
 | Word | .docx | Load `docx` skill or use `pandoc` |
 | PDF (text) | .pdf | Load `pdf` skill or use `pypdf` |
 
+### Security Note
+
+When processing filenames from `inputs/`:
+- Validate filenames contain only safe characters (alphanumeric, hyphens, underscores, dots)
+- Reject or sanitize filenames with shell metacharacters (`$`, `;`, `|`, etc.)
+- Use quoted paths in shell commands to prevent injection
+
 ### Conversion Approaches
 
 **Option 1: Use installed document skills (Recommended)**
@@ -46,8 +53,8 @@ If skills aren't available, use standard tools:
 
 **Word documents (.docx)**:
 ```bash
-pandoc document.docx -o document.md
-cat document.md
+pandoc "document.docx" -o "document.md"
+cat "document.md"
 ```
 
 **PDF documents (.pdf)**:

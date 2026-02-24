@@ -30,14 +30,25 @@ On first request, identify Discovery work context from environment (current bran
 
 ### Stage Boundary Handling
 
-At each stage boundary, check the Review Policy from DiscoveryContext.md:
+Discovery has **4 stages**, each with an activity and a review:
 
-| Stage Boundary | every-stage | milestones | final-only |
-|----------------|-------------|------------|------------|
-| extraction-review → mapping | PAUSE | PAUSE (artifact) | continue |
-| mapping-review → correlation | PAUSE | PAUSE (artifact) | continue |
-| correlation-review → prioritization | PAUSE | PAUSE (artifact) | continue |
-| prioritization-review → complete | PAUSE | PAUSE (artifact) | PAUSE |
+| Stage | Activity → Review (internal) | Artifact |
+|-------|------------------------------|----------|
+| Extraction | extraction → extraction-review | Extraction.md |
+| Mapping | mapping → mapping-review | CapabilityMap.md |
+| Correlation | correlation → correlation-review | Correlation.md |
+| Prioritization | prioritize → prioritize-review → final-review | Roadmap.md |
+
+**Stage boundaries** occur between stages (not within):
+
+| Stage Boundary | every-stage | final-only |
+|----------------|-------------|------------|
+| Extraction complete → Mapping | PAUSE | continue |
+| Mapping complete → Correlation | PAUSE | continue |
+| Correlation complete → Prioritization | PAUSE | continue |
+| Prioritization complete → Workflow done | PAUSE | PAUSE |
+
+**Critical rule**: Activity → Review transitions are ALWAYS immediate (no pause). Only stage boundaries check Review Policy.
 
 When pausing:
 1. Report completed stage and artifact location
@@ -47,11 +58,10 @@ When pausing:
 When continuing:
 - Proceed directly to next stage without pausing
 
-### Review Policy Behavior
+### Review Policy Options
 
-- `every-stage`: Pause after every artifact for user confirmation
-- `milestones`: Pause at Extraction.md, CapabilityMap.md, Correlation.md, Roadmap.md
-- `final-only`: Only pause at Roadmap.md completion
+- `every-stage`: Pause at each stage boundary for user confirmation
+- `final-only`: Run all stages autonomously, only pause when Roadmap.md is complete
 
 Review skills (extraction-review, mapping-review, etc.) are mandatory regardless of Review Policy.
 

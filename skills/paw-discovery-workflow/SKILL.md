@@ -82,7 +82,7 @@ All Discovery artifacts are stored in a consistent directory structure:
 - **Created**: <YYYY-MM-DD>
 
 ## Configuration
-- **Review Policy**: <every-stage | milestones | final-only>
+- **Review Policy**: <every-stage | final-only>
 
 ## Input Documents
 | File | Type | Added | Status |

@@ -22,9 +22,14 @@ Bootstrap skill that initializes the Discovery workflow directory structure. Thi
 | Parameter | Required | Default | Values |
 |-----------|----------|---------|--------|
 | `work_title` | No | auto-derive | text |
-| `review_policy` | No | `milestones` | `every-stage`, `milestones`, `final-only` |
+| `review_policy` | No | `every-stage` | `every-stage`, `final-only` |
 | `final_review` | No | `enabled` | `enabled`, `disabled` |
 | `final_review_mode` | No | `society-of-thought` | `single-model`, `multi-model`, `society-of-thought` |
+
+### Review Policy Options
+
+- **`every-stage`**: Pause at each stage boundary (after Extraction, Mapping, Correlation, Prioritization) for user review
+- **`final-only`**: Run all stages autonomously, only pause when Roadmap.md is complete
 
 ## Work Title Derivation
 
@@ -82,7 +87,7 @@ When `work_title` is not provided, derive from (priority order):
 - **Created**: [ISO date]
 
 ## Configuration
-- **Review Policy**: [every-stage|milestones|final-only]
+- **Review Policy**: [every-stage|final-only]
 - **Final Review**: [enabled|disabled]
 - **Final Review Mode**: [single-model|multi-model|society-of-thought]
 

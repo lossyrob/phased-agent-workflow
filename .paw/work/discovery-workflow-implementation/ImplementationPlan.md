@@ -112,7 +112,7 @@ Create skill that processes input documents (including docx/PDF conversion), ext
 
 - **`skills/paw-discovery-extraction/SKILL.md`**: Extraction activity skill
   - Execution context: Direct (interactive Q&A)
-  - Document conversion: docx→markdown using mammoth, PDF→markdown using pdf-parse
+  - Document conversion: docx→markdown using mammoth, PDF→text using pdf-parse (structure inferred from headings/formatting)
   - Theme extraction: Features, user needs, constraints, vision statements
   - Interactive refinement: Q&A to validate understanding (pattern from `paw-work-shaping`)
   - Source attribution: Track which themes came from which documents

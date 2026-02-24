@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Correctness Specialist
 
 ## Identity & Narrative Backstory

@@ -24,7 +24,7 @@ The calling skill provides a **review context** describing what to review and ho
 
 | Field | Required | Values | Description |
 |-------|----------|--------|-------------|
-| `type` | yes | `diff` \| `artifacts` \| `freeform` | What kind of content is being reviewed |
+| `type` | yes | `diff` \| `artifacts` \| `discovery-artifacts` \| `freeform` | What kind of content is being reviewed |
 | `coordinates` | yes | diff range, artifact paths, or content description | What to point specialists at |
 | `output_dir` | yes | directory path | Where to write REVIEW-*.md files |
 | `specialists` | no | `all` (default) \| comma-separated names \| `adaptive:<N>` | Which specialists to invoke |
@@ -32,6 +32,17 @@ The calling skill provides a **review context** describing what to review and ho
 | `interactive` | yes | `true` \| `false` \| `smart` | Whether to pause for user decisions on trade-offs |
 | `specialist_models` | no | `none` \| model pool \| pinned pairs \| mixed | Model assignment for specialists |
 | `framing` | no | free text | Caller-provided preamble for `freeform` type |
+
+### Type-to-Context Mapping
+
+Each review `type` maps to a specialist `context` for filtering:
+
+| Review Type | Specialist Context | Description |
+|-------------|-------------------|-------------|
+| `diff` | `implementation` | Code/implementation review — loads implementation specialists |
+| `artifacts` | `implementation` | Design/planning document review — loads implementation specialists |
+| `discovery-artifacts` | `discovery` | Discovery workflow synthesis artifacts — loads discovery specialists |
+| `freeform` | *(bypass)* | No context filtering — all discovered specialists participate |
 
 ## Context-Adaptive Preambles
 
@@ -42,6 +53,11 @@ Before composing specialist prompts, inject a type-dependent preamble that frame
 
 **Type `artifacts`** (design/planning review):
 > You are reviewing design and planning documents, not code. Apply your cognitive strategy to design decisions, architectural choices, and unstated assumptions. Your domain expertise should evaluate whether the planned approach is sound — look for gaps in reasoning, missing edge cases, feasibility risks, and cross-concern conflicts. Reference specific sections and claims in the documents rather than code lines.
+
+**Type `discovery-artifacts`** (Discovery workflow synthesis review):
+> You are reviewing Discovery workflow synthesis artifacts—extracted themes, capability mappings, correlations, and prioritized roadmaps. Apply your cognitive strategy to evaluate reasoning quality, source attribution accuracy, coverage completeness, and cross-artifact consistency. Reference specific artifact sections, theme IDs, and capability references rather than code lines.
+
+**Note**: The Discovery preamble contextually overrides diff-centric language in shared rules. Agents should interpret "evidence anchored to specific locations" as artifact sections and theme IDs rather than code lines.
 
 **Type `freeform`**:
 > Use the caller-provided `framing` field content as the preamble. If no `framing` provided, use a neutral framing: "You are reviewing the provided content. Apply your cognitive strategy and domain expertise to identify issues, risks, and opportunities for improvement."
@@ -63,9 +79,42 @@ Resolution rules:
 - Skip malformed or empty specialist files with a warning; continue with remaining roster
 - If zero specialists found after discovery, fall back to built-in defaults with a warning
 
+## Context-Based Specialist Filtering
+
+After discovery, filter specialists based on the review `type` using the type-to-context mapping (see Review Context Input Contract).
+
+**Filtering logic**:
+
+1. Determine the target context from the review `type`:
+   - `diff` or `artifacts` → target context is `implementation`
+   - `discovery-artifacts` → target context is `discovery`
+   - `freeform` → **bypass filtering** (skip to step 4)
+
+2. For each discovered specialist, read the `context` field from YAML frontmatter:
+   ```yaml
+   ---
+   context: implementation  # or: discovery
+   ---
+   ```
+
+3. Include only specialists where `context` matches the target context
+
+4. For `freeform` type: include all discovered specialists regardless of `context` value (no filtering applied)
+
+**Backward compatibility**: Specialists without a `context` field in frontmatter are treated as `context: implementation`. This means:
+- For `diff` and `artifacts` types: specialists without `context` are included (backward compatible)
+- For `discovery-artifacts` type: specialists without `context` are excluded (only explicit `context: discovery` specialists participate)
+
+**Specialist author guidance**: When creating new specialists, always include the `context` field in frontmatter:
+- Use `context: implementation` for specialists that review code, diffs, design documents, or implementation plans (security, architecture, performance, testing, etc.)
+- Use `context: discovery` for specialists that review synthesis artifacts like theme extractions, capability maps, correlations, and roadmaps (source-fidelity, coverage, reasoning, coherence, etc.)
+- Omitting the `context` field defaults to `implementation`, which may cause unexpected exclusion from Discovery reviews
+
+**Edge case**: If filtering results in zero specialists, report the condition to the calling context with a warning — the caller decides whether to proceed with fallback behavior or abort.
+
 ## Adaptive Selection
 
-When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on content analysis.
+When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the **context-filtered roster** based on content analysis. Context filtering (see above) is applied first to produce the candidate pool, then adaptive selection chooses from that filtered pool.
 
 **Selection process**:
 1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
@@ -82,9 +131,17 @@ When `specialists` is `adaptive:<N>`, select the N most relevant specialists fro
 
 **Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
 
+**Discovery limitation**: When `type: discovery-artifacts` and `specialists: adaptive:<N>`, fall back to `all` with a warning. Adaptive selection analyzes code-centric change categories (file types, subsystems, data handling) which are not applicable to Discovery synthesis artifacts. Future work may introduce Discovery-specific adaptive heuristics.
+
 ## Prompt Composition
 
-Compose the review prompt for each specialist subagent from four layers:
+Compose the review prompt for each specialist subagent. The process includes context filtering followed by four-layer prompt assembly:
+
+**Step 1: Context Filtering**
+Apply context-based specialist filtering (see Context-Based Specialist Filtering above) to produce the filtered specialist roster for the review `type`.
+
+**Step 2: Prompt Assembly**
+For each specialist in the filtered roster, compose the prompt from four layers:
 
 1. **Shared rules** — load `references/specialists/_shared-rules.md` once per review run (anti-sycophancy rules, confidence scoring, Toulmin output format)
 2. **Context preamble** — inject the type-dependent preamble (see Context-Adaptive Preambles above) to frame the specialist's review lens

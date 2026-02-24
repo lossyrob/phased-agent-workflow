@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Assumptions Specialist
 
 ## Identity & Narrative Backstory

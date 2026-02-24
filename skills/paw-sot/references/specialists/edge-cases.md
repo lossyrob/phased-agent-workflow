@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Edge Cases Specialist
 
 ## Identity & Narrative Backstory

@@ -89,8 +89,9 @@ Write findings in structured markdown.
 
 **If society-of-thought mode**:
 - Load `paw-sot` skill
-- Invoke with review context (type: `artifacts`, coordinates: Discovery artifact paths)
+- Invoke with review context (type: `discovery-artifacts`, coordinates: Discovery artifact paths)
 - SoT handles specialist orchestration and synthesis
+- Note: Discovery specialists are automatically selected via context filtering (type-based specialist selection)
 
 ### Step 5: Resolution
 

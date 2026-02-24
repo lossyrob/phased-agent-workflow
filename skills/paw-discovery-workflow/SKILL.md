@@ -51,8 +51,9 @@ Humans have final authority over all Discovery decisions:
 | `paw-discovery-correlation-review` | Review correlation quality | Review feedback |
 | `paw-discovery-prioritize` | Multi-factor prioritization, PAW handoff | Roadmap.md |
 | `paw-discovery-prioritize-review` | Review roadmap quality | Review feedback |
+| `paw-discovery-final-review` | Comprehensive SoT/multi-model review before handoff | reviews/ |
 
-**Utility skills**: `paw-code-research` (invoked by mapping).
+**Utility skills**: `paw-code-research` (invoked by mapping), `paw-sot` (invoked by final-review).
 
 ## Artifact Directory Structure
 

@@ -30,13 +30,14 @@ From user-provided title: lowercase, hyphens, 1-100 chars (e.g., "Q1 Planning" �
 |----------------|---------------|------------|
 | initialization | paw-discovery-extraction | Per user (needs inputs first) |
 | paw-discovery-extraction | paw-discovery-extraction-review | NO |
-| paw-discovery-extraction-review (passes) | paw-transition → paw-discovery-mapping | NO |
+| paw-discovery-extraction-review (passes) | paw-discovery-mapping | NO |
 | paw-discovery-mapping | paw-discovery-mapping-review | NO |
-| paw-discovery-mapping-review (passes) | paw-transition → paw-discovery-correlation | NO |
+| paw-discovery-mapping-review (passes) | paw-discovery-correlation | NO |
 | paw-discovery-correlation | paw-discovery-correlation-review | NO |
-| paw-discovery-correlation-review (passes) | paw-transition → paw-discovery-prioritize | NO |
+| paw-discovery-correlation-review (passes) | paw-discovery-prioritize | NO |
 | paw-discovery-prioritize | paw-discovery-prioritize-review | NO |
-| paw-discovery-prioritize-review (passes) | Discovery complete, offer PAW handoff | NO |
+| paw-discovery-prioritize-review (passes) | paw-discovery-final-review | NO |
+| paw-discovery-final-review (passes) | Discovery complete, offer PAW handoff | NO |
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 

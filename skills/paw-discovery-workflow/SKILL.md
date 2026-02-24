@@ -174,12 +174,34 @@ The agent detects input changes by comparing `inputs/` with `Last Extraction Inp
 
 ## PAW Handoff
 
-At completion, Discovery offers to initiate PAW workflow for the top roadmap item:
+At completion, guide user to choose their PAW entry point:
 
-1. Extract work title from top Roadmap.md item
-2. Generate brief from item description and rationale
-3. Reference Discovery artifacts as source material
-4. User confirms to proceed with PAW initialization
+### Two Valid Paths
+
+| Path | When to Use | Entry Point |
+|------|-------------|-------------|
+| **Work Shaping** | Multiple items to scope/group | `paw-work-shaping` with roadmap items |
+| **Direct PAW** | Single clear item | `paw-init` with item as brief |
+
+### Scale Guidance
+
+| MVP-Critical Count | Suggested Path |
+|--------------------|----------------|
+| 1-3 items | Direct PAW likely sufficient |
+| 4-7 items | Either path works |
+| 8+ items | Work Shaping to scope batch first |
+
+### Completion Message
+
+```
+Discovery complete! Roadmap has N MVP-Critical items.
+
+Next steps:
+1. "Start Work Shaping with [items]" — scope/refine first
+2. "Start PAW for [item]" — implement directly
+
+Which would you like?
+```
 
 ## Execution Model
 

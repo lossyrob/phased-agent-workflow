@@ -107,15 +107,49 @@ When invoking `paw-sot` for Discovery artifacts, **always use `type: discovery-a
 
 ## PAW Handoff
 
-At Discovery completion:
+At Discovery completion, guide the user to their preferred PAW entry point:
 
-1. Identify top-priority item from Roadmap.md
-2. Offer to initiate PAW workflow: "Ready to implement [item]? I can start a PAW workflow."
-3. If user accepts:
-   - Extract work title from roadmap item
-   - Generate brief from item description and rationale
-   - Reference Discovery artifacts as context
-   - Initialize PAW workflow (delegate to PAW agent or load paw-init)
+### Completion Message
+
+Present the Roadmap summary and offer two paths:
+
+```
+Discovery complete! Roadmap has N MVP-Critical items.
+
+**Next steps — choose your path:**
+
+1. **Scope first** (recommended for 4+ items):
+   "Start Work Shaping with [item names]"
+   → Refine scope, group features, then proceed to Spec
+
+2. **Implement directly** (for clear single items):
+   "Start PAW for [item name]"
+   → Use roadmap item as brief, proceed to Spec
+
+Which would you like to do?
+```
+
+### Path A: Work Shaping Entry
+
+If user chooses Work Shaping:
+- Pass selected roadmap items as starting context
+- Work Shaping refines/groups into a coherent brief
+- Brief flows into PAW Spec as usual
+
+### Path B: Direct PAW Entry
+
+If user chooses direct PAW:
+- Use the MVP-Critical item's content as the initial brief
+- Reference Discovery artifacts for context during Spec/Planning
+- Initialize PAW workflow (delegate to PAW agent or load paw-init)
+
+### Scale Guidance
+
+| MVP-Critical Count | Suggested Path |
+|--------------------|----------------|
+| 1-3 items | Direct PAW likely sufficient |
+| 4-7 items | Either path works |
+| 8+ items | Work Shaping to scope batch first |
 
 ## Before Yielding Control
 

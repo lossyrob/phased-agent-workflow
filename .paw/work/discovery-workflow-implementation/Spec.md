@@ -125,7 +125,7 @@ The workflow supports iteration—teams can add documents, re-run extraction, an
 
 ## Assumptions
 
-- Users will provide input documents in supported formats (Markdown, text, .docx) rather than PDFs or images
+- Users will provide input documents in supported formats (Markdown, text, .docx, text-based PDF) rather than image-based PDFs or images
 - Input documents are in English or a language the LLM can process effectively
 - The target codebase has sufficient structure for meaningful capability mapping (not an empty/starter project)
 - Users understand Discovery is strategic/exploratory—effort estimates are qualitative, not precise
@@ -146,7 +146,7 @@ The workflow supports iteration—teams can add documents, re-run extraction, an
 
 **Out of Scope:**
 - Multi-repository correlation (single repo only for MVP)
-- PDF or image document processing
+- Image-based PDF or image document processing (text-based PDF supported)
 - Automated effort estimation (qualitative only)
 - Direct integration with external tools (Jira, Linear, Notion)
 - Real-time collaboration features

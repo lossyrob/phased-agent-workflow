@@ -53,6 +53,7 @@ Verification: User can place heterogeneous documents in `inputs/`, invoke Discov
 - [ ] **Phase 9: Prioritization Review Skill** - Quality validation for Roadmap.md
 - [ ] **Phase 10: Discovery Agent** - Orchestrator agent file with workflow rules
 - [ ] **Phase 11: Documentation** - Docs.md, user guide updates
+- [ ] **Phase 12: Integration Testing** - Workflow test for full Discovery flow
 
 ## Phase Candidates
 
@@ -67,11 +68,12 @@ Establish directory structure, configuration artifact, and orchestrator skill th
 
 ### Changes Required
 
-- **`skills/paw-discovery-workflow/SKILL.md`**: Orchestrator skill mirroring `paw-workflow` pattern
+- **`skills/paw-discovery-workflow/SKILL.md`**: Reference documentation skill (not orchestrator)
   - Activity table (extraction → mapping → correlation → prioritize)
   - Artifact directory structure documentation
   - Stage guidance and artifact progression
   - Review integration points
+  - **Note**: This skill provides reference documentation only. Orchestration execution is owned by `PAW Discovery.agent.md` (Phase 10).
 
 - **Directory structure template** (documented in skill):
   ```
@@ -144,6 +146,7 @@ Create skill that processes input documents (including docx/PDF conversion), ext
 - [ ] Interactive Q&A flow matches pattern from `paw-work-shaping:21-61`
 - [ ] Extraction.md template has YAML frontmatter with source attribution
 - [ ] Quality checklist included
+- [ ] Edge case handling documented: scale limits (token warnings), contradictory documents (conflict detection/surfacing)
 
 ---
 
@@ -385,8 +388,12 @@ Create orchestrator agent that coordinates the Discovery workflow, mirroring PAW
   - Initialization: Detect/create `.paw/discovery/<work-id>/` directory
   - Workflow rules:
     - Mandatory transitions (extraction → extraction-review → mapping → ...)
-    - Stage boundary handling
+    - Stage boundary handling: Delegate to `paw-transition` skill (reuse existing infrastructure)
     - Review policy behavior (supports iteration via FR-012)
+  - Re-invocation mechanics (FR-012):
+    - Detect new/changed files in `inputs/` folder via file list comparison in DiscoveryContext.md
+    - On re-run: Invalidate downstream artifacts (mark stale or delete)
+    - DiscoveryContext.md tracks: `last_extraction_inputs` list, `stages_requiring_rerun` flags
   - Skill loading references
   - PAW handoff mechanism at completion
 
@@ -436,6 +443,33 @@ Create technical documentation and update user guide.
 - [ ] Docs.md follows `paw-docs-guidance` patterns
 - [ ] User guide is clear for first-time users
 - [ ] Navigation entry added correctly
+
+---
+
+## Phase 12: Integration Testing
+
+### Objective
+Create integration test validating the full Discovery workflow flow.
+
+### Changes Required
+
+- **`tests/integration/tests/workflows/discovery-workflow.test.ts`**: Full workflow test
+  - Use `TestFixture.clone("minimal-ts")` for isolated test repo
+  - Seed input documents in `.paw/discovery/<work-id>/inputs/`
+  - Use `RuleBasedAnswerer` to simulate user responses during interactive Q&A
+  - Drive workflow through extraction → mapping → correlation → prioritization
+  - Assert artifact structure for each stage output
+  - Validate PAW handoff brief is actionable
+
+### Success Criteria
+
+#### Automated Verification
+- [ ] Test passes: `npm run test:integration:workflows`
+
+#### Manual Verification
+- [ ] Test follows patterns from existing workflow tests
+- [ ] RuleBasedAnswerer rules cover interactive Q&A scenarios
+- [ ] Assertions verify artifact YAML frontmatter and key sections
 
 ---
 

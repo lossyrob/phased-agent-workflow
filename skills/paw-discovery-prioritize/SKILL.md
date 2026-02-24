@@ -13,8 +13,9 @@ Apply multi-factor prioritization to correlated themes to produce a ranked MVP r
 
 - Read Correlation.md for theme-capability relationships
 - Apply 5-factor prioritization framework
-- Facilitate interactive tradeoff discussion
-- Generate prioritized roadmap with rationale
+- Categorize items into MVP-Critical / MVP-Nice-to-Have / Post-MVP
+- Generate prioritized roadmap autonomously
+- Offer single Q&A pass for adjustments
 - Offer PAW workflow handoff for top item
 - Generate Roadmap.md artifact
 
@@ -69,38 +70,32 @@ Consider correlation type: matches/partials = lower effort; gaps = higher effort
 
 From Correlation.md: matches/combinations = high leverage; gaps = low leverage
 
-## Interactive Tradeoff Discussion
+## Autonomous Prioritization
 
 ### Process
 
-For each candidate roadmap item:
-1. Present the item with current scores
-2. Highlight key tradeoffs
-3. Ask user to confirm or adjust
-4. Document final decision
+Generate the **complete roadmap autonomously** using the 5-factor framework:
+1. Score all candidate items against the factors
+2. Apply dependency ordering and value-to-effort ranking
+3. Categorize into priority buckets (see below)
+4. Present the full roadmap to user
 
-### Example Dialogue
+**One Q&A pass at the end**: After presenting the full roadmap, offer a single opportunity for adjustments:
+- "Here's the prioritized roadmap. Would you like to adjust any items before finalizing?"
+- If user requests changes, update and present the revised roadmap
+- Do NOT ask for confirmation on each individual item
 
-```
-**Item: User Authentication System (F1)**
-- Value: High (core user workflow)
-- Effort: Medium (partial match to CAP-1)
-- Dependencies: Blocker (other features need auth)
-- Risk: Low (well-understood pattern)
-- Leverage: High (extends existing auth)
+### Priority Categories (Not Numbers)
 
-Recommendation: Priority 1 (high value, foundational)
+Use meaningful categories instead of numeric priority:
 
-Do you agree with this assessment? [Confirm / Adjust / Discuss]
-```
+| Category | Meaning | Criteria |
+|----------|---------|----------|
+| **MVP-Critical** | Must ship in MVP | High value + blocker/enabler + manageable effort |
+| **MVP-Nice-to-Have** | Should ship if time allows | Medium-high value, no blockers |
+| **Post-MVP** | Defer to future releases | Lower value OR high risk OR high effort |
 
-### Adjustment Guidelines
-
-If user disagrees:
-1. Ask which factor they see differently
-2. Understand their reasoning
-3. Update score with user rationale
-4. Document the adjustment
+Within each category, order by dependency (blockers first) then value-to-effort ratio.
 
 ## Roadmap Generation
 
@@ -146,8 +141,10 @@ Save to: `.paw/discovery/<work-id>/Roadmap.md`
 ---
 date: [ISO timestamp]
 work_id: [work-id]
-item_count: [N]
-top_priority: [item-name]
+mvp_critical_count: [N]
+mvp_nice_to_have_count: [N]
+post_mvp_count: [N]
+top_item: [item-name]
 paw_handoff_ready: true
 status: complete
 ---
@@ -158,49 +155,40 @@ status: complete
 
 [2-3 sentences describing the prioritization outcome and recommended first steps]
 
-## Prioritization Criteria
+## Priority Categories
 
-| Factor | Weight | Description |
-|--------|--------|-------------|
-| Value | High | User/business impact |
-| Effort | Medium | Implementation complexity |
-| Dependencies | High | Blocking/enabling relationships |
-| Risk | Medium | Uncertainty and potential issues |
-| Leverage | Medium | Reuse of existing capabilities |
+| Category | Count | Description |
+|----------|-------|-------------|
+| MVP-Critical | N | Must ship in MVP |
+| MVP-Nice-to-Have | N | Should ship if time allows |
+| Post-MVP | N | Deferred to future releases |
 
 ## Prioritized Items
 
-### Priority 1: [Item Name]
+### MVP-Critical
+
+#### [Item Name]
 - **Theme**: [Theme ID and description]
 - **Correlation**: [Match/Gap/Combination with capabilities]
-- **Scores**:
-  - Value: High | Effort: Medium | Dependencies: Blocker | Risk: Low | Leverage: High
-- **Rationale**: [Why this is priority 1]
-- **User Adjustments**: [Any user modifications to default scores]
+- **Why critical**: [Rationale - value, dependency role, etc.]
+- **Scores**: Value: High | Effort: Medium | Risk: Low | Leverage: High
 
-### Priority 2: [Item Name]
-- **Theme**: [Theme ID and description]
-- **Correlation**: [Match/Gap/Combination]
-- **Scores**:
-  - Value: Medium | Effort: Low | Dependencies: Enabler | Risk: Low | Leverage: High
-- **Rationale**: [Why this is priority 2]
-- **User Adjustments**: [Any user modifications]
-
-### Priority 3: [Item Name]
+#### [Item Name]
 ...
 
-## Dependency Graph
+### MVP-Nice-to-Have
 
-```
-[Priority 1] → [Priority 2] → [Priority 4]
-                ↘ [Priority 3]
-```
+#### [Item Name]
+- **Theme**: [Theme ID and description]
+- **Correlation**: [Match/Gap/Combination]
+- **Why nice-to-have**: [Rationale]
+- **Scores**: Value: Medium | Effort: Low | Risk: Low | Leverage: High
 
-## Deferred Items
+### Post-MVP
 
-Items not recommended for MVP:
-
-- **[Item Name]**: [Reason for deferral - high risk, low value, etc.]
+#### [Item Name]
+- **Theme**: [Theme ID and description]
+- **Why deferred**: [Rationale - high effort, risk, lower priority, etc.]
 
 ## PAW Handoff Brief
 
@@ -225,11 +213,10 @@ Items not recommended for MVP:
 
 - [ ] All correlated themes considered for roadmap
 - [ ] 5 factors scored for each item
-- [ ] Tradeoff discussion completed with user
-- [ ] Dependency order is logical
-- [ ] Top priority item clearly identified
+- [ ] Items categorized as MVP-Critical / MVP-Nice-to-Have / Post-MVP
+- [ ] Dependency order is logical within categories
+- [ ] Top MVP-Critical item identified for PAW handoff
 - [ ] PAW handoff brief is actionable
-- [ ] Deferred items have clear rationale
 - [ ] YAML frontmatter is complete
 
 ## Completion Response

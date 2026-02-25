@@ -5,7 +5,10 @@
  * - Extraction: produces Extraction.md from input documents
  * - Mapping: delegates to paw-code-research and produces CapabilityMap.md
  * - Correlation: cross-references themes and capabilities into Correlation.md
- * - Prioritization: applies 5-factor scoring to produce Roadmap.md
+ * - Journey Grounding: extracts pain points and synthesizes user journeys into JourneyMap.md
+ * - Journey Grounding Review: validates JourneyMap.md quality
+ * - Journey Scoping: interactive MVP depth scoping checkpoint
+ * - Prioritization: applies multi-factor scoring (including journey factors) to produce Roadmap.md
  *
  * Each test seeds prerequisite artifacts from previous stages.
  *
@@ -854,6 +857,717 @@ function buildPrioritizePrompt(skillContent: string, workId: string): string {
     "- Include YAML frontmatter with: mvp_critical_count, mvp_nice_to_have_count, post_mvp_count",
     "- Categorize each item as: MVP-Critical, MVP-Nice-to-Have, or Post-MVP",
     "- Provide rationale for each prioritization decision",
+    "- Do NOT push to git or create PRs",
+    "",
+    "Reference skill documentation:",
+    skillContent,
+  ].join("\n");
+}
+
+// ============================================================================
+// Journey Grounding Stage Tests
+// ============================================================================
+
+describe("discovery workflow - journey grounding", { timeout: 180_000 }, () => {
+  let ctx: TestContext;
+  let judge: Judge;
+
+  after(async () => {
+    if (ctx) { await destroyTestContext(ctx); }
+    if (judge) { await judge.stop(); }
+  });
+
+  it("produces JourneyMap.md with pain points and user journeys", async () => {
+    const groundingSkill = await loadSkill("paw-discovery-journey-grounding");
+    const workId = "test-journey-grounding";
+
+    const answerer = new RuleBasedAnswerer([
+      (req) => req.choices?.[0] ?? "yes",
+      (req) => {
+        if (/proceed|confirm|ready|continue/i.test(req.question)) {
+          return "yes";
+        }
+        return "yes";
+      },
+    ], false);
+
+    ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "discovery-journey-grounding",
+      systemPrompt: buildJourneyGroundingPrompt(groundingSkill, workId),
+      answerer,
+    });
+
+    // Seed prerequisite artifacts
+    const contextDir = join(ctx.fixture.workDir, `.paw/discovery/${workId}`);
+    await mkdir(contextDir, { recursive: true });
+
+    // Seed DiscoveryContext.md
+    await writeFile(join(contextDir, "DiscoveryContext.md"), `---
+work_id: ${workId}
+created: 2024-01-15
+current_stage: journey_grounding
+review_policy: every-stage
+scoping_style: per-journey
+workflow_version: "2.0"
+---
+
+# Discovery Context
+
+## Configuration
+- **Work ID**: ${workId}
+- **Review Policy**: every-stage
+- **Scoping Style**: per-journey
+`);
+
+    // Seed Extraction.md with pain points (journey grounding reads from this, not source docs)
+    await writeFile(join(contextDir, "Extraction.md"), `---
+source_documents:
+  - user-research.md
+theme_count: 3
+status: complete
+---
+
+# Extraction: ${workId}
+
+## Themes
+
+### T1: User Authentication
+Users want easier login with remember-me.
+
+### T2: Dashboard Performance
+Dashboard loads too slowly.
+
+### T3: Mobile Support
+Mobile experience is poor.
+
+## User Needs
+
+### N1: Frictionless Login
+"I have to enter my password every single time, even on my own computer." Multiple users requested remember-me functionality.
+[SOURCE: user-research.md, Pain Points section]
+
+### N2: Fast Dashboard Access
+"The dashboard takes forever to load. I just want to see my stats quickly." Users mentioned abandoning the dashboard due to loading times.
+[SOURCE: user-research.md, Pain Points section]
+
+### N3: Mobile-Friendly Experience
+"I can't use the app on my phone - buttons are too small and pages don't fit." Users want a proper mobile experience.
+[SOURCE: user-research.md, Pain Points section]
+
+## User Goals
+- Quick access to daily stats
+- Seamless authentication
+- On-the-go access via mobile
+`);
+
+    // Seed Correlation.md (required for feature mapping)
+    await writeFile(join(contextDir, "Correlation.md"), `---
+work_id: ${workId}
+theme_count: 3
+status: complete
+---
+
+# Correlation: ${workId}
+
+## Summary
+3 themes correlated.
+
+## Correlation Matrix
+
+| Theme | ID | Type | Related Capabilities |
+|-------|-----|------|---------------------|
+| Authentication | F-1 | Gap | - |
+| Dashboard Performance | F-2 | Partial | src/dashboard.ts |
+| Mobile Support | F-3 | Gap | - |
+`);
+
+    // Run journey grounding
+    await ctx.session.sendAndWait({
+      prompt: [
+        "Run the Discovery journey grounding stage.",
+        "",
+        `The discovery work directory is: .paw/discovery/${workId}/`,
+        "Extract pain points from Extraction.md (not original source documents).",
+        "Synthesize user journeys based on pain points and themes.",
+        "Map features from Correlation.md to journey steps.",
+        "Apply source tracing discipline ([SOURCE] vs [SYNTHESIS]).",
+        "",
+        `Write the journey map to .paw/discovery/${workId}/JourneyMap.md`,
+      ].join("\n"),
+    }, 120_000);
+
+    // Assert JourneyMap.md exists and has proper structure
+    const journeyMapPath = join(contextDir, "JourneyMap.md");
+    let journeyMapContent: string;
+    try {
+      journeyMapContent = await readFile(journeyMapPath, "utf-8");
+    } catch {
+      assert.fail(`JourneyMap.md not found at ${journeyMapPath}`);
+    }
+
+    // Should have YAML frontmatter
+    assert.match(
+      journeyMapContent,
+      /^---\n/,
+      "JourneyMap.md should start with YAML frontmatter",
+    );
+
+    // Should have pain points section
+    assert.match(
+      journeyMapContent,
+      /pain\s*point|PP-/im,
+      "JourneyMap.md should have pain points",
+    );
+
+    // Should have user journeys section
+    assert.match(
+      journeyMapContent,
+      /journey|user\s*journey|J-/im,
+      "JourneyMap.md should have user journeys",
+    );
+
+    // Should have source tracing markers
+    assert.ok(
+      journeyMapContent.includes("[SOURCE") || journeyMapContent.includes("[SYNTHESIS"),
+      "JourneyMap.md should have source tracing markers",
+    );
+
+    // Verify no forbidden operations
+    assertToolCalls(ctx.toolLog, {
+      forbidden: ["git_push"],
+      bashMustNotInclude: [/git push/],
+    });
+
+    // Judge evaluation for quality
+    judge = new Judge();
+    await judge.start();
+
+    const groundingRubric = [
+      "Evaluate this JourneyMap.md artifact:",
+      "- pain_points: Are pain points extracted with quotes and sources? (1-5)",
+      "- journeys: Are user journeys synthesized with clear steps? (1-5)",
+      "- source_tracing: Are insights marked with [SOURCE] or [SYNTHESIS]? (1-5)",
+      "- feature_mapping: Are features from Correlation.md mapped to journeys? (1-5)",
+    ].join("\n");
+
+    const verdict = await judge.evaluate({
+      context: "Agent extracted pain points and synthesized user journeys with source tracing discipline.",
+      artifact: journeyMapContent,
+      rubric: groundingRubric,
+    });
+
+    if (!verdict.pass) {
+      throw new Error(
+        `Judge FAILED journey grounding:\n  ${JSON.stringify(verdict.scores)}\n  ${verdict.rationale}`,
+      );
+    }
+  });
+});
+
+function buildJourneyGroundingPrompt(skillContent: string, workId: string): string {
+  return [
+    "You are a PAW Discovery journey grounding agent. Your job is to extract pain points and synthesize user journeys.",
+    "",
+    "IMPORTANT RULES:",
+    `- Read Extraction.md and Correlation.md from .paw/discovery/${workId}/`,
+    `- Write output to .paw/discovery/${workId}/JourneyMap.md`,
+    "- Extract pain points from Extraction.md content (not from original source documents)",
+    "- Synthesize user journeys connecting pain points to feature solutions",
+    "- Map features from Correlation.md to journey steps",
+    "- Apply source tracing: [SOURCE: doc, location] for grounded content, [SYNTHESIS] for inferences",
+    "- Include YAML frontmatter with: pain_point_count, journey_count, date, status",
+    "- Do NOT push to git or create PRs",
+    "",
+    "Reference skill documentation:",
+    skillContent,
+  ].join("\n");
+}
+
+// ============================================================================
+// Journey Grounding Review Tests
+// ============================================================================
+
+describe("discovery workflow - journey grounding review", { timeout: 180_000 }, () => {
+  let ctx: TestContext;
+
+  after(async () => {
+    if (ctx) { await destroyTestContext(ctx); }
+  });
+
+  it("returns PASS for valid JourneyMap.md", async () => {
+    const reviewSkill = await loadSkill("paw-discovery-journey-grounding-review");
+    const workId = "test-journey-review";
+
+    const answerer = new RuleBasedAnswerer([
+      (req) => req.choices?.[0] ?? "yes",
+    ], false);
+
+    ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "discovery-journey-grounding-review",
+      systemPrompt: buildJourneyGroundingReviewPrompt(reviewSkill, workId),
+      answerer,
+    });
+
+    // Seed prerequisite artifacts
+    const contextDir = join(ctx.fixture.workDir, `.paw/discovery/${workId}`);
+    await mkdir(contextDir, { recursive: true });
+
+    // Seed valid JourneyMap.md
+    await writeFile(join(contextDir, "JourneyMap.md"), `---
+work_id: ${workId}
+pain_point_count: 2
+journey_count: 2
+source_tracing:
+  grounded: 3
+  synthesized: 2
+date: 2024-01-15
+status: complete
+---
+
+# Journey Map: ${workId}
+
+## Pain Points
+
+### PP-1: Login Friction
+"I have to enter my password every single time" - User frustration with authentication.
+[SOURCE: user-research.md, Pain Points section]
+
+### PP-2: Slow Dashboard
+"The dashboard takes forever to load" - Performance complaint.
+[SOURCE: user-research.md, Pain Points section]
+
+## User Journeys
+
+### J-1: Quick Stats Check
+
+- **Goal**: View daily statistics quickly
+- **Addresses**: PP-2
+
+#### Steps
+1. User opens dashboard [SYNTHESIS]
+2. User waits for data to load
+3. User views stats summary [SOURCE: user-research.md, User Goals]
+
+### J-2: Seamless Login
+
+- **Goal**: Log in without friction
+- **Addresses**: PP-1
+
+#### Steps
+1. User returns to app
+2. User is remembered (no password entry)
+3. User proceeds to dashboard [SYNTHESIS]
+
+## Feature-to-Journey Mapping
+
+| Feature ID | Journey | Required For | MVP Critical |
+|------------|---------|--------------|--------------|
+| F-1 | J-2 | Step 2 | Yes |
+| F-2 | J-1 | Step 2 | Yes |
+| F-3 | J-1, J-2 | All steps | No |
+`);
+
+    // Seed Correlation.md for feature ID validation
+    await writeFile(join(contextDir, "Correlation.md"), `---
+work_id: ${workId}
+theme_count: 3
+status: complete
+---
+
+# Correlation
+
+## Correlation Matrix
+
+| Theme | ID | Type |
+|-------|-----|------|
+| Authentication | F-1 | Gap |
+| Performance | F-2 | Partial |
+| Mobile | F-3 | Gap |
+`);
+
+    // Run review
+    const result = await ctx.session.sendAndWait({
+      prompt: [
+        "Run the Journey Grounding review stage.",
+        "",
+        `The discovery work directory is: .paw/discovery/${workId}/`,
+        "Review JourneyMap.md against the quality checklist.",
+        "Check: pain point extraction, journey synthesis, source tracing, feature mapping.",
+        "Return verdict: PASS or REVISE with feedback.",
+      ].join("\n"),
+    }, 120_000);
+
+    // Should return PASS verdict
+    const responseText = result?.data?.content ?? "";
+    assert.match(
+      responseText,
+      /pass|proceed|approved|looks good/i,
+      "Review should return PASS for valid JourneyMap.md",
+    );
+
+    // Verify no forbidden operations
+    assertToolCalls(ctx.toolLog, {
+      forbidden: ["git_push"],
+      bashMustNotInclude: [/git push/],
+    });
+  });
+});
+
+function buildJourneyGroundingReviewPrompt(skillContent: string, workId: string): string {
+  return [
+    "You are a PAW Discovery journey grounding review agent. Your job is to validate JourneyMap.md quality.",
+    "",
+    "IMPORTANT RULES:",
+    `- Read JourneyMap.md from .paw/discovery/${workId}/`,
+    `- Read Correlation.md from .paw/discovery/${workId}/ to validate feature IDs`,
+    "- Apply quality checklist: pain point extraction, journey synthesis, source tracing, feature mapping",
+    "- Return PASS if all criteria met, REVISE with specific feedback otherwise",
+    "- Validate that feature IDs in mapping exist in Correlation.md",
+    "- Do NOT push to git or create PRs",
+    "",
+    "Reference skill documentation:",
+    skillContent,
+  ].join("\n");
+}
+
+// ============================================================================
+// Journey Scoping Tests
+// ============================================================================
+
+describe("discovery workflow - journey scoping", { timeout: 180_000 }, () => {
+  let ctx: TestContext;
+
+  after(async () => {
+    if (ctx) { await destroyTestContext(ctx); }
+  });
+
+  it("adds MVP depth annotations to JourneyMap.md", async () => {
+    const scopingSkill = await loadSkill("paw-discovery-journey-scoping");
+    const workId = "test-journey-scoping";
+
+    // Answer scoping questions with specific depths
+    const answerer = new RuleBasedAnswerer([
+      (req) => {
+        // When asked about MVP depth for a journey
+        if (/mvp|depth|scope|partial|full|minimal/i.test(req.question)) {
+          return req.choices?.[0] ?? "Partial";
+        }
+        return req.choices?.[0] ?? "yes";
+      },
+    ], false);
+
+    ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "discovery-journey-scoping",
+      systemPrompt: buildJourneyScopingPrompt(scopingSkill, workId),
+      answerer,
+    });
+
+    // Seed prerequisite artifacts
+    const contextDir = join(ctx.fixture.workDir, `.paw/discovery/${workId}`);
+    await mkdir(contextDir, { recursive: true });
+
+    // Seed DiscoveryContext.md with scoping_style
+    await writeFile(join(contextDir, "DiscoveryContext.md"), `---
+work_id: ${workId}
+scoping_style: per-journey
+workflow_version: "2.0"
+---
+
+# Discovery Context
+
+## Configuration
+- **Scoping Style**: per-journey
+`);
+
+    // Seed JourneyMap.md without MVP depth annotations
+    await writeFile(join(contextDir, "JourneyMap.md"), `---
+work_id: ${workId}
+pain_point_count: 2
+journey_count: 2
+status: complete
+---
+
+# Journey Map
+
+## Pain Points
+
+### PP-1: Login Friction
+User frustration with password entry.
+
+### PP-2: Slow Dashboard
+Performance complaints.
+
+## User Journeys
+
+### J-1: Quick Stats Check
+
+- **Goal**: View daily statistics
+- **Addresses**: PP-2
+
+#### Steps
+1. Open dashboard
+2. Wait for load
+3. View stats
+
+#### MVP Options
+- **Full**: All statistics, charts, history
+- **Partial**: Key stats only, no charts
+- **Minimal**: Single number summary
+
+### J-2: Seamless Login
+
+- **Goal**: Frictionless login
+- **Addresses**: PP-1
+
+#### Steps
+1. Return to app
+2. Auto-authenticated
+3. Proceed to dashboard
+
+#### MVP Options
+- **Full**: Remember-me, OAuth, SSO
+- **Partial**: Remember-me only
+- **Minimal**: Session persistence only
+
+## Feature-to-Journey Mapping
+
+| Feature ID | Journey | Required For | MVP Critical |
+|------------|---------|--------------|--------------|
+| F-1 | J-2 | Step 2 | TBD |
+| F-2 | J-1 | Step 2 | TBD |
+`);
+
+    // Run scoping
+    await ctx.session.sendAndWait({
+      prompt: [
+        "Run the Journey Scoping checkpoint.",
+        "",
+        `The discovery work directory is: .paw/discovery/${workId}/`,
+        "Read JourneyMap.md and DiscoveryContext.md.",
+        "For each journey, ask the user to select MVP depth (Full/Partial/Minimal).",
+        "Update JourneyMap.md with MVP depth annotations.",
+        "Update the Feature-to-Journey Mapping MVP Critical column.",
+      ].join("\n"),
+    }, 120_000);
+
+    // Assert JourneyMap.md was updated with MVP depth
+    const journeyMapPath = join(contextDir, "JourneyMap.md");
+    let journeyMapContent: string;
+    try {
+      journeyMapContent = await readFile(journeyMapPath, "utf-8");
+    } catch {
+      assert.fail(`JourneyMap.md not found at ${journeyMapPath}`);
+    }
+
+    // Should have MVP Depth annotations
+    assert.match(
+      journeyMapContent,
+      /mvp\s*depth|scoped|partial|full|minimal/im,
+      "JourneyMap.md should have MVP depth annotations",
+    );
+
+    // Verify no forbidden operations
+    assertToolCalls(ctx.toolLog, {
+      forbidden: ["git_push"],
+      bashMustNotInclude: [/git push/],
+    });
+  });
+});
+
+function buildJourneyScopingPrompt(skillContent: string, workId: string): string {
+  return [
+    "You are a PAW Discovery journey scoping agent. Your job is to interactively scope MVP depth for each journey.",
+    "",
+    "IMPORTANT RULES:",
+    `- Read JourneyMap.md from .paw/discovery/${workId}/`,
+    `- Read DiscoveryContext.md from .paw/discovery/${workId}/ for scoping_style`,
+    "- For each journey, present MVP options and ask user to select depth",
+    "- Update JourneyMap.md with MVP Depth field for each journey",
+    "- Update Feature-to-Journey Mapping MVP Critical column based on scope",
+    "- Do NOT push to git or create PRs",
+    "",
+    "Reference skill documentation:",
+    skillContent,
+  ].join("\n");
+}
+
+// ============================================================================
+// Prioritization with Journey Factors Test
+// ============================================================================
+
+describe("discovery workflow - prioritization with journey factors", { timeout: 180_000 }, () => {
+  let ctx: TestContext;
+  let judge: Judge;
+
+  after(async () => {
+    if (ctx) { await destroyTestContext(ctx); }
+    if (judge) { await judge.stop(); }
+  });
+
+  it("integrates journey factors into prioritization when JourneyMap.md exists", async () => {
+    const prioritizeSkill = await loadSkill("paw-discovery-prioritize");
+    const workId = "test-journey-prioritize";
+
+    const answerer = new RuleBasedAnswerer([
+      (req) => req.choices?.[0] ?? "yes",
+      (req) => {
+        if (/adjust|change|modify/i.test(req.question)) {
+          return "no, proceed with the roadmap as presented";
+        }
+        return "yes";
+      },
+    ], false);
+
+    ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "discovery-journey-prioritize",
+      systemPrompt: buildJourneyPrioritizePrompt(prioritizeSkill, workId),
+      answerer,
+    });
+
+    // Seed all prerequisite artifacts including JourneyMap.md
+    const contextDir = join(ctx.fixture.workDir, `.paw/discovery/${workId}`);
+    await mkdir(contextDir, { recursive: true });
+
+    // Seed DiscoveryContext.md
+    await writeFile(join(contextDir, "DiscoveryContext.md"), `---
+work_id: ${workId}
+workflow_version: "2.0"
+---
+# Discovery Context
+`);
+
+    // Seed Correlation.md
+    await writeFile(join(contextDir, "Correlation.md"), `---
+work_id: ${workId}
+status: complete
+---
+
+# Correlation
+
+| Theme | ID | Type |
+|-------|-----|------|
+| Auth | F-1 | Gap |
+| Performance | F-2 | Partial |
+| Mobile | F-3 | Gap |
+`);
+
+    // Seed JourneyMap.md with scoped journeys
+    await writeFile(join(contextDir, "JourneyMap.md"), `---
+work_id: ${workId}
+pain_point_count: 2
+journey_count: 2
+status: complete
+---
+
+# Journey Map
+
+## Pain Points
+
+### PP-1: Login Friction
+Severity: High
+
+### PP-2: Slow Dashboard
+Severity: Medium
+
+## User Journeys
+
+### J-1: Quick Stats
+- **MVP Depth**: Partial
+- **Scoped**: Partial
+
+### J-2: Seamless Login
+- **MVP Depth**: Full
+- **Scoped**: Full
+
+## Feature-to-Journey Mapping
+
+| Feature ID | Journey | MVP Critical |
+|------------|---------|--------------|
+| F-1 | J-2 | Yes |
+| F-2 | J-1 | Yes |
+| F-3 | J-1, J-2 | No |
+`);
+
+    // Run prioritization
+    await ctx.session.sendAndWait({
+      prompt: [
+        "Run Discovery prioritization with journey factors.",
+        "",
+        `The discovery work directory is: .paw/discovery/${workId}/`,
+        "Read Correlation.md and JourneyMap.md.",
+        "Apply multi-factor prioritization including journey factors:",
+        "- Base factors (1-5): Value, Effort, Dependencies, Risk, Leverage",
+        "- Journey factors (6-8): Criticality, Pain Severity, MVP Scope",
+        "",
+        `Write Roadmap.md to .paw/discovery/${workId}/`,
+        "Include journey-related rationale for priority decisions.",
+      ].join("\n"),
+    }, 120_000);
+
+    // Assert Roadmap.md exists
+    const roadmapPath = join(contextDir, "Roadmap.md");
+    let roadmapContent: string;
+    try {
+      roadmapContent = await readFile(roadmapPath, "utf-8");
+    } catch {
+      assert.fail(`Roadmap.md not found at ${roadmapPath}`);
+    }
+
+    // Should reference journey-related concepts
+    assert.match(
+      roadmapContent,
+      /journey|pain|critical|mvp|scoped/im,
+      "Roadmap.md should reference journey factors",
+    );
+
+    // Verify no forbidden operations
+    assertToolCalls(ctx.toolLog, {
+      forbidden: ["git_push"],
+      bashMustNotInclude: [/git push/],
+    });
+
+    // Judge evaluation
+    judge = new Judge();
+    await judge.start();
+
+    const journeyPrioritizeRubric = [
+      "Evaluate this roadmap with journey factor integration:",
+      "- journey_factors: Does it consider journey criticality, pain severity, MVP scope? (1-5)",
+      "- rationale: Does rationale reference journeys and pain points? (1-5)",
+      "- categorization: Are MVP-critical journey features prioritized appropriately? (1-5)",
+    ].join("\n");
+
+    const verdict = await judge.evaluate({
+      context: "Agent prioritized items using both base factors and journey factors from JourneyMap.md.",
+      artifact: roadmapContent,
+      rubric: journeyPrioritizeRubric,
+    });
+
+    if (!verdict.pass) {
+      throw new Error(
+        `Judge FAILED journey prioritization:\n  ${JSON.stringify(verdict.scores)}\n  ${verdict.rationale}`,
+      );
+    }
+  });
+});
+
+function buildJourneyPrioritizePrompt(skillContent: string, workId: string): string {
+  return [
+    "You are a PAW Discovery prioritization agent with journey factor integration.",
+    "",
+    "IMPORTANT RULES:",
+    `- Read Correlation.md from .paw/discovery/${workId}/`,
+    `- Read JourneyMap.md from .paw/discovery/${workId}/ for journey factors`,
+    `- Write output to .paw/discovery/${workId}/Roadmap.md`,
+    "- Apply multi-factor prioritization:",
+    "  - Base factors (1-5): Value, Effort, Dependencies, Risk, Leverage",
+    "  - Journey factors (6-8): Criticality, Pain Severity, MVP Scope",
+    "- Include journey rationale in priority decisions",
+    "- Features marked MVP Critical in JourneyMap.md get priority boost",
     "- Do NOT push to git or create PRs",
     "",
     "Reference skill documentation:",

@@ -7,8 +7,9 @@ graph LR
     A[Documents] --> B[Extraction]
     B --> C[Mapping]
     C --> D[Correlation]
-    D --> E[Roadmap]
-    E --> F[PAW Handoff]
+    D --> E[Journey Grounding]
+    E --> F[Roadmap]
+    F --> G[PAW Handoff]
 ```
 
 ## When to Use Discovery
@@ -98,17 +99,35 @@ Cross-references extracted themes with mapped capabilities:
 
 **Output**: `Correlation.md`
 
-### Stage 4: Prioritization
+### Stage 4: Journey Grounding
+
+**Skill**: `paw-discovery-journey-grounding`
+
+Extracts user pain points and synthesizes user journeys from source documents:
+
+- Extracts **pain points** with direct quotes and source references
+- Identifies **journey models** (patterns/flows) stated in sources
+- Synthesizes **concrete user journeys** showing how users achieve goals
+- Maps **features to journeys** showing which features enable which journeys
+- Applies **source tracing** distinguishing grounded insights from agent synthesis
+
+**Output**: `JourneyMap.md`
+
+After review, an interactive **Journey Scoping** checkpoint lets you define MVP depth (Full/Partial/Minimal) for each journey before prioritization.
+
+### Stage 5: Prioritization
 
 **Skill**: `paw-discovery-prioritize`
 
-Produces a ranked MVP roadmap using 5-factor analysis:
+Produces a ranked MVP roadmap using multi-factor analysis:
 
 1. **Business Value** — Impact on users, revenue, strategic goals
 2. **Technical Feasibility** — How much existing code can be reused
 3. **Effort Estimate** — Implementation complexity (T-shirt sizing)
 4. **Dependencies** — What must be built first
 5. **Risk Assessment** — Technical and business risks
+6. **Journey Criticality** — Is the feature required for an MVP-scoped journey?
+7. **Pain Point Severity** — How severe is the problem this feature addresses?
 
 **Output**: `Roadmap.md`
 
@@ -123,6 +142,7 @@ All artifacts are created in your Discovery work directory:
 ├── Extraction.md        # Themes with source attribution
 ├── CapabilityMap.md     # Codebase capabilities inventory
 ├── Correlation.md       # Theme ↔ capability connections
+├── JourneyMap.md        # Pain points, user journeys, MVP scoping
 └── Roadmap.md           # Prioritized MVP items
 ```
 

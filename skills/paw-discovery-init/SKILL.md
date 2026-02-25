@@ -23,13 +23,20 @@ Bootstrap skill that initializes the Discovery workflow directory structure. Thi
 |-----------|----------|---------|--------|
 | `work_title` | No | auto-derive | text |
 | `review_policy` | No | `every-stage` | `every-stage`, `final-only` |
+| `scoping_style` | No | `per-journey` | `per-journey`, `batch`, `bulk-guidance` |
 | `final_review` | No | `enabled` | `enabled`, `disabled` |
 | `final_review_mode` | No | `society-of-thought` | `single-model`, `multi-model`, `society-of-thought` |
 
 ### Review Policy Options
 
-- **`every-stage`**: Pause at each stage boundary (after Extraction, Mapping, Correlation, Prioritization) for user review
+- **`every-stage`**: Pause at each stage boundary (after Extraction, Mapping, Correlation, Journey Grounding, Prioritization) for user review
 - **`final-only`**: Run all stages autonomously, only pause when Roadmap.md is complete
+
+### Scoping Style Options
+
+- **`per-journey`** (default): Walk through each journey individually for MVP depth scoping
+- **`batch`**: Present all journeys at once for simultaneous scoping
+- **`bulk-guidance`**: User provides high-level direction (e.g., "all minimal"), agent applies
 
 ## Work Title Derivation
 
@@ -66,7 +73,7 @@ When `work_title` is not provided, derive from (priority order):
 
 ### Work ID
 - Unique within `.paw/discovery/`
-- Format: lowercase letters, numbers, hyphens only; 1-100 chars
+- Format: lowercase letters, numbers, hyphens only; 1-100 chars (no path traversal characters)
 - If conflict: append `-2`, `-3`, etc.
 
 ### Directory Structure
@@ -85,9 +92,11 @@ When `work_title` is not provided, derive from (priority order):
 - **Work Title**: [Title]
 - **Work ID**: `[work-id]`
 - **Created**: [ISO date]
+- **Workflow Version**: 2.0
 
 ## Configuration
 - **Review Policy**: [every-stage|final-only]
+- **Scoping Style**: [per-journey|batch|bulk-guidance]
 - **Final Review**: [enabled|disabled]
 - **Final Review Mode**: [single-model|multi-model|society-of-thought]
 
@@ -100,6 +109,9 @@ When `work_title` is not provided, derive from (priority order):
 | Mapping Review | pending | - |
 | Correlation | pending | - |
 | Correlation Review | pending | - |
+| Journey Grounding | pending | - |
+| Journey Grounding Review | pending | - |
+| Journey Scoping | pending | - |
 | Prioritization | pending | - |
 | Prioritization Review | pending | - |
 | Final Review | pending | - |

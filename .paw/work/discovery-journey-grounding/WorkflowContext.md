@@ -23,7 +23,7 @@
 | Stage | Status | Artifact |
 |-------|--------|----------|
 | Work Shaping | complete | WorkShaping.md |
-| Specification | pending | - |
+| Specification | complete | Spec.md |
 | Code Research | pending | - |
 | Planning | pending | - |
 | Implementation | pending | - |

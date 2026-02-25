@@ -25,7 +25,7 @@
 | Work Shaping | complete | WorkShaping.md |
 | Specification | complete | Spec.md |
 | Code Research | complete | CodeResearch.md |
-| Planning | pending | - |
+| Planning | complete | ImplementationPlan.md |
 | Implementation | pending | - |
 | Final Review | pending | - |
 | Final PR | pending | - |

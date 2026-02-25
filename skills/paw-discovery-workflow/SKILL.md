@@ -49,6 +49,9 @@ Humans have final authority over all Discovery decisions:
 | `paw-discovery-mapping-review` | Review mapping quality | Review feedback |
 | `paw-discovery-correlation` | Cross-reference themes with capabilities | Correlation.md |
 | `paw-discovery-correlation-review` | Review correlation quality | Review feedback |
+| `paw-discovery-journey-grounding` | Extract pain points, synthesize user journeys | JourneyMap.md |
+| `paw-discovery-journey-grounding-review` | Review journey quality, source tracing | Review feedback |
+| `paw-discovery-journey-scoping` | Interactive MVP depth scoping (checkpoint) | JourneyMap.md (updated) |
 | `paw-discovery-prioritize` | Multi-factor prioritization, PAW handoff | Roadmap.md |
 | `paw-discovery-prioritize-review` | Review roadmap quality | Review feedback |
 | `paw-discovery-final-review` | Comprehensive SoT/multi-model review before handoff | reviews/ |
@@ -66,7 +69,8 @@ All Discovery artifacts are stored in a consistent directory structure:
 ├── Extraction.md        # Stage 1 output: normalized themes with source attribution
 ├── CapabilityMap.md     # Stage 2 output: codebase capabilities inventory
 ├── Correlation.md       # Stage 3 output: theme ↔ capability connections
-└── Roadmap.md           # Stage 4 output: prioritized MVP items with rationale
+├── JourneyMap.md        # Stage 4 output: pain points, user journeys, MVP scoping
+└── Roadmap.md           # Stage 5 output: prioritized MVP items with rationale
 ```
 
 **Work ID Derivation**: Normalized from user-provided title, lowercase with hyphens (e.g., "Q1 Planning" → "q1-planning").
@@ -83,6 +87,7 @@ All Discovery artifacts are stored in a consistent directory structure:
 
 ## Configuration
 - **Review Policy**: <every-stage | final-only>
+- **Scoping Style**: <per-journey | batch | bulk-guidance>
 
 ## Input Documents
 | File | Type | Added | Status |
@@ -99,6 +104,9 @@ All Discovery artifacts are stored in a consistent directory structure:
 | Mapping Review | pending | - |
 | Correlation | pending | Correlation.md |
 | Correlation Review | pending | - |
+| Journey Grounding | pending | JourneyMap.md |
+| Journey Grounding Review | pending | - |
+| Journey Scoping | pending | - |
 | Prioritization | pending | Roadmap.md |
 | Prioritization Review | pending | - |
 
@@ -126,8 +134,13 @@ Typical Discovery progression (adapt based on user intent and workflow state):
 1. `paw-discovery-correlation`: Cross-reference themes with capabilities
 2. `paw-discovery-correlation-review`: Review correlation quality
 
+### Journey Grounding Stage
+1. `paw-discovery-journey-grounding`: Extract pain points, synthesize user journeys
+2. `paw-discovery-journey-grounding-review`: Review journey quality, source tracing
+3. `paw-discovery-journey-scoping`: Interactive MVP depth scoping (user decisions)
+
 ### Prioritization Stage
-1. `paw-discovery-prioritize`: Multi-factor analysis, generate roadmap
+1. `paw-discovery-prioritize`: Multi-factor analysis (including journey factors), generate roadmap
 2. `paw-discovery-prioritize-review`: Review roadmap quality
 
 ### Completion

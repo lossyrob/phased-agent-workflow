@@ -21,7 +21,10 @@ On first request, identify Discovery work context from environment (current bran
 | paw-discovery-mapping | paw-discovery-mapping-review | NO |
 | paw-discovery-mapping-review (passes) | paw-discovery-correlation | NO |
 | paw-discovery-correlation | paw-discovery-correlation-review | NO |
-| paw-discovery-correlation-review (passes) | paw-discovery-prioritize | NO |
+| paw-discovery-correlation-review (passes) | paw-discovery-journey-grounding | NO |
+| paw-discovery-journey-grounding | paw-discovery-journey-grounding-review | NO |
+| paw-discovery-journey-grounding-review (passes) | paw-discovery-journey-scoping | NO |
+| paw-discovery-journey-scoping | paw-discovery-prioritize | NO |
 | paw-discovery-prioritize | paw-discovery-prioritize-review | NO |
 | paw-discovery-prioritize-review (passes) | paw-discovery-final-review | NO |
 | paw-discovery-final-review (passes) | Discovery complete, offer PAW handoff | NO |
@@ -30,14 +33,17 @@ On first request, identify Discovery work context from environment (current bran
 
 ### Stage Boundary Handling
 
-Discovery has **4 stages**, each with an activity and a review:
+Discovery has **5 stages**, each with an activity and a review (except Journey Scoping which is an interactive checkpoint):
 
 | Stage | Activity → Review (internal) | Artifact |
 |-------|------------------------------|----------|
 | Extraction | extraction → extraction-review | Extraction.md |
 | Mapping | mapping → mapping-review | CapabilityMap.md |
 | Correlation | correlation → correlation-review | Correlation.md |
+| Journey Grounding | journey-grounding → journey-grounding-review → journey-scoping* | JourneyMap.md |
 | Prioritization | prioritize → prioritize-review → final-review | Roadmap.md |
+
+*Journey Scoping is an interactive checkpoint, not a reviewed stage. User decisions are authoritative.
 
 **Stage boundaries** occur between stages (not within):
 
@@ -45,7 +51,8 @@ Discovery has **4 stages**, each with an activity and a review:
 |----------------|-------------|------------|
 | Extraction complete → Mapping | PAUSE | continue |
 | Mapping complete → Correlation | PAUSE | continue |
-| Correlation complete → Prioritization | PAUSE | continue |
+| Correlation complete → Journey Grounding | PAUSE | continue |
+| Journey Grounding complete → Prioritization | PAUSE | continue |
 | Prioritization complete → Workflow done | PAUSE | PAUSE |
 
 **Critical rule**: Activity → Review transitions are ALWAYS immediate (no pause). Only stage boundaries check Review Policy.
@@ -96,12 +103,15 @@ User can request re-extraction:
 - `paw-discovery-extraction`
 - `paw-discovery-mapping`
 - `paw-discovery-correlation`
+- `paw-discovery-journey-grounding`
+- `paw-discovery-journey-scoping`
 - `paw-discovery-prioritize`
 
 **Subagent delegation** (context isolation):
 - `paw-discovery-extraction-review`
 - `paw-discovery-mapping-review`
 - `paw-discovery-correlation-review`
+- `paw-discovery-journey-grounding-review`
 - `paw-discovery-prioritize-review`
 - `paw-discovery-final-review` (SoT-capable)
 - `paw-code-research` (invoked by mapping skill)

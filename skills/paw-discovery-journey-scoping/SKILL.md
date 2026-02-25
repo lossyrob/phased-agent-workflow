@@ -101,11 +101,12 @@ Apply user's guidance programmatically, then present summary for confirmation.
 ## Execution Flow
 
 1. Read JourneyMap.md to get journey list
-2. Read DiscoveryContext.md for scoping_style
-3. Check journey count against threshold (5) if per-journey style
-4. Execute scoping per selected style
-5. Update JourneyMap.md with MVP depth annotations
-6. Update Feature-to-Journey Mapping "MVP Critical" column
+2. **If journey list is empty, handle edge case** (see Empty Journeys below)
+3. Read DiscoveryContext.md for scoping_style
+4. Check journey count against threshold (5) if per-journey style
+5. Execute scoping per selected style
+6. Update JourneyMap.md with MVP depth annotations
+7. Update Feature-to-Journey Mapping "MVP Critical" column
 
 ## JourneyMap.md Updates
 

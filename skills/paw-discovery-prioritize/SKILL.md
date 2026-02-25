@@ -104,6 +104,16 @@ From JourneyMap.md Pain Points section: cross-reference which pain points the fe
 
 From JourneyMap.md User Journeys: check "Scoped" field and which steps require this feature.
 
+## JourneyMap.md Fallback Behavior
+
+When JourneyMap.md is absent (e.g., skipped Journey Grounding stage):
+
+- **Factors 6-8**: Mark as N/A in scoring; omit journey-related rationale from Roadmap.md
+- **Priority calculation**: Use base factors (1-5) only
+- **Roadmap descriptions**: No journey criticality references; rely on correlation type and capability alignment
+
+This ensures backward compatibility with workflows that skip Journey Grounding or were started before this stage was introduced.
+
 ## Journey Factor Integration
 
 When JourneyMap.md exists, integrate journey factors into prioritization:
@@ -291,7 +301,8 @@ Nice-to-Have items use condensed format (full details available in Extraction/Co
 ## Quality Checklist
 
 - [ ] All correlated themes considered for roadmap
-- [ ] 5 factors scored for each item
+- [ ] Base factors (1-5) scored for each item
+- [ ] Journey factors (6-8) scored when JourneyMap.md exists
 - [ ] Items categorized as MVP-Critical / MVP-Nice-to-Have / Post-MVP
 - [ ] Dependency order is logical within categories
 - [ ] Top MVP-Critical item identified for PAW handoff

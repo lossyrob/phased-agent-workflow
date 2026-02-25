@@ -173,7 +173,7 @@ Typical Discovery progression (adapt based on user intent and workflow state):
 Discovery supports iterative refinement (FR-012):
 
 1. **Input change detection**: Compare current `inputs/` file list with `Last Extraction Inputs` in DiscoveryContext.md
-2. **Cascade invalidation**: When extraction re-runs, downstream artifacts (CapabilityMap.md, Correlation.md, Roadmap.md) are marked stale
+2. **Cascade invalidation**: When extraction re-runs, downstream artifacts (CapabilityMap.md, Correlation.md, JourneyMap.md, Roadmap.md) are marked stale
 3. **Selective re-run**: User can re-invoke specific stages; downstream stages auto-invalidate
 
 ### Trigger Commands
@@ -219,8 +219,8 @@ Which would you like?
 
 ## Execution Model
 
-**Direct execution**: `paw-discovery-extraction`, `paw-discovery-mapping`, `paw-discovery-correlation`, `paw-discovery-prioritize`
+**Direct execution**: `paw-discovery-extraction`, `paw-discovery-mapping`, `paw-discovery-correlation`, `paw-discovery-journey-grounding`, `paw-discovery-journey-scoping`, `paw-discovery-prioritize`
 
-**Subagent delegation**: `paw-discovery-extraction-review`, `paw-discovery-mapping-review`, `paw-discovery-correlation-review`, `paw-discovery-prioritize-review`, `paw-code-research` (invoked by mapping)
+**Subagent delegation**: `paw-discovery-extraction-review`, `paw-discovery-mapping-review`, `paw-discovery-correlation-review`, `paw-discovery-journey-grounding-review`, `paw-discovery-prioritize-review`, `paw-code-research` (invoked by mapping)
 
 **Orchestrator-handled**: Stage transitions (inline Review Policy checks), input change detection, artifact invalidation

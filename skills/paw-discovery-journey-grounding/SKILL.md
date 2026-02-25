@@ -23,9 +23,11 @@ Extract user pain points and synthesize user journeys from source documents. Pro
 
 | Artifact | Purpose |
 |----------|---------|
-| `inputs/` folder | Original source documents |
+| `inputs/` folder | Original source documents (re-read for direct quotes) |
 | `Extraction.md` | Themes, features, user needs, constraints |
 | `Correlation.md` | Theme-capability relationships, feature IDs |
+
+> **Note**: Source documents are re-read directly (not via Extraction.md) because pain point extraction requires direct quotes and verbatim user language that Extraction focuses on different facets (themes, features). This is intentional design, not redundant processing.
 
 ## Source Tracing Discipline
 
@@ -98,6 +100,8 @@ Cross-reference journeys with Correlation.md:
 2. Check if features exist (match), need extension (partial), or are gaps
 3. Build mapping table showing which features enable which journeys
 4. Flag features not required for any journey (may be deprioritized)
+
+**Feature ID format**: Reference features using the IDs from Correlation.md (e.g., F-1, F-2). If Correlation.md uses theme-based IDs (T-1, T-2), reference those instead. The review skill validates that all referenced IDs exist in Correlation.md.
 
 ## Image Handling
 

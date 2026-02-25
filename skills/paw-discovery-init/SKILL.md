@@ -73,7 +73,7 @@ When `work_title` is not provided, derive from (priority order):
 
 ### Work ID
 - Unique within `.paw/discovery/`
-- Format: lowercase letters, numbers, hyphens only; 1-100 chars
+- Format: lowercase letters, numbers, hyphens only; 1-100 chars (no path traversal characters)
 - If conflict: append `-2`, `-3`, etc.
 
 ### Directory Structure
@@ -92,6 +92,7 @@ When `work_title` is not provided, derive from (priority order):
 - **Work Title**: [Title]
 - **Work ID**: `[work-id]`
 - **Created**: [ISO date]
+- **Workflow Version**: 2.0
 
 ## Configuration
 - **Review Policy**: [every-stage|final-only]

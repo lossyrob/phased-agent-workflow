@@ -142,8 +142,9 @@ Typical Discovery progression (adapt based on user intent and workflow state):
 | Plain text | .txt | Native |
 | Word document | .docx | mammoth → markdown |
 | PDF (text-based) | .pdf | pdf-parse → text |
+| Images | .png, .jpg, .jpeg | LLM vision (mockups, diagrams) |
 
-**Note**: Image-based PDFs and image files are not supported.
+**Note**: Image-based PDFs require OCR and are not supported.
 
 ## Edge Case Handling
 

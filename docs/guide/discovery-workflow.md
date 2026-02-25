@@ -157,7 +157,6 @@ Discovery supports the same review policies as PAW Implementation:
 | Policy | Behavior |
 |--------|----------|
 | `every-stage` | Pause after each artifact for review |
-| `milestones` | Pause at major artifacts |
 | `final-only` | Only pause at Roadmap completion |
 
 Each stage includes a mandatory review skill regardless of policy.

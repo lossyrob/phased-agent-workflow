@@ -900,29 +900,7 @@ describe("discovery workflow - journey grounding", { timeout: 180_000 }, () => {
 
     // Seed prerequisite artifacts
     const contextDir = join(ctx.fixture.workDir, `.paw/discovery/${workId}`);
-    const inputsDir = join(contextDir, "inputs");
-    await mkdir(inputsDir, { recursive: true });
-
-    // Seed input document with user pain points
-    await writeFile(join(inputsDir, "user-research.md"), `
-# User Research Summary
-
-## Pain Points
-
-### Login Frustration
-Users report frustration with the current login process. "I have to enter my password every single time, even on my own computer." Multiple users requested remember-me functionality.
-
-### Slow Dashboard
-"The dashboard takes forever to load. I just want to see my stats quickly." Users mentioned abandoning the dashboard due to loading times.
-
-### Mobile Issues
-"I can't use the app on my phone - buttons are too small and pages don't fit." Users want a proper mobile experience.
-
-## User Goals
-- Quick access to daily stats
-- Seamless authentication
-- On-the-go access via mobile
-`);
+    await mkdir(contextDir, { recursive: true });
 
     // Seed DiscoveryContext.md
     await writeFile(join(contextDir, "DiscoveryContext.md"), `---
@@ -942,7 +920,7 @@ workflow_version: "2.0"
 - **Scoping Style**: per-journey
 `);
 
-    // Seed Extraction.md (required for context)
+    // Seed Extraction.md with pain points (journey grounding reads from this, not source docs)
     await writeFile(join(contextDir, "Extraction.md"), `---
 source_documents:
   - user-research.md
@@ -962,6 +940,25 @@ Dashboard loads too slowly.
 
 ### T3: Mobile Support
 Mobile experience is poor.
+
+## User Needs
+
+### N1: Frictionless Login
+"I have to enter my password every single time, even on my own computer." Multiple users requested remember-me functionality.
+[SOURCE: user-research.md, Pain Points section]
+
+### N2: Fast Dashboard Access
+"The dashboard takes forever to load. I just want to see my stats quickly." Users mentioned abandoning the dashboard due to loading times.
+[SOURCE: user-research.md, Pain Points section]
+
+### N3: Mobile-Friendly Experience
+"I can't use the app on my phone - buttons are too small and pages don't fit." Users want a proper mobile experience.
+[SOURCE: user-research.md, Pain Points section]
+
+## User Goals
+- Quick access to daily stats
+- Seamless authentication
+- On-the-go access via mobile
 `);
 
     // Seed Correlation.md (required for feature mapping)
@@ -991,7 +988,7 @@ status: complete
         "Run the Discovery journey grounding stage.",
         "",
         `The discovery work directory is: .paw/discovery/${workId}/`,
-        "Extract pain points from source documents in inputs/",
+        "Extract pain points from Extraction.md (not original source documents).",
         "Synthesize user journeys based on pain points and themes.",
         "Map features from Correlation.md to journey steps.",
         "Apply source tracing discipline ([SOURCE] vs [SYNTHESIS]).",
@@ -1073,10 +1070,9 @@ function buildJourneyGroundingPrompt(skillContent: string, workId: string): stri
     "You are a PAW Discovery journey grounding agent. Your job is to extract pain points and synthesize user journeys.",
     "",
     "IMPORTANT RULES:",
-    `- Read input documents from .paw/discovery/${workId}/inputs/`,
     `- Read Extraction.md and Correlation.md from .paw/discovery/${workId}/`,
     `- Write output to .paw/discovery/${workId}/JourneyMap.md`,
-    "- Extract pain points with direct quotes from source documents",
+    "- Extract pain points from Extraction.md content (not from original source documents)",
     "- Synthesize user journeys connecting pain points to feature solutions",
     "- Map features from Correlation.md to journey steps",
     "- Apply source tracing: [SOURCE: doc, location] for grounded content, [SYNTHESIS] for inferences",

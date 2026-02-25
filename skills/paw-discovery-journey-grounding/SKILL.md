@@ -23,11 +23,11 @@ Extract user pain points and synthesize user journeys from source documents. Pro
 
 | Artifact | Purpose |
 |----------|---------|
-| `inputs/` folder | Original source documents (re-read for direct quotes) |
-| `Extraction.md` | Themes, features, user needs, constraints |
+| `Extraction.md` | Primary source for themes, features, user needs, constraints, and pain points |
 | `Correlation.md` | Theme-capability relationships, feature IDs |
+| `inputs/` folder | Reference only for source tracing citations |
 
-> **Note**: Source documents are re-read directly (not via Extraction.md) because pain point extraction requires direct quotes and verbatim user language that Extraction focuses on different facets (themes, features). This is intentional design, not redundant processing.
+> **Note**: Journey Grounding builds on Extraction.md content—it does NOT re-read original source documents. Pain points, user needs, and quotes should already be captured in Extraction.md. If Extraction is missing pain point details, request re-extraction rather than bypassing.
 
 ## Source Tracing Discipline
 
@@ -57,19 +57,19 @@ Always mark synthesized content clearly so stakeholders can evaluate what's evid
 
 ### Pain Point Extraction
 
-Read all source documents and extract explicit user problems:
+Extract user problems from Extraction.md content:
 
-1. Scan for problem statements, complaints, frustrations, blockers
-2. Capture direct quotes with source attribution
+1. Scan Extraction.md for problem statements, user needs, complaints, frustrations
+2. Reference original source citations from Extraction.md for tracing
 3. Assess severity (High/Medium/Low) based on:
-   - Frequency mentioned across documents
+   - Frequency mentioned across themes
    - Impact on user workflow
-   - Explicit priority indicators in sources
+   - Explicit priority indicators in Extraction.md
 4. Identify affected user segments when stated
 
 ### Journey Model Identification
 
-Look for stated patterns or flows in sources:
+Look for stated patterns or flows from Extraction.md:
 
 1. Search for explicit journey descriptions ("users will...", "the flow is...")
 2. Identify step sequences mentioned in requirements

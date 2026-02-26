@@ -5,19 +5,19 @@
 
 ## Overview
 
-Today, installing PAW for Copilot CLI requires two steps: installing the npm package globally, then running `paw install copilot` to copy agents and skills into the user's Copilot directories. This works, but it sits outside the Copilot CLI ecosystem — users can't discover PAW through marketplace browsing, don't get native update/uninstall support, and must manage a separate global npm dependency.
+Today, installing PAW for Copilot CLI works via `npx @paw-workflow/cli install copilot` — a single command, but one that sits outside the Copilot CLI ecosystem. Users must have Node.js available, don't get native update/uninstall support through `copilot plugin` commands, and can't browse for PAW alongside other Copilot CLI plugins.
 
 Copilot CLI now has a native plugin system with install, update, uninstall, and marketplace discovery. By packaging PAW as a Copilot CLI plugin, users get a single-command install experience (`copilot plugin install lossyrob/phased-agent-workflow`), native lifecycle management, and discoverability through plugin marketplaces. This makes PAW a first-class citizen of the Copilot CLI ecosystem.
 
-The existing npm CLI (`@paw-workflow/cli`) remains as a fallback distribution path and for future Claude Code support. The plugin becomes the primary recommended install method for Copilot CLI users. A dedicated plugin distribution ensures users always get the latest release version with a single install command.
+The existing npm CLI (`@paw-workflow/cli`) remains as the distribution path for Claude Code users (via `npx @paw-workflow/cli install claude`) and as a fallback for environments without the plugin system. A future Claude Code plugin may follow a similar pattern. The Copilot CLI plugin becomes the primary recommended install method for Copilot CLI users. A dedicated plugin distribution ensures users always get the latest release version with a single install command.
 
 ## Objectives
 
-- Enable single-command PAW installation via `copilot plugin install lossyrob/phased-agent-workflow` (Rationale: eliminates npm dependency and two-step install)
-- Provide native update/uninstall through `copilot plugin update`/`uninstall` commands (Rationale: users manage PAW like any other plugin)
-- Make PAW discoverable through Copilot CLI marketplace browsing (Rationale: new users find PAW without prior knowledge)
+- Enable PAW installation via `copilot plugin install lossyrob/phased-agent-workflow` (Rationale: native ecosystem integration — eliminates npm/Node.js dependency, uses Copilot CLI's built-in install/update/uninstall lifecycle)
+- Provide native update/uninstall through `copilot plugin update`/`uninstall` commands (Rationale: users manage PAW like any other plugin, no separate toolchain)
+- Enable marketplace listing so PAW can appear in curated plugin registries (Rationale: self-hosted marketplace.json prepares for submission to default marketplaces like `awesome-copilot`, where real discoverability happens)
 - Automate plugin branch publishing on each CLI release (Rationale: plugin always stays current with releases)
-- Maintain the existing npm CLI as a parallel distribution path (Rationale: fallback for non-plugin environments and Claude Code users)
+- Maintain the existing npm CLI as a parallel distribution path (Rationale: serves Claude Code users today and environments without the plugin system)
 
 ## User Scenarios & Testing
 
@@ -36,11 +36,11 @@ Acceptance Scenarios:
 1. Given the plugin is installed at version X, When a new version is published to the plugin branch, Then `copilot plugin update paw-workflow` installs the new version
 2. Given the plugin is installed, When user runs `copilot plugin uninstall paw-workflow`, Then all PAW agents and skills are removed and `copilot plugin list` no longer shows `paw-workflow`
 
-### User Story P3 – Discover PAW via Marketplace
-Narrative: A developer browsing available Copilot CLI plugins discovers PAW and installs it from the marketplace.
-Independent Test: Add the marketplace, browse it, and find `paw-workflow` listed.
+### User Story P3 – Marketplace Listing
+Narrative: The PAW plugin includes marketplace metadata so it can be listed in curated plugin registries. Users who have registered a marketplace containing PAW can browse and install it. This also prepares for future submission to default marketplaces (e.g., `awesome-copilot`) where broader discoverability happens.
+Independent Test: Register the PAW marketplace, browse it, and find `paw-workflow` listed.
 Acceptance Scenarios:
-1. Given the PAW marketplace is registered, When user runs `copilot plugin marketplace browse`, Then `paw-workflow` appears with description and metadata
+1. Given the PAW marketplace is registered via `copilot plugin marketplace add`, When user runs `copilot plugin marketplace browse`, Then `paw-workflow` appears with description and metadata
 2. Given the user finds `paw-workflow` in the marketplace, When they install it, Then the plugin delivers the same agents, skills, and prompt content as a direct install
 
 ### User Story P4 – Automated Plugin Publishing
@@ -83,7 +83,7 @@ Acceptance Scenarios:
 - SC-001: A user can install PAW with a single command `copilot plugin install lossyrob/phased-agent-workflow` and have both agents and all skills available (FR-001, FR-002, FR-004, FR-007)
 - SC-002: Running `copilot plugin list` shows `paw-workflow` with correct version after installation (FR-001, FR-006)
 - SC-003: Plugin updates are available via `copilot plugin update paw-workflow` after a new release (FR-003, FR-008)
-- SC-004: The plugin appears in marketplace browsing after marketplace registration (FR-005, FR-006)
+- SC-004: The plugin appears in marketplace browsing after a user registers the PAW marketplace (FR-005, FR-006)
 - SC-005: The plugin branch is automatically updated when a `cli-v*` tag is pushed, without manual intervention (FR-003, FR-008)
 - SC-006: Agents and skills delivered via the plugin have the same agent names, skill names, and prompt content as those installed via `paw install copilot` (FR-002, FR-007)
 
@@ -105,7 +105,7 @@ In Scope:
 
 Out of Scope:
 - Actual PR submission to `github/awesome-copilot` marketplace (manual follow-up)
-- Claude Code `.claude-plugin/` support (future work)
+- Claude Code plugin via `.claude-plugin/` convention (future work, parallel to this Copilot CLI plugin)
 - Hook bundling in the plugin (deferred)
 - MCP server configuration in the plugin
 - Removing or deprecating the npm CLI distribution path

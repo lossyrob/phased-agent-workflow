@@ -27,9 +27,9 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 
 ## Phase Status
 - [ ] **Phase 1: Plugin Manifest Generation** - Extend build script to produce plugin.json and marketplace.json
-- [ ] **Phase 2: CI Plugin Branch Publishing** - Add workflow job to publish built dist to plugin orphan branch
-- [ ] **Phase 3: Documentation Updates** - Update install docs to recommend plugin as primary for Copilot CLI
-- [ ] **Phase 4: Documentation** - Create Docs.md technical reference
+- [ ] **Phase 2: CI Plugin Branch Publishing** - Add workflow job to publish built dist to plugin orphan branch (depends on Phase 1)
+- [ ] **Phase 3: Documentation Updates** - Update install docs to recommend plugin as primary for Copilot CLI (depends on Phase 2 for validated install syntax)
+- [ ] **Phase 4: Documentation** - Create Docs.md technical reference (depends on all prior phases)
 
 ## Phase Candidates
 <!-- None currently — scope is well-defined -->
@@ -78,7 +78,7 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 ### Changes Required:
 
 - **`.github/workflows/publish-cli.yml`**: Add a new job `publish-plugin` that runs after the existing publish steps:
-  - Depends on successful build (reuses the already-built `cli/dist/`)
+  - Depends on successful build (use `actions/upload-artifact` / `actions/download-artifact` to share `cli/dist/` between jobs, since separate GitHub Actions jobs don't share filesystem)
   - Checks out `plugin` orphan branch (create if doesn't exist via `git checkout --orphan`)
   - Clears branch contents, copies `cli/dist/` contents to branch root
   - Commits with message like "Update plugin distribution to vX.X.X"
@@ -102,6 +102,8 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 - [ ] The validated install syntax installs PAW successfully (test with local path fallback: `copilot plugin install ./cli/dist`)
 - [ ] `copilot plugin list` shows `paw-workflow` after installation
 - [ ] Agents and skills loaded match those from `paw install copilot`
+- [ ] Marketplace verification: `copilot plugin marketplace add ./cli/dist` + `copilot plugin marketplace browse` lists `paw-workflow` with correct metadata
+- [ ] Plugin branch publishing completes within 5 minutes (Spec NFR)
 
 ---
 

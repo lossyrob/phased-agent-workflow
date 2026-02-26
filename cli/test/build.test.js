@@ -76,4 +76,54 @@ describe('build-dist script', () => {
     assert.ok(specialists.includes('correctness.md'), 'should include correctness.md');
     assert.ok(specialists.length >= 10, `should have at least 10 specialist files (9 + shared rules), found ${specialists.length}`);
   });
+
+  test('generates plugin.json manifest', () => {
+    const pluginPath = join(DIST_DIR, 'plugin.json');
+    assert.ok(existsSync(pluginPath), 'dist/plugin.json should exist');
+    
+    const manifest = JSON.parse(readFileSync(pluginPath, 'utf-8'));
+    assert.strictEqual(manifest.name, 'paw-workflow', 'plugin name should be paw-workflow');
+    assert.strictEqual(manifest.agents, 'agents/', 'agents path should be agents/');
+    assert.strictEqual(manifest.skills, 'skills/', 'skills path should be skills/');
+    assert.ok(manifest.version, 'should have a version');
+    assert.ok(manifest.description, 'should have a description');
+    assert.ok(manifest.license, 'should have a license');
+    assert.ok(manifest.keywords && manifest.keywords.length > 0, 'should have keywords');
+    assert.ok(manifest.repository, 'should have a repository');
+    assert.ok(manifest.homepage, 'should have a homepage');
+  });
+
+  test('plugin.json version matches package.json version', () => {
+    const pluginManifest = JSON.parse(readFileSync(join(DIST_DIR, 'plugin.json'), 'utf-8'));
+    const pkg = JSON.parse(readFileSync(join(CLI_ROOT, 'package.json'), 'utf-8'));
+    assert.strictEqual(pluginManifest.version, pkg.version, 'plugin version should match package.json version');
+  });
+
+  test('generates marketplace.json manifest', () => {
+    const marketplacePath = join(DIST_DIR, '.github', 'plugin', 'marketplace.json');
+    assert.ok(existsSync(marketplacePath), 'dist/.github/plugin/marketplace.json should exist');
+    
+    const marketplace = JSON.parse(readFileSync(marketplacePath, 'utf-8'));
+    assert.ok(marketplace.name, 'should have a name');
+    assert.ok(marketplace.owner && marketplace.owner.name, 'should have owner with name');
+    assert.ok(Array.isArray(marketplace.plugins), 'should have plugins array');
+    assert.ok(marketplace.plugins.length > 0, 'should have at least one plugin');
+    
+    const pawPlugin = marketplace.plugins.find(p => p.name === 'paw-workflow');
+    assert.ok(pawPlugin, 'should contain paw-workflow plugin entry');
+    assert.ok(pawPlugin.source, 'plugin entry should have a source');
+    assert.ok(pawPlugin.description, 'plugin entry should have a description');
+  });
+
+  test('dist directory is a valid plugin layout', () => {
+    // plugin.json at root
+    assert.ok(existsSync(join(DIST_DIR, 'plugin.json')), 'plugin.json at dist root');
+    // agents directory with expected files
+    assert.ok(existsSync(join(DIST_DIR, 'agents', 'PAW.agent.md')), 'PAW agent in agents/');
+    assert.ok(existsSync(join(DIST_DIR, 'agents', 'PAW-Review.agent.md')), 'PAW-Review agent in agents/');
+    // skills directory with expected structure
+    assert.ok(existsSync(join(DIST_DIR, 'skills', 'paw-spec', 'SKILL.md')), 'skills have SKILL.md');
+    // marketplace manifest
+    assert.ok(existsSync(join(DIST_DIR, '.github', 'plugin', 'marketplace.json')), 'marketplace.json in .github/plugin/');
+  });
 });

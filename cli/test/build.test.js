@@ -104,15 +104,18 @@ describe('build-dist script', () => {
     assert.ok(existsSync(marketplacePath), 'dist/.github/plugin/marketplace.json should exist');
     
     const marketplace = JSON.parse(readFileSync(marketplacePath, 'utf-8'));
+    const pkg = JSON.parse(readFileSync(join(CLI_ROOT, 'package.json'), 'utf-8'));
     assert.ok(marketplace.name, 'should have a name');
     assert.ok(marketplace.owner && marketplace.owner.name, 'should have owner with name');
     assert.ok(Array.isArray(marketplace.plugins), 'should have plugins array');
     assert.ok(marketplace.plugins.length > 0, 'should have at least one plugin');
+    assert.strictEqual(marketplace.metadata.version, pkg.version, 'marketplace metadata version should match package.json');
     
     const pawPlugin = marketplace.plugins.find(p => p.name === 'paw-workflow');
     assert.ok(pawPlugin, 'should contain paw-workflow plugin entry');
     assert.ok(pawPlugin.source, 'plugin entry should have a source');
     assert.ok(pawPlugin.description, 'plugin entry should have a description');
+    assert.strictEqual(pawPlugin.version, pkg.version, 'plugin entry version should match package.json');
   });
 
   test('dist directory is a valid plugin layout', () => {

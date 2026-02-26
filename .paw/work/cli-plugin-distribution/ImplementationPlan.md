@@ -28,7 +28,7 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 ## Phase Status
 - [x] **Phase 1: Plugin Manifest Generation** - Extend build script to produce plugin.json and marketplace.json
 - [x] **Phase 2: CI Plugin Branch Publishing** - Add workflow job to publish built dist to plugin orphan branch (depends on Phase 1)
-- [ ] **Phase 3: Documentation Updates** - Update install docs to recommend plugin as primary for Copilot CLI (depends on Phase 2 for validated install syntax)
+- [x] **Phase 3: Documentation Updates** - Update install docs to recommend plugin as primary for Copilot CLI (depends on Phase 2 for validated install syntax)
 - [ ] **Phase 4: Documentation** - Create Docs.md technical reference (depends on all prior phases)
 
 ## Phase Candidates

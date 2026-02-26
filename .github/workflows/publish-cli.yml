@@ -5,13 +5,12 @@ on:
     tags:
       - 'cli-v*'
 
-permissions:
-  id-token: write  # Required for OIDC trusted publishing
-  contents: write  # Required to create GitHub releases
-
 jobs:
-  publish:
+  publish-npm:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     defaults:
       run:
         working-directory: cli
@@ -37,7 +36,6 @@ jobs:
         id: prerelease
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          # Check for pre-release suffixes: -alpha, -beta, -rc
           if [[ "$VERSION" =~ -(alpha|beta|rc) ]]; then
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
             echo "npm_tag=beta" >> $GITHUB_OUTPUT
@@ -89,3 +87,69 @@ jobs:
           prerelease: ${{ steps.prerelease.outputs.is_prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-plugin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION="${TAG_NAME#cli-v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Determine pre-release status
+        id: prerelease
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ "$VERSION" =~ -(alpha|beta|rc) ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build plugin distribution
+        working-directory: cli
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          npm ci
+          npm run build
+
+      - name: Run tests
+        working-directory: cli
+        run: npm test
+
+      - name: Publish to plugin branch
+        if: steps.prerelease.outputs.is_prerelease == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Save dist contents outside working tree
+          cp -r cli/dist /tmp/plugin-dist
+
+          # Create fresh orphan branch (no history accumulation)
+          git checkout --orphan plugin-staging
+          git rm -rf .
+          git clean -fdx
+
+          # Copy plugin dist contents to branch root
+          cp -r /tmp/plugin-dist/* .
+          cp -r /tmp/plugin-dist/.github .
+
+          # Commit and force-push as plugin branch
+          git add -A
+          git commit -m "Update plugin distribution to v${VERSION}"
+          git push --force origin HEAD:plugin

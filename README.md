@@ -6,11 +6,13 @@
 
 ## Try It Now
 
+### Copilot CLI Plugin (Recommended)
+
 ```bash
-npx @paw-workflow/cli install copilot
+copilot plugin install lossyrob/phased-agent-workflow
 ```
 
-This installs PAW agents and skills to your [GitHub Copilot CLI](https://github.com/github/copilot-cli). Then start a workflow:
+This installs PAW as a [Copilot CLI plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) with native update and uninstall support. Then start a workflow:
 
 ```bash
 copilot --agent PAW          # Implementation workflow
@@ -19,9 +21,18 @@ copilot --agent PAW-Review   # PR review workflow
 
 Or use `/agent` inside your session to switch agents.
 
-Upgrade with `npx @paw-workflow/cli upgrade`, uninstall with `npx @paw-workflow/cli uninstall`.
+Update with `copilot plugin update paw-workflow`, uninstall with `copilot plugin uninstall paw-workflow`.
 
-**Requirements**: Node.js 18+ and [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed.
+**Requirements**: [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed.
+
+### Alternative: NPM CLI
+
+If you prefer the npm-based installer (also supports Claude Code):
+
+```bash
+npx @paw-workflow/cli install copilot   # Copilot CLI
+npx @paw-workflow/cli install claude    # Claude Code
+```
 
 ---
 
@@ -47,7 +58,8 @@ PAW works with both **GitHub Copilot CLI** (terminal) and **VS Code** (GUI):
 
 | Platform | Installation | Best For |
 |----------|--------------|----------|
-| **Copilot CLI** | `npx @paw-workflow/cli install copilot` | Terminal workflows, quick iteration |
+| **Copilot CLI** (Plugin) | `copilot plugin install lossyrob/phased-agent-workflow` | Terminal workflows, quick iteration |
+| **Copilot CLI** (NPM) | `npx @paw-workflow/cli install copilot` | Fallback, or if you also use Claude Code |
 | **VS Code Extension** | Download `.vsix` from [Releases](https://github.com/lossyrob/phased-agent-workflow/releases) | IDE integration, visual workflow |
 
 Both platforms use the same PAW agents and skills—choose based on your preferred workflow.
@@ -79,18 +91,33 @@ All comments are created as a pending review—you edit, delete, or add to them 
 
 ### Copilot CLI (Recommended)
 
+Install as a Copilot CLI plugin:
 ```bash
-npx @paw-workflow/cli install copilot
+copilot plugin install lossyrob/phased-agent-workflow
 ```
 
 Then start a session with `copilot --agent PAW` or `copilot --agent PAW-Review`.
 
 Manage your installation:
 ```bash
-npx @paw-workflow/cli list      # Show installed version
-npx @paw-workflow/cli upgrade   # Check for updates
-npx @paw-workflow/cli uninstall # Remove PAW
+copilot plugin list                     # Show installed plugins
+copilot plugin update paw-workflow      # Update to latest
+copilot plugin uninstall paw-workflow   # Remove PAW
 ```
+
+<details>
+<summary>Alternative: NPM CLI (also supports Claude Code)</summary>
+
+```bash
+npx @paw-workflow/cli install copilot   # Copilot CLI
+npx @paw-workflow/cli install claude    # Claude Code
+npx @paw-workflow/cli list              # Show installed version
+npx @paw-workflow/cli upgrade           # Check for updates
+npx @paw-workflow/cli uninstall         # Remove PAW
+```
+
+**Note**: If switching from NPM CLI to the plugin, uninstall the NPM version first to avoid duplicate agents (user-level files take precedence over plugin files).
+</details>
 
 ### VS Code Extension
 

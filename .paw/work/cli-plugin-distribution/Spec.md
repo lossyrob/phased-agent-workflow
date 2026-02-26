@@ -9,9 +9,7 @@ Today, installing PAW for Copilot CLI requires two steps: installing the npm pac
 
 Copilot CLI now has a native plugin system with install, update, uninstall, and marketplace discovery. By packaging PAW as a Copilot CLI plugin, users get a single-command install experience (`copilot plugin install lossyrob/phased-agent-workflow`), native lifecycle management, and discoverability through plugin marketplaces. This makes PAW a first-class citizen of the Copilot CLI ecosystem.
 
-The existing npm CLI (`@paw-workflow/cli`) remains as a fallback distribution path and for future Claude Code support. The plugin becomes the primary recommended install method for Copilot CLI users.
-
-Since the build process applies conditional processing (CLI-specific variants, version injection), the plugin cannot point directly at source files. A dedicated `plugin` branch will contain the built distribution, updated automatically by CI on each CLI release.
+The existing npm CLI (`@paw-workflow/cli`) remains as a fallback distribution path and for future Claude Code support. The plugin becomes the primary recommended install method for Copilot CLI users. A dedicated plugin distribution ensures users always get the latest release version with a single install command.
 
 ## Objectives
 
@@ -54,22 +52,22 @@ Acceptance Scenarios:
 3. Given the publish workflow runs, When it completes, Then both npm publish and plugin branch update succeed independently (one failing doesn't block the other)
 
 ### Edge Cases
-- User has PAW installed via npm CLI AND as a plugin: Copilot CLI deduplicates by agent/skill name using first-found-wins; user-level `~/.copilot/agents/` takes precedence over plugin agents, so both can coexist but npm-installed version wins. Documentation should recommend uninstalling npm version when switching to plugin.
+- User has PAW installed via npm CLI AND as a plugin: Copilot CLI deduplicates by agent/skill name using first-found-wins; user-level agents take precedence over plugin agents, so both can coexist but the npm-installed version wins. Documentation should recommend uninstalling the npm version when switching to plugin.
 - Plugin branch doesn't exist yet on first install: CI workflow creates the orphan branch on first run.
 - Network failure during install: Handled by Copilot CLI's built-in error handling (not PAW's responsibility).
-- User installs from main branch instead of plugin branch: Gets source files without conditional processing; plugin.json at repo root is not present so install fails with clear error.
+- User installs from main branch instead of plugin branch: Gets source files without conditional processing; no plugin manifest is present at main branch root so install fails with an error indicating the manifest is missing.
 
 ## Requirements
 
 ### Functional Requirements
 - FR-001: Generate `plugin.json` manifest with name `paw-workflow`, version synced from CLI package, and paths pointing to `agents/` and `skills/` directories (Stories: P1, P2, P4)
-- FR-002: Build pipeline produces a complete plugin directory containing `plugin.json`, processed agent files, and processed skill files ready for plugin installation (Stories: P1, P4)
-- FR-003: CI workflow publishes the built plugin directory to a dedicated `plugin` orphan branch on each `cli-v*` tag (Stories: P2, P4)
-- FR-004: The `plugin` branch is structured so `copilot plugin install lossyrob/phased-agent-workflow` resolves the plugin correctly — `plugin.json` at the branch root or in `.github/plugin/` (Stories: P1)
-- FR-005: Create `marketplace.json` in `.github/plugin/` on the plugin branch for marketplace discovery (Stories: P3)
+- FR-002: A complete, installable plugin distribution is produced containing processed agent files and all workflow skill files ready for plugin installation (Stories: P1, P4)
+- FR-003: Each CLI release automatically updates the plugin distribution on a dedicated branch without manual intervention (Stories: P2, P4)
+- FR-004: The plugin distribution branch is structured so `copilot plugin install lossyrob/phased-agent-workflow` resolves the plugin correctly — with the manifest discoverable at the branch root or in the standard plugin directory (Stories: P1)
+- FR-005: Create marketplace manifest on the plugin distribution branch for marketplace discovery (Stories: P3)
 - FR-006: Plugin manifest includes metadata fields: description, author, license, keywords, category, repository, and homepage (Stories: P1, P3)
 - FR-007: The plugin bundles both PAW and PAW Review agents and all workflow skills in a single plugin (Stories: P1)
-- FR-008: Plugin version in `plugin.json` matches the CLI package version from `cli/package.json` (Stories: P2, P4)
+- FR-008: Plugin version in the manifest matches the CLI package version at release time (Stories: P2, P4)
 
 ### Key Entities
 - **Plugin manifest** (`plugin.json`): Required manifest declaring plugin name, version, and component paths
@@ -79,7 +77,7 @@ Acceptance Scenarios:
 ### Cross-Cutting / Non-Functional
 - Plugin branch contains only distribution files (no source, no node_modules, no development artifacts)
 - Build process is idempotent: same input version produces identical plugin output
-- CI workflow completes plugin branch update within existing pipeline time constraints
+- CI workflow completes plugin branch update within 5 minutes
 
 ## Success Criteria
 - SC-001: A user can install PAW with a single command `copilot plugin install lossyrob/phased-agent-workflow` and have both agents and all skills available (FR-001, FR-002, FR-004, FR-007)
@@ -87,7 +85,7 @@ Acceptance Scenarios:
 - SC-003: Plugin updates are available via `copilot plugin update paw-workflow` after a new release (FR-003, FR-008)
 - SC-004: The plugin appears in marketplace browsing after marketplace registration (FR-005, FR-006)
 - SC-005: The plugin branch is automatically updated when a `cli-v*` tag is pushed, without manual intervention (FR-003, FR-008)
-- SC-006: Agents and skills delivered via the plugin are functionally identical to those installed via `paw install copilot` (FR-002, FR-007)
+- SC-006: Agents and skills delivered via the plugin have the same agent names, skill names, and prompt content as those installed via `paw install copilot` (FR-002, FR-007)
 
 ## Assumptions
 - The Copilot CLI plugin system resolves `copilot plugin install owner/repo` using the default branch unless overridden — if this assumption is wrong, users may need `copilot plugin install lossyrob/phased-agent-workflow:plugin` or similar syntax (will be validated during implementation)
@@ -115,7 +113,7 @@ Out of Scope:
 
 ## Dependencies
 - Copilot CLI plugin system (stable, documented)
-- Existing `cli/scripts/build-dist.js` for conditional processing
+- Existing CLI build tooling for conditional processing
 - GitHub Actions for CI publishing
 - `cli-v*` tag convention from existing `publish-cli.yml` workflow
 

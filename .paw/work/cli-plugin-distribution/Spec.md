@@ -41,7 +41,7 @@ Narrative: A developer browsing available Copilot CLI plugins discovers PAW and 
 Independent Test: Add the marketplace, browse it, and find `paw-workflow` listed.
 Acceptance Scenarios:
 1. Given the PAW marketplace is registered, When user runs `copilot plugin marketplace browse`, Then `paw-workflow` appears with description and metadata
-2. Given the user finds `paw-workflow` in the marketplace, When they install it, Then the plugin functions identically to direct install
+2. Given the user finds `paw-workflow` in the marketplace, When they install it, Then the plugin delivers the same agents, skills, and prompt content as a direct install
 
 ### User Story P4 – Automated Plugin Publishing
 Narrative: A maintainer tags a CLI release and the plugin branch is automatically updated with the latest built artifacts, keeping the plugin distribution current without manual intervention.
@@ -90,7 +90,7 @@ Acceptance Scenarios:
 ## Assumptions
 - The Copilot CLI plugin system resolves `copilot plugin install owner/repo` using the default branch unless overridden — if this assumption is wrong, users may need `copilot plugin install lossyrob/phased-agent-workflow:plugin` or similar syntax (will be validated during implementation)
 - The `plugin` branch approach is compatible with GitHub's plugin resolution — the CLI looks for `plugin.json` at repo root or `.github/plugin/plugin.json` on the resolved branch
-- The existing `build-dist.js` output is sufficient as plugin content without additional transformation
+- The existing CLI build output is sufficient as plugin content without additional transformation
 - GitHub Actions has permission to force-push to the `plugin` orphan branch
 - The `awesome-copilot` marketplace submission is a separate follow-up PR to that repo (out of scope for this implementation)
 

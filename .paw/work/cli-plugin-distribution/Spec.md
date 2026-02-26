@@ -125,7 +125,7 @@ Out of Scope:
 
 ## References
 - Issue: https://github.com/lossyrob/phased-agent-workflow/issues/263
-- Research: .paw/work/cli-plugin-distribution/SpecResearch.md
+- Research: .paw/work/cli-plugin-distribution/CodeResearch.md
 - [About CLI plugins](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-cli-plugins)
 - [Creating a plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating)
 - [Plugin reference](https://docs.github.com/en/copilot/reference/cli-plugin-reference)

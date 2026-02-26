@@ -58,6 +58,7 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 - [ ] `cd cli && npm run build` produces `cli/dist/plugin.json` and `cli/dist/.github/plugin/marketplace.json`
 - [ ] `cd cli && npm test` passes including new manifest tests
 - [ ] `cd cli && npm run lint` passes
+- [ ] Build idempotency: running `npm run build` twice produces identical output (diff confirms no changes)
 
 #### Manual Verification:
 - [ ] `plugin.json` contents match Copilot CLI plugin schema (name, version, agents, skills fields)
@@ -77,18 +78,17 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 
 ### Changes Required:
 
-- **`.github/workflows/publish-cli.yml`**: Add a new job `publish-plugin` that runs after the existing publish steps:
-  - Depends on successful build (use `actions/upload-artifact` / `actions/download-artifact` to share `cli/dist/` between jobs, since separate GitHub Actions jobs don't share filesystem)
-  - Checks out `plugin` orphan branch (create if doesn't exist via `git checkout --orphan`)
-  - Clears branch contents, copies `cli/dist/` contents to branch root
-  - Commits with message like "Update plugin distribution to vX.X.X"
-  - Force-pushes to `plugin` branch
-  - Independent of npm publish success (one failing shouldn't block the other — use separate jobs or continue-on-error)
+- **`.github/workflows/publish-cli.yml`**: Restructure into three jobs for independence:
+  - `build` job: checkout, setup Node, extract version, install, build, test, upload `cli/dist/` as artifact
+  - `publish-npm` job: depends on `build`, downloads artifact, publishes to npm (uses `if: always()` or `continue-on-error` so plugin job isn't blocked by npm failure)
+  - `publish-plugin` job: depends on `build`, downloads artifact, checks out/creates `plugin` orphan branch, clears contents, copies dist to branch root, commits ("Update plugin distribution to vX.X.X"), force-pushes to `plugin` branch
+  - This ensures npm publish and plugin publish are independent — one failing doesn't block the other
 
-- **Install syntax validation** (during this phase): Test locally how `copilot plugin install` resolves branches. Determine if `OWNER/REPO` uses default branch or if there's a branch override. Document the validated install command. Potential syntaxes:
-  - `copilot plugin install lossyrob/phased-agent-workflow` (if CLI checks all branches or follows some convention)
-  - Git URL with branch ref if supported
-  - Marketplace-based: `copilot plugin install paw-workflow@<marketplace-name>`
+- **Install syntax validation and fallback** (during this phase): Test locally how `copilot plugin install` resolves branches. This is a **decision gate**:
+  - **If `copilot plugin install lossyrob/phased-agent-workflow` resolves the plugin branch**: Document this as the primary install command. No further action needed.
+  - **If default branch resolution doesn't find the plugin**: Implement fallback — add a minimal `.github/plugin/plugin.json` on `main` that makes the plugin discoverable from the default branch (pointing to agents/skills on that branch or redirecting). Alternatively, document branch-specific syntax (e.g., git URL with ref) and update all install commands in Phase 3 docs accordingly.
+  - **Potential syntaxes to test**: `OWNER/REPO` shorthand, git URL with branch ref, marketplace-based `paw-workflow@<marketplace-name>`
+  - **Also validate**: marketplace source field (`.`) resolves correctly; if not, use full GitHub URL in marketplace.json instead
 
 ### Success Criteria:
 
@@ -102,8 +102,12 @@ Package PAW as a Copilot CLI plugin so users can install via `copilot plugin ins
 - [ ] The validated install syntax installs PAW successfully (test with local path fallback: `copilot plugin install ./cli/dist`)
 - [ ] `copilot plugin list` shows `paw-workflow` after installation
 - [ ] Agents and skills loaded match those from `paw install copilot`
+- [ ] Update flow: after publishing a newer version to the plugin branch, `copilot plugin update paw-workflow` pulls the update and `copilot plugin list` reflects the new version
+- [ ] Uninstall flow: `copilot plugin uninstall paw-workflow` removes all PAW agents/skills and `copilot plugin list` no longer shows `paw-workflow`
 - [ ] Marketplace verification: `copilot plugin marketplace add ./cli/dist` + `copilot plugin marketplace browse` lists `paw-workflow` with correct metadata
 - [ ] Plugin branch publishing completes within 5 minutes (Spec NFR)
+- [ ] Dual-install coexistence: with both npm CLI and plugin installed, verify which agent version takes precedence, and that uninstalling one leaves the other functional
+- [ ] Main-branch install: attempting `copilot plugin install` against the main branch fails with an error about missing plugin manifest (spec edge case)
 
 ---
 

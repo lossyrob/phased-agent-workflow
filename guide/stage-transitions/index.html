@@ -1,0 +1,1779 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="VS Code extension for coordinating multi-stage AI agent workflows">
+      
+      
+        <meta name="author" content="PAW Contributors">
+      
+      
+        <link rel="canonical" href="https://lossyrob.github.io/phased-agent-workflow/guide/stage-transitions/">
+      
+      
+        <link rel="prev" href="../workflow-modes/">
+      
+      
+        <link rel="next" href="../two-workflows/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Stage Transitions - Phased Agent Workflow (PAW)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#stage-transitions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-header__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Phased Agent Workflow (PAW)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Stage Transitions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-nav__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Phased Agent Workflow (PAW)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vscode-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code Extension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow-modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage Transitions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage Transitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-the-paw-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with the PAW Agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Working with the PAW Agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-sensitive-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Sensitive Routing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-continue-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The continue Command
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Policies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#every-stage-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every-Stage Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#milestones-review-policy-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestones Review Policy (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planning-only-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planning-Only Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final-pr-only-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final-PR-Only Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-your-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Your Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inline-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline Instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capturing-phase-candidates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing Phase Candidates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-workflow-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking Workflow Status
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Checking Workflow Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#via-natural-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Via Natural Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#via-command-palette" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Via Command Palette
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-status-reports-include" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Status Reports Include
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handling-pr-review-comments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Handling PR Review Comments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-work-item-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Work-Item Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rewinding-the-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rewinding the Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rewinding the Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-rewind-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Rewind Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safeguards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safeguards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../society-of-thought-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Society-of-Thought Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/implementation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/artifacts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#working-with-the-paw-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Working with the PAW Agent
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Working with the PAW Agent">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-sensitive-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Sensitive Routing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-continue-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The continue Command
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Policies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#every-stage-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Every-Stage Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#milestones-review-policy-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Milestones Review Policy (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planning-only-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planning-Only Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#final-pr-only-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final-PR-Only Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-your-review-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting Your Review Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inline-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline Instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#capturing-phase-candidates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing Phase Candidates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checking-workflow-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Checking Workflow Status
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Checking Workflow Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#via-natural-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Via Natural Request
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#via-command-palette" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Via Command Palette
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-status-reports-include" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Status Reports Include
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handling-pr-review-comments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Handling PR Review Comments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-work-item-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Work-Item Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rewinding-the-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rewinding the Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Rewinding the Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#available-rewind-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Available Rewind Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#safeguards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safeguards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#session-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session Policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="stage-transitions">Stage Transitions<a class="headerlink" href="#stage-transitions" title="Permanent link">&para;</a></h1>
+<p>PAW workflows consist of multiple stages, and navigating between them is a key part of the development process. This guide explains how to work with the PAW agent for stage transitions, how review policies affect the flow, and how to check your progress.</p>
+<h2 id="working-with-the-paw-agent">Working with the PAW Agent<a class="headerlink" href="#working-with-the-paw-agent" title="Permanent link">&para;</a></h2>
+<p>The PAW agent is an intelligent orchestrator that understands natural language requests and routes them to appropriate skills. You can navigate stages using natural requests:</p>
+<table>
+<thead>
+<tr>
+<th>Request Pattern</th>
+<th>Skill Used</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Create a spec for..."</td>
+<td><code>paw-spec</code></td>
+<td>Start or refine a specification</td>
+</tr>
+<tr>
+<td>"Research how X works"</td>
+<td><code>paw-spec-research</code> or <code>paw-code-research</code></td>
+<td>Answer research questions (context-dependent)</td>
+</tr>
+<tr>
+<td>"Create an implementation plan"</td>
+<td><code>paw-planning</code></td>
+<td>Create an implementation plan</td>
+</tr>
+<tr>
+<td>"Implement phase N"</td>
+<td><code>paw-implement</code></td>
+<td>Execute an implementation phase</td>
+</tr>
+<tr>
+<td>"Review my changes"</td>
+<td><code>paw-impl-review</code></td>
+<td>Verify and push implementation</td>
+</tr>
+<tr>
+<td>"Run final review"</td>
+<td><code>paw-final-review</code></td>
+<td>Pre-PR review of implementation</td>
+</tr>
+<tr>
+<td>"Create the final PR"</td>
+<td><code>paw-pr</code></td>
+<td>Create the final pull request</td>
+</tr>
+<tr>
+<td>"What's the status?"</td>
+<td><code>paw-status</code></td>
+<td>Check workflow progress</td>
+</tr>
+<tr>
+<td>"Rewind to planning"</td>
+<td><code>paw-rewind</code></td>
+<td>Roll back to a previous stage or phase</td>
+</tr>
+</tbody>
+</table>
+<h3 id="context-sensitive-routing">Context-Sensitive Routing<a class="headerlink" href="#context-sensitive-routing" title="Permanent link">&para;</a></h3>
+<p>The PAW agent adapts based on your current workflow position:</p>
+<ul>
+<li><strong>Research requests</strong>: Routes to spec research from the Spec stage, or code research from planning stages</li>
+<li><strong>Implement requests</strong>: Auto-detects the current phase from <code>ImplementationPlan.md</code></li>
+<li><strong>Non-linear requests</strong>: "Update spec to align with plan changes" routes appropriately</li>
+</ul>
+<h3 id="the-continue-command">The <code>continue</code> Command<a class="headerlink" href="#the-continue-command" title="Permanent link">&para;</a></h3>
+<p>When you want to proceed to the default next stage, simply type:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>continue
+</span></code></pre></div>
+<p>This tells the PAW agent to proceed to the recommended next activity.</p>
+<h2 id="review-policies">Review Policies<a class="headerlink" href="#review-policies" title="Permanent link">&para;</a></h2>
+<p>PAW supports four review policies that control when the workflow pauses for human review at artifact boundaries:</p>
+<h3 id="every-stage-review-policy">Every-Stage Review Policy<a class="headerlink" href="#every-stage-review-policy" title="Permanent link">&para;</a></h3>
+<p>In <code>every-stage</code> mode, the workflow pauses after every artifact is produced for potential iteration.</p>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Learning PAW workflows</li>
+<li>Complex work requiring careful review between stages</li>
+<li>Situations where you want to pause and think between stages</li>
+</ul>
+<h3 id="milestones-review-policy-default">Milestones Review Policy (Default)<a class="headerlink" href="#milestones-review-policy-default" title="Permanent link">&para;</a></h3>
+<p>In <code>milestones</code> mode, the workflow pauses only at key milestone artifacts:</p>
+<p><strong>Pauses at (milestone artifacts):</strong></p>
+<ul>
+<li>Spec.md (after specification is created)</li>
+<li>ImplementationPlan.md (after plan is created)</li>
+<li>Planning Documents Review completion (if enabled)</li>
+<li>Phase completion (after each implementation phase completes)</li>
+<li>Final PR creation</li>
+</ul>
+<p><strong>Auto-proceeds at (non-milestone artifacts):</strong></p>
+<ul>
+<li>WorkflowContext.md</li>
+<li>SpecResearch.md</li>
+<li>CodeResearch.md</li>
+<li>Docs.md (part of implementation phase)</li>
+<li>Intermediate commits</li>
+</ul>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Experienced PAW users who want speed with control at key points</li>
+<li>Most production workflows</li>
+</ul>
+<h3 id="planning-only-review-policy">Planning-Only Review Policy<a class="headerlink" href="#planning-only-review-policy" title="Permanent link">&para;</a></h3>
+<p>In <code>planning-only</code> mode, the workflow pauses at specification and implementation plan milestones, then proceeds autonomously through all implementation phases until the final PR.</p>
+<p><strong>Pauses at:</strong></p>
+<ul>
+<li>Spec.md (after specification is created)</li>
+<li>ImplementationPlan.md (after plan is created)</li>
+<li>Planning Documents Review completion (if enabled)</li>
+<li>Final PR creation</li>
+</ul>
+<p><strong>Auto-proceeds at:</strong></p>
+<ul>
+<li>Phase completions (unlike <code>milestones</code> policy)</li>
+<li>All non-milestone artifacts</li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Local Strategy Required</p>
+<p>The <code>planning-only</code> review policy requires <strong>local review strategy</strong>. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.</p>
+</div>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Users who want to review plans upfront, then trust autonomous execution</li>
+<li>Well-specified work where planning review is sufficient</li>
+<li>Workflows where phase-level interruptions slow progress unnecessarily</li>
+</ul>
+<h3 id="final-pr-only-review-policy">Final-PR-Only Review Policy<a class="headerlink" href="#final-pr-only-review-policy" title="Permanent link">&para;</a></h3>
+<p>In <code>final-pr-only</code> mode, the workflow only pauses at the final PR — auto-proceeding through all intermediate stages.</p>
+<div class="admonition warning">
+<p class="admonition-title">Local Strategy Required</p>
+<p>The <code>final-pr-only</code> review policy requires <strong>local review strategy</strong>. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Automated Quality Gates Still Run</p>
+<p>Review Policy controls HUMAN review pauses only. Automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review) are mandatory regardless of Review Policy setting.</p>
+</div>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Routine, well-understood tasks</li>
+<li>When you trust the workflow to proceed without intervention</li>
+</ul>
+<h2 id="setting-your-review-policy">Setting Your Review Policy<a class="headerlink" href="#setting-your-review-policy" title="Permanent link">&para;</a></h2>
+<p>Review policy is set during workflow initialization and stored in <code>WorkflowContext.md</code>:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gh"># WorkflowContext</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Work Title: Auth System
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Work ID: auth-system
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>Target Branch: feature/auth-system
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>Workflow Mode: full
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>Review Strategy: prs
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>Review Policy: milestones    # ← Your review policy
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Session Policy: per-stage
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>...
+</span></code></pre></div>
+<p>To change the policy for an existing workflow, edit <code>WorkflowContext.md</code> directly.</p>
+<h2 id="inline-instructions">Inline Instructions<a class="headerlink" href="#inline-instructions" title="Permanent link">&para;</a></h2>
+<p>You can customize activity behavior by adding instructions to your requests:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>implement Phase 2 but add rate limiting
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>continue but focus on error handling
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>research but skip external dependencies
+</span></code></pre></div>
+<p>The additional context is passed to the target skill as part of the delegation.</p>
+<h2 id="capturing-phase-candidates">Capturing Phase Candidates<a class="headerlink" href="#capturing-phase-candidates" title="Permanent link">&para;</a></h2>
+<p>During implementation, you may realize additional work is needed that wasn't in the original plan. Instead of stopping to define a full phase, you can quickly capture the idea:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>note: we should also refactor the auth module
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>capture candidate: add caching for the API responses
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>this would be cleaner if we extracted a helper function - add that as a candidate
+</span></code></pre></div>
+<p>The agent appends a one-liner to the <code>## Phase Candidates</code> section in <code>ImplementationPlan.md</code> and continues the current phase without interruption.</p>
+<p>When all planned phases complete, you'll be prompted to decide on each candidate:</p>
+<ul>
+<li><strong>Promote</strong> — Elaborate into a full phase with code research and planning</li>
+<li><strong>Skip</strong> — Mark as skipped and move on</li>
+<li><strong>Defer</strong> — Mark as deferred for future work outside this workflow</li>
+</ul>
+<h2 id="checking-workflow-status">Checking Workflow Status<a class="headerlink" href="#checking-workflow-status" title="Permanent link">&para;</a></h2>
+<p>At any point, you can check your workflow progress:</p>
+<h3 id="via-natural-request">Via Natural Request<a class="headerlink" href="#via-natural-request" title="Permanent link">&para;</a></h3>
+<p>Ask "what's the status?" or "where am I?" to get a comprehensive report:</p>
+<ul>
+<li>Completed artifacts</li>
+<li>Current phase progress</li>
+<li>Git branch status</li>
+<li>PR states and review comments</li>
+<li>Recommended next steps</li>
+</ul>
+<h3 id="via-command-palette">Via Command Palette<a class="headerlink" href="#via-command-palette" title="Permanent link">&para;</a></h3>
+<p>Use <strong>PAW: Get Work Status</strong> for a quick status check with work item selection.</p>
+<h3 id="what-status-reports-include">What Status Reports Include<a class="headerlink" href="#what-status-reports-include" title="Permanent link">&para;</a></h3>
+<p>The <code>paw-status</code> skill analyzes:</p>
+<ol>
+<li><strong>Artifact Inventory</strong>: Which files exist (Spec.md, ImplementationPlan.md, etc.)</li>
+<li><strong>Phase Progress</strong>: Current implementation phase and completion status</li>
+<li><strong>Git State</strong>: Branch, commits ahead/behind, uncommitted changes</li>
+<li><strong>PR Analysis</strong>: Open PRs, review comments needing attention</li>
+<li><strong>Recommended Actions</strong>: Clear next steps based on current state</li>
+</ol>
+<h2 id="handling-pr-review-comments">Handling PR Review Comments<a class="headerlink" href="#handling-pr-review-comments" title="Permanent link">&para;</a></h2>
+<p>When using the <strong>PRs strategy</strong>, pull requests may receive review comments that need addressing:</p>
+<table>
+<thead>
+<tr>
+<th>PR Type</th>
+<th>Request</th>
+<th>Skills Involved</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Planning PR</td>
+<td>"address PR comments"</td>
+<td><code>paw-planning</code></td>
+</tr>
+<tr>
+<td>Phase PR</td>
+<td>"address PR comments"</td>
+<td><code>paw-implement</code> → <code>paw-impl-review</code></td>
+</tr>
+<tr>
+<td>Final PR</td>
+<td>"address PR comments"</td>
+<td><code>paw-implement</code> → <code>paw-impl-review</code></td>
+</tr>
+</tbody>
+</table>
+<p>The PAW agent routes to the appropriate skill based on which PR has pending comments.</p>
+<h2 id="multi-work-item-management">Multi-Work-Item Management<a class="headerlink" href="#multi-work-item-management" title="Permanent link">&para;</a></h2>
+<p>When working on multiple features simultaneously:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>What PAW work items do I have?
+</span></code></pre></div>
+<p>The <code>paw-status</code> skill lists all workflows sorted by most recently modified, showing:</p>
+<ul>
+<li>Work Title</li>
+<li>Work ID</li>
+<li>Last modified time</li>
+<li>Current stage</li>
+</ul>
+<h2 id="rewinding-the-workflow">Rewinding the Workflow<a class="headerlink" href="#rewinding-the-workflow" title="Permanent link">&para;</a></h2>
+<p>The <code>paw-rewind</code> skill allows rolling back to a previous workflow state when you need to make corrections.</p>
+<h3 id="available-rewind-targets">Available Rewind Targets<a class="headerlink" href="#available-rewind-targets" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Effect</th>
+<th>Restore Point</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start</code></td>
+<td>Reset to initialization</td>
+<td>After WorkflowContext.md</td>
+</tr>
+<tr>
+<td><code>spec</code></td>
+<td>Reset to post-specification (full mode only)</td>
+<td>After Spec.md</td>
+</tr>
+<tr>
+<td><code>planning</code></td>
+<td>Reset to post-research</td>
+<td>After CodeResearch.md</td>
+</tr>
+<tr>
+<td><code>phase N</code></td>
+<td>Reset to post-phase N</td>
+<td>After Phase N completed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="safeguards">Safeguards<a class="headerlink" href="#safeguards" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Rewind requires explicit confirmation</li>
+<li>Uses git reset to restore previous state; pushed history is preserved</li>
+<li>If commits are pushed or PRs exist, additional manual steps may be required</li>
+</ul>
+<h3 id="example-usage">Example Usage<a class="headerlink" href="#example-usage" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>Rewind to planning
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Rewind to phase 2
+</span></code></pre></div>
+<h2 id="session-policy">Session Policy<a class="headerlink" href="#session-policy" title="Permanent link">&para;</a></h2>
+<p>Session Policy controls chat context management. This is primarily relevant for VS Code, where long workflows may benefit from context resets.</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>per-stage</code></td>
+<td>Reset context at stage boundaries (VS Code only)</td>
+</tr>
+<tr>
+<td><code>continuous</code></td>
+<td>Single session throughout workflow</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong> GitHub Copilot CLI always uses <code>continuous</code> mode (single-session).</p>
+<p>Session Policy is stored in <code>WorkflowContext.md</code> and can be changed by editing the file directly.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

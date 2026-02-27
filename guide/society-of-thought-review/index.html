@@ -1,0 +1,2067 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="VS Code extension for coordinating multi-stage AI agent workflows">
+      
+      
+        <meta name="author" content="PAW Contributors">
+      
+      
+        <link rel="canonical" href="https://lossyrob.github.io/phased-agent-workflow/guide/society-of-thought-review/">
+      
+      
+        <link rel="prev" href="../two-workflows/">
+      
+      
+        <link rel="next" href="../../specification/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Society-of-Thought Review - Phased Agent Workflow (PAW)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#society-of-thought-review" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-header__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Phased Agent Workflow (PAW)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Society-of-Thought Review
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-nav__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Phased Agent Workflow (PAW)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vscode-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code Extension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../workflow-modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stage-transitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage Transitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Society-of-Thought Review
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Society-of-Thought Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#two-integration-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Integration Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-perspective-diversity-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Perspective Diversity Matters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Perspective Diversity Matters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perspective-overlays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perspective Overlays
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementation-workflow-final-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Workflow (Final Review)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-workflow-pr-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Workflow (PR Review)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in Specialists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interaction-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interaction Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interaction Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parallel-mode-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Mode (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debate-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debate Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specialist-selection-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specialist Selection Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Specialist Selection Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed List
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Specialists
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Specialists">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-specialist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Custom Specialist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-for-effective-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips for Effective Specialists
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-perspectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Perspectives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Perspectives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-perspective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Custom Perspective
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-synthesis-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Synthesis Agent
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-moderator-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Moderator Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflow-level-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow-Level Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-specialist-frontmatter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Specialist Frontmatter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/implementation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/artifacts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#two-integration-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two Integration Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-perspective-diversity-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Perspective Diversity Matters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Why Perspective Diversity Matters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perspective-overlays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perspective Overlays
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#implementation-workflow-final-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Workflow (Final Review)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-workflow-pr-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Workflow (PR Review)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#built-in-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in Specialists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interaction-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interaction Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interaction Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#parallel-mode-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parallel Mode (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debate-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debate Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#specialist-selection-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specialist Selection Modes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Specialist Selection Modes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#all-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        All (Default)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed-list" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed List
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Selection
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Specialists
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Specialists">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-specialist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Custom Specialist
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tips-for-effective-specialists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips for Effective Specialists
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-perspectives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Perspectives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Perspectives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-custom-perspective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Custom Perspective
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-synthesis-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Synthesis Agent
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-moderator-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Moderator Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Model Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflow-level-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow-Level Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-specialist-frontmatter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Specialist Frontmatter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Precedence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="society-of-thought-review">Society-of-Thought Review<a class="headerlink" href="#society-of-thought-review" title="Permanent link">&para;</a></h1>
+<p>Society-of-thought is a review mode that uses <strong>specialist personas</strong> — each with a unique cognitive strategy and behavioral rules — to review code from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes the code, then a synthesis step merges their findings into a single prioritized report.</p>
+<p>The society-of-thought engine is implemented as the <code>paw-sot</code> utility skill, which both <code>paw-final-review</code> (implementation workflow) and <code>paw-review-workflow</code> (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.</p>
+<h3 id="two-integration-points">Two Integration Points<a class="headerlink" href="#two-integration-points" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Calling Skill</th>
+<th>Config Source</th>
+<th>Post-Synthesis Flow</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Implementation</strong></td>
+<td><code>paw-final-review</code></td>
+<td>WorkflowContext.md</td>
+<td>Apply/skip/discuss resolution</td>
+</tr>
+<tr>
+<td><strong>Review</strong></td>
+<td><code>paw-review-workflow</code></td>
+<td>ReviewContext.md</td>
+<td>Feedback → critic → GitHub comment pipeline</td>
+</tr>
+</tbody>
+</table>
+<p>In the <strong>implementation workflow</strong>, SoT is one of three Final Review modes (alongside single-model and multi-model). After synthesis, findings go through an interactive resolution phase where changes are applied directly.</p>
+<p>In the <strong>review workflow</strong>, SoT replaces the Evaluation Stage's impact analysis and gap identification with unified specialist evaluation. Findings from <code>REVIEW-SYNTHESIS.md</code> flow into the existing output pipeline for comment generation and GitHub posting.</p>
+<h2 id="why-perspective-diversity-matters">Why Perspective Diversity Matters<a class="headerlink" href="#why-perspective-diversity-matters" title="Permanent link">&para;</a></h2>
+<p>Traditional code review (whether human or AI) tends to look at code through one lens. A single reviewer might catch logic bugs but miss security implications. Multi-model review helps by adding model-architecture diversity, but every model still answers the same questions.</p>
+<p>Society-of-thought adds <strong>perspective diversity</strong>: a security specialist traces data flows through trust boundaries, a performance specialist estimates computational costs, and an assumptions specialist questions whether the code should exist at all. Research shows that inspectors using different perspectives find non-overlapping defects — each perspective surfaces issues the others miss.</p>
+<h3 id="perspective-overlays">Perspective Overlays<a class="headerlink" href="#perspective-overlays" title="Permanent link">&para;</a></h3>
+<p>Perspective diversity goes even further with <strong>perspective overlays</strong> — evaluative lenses that shift <em>when</em> and <em>under what conditions</em> a specialist reviews without changing <em>who</em> they are. A security specialist running under a <strong>premortem</strong> perspective ("it's 6 months after launch and the system was breached") will surface different risks than the same specialist reviewing under standard present-tense framing.</p>
+<p>PAW ships with three built-in perspectives:</p>
+<table>
+<thead>
+<tr>
+<th>Perspective</th>
+<th>Lens Type</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Premortem</strong></td>
+<td>Temporal</td>
+<td>6-month post-launch failure analysis — "what went wrong?"</td>
+</tr>
+<tr>
+<td><strong>Retrospective</strong></td>
+<td>Temporal</td>
+<td>6-month operational review — "what's painful to maintain?"</td>
+</tr>
+<tr>
+<td><strong>Red Team</strong></td>
+<td>Adversarial</td>
+<td>Exploitation analysis — "how would an attacker abuse this?"</td>
+</tr>
+</tbody>
+</table>
+<p>Perspectives are configured at three tiers:</p>
+<ul>
+<li><strong>Auto</strong> (default for final review): The engine analyzes your diff and selects relevant perspectives — temporal for operational changes, adversarial for security-sensitive code</li>
+<li><strong>Guided</strong>: Specify perspectives by name (e.g., <code>premortem, red-team</code>)</li>
+<li><strong>None</strong> (default for PR review): No perspective overlays — standard present-tense review only</li>
+</ul>
+<p>The <code>perspective_cap</code> setting (default: 2) limits how many perspectives each specialist runs, controlling cost. With 3 specialists and 2 perspectives each, you get 6 specialist-perspective runs instead of 3.</p>
+<p>Each finding in the review output includes a <code>**Perspective**</code> attribution showing which lens surfaced it, and the <code>REVIEW-SYNTHESIS.md</code> includes a Perspective Diversity section summarizing which perspectives were applied and why.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<h3 id="implementation-workflow-final-review">Implementation Workflow (Final Review)<a class="headerlink" href="#implementation-workflow-final-review" title="Permanent link">&para;</a></h3>
+<p>Society-of-thought is configured during workflow initialization (<code>paw-init</code>). The key fields in <code>WorkflowContext.md</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Final Review Mode</td>
+<td><code>society-of-thought</code></td>
+<td><code>multi-model</code></td>
+</tr>
+<tr>
+<td>Final Review Specialists</td>
+<td><code>all</code>, comma-separated names, or <code>adaptive:&lt;N&gt;</code></td>
+<td><code>all</code></td>
+</tr>
+<tr>
+<td>Final Review Interaction Mode</td>
+<td><code>parallel</code> or <code>debate</code></td>
+<td><code>parallel</code></td>
+</tr>
+<tr>
+<td>Final Review Interactive</td>
+<td><code>true</code>, <code>false</code>, or <code>smart</code></td>
+<td><code>smart</code></td>
+</tr>
+<tr>
+<td>Final Review Specialist Models</td>
+<td><code>none</code>, model pool, pinned pairs, or mixed</td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td>Final Review Perspectives</td>
+<td><code>none</code>, <code>auto</code>, or comma-separated names</td>
+<td><code>auto</code></td>
+</tr>
+<tr>
+<td>Final Review Perspective Cap</td>
+<td>positive integer</td>
+<td><code>2</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="review-workflow-pr-review">Review Workflow (PR Review)<a class="headerlink" href="#review-workflow-pr-review" title="Permanent link">&para;</a></h3>
+<p>Society-of-thought for PR review is configured in <code>ReviewContext.md</code> (populated from invocation parameters):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Values</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Review Mode</td>
+<td><code>society-of-thought</code></td>
+<td><code>single-model</code></td>
+</tr>
+<tr>
+<td>Review Specialists</td>
+<td><code>all</code>, comma-separated names, or <code>adaptive:&lt;N&gt;</code></td>
+<td><code>all</code></td>
+</tr>
+<tr>
+<td>Review Interaction Mode</td>
+<td><code>parallel</code> or <code>debate</code></td>
+<td><code>parallel</code></td>
+</tr>
+<tr>
+<td>Review Interactive</td>
+<td><code>true</code>, <code>false</code>, or <code>smart</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td>Review Specialist Models</td>
+<td><code>none</code>, model pool, pinned pairs, or mixed</td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td>Review Perspectives</td>
+<td><code>none</code>, <code>auto</code>, or comma-separated names</td>
+<td><code>none</code></td>
+</tr>
+<tr>
+<td>Review Perspective Cap</td>
+<td>positive integer</td>
+<td><code>2</code></td>
+</tr>
+</tbody>
+</table>
+<p>When Review Mode is <code>society-of-thought</code>, the Evaluation Stage invokes <code>paw-sot</code> instead of running <code>paw-review-impact</code> and <code>paw-review-gap</code> separately. Findings from <code>REVIEW-SYNTHESIS.md</code> are then mapped into the output pipeline with severity mapping: must-fix → Must, should-fix → Should, consider → Could.</p>
+<div class="admonition note">
+<p class="admonition-title">CLI Only</p>
+<p>Society-of-thought is CLI-only for v1. In VS Code, configuring <code>society-of-thought</code> falls back to <code>multi-model</code> mode with a notification.</p>
+</div>
+<h2 id="built-in-specialists">Built-in Specialists<a class="headerlink" href="#built-in-specialists" title="Permanent link">&para;</a></h2>
+<p>PAW ships with 9 built-in specialists, each using a distinct cognitive strategy:</p>
+<table>
+<thead>
+<tr>
+<th>Specialist</th>
+<th>Cognitive Strategy</th>
+<th>Focus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Security</strong></td>
+<td>Threat modeling via attack-tree decomposition</td>
+<td>Trust boundaries, data flows, blast radius</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Quantitative estimation and bottleneck analysis</td>
+<td>Computational costs, scaling behavior</td>
+</tr>
+<tr>
+<td><strong>Assumptions</strong></td>
+<td>Socratic questioning</td>
+<td>Hidden assumptions, unstated requirements</td>
+</tr>
+<tr>
+<td><strong>Edge Cases</strong></td>
+<td>Boundary enumeration</td>
+<td>Off-by-one, empty inputs, race conditions</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td>Narrative walkthrough</td>
+<td>Future engineer experience, cognitive load</td>
+</tr>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>Pattern recognition</td>
+<td>System-level fit, coupling, extensibility</td>
+</tr>
+<tr>
+<td><strong>Testing</strong></td>
+<td>Coverage gap analysis</td>
+<td>Untested paths, assertion quality</td>
+</tr>
+<tr>
+<td><strong>Correctness</strong></td>
+<td>Specification-implementation correspondence</td>
+<td>Logic errors, wrong operators, default paths</td>
+</tr>
+<tr>
+<td><strong>Release Manager</strong></td>
+<td>Release-impact analysis / deployment-path tracing</td>
+<td>CI/CD changes, packaging, migration safety, rollback</td>
+</tr>
+</tbody>
+</table>
+<p>Every specialist includes <strong>anti-sycophancy rules</strong> — structural constraints that require each specialist to either identify a substantive concern or explain what they analyzed and why they found no issues. This prevents the "looks good to me" problem common in AI reviews.</p>
+<h2 id="interaction-modes">Interaction Modes<a class="headerlink" href="#interaction-modes" title="Permanent link">&para;</a></h2>
+<h3 id="parallel-mode-default">Parallel Mode (Default)<a class="headerlink" href="#parallel-mode-default" title="Permanent link">&para;</a></h3>
+<p>All specialists review the diff independently and in parallel, then a synthesis agent merges their findings into <code>REVIEW-SYNTHESIS.md</code>. This is the fastest option and works well for most reviews.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Specialists (parallel) → Synthesis → REVIEW-SYNTHESIS.md
+</span></code></pre></div>
+<h3 id="debate-mode">Debate Mode<a class="headerlink" href="#debate-mode" title="Permanent link">&para;</a></h3>
+<p>Specialists run in sequential rounds. After each round, a synthesis agent summarizes findings and poses targeted questions back to specific specialists. The debate terminates when no new substantive findings emerge (or after 3 rounds).</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Round 1 (parallel) → Synthesis → Round 2 (targeted) → Synthesis → ...
+</span></code></pre></div>
+<p>Debate mode uses <strong>hub-and-spoke mediation</strong>: specialists see only the synthesis summary between rounds, never each other's raw findings. This preserves perspective independence while allowing productive disagreement.</p>
+<div class="admonition tip">
+<p class="admonition-title">When to Use Debate</p>
+<p>Debate mode costs more tokens but produces more thorough reviews. Use it for critical changes, security-sensitive code, or architectural decisions where you want specialists to challenge each other's findings.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Token Cost Estimates</p>
+<p>Debate mode token usage scales with specialist count and rounds. With 9 specialists and up to 3 rounds plus per-thread continuation (30-call budget), a full debate can consume 50+ subagent calls. For large diffs, consider using <code>adaptive:&lt;N&gt;</code> with a smaller N to control cost, or use parallel mode for routine reviews.</p>
+</div>
+<h2 id="specialist-selection-modes">Specialist Selection Modes<a class="headerlink" href="#specialist-selection-modes" title="Permanent link">&para;</a></h2>
+<h3 id="all-default">All (Default)<a class="headerlink" href="#all-default" title="Permanent link">&para;</a></h3>
+<p>All discovered specialists participate. With only the built-in roster, this means 9 specialists.</p>
+<h3 id="fixed-list">Fixed List<a class="headerlink" href="#fixed-list" title="Permanent link">&para;</a></h3>
+<p>Specify exactly which specialists to use:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Final Review Specialists: security, performance, testing
+</span></code></pre></div>
+<h3 id="adaptive-selection">Adaptive Selection<a class="headerlink" href="#adaptive-selection" title="Permanent link">&para;</a></h3>
+<p>Let the agent analyze your diff and select the most relevant specialists:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Final Review Specialists: adaptive:3
+</span></code></pre></div>
+<p>The agent examines the change content, matches it against specialist domains, and selects up to N specialists. The selection rationale is documented in <code>REVIEW-SYNTHESIS.md</code>.</p>
+<h2 id="custom-specialists">Custom Specialists<a class="headerlink" href="#custom-specialists" title="Permanent link">&para;</a></h2>
+<p>You can create custom specialists at three levels, with most-specific-wins precedence:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Location</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project</td>
+<td><code>.paw/personas/&lt;name&gt;.md</code></td>
+<td>Shared with team via Git</td>
+</tr>
+<tr>
+<td>User</td>
+<td><code>~/.paw/personas/&lt;name&gt;.md</code></td>
+<td>Personal, all projects</td>
+</tr>
+<tr>
+<td>Built-in</td>
+<td>Bundled with PAW</td>
+<td>Default roster</td>
+</tr>
+</tbody>
+</table>
+<p>A project-level specialist with the same filename as a built-in specialist overrides the built-in version.</p>
+<div class="admonition warning">
+<p class="admonition-title">Trust Model</p>
+<p>Custom specialist files are loaded as agent instructions with full tool access. Only use persona files from trusted sources. Project-level specialists (<code>.paw/personas/</code>) are committed to the repository and should be reviewed like any other code contribution.</p>
+</div>
+<h3 id="creating-a-custom-specialist">Creating a Custom Specialist<a class="headerlink" href="#creating-a-custom-specialist" title="Permanent link">&para;</a></h3>
+<p>A specialist file is a markdown document that defines a persona. The filename (without <code>.md</code>) becomes the specialist's name. Here's a scaffold:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>---
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="gu">shared_rules_included: false</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="gu">---</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="gh"># Compliance Specialist</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="gu">## Identity &amp; Narrative Backstory</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>You are an expert in regulatory compliance with deep experience
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>in [your domain]. Describe formative experiences that shape how
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>you approach code review — incidents, lessons learned, and the
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>instincts they developed.
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>The backstory should be written in second person (&quot;You are...&quot;)
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>and establish genuine expertise through specific, realistic
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>scenarios rather than generic credentials.
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="gu">## Cognitive Strategy</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a><span class="gs">**[Name your strategy and describe it.]**</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>Describe the structured analytical process this specialist
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>follows when examining a diff. This should be genuinely
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>different from other specialists — not just a different topic,
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>but a different WAY of analyzing code.
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>Example strategies:
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="k">-</span><span class="w"> </span>Threat modeling (security)
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="k">-</span><span class="w"> </span>Quantitative estimation (performance)
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a><span class="k">-</span><span class="w"> </span>Socratic questioning (assumptions)
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="k">-</span><span class="w"> </span>Boundary enumeration (edge cases)
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="gu">## Behavioral Rules</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="k">-</span><span class="w"> </span>Specific rules that guide this specialist&#39;s review behavior
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="k">-</span><span class="w"> </span>Each rule should be actionable and distinct
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="k">-</span><span class="w"> </span>Include what the specialist looks for and what it refuses
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a>  to accept
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="gu">## Shared Rules</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>See <span class="sb">`_shared-rules.md`</span> for Anti-Sycophancy Rules and
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a>Confidence Scoring.
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a><span class="gu">## Demand Rationale</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a>Before evaluating code, describe what context this specialist
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a>needs to see in order to do its job. What should it flag if
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a>that context is missing?
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a>
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a><span class="gu">## Shared Output Format</span>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a>See <span class="sb">`_shared-rules.md`</span> for Required Output Format (Toulmin
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a>structure). Use <span class="sb">`**Category**: &lt;name&gt;`</span> where <span class="sb">`&lt;name&gt;`</span> is this
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a>specialist&#39;s category.
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a>
+</span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a><span class="gu">## Example Review Comments</span>
+</span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a>
+</span><span id="__span-4-59"><a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a>Include 2-3 example findings that demonstrate this specialist&#39;s
+</span><span id="__span-4-60"><a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a>cognitive strategy in action. Use the Toulmin format from the
+</span><span id="__span-4-61"><a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a>shared rules (Finding → Grounds → Warrant → Rebuttal Conditions
+</span><span id="__span-4-62"><a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a>→ Suggested Verification).
+</span></code></pre></div>
+<h3 id="tips-for-effective-specialists">Tips for Effective Specialists<a class="headerlink" href="#tips-for-effective-specialists" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Distinct cognitive strategies matter more than distinct topics.</strong> A "database specialist" that reviews code the same way as a general reviewer adds little. A specialist that estimates query plans and calculates I/O costs adds real value.</li>
+<li><strong>Narrative backstories improve consistency.</strong> Research shows that detailed persona narratives help models maintain character better than bullet-point role descriptions.</li>
+<li><strong>Anti-sycophancy is structural, not stylistic.</strong> The shared rules enforce that every specialist must produce substantive analysis. Don't override these in custom specialists.</li>
+<li><strong>Use <code>shared_rules_included</code> frontmatter.</strong> Set to <code>true</code> only if your custom specialist includes its own anti-sycophancy rules, confidence scoring, and Toulmin output format. When <code>false</code> (default), shared rules are automatically injected.</li>
+<li><strong>Include example findings.</strong> 2-3 examples in the Toulmin format (Grounds → Warrant → Rebuttal → Verification) anchor the specialist's behavior more effectively than additional instructions.</li>
+</ul>
+<h2 id="custom-perspectives">Custom Perspectives<a class="headerlink" href="#custom-perspectives" title="Permanent link">&para;</a></h2>
+<p>You can create custom perspective overlays at three levels, with the same most-specific-wins precedence as specialists:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Location</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Project</td>
+<td><code>.paw/perspectives/&lt;name&gt;.md</code></td>
+<td>Shared with team via Git</td>
+</tr>
+<tr>
+<td>User</td>
+<td><code>~/.paw/perspectives/&lt;name&gt;.md</code></td>
+<td>Personal, all projects</td>
+</tr>
+<tr>
+<td>Built-in</td>
+<td>Bundled with PAW</td>
+<td>Default roster (premortem, retrospective, red-team)</td>
+</tr>
+</tbody>
+</table>
+<p>A project-level perspective with the same filename as a built-in perspective overrides the built-in version.</p>
+<h3 id="creating-a-custom-perspective">Creating a Custom Perspective<a class="headerlink" href="#creating-a-custom-perspective" title="Permanent link">&para;</a></h3>
+<p>A perspective file defines an evaluative lens. The filename (without <code>.md</code>) becomes the perspective's name. Required sections:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gh"># Compliance Perspective</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="gu">## Lens Type</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>custom
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="gu">## Parameters</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Temporal Frame**</span>: N/A
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Scenario**</span>: Evaluating code against regulatory requirements
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="gu">## Overlay Template</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>You are reviewing this code for regulatory compliance violations. As the
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>{specialist}, identify requirements gaps, audit trail deficiencies, and
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>data handling violations specific to your domain. Focus on what a
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>compliance auditor would flag during certification review.
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="gu">## Novelty Constraint</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>Each compliance concern must reference a specific code pattern, data flow,
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>or missing control visible in the artifact. Do not raise generic
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>compliance concerns that apply to any system.
+</span></code></pre></div>
+<p>Key requirements:</p>
+<ul>
+<li>The <code>{specialist}</code> placeholder in the Overlay Template is resolved at runtime with the specialist's name</li>
+<li>Overlay Templates should be 50–100 words — long enough to shift the evaluative frame, short enough not to compete with the specialist's cognitive strategy</li>
+<li>The Novelty Constraint should require evidence-anchoring to prevent unconstrained speculation</li>
+</ul>
+<h2 id="the-synthesis-agent">The Synthesis Agent<a class="headerlink" href="#the-synthesis-agent" title="Permanent link">&para;</a></h2>
+<p>The synthesis agent operates as a <strong>PR triage lead</strong> — a functional role with structural constraints. It can merge, deduplicate, classify conflicts, and flag trade-offs, but it <strong>cannot generate new findings</strong>. This prevents the synthesis step from introducing hallucinated issues that no specialist actually raised.</p>
+<p>Key synthesis behaviors:</p>
+<ul>
+<li><strong>Confidence-weighted aggregation</strong> — Findings supported by multiple specialists with high confidence rank higher</li>
+<li><strong>Grounding validation</strong> — Findings referencing code not in the diff are flagged as ungrounded and demoted</li>
+<li><strong>Evidence-based adjudication</strong> — When specialists disagree, the synthesis examines reasoning traces rather than counting votes</li>
+</ul>
+<p>The output is <code>REVIEW-SYNTHESIS.md</code> in <code>.paw/work/&lt;work-id&gt;/reviews/</code>.</p>
+<h2 id="interactive-moderator-mode">Interactive Moderator Mode<a class="headerlink" href="#interactive-moderator-mode" title="Permanent link">&para;</a></h2>
+<p>When <code>Final Review Interactive</code> is <code>true</code> or <code>smart</code>, you can interact with specialists after the review completes:</p>
+<ul>
+<li><strong>Summon</strong> a specialist by name for follow-up on a specific area</li>
+<li><strong>Challenge</strong> a finding — the specialist must respond with independent evidence</li>
+<li><strong>Request deeper analysis</strong> on a particular file or function</li>
+</ul>
+<p>With <code>smart</code> mode, interactive sessions activate only when significant findings (must-fix or should-fix) are present. If the review produces only <code>consider</code> items, it completes without interruption.</p>
+<h2 id="model-assignment">Model Assignment<a class="headerlink" href="#model-assignment" title="Permanent link">&para;</a></h2>
+<p>By default, all specialists use the session's default model. You can add model-architecture diversity in two ways: workflow-level configuration and per-specialist frontmatter.</p>
+<h3 id="workflow-level-configuration">Workflow-Level Configuration<a class="headerlink" href="#workflow-level-configuration" title="Permanent link">&para;</a></h3>
+<p>Set <code>Final Review Specialist Models</code> in WorkflowContext.md (configured during <code>paw-init</code>):</p>
+<p><strong>Model pool</strong> — distribute models round-robin across specialists:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>Final Review Specialist Models: gpt-5.3-codex, claude-opus-4.6, gemini-3-pro-preview
+</span></code></pre></div>
+<p><strong>Explicit pinning</strong> — assign specific models to specific specialists:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Final Review Specialist Models: security:claude-opus-4.6, architecture:gpt-5.3-codex
+</span></code></pre></div>
+<p><strong>Mixed</strong> — pin some specialists, pool the rest:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Final Review Specialist Models: security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview
+</span></code></pre></div>
+<p>In mixed mode, pinned specialists get their assigned model. Unpinned specialists are sorted alphabetically and assigned models from the pool list round-robin.</p>
+<h3 id="per-specialist-frontmatter">Per-Specialist Frontmatter<a class="headerlink" href="#per-specialist-frontmatter" title="Permanent link">&para;</a></h3>
+<p>Custom specialists (in <code>.paw/personas/</code> or <code>~/.paw/personas/</code>) can specify a model in their YAML frontmatter:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nn">---</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">claude-opus-4.6</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nn">---</span>
+</span></code></pre></div>
+<h3 id="resolution-precedence">Resolution Precedence<a class="headerlink" href="#resolution-precedence" title="Permanent link">&para;</a></h3>
+<p>When multiple sources specify a model, the most specific wins:</p>
+<ol>
+<li><strong>Specialist frontmatter</strong> <code>model:</code> field (highest priority)</li>
+<li><strong>WorkflowContext pinning</strong> (<code>specialist:model</code> pair)</li>
+<li><strong>WorkflowContext pool</strong> (round-robin distribution)</li>
+<li><strong>Session default</strong> (fallback)</li>
+</ol>
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../stage-transitions/">Stage Transitions</a> — How review policies affect the workflow</li>
+<li><a href="../workflow-modes/">Workflow Modes</a> — Configure Full, Minimal, or Custom modes</li>
+<li><a href="../../reference/artifacts/">Artifacts Reference</a> — All PAW artifacts including REVIEW-SYNTHESIS.md</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

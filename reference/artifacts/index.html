@@ -1,0 +1,1823 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="VS Code extension for coordinating multi-stage AI agent workflows">
+      
+      
+        <meta name="author" content="PAW Contributors">
+      
+      
+        <link rel="canonical" href="https://lossyrob.github.io/phased-agent-workflow/reference/artifacts/">
+      
+      
+        <link rel="prev" href="../agents/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Artifacts - Phased Agent Workflow (PAW)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#paw-artifacts-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-header__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Phased Agent Workflow (PAW)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Artifacts
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-nav__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Phased Agent Workflow (PAW)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/vscode-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code Extension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/cli-installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/workflow-modes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/stage-transitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage Transitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/two-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guide/society-of-thought-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Society-of-Thought Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/implementation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-workflow-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Workflow Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Workflow Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflowcontextmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WorkflowContext.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spec.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#researchquestionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResearchQuestions.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specresearchmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpecResearch.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coderesearchmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CodeResearch.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementationplanmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImplementationPlan.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-synthesismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REVIEW-SYNTHESIS.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-workflow-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Workflow Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Workflow Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reviewcontextmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReviewContext.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#researchquestionsmd_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResearchQuestions.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derivedspecmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DerivedSpec.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impactanalysismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImpactAnalysis.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gapanalysismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GapAnalysis.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reviewcommentsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReviewComments.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#artifact-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifact Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rewindability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rewindability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#directory-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-workflow-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Workflow Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Workflow Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#workflowcontextmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WorkflowContext.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spec.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#researchquestionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResearchQuestions.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specresearchmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SpecResearch.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#coderesearchmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CodeResearch.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementationplanmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImplementationPlan.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-synthesismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        REVIEW-SYNTHESIS.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-workflow-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Workflow Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Workflow Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#reviewcontextmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReviewContext.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#researchquestionsmd_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ResearchQuestions.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derivedspecmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DerivedSpec.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impactanalysismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ImpactAnalysis.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gapanalysismd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GapAnalysis.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reviewcommentsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReviewComments.md
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#artifact-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifact Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#version-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Version Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rewindability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rewindability
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="paw-artifacts-reference">PAW Artifacts Reference<a class="headerlink" href="#paw-artifacts-reference" title="Permanent link">&para;</a></h1>
+<p>PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. By default (<code>commit-and-clean</code> lifecycle), artifacts are committed during development and removed at PR time.</p>
+<h2 id="directory-structure">Directory Structure<a class="headerlink" href="#directory-structure" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>.paw/
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  work/                         # Implementation workflow
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    &lt;work-id&gt;/
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      WorkflowContext.md        # Required: workflow parameters
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>      ResearchQuestions.md      # Research questions for spec research
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>      Spec.md                   # Feature specification
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>      SpecResearch.md           # Spec research findings
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>      CodeResearch.md           # Code research findings
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>      ImplementationPlan.md     # Implementation plan
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>      Docs.md                   # Documentation
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>      WorkShaping.md            # Pre-spec ideation (optional)
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>      planning/                 # Multi-model planning artifacts (gitignored)
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        PLAN-{MODEL}.md         # Per-model plan drafts
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>      reviews/                  # Review artifacts (gitignored)
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        planning/               # Planning Documents Review artifacts
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  reviews/                      # Review workflow
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    PR-&lt;number&gt;/                # Single-repo: PR-123
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    PR-&lt;number&gt;-&lt;repo-slug&gt;/    # Multi-repo: PR-123-my-repo
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>      ReviewContext.md          # Review parameters
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>      ResearchQuestions.md      # Research questions for baseline analysis
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>      CodeResearch.md           # Pre-change baseline
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>      DerivedSpec.md            # Reverse-engineered spec
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>      ImpactAnalysis.md         # Impact analysis (single-model mode)
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>      GapAnalysis.md            # Gap analysis (single-model mode)
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>      REVIEW-{SPECIALIST}.md   # Per-specialist findings (SoT mode, no perspectives)
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>      REVIEW-{SPECIALIST}-{PERSPECTIVE}.md  # Per-specialist-perspective findings (SoT with perspectives)
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>      REVIEW-SYNTHESIS.md       # Synthesized findings (SoT mode)
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>      ReviewComments.md         # Review comments
+</span></code></pre></div>
+<hr />
+<h2 id="implementation-workflow-artifacts">Implementation Workflow Artifacts<a class="headerlink" href="#implementation-workflow-artifacts" title="Permanent link">&para;</a></h2>
+<h3 id="workflowcontextmd">WorkflowContext.md<a class="headerlink" href="#workflowcontextmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Centralized parameter file that all agents read at startup.</p>
+<p><strong>Contents:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Work Title</td>
+<td>Short name for PR titles</td>
+</tr>
+<tr>
+<td>Work ID</td>
+<td>Normalized slug for artifact paths</td>
+</tr>
+<tr>
+<td>Target Branch</td>
+<td>Branch where implementation merges</td>
+</tr>
+<tr>
+<td>Workflow Mode</td>
+<td><code>full</code>, <code>minimal</code>, or <code>custom</code></td>
+</tr>
+<tr>
+<td>Review Strategy</td>
+<td><code>prs</code> or <code>local</code></td>
+</tr>
+<tr>
+<td>Review Policy</td>
+<td><code>every-stage</code>, <code>milestones</code>, <code>planning-only</code>, or <code>final-pr-only</code></td>
+</tr>
+<tr>
+<td>Session Policy</td>
+<td><code>per-stage</code> or <code>continuous</code></td>
+</tr>
+<tr>
+<td>Issue URL</td>
+<td>GitHub Issue or Azure DevOps Work Item</td>
+</tr>
+<tr>
+<td>Remote</td>
+<td>Git remote name (default: "origin")</td>
+</tr>
+<tr>
+<td>Artifact Paths</td>
+<td>Usually "auto-derived"</td>
+</tr>
+<tr>
+<td>Additional Inputs</td>
+<td>Extra parameters</td>
+</tr>
+<tr>
+<td>Artifact Lifecycle</td>
+<td><code>commit-and-clean</code>, <code>commit-and-persist</code>, or <code>never-commit</code></td>
+</tr>
+<tr>
+<td>Final Agent Review</td>
+<td><code>enabled</code> or <code>disabled</code></td>
+</tr>
+<tr>
+<td>Final Review Mode</td>
+<td><code>single-model</code>, <code>multi-model</code>, or <code>society-of-thought</code></td>
+</tr>
+<tr>
+<td>Final Review Interactive</td>
+<td><code>true</code>, <code>false</code>, or <code>smart</code></td>
+</tr>
+<tr>
+<td>Final Review Models</td>
+<td>Comma-separated model names</td>
+</tr>
+<tr>
+<td>Final Review Specialists</td>
+<td><code>all</code>, comma-separated names, or <code>adaptive:&lt;N&gt;</code> (society-of-thought only)</td>
+</tr>
+<tr>
+<td>Final Review Interaction Mode</td>
+<td><code>parallel</code> or <code>debate</code> (society-of-thought only)</td>
+</tr>
+<tr>
+<td>Planning Docs Review</td>
+<td><code>enabled</code> or <code>disabled</code></td>
+</tr>
+<tr>
+<td>Plan Generation Mode</td>
+<td><code>single-model</code> or <code>multi-model</code></td>
+</tr>
+<tr>
+<td>Plan Generation Models</td>
+<td>Comma-separated model names</td>
+</tr>
+<tr>
+<td>Planning Review Mode</td>
+<td><code>single-model</code> or <code>multi-model</code></td>
+</tr>
+<tr>
+<td>Planning Review Interactive</td>
+<td><code>true</code>, <code>false</code>, or <code>smart</code></td>
+</tr>
+<tr>
+<td>Planning Review Models</td>
+<td>Comma-separated model names</td>
+</tr>
+</tbody>
+</table>
+<h3 id="specmd">Spec.md<a class="headerlink" href="#specmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Testable requirements document defining what the feature must do.</p>
+<p><strong>Created by:</strong> <code>paw-spec</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>Overview</strong> — Brief summary of feature purpose</li>
+<li><strong>Functional Requirements</strong> — What the feature must do</li>
+<li><strong>Non-Functional Requirements</strong> — Performance, security, usability constraints</li>
+<li><strong>Data Requirements</strong> — New entities, validation rules</li>
+<li><strong>Acceptance Criteria</strong> — Measurable conditions that define "done"</li>
+<li><strong>Out of Scope</strong> — What this feature will NOT do</li>
+</ul>
+<p><strong>Quality Standard:</strong> Every requirement must be testable—measurable, observable, unambiguous.</p>
+<h3 id="researchquestionsmd">ResearchQuestions.md<a class="headerlink" href="#researchquestionsmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Research questions to guide spec research.</p>
+<p><strong>Created by:</strong> <code>paw-spec</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li>Questions about current system behavior</li>
+<li>Areas needing clarification for specification</li>
+<li>Optional external/context questions for user input</li>
+</ul>
+<h3 id="specresearchmd">SpecResearch.md<a class="headerlink" href="#specresearchmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Factual documentation of how the current system works.</p>
+<p><strong>Created by:</strong> <code>paw-spec-research</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li>Answers to questions from <code>ResearchQuestions.md</code></li>
+<li>Current system behavior (conceptual, not code-level)</li>
+<li>Component interactions and data flows</li>
+<li>User-facing workflows and business rules</li>
+</ul>
+<p><strong>Key Distinction:</strong> Behavioral view for specification writing, not implementation details.</p>
+<h3 id="coderesearchmd">CodeResearch.md<a class="headerlink" href="#coderesearchmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Technical mapping of where and how relevant code works.</p>
+<p><strong>Created by:</strong> <code>paw-code-research</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li>File paths and code locations</li>
+<li>Patterns and conventions</li>
+<li>Integration points and dependencies</li>
+<li>Architecture documentation references</li>
+</ul>
+<p><strong>Key Distinction:</strong> Implementation view for planning with specific file paths.</p>
+<h3 id="implementationplanmd">ImplementationPlan.md<a class="headerlink" href="#implementationplanmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Detailed plan with discrete phases that can be reviewed and merged independently.</p>
+<p><strong>Created by:</strong> <code>paw-planning</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>Overview</strong> — What the plan accomplishes</li>
+<li><strong>Current State Analysis</strong> — Relevant findings from research</li>
+<li><strong>Phase Status</strong> — Checkbox list of all phases with objectives</li>
+<li><strong>Phase Candidates</strong> — Lightweight capture of potential phases (see below)</li>
+<li><strong>Phase Details</strong> — For each phase:<ul>
+<li>Changes required (files, components)</li>
+<li>Success criteria (automated and manual)</li>
+<li>Implementation notes (after completion)</li>
+</ul>
+</li>
+</ul>
+<p><strong>Checkboxes:</strong> Implementer marks items complete as work progresses.</p>
+<p><strong>Phase Candidates Section:</strong></p>
+<p>During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in this section:</p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gu">## Phase Candidates</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">- [ ]</span> Refactor X to use new pattern
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">- [ ]</span> Add caching for frequently accessed data
+</span></code></pre></div>
+<p>When all planned phases complete, <code>paw-transition</code> detects unresolved candidates and the orchestrator presents each for user decision:</p>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Promote</strong></td>
+<td>Candidate elaborated into full phase via code research + planning</td>
+</tr>
+<tr>
+<td><strong>Skip</strong></td>
+<td>Marked <code>- [x] [skipped]</code>, excluded from future checks</td>
+</tr>
+<tr>
+<td><strong>Defer</strong></td>
+<td>Marked <code>- [x] [deferred]</code>, excluded from future checks</td>
+</tr>
+</tbody>
+</table>
+<p>This decouples intent capture from phase elaboration, preserving implementer momentum while ensuring ideas aren't lost.</p>
+<h3 id="docsmd">Docs.md<a class="headerlink" href="#docsmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Authoritative technical reference for the implemented work.</p>
+<p><strong>Created by:</strong> <code>paw-docs-guidance</code> skill (via <code>paw-impl-review</code>)</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li>What was built and why</li>
+<li>Architecture and design decisions</li>
+<li>How to use and test the feature</li>
+<li>Integration points and dependencies</li>
+</ul>
+<p><strong>Note:</strong> Focuses on concepts and user-facing behavior, not code reproduction.</p>
+<h3 id="review-synthesismd">REVIEW-SYNTHESIS.md<a class="headerlink" href="#review-synthesismd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Synthesized review findings from society-of-thought or multi-model review.</p>
+<p><strong>Created by:</strong> <code>paw-final-review</code> skill (implementation workflow) or <code>paw-review-workflow</code> (review workflow), both via <code>paw-sot</code> engine for society-of-thought mode</p>
+<p><strong>Location:</strong> <code>.paw/work/&lt;work-id&gt;/reviews/REVIEW-SYNTHESIS.md</code> (implementation) or <code>.paw/reviews/&lt;identifier&gt;/REVIEW-SYNTHESIS.md</code> (review workflow)</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>Review metadata</strong> — Mode, participating specialists/models, selection rationale, perspectives applied</li>
+<li><strong>Perspective Diversity</strong> — Which perspectives were applied to which specialists, selection rationale, perspectives skipped (when perspectives are active)</li>
+<li><strong>Prioritized findings</strong> — Must-fix, should-fix, consider classifications with specialist and perspective attribution</li>
+<li><strong>Confidence levels</strong> — HIGH, MEDIUM, LOW per finding with supporting evidence</li>
+<li><strong>Disagreement resolution</strong> — How conflicting specialist perspectives were reconciled, including inter-perspective conflicts</li>
+<li><strong>Grounding status</strong> — Flags for findings referencing code not in the diff</li>
+</ul>
+<p>When perspectives are active, each finding includes a <code>**Perspective**</code> field indicating which lens surfaced it (<code>baseline</code> for findings without a perspective overlay).</p>
+<hr />
+<h2 id="review-workflow-artifacts">Review Workflow Artifacts<a class="headerlink" href="#review-workflow-artifacts" title="Permanent link">&para;</a></h2>
+<h3 id="reviewcontextmd">ReviewContext.md<a class="headerlink" href="#reviewcontextmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Authoritative parameter source for review workflow.</p>
+<p><strong>Created by:</strong> <code>paw-review-understanding</code> skill</p>
+<p><strong>Contents:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PR Number</td>
+<td>GitHub PR number (or branch for non-GitHub)</td>
+</tr>
+<tr>
+<td>Base/Head Branch</td>
+<td>Before and after branches</td>
+</tr>
+<tr>
+<td>Base/Head Commit</td>
+<td>Specific commit SHAs</td>
+</tr>
+<tr>
+<td>Changed Files</td>
+<td>Count, additions, deletions</td>
+</tr>
+<tr>
+<td>CI Status</td>
+<td>Passing, failing, pending</td>
+</tr>
+<tr>
+<td>Flags</td>
+<td>CI failures, breaking changes suspected</td>
+</tr>
+</tbody>
+</table>
+<h3 id="researchquestionsmd_1">ResearchQuestions.md<a class="headerlink" href="#researchquestionsmd_1" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Research questions to guide baseline codebase analysis.</p>
+<p><strong>Created by:</strong> <code>paw-review-understanding</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li>Questions about pre-change behavior</li>
+<li>Areas needing investigation for baseline understanding</li>
+<li>Specific patterns or behaviors to document</li>
+</ul>
+<p><strong>Note:</strong> This artifact replaces the previous <code>prompts/code-research.prompt.md</code> approach, simplifying the review artifact structure by storing research questions directly in the review directory.</p>
+<h3 id="derivedspecmd">DerivedSpec.md<a class="headerlink" href="#derivedspecmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Reverse-engineered specification inferred from implementation.</p>
+<p><strong>Created by:</strong> <code>paw-review-understanding</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>Intent Summary</strong> — What problem this appears to solve</li>
+<li><strong>Scope</strong> — What's in and out of scope</li>
+<li><strong>Assumptions</strong> — Inferences from the code</li>
+<li><strong>Measurable Outcomes</strong> — Before/after behavior</li>
+<li><strong>Changed Interfaces</strong> — APIs, routes, schemas</li>
+<li><strong>Risks &amp; Invariants</strong> — Properties that must hold</li>
+<li><strong>Open Questions</strong> — Ambiguities about intent</li>
+</ul>
+<h3 id="impactanalysismd">ImpactAnalysis.md<a class="headerlink" href="#impactanalysismd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> System-wide effects, integration analysis, and risk assessment (single-model mode only; replaced by specialist evaluation in society-of-thought mode).</p>
+<p><strong>Created by:</strong> <code>paw-review-impact</code> skill</p>
+<p><strong>Contents:</strong></p>
+<ul>
+<li><strong>Integration Points</strong> — Dependencies and downstream consumers</li>
+<li><strong>Breaking Changes</strong> — API changes, incompatibilities</li>
+<li><strong>Performance Implications</strong> — Hot paths, resource usage</li>
+<li><strong>Security Changes</strong> — Auth, validation modifications</li>
+<li><strong>Design Assessment</strong> — Architecture fit, timing appropriateness</li>
+<li><strong>User Impact</strong> — End-user and developer-user effects</li>
+<li><strong>Risk Assessment</strong> — Overall risk with rationale</li>
+</ul>
+<h3 id="gapanalysismd">GapAnalysis.md<a class="headerlink" href="#gapanalysismd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Categorized findings with evidence and suggestions (single-model mode only; replaced by specialist evaluation in society-of-thought mode).</p>
+<p><strong>Created by:</strong> <code>paw-review-gap</code> skill</p>
+<p><strong>Structure:</strong></p>
+<div class="language-markdown highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gu">## Must</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>[Correctness, safety, security issues]
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="gu">## Should</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>[Quality, testing, completeness gaps]
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="gu">## Could</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>[Optional enhancements]
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="gu">## Positive Observations</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>[Good practices to commend]
+</span></code></pre></div>
+<p><strong>Each finding includes:</strong></p>
+<ul>
+<li>File and line reference</li>
+<li>Description of issue</li>
+<li>Impact explanation</li>
+<li>Suggested fix</li>
+</ul>
+<h3 id="reviewcommentsmd">ReviewComments.md<a class="headerlink" href="#reviewcommentsmd" title="Permanent link">&para;</a></h3>
+<p><strong>Purpose:</strong> Complete feedback with rationale and assessment.</p>
+<p><strong>Created by:</strong> <code>paw-review-feedback</code> skill, <code>paw-review-critic</code> skill</p>
+<p><strong>For each comment:</strong></p>
+<ul>
+<li><strong>Comment text</strong> — What gets posted</li>
+<li><strong>Rationale</strong> — Evidence, baseline pattern, impact, best practice</li>
+<li><strong>Assessment</strong> — Usefulness, accuracy, trade-offs (never posted)</li>
+</ul>
+<hr />
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="artifact-quality">Artifact Quality<a class="headerlink" href="#artifact-quality" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Testable</strong> — Requirements can be verified objectively</li>
+<li><strong>Complete</strong> — All relevant information included</li>
+<li><strong>Clear</strong> — Precise language without ambiguity</li>
+<li><strong>Scoped</strong> — Explicit boundaries on what's included</li>
+</ul>
+<h3 id="version-control">Version Control<a class="headerlink" href="#version-control" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Artifacts committed to Git during development (unless <code>never-commit</code> lifecycle)</li>
+<li>Changes tracked through PRs</li>
+<li>History preserved for traceability</li>
+</ul>
+<h3 id="rewindability">Rewindability<a class="headerlink" href="#rewindability" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Any artifact can be updated to fix errors</li>
+<li>Downstream artifacts regenerated as needed</li>
+<li>Clear chain of dependencies between artifacts</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

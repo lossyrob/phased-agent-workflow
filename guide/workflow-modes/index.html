@@ -1,0 +1,1691 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="VS Code extension for coordinating multi-stage AI agent workflows">
+      
+      
+        <meta name="author" content="PAW Contributors">
+      
+      
+        <link rel="canonical" href="https://lossyrob.github.io/phased-agent-workflow/guide/workflow-modes/">
+      
+      
+        <link rel="prev" href="../cli-installation/">
+      
+      
+        <link rel="next" href="../stage-transitions/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.3">
+    
+    
+      
+        <title>Workflow Modes - Phased Agent Workflow (PAW)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workflow-modes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-header__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Phased Agent Workflow (PAW)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Workflow Modes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Phased Agent Workflow (PAW)" class="md-nav__button md-logo" aria-label="Phased Agent Workflow (PAW)" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Phased Agent Workflow (PAW)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lossyrob/phased-agent-workflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lossyrob/phased-agent-workflow
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vscode-extension/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code Extension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Modes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow Modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Full Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Full Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategies-for-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies for Full Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimal Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Minimal Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Minimal Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategy-for-minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategy for Minimal Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Custom Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategies-for-custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies for Custom Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-custom-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Custom Instructions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-strategies-explained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies Explained
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Strategies Explained">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prs-strategy-intermediate-pull-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PRs Strategy (Intermediate Pull Requests)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-strategy-single-branch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Strategy (Single Branch)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-gates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Gates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-agent-review-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final Agent Review Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-model-planning-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Model Planning Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planning-docs-review-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planning Docs Review Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selecting-your-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selecting Your Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stage-transitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage Transitions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../two-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Two Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../society-of-thought-review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Society-of-Thought Review
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/implementation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Implementation Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specification/review/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Review Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/artifacts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Full Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Full Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategies-for-full-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies for Full Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Minimal Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Minimal Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Minimal Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategy-for-minimal-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategy for Minimal Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Custom Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Custom Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-strategies-for-custom-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies for Custom Mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-custom-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example Custom Instructions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-strategies-explained" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Strategies Explained
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Review Strategies Explained">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prs-strategy-intermediate-pull-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PRs Strategy (Intermediate Pull Requests)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-strategy-single-branch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Strategy (Single Branch)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quality-gates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality Gates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#final-agent-review-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Final Agent Review Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-model-planning-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Model Planning Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planning-docs-review-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planning Docs Review Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selecting-your-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selecting Your Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="workflow-modes">Workflow Modes<a class="headerlink" href="#workflow-modes" title="Permanent link">&para;</a></h1>
+<p>PAW supports three workflow modes to match your task scope and development style. Each mode determines which stages are included and how work is reviewed.</p>
+<h2 id="quick-overview">Quick Overview<a class="headerlink" href="#quick-overview" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Stages</th>
+<th>Review Strategy</th>
+<th>Best For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Full</strong></td>
+<td>All stages (Spec → Docs)</td>
+<td>PRs or Local</td>
+<td>Large features, complex changes</td>
+</tr>
+<tr>
+<td><strong>Minimal</strong></td>
+<td>Core stages (Code Research → Final PR)</td>
+<td>Local only</td>
+<td>Bug fixes, small enhancements</td>
+</tr>
+<tr>
+<td><strong>Custom</strong></td>
+<td>User-defined</td>
+<td>PRs or Local</td>
+<td>Unique workflows</td>
+</tr>
+</tbody>
+</table>
+<h2 id="full-mode">Full Mode<a class="headerlink" href="#full-mode" title="Permanent link">&para;</a></h2>
+<p><strong>Stages Included:</strong> Spec → Spec Research → Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status</p>
+<p>Full mode is the complete PAW workflow with all stages from initial specification through comprehensive documentation. When Final Agent Review is enabled (default), an automated review step runs after implementation phases to catch issues before the Final PR.</p>
+<h3 id="when-to-use-full-mode">When to Use Full Mode<a class="headerlink" href="#when-to-use-full-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Large features requiring comprehensive documentation</li>
+<li>Complex system changes needing formal specifications</li>
+<li>New features where requirements need refinement through the spec process</li>
+<li>Work that benefits from detailed technical documentation for future maintainers</li>
+<li>Projects where complete traceability and documentation are organizational requirements</li>
+</ul>
+<h3 id="review-strategies-for-full-mode">Review Strategies for Full Mode<a class="headerlink" href="#review-strategies-for-full-mode" title="Permanent link">&para;</a></h3>
+<p>Full mode supports both review strategies:</p>
+<ul>
+<li>
+<p><strong>PRs strategy</strong>: Creates intermediate PRs (planning, phase, docs branches) for review at multiple stages. Best for complex work requiring review checkpoints throughout development.</p>
+</li>
+<li>
+<p><strong>Local strategy</strong>: Single branch workflow with all work on the target branch, only creating the final PR. Best when you prefer consolidated review but still want all stages executed.</p>
+</li>
+</ul>
+<h2 id="minimal-mode">Minimal Mode<a class="headerlink" href="#minimal-mode" title="Permanent link">&para;</a></h2>
+<p><strong>Stages Included:</strong> Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status</p>
+<p><strong>Stages Skipped:</strong> Specification stage</p>
+<p>Minimal mode is a streamlined workflow focusing on core implementation activities. It assumes requirements are already clear from the issue description or enhancement request.</p>
+<h3 id="when-to-use-minimal-mode">When to Use Minimal Mode<a class="headerlink" href="#when-to-use-minimal-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Bug fixes with clear requirements from issue description</li>
+<li>Small features or enhancements where the goal is well-understood</li>
+<li>Refactoring work where objectives and approach are already clear</li>
+<li>Quick iterations when formal specs aren't needed</li>
+<li>Work where existing project documentation is sufficient</li>
+</ul>
+<h3 id="review-strategy-for-minimal-mode">Review Strategy for Minimal Mode<a class="headerlink" href="#review-strategy-for-minimal-mode" title="Permanent link">&para;</a></h3>
+<p>Minimal mode <strong>enforces local strategy</strong> (single branch workflow) to simplify the process. No intermediate planning, phase, or docs branches or PRs—all work happens on the target branch with only a final PR created.</p>
+<div class="admonition note">
+<p class="admonition-title">Quality Assurance</p>
+<p>Even though specification and documentation stages are skipped, all quality gates (tests, linting, type checking, build verification) remain mandatory. The implementation plan still includes detailed success criteria and phase breakdown for reviewable work.</p>
+</div>
+<h2 id="custom-mode">Custom Mode<a class="headerlink" href="#custom-mode" title="Permanent link">&para;</a></h2>
+<p><strong>Stages Included:</strong> User-defined based on custom instructions provided during initialization</p>
+<p>Custom mode offers flexibility to define which stages to include and how work should be reviewed. Agents interpret your custom instructions to determine the appropriate workflow structure.</p>
+<h3 id="when-to-use-custom-mode">When to Use Custom Mode<a class="headerlink" href="#when-to-use-custom-mode" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Unique workflows that don't fit full or minimal patterns</li>
+<li>Experimenting with different workflow configurations</li>
+<li>Project-specific requirements that need non-standard stage combinations</li>
+<li>Workflows where you want some but not all optional stages</li>
+</ul>
+<h3 id="review-strategies-for-custom-mode">Review Strategies for Custom Mode<a class="headerlink" href="#review-strategies-for-custom-mode" title="Permanent link">&para;</a></h3>
+<p>Custom mode supports both <strong>prs</strong> and <strong>local</strong> strategies. You specify the review approach as part of your custom instructions.</p>
+<h3 id="example-custom-instructions">Example Custom Instructions<a class="headerlink" href="#example-custom-instructions" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Skip specification stage, include documentation, use prs review strategy
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Include code research and implementation only, single branch workflow
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Full stages but combine all implementation phases into one, use local strategy
+</span></code></pre></div>
+<h2 id="review-strategies-explained">Review Strategies Explained<a class="headerlink" href="#review-strategies-explained" title="Permanent link">&para;</a></h2>
+<h3 id="prs-strategy-intermediate-pull-requests">PRs Strategy (Intermediate Pull Requests)<a class="headerlink" href="#prs-strategy-intermediate-pull-requests" title="Permanent link">&para;</a></h3>
+<p><strong>Branch Structure:</strong></p>
+<ul>
+<li>Planning branch: <code>&lt;target&gt;_plan</code> → Planning PR to target branch</li>
+<li>Phase branches: <code>&lt;target&gt;_phase[N]</code> → Phase PRs to target branch</li>
+<li>Docs branch: <code>&lt;target&gt;_docs</code> → Docs PR to target branch</li>
+<li>Final PR: target branch → base branch (usually <code>main</code>)</li>
+</ul>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Complex work requiring review at multiple stages</li>
+<li>Large features where incremental review reduces cognitive load</li>
+<li>Teams with multiple reviewers who can review different phases</li>
+<li>Work where early feedback on planning or individual phases is valuable</li>
+<li>Projects where intermediate review checkpoints improve quality</li>
+</ul>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>More PR overhead (planning, phases, docs, final)</li>
+<li>Longer time from start to merge (multiple review cycles)</li>
+<li>Better quality assurance through staged review</li>
+<li>Easier to rewind and fix issues at specific stages</li>
+</ul>
+<h3 id="local-strategy-single-branch">Local Strategy (Single Branch)<a class="headerlink" href="#local-strategy-single-branch" title="Permanent link">&para;</a></h3>
+<p><strong>Branch Structure:</strong></p>
+<ul>
+<li>All work committed directly to target branch</li>
+<li>Final PR: target branch → base branch (usually <code>main</code>)</li>
+</ul>
+<p><strong>Best for:</strong></p>
+<ul>
+<li>Simpler work where consolidated review is preferred</li>
+<li>Solo developers or small teams with streamlined review processes</li>
+<li>Work where you want to complete all stages but prefer single review point</li>
+<li>Bug fixes or small enhancements (especially with minimal mode)</li>
+<li>Projects where PR overhead should be minimized</li>
+</ul>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>Less PR overhead (only final PR)</li>
+<li>Faster path to merge (single review cycle)</li>
+<li>Larger final PR to review (all stages combined)</li>
+<li>Harder to rewind to specific stages (requires git operations on target branch)</li>
+</ul>
+<h2 id="quality-gates">Quality Gates<a class="headerlink" href="#quality-gates" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Important</p>
+<p>Quality gates remain <strong>mandatory regardless of workflow mode or review strategy</strong>. Skipping stages or choosing local strategy streamlines the process but never compromises code quality.</p>
+</div>
+<p>All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected:</p>
+<ul>
+<li>Tests must pass</li>
+<li>Linting must pass</li>
+<li>Type checking must pass</li>
+<li>Build verification must pass</li>
+</ul>
+<h2 id="final-agent-review-configuration">Final Agent Review Configuration<a class="headerlink" href="#final-agent-review-configuration" title="Permanent link">&para;</a></h2>
+<p>Final Agent Review runs after all implementation phases complete, before the Final PR is created. It catches issues before external review. Configuration is stored in <code>WorkflowContext.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Final Agent Review</td>
+<td>enabled</td>
+<td><code>enabled</code>, <code>disabled</code></td>
+<td>Whether to run the review step</td>
+</tr>
+<tr>
+<td>Final Review Mode</td>
+<td>multi-model</td>
+<td><code>single-model</code>, <code>multi-model</code>, <code>society-of-thought</code></td>
+<td>Review mode (see <a href="../society-of-thought-review/">Society-of-Thought Review</a>)</td>
+</tr>
+<tr>
+<td>Final Review Interactive</td>
+<td>smart</td>
+<td><code>true</code>, <code>false</code>, <code>smart</code></td>
+<td><code>true</code>: confirm each finding; <code>false</code>: auto-apply; <code>smart</code>: auto-apply consensus, interactive for ambiguous</td>
+</tr>
+<tr>
+<td>Final Review Models</td>
+<td>latest GPT, latest Gemini, latest Claude Opus</td>
+<td>comma-separated</td>
+<td>Models for multi-model review (CLI only)</td>
+</tr>
+<tr>
+<td>Final Review Specialists</td>
+<td>all</td>
+<td><code>all</code>, comma-separated names, <code>adaptive:&lt;N&gt;</code></td>
+<td>Which specialists participate (society-of-thought only)</td>
+</tr>
+<tr>
+<td>Final Review Interaction Mode</td>
+<td>parallel</td>
+<td><code>parallel</code>, <code>debate</code></td>
+<td>How specialists interact (society-of-thought only)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Notes:</strong></p>
+<ul>
+<li><strong>VS Code</strong> only supports single-model mode (multi-model and society-of-thought fall back to single-model)</li>
+<li><strong>CLI</strong> supports all three modes; multi-model spawns parallel reviews and synthesizes findings</li>
+<li>In <strong>smart mode</strong> (default), consensus fixes are auto-applied and ambiguous findings prompt for your decision</li>
+<li>In <strong>interactive mode</strong>, you confirm each finding before changes are made</li>
+<li>In <strong>auto-apply mode</strong>, must-fix and should-fix recommendations are applied automatically</li>
+</ul>
+<h2 id="multi-model-planning-configuration">Multi-Model Planning Configuration<a class="headerlink" href="#multi-model-planning-configuration" title="Permanent link">&para;</a></h2>
+<p>Planning can use multiple AI models to independently create competing implementation plans, then synthesize the best elements. This brings the multi-model pattern to where it has the highest leverage — design decisions.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plan Generation Mode</td>
+<td>single-model</td>
+<td><code>single-model</code>, <code>multi-model</code></td>
+<td>Plan generation execution mode</td>
+</tr>
+<tr>
+<td>Plan Generation Models</td>
+<td>latest GPT, latest Gemini, latest Claude Opus</td>
+<td>comma-separated</td>
+<td>Models for multi-model plan generation (CLI only)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Modes:</strong></p>
+<ul>
+<li><strong><code>single-model</code></strong> — Current behavior. One model creates the plan. (Default)</li>
+<li><strong><code>multi-model</code></strong> — Three models independently create plans in parallel, then a synthesis step merges them. (N+1 LLM calls)</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>Multi-model planning is <strong>CLI only</strong> — VS Code falls back to single-model</li>
+<li>Per-model artifacts are saved in a gitignored <code>planning/</code> subfolder (distinct from <code>reviews/</code> which holds final review artifacts)</li>
+<li>With all multi-model options enabled (plan generation + final review), expect 8 LLM calls before any code is written. This is the max-quality configuration, not the default.</li>
+</ul>
+<h2 id="planning-docs-review-configuration">Planning Docs Review Configuration<a class="headerlink" href="#planning-docs-review-configuration" title="Permanent link">&para;</a></h2>
+<p>Planning Docs Review runs during planning (Stage 02) to validate cross-artifact consistency before implementation begins. Configuration is stored in <code>WorkflowContext.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Options</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Planning Docs Review</td>
+<td>enabled</td>
+<td><code>enabled</code>, <code>disabled</code></td>
+<td>Whether to run the review step</td>
+</tr>
+<tr>
+<td>Planning Review Mode</td>
+<td>multi-model</td>
+<td><code>single-model</code>, <code>multi-model</code></td>
+<td>Single model or parallel multi-model review</td>
+</tr>
+<tr>
+<td>Planning Review Interactive</td>
+<td>smart</td>
+<td><code>true</code>, <code>false</code>, <code>smart</code></td>
+<td><code>true</code>: confirm each finding; <code>false</code>: auto-apply; <code>smart</code>: auto-apply consensus, interactive for ambiguous</td>
+</tr>
+<tr>
+<td>Planning Review Models</td>
+<td>latest GPT, latest Gemini, latest Claude Opus</td>
+<td>comma-separated</td>
+<td>Models for multi-model review (CLI only)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="selecting-your-mode">Selecting Your Mode<a class="headerlink" href="#selecting-your-mode" title="Permanent link">&para;</a></h2>
+<p>When using the VS Code extension's <code>PAW: New PAW Workflow</code> command, you'll be prompted to:</p>
+<ol>
+<li><strong>Select workflow mode</strong> (Full, Minimal, or Custom)</li>
+<li><strong>Select review strategy</strong> (PRs or Local)—automatically set to Local for Minimal mode</li>
+<li><strong>Provide custom instructions</strong> (if Custom mode selected)</li>
+</ol>
+<p>Your selections are stored in <code>WorkflowContext.md</code> and guide all agents throughout the workflow.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

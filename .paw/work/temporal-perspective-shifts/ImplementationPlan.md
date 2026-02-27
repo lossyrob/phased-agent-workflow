@@ -56,7 +56,7 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
 
 ## Phase Status
 
-- [ ] **Phase 1: Perspective Schema & Built-in Perspectives** — Define the perspective file format and create three built-in perspective files
+- [x] **Phase 1: Perspective Schema & Built-in Perspectives** — Define the perspective file format and create three built-in perspective files
 - [ ] **Phase 2: Engine Core** — Add perspective discovery, 5-layer prompt composition, perspective-aware execution, and attribution to the SoT engine *(depends on: Phase 1)*
 - [ ] **Phase 3: Configuration Pipeline** — Thread perspective config through init, WorkflowContext, ReviewContext, and both caller skills *(depends on: Phase 2)*
 - [ ] **Phase 4: Synthesis & Conflict Handling** — Add perspective attribution to synthesis, Perspective Diversity section, and mode-aware conflict handling *(depends on: Phase 2)*

@@ -89,7 +89,7 @@ Acceptance Scenarios:
 
 ### Functional Requirements
 
-- FR-001: The SoT engine accepts a `perspectives` field in the review context input contract with values: `none`, `auto` (default), comma-separated perspective names, or a perspective preset pack name. (Stories: P1, P2)
+- FR-001: The SoT engine accepts a `perspectives` field in the review context input contract with values: `none`, `auto` (default), or comma-separated perspective names. *(Preset pack names are deferred to post-v1; see Future Work.)* (Stories: P1, P2)
 - FR-002: The SoT engine accepts a `perspective_cap` field in the review context input contract (positive integer, default 2) controlling the maximum number of perspective overlays applied per specialist. (Stories: P5)
 - FR-003: The engine discovers perspective files at four precedence levels — workflow, project (`.paw/perspectives/`), user (`~/.paw/perspectives/`), built-in (`references/perspectives/`) — using most-specific-wins for name conflicts, parallel to existing specialist discovery. (Stories: P3)
 - FR-004: Each perspective file defines: name, lens type, parameters, a prompt overlay template, and a novelty constraint directive. The overlay template supports a `{specialist}` placeholder resolved at composition time. (Stories: P3)
@@ -99,7 +99,7 @@ Acceptance Scenarios:
 - FR-008: Each finding in specialist output and in the synthesis includes a `perspective` attribution field identifying which perspective lens surfaced it. Findings from the baseline (no perspective) run are attributed as `baseline`. (Stories: P4)
 - FR-009: In parallel mode, inter-perspective conflicts on the same specialist are surfaced in the synthesis with both positions and their temporal/contextual framing, flagged as high-signal disagreements. (Stories: P4)
 - FR-010: In debate mode, perspective-variant findings from the same specialist participate in the debate rounds and conflicts are resolved through the existing cross-examination mechanism. (Stories: P4)
-- FR-011: The engine applies adaptive novelty-based stopping — if a perspective overlay produces findings exceeding a configurable similarity threshold (default determined at implementation, tuned post-v1) against the baseline or prior perspectives, subsequent perspectives may be skipped even if `perspective_cap` allows more. (Stories: P1, P5)
+- FR-011: *(Deferred to post-v1.)* The engine applies adaptive novelty-based stopping — if a perspective overlay produces findings exceeding a configurable similarity threshold against the baseline or prior perspectives, subsequent perspectives may be skipped even if `perspective_cap` allows more. In v1, `perspective_cap` serves as the hard limit and the engine relies on prompt-driven reasoning for novelty assessment. A configurable threshold will be added after v1 usage data informs sensible defaults. (Stories: P1, P5)
 - FR-012: When `perspectives` is `none`, the engine behaves identically to the current implementation with no perspective-related processing. (Stories: P1)
 - FR-013: The REVIEW-SYNTHESIS.md output includes a "Perspective Diversity" section documenting which perspectives were applied to which specialists, the selection rationale (for auto mode), and any perspectives skipped due to novelty stopping or cap limits. (Stories: P1, P4)
 
@@ -115,11 +115,11 @@ Acceptance Scenarios:
 
 ## Success Criteria
 
-- SC-001: A review run with `perspectives: auto` produces at least 15% more unique semantic finding clusters than an equivalent run with `perspectives: none` on the same artifact, as measured by embedding-based clustering of findings. (FR-006, FR-007, FR-008)
+- SC-001: *(Post-v1 empirical validation goal.)* A review run with `perspectives: auto` produces at least 15% more unique semantic finding clusters than an equivalent run with `perspectives: none` on the same artifact, as measured by embedding-based clustering of findings. *(For v1, validated qualitatively: a review with perspectives enabled produces findings attributed to different perspectives that address distinct concerns not surfaced in baseline-only runs.)* (FR-006, FR-007, FR-008)
 - SC-002: Each finding in REVIEW-SYNTHESIS.md includes a `perspective` attribution that traces to a specific perspective name or `baseline`. (FR-008, FR-013)
 - SC-003: A custom perspective file placed in `.paw/perspectives/` is discovered and applied by the engine without code changes. (FR-003, FR-004)
 - SC-004: Setting `perspectives: none` produces byte-identical REVIEW-SYNTHESIS.md output compared to the current engine on the same input. (FR-012)
-- SC-005: The `perspective_cap` setting limits the maximum perspectives applied per specialist, verified by counting subagent calls. (FR-002, FR-011)
+- SC-005: The `perspective_cap` setting limits the maximum perspectives applied per specialist, verified by counting subagent calls. (FR-002) *(FR-011's novelty-based reduction below the cap will be validated when that feature is implemented post-v1.)*
 - SC-006: In parallel mode, conflicting findings from different perspectives appear in the synthesis with both positions preserved and perspective attribution. (FR-009)
 - SC-007: In debate mode, perspective-variant findings are resolved through debate rounds, not surfaced as unresolved conflicts. (FR-010)
 
@@ -152,6 +152,12 @@ Out of Scope:
 - Automated A/B testing of perspective effectiveness
 - Perspective interaction with specialist model assignment (perspectives don't change which model runs the specialist)
 - Preset pack definition files (v1 uses direct perspective names; pack names are syntactic sugar for later)
+
+## Future Work (Deferred to Post-v1)
+
+- **Preset pack names** (FR-001 partial): Named perspective packs (e.g., "ship-readiness" = premortem + red-team) as syntactic sugar for comma-separated lists. Deferred until the direct-name workflow is proven stable.
+- **Adaptive novelty stopping** (FR-011): Configurable similarity-threshold novelty stopping that can skip perspectives below the `perspective_cap` when findings are redundant. Deferred until v1 usage data informs sensible defaults. V1 relies on `perspective_cap` as the hard limit and prompt-driven novelty assessment.
+- **SC-001 quantitative validation**: Embedding-based clustering measurement of the 15% semantic diversity improvement target. Deferred until measurement infrastructure exists. V1 validates qualitatively.
 
 ## Dependencies
 

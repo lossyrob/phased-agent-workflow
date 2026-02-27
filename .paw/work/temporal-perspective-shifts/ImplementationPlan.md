@@ -52,6 +52,8 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
 
 **FR-001 (preset pack names) — deferred to post-v1**: The spec allows `perspectives` to accept "a perspective preset pack name." In v1, the input grammar is restricted to `none | auto | comma-separated perspective names`. If an unrecognized name is provided that matches neither a discoverable perspective file nor the reserved values `none`/`auto`, the engine warns and skips it — consistent with specialist discovery's malformed-file handling pattern (`SKILL.md:49-64`). Named packs are syntactic sugar that will be added once the direct-name workflow is proven stable.
 
+**Review workflow default `none` vs spec default `auto`**: The spec's FR-001 defaults `perspectives` to `auto` (engine-level default). The plan sets `auto` for the final review workflow (consistent) but `none` for the review workflow (ReviewContext.md). This is deliberate: perspectives are exploratory and better suited to final review by default; PR review users opt-in. The engine-level default remains `auto` per spec; the review workflow's configuration template overrides to `none` as a conservative opt-in choice.
+
 ## Phase Status
 
 - [ ] **Phase 1: Perspective Schema & Built-in Perspectives** — Define the perspective file format and create three built-in perspective files
@@ -156,6 +158,7 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
   4. **Perspective overlay** — load perspective file, resolve `{specialist}` placeholder, inject as evaluative lens framing
   5. Review coordinates (unchanged)
 - When no perspective is assigned (`perspectives: none`): skip layer 4, composition identical to current 4-layer model
+- **Prompt budget overflow**: If the composed 5-layer prompt approaches model context limits, the perspective overlay (layer 4) is the first candidate for truncation, preserving specialist identity and review coordinates. A warning is emitted when truncation occurs. Given overlays are 50–100 words, this edge case is unlikely in practice.
 
 **Modified section**: "Parallel Mode" (at `SKILL.md:104-121`):
 - Each specialist runs once per assigned perspective. With 2 perspectives selected, specialist runs twice (once per perspective).
@@ -171,7 +174,7 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
 
 **Toulmin output format** (at `_shared-rules.md:22-43`):
 - Add `**Perspective**: baseline | {perspective-name}` field to finding header, after `**Category**`
-- This field identifies which perspective lens produced the finding
+- This field is **conditional**: only emitted when perspectives are active in the review context. When `perspectives: none`, the Toulmin format remains identical to the pre-change format (preserving byte-identical output per SC-004).
 
 ### Success Criteria
 
@@ -251,12 +254,14 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
 **Synthesis section** (at `SKILL.md:157-218`):
 
 _Synthesis requirements additions:_
-- The synthesis agent must preserve perspective attribution from specialist findings — each finding in the synthesis includes the `**Perspective**` field from the source
+- **File discovery update**: The synthesis agent discovers all `REVIEW-*.md` files in the output directory, covering both legacy `REVIEW-{SPECIALIST}.md` and perspective-attributed `REVIEW-{SPECIALIST}-{PERSPECTIVE}.md` patterns. This ensures perspective-specific findings are included in synthesis regardless of whether perspectives are active.
+- The synthesis agent must preserve perspective attribution from specialist findings — each finding in the synthesis includes the `**Perspective**` field from the source (when present)
 - When merging findings from different perspectives on the same specialist, treat perspective-attributed findings as distinct positions even if they address the same code location
 
 _Conflict handling additions:_
 - **Parallel mode**: Inter-perspective conflicts on the same specialist are surfaced with both positions and their perspective context, flagged as "high-signal perspective disagreement" in the Dissent Log
 - **Debate mode**: Perspective-variant findings participate in debate rounds as distinct positions. The debate mechanism resolves them through cross-examination — no special handling beyond perspective attribution in thread metadata
+- **Intra-specialist perspective contrast**: When synthesizing debate round summaries, explicitly contrast baseline vs perspective views from the same specialist to ensure the debate loop addresses intra-specialist perspective disagreements rather than glossing over them
 
 **REVIEW-SYNTHESIS.md structure** (at `SKILL.md:180-218`):
 
@@ -329,6 +334,8 @@ _Update section_: "Why Perspective Diversity Matters" (lines 18–22):
 
 **Modified files**: `docs/specification/implementation.md`, `docs/specification/review.md`
 - Add mention of perspective overlay support in SoT evaluation sections
+
+**Spec alignment verification**: Verify Spec.md amendments (FR-001, FR-011, SC-001, SC-005 changes made during planning) remain consistent with implemented behavior. Update if any implementation decisions altered the deferred items.
 
 **New/modified test**: `tests/integration/tests/workflows/` — Workflow integration test for perspective discovery and synthesis attribution
 - Test scenario: seed a SoT review with `perspectives: premortem,red-team` and 2 specialists

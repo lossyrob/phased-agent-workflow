@@ -260,6 +260,8 @@ status: complete
 **Review Interaction Mode**: <parallel (default) | debate>
 **Review Interactive**: <false (default) | true | smart>
 **Review Specialist Models**: <none (default) | model pool | pinned:model pairs | mixed>
+**Review Perspectives**: <none (default) | auto | comma-separated names>
+**Review Perspective Cap**: <2 (default) | positive integer>
 
 *SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above. In particular, if `Review Mode` is `society-of-thought` and no `Review Specialists` value is provided, default to `all` — do not select a subset.*
 

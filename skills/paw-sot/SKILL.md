@@ -32,6 +32,8 @@ The calling skill provides a **review context** describing what to review and ho
 | `interactive` | yes | `true` \| `false` \| `smart` | Whether to pause for user decisions on trade-offs |
 | `specialist_models` | no | `none` \| model pool \| pinned pairs \| mixed | Model assignment for specialists |
 | `framing` | no | free text | Caller-provided preamble for `freeform` type |
+| `perspectives` | no | `none` \| `auto` (default) \| comma-separated names | Which perspective overlays to apply |
+| `perspective_cap` | no | positive integer (default `2`) | Max perspective overlays per specialist |
 
 ## Context-Adaptive Preambles
 
@@ -67,6 +69,33 @@ Resolution rules:
 
 When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on content analysis.
 
+## Perspective Discovery
+
+When `perspectives` is not `none`, discover perspective overlay files at 4 precedence levels (mirroring specialist discovery):
+
+1. **Workflow**: Parse `perspectives` from review context — if explicit comma-separated list, resolve only those names
+2. **Project**: Scan `.paw/perspectives/<name>.md` files in the repository
+3. **User**: Scan `~/.paw/perspectives/<name>.md` files
+4. **Built-in**: Scan `references/perspectives/<name>.md` files
+
+Resolution rules (parallel to specialist discovery):
+- Most-specific-wins for name conflicts (project overrides user overrides built-in)
+- Skip malformed perspective files (missing required sections) with a warning; continue with remaining roster
+- Unknown names: if a name in the comma-separated list matches no discoverable perspective file, warn and skip — consistent with specialist discovery's malformed-file handling
+- `none` → skip discovery entirely; engine behaves identically to current implementation with no perspective-related processing
+- `auto` → discover all perspectives, then select based on artifact signals (see Perspective Auto-Selection)
+
+## Perspective Auto-Selection
+
+When `perspectives` is `auto`, analyze the review target and select up to `perspective_cap` perspectives per specialist:
+
+- Analyze artifact type, file types touched, affected subsystems, and estimated complexity
+- **Temporal perspectives** (premortem, retrospective): relevant for code changes with operational implications, scaling concerns, dependency management, or long-term maintenance impact
+- **Adversarial perspectives** (red-team): relevant for changes touching trust boundaries, external interfaces, authentication, authorization, or data handling
+- If no perspectives meet relevance threshold: proceed with baseline-only review and note in synthesis
+
+Selection is budget-aware: total subagent calls = specialists × (1 + assigned perspectives). The `perspective_cap` bounds per-specialist perspective count.
+
 **Selection process**:
 1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
 2. For each discovered specialist, assess relevance by matching the specialist's cognitive strategy and domain against the identified change categories
@@ -84,12 +113,15 @@ When `specialists` is `adaptive:<N>`, select the N most relevant specialists fro
 
 ## Prompt Composition
 
-Compose the review prompt for each specialist subagent from four layers:
+Compose the review prompt for each specialist subagent from up to five layers:
 
 1. **Shared rules** — load `references/specialists/_shared-rules.md` once per review run (anti-sycophancy rules, confidence scoring, Toulmin output format)
 2. **Context preamble** — inject the type-dependent preamble (see Context-Adaptive Preambles above) to frame the specialist's review lens
 3. **Specialist content** — load the discovered specialist `.md` file (identity, cognitive strategy, behavioral rules, demand rationale, examples)
-4. **Review coordinates** — review target location (diff range, artifact paths, or content description) and output directory so the subagent can self-gather context via `git diff`, `view`, and `grep`
+4. **Perspective overlay** — when a perspective is assigned, load the perspective file, resolve `{specialist}` placeholder with the specialist's name, and inject as evaluative lens framing. When no perspective is assigned (`perspectives: none`), skip this layer entirely — composition is identical to the pre-change 4-layer model.
+5. **Review coordinates** — review target location (diff range, artifact paths, or content description) and output directory so the subagent can self-gather context via `git diff`, `view`, and `grep`
+
+**Prompt budget overflow**: If the composed prompt approaches model context limits, the perspective overlay (layer 4) is the first candidate for truncation, preserving specialist identity and review coordinates. A warning is emitted when truncation occurs. Given overlays are 50–100 words, this edge case is unlikely in practice.
 
 If a specialist file contains `shared_rules_included: true` in its YAML frontmatter, skip shared rules injection to avoid duplication. Otherwise, always inject shared rules.
 
@@ -101,11 +133,16 @@ Execution depends on `interaction_mode`:
 
 ### Parallel Mode (default)
 
-Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist:
-- Compose prompt: shared rules + context preamble + specialist content + review coordinates
+Spawn parallel subagents using `task` tool with `agent_type: "general-purpose"`. For each specialist (and each assigned perspective):
+- Compose prompt: shared rules + context preamble + specialist content + perspective overlay (if assigned) + review coordinates
 - Resolve model using precedence chain (see Model Assignment below)
-- Instruct the subagent to write its Toulmin-structured findings directly to `REVIEW-{SPECIALIST-NAME}.md` in the output directory
+- Instruct the subagent to write its Toulmin-structured findings directly to the output directory:
+  - **With perspective**: `REVIEW-{SPECIALIST-NAME}-{PERSPECTIVE}.md`
+  - **Without perspective** (`perspectives: none`): `REVIEW-{SPECIALIST-NAME}.md` (backward compatible)
+- Each subagent's findings are attributed to the perspective that framed its review
 - The orchestrator receives only a brief completion status (success/failure, finding count) — NOT the full findings content
+
+When perspectives are active, each specialist runs once per assigned perspective. With 2 perspectives selected, a specialist runs twice (once per perspective), producing separate review files.
 
 **Model Assignment**: Resolve the model for each specialist using this precedence (most-specific-wins):
 
@@ -126,10 +163,11 @@ Thread-based multi-round debate where findings become discussion threads with po
 
 **Edge case**: If only 1 specialist is selected, skip debate and use parallel mode (debate requires ≥2 specialists).
 
-**Round 1 (Initial sweep)**: Run all specialists in parallel (same as parallel mode). Each finding becomes a **thread** with state `open`.
+**Round 1 (Initial sweep)**: Run all specialists in parallel (same as parallel mode, including perspective-aware execution if perspectives are active). Each finding becomes a **thread** with state `open`. When perspectives are active, perspective-variant findings from the same specialist participate as distinct positions — thread attribution includes both specialist name and perspective name.
 
 **Rounds 2–3 (Threaded responses)**: After each round, the synthesis agent (operating as PR triage lead) generates a **round summary** organized by thread:
 - For each thread: current state (`open`, `agreed`, `contested`), summary of positions, open questions
+- When perspectives are active, explicitly contrast baseline vs perspective views from the same specialist to ensure the debate loop addresses intra-specialist perspective disagreements
 - This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
 
 Re-run specialists with: shared rules + context preamble + specialist content + review coordinates + round summary (embedded — this is the only new information per round). Specialists can:
@@ -223,7 +261,8 @@ Create `.gitignore` with content `*` in the output directory (if not already pre
 
 | Review Type | Files Created |
 |-------------|---------------|
-| All modes | `REVIEW-{SPECIALIST-NAME}.md` per specialist |
+| All modes, no perspectives | `REVIEW-{SPECIALIST-NAME}.md` per specialist |
+| All modes, with perspectives | `REVIEW-{SPECIALIST-NAME}-{PERSPECTIVE}.md` per specialist-perspective pair |
 | All modes | `REVIEW-SYNTHESIS.md` |
 
 Location: review context's `output_dir`.

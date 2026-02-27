@@ -26,7 +26,7 @@ Add society-of-thought execution mode and perspective overlays to `paw-planning-
 - Integration tests (separate follow-up)
 
 ## Phase Status
-- [ ] **Phase 1: paw-init SoT Configuration** - Add planning review SoT config fields, validation, and WorkflowContext template
+- [x] **Phase 1: paw-init SoT Configuration** - Add planning review SoT config fields, validation, and WorkflowContext template
 - [ ] **Phase 2: paw-planning-docs-review SoT Execution** - Add SoT execution path, smart mode heuristic, moderator mode, VS Code degradation
 - [ ] **Phase 3: Documentation** - Update docs to reflect planning review SoT support
 

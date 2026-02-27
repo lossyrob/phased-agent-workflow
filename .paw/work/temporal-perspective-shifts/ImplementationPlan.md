@@ -64,8 +64,8 @@ Two spec requirements are intentionally deferred from v1 implementation. The spe
 
 ## Phase Candidates
 
-- [ ] Preset pack aliases (e.g., `ship-readiness` = premortem + red-team) after direct-name flow is stable
-- [ ] Configurable similarity-threshold tuning for novelty stopping after v1 usage telemetry
+- [x] Preset pack aliases (e.g., `ship-readiness` = premortem + red-team) after direct-name flow is stable [skipped]
+- [x] Configurable similarity-threshold tuning for novelty stopping after v1 usage telemetry [skipped]
 
 ---
 

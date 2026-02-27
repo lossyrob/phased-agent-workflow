@@ -133,7 +133,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 **Review Modes:**
 
 - **Single-model** (default): `paw-review-impact`, `paw-review-gap`
-- **Society-of-thought**: `paw-sot` engine (replaces both impact and gap analysis)
+- **Society-of-thought**: `paw-sot` engine (replaces both impact and gap analysis). Supports perspective overlays for additional evaluative diversity.
 
 **Inputs:**
 

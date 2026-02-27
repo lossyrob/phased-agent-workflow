@@ -146,6 +146,8 @@ Load the `paw-sot` skill and invoke it with a review context constructed from Wo
 | `interaction_mode` | `Final Review Interaction Mode` value from WorkflowContext.md |
 | `interactive` | `Final Review Interactive` value from WorkflowContext.md |
 | `specialist_models` | `Final Review Specialist Models` value from WorkflowContext.md |
+| `perspectives` | `Final Review Perspectives` value from WorkflowContext.md |
+| `perspective_cap` | `Final Review Perspective Cap` value from WorkflowContext.md |
 
 After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resolution) to process the REVIEW-SYNTHESIS.md findings.
 

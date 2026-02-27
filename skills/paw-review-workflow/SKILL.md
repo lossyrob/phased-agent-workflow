@@ -187,6 +187,8 @@ When `Review Mode` is `society-of-thought`, load the `paw-sot` skill directly an
 | `interaction_mode` | `Review Interaction Mode` value from ReviewContext.md |
 | `interactive` | `Review Interactive` value from ReviewContext.md |
 | `specialist_models` | `Review Specialist Models` value from ReviewContext.md |
+| `perspectives` | `Review Perspectives` value from ReviewContext.md |
+| `perspective_cap` | `Review Perspective Cap` value from ReviewContext.md |
 
 After paw-sot completes orchestration and synthesis, proceed to the Output stage.
 

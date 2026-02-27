@@ -45,6 +45,8 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_review_specialists` | No | `all` | `all`, comma-separated names, or `adaptive:<N>` (e.g., `adaptive:3`) |
 | `final_review_interaction_mode` | No | `parallel` | `parallel`, `debate` |
 | `final_review_specialist_models` | No | `none` | `none`, model pool, pinned pairs, or mixed (see below) |
+| `final_review_perspectives` | No | `auto` | `none`, `auto`, comma-separated perspective names |
+| `final_review_perspective_cap` | No | `2` | positive integer |
 | `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model` |
 | `plan_generation_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
@@ -103,6 +105,8 @@ When `final_review_mode` is `society-of-thought`:
   - **Mixed**: combination of pinned pairs and pool models (e.g., `security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview`) — pinned specialists get their model, unpinned draw from pool round-robin
   - Resolve model intents (e.g., `latest GPT`) using existing model intent resolution
 - `final_review_models` is ignored (use `final_review_specialist_models` for model diversity with society-of-thought)
+- `final_review_perspectives` becomes relevant — validate: `none`, `auto`, or comma-separated perspective names
+- `final_review_perspective_cap` becomes relevant — validate: positive integer
 - Present society-of-thought config as part of the configuration summary
 
 ### Directory Structure
@@ -132,6 +136,8 @@ Final Review Models: <final_review_models>
 Final Review Specialists: <final_review_specialists>
 Final Review Interaction Mode: <final_review_interaction_mode>
 Final Review Specialist Models: <final_review_specialist_models>
+Final Review Perspectives: <final_review_perspectives>
+Final Review Perspective Cap: <final_review_perspective_cap>
 Plan Generation Mode: <plan_generation_mode>
 Plan Generation Models: <plan_generation_models>
 Planning Docs Review: <planning_docs_review>

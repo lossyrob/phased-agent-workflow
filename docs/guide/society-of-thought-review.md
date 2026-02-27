@@ -4,10 +4,11 @@ Society-of-thought is a review mode that uses **specialist personas** — each w
 
 The society-of-thought engine is implemented as the `paw-sot` utility skill, which both `paw-final-review` (implementation workflow) and `paw-review-workflow` (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.
 
-### Two Integration Points
+### Three Integration Points
 
 | Workflow | Calling Skill | Config Source | Post-Synthesis Flow |
 |----------|--------------|---------------|---------------------|
+| **Planning** | `paw-planning-docs-review` | WorkflowContext.md | Apply-to-spec/apply-to-plan routing |
 | **Implementation** | `paw-final-review` | WorkflowContext.md | Apply/skip/discuss resolution |
 | **Review** | `paw-review-workflow` | ReviewContext.md | Feedback → critic → GitHub comment pipeline |
 

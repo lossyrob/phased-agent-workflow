@@ -69,6 +69,21 @@ Resolution rules:
 
 When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on content analysis.
 
+**Selection process**:
+1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
+2. For each discovered specialist, assess relevance by matching the specialist's cognitive strategy and domain against the identified change categories
+3. Select up to N specialists with the highest relevance to the actual changes
+4. Document selection rationale in the REVIEW-SYNTHESIS.md `Selection rationale` field (e.g., "Selected security, performance, testing — diff adds new API endpoint with database queries and no test coverage")
+
+**Edge cases**:
+- If N ≥ number of available specialists, include all (equivalent to `all`)
+- If the review target is trivial (e.g., single typo fix, comment-only changes), report the condition to the calling context — the caller decides whether to proceed or fall back to a simpler review mode
+- If adaptive selection would select 0 specialists (no strong relevance signal):
+  - **Interactive mode** (`interactive: true`): Present the user with options — proceed with all specialists, specify which to include, or report the condition to the calling context for fallback
+  - **Non-interactive mode** (`interactive: false` or `smart`): Report the condition to the calling context — the caller decides how to proceed
+
+**Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
+
 ## Perspective Discovery
 
 When `perspectives` is not `none`, discover perspective overlay files at 4 precedence levels (mirroring specialist discovery):
@@ -95,21 +110,6 @@ When `perspectives` is `auto`, analyze the review target and select up to `persp
 - If no perspectives meet relevance threshold: proceed with baseline-only review and note in synthesis
 
 Selection is budget-aware: total subagent calls = specialists × (1 + assigned perspectives). The `perspective_cap` bounds per-specialist perspective count.
-
-**Selection process**:
-1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
-2. For each discovered specialist, assess relevance by matching the specialist's cognitive strategy and domain against the identified change categories
-3. Select up to N specialists with the highest relevance to the actual changes
-4. Document selection rationale in the REVIEW-SYNTHESIS.md `Selection rationale` field (e.g., "Selected security, performance, testing — diff adds new API endpoint with database queries and no test coverage")
-
-**Edge cases**:
-- If N ≥ number of available specialists, include all (equivalent to `all`)
-- If the review target is trivial (e.g., single typo fix, comment-only changes), report the condition to the calling context — the caller decides whether to proceed or fall back to a simpler review mode
-- If adaptive selection would select 0 specialists (no strong relevance signal):
-  - **Interactive mode** (`interactive: true`): Present the user with options — proceed with all specialists, specify which to include, or report the condition to the calling context for fallback
-  - **Non-interactive mode** (`interactive: false` or `smart`): Report the condition to the calling context — the caller decides how to proceed
-
-**Compatibility**: Adaptive selection is orthogonal to interaction mode — works with both `parallel` and `debate`.
 
 ## Prompt Composition
 
@@ -170,12 +170,12 @@ Thread-based multi-round debate where findings become discussion threads with po
 - When perspectives are active, explicitly contrast baseline vs perspective views from the same specialist to ensure the debate loop addresses intra-specialist perspective disagreements
 - This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
 
-Re-run specialists with: shared rules + context preamble + specialist content + review coordinates + round summary (embedded — this is the only new information per round). Specialists can:
+Re-run specialists with: shared rules + context preamble + specialist content + perspective overlay (if assigned) + review coordinates + round summary (embedded — this is the only new information per round). Specialists can:
 - Refine their position on existing threads (cite thread ID)
 - Respond to summarized counterarguments
 - Add new threads (new findings become new `open` threads)
 
-Each specialist appends round output to its existing `REVIEW-{SPECIALIST-NAME}.md`.
+Each specialist appends round output to its existing review file (`REVIEW-{SPECIALIST-NAME}.md` or `REVIEW-{SPECIALIST-NAME}-{PERSPECTIVE}.md` when perspectives are active).
 
 **Adaptive termination**: After each round, the synthesis agent evaluates whether new substantive findings emerged. If no new threads and no position changes on existing threads, global rounds terminate early. Hard cap: 3 global rounds.
 

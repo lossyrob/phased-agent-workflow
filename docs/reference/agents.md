@@ -64,7 +64,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-git-operations` | Branch naming, strategy-based branching, selective staging |
 | `paw-review-response` | PR comment mechanics (read, TODO, commit, reply) |
 | `paw-docs-guidance` | Documentation templates and project doc update patterns |
-| `paw-sot` | Society-of-thought engine (loaded by `paw-final-review` or `paw-review-workflow`) |
+| `paw-sot` | Society-of-thought engine (loaded by `paw-planning-docs-review`, `paw-final-review`, or `paw-review-workflow`) |
 
 **Workflow Stages:**
 

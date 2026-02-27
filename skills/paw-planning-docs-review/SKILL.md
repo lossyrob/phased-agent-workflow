@@ -154,7 +154,7 @@ Load the `paw-sot` skill and invoke it with a review context constructed from Wo
 | Review Context Field | Source |
 |---------------------|--------|
 | `type` | `artifacts` |
-| `coordinates` | Artifact paths: Spec.md, ImplementationPlan.md, CodeResearch.md in `.paw/work/<work-id>/` |
+| `coordinates` | Available artifact paths in `.paw/work/<work-id>/`: ImplementationPlan.md (required), Spec.md (if present), CodeResearch.md (if present) |
 | `output_dir` | `.paw/work/<work-id>/reviews/planning/` |
 | `specialists` | `Planning Review Specialists` value from WorkflowContext.md |
 | `interaction_mode` | `Planning Review Interaction Mode` value from WorkflowContext.md |
@@ -162,8 +162,9 @@ Load the `paw-sot` skill and invoke it with a review context constructed from Wo
 | `specialist_models` | `Planning Review Specialist Models` value from WorkflowContext.md |
 | `perspectives` | `Planning Review Perspectives` value from WorkflowContext.md |
 | `perspective_cap` | `Planning Review Perspective Cap` value from WorkflowContext.md |
+| `framing` | Supplement the `artifacts` preamble with the 5 cross-artifact criteria: requirement traceability (FRs → plan phases), assumption consistency, scope coherence, feasibility validation, completeness coverage |
 
-After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resolution) to process the REVIEW-SYNTHESIS.md findings.
+After paw-sot completes orchestration and synthesis, tag each REVIEW-SYNTHESIS.md finding with `Affected artifact(s): spec | plan | both` by mapping the finding's document references — Spec.md references → `spec`, ImplementationPlan.md references → `plan`, references to both or ambiguous → `both`. Then proceed to Step 5 (Resolution) to process the tagged findings.
 {{/cli}}
 
 {{#vscode}}
@@ -298,7 +299,7 @@ If any findings were applied (artifacts revised), re-run the review to verify co
 4. **Cycle limit**: After 2 review cycles, present any remaining findings as informational and proceed. Do not loop indefinitely.
 
 {{#cli}}
-### Step 6.5: Moderator Mode (society-of-thought only)
+#### Moderator Mode (society-of-thought only)
 
 After re-review completes (or after initial resolution if no revisions were made), if `Planning Review Mode` is `society-of-thought` and (`Planning Review Interactive` is `true`, or `smart` with must-fix/should-fix findings remaining), invoke `paw-sot` a second time for moderator mode — pass the review context `type` (`artifacts`), `output_dir` (`.paw/work/<work-id>/reviews/planning/` containing individual REVIEW-{SPECIALIST-NAME}.md files and REVIEW-SYNTHESIS.md), and artifact coordinates.
 

@@ -194,7 +194,7 @@ After all threads resolve or budget is exhausted, proceed to synthesis.
 
 ## Synthesis
 
-Spawn a synthesis subagent (`agent_type: "general-purpose"`) that reads all `REVIEW-{SPECIALIST}.md` files directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output.
+Spawn a synthesis subagent (`agent_type: "general-purpose"`) that reads all `REVIEW-*.md` files in the output directory (covering both `REVIEW-{SPECIALIST}.md` and `REVIEW-{SPECIALIST}-{PERSPECTIVE}.md` patterns) directly via `view` tool and produces `REVIEW-SYNTHESIS.md`. The orchestrator sees only the final synthesis output.
 
 The synthesis agent operates as a **PR triage lead** with these structural constraints:
 - **May only** merge, deduplicate, classify conflicts, and flag trade-offs
@@ -211,6 +211,13 @@ Synthesis requirements:
 - **Proportional output**: weight by evidence quality, not word count or finding count
 - **Trade-off handling**: in `interactive`/`smart` mode, escalate to user with shared facts, decision axis, options, and recommendation per priority hierarchy. In `auto` mode, apply priority hierarchy (`Correctness > Security > Reliability > Performance > Maintainability > Developer Experience`), document the decision, flag prominently
 
+**Perspective-aware synthesis** (when perspectives are active):
+- Preserve `**Perspective**` attribution from specialist findings — each finding in the synthesis includes the perspective field from the source
+- When merging findings from different perspectives on the same specialist, treat perspective-attributed findings as distinct positions even if they address the same code location
+- **Parallel mode conflict handling**: Inter-perspective conflicts on the same specialist are surfaced with both positions and their perspective context, flagged as "high-signal perspective disagreement" in the Dissent Log
+- **Debate mode conflict handling**: Perspective-variant findings participate in debate as distinct positions; when synthesizing round summaries, explicitly contrast baseline vs perspective views from the same specialist
+- Findings attributed to `baseline` were produced without a perspective overlay
+
 **REVIEW-SYNTHESIS.md structure**:
 
 The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items presented during interactive resolution. Trade-offs are resolved as part of findings when the user makes a decision. Observations, Dissent Log, Debate Trace, and Synthesis Trace are reference sections — they document the review process but are not presented as individual resolution items.
@@ -221,9 +228,17 @@ The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items p
 ## Review Summary
 - Mode: society-of-thought (parallel | debate)
 - Specialists: [list of participating specialists]
+- Perspectives: [list of perspectives applied, or "none"]
+- Perspective cap: [configured cap value]
 - Selection rationale: [if adaptive mode was used]
 - Rounds: [number of rounds completed, debate mode only]
 - Threads: [total threads, agreed/contested/trade-off/resolved counts, debate mode only]
+
+## Perspective Diversity
+- Perspectives applied: [perspective-name → specialist list, for each active perspective]
+- Selection mode: [auto | guided | none]
+- Selection rationale: [if auto, why these perspectives were chosen for this artifact]
+- Perspectives skipped: [if any, name + reason (cap, relevance threshold)]
 
 ## Must-Fix Findings
 [Findings with severity: must-fix, each with specialist attribution, confidence, grounding tier]
@@ -241,7 +256,7 @@ The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items p
 [Contextual-tier findings — beyond this diff, not presented during resolution. Retained as reference for future work.]
 
 ## Dissent Log
-[Findings where specialists disagreed and how the disagreement was resolved]
+[Findings where specialists disagreed and how the disagreement was resolved. Includes inter-perspective disagreements (same specialist, different perspectives) flagged as high-signal perspective conflicts.]
 
 ## Debate Trace
 [Debate mode only — thread-by-thread progression]

@@ -40,8 +40,9 @@ Add society-of-thought execution mode and perspective overlays to `paw-planning-
 ### Changes Required:
 
 - **`skills/paw-init/SKILL.md`**:
+  - **Input Parameters Table** (line 53): Update `planning_review_mode` row to add `society-of-thought` as a valid value: `single-model`, `multi-model`, `society-of-thought`
   - **Input Parameters Table** (after line 55): Add 5 new rows for `planning_review_specialists` (default: `all`), `planning_review_interaction_mode` (default: `parallel`), `planning_review_specialist_models` (default: `none`), `planning_review_perspectives` (default: `auto`), `planning_review_perspective_cap` (default: `2`)
-  - **Configuration Validation** (after line 84): Add rule: `planning_review_mode` is `society-of-thought` → `planning_docs_review` MUST be `enabled`
+  - **Configuration Validation** (after line 84): Add rule: `planning_review_mode` is `society-of-thought` → `planning_docs_review` MUST be `enabled`. This is an init-time guardrail preventing contradictory configuration; the spec edge case (stored-but-unused) covers post-init manual WorkflowContext edits.
   - **Society-of-Thought Configuration section** (after line 110): Add parallel section for planning review SoT — validate specialist values, interaction mode, specialist models, perspectives, perspective cap when `planning_review_mode` is `society-of-thought`. Mirror the final review section structure but reference `planning_review_*` fields. Note that `planning_review_models` is ignored when SoT is active.
   - **WorkflowContext.md Template** (after line 146, after `Planning Review Models`): Add 5 new template fields: `Planning Review Specialists`, `Planning Review Interaction Mode`, `Planning Review Specialist Models`, `Planning Review Perspectives`, `Planning Review Perspective Cap`
 
@@ -65,8 +66,8 @@ Add society-of-thought execution mode and perspective overlays to `paw-planning-
 ### Changes Required:
 
 - **`skills/paw-planning-docs-review/SKILL.md`**:
-  - **Step 1: Read Configuration** (lines 24-39): Add SoT-specific field reading when mode is `society-of-thought`: `Planning Review Specialists`, `Planning Review Interaction Mode`, `Planning Review Specialist Models`, `Planning Review Perspectives`, `Planning Review Perspective Cap`. Add VS Code note that SoT degrades to single-model.
-  - **Step 4: Execute Review (CLI)** (after line 140, after multi-model section): Add third branch `**If society-of-thought mode**:` — load `paw-sot` skill, construct review context table mapping WorkflowContext fields to SoT input contract. Key differences from final review: `type` is `artifacts` (not `diff`), `coordinates` are artifact paths (Spec.md, ImplementationPlan.md, CodeResearch.md), `output_dir` is `reviews/planning/`.
+  - **Step 1: Read Configuration** (lines 24-39): Add SoT-specific field reading when mode is `society-of-thought`: `Planning Review Specialists`, `Planning Review Interaction Mode`, `Planning Review Specialist Models`, `Planning Review Perspectives`, `Planning Review Perspective Cap`.
+  - **Step 4: Execute Review (CLI)** (after line 140, after multi-model section): Add third branch `**If society-of-thought mode**:` — load `paw-sot` skill, construct review context table mapping WorkflowContext fields to SoT input contract. Include the full field-to-source mapping table (mirroring `paw-final-review` lines 140-150). Key differences from final review: `type` is `artifacts` (not `diff`), `coordinates` are artifact paths (Spec.md, ImplementationPlan.md, CodeResearch.md), `output_dir` is `reviews/planning/`. All other fields map from their `Planning Review *` WorkflowContext counterparts.
   - **Step 4: Execute Review (VS Code)** (line 146): Add SoT degradation message: "Society-of-thought requires CLI for specialist persona loading (see issue #240). Running single-model review." Mirror `paw-final-review` line 161.
   - **Step 5: Resolution — Interactive = true (CLI)** (after line 189): Add SoT-specific processing — process REVIEW-SYNTHESIS.md findings by severity, present trade-offs, track cross-finding duplicates. Resolution routing remains the same (apply-to-spec, apply-to-plan, apply-to-both, skip, discuss).
   - **Step 5: Resolution — Smart mode (CLI)**: Add SoT heuristic after multi-model heuristic. The SoT classification table combines confidence/grounding dimensions with the affected artifact routing dimension:
@@ -82,7 +83,7 @@ Add society-of-thought execution mode and perspective overlays to `paw-planning-
 
     Smart mode classification applies independently per re-review cycle.
 
-  - **After Step 5 Resolution / Before Step 6** (CLI only): Add Moderator Mode section. Condition: `Planning Review Mode` is `society-of-thought` AND (`Planning Review Interactive` is `true`, or `smart` with significant findings remaining). Invoke `paw-sot` a second time with review context `type: artifacts`, `output_dir` (reviews/planning/), and artifact coordinates. Exit on "done"/"continue"/"proceed". Skip if `interactive` is `false` or no findings.
+  - **After Step 5 Resolution / Before Step 6** (CLI only): Add Moderator Mode section. Condition: `Planning Review Mode` is `society-of-thought` AND (`Planning Review Interactive` is `true`, or `smart` with significant findings remaining). Invoke `paw-sot` a second time with review context `type: artifacts`, `output_dir` (reviews/planning/), and artifact coordinates. Exit on "done"/"continue"/"proceed". Skip if `interactive` is `false` or no findings. Moderator mode is advisory — specialist engagement informs user understanding but does not trigger re-review cycles. Place moderator mode after the Step 6 re-review loop completes (after resolution is final).
   - **Review Artifacts table** (lines 269-278): Add SoT row: `society-of-thought` → `REVIEW-{SPECIALIST-NAME}.md` per specialist, `REVIEW-{SPECIALIST-NAME}-{PERSPECTIVE}.md` (when perspectives active), `REVIEW-SYNTHESIS.md` (produced by `paw-sot`)
 
 ### Success Criteria:

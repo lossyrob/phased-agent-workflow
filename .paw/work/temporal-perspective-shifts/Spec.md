@@ -42,7 +42,7 @@ Narrative: A tech lead wants to run a "ship readiness" review before a release. 
 Independent Test: Specify a named perspective preset and verify the engine applies exactly those perspectives to the selected specialists.
 
 Acceptance Scenarios:
-1. Given a review context with `perspectives: premortem, red-team`, When the engine runs, Then each specialist runs once per specified perspective (plus baseline), and findings are tagged with perspective names.
+1. Given a review context with `perspectives: premortem, red-team`, When the engine runs, Then each specialist runs once per specified perspective, and findings are tagged with perspective names. (Baseline is available as a built-in perspective `baseline` that applies no evaluative shift.)
 2. Given a perspective name that doesn't match any discovered perspective file, When the engine runs, Then it warns about the unknown perspective and continues with discovered perspectives only.
 
 ### User Story P3 – Custom Perspective Definition
@@ -71,7 +71,7 @@ Acceptance Scenarios:
 
 Narrative: A user wants tighter control over review cost. They set the perspective cap to 1 (instead of the default 2) to limit the number of perspective overlays per specialist, reducing the total number of subagent calls.
 
-Independent Test: Set `perspective_cap` to 1 and verify no specialist runs more than one perspective overlay beyond the baseline.
+Independent Test: Set `perspective_cap` to 1 and verify no specialist runs more than one perspective overlay.
 
 Acceptance Scenarios:
 1. Given `perspective_cap: 1` in the review context, When the engine runs with `auto` perspectives, Then each specialist runs with at most 1 perspective overlay.
@@ -79,9 +79,9 @@ Acceptance Scenarios:
 
 ### Edge Cases
 
-- **Single specialist selected**: Perspectives still apply — a single specialist with 2 perspectives produces 2 review runs (plus optional baseline).
+- **Single specialist selected**: Perspectives still apply — a single specialist with 2 perspectives produces 2 review runs.
 - **Zero perspectives discovered**: Engine proceeds with standard (no-perspective) review and logs a warning.
-- **All perspectives pruned by adaptive selection**: Engine proceeds with baseline review only and notes in synthesis that no perspectives met relevance threshold.
+- **All perspectives pruned by adaptive selection**: Engine selects the built-in `baseline` perspective and notes in synthesis that no other perspectives met relevance threshold.
 - **Perspective overlay exceeds prompt budget**: If the specialist persona + perspective overlay + shared rules exceed model context limits, truncate the perspective overlay with a warning rather than dropping the specialist.
 - **Custom perspective references nonexistent parameters**: Engine applies the perspective with available parameters and warns about unresolvable parameter references.
 
@@ -96,7 +96,7 @@ Acceptance Scenarios:
 - FR-005: Three built-in perspectives ship with the engine: **premortem** (prospective hindsight / future failure analysis), **retrospective** (post-production operational review), and **red-team** (adversarial exploitation analysis). (Stories: P1, P2)
 - FR-006: When `perspectives` is `auto`, the engine selects perspectives based on artifact signals — review type, file types touched, subsystems affected, estimated complexity — applying up to `perspective_cap` overlays per specialist. (Stories: P1)
 - FR-007: Perspectives compose additively with specialist personas without modifying the specialist's domain, cognitive strategy, or backstory. The perspective overlay shifts the evaluative frame while preserving the specialist's identity and reasoning approach. (Stories: P1, P2, P3)
-- FR-008: Each finding in specialist output and in the synthesis includes a `perspective` attribution field identifying which perspective lens surfaced it. Findings from the baseline (no perspective) run are attributed as `baseline`. (Stories: P4)
+- FR-008: Each finding in specialist output and in the synthesis includes a `perspective` attribution field identifying which perspective lens surfaced it. The `**Perspective**` field instruction is embedded in each perspective's overlay template (layer 4), so it is physically absent when `perspectives: none`. The built-in `baseline` perspective produces findings attributed as `baseline`. (Stories: P4)
 - FR-009: In parallel mode, inter-perspective conflicts on the same specialist are surfaced in the synthesis with both positions and their temporal/contextual framing, flagged as high-signal disagreements. (Stories: P4)
 - FR-010: In debate mode, perspective-variant findings from the same specialist participate in the debate rounds and conflicts are resolved through the existing cross-examination mechanism. (Stories: P4)
 - FR-011: *(Deferred to post-v1.)* The engine applies adaptive novelty-based stopping — if a perspective overlay produces findings exceeding a configurable similarity threshold against the baseline or prior perspectives, subsequent perspectives may be skipped even if `perspective_cap` allows more. In v1, `perspective_cap` serves as the hard limit and the engine relies on prompt-driven reasoning for novelty assessment. A configurable threshold will be added after v1 usage data informs sensible defaults. (Stories: P1, P5)
@@ -172,7 +172,7 @@ Out of Scope:
 ## Risks & Mitigations
 
 - **Perspective overlays may degrade specialist coherence on some models**: Research shows minor prompt perturbations can reduce performance by up to 40pp on some models. Mitigation: Keep overlays concise (~50–100 words), use explicit identity reinforcement ("Remain the {specialist}"), and design the overlay to frame *what to look for* rather than *how to reason*. Post-v1: add per-model calibration if needed.
-- **Combinatorial explosion of specialist × perspective runs**: With 6 specialists × 2 perspectives each, that's 12 subagent runs (plus optional baselines). Mitigation: Budget-aware auto selection, configurable `perspective_cap`, and adaptive novelty stopping. Default configuration keeps runs manageable.
+- **Combinatorial explosion of specialist × perspective runs**: With 6 specialists × 2 perspectives each, that's 12 subagent runs. Mitigation: Budget-aware auto selection, configurable `perspective_cap`, and adaptive novelty stopping. Default configuration keeps runs manageable.
 - **Auto perspective selection may be poor for unfamiliar artifact types**: The heuristic-based selection may not make good choices for artifact types the engine hasn't seen. Mitigation: Users can override with explicit perspective names or `none`. Auto selection errs conservative (fewer perspectives rather than more).
 - **Temporal perspectives may generate plausible-sounding but ungrounded operational risks**: A post-mortem framing could produce "credible hallucinations" about failures that have no basis in the artifact. Mitigation: Novelty constraint directives in perspective definitions require evidence anchoring ("tie each predicted failure back to evidence in the artifact, or label it as speculative operational risk").
 

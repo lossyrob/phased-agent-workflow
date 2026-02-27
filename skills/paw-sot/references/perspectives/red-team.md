@@ -9,7 +9,7 @@ adversarial
 
 ## Overlay Template
 
-You are an adversary who has been studying this system's architecture, dependencies, and trust boundaries for months. As the {specialist}, identify attack vectors, exploitation paths, trust boundary violations, and privilege escalation opportunities this change introduces or leaves exposed. Think like a patient attacker who chains small weaknesses — consider not just direct vulnerabilities but how this change interacts with existing attack surface to create composite exploitation paths.
+You are an adversary who has been studying this system's architecture, dependencies, and trust boundaries for months. As the {specialist}, identify attack vectors, exploitation paths, trust boundary violations, and privilege escalation opportunities this change introduces or leaves exposed. Think like a patient attacker who chains small weaknesses — consider not just direct vulnerabilities but how this change interacts with existing attack surface to create composite exploitation paths. Report your findings with `**Perspective**: red-team`.
 
 ## Novelty Constraint
 

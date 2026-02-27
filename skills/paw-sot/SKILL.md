@@ -107,9 +107,9 @@ When `perspectives` is `auto`, analyze the review target and select up to `persp
 - Analyze artifact type, file types touched, affected subsystems, and estimated complexity
 - **Temporal perspectives** (premortem, retrospective): relevant for code changes with operational implications, scaling concerns, dependency management, or long-term maintenance impact
 - **Adversarial perspectives** (red-team): relevant for changes touching trust boundaries, external interfaces, authentication, authorization, or data handling
-- If no perspectives meet relevance threshold: proceed with baseline-only review and note in synthesis
+- If no perspectives meet relevance threshold: select the built-in `baseline` perspective and note in synthesis
 
-Selection is budget-aware: total subagent calls = specialists × (1 + assigned perspectives). The `perspective_cap` bounds per-specialist perspective count.
+Selection is budget-aware: total subagent calls = specialists × assigned perspectives. The `perspective_cap` bounds per-specialist perspective count.
 
 ## Prompt Composition
 
@@ -118,7 +118,7 @@ Compose the review prompt for each specialist subagent from up to five layers:
 1. **Shared rules** — load `references/specialists/_shared-rules.md` once per review run (anti-sycophancy rules, confidence scoring, Toulmin output format)
 2. **Context preamble** — inject the type-dependent preamble (see Context-Adaptive Preambles above) to frame the specialist's review lens
 3. **Specialist content** — load the discovered specialist `.md` file (identity, cognitive strategy, behavioral rules, demand rationale, examples)
-4. **Perspective overlay** — when a perspective is assigned, load the perspective file, resolve `{specialist}` placeholder with the specialist's name, and inject as evaluative lens framing. When no perspective is assigned (`perspectives: none`), skip this layer entirely — composition is identical to the pre-change 4-layer model.
+4. **Perspective overlay** — when a perspective is assigned, load the perspective file, resolve `{specialist}` placeholder with the specialist's name, and inject as evaluative lens framing. The overlay template includes the `**Perspective**` field instruction for Toulmin output attribution. When no perspective is assigned (`perspectives: none`), skip this layer entirely — composition is identical to the pre-change 4-layer model.
 5. **Review coordinates** — review target location (diff range, artifact paths, or content description) and output directory so the subagent can self-gather context via `git diff`, `view`, and `grep`
 
 **Prompt budget overflow**: If the composed prompt approaches model context limits, the perspective overlay (layer 4) is the first candidate for truncation, preserving specialist identity and review coordinates. A warning is emitted when truncation occurs. Given overlays are 50–100 words, this edge case is unlikely in practice.
@@ -167,7 +167,7 @@ Thread-based multi-round debate where findings become discussion threads with po
 
 **Rounds 2–3 (Threaded responses)**: After each round, the synthesis agent (operating as PR triage lead) generates a **round summary** organized by thread:
 - For each thread: current state (`open`, `agreed`, `contested`), summary of positions, open questions
-- When perspectives are active, explicitly contrast baseline vs perspective views from the same specialist to ensure the debate loop addresses intra-specialist perspective disagreements
+- When perspectives are active, explicitly contrast findings across different perspectives from the same specialist to ensure the debate loop addresses intra-specialist perspective disagreements
 - This summary is the only inter-specialist communication (hub-and-spoke — specialists never see each other's raw findings)
 
 Re-run specialists with: shared rules + context preamble + specialist content + perspective overlay (if assigned) + review coordinates + round summary (embedded — this is the only new information per round). Specialists can:
@@ -215,8 +215,8 @@ Synthesis requirements:
 - Preserve `**Perspective**` attribution from specialist findings — each finding in the synthesis includes the perspective field from the source
 - When merging findings from different perspectives on the same specialist, treat perspective-attributed findings as distinct positions even if they address the same code location
 - **Parallel mode conflict handling**: Inter-perspective conflicts on the same specialist are surfaced with both positions and their perspective context, flagged as "high-signal perspective disagreement" in the Dissent Log
-- **Debate mode conflict handling**: Perspective-variant findings participate in debate as distinct positions; when synthesizing round summaries, explicitly contrast baseline vs perspective views from the same specialist
-- Findings attributed to `baseline` were produced without a perspective overlay
+- **Debate mode conflict handling**: Perspective-variant findings participate in debate as distinct positions; when synthesizing round summaries, explicitly contrast findings across different perspectives from the same specialist
+- Findings attributed to `baseline` were produced using the built-in baseline perspective (no evaluative frame shift)
 
 **REVIEW-SYNTHESIS.md structure**:
 

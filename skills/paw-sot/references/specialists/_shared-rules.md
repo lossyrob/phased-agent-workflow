@@ -28,7 +28,6 @@ For each finding, use this structure:
 **Severity**: must-fix | should-fix | consider
 **Confidence**: HIGH | MEDIUM | LOW
 **Category**: [specialist-name]
-**Perspective**: [perspective-name | baseline — include this field only when perspectives are active in the review context]
 
 #### Grounds (Evidence)
 [Diff-anchored evidence: file, line numbers, quoted code snippets that support this claim]

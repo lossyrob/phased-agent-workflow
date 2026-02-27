@@ -240,7 +240,7 @@ shared rules (Finding → Grounds → Warrant → Rebuttal Conditions
 
 ## Custom Perspectives
 
-You can create custom perspective overlays at two levels, with the same most-specific-wins precedence as specialists:
+You can create custom perspective overlays at three levels, with the same most-specific-wins precedence as specialists:
 
 | Level | Location | Scope |
 |-------|----------|-------|

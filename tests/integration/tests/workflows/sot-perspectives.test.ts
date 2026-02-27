@@ -9,7 +9,7 @@
  */
 import { describe, it, after } from "node:test";
 import assert from "node:assert";
-import { readFile, readdir, mkdir, writeFile } from "fs/promises";
+import { readFile, readdir, mkdir } from "fs/promises";
 import { join } from "path";
 import { createTestContext, destroyTestContext, type TestContext } from "../../lib/harness.js";
 import { RuleBasedAnswerer } from "../../lib/answerer.js";

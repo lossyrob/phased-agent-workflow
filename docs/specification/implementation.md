@@ -144,7 +144,7 @@ When the implementation plan includes a documentation phase:
 
 **Skill:** `paw-final-review` (delegates to `paw-sot` for society-of-thought mode)
 
-Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext. For society-of-thought mode, `paw-final-review` delegates SoT orchestration (specialist discovery, selection, execution, synthesis) to the `paw-sot` utility skill.
+Automated review of the complete implementation against specification before Final PR creation. Runs after all implementation phases complete, if enabled via WorkflowContext. For society-of-thought mode, `paw-final-review` delegates SoT orchestration (specialist discovery, selection, execution, synthesis) to the `paw-sot` utility skill. SoT supports perspective overlays — composable evaluative lenses (temporal, adversarial, custom) that shift specialist framing without altering their identity.
 
 **Inputs:**
 

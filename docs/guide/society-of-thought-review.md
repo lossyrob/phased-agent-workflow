@@ -21,6 +21,28 @@ Traditional code review (whether human or AI) tends to look at code through one 
 
 Society-of-thought adds **perspective diversity**: a security specialist traces data flows through trust boundaries, a performance specialist estimates computational costs, and an assumptions specialist questions whether the code should exist at all. Research shows that inspectors using different perspectives find non-overlapping defects — each perspective surfaces issues the others miss.
 
+### Perspective Overlays
+
+Perspective diversity goes even further with **perspective overlays** — evaluative lenses that shift *when* and *under what conditions* a specialist reviews without changing *who* they are. A security specialist running under a **premortem** perspective ("it's 6 months after launch and the system was breached") will surface different risks than the same specialist reviewing under standard present-tense framing.
+
+PAW ships with three built-in perspectives:
+
+| Perspective | Lens Type | Focus |
+|------------|-----------|-------|
+| **Premortem** | Temporal | 6-month post-launch failure analysis — "what went wrong?" |
+| **Retrospective** | Temporal | 6-month operational review — "what's painful to maintain?" |
+| **Red Team** | Adversarial | Exploitation analysis — "how would an attacker abuse this?" |
+
+Perspectives are configured at three tiers:
+
+- **Auto** (default for final review): The engine analyzes your diff and selects relevant perspectives — temporal for operational changes, adversarial for security-sensitive code
+- **Guided**: Specify perspectives by name (e.g., `premortem, red-team`)
+- **None** (default for PR review): No perspective overlays — standard present-tense review only
+
+The `perspective_cap` setting (default: 2) limits how many perspectives each specialist runs, controlling cost. With 3 specialists and 2 perspectives each, you get 6 specialist-perspective runs instead of 3.
+
+Each finding in the review output includes a `**Perspective**` attribution showing which lens surfaced it, and the `REVIEW-SYNTHESIS.md` includes a Perspective Diversity section summarizing which perspectives were applied and why.
+
 ## Configuration
 
 ### Implementation Workflow (Final Review)
@@ -34,6 +56,8 @@ Society-of-thought is configured during workflow initialization (`paw-init`). Th
 | Final Review Interaction Mode | `parallel` or `debate` | `parallel` |
 | Final Review Interactive | `true`, `false`, or `smart` | `smart` |
 | Final Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
+| Final Review Perspectives | `none`, `auto`, or comma-separated names | `auto` |
+| Final Review Perspective Cap | positive integer | `2` |
 
 ### Review Workflow (PR Review)
 
@@ -46,6 +70,8 @@ Society-of-thought for PR review is configured in `ReviewContext.md` (populated 
 | Review Interaction Mode | `parallel` or `debate` | `parallel` |
 | Review Interactive | `true`, `false`, or `smart` | `false` |
 | Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
+| Review Perspectives | `none`, `auto`, or comma-separated names | `none` |
+| Review Perspective Cap | positive integer | `2` |
 
 When Review Mode is `society-of-thought`, the Evaluation Stage invokes `paw-sot` instead of running `paw-review-impact` and `paw-review-gap` separately. Findings from `REVIEW-SYNTHESIS.md` are then mapped into the output pipeline with severity mapping: must-fix → Must, should-fix → Should, consider → Could.
 
@@ -211,6 +237,50 @@ shared rules (Finding → Grounds → Warrant → Rebuttal Conditions
 - **Anti-sycophancy is structural, not stylistic.** The shared rules enforce that every specialist must produce substantive analysis. Don't override these in custom specialists.
 - **Use `shared_rules_included` frontmatter.** Set to `true` only if your custom specialist includes its own anti-sycophancy rules, confidence scoring, and Toulmin output format. When `false` (default), shared rules are automatically injected.
 - **Include example findings.** 2-3 examples in the Toulmin format (Grounds → Warrant → Rebuttal → Verification) anchor the specialist's behavior more effectively than additional instructions.
+
+## Custom Perspectives
+
+You can create custom perspective overlays at two levels, with the same most-specific-wins precedence as specialists:
+
+| Level | Location | Scope |
+|-------|----------|-------|
+| Project | `.paw/perspectives/<name>.md` | Shared with team via Git |
+| User | `~/.paw/perspectives/<name>.md` | Personal, all projects |
+| Built-in | Bundled with PAW | Default roster (premortem, retrospective, red-team) |
+
+A project-level perspective with the same filename as a built-in perspective overrides the built-in version.
+
+### Creating a Custom Perspective
+
+A perspective file defines an evaluative lens. The filename (without `.md`) becomes the perspective's name. Required sections:
+
+```markdown
+# Compliance Perspective
+
+## Lens Type
+custom
+
+## Parameters
+- **Temporal Frame**: N/A
+- **Scenario**: Evaluating code against regulatory requirements
+
+## Overlay Template
+You are reviewing this code for regulatory compliance violations. As the
+{specialist}, identify requirements gaps, audit trail deficiencies, and
+data handling violations specific to your domain. Focus on what a
+compliance auditor would flag during certification review.
+
+## Novelty Constraint
+Each compliance concern must reference a specific code pattern, data flow,
+or missing control visible in the artifact. Do not raise generic
+compliance concerns that apply to any system.
+```
+
+Key requirements:
+
+- The `{specialist}` placeholder in the Overlay Template is resolved at runtime with the specialist's name
+- Overlay Templates should be 50–100 words — long enough to shift the evaluative frame, short enough not to compete with the specialist's cognitive strategy
+- The Novelty Constraint should require evidence-anchoring to prevent unconstrained speculation
 
 ## The Synthesis Agent
 

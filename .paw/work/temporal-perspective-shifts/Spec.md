@@ -95,11 +95,11 @@ Acceptance Scenarios:
 - FR-004: Each perspective file defines: name, lens type, parameters, a prompt overlay template, and a novelty constraint directive. The overlay template supports a `{specialist}` placeholder resolved at composition time. (Stories: P3)
 - FR-005: Three built-in perspectives ship with the engine: **premortem** (prospective hindsight / future failure analysis), **retrospective** (post-production operational review), and **red-team** (adversarial exploitation analysis). (Stories: P1, P2)
 - FR-006: When `perspectives` is `auto`, the engine selects perspectives based on artifact signals — review type, file types touched, subsystems affected, estimated complexity — applying up to `perspective_cap` overlays per specialist. (Stories: P1)
-- FR-007: Perspectives are composed as additive prompt overlays using a three-layer architecture: Identity (stable specialist persona) → Lens (variable perspective overlay, ~50–100 words) → Task (structured output schema). The specialist's domain, cognitive strategy, and backstory are never modified by perspective application. (Stories: P1, P2, P3)
+- FR-007: Perspectives compose additively with specialist personas without modifying the specialist's domain, cognitive strategy, or backstory. The perspective overlay shifts the evaluative frame while preserving the specialist's identity and reasoning approach. (Stories: P1, P2, P3)
 - FR-008: Each finding in specialist output and in the synthesis includes a `perspective` attribution field identifying which perspective lens surfaced it. Findings from the baseline (no perspective) run are attributed as `baseline`. (Stories: P4)
 - FR-009: In parallel mode, inter-perspective conflicts on the same specialist are surfaced in the synthesis with both positions and their temporal/contextual framing, flagged as high-signal disagreements. (Stories: P4)
 - FR-010: In debate mode, perspective-variant findings from the same specialist participate in the debate rounds and conflicts are resolved through the existing cross-examination mechanism. (Stories: P4)
-- FR-011: The engine applies adaptive novelty-based stopping — if a perspective overlay produces findings with high semantic overlap to the baseline or prior perspectives, subsequent perspectives may be skipped even if `perspective_cap` allows more. (Stories: P1, P5)
+- FR-011: The engine applies adaptive novelty-based stopping — if a perspective overlay produces findings exceeding a configurable similarity threshold (default determined at implementation, tuned post-v1) against the baseline or prior perspectives, subsequent perspectives may be skipped even if `perspective_cap` allows more. (Stories: P1, P5)
 - FR-012: When `perspectives` is `none`, the engine behaves identically to the current implementation with no perspective-related processing. (Stories: P1)
 - FR-013: The REVIEW-SYNTHESIS.md output includes a "Perspective Diversity" section documenting which perspectives were applied to which specialists, the selection rationale (for auto mode), and any perspectives skipped due to novelty stopping or cap limits. (Stories: P1, P4)
 
@@ -110,7 +110,6 @@ Acceptance Scenarios:
 
 ### Cross-Cutting / Non-Functional
 
-- Perspective overlay composition must not increase individual specialist prompt size by more than 150 tokens beyond the base prompt.
 - Perspective discovery must complete in under 1 second (filesystem scan, not network).
 - The feature must not alter review output when `perspectives: none` is set — backward compatibility with existing SoT behavior is mandatory.
 
@@ -160,6 +159,9 @@ Out of Scope:
 - Existing specialist persona files (`references/specialists/`)
 - Existing review context input contract
 - Existing Toulmin output format in shared rules
+
+### Perspective Overlay Sizing
+- Perspective overlays must be concise enough not to materially impact specialist prompt budgets — the exact sizing constraint is an implementation concern
 
 ## Risks & Mitigations
 

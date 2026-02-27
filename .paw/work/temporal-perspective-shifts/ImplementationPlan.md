@@ -44,19 +44,26 @@ The Toulmin output format (`_shared-rules.md:22-43`) has three finding-level met
 - **No changes to `paw-review-feedback`** — perspective attribution embedded in finding text flows through the existing pipeline
 - **No explicit similarity-threshold novelty stopping** — the engine is prompt-driven; agents implement novelty assessment through reasoning. `perspective_cap` provides the hard limit. A configurable threshold is deferred until v1 usage data informs defaults.
 
+## Spec Deviations
+
+Two spec requirements are intentionally deferred from v1 implementation. The spec should be amended to reflect these deferrals.
+
+**FR-011 (novelty stopping) — deferred to post-v1**: The spec requires "adaptive novelty-based stopping" with a "configurable similarity threshold." In v1, `perspective_cap` serves as the hard limit and the engine relies on prompt-driven reasoning for novelty assessment. An explicit similarity threshold will be added after v1 usage data informs sensible defaults. Rationale: the inverted U-curve research (2–3 diversity axes) supports a simple cap as sufficient for initial release.
+
+**FR-001 (preset pack names) — deferred to post-v1**: The spec allows `perspectives` to accept "a perspective preset pack name." In v1, the input grammar is restricted to `none | auto | comma-separated perspective names`. If an unrecognized name is provided that matches neither a discoverable perspective file nor the reserved values `none`/`auto`, the engine warns and skips it — consistent with specialist discovery's malformed-file handling pattern (`SKILL.md:49-64`). Named packs are syntactic sugar that will be added once the direct-name workflow is proven stable.
+
 ## Phase Status
 
 - [ ] **Phase 1: Perspective Schema & Built-in Perspectives** — Define the perspective file format and create three built-in perspective files
-- [ ] **Phase 2: Engine Core** — Add perspective discovery, 5-layer prompt composition, perspective-aware execution, and attribution to the SoT engine
-- [ ] **Phase 3: Configuration Pipeline** — Thread perspective config through init, WorkflowContext, ReviewContext, and both caller skills
-- [ ] **Phase 4: Synthesis & Conflict Handling** — Add perspective attribution to synthesis, Perspective Diversity section, and mode-aware conflict handling
-- [ ] **Phase 5: Documentation** — Update user guide, reference docs, and specification docs
+- [ ] **Phase 2: Engine Core** — Add perspective discovery, 5-layer prompt composition, perspective-aware execution, and attribution to the SoT engine *(depends on: Phase 1)*
+- [ ] **Phase 3: Configuration Pipeline** — Thread perspective config through init, WorkflowContext, ReviewContext, and both caller skills *(depends on: Phase 2)*
+- [ ] **Phase 4: Synthesis & Conflict Handling** — Add perspective attribution to synthesis, Perspective Diversity section, and mode-aware conflict handling *(depends on: Phase 2)*
+- [ ] **Phase 5: Documentation & Integration Testing** — Update user guide, reference docs, specification docs; add workflow integration test *(depends on: Phases 3, 4)*
 
 ## Phase Candidates
 
 - [ ] Preset pack aliases (e.g., `ship-readiness` = premortem + red-team) after direct-name flow is stable
 - [ ] Configurable similarity-threshold tuning for novelty stopping after v1 usage telemetry
-- [ ] Integration test for perspective discovery and synthesis attribution
 
 ---
 
@@ -133,6 +140,7 @@ The Toulmin output format (`_shared-rules.md:22-43`) has three finding-level met
   3. User: scan `~/.paw/perspectives/<name>.md` files
   4. Built-in: scan `references/perspectives/<name>.md` files
 - Resolution rules parallel to specialist discovery: most-specific-wins, skip malformed with warning, `none` → skip discovery entirely, `auto` → discover all then select based on artifact signals
+- Unknown name handling: if a name in the comma-separated list matches no discoverable perspective file and is not a reserved value (`none`/`auto`), warn and skip — consistent with specialist discovery's malformed-file pattern (`SKILL.md:49-64`)
 - When `perspectives` is `none`: skip all perspective-related processing — engine behaves identically to current implementation
 
 **New section**: "Perspective Auto-Selection" (after Perspective Discovery):
@@ -175,7 +183,7 @@ The Toulmin output format (`_shared-rules.md:22-43`) has three finding-level met
 #### Manual Verification:
 - [ ] Review context table has 10 fields (8 existing + perspectives + perspective_cap)
 - [ ] Prompt composition section describes 5 layers with perspective overlay as layer 4
-- [ ] `perspectives: none` produces a code path functionally identical to pre-change engine
+- [ ] `perspectives: none` produces byte-identical output to the pre-change engine (no perspective-related content injected)
 - [ ] Parallel mode describes perspective-aware execution with `REVIEW-{SPECIALIST}-{PERSPECTIVE}.md` naming
 - [ ] Debate mode describes perspective-variant findings participating in thread lifecycle
 
@@ -283,7 +291,7 @@ _Finding format note:_
 
 ---
 
-## Phase 5: Documentation
+## Phase 5: Documentation & Integration Testing
 
 ### Changes Required
 
@@ -322,17 +330,24 @@ _Update section_: "Why Perspective Diversity Matters" (lines 18–22):
 **Modified files**: `docs/specification/implementation.md`, `docs/specification/review.md`
 - Add mention of perspective overlay support in SoT evaluation sections
 
+**New/modified test**: `tests/integration/tests/workflows/` — Workflow integration test for perspective discovery and synthesis attribution
+- Test scenario: seed a SoT review with `perspectives: premortem,red-team` and 2 specialists
+- Assert: perspective discovery resolves built-in files, synthesis output includes Perspective Diversity section, finding format includes `**Perspective**` field, output files follow `REVIEW-{SPECIALIST}-{PERSPECTIVE}.md` naming
+- Use `createTestContext()`, `RuleBasedAnswerer`, and structural assertions per project integration test patterns
+
 ### Success Criteria
 
 #### Automated Verification:
 - [ ] Docs build passes: `source .venv/bin/activate && mkdocs build --strict`
 - [ ] Prompt lint passes: `npm run lint:skills`
 - [ ] Lint passes: `npm run lint`
+- [ ] Integration test passes: `cd tests/integration && npx tsx --test tests/workflows/sot-perspectives.test.ts`
 
 #### Manual Verification:
 - [ ] SoT guide page covers perspectives with config tables, concept explanation, built-in presets, custom perspective guide, and precedence rules
 - [ ] Docs.md captures implementation details sufficient for future maintenance
 - [ ] Configuration defaults match implementation (`perspectives: auto` for final review, `none` for review workflow)
+- [ ] Integration test validates perspective discovery, attribution in findings, and synthesis output structure
 
 ---
 

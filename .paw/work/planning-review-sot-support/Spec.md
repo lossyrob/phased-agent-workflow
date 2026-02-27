@@ -61,20 +61,23 @@ Acceptance Scenarios:
 1. Given SoT planning review with `planning_review_interactive: true` and findings exist, When resolution completes, Then moderator mode is offered
 2. Given SoT planning review with `planning_review_interactive: false`, When resolution completes, Then moderator mode is skipped
 3. Given moderator mode is active, When user says "done" or "continue", Then moderator mode exits and workflow proceeds
+4. Given SoT planning review with `planning_review_interactive: smart`, When resolution completes with must-fix or should-fix findings remaining, Then moderator mode is offered. When only consider-tier findings remain, Then moderator mode is skipped.
+
+Moderator mode is advisory — specialist engagement informs user understanding but does not trigger additional re-review cycles.
 
 ### Edge Cases
 - SoT mode configured but zero specialists found after discovery → paw-sot engine falls back to built-in default specialists (engine-level fallback; planning docs review does not preempt this)
 - All specialist reviews return no findings → clean pass, no synthesis needed
 - Perspective auto-selection finds no relevant perspectives → use baseline perspective
 - SoT configured in VS Code → degrade to single-model with informational message (consistent with final review behavior)
-- `planning_review_mode: society-of-thought` with `planning_docs_review: disabled` → SoT config is stored but unused
+- `planning_review_mode: society-of-thought` with `planning_docs_review: disabled` → init rejects with guidance to enable planning docs review; if manually set post-init in WorkflowContext.md, SoT config is stored but unused
 
 ## Requirements
 
 ### Functional Requirements
 
 - FR-001: `paw-init` accepts `society-of-thought` as a valid value for `planning_review_mode` (Stories: P1)
-- FR-002: `paw-init` accepts and stores SoT-specific planning review config fields: `planning_review_specialists`, `planning_review_interaction_mode`, `planning_review_specialist_models`, `planning_review_perspectives`, `planning_review_perspective_cap` (Stories: P1, P2)
+- FR-002: `paw-init` accepts and stores SoT-specific planning review config fields: `planning_review_specialists`, `planning_review_interaction_mode`, `planning_review_specialist_models`, `planning_review_perspectives`, `planning_review_perspective_cap`. When `planning_review_mode` is `society-of-thought`, `planning_review_models` is ignored — specialist model assignment is controlled by `planning_review_specialist_models`. (Stories: P1, P2)
 - FR-003: WorkflowContext.md template includes all new planning review SoT fields (Stories: P1, P2)
 - FR-004: `paw-planning-docs-review` constructs SoT review context with `type: artifacts` and planning artifact coordinates when mode is `society-of-thought` (Stories: P1)
 - FR-005: `paw-planning-docs-review` maps planning review config fields to the `paw-sot` review context input contract (Stories: P1, P2)

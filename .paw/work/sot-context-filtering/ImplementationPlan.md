@@ -30,9 +30,9 @@ Adding a `context` field to SoT specialist frontmatter and review context input 
 
 ## Phase Status
 
-- [ ] **Phase 1: SKILL.md Updates** - Add context field to contract and document filtering behavior
-- [ ] **Phase 2: Built-in Specialist Updates** - Add `context: implementation` to all 9 specialists
-- [ ] **Phase 3: Documentation** - Create Docs.md and update project documentation
+- [x] **Phase 1: SKILL.md Updates** - Add context field to contract and document filtering behavior
+- [x] **Phase 2: Built-in Specialist Updates** - Add `context: implementation` to all 9 specialists
+- [x] **Phase 3: Documentation** - Create Docs.md and update project documentation
 
 ## Phase Candidates
 

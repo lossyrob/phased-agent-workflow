@@ -4,18 +4,46 @@ Install PAW agents and skills to your GitHub Copilot CLI configuration.
 
 ## Prerequisites
 
-- Node.js 18.0.0 or later
 - [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line) installed and configured
 
-## Quick Start
+## Plugin Installation (Recommended)
+
+Install PAW as a native Copilot CLI plugin:
 
 ```bash
-npx @paw-workflow/cli install copilot
+copilot plugin install lossyrob/phased-agent-workflow
 ```
 
-This installs PAW agents and skills to `~/.copilot/`, making them available in your Copilot CLI sessions.
+This installs PAW agents and skills as a managed plugin, with native update and uninstall support.
 
-## Commands
+### Plugin Commands
+
+| Command | Description |
+|---------|-------------|
+| `copilot plugin install lossyrob/phased-agent-workflow` | Install PAW plugin |
+| `copilot plugin list` | Show installed plugins |
+| `copilot plugin update paw-workflow` | Update to latest version |
+| `copilot plugin uninstall paw-workflow` | Remove PAW plugin |
+
+## NPM CLI Installation (Alternative)
+
+If you prefer the npm-based installer, or need to install to Claude Code:
+
+### Prerequisites
+
+- Node.js 18.0.0 or later
+- [GitHub Copilot CLI](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line) and/or [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)
+
+### Quick Start
+
+```bash
+npx @paw-workflow/cli install copilot   # Copilot CLI
+npx @paw-workflow/cli install claude    # Claude Code
+```
+
+This installs PAW agents and skills to `~/.copilot/` or `~/.claude/`, making them available in your CLI sessions.
+
+### NPM CLI Commands
 
 | Command | Description |
 |---------|-------------|
@@ -84,6 +112,22 @@ npx @paw-workflow/cli uninstall
 ```
 
 This removes installed agents, skills, and the manifest file.
+
+## Switching from NPM CLI to Plugin
+
+If you previously installed PAW via the NPM CLI and want to switch to the plugin:
+
+1. Uninstall the NPM version first:
+   ```bash
+   npx @paw-workflow/cli uninstall
+   ```
+2. Install as a plugin:
+   ```bash
+   copilot plugin install lossyrob/phased-agent-workflow
+   ```
+
+!!! warning
+    If both installations are active, the NPM-installed files at `~/.copilot/agents/` take precedence over plugin-provided agents (Copilot CLI uses first-found-wins for agents and skills).
 
 ## Troubleshooting
 

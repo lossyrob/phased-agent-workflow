@@ -153,6 +153,75 @@ function buildSkills() {
 }
 
 /**
+ * Build plugin.json manifest for Copilot CLI plugin distribution.
+ */
+function buildPluginManifest() {
+  console.log('Building plugin manifest...');
+
+  const manifest = {
+    name: 'paw-workflow',
+    description: 'Phased Agent Workflow (PAW) — structured multi-phase implementation and PR review workflows for AI coding agents',
+    version: VERSION,
+    author: {
+      name: 'Rob Emanuele',
+      url: 'https://github.com/lossyrob'
+    },
+    homepage: 'https://lossyrob.github.io/phased-agent-workflow',
+    repository: 'https://github.com/lossyrob/phased-agent-workflow',
+    license: 'MIT',
+    keywords: ['paw', 'workflow', 'agent', 'copilot', 'implementation', 'code-review'],
+    category: 'workflow',
+    agents: 'agents/',
+    skills: 'skills/'
+  };
+
+  writeFileSync(join(DIST_DIR, 'plugin.json'), JSON.stringify(manifest, null, 2) + '\n');
+  console.log('  plugin.json');
+}
+
+/**
+ * Build marketplace.json for Copilot CLI marketplace discovery.
+ */
+function buildMarketplaceManifest() {
+  console.log('Building marketplace manifest...');
+
+  const marketplaceDir = join(DIST_DIR, '.github', 'plugin');
+  mkdirSync(marketplaceDir, { recursive: true });
+
+  const marketplace = {
+    name: 'paw-workflow',
+    owner: {
+      name: 'Rob Emanuele',
+      email: 'rdemanuele@gmail.com'
+    },
+    metadata: {
+      description: 'Phased Agent Workflow (PAW) plugin marketplace',
+      version: VERSION
+    },
+    plugins: [
+      {
+        name: 'paw-workflow',
+        description: 'Structured multi-phase implementation and PR review workflows for AI coding agents',
+        version: VERSION,
+        source: '.',
+        author: {
+          name: 'Rob Emanuele',
+          url: 'https://github.com/lossyrob'
+        },
+        homepage: 'https://lossyrob.github.io/phased-agent-workflow',
+        repository: 'https://github.com/lossyrob/phased-agent-workflow',
+        license: 'MIT',
+        keywords: ['paw', 'workflow', 'agent', 'copilot', 'implementation', 'code-review'],
+        category: 'workflow'
+      }
+    ]
+  };
+
+  writeFileSync(join(marketplaceDir, 'marketplace.json'), JSON.stringify(marketplace, null, 2) + '\n');
+  console.log('  .github/plugin/marketplace.json');
+}
+
+/**
  * Main build function.
  */
 function build() {
@@ -166,6 +235,9 @@ function build() {
   const agentCount = buildAgents();
   console.log('');
   const skillCount = buildSkills();
+  console.log('');
+  buildPluginManifest();
+  buildMarketplaceManifest();
   
   console.log(`\nBuild complete: ${agentCount} agents, ${skillCount} skills (v${VERSION})`);
   console.log(`Output: ${DIST_DIR}`);

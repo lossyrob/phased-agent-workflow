@@ -278,6 +278,13 @@ context: business
 - For `diff` and `artifacts` review types without explicit context, filtering defaults to `implementation`
 - For `freeform` review type without explicit context, no filtering occurs (all specialists participate)
 
+**Zero-match handling:** If no specialists match the requested context:
+
+- In **interactive** or **smart** mode, SoT warns you and asks how to proceed
+- In **non-interactive** mode, SoT warns and falls back to all specialists
+
+This means typos in context values are recoverable — you'll always get a clear warning rather than a silent failure.
+
 All 9 built-in specialists have `context: implementation`. To create specialists for other domains (compliance, business analysis, etc.), add the appropriate `context` field to your custom specialist's frontmatter.
 
 ## Custom Perspectives

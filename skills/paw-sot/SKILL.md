@@ -97,7 +97,7 @@ context: implementation
 
 ## Adaptive Selection
 
-When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on content analysis.
+When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the discovered roster (after any context filtering) based on content analysis.
 
 **Selection process**:
 1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
@@ -258,6 +258,7 @@ The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items p
 ## Review Summary
 - Mode: society-of-thought (parallel | debate)
 - Specialists: [list of participating specialists]
+- Context: [context value used for filtering, or "none"]
 - Perspectives: [list of perspectives applied, or "none"]
 - Perspective cap: [configured cap value]
 - Selection rationale: [if adaptive mode was used]

@@ -2,14 +2,17 @@
 
 Society-of-thought is a review mode that uses **specialist personas** — each with a unique cognitive strategy and behavioral rules — to review code from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes the code, then a synthesis step merges their findings into a single prioritized report.
 
-The society-of-thought engine is implemented as the `paw-sot` utility skill, which both `paw-final-review` (implementation workflow) and `paw-review-workflow` (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.
+The society-of-thought engine is implemented as the `paw-sot` utility skill, which `paw-planning-docs-review` (planning workflow), `paw-final-review` (implementation workflow), and `paw-review-workflow` (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.
 
-### Two Integration Points
+### Three Integration Points
 
 | Workflow | Calling Skill | Config Source | Post-Synthesis Flow |
 |----------|--------------|---------------|---------------------|
+| **Planning** | `paw-planning-docs-review` | WorkflowContext.md | Apply-to-spec/apply-to-plan routing |
 | **Implementation** | `paw-final-review` | WorkflowContext.md | Apply/skip/discuss resolution |
 | **Review** | `paw-review-workflow` | ReviewContext.md | Feedback → critic → GitHub comment pipeline |
+
+In the **planning workflow**, SoT is one of three Planning Review modes (alongside single-model and multi-model). Specialists review design documents (Spec.md, ImplementationPlan.md, CodeResearch.md) using the `artifacts` review type, which frames analysis around design decisions and feasibility rather than code. Findings route to `paw-spec` or `paw-planning` based on affected artifact.
 
 In the **implementation workflow**, SoT is one of three Final Review modes (alongside single-model and multi-model). After synthesis, findings go through an interactive resolution phase where changes are applied directly.
 
@@ -44,6 +47,22 @@ The `perspective_cap` setting (default: 2) limits how many perspectives each spe
 Each finding in the review output includes a `**Perspective**` attribution showing which lens surfaced it, and the `REVIEW-SYNTHESIS.md` includes a Perspective Diversity section summarizing which perspectives were applied and why.
 
 ## Configuration
+
+### Planning Workflow (Planning Docs Review)
+
+Society-of-thought for planning review is configured during workflow initialization (`paw-init`). The key fields in `WorkflowContext.md`:
+
+| Field | Values | Default |
+|-------|--------|---------|
+| Planning Review Mode | `society-of-thought` | `multi-model` |
+| Planning Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
+| Planning Review Interaction Mode | `parallel` or `debate` | `parallel` |
+| Planning Review Interactive | `true`, `false`, or `smart` | `smart` |
+| Planning Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
+| Planning Review Perspectives | `none`, `auto`, or comma-separated names | `auto` |
+| Planning Review Perspective Cap | positive integer | `2` |
+
+When Planning Review Mode is `society-of-thought`, `paw-planning-docs-review` invokes `paw-sot` with `type: artifacts` (not `diff`), framing specialists for design and planning document analysis. Findings route to `paw-spec` or `paw-planning` based on affected artifact. When `planning_review_models` is set, it is ignored in SoT mode — use `planning_review_specialist_models` for model diversity.
 
 ### Implementation Workflow (Final Review)
 

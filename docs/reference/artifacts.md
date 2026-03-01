@@ -70,9 +70,14 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Planning Docs Review | `enabled` or `disabled` |
 | Plan Generation Mode | `single-model` or `multi-model` |
 | Plan Generation Models | Comma-separated model names |
-| Planning Review Mode | `single-model` or `multi-model` |
+| Planning Review Mode | `single-model`, `multi-model`, or `society-of-thought` |
 | Planning Review Interactive | `true`, `false`, or `smart` |
 | Planning Review Models | Comma-separated model names |
+| Planning Review Specialists | `all`, comma-separated names, or `adaptive:<N>` |
+| Planning Review Interaction Mode | `parallel` or `debate` |
+| Planning Review Specialist Models | `none`, model pool, pinned pairs, or mixed |
+| Planning Review Perspectives | `none`, `auto`, or comma-separated perspective names |
+| Planning Review Perspective Cap | Positive integer |
 
 ### Spec.md
 

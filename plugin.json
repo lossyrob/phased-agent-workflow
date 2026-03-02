@@ -1,0 +1,23 @@
+{
+  "name": "paw-workflow",
+  "description": "Phased Agent Workflow (PAW) — structured multi-phase implementation and PR review workflows for AI coding agents",
+  "version": "0.3.0",
+  "author": {
+    "name": "Rob Emanuele",
+    "url": "https://github.com/lossyrob"
+  },
+  "homepage": "https://lossyrob.github.io/phased-agent-workflow",
+  "repository": "https://github.com/lossyrob/phased-agent-workflow",
+  "license": "MIT",
+  "keywords": [
+    "paw",
+    "workflow",
+    "agent",
+    "copilot",
+    "implementation",
+    "code-review"
+  ],
+  "category": "workflow",
+  "agents": "agents/",
+  "skills": "skills/"
+}

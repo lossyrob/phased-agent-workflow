@@ -83,7 +83,10 @@ Guidelines:
 - Write concise descriptions (don't just copy PR titles verbatim — clean up brackets, prefixes, etc.)
 - Link PR numbers to their URLs
 - Omit empty categories
-- Add an installation section at the end with `npx @paw-workflow/cli@<version>` and `npm install -g` options
+- Add an installation section at the end with:
+  - Plugin install: `copilot plugin install lossyrob/phased-agent-workflow` (always installs from `main`)
+  - NPM versioned install: `npx @paw-workflow/cli@<version>` and `npm install -g` options
+  - Note: The Copilot CLI plugin always installs from the `main` branch. For pinned versions, use the npm CLI.
 
 Present the changelog to the user for review. After approval, post it to the GitHub release:
 

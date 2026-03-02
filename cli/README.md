@@ -96,19 +96,17 @@ Build the distribution (processes conditionals, injects version metadata):
 npm run build
 ```
 
-This creates `dist/` with processed agents and skills, plus `plugin.json` and `.github/plugin/marketplace.json` for the Copilot CLI plugin system.
+This creates `dist/` with processed agents and skills for the npm package.
 
 ### Plugin Distribution
 
-The build output in `dist/` is a complete Copilot CLI plugin. The CI workflow (`publish-cli.yml`) publishes this to a `plugin` orphan branch on each release, enabling:
+The Copilot CLI plugin reads `plugin.json` from the repository root on `main`. The `agents/` and `skills/` directories on `main` serve as the canonical source for plugin installation:
 
 ```bash
 copilot plugin install lossyrob/phased-agent-workflow
 ```
 
-The `publish-cli.yml` workflow has two independent jobs:
-- **publish-npm**: Publishes to npm as `@paw-workflow/cli`
-- **publish-plugin**: Publishes the built dist to the `plugin` branch
+Users wanting versioned/stable installs should use the npm CLI (`npx @paw-workflow/cli@<version>`).
 
 ### Test locally
 
@@ -149,8 +147,6 @@ git tag cli-v0.0.1
 git push origin cli-v0.0.1
 ```
 
-This triggers two independent jobs:
-1. **npm publish** — Publishes `@paw-workflow/cli` to npm and creates a GitHub Release
-2. **Plugin branch** — Updates the `plugin` orphan branch with the built distribution
+This triggers npm publish — publishes `@paw-workflow/cli` to npm and creates a GitHub Release.
 
 Requires `NPM_TOKEN` secret configured in the repository.

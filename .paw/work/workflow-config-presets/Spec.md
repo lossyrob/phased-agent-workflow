@@ -78,7 +78,14 @@ Acceptance Scenarios:
 
 ### Functional Requirements
 - FR-001: paw-init accepts a preset name parameter and resolves it to configuration values (Stories: P1, P2)
-- FR-002: Built-in presets are shipped with the PAW repository and discoverable by paw-init without user setup (Stories: P1)
+- FR-002: Built-in presets are shipped with the PAW repository and discoverable by paw-init without user setup (Stories: P1). Initial built-in presets:
+
+| Preset | Workflow Mode | Strategy | Review Policy | Planning Docs Review | Final Review | Key Trait |
+|--------|--------------|----------|---------------|---------------------|-------------|-----------|
+| `quick` | minimal | local | final-pr-only | disabled | disabled | Minimal ceremony for small fixes |
+| `standard` | full | local | milestones | enabled (multi-model) | enabled (single-model) | Balanced with review gates |
+| `thorough` | full | local | planning-only | enabled (multi-model) | enabled (SoT, debate) | Maximum review rigor |
+| `team` | full | prs | every-stage | enabled (multi-model) | enabled (multi-model) | PR-based collaboration |
 - FR-003: User presets are YAML files in `~/.paw/presets/` with a defined schema (Stories: P2)
 - FR-004: Explicit user instructions override preset values, which override PAW defaults (Stories: P3)
 - FR-005: A preset can declare `default: true` to be applied when no preset is specified (Stories: P4)
@@ -106,6 +113,7 @@ Acceptance Scenarios:
 - SC-005: Invalid preset configurations are caught and reported before WorkflowContext.md creation (FR-008)
 - SC-006: Users can discover all available presets with descriptions (FR-009)
 - SC-007: User presets override built-in presets of the same name (FR-010)
+- SC-008: After preset resolution, paw-init presents a configuration summary showing the source of each field (preset, override, or default) before creating WorkflowContext.md (FR-011)
 
 ## Assumptions
 - The `~/.paw/` directory is an acceptable location for user presets (aligns with existing PAW CLI conventions)
@@ -129,6 +137,7 @@ In Scope:
 
 Out of Scope:
 - CLI commands for preset management (create/edit/delete) — users edit YAML directly
+- Custom aliases or shorthand mappings (e.g., "fast mode" → quick preset) — users reference presets by name directly; aliases may be added later via `extends`
 - Preset sharing or publishing mechanism
 - Preset versioning or migration
 - GUI/TUI for preset selection
@@ -146,4 +155,3 @@ Out of Scope:
 
 ## References
 - Issue: https://github.com/lossyrob/phased-agent-workflow/issues/278
-- Research: .paw/work/workflow-config-presets/SpecResearch.md

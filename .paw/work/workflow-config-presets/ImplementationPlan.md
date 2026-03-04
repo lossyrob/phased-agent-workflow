@@ -28,7 +28,7 @@ Add named workflow configuration presets to PAW, enabling users to reference sho
 
 ## Phase Status
 - [x] **Phase 1: Preset Support in paw-init** - Built-in presets, user preset loading, inheritance, defaults, validation, provenance
-- [ ] **Phase 2: Preset Discovery & Documentation** - paw-status preset listing, user guide, Docs.md
+- [x] **Phase 2: Preset Discovery & Documentation** - paw-status preset listing, user guide, Docs.md
 
 ## Phase Candidates
 <!-- None currently -->

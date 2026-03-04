@@ -17,6 +17,7 @@ Serve as the workflow navigator and historian. Diagnose current workflow state, 
 - Recommend appropriate next steps
 - Explain PAW process and stages
 - List active work items across workspace
+- List available workflow presets (built-in and user-defined)
 - Post status updates to Issues/PRs (on explicit request)
 
 ## Default Behavior
@@ -145,6 +146,14 @@ Only post externally when explicitly asked.
 - Assign reviewers
 - Change labels
 
+## Preset Discovery
+
+When asked "What presets are available?" or "List presets":
+- **Built-in presets**: Read from `skills/paw-init/SKILL.md` (the canonical source) — extract the Built-in Presets table
+- **User presets**: Scan `~/.paw/presets/*.yaml` files, read name and description from each
+- Display: name, description, source (built-in/user), default marker if set, extends target if present
+- If user preset has same name as built-in, show user version (it takes precedence)
+
 ## Help Mode
 
 When asked "What does <stage> do?", provide:
@@ -159,6 +168,7 @@ For implementation details (e.g., two-agent pattern, delegation mechanics), refe
 For "How do I start?", explain:
 - `PAW: New PAW Workflow` command
 - Parameters (branch, mode, strategy, issue URL)
+- Available presets for quick setup (e.g., "use `quick` for minimal ceremony, `thorough` for full review pipeline")
 - That prompt files generate on demand
 
 ## Status Dashboard Format

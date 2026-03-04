@@ -149,7 +149,7 @@ Only post externally when explicitly asked.
 ## Preset Discovery
 
 When asked "What presets are available?" or "List presets":
-- **Built-in presets**: `quick` (minimal ceremony), `standard` (balanced with gates), `thorough` (maximum rigor), `team` (PR-based collaboration)
+- **Built-in presets**: `quick` (minimal ceremony), `standard` (balanced with gates), `thorough` (maximum rigor), `team` (PR-based collaboration), `auto` (autonomous, final-pr-only), `auto-full` (auto + full review rigor), `shaping-full` (work shaping then auto-full)
 - **User presets**: Scan `~/.paw/presets/*.yaml` files, read name and description from each
 - Display: name, description, source (built-in/user), default marker if set, extends target if present
 - If user preset has same name as built-in, show user version (it takes precedence)

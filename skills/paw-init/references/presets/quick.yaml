@@ -1,0 +1,8 @@
+name: quick
+description: Fast local workflow, minimal ceremony
+config:
+  workflow_mode: minimal
+  review_strategy: local
+  review_policy: final-pr-only
+  planning_docs_review: disabled
+  final_agent_review: disabled

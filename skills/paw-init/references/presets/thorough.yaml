@@ -1,0 +1,11 @@
+name: thorough
+description: Full review pipeline with SoT final review
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: planning-only
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: society-of-thought
+  final_review_interaction_mode: debate

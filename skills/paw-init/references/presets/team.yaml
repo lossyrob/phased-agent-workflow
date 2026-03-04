@@ -1,0 +1,10 @@
+name: team
+description: PR-based workflow with review gates at every stage
+config:
+  workflow_mode: full
+  review_strategy: prs
+  review_policy: every-stage
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: multi-model

@@ -16,7 +16,7 @@ Explicit overrides always take precedence over preset values.
 
 ## Built-in Presets
 
-PAW ships with four presets covering common patterns:
+PAW ships with seven presets covering common patterns:
 
 | Preset | Description |
 |--------|-------------|
@@ -24,8 +24,11 @@ PAW ships with four presets covering common patterns:
 | **standard** | Full mode with milestones review, multi-model planning review, single-model final review. |
 | **thorough** | Full mode with planning-only review, multi-model planning review, SoT debate final review. |
 | **team** | Full mode with PRs strategy, every-stage review, multi-model planning and final review. |
+| **auto** | Full mode, local strategy, final-pr-only. Burns through everything with no human pauses until the final PR. |
+| **auto-full** | Extends `auto` — adds multi-model planning with perspectives and SoT debate final review. Maximum rigor, zero human interrupts. |
+| **shaping-full** | Extends `auto-full` — starts with interactive work shaping, then burns through the rest autonomously. |
 
-See `skills/paw-init/SKILL.md` for the canonical YAML definitions with exact field values. Fields not specified by a preset use PAW's standard defaults.
+Canonical YAML definitions live in `skills/paw-init/references/presets/`. Fields not specified by a preset use PAW's standard defaults.
 
 ## Custom Presets
 

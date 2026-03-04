@@ -85,10 +85,10 @@ name: my-preset
 description: Short description for listing
 default: false          # optional; if true, applied when no preset specified
 extends: base-preset    # optional; inherit from another preset
+initial_activity: spec  # optional; spec (default), work-shaping, code-research
 config:
   workflow_mode: full
   review_strategy: local
-  review_policy: planning-only
   # ... only fields to override
 ```
 
@@ -96,66 +96,17 @@ config:
 
 ### Built-in Presets
 
-| Preset | Description | Key Settings |
-|--------|-------------|--------------|
-| `quick` | Minimal ceremony | minimal, local, final-pr-only, no docs review, no final review |
-| `standard` | Balanced with gates | full, local, milestones, multi-model planning review |
-| `thorough` | Maximum rigor | full, local, planning-only, multi-model planning, SoT debate final |
-| `team` | PR-based collaboration | full, prs, every-stage, multi-model planning and final |
+Canonical definitions live in `references/presets/<name>.yaml`. Load the specific preset file when resolving.
 
-<details>
-<summary>Canonical YAML definitions</summary>
-
-```yaml
-name: quick
-description: Fast local workflow, minimal ceremony
-config:
-  workflow_mode: minimal
-  review_strategy: local
-  review_policy: final-pr-only
-  planning_docs_review: disabled
-  final_agent_review: disabled
-
----
-name: standard
-description: Balanced local workflow with review gates
-config:
-  workflow_mode: full
-  review_strategy: local
-  review_policy: milestones
-  planning_docs_review: enabled
-  planning_review_mode: multi-model
-  final_agent_review: enabled
-  final_review_mode: single-model
-
----
-name: thorough
-description: Full review pipeline with SoT final review
-config:
-  workflow_mode: full
-  review_strategy: local
-  review_policy: planning-only
-  planning_docs_review: enabled
-  planning_review_mode: multi-model
-  final_agent_review: enabled
-  final_review_mode: society-of-thought
-  final_review_interaction_mode: debate
-
----
-name: team
-description: PR-based workflow with review gates at every stage
-config:
-  workflow_mode: full
-  review_strategy: prs
-  review_policy: every-stage
-  planning_docs_review: enabled
-  planning_review_mode: multi-model
-  final_agent_review: enabled
-  final_review_mode: multi-model
-```
-</details>
-
-Model fields use intent strings (`latest GPT`) for portability; resolved during model resolution step.
+| Preset | Description |
+|--------|-------------|
+| `quick` | Minimal ceremony — burns through with no reviews |
+| `standard` | Balanced local workflow with milestone review gates |
+| `thorough` | Maximum rigor — multi-model planning, SoT debate final |
+| `team` | PR-based collaboration with every-stage review |
+| `auto` | Autonomous full workflow, only pauses at final PR |
+| `auto-full` | Auto + multi-model planning with perspectives + SoT debate final |
+| `shaping-full` | Work shaping then auto-full (interactive shaping, auto everything else) |
 
 ### User Presets
 
@@ -165,10 +116,11 @@ User presets are YAML files at `~/.paw/presets/<name>.yaml`. The filename (minus
 
 When a preset is specified (explicitly or via default):
 
-1. **Lookup**: Check `~/.paw/presets/` first, then built-in presets. User presets override built-in presets of the same name.
+1. **Lookup**: Check `~/.paw/presets/` first, then `references/presets/` for built-in. User presets override built-in presets of the same name.
 2. **Inheritance**: If preset has `extends`, resolve the base preset recursively (max depth 5). Detect circular chains and report error.
 3. **Merge**: Apply fields from base → child (most-specific-wins for each field).
 4. **Validate**: Run Configuration Validation on the merged result.
+5. **Initial activity**: If the resolved preset has `initial_activity`, use it for the completion response recommendation instead of the workflow-mode default.
 
 **Default preset**: If no preset specified, scan user presets for one with `default: true`. If found, apply it. If multiple defaults found, report conflict and ask user. If none found, use standard PAW defaults. The precedence chain ensures explicit overrides still win over default preset values.
 
@@ -306,7 +258,7 @@ Never create feature branch from current HEAD without explicit checkout of base.
 
 ## Completion Response
 
-Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step based on workflow mode (full → spec, minimal → code research, custom → per instructions).
+Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step. Next step defaults by workflow mode (full → spec, minimal → code research, custom → per instructions) but is overridden by the preset's `initial_activity` if set (e.g., `work-shaping`).
 
 ## Validation Checklist
 

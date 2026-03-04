@@ -1,0 +1,6 @@
+name: auto
+description: Autonomous full workflow, only pauses at final PR
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: final-pr-only

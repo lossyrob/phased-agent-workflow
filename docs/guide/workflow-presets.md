@@ -18,14 +18,14 @@ Explicit overrides always take precedence over preset values.
 
 PAW ships with four presets covering common patterns:
 
-| Preset | Description | Key Settings |
-|--------|-------------|--------------|
-| **quick** | Minimal ceremony | Minimal mode, local, final-pr-only review, no planning docs review, no final review |
-| **standard** | Balanced with gates | Full mode, local, milestones review, multi-model planning review, single-model final review |
-| **thorough** | Maximum rigor | Full mode, local, planning-only review, multi-model planning review, SoT debate final review |
-| **team** | PR-based collaboration | Full mode, PRs strategy, every-stage review, multi-model planning and final review |
+| Preset | Description |
+|--------|-------------|
+| **quick** | Minimal mode, local strategy, final-pr-only review. No planning docs review or final review. |
+| **standard** | Full mode with milestones review, multi-model planning review, single-model final review. |
+| **thorough** | Full mode with planning-only review, multi-model planning review, SoT debate final review. |
+| **team** | Full mode with PRs strategy, every-stage review, multi-model planning and final review. |
 
-Fields not specified by a preset use PAW's standard defaults.
+See `skills/paw-init/SKILL.md` for the canonical YAML definitions with exact field values. Fields not specified by a preset use PAW's standard defaults.
 
 ## Custom Presets
 

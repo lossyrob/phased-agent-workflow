@@ -92,16 +92,68 @@ config:
   # ... only fields to override
 ```
 
-**Presetable fields**: All Input Parameters table fields except per-workflow fields (`base_branch`, `target_branch`, `issue_url`, `custom_instructions`, `work_description`). Non-presetable fields in `config:` are warned and ignored.
+**Presetable fields**: All configuration fields from the Input Parameters table above. **Not presetable** (per-workflow, ignored with warning if present in `config:`): `base_branch`, `target_branch`, `preset`, `issue_url`, `custom_instructions`, `work_description`. Fields not in the Input Parameters table (e.g., `work_title`, `work_id`, `remote`) are always non-presetable.
 
 ### Built-in Presets
 
-| Preset | Description | Key Config |
-|--------|-------------|------------|
-| `quick` | Minimal ceremony | `minimal`, `local`, `final-pr-only`, planning docs review: off, final review: off |
-| `standard` | Balanced with gates | `full`, `local`, `milestones`, planning review: multi-model, final review: single-model |
-| `thorough` | Maximum rigor | `full`, `local`, `planning-only`, planning review: multi-model, final review: SoT debate |
-| `team` | PR-based collaboration | `full`, `prs`, `every-stage`, planning review: multi-model, final review: multi-model |
+| Preset | Description | Key Settings |
+|--------|-------------|--------------|
+| `quick` | Minimal ceremony | minimal, local, final-pr-only, no docs review, no final review |
+| `standard` | Balanced with gates | full, local, milestones, multi-model planning review |
+| `thorough` | Maximum rigor | full, local, planning-only, multi-model planning, SoT debate final |
+| `team` | PR-based collaboration | full, prs, every-stage, multi-model planning and final |
+
+<details>
+<summary>Canonical YAML definitions</summary>
+
+```yaml
+name: quick
+description: Fast local workflow, minimal ceremony
+config:
+  workflow_mode: minimal
+  review_strategy: local
+  review_policy: final-pr-only
+  planning_docs_review: disabled
+  final_agent_review: disabled
+
+---
+name: standard
+description: Balanced local workflow with review gates
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: milestones
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: single-model
+
+---
+name: thorough
+description: Full review pipeline with SoT final review
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: planning-only
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: society-of-thought
+  final_review_interaction_mode: debate
+
+---
+name: team
+description: PR-based workflow with review gates at every stage
+config:
+  workflow_mode: full
+  review_strategy: prs
+  review_policy: every-stage
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: multi-model
+```
+</details>
 
 Model fields use intent strings (`latest GPT`) for portability; resolved during model resolution step.
 
@@ -118,7 +170,7 @@ When a preset is specified (explicitly or via default):
 3. **Merge**: Apply fields from base → child (most-specific-wins for each field).
 4. **Validate**: Run Configuration Validation on the merged result.
 
-**Default preset**: If no preset specified and no explicit configuration provided, scan user presets for one with `default: true`. If found, apply it. If multiple defaults found, report conflict and ask user. If none found, use standard PAW defaults.
+**Default preset**: If no preset specified, scan user presets for one with `default: true`. If found, apply it. If multiple defaults found, report conflict and ask user. If none found, use standard PAW defaults. The precedence chain ensures explicit overrides still win over default preset values.
 
 ### Error Handling
 

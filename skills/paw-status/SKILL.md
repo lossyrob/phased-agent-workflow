@@ -149,7 +149,7 @@ Only post externally when explicitly asked.
 ## Preset Discovery
 
 When asked "What presets are available?" or "List presets":
-- **Built-in presets**: Read from `skills/paw-init/SKILL.md` (the canonical source) — extract the Built-in Presets table
+- **Built-in presets**: `quick` (minimal ceremony), `standard` (balanced with gates), `thorough` (maximum rigor), `team` (PR-based collaboration)
 - **User presets**: Scan `~/.paw/presets/*.yaml` files, read name and description from each
 - Display: name, description, source (built-in/user), default marker if set, extends target if present
 - If user preset has same name as built-in, show user version (it takes precedence)

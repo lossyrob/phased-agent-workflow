@@ -56,7 +56,11 @@ config:
   # ... only fields to override
 ```
 
-**Resolution precedence**: table defaults → preset config → user-level defaults (copilot-instructions.md) → explicit user overrides → confirmation. This means a preset is a starting point that can still be overridden by copilot-instructions defaults or explicit user instructions.
+**Presetable fields** (configuration that belongs in `config:` block): `workflow_mode`, `review_strategy`, `review_policy`, `session_policy`, `artifact_lifecycle`, `final_agent_review`, `final_review_mode`, `final_review_interactive`, `final_review_models`, `final_review_specialists`, `final_review_interaction_mode`, `final_review_specialist_models`, `plan_generation_mode`, `plan_generation_models`, `planning_docs_review`, `planning_review_mode`, `planning_review_interactive`, `planning_review_models`.
+
+**Not presetable** (per-workflow, ignored if present in preset): `work_title`, `work_id`, `base_branch`, `target_branch`, `custom_workflow_instructions`, `initial_prompt`, `issue_url`, `remote`, `artifact_paths`, `additional_inputs`.
+
+**Resolution precedence**: table defaults → user-level defaults (copilot-instructions.md) → preset config → explicit user overrides → confirmation. An explicitly requested preset overrides user-level defaults because the user's intent to use that preset should win over background config files.
 
 ### Changes Required
 
@@ -64,14 +68,21 @@ config:
   - Add new `preset` input parameter (optional, default: none) to parameter table
   - Add `## Preset System` section after Handling Missing Parameters defining:
     - Preset file schema (YAML format with name, description, default, extends, config)
+    - Built-in preset definitions as embedded YAML blocks:
+      - `quick`: `workflow_mode: minimal`, `review_strategy: local`, `review_policy: final-pr-only`, `planning_docs_review: disabled`, `final_agent_review: disabled`
+      - `standard`: `workflow_mode: full`, `review_strategy: local`, `review_policy: milestones`, `planning_docs_review: enabled`, `planning_review_mode: multi-model`, `final_agent_review: enabled`, `final_review_mode: single-model`
+      - `thorough`: `workflow_mode: full`, `review_strategy: local`, `review_policy: planning-only`, `planning_docs_review: enabled`, `planning_review_mode: multi-model`, `final_agent_review: enabled`, `final_review_mode: society-of-thought`, `final_review_interaction_mode: debate`
+      - `team`: `workflow_mode: full`, `review_strategy: prs`, `review_policy: every-stage`, `planning_docs_review: enabled`, `planning_review_mode: multi-model`, `final_agent_review: enabled`, `final_review_mode: multi-model`
+    - Model fields use intent strings (e.g., `latest GPT`) for portability; paw-init resolves to concrete names
     - Built-in preset definitions (quick, standard, thorough, team) as embedded YAML blocks
     - User preset location (`~/.paw/presets/<name>.yaml`)
-    - Resolution algorithm: detect preset name → load built-in or user preset → resolve `extends` chains (max depth 5, detect cycles) → merge with precedence
+    - Resolution algorithm: detect preset name → check user presets first (`~/.paw/presets/`), then built-in (user overrides built-in on name conflict per FR-010) → resolve `extends` chains (max depth 5, detect cycles) → merge with precedence
     - Default preset: if no preset specified and no explicit config, scan for `default: true` preset
     - Provenance tracking: configuration summary shows source of each field (preset/override/default)
-  - Update parameter resolution flow (currently 3-step) to 5-step: table defaults → preset → user-level defaults → explicit overrides → confirmation
+  - Update parameter resolution flow (currently 3-step) to 4-step: table defaults → user-level defaults → preset → explicit overrides → confirmation
+  - Note: presets override user-level defaults because an explicitly requested preset represents the user's current intent
   - Update Configuration Validation section to note validation runs on merged result (after preset + overrides)
-  - Add error handling: unknown preset → list available; invalid YAML → report; circular extends → report; multiple defaults → ask user
+  - Add error handling: unknown preset → list available; invalid YAML → report; circular extends → report; multiple defaults → ask user; unknown fields in config → warn but don't fail (forward compatibility); empty preset file → no-op (all defaults apply); missing `~/.paw/presets/` directory → skip gracefully
 
 ### Success Criteria
 
@@ -95,7 +106,7 @@ config:
 
 - **`skills/paw-status/SKILL.md`**:
   - Add "List available presets" to Capabilities section
-  - Add preset listing behavior: scan built-in presets (from paw-init knowledge) + `~/.paw/presets/` directory
+  - Add preset listing behavior: read built-in preset definitions from `skills/paw-init/SKILL.md` (the canonical source) + scan `~/.paw/presets/` directory for user presets
   - Display format: name, description, source (built-in/user), extends (if any), default marker
   - Add preset guidance to Help Mode ("Available presets: ..., create custom at ~/.paw/presets/")
 

@@ -87,7 +87,7 @@ Acceptance Scenarios:
 | `thorough` | full | local | planning-only | enabled (multi-model) | enabled (SoT, debate) | Maximum review rigor |
 | `team` | full | prs | every-stage | enabled (multi-model) | enabled (multi-model) | PR-based collaboration |
 - FR-003: User presets are YAML files in `~/.paw/presets/` with a defined schema (Stories: P2)
-- FR-004: Explicit user instructions override preset values, which override PAW defaults (Stories: P3)
+- FR-004: Explicit user instructions override preset values, which override user-level defaults (copilot-instructions.md/AGENTS.md), which override PAW table defaults. Resolution order: table defaults → user-level defaults → preset → explicit overrides (Stories: P3)
 - FR-005: A preset can declare `default: true` to be applied when no preset is specified (Stories: P4)
 - FR-006: A preset can declare `extends: <preset-name>` to inherit from another preset (Stories: P5)
 - FR-007: Preset inheritance chains are resolved with most-specific-wins merge semantics (Stories: P5)
@@ -121,6 +121,7 @@ Acceptance Scenarios:
 - Built-in presets can be embedded in the paw-init skill's prompt text or stored as reference files in the repo
 - paw-init is prompt-driven (not programmatic) so preset resolution happens through agent reasoning over file contents, not code execution
 - Preset files are small (< 1KB each) and few in number (< 20), so full directory scan is acceptable
+- Presets should avoid platform-conditional fields (`session_policy`) or users accept responsibility for platform compatibility; unspecified fields use platform-appropriate defaults
 
 ## Scope
 
@@ -141,6 +142,7 @@ Out of Scope:
 - Preset sharing or publishing mechanism
 - Preset versioning or migration
 - GUI/TUI for preset selection
+- VS Code quick-pick UI integration — presets are resolved from natural language in the chat panel; VS Code quick-pick workflow is a future enhancement
 - Preset templates or generators
 
 ## Dependencies

@@ -27,7 +27,7 @@ Add named workflow configuration presets to PAW, enabling users to reference sho
 - Programmatic YAML parsing — agent reads and reasons over YAML text
 
 ## Phase Status
-- [ ] **Phase 1: Preset Support in paw-init** - Built-in presets, user preset loading, inheritance, defaults, validation, provenance
+- [x] **Phase 1: Preset Support in paw-init** - Built-in presets, user preset loading, inheritance, defaults, validation, provenance
 - [ ] **Phase 2: Preset Discovery & Documentation** - paw-status preset listing, user guide, Docs.md
 
 ## Phase Candidates

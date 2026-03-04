@@ -25,6 +25,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 |-----------|----------|---------|--------|
 | `base_branch` | No | `main` | branch name |
 | `target_branch` | No | auto-derive from work ID | branch name |
+| `preset` | No | none | preset name (built-in or user-defined) |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
 | `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
@@ -64,10 +65,67 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 When parameters are not provided:
 1. Apply defaults from the table above
 2. Check user-level defaults in `copilot-instructions.md` or `AGENTS.md` (these override table defaults)
-3. **Present configuration summary** and ask for confirmation before proceeding
-4. If user requests changes, update values and re-confirm
+3. If a `preset` was specified, apply preset configuration (overrides steps 1-2 for fields the preset defines)
+4. Apply any explicit user overrides from the current request (override everything)
+5. **Present configuration summary** showing the source of each non-default field (preset, user-default, or explicit override) and ask for confirmation
+6. If user requests changes, update values and re-confirm
+
+Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
 This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
+
+## Preset System
+
+Presets are named bundles of configuration fields that simplify workflow initialization. Users reference a preset by name (e.g., "paw this with quick") instead of specifying individual fields.
+
+### Preset File Schema
+
+```yaml
+name: my-preset
+description: Short description for listing
+default: false          # optional; if true, applied when no preset specified
+extends: base-preset    # optional; inherit from another preset
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: planning-only
+  # ... only fields to override
+```
+
+**Presetable fields**: All Input Parameters table fields except per-workflow fields (`base_branch`, `target_branch`, `issue_url`, `custom_instructions`, `work_description`). Non-presetable fields in `config:` are warned and ignored.
+
+### Built-in Presets
+
+| Preset | Description | Key Config |
+|--------|-------------|------------|
+| `quick` | Minimal ceremony | `minimal`, `local`, `final-pr-only`, planning docs review: off, final review: off |
+| `standard` | Balanced with gates | `full`, `local`, `milestones`, planning review: multi-model, final review: single-model |
+| `thorough` | Maximum rigor | `full`, `local`, `planning-only`, planning review: multi-model, final review: SoT debate |
+| `team` | PR-based collaboration | `full`, `prs`, `every-stage`, planning review: multi-model, final review: multi-model |
+
+Model fields use intent strings (`latest GPT`) for portability; resolved during model resolution step.
+
+### User Presets
+
+User presets are YAML files at `~/.paw/presets/<name>.yaml`. The filename (minus extension) is the preset name.
+
+### Preset Resolution
+
+When a preset is specified (explicitly or via default):
+
+1. **Lookup**: Check `~/.paw/presets/` first, then built-in presets. User presets override built-in presets of the same name.
+2. **Inheritance**: If preset has `extends`, resolve the base preset recursively (max depth 5). Detect circular chains and report error.
+3. **Merge**: Apply fields from base → child (most-specific-wins for each field).
+4. **Validate**: Run Configuration Validation on the merged result.
+
+**Default preset**: If no preset specified and no explicit configuration provided, scan user presets for one with `default: true`. If found, apply it. If multiple defaults found, report conflict and ask user. If none found, use standard PAW defaults.
+
+### Error Handling
+
+- **Unknown preset**: Report not found, list available (built-in + user)
+- **Invalid YAML / circular extends / multiple defaults**: Report error, ask user to resolve
+- **Unknown fields in `config:`**: Warn but don't fail (forward compatibility)
+- **Empty preset / missing `~/.paw/presets/`**: Skip gracefully (no-op / no user presets)
 
 ## Desired End States
 

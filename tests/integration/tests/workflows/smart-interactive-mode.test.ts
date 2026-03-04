@@ -4,7 +4,7 @@
  * Verifies that smart mode correctly classifies synthesis findings:
  * - Consensus must-fix/should-fix → auto-apply
  * - Partial/single-model must-fix/should-fix → interactive
- * - Any consider → report-only
+ * - Consensus consider → quick-win evaluation (auto-apply if trivial+net-positive+improves safety/correctness/clarity, otherwise report-only)
  *
  * Seeds: Spec.md, ImplementationPlan.md, CodeResearch.md, WorkflowContext.md (smart config)
  * Exercises: Smart classification heuristic, phased resolution (auto-apply → interactive → summary)
@@ -165,7 +165,7 @@ describe("smart interactive mode classification", { timeout: 300_000 }, () => {
       context: [
         "Agent was given planning artifacts to review with smart interactive mode.",
         "Smart mode should: auto-apply consensus fixes, present partial/single findings interactively,",
-        "and report consider-severity as report-only.",
+        "and evaluate consider-severity findings as quick wins (auto-apply if trivial, net-positive, and improves safety/correctness/clarity) or defer with reason.",
         "",
         "Agent produced this response:",
       ].join("\n"),

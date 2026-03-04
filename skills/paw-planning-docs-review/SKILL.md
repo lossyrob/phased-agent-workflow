@@ -235,17 +235,21 @@ If `Planning Review Mode` is `multi-model`, classify each synthesis finding, the
 | Consensus | must-fix/should-fix | both | `interactive` → user chooses routing |
 | Partial | must-fix/should-fix | any | `interactive` |
 | Single-model | must-fix/should-fix | any | `interactive` |
-| Any | consider | any | `report-only` |
+| Consensus | consider | spec or plan (single) | `quick-win evaluation`* → auto-route if applied |
+| Partial/Single | consider | any | `report-only` |
 
 Consensus agreement implies models converged on the fix. Single-artifact consensus findings are auto-routed: `spec` → paw-spec (Revise), `plan` → paw-planning (Revision). Multi-artifact findings always pause for user routing even at consensus.
 
-**Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction, routing each to the appropriate skill. Display batch summary:
+*Quick-win evaluation: auto-apply if **all three** hold: (1) trivial fix — < ~2 min, localized change; (2) clearly net-positive — no design tradeoff, scope expansion, or new dependencies; (3) improves safety, correctness, or clarity — not purely style. For SoT findings, security/correctness categories and multi-specialist agreement favor applying. Otherwise → `report-only`.
+
+**Phase 1 — Auto-apply**: Apply all `auto-apply` and quick-win findings without user interaction, routing each to the appropriate skill. Display batch summary:
 
 ```
 ## Auto-Applied Findings (N items)
 
 1. **[Title]** (must-fix) → applied to spec — [one-line description]
 2. **[Title]** (should-fix) → applied to plan — [one-line description]
+3. **[Title]** (consider, quick-win) → applied to spec — [one-line description]
 ...
 ```
 
@@ -256,13 +260,13 @@ Consensus agreement implies models converged on the fix. Single-artifact consens
 ```
 ## Resolution Summary
 
-**Auto-applied**: N findings (consensus single-artifact fixes)
+**Auto-applied**: N findings (consensus fixes + quick wins)
 **User-applied**: N findings (to-spec: X, to-plan: Y, to-both: Z)
 **User-skipped**: N findings
-**Reported only**: N findings (consider-severity)
+**Deferred**: N findings (consider-severity, with one-line reasons)
 ```
 
-If all findings are `auto-apply` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
+If all findings are `auto-apply`/`quick-win` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
 
 Smart mode classification applies independently per re-review cycle (Step 6) since synthesis is regenerated from modified artifacts each cycle.
 
@@ -274,7 +278,8 @@ If `Planning Review Mode` is `society-of-thought`, classify each REVIEW-SYNTHESI
 | HIGH | Direct | must-fix/should-fix | both | `interactive` → user chooses routing |
 | HIGH | Inferential | must-fix/should-fix | any | `interactive` |
 | MEDIUM/LOW | any | must-fix/should-fix | any | `interactive` |
-| Any | any | consider | any | `report-only` |
+| HIGH | Direct | consider | spec or plan (single) | `quick-win evaluation`* → auto-route if applied |
+| Other | any | consider | any | `report-only` |
 | — | — | trade-off | any | `interactive` (always) |
 
 Single-artifact HIGH+Direct findings are auto-routed: `spec` → paw-spec (Revise), `plan` → paw-planning (Revision). Multi-artifact findings always pause for user routing. Follow the same Phase 1/2/3 resolution flow as multi-model smart mode.
@@ -287,7 +292,7 @@ Smart mode degrades to interactive behavior in VS Code (single-model has no agre
 
 **If Interactive = false**:
 
-Auto-apply all `must-fix` and `should-fix` findings. Skip `consider` items. Route each to the appropriate planning skill based on affected artifact. Report what was applied.
+Auto-apply all `must-fix` and `should-fix` findings. For each `consider` finding, apply the quick-win evaluation* — auto-apply if it passes, otherwise report as a deferred consider with a one-line reason. Route each applied finding to the appropriate planning skill based on affected artifact. Report all applied and deferred findings.
 
 ### Step 6: Re-Review (if revisions were made)
 
@@ -307,7 +312,7 @@ The `paw-sot` moderator mode handles specialist summoning, finding challenges, a
 
 **Exit**: User says "done", "continue", or "proceed" to exit moderator mode and continue to implementation.
 
-**Skip condition**: If `Planning Review Interactive` is `false`, or no findings exist, or `smart` with only consider-tier findings, skip moderator mode entirely.
+**Skip condition**: If `Planning Review Interactive` is `false`, or no findings exist, or `smart` with only consider-tier findings and none qualify as quick wins, skip moderator mode entirely.
 {{/cli}}
 
 ### Step 7: Completion

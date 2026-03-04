@@ -1,0 +1,14 @@
+name: auto-full
+description: Full autonomous workflow with maximum review rigor
+extends: auto
+config:
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  planning_review_interactive: false
+  planning_review_perspectives: auto
+  final_agent_review: enabled
+  final_review_mode: society-of-thought
+  final_review_interactive: false
+  final_review_specialists: all
+  final_review_interaction_mode: debate
+  final_review_perspectives: auto

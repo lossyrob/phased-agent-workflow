@@ -1,0 +1,10 @@
+name: standard
+description: Balanced local workflow with review gates
+config:
+  workflow_mode: full
+  review_strategy: local
+  review_policy: milestones
+  planning_docs_review: enabled
+  planning_review_mode: multi-model
+  final_agent_review: enabled
+  final_review_mode: single-model

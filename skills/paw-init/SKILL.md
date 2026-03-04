@@ -25,6 +25,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 |-----------|----------|---------|--------|
 | `base_branch` | No | `main` | branch name |
 | `target_branch` | No | auto-derive from work ID | branch name |
+| `preset` | No | none | preset name (built-in or user-defined) |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
 | `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
@@ -64,10 +65,71 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 When parameters are not provided:
 1. Apply defaults from the table above
 2. Check user-level defaults in `copilot-instructions.md` or `AGENTS.md` (these override table defaults)
-3. **Present configuration summary** and ask for confirmation before proceeding
-4. If user requests changes, update values and re-confirm
+3. If a `preset` was specified, apply preset configuration (overrides steps 1-2 for fields the preset defines)
+4. Apply any explicit user overrides from the current request (override everything)
+5. **Present configuration summary** showing the source of each non-default field (preset, user-default, or explicit override) and ask for confirmation
+6. If user requests changes, update values and re-confirm
+
+Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
 This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
+
+## Preset System
+
+Presets are named bundles of configuration fields that simplify workflow initialization. Users reference a preset by name (e.g., "paw this with quick") instead of specifying individual fields.
+
+### Preset File Schema
+
+```yaml
+name: my-preset
+description: Short description for listing
+default: false          # optional; if true, applied when no preset specified
+extends: base-preset    # optional; inherit from another preset
+initial_activity: spec  # optional; spec (default), work-shaping, code-research
+config:
+  workflow_mode: full
+  review_strategy: local
+  # ... only fields to override
+```
+
+**Presetable fields**: All configuration fields from the Input Parameters table above. **Not presetable** (per-workflow, ignored with warning if present in `config:`): `base_branch`, `target_branch`, `preset`, `issue_url`, `custom_instructions`, `work_description`. Fields not in the Input Parameters table (e.g., `work_title`, `work_id`, `remote`) are always non-presetable.
+
+### Built-in Presets
+
+Canonical definitions live in `references/presets/<name>.yaml`. Load the specific preset file when resolving.
+
+| Preset | Description |
+|--------|-------------|
+| `quick` | Minimal ceremony — burns through with no reviews |
+| `standard` | Balanced local workflow with milestone review gates |
+| `thorough` | Maximum rigor — multi-model planning, SoT debate final |
+| `team` | PR-based collaboration with every-stage review |
+| `auto` | Autonomous full workflow, only pauses at final PR |
+| `auto-full` | Auto + multi-model planning with perspectives + SoT debate final |
+| `shaping-full` | Work shaping then auto-full (interactive shaping, auto everything else) |
+
+### User Presets
+
+User presets are YAML files at `~/.paw/presets/<name>.yaml`. The filename (minus extension) is the preset name.
+
+### Preset Resolution
+
+When a preset is specified (explicitly or via default):
+
+1. **Lookup**: Check `~/.paw/presets/` first, then `references/presets/` for built-in. User presets override built-in presets of the same name.
+2. **Inheritance**: If preset has `extends`, resolve the base preset recursively (max depth 5). Detect circular chains and report error.
+3. **Merge**: Apply fields from base → child (most-specific-wins for each field).
+4. **Validate**: Run Configuration Validation on the merged result.
+5. **Initial activity**: If the resolved preset has `initial_activity`, use it for the completion response recommendation instead of the workflow-mode default.
+
+**Default preset**: If no preset specified, scan user presets for one with `default: true`. If found, apply it. If multiple defaults found, report conflict and ask user. If none found, use standard PAW defaults. The precedence chain ensures explicit overrides still win over default preset values.
+
+### Error Handling
+
+- **Unknown preset**: Report not found, list available (built-in + user)
+- **Invalid YAML / circular extends / multiple defaults**: Report error, ask user to resolve
+- **Unknown fields in `config:`**: Warn but don't fail (forward compatibility)
+- **Empty preset / missing `~/.paw/presets/`**: Skip gracefully (no-op / no user presets)
 
 ## Desired End States
 
@@ -196,7 +258,7 @@ Never create feature branch from current HEAD without explicit checkout of base.
 
 ## Completion Response
 
-Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step based on workflow mode (full → spec, minimal → code research, custom → per instructions).
+Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step. Next step defaults by workflow mode (full → spec, minimal → code research, custom → per instructions) but is overridden by the preset's `initial_activity` if set (e.g., `work-shaping`).
 
 ## Validation Checklist
 

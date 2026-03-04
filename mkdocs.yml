@@ -65,6 +65,7 @@ nav:
     - VS Code Extension: guide/vscode-extension.md
     - CLI Installation: guide/cli-installation.md
     - Workflow Modes: guide/workflow-modes.md
+    - Workflow Presets: guide/workflow-presets.md
     - Stage Transitions: guide/stage-transitions.md
     - Two Workflows: guide/two-workflows.md
     - Society-of-Thought Review: guide/society-of-thought-review.md

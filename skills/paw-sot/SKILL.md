@@ -300,4 +300,4 @@ Announce moderator mode with a brief prompt: available specialists, interaction 
 
 **Exit**: User says "done", "continue", or "proceed" to exit moderator mode.
 
-**Skip condition**: If `interactive` is `false`, no findings exist, or `interactive` is `smart` with no significant findings (only `consider`-tier), skip moderator mode entirely.
+**Skip condition**: If `interactive` is `false`, no findings exist, or `interactive` is `smart` with no significant findings (only `consider`-tier and none qualify as quick wins), skip moderator mode entirely.

@@ -215,7 +215,8 @@ If `Final Review Mode` is `multi-model`, classify each synthesis finding, then r
 | Consensus | should-fix | `auto-apply` |
 | Partial | must-fix/should-fix | `interactive` |
 | Single-model | must-fix/should-fix | `interactive` |
-| Any | consider | `report-only` |
+| Consensus | consider | `quick-win evaluation`* |
+| Partial/Single | consider | `report-only` |
 
 Consensus agreement implies models converged on the fix — no per-model cross-referencing needed.
 
@@ -227,16 +228,20 @@ If `Final Review Mode` is `society-of-thought`, classify each REVIEW-SYNTHESIS.m
 | HIGH | Direct | should-fix | `auto-apply` |
 | HIGH | Inferential | must-fix/should-fix | `interactive` |
 | MEDIUM/LOW | any | must-fix/should-fix | `interactive` |
-| Any | any | consider | `report-only` |
+| HIGH | Direct | consider | `quick-win evaluation`* |
+| Other | any | consider | `report-only` |
 | — | — | trade-off | `interactive` (always) |
 
-**Phase 1 — Auto-apply**: Apply all `auto-apply` findings without user interaction. Display batch summary:
+*Quick-win evaluation: auto-apply if **all three** hold: (1) trivial fix — < ~2 min, localized change; (2) clearly net-positive — no design tradeoff, scope expansion, or new dependencies; (3) improves safety, correctness, or clarity — not purely style. For SoT findings, security/correctness categories and multi-specialist agreement favor applying. Otherwise → `report-only`.
+
+**Phase 1 — Auto-apply**: Apply all `auto-apply` and quick-win findings without user interaction. Display batch summary:
 
 ```
 ## Auto-Applied Findings (N items)
 
 1. **[Title]** (must-fix) — [one-line description]
 2. **[Title]** (should-fix) — [one-line description]
+3. **[Title]** (consider, quick-win) — [one-line description]
 ...
 ```
 
@@ -247,13 +252,13 @@ If `Final Review Mode` is `society-of-thought`, classify each REVIEW-SYNTHESIS.m
 ```
 ## Resolution Summary
 
-**Auto-applied**: N findings (consensus fixes)
+**Auto-applied**: N findings (consensus fixes + quick wins)
 **User-applied**: N findings
 **User-skipped**: N findings
-**Reported only**: N findings (consider-severity)
+**Deferred**: N findings (consider-severity, with one-line reasons)
 ```
 
-If all findings are `auto-apply` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
+If all findings are `auto-apply`/`quick-win` or `report-only`, skip Phase 2. If all findings are `interactive`, skip Phase 1.
 {{/cli}}
 {{#vscode}}
 Smart mode degrades to interactive behavior in VS Code (single-model has no agreement signal). Follow the `Interactive = true` flow above.
@@ -261,7 +266,7 @@ Smart mode degrades to interactive behavior in VS Code (single-model has no agre
 
 **If Interactive = false**:
 
-Auto-apply all findings marked `must-fix` and `should-fix`. Skip `consider` items. Report what was applied.
+Auto-apply all `must-fix` and `should-fix` findings. For each `consider` finding, apply the quick-win evaluation* — auto-apply if it passes, otherwise report as a deferred consider with a one-line reason. Report all applied and deferred findings.
 
 {{#cli}}
 #### Moderator Mode (society-of-thought only)

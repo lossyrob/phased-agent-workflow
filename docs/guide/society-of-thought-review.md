@@ -321,7 +321,7 @@ When `Final Review Interactive` is `true` or `smart`, you can interact with spec
 - **Challenge** a finding — the specialist must respond with independent evidence
 - **Request deeper analysis** on a particular file or function
 
-With `smart` mode, interactive sessions activate only when significant findings (must-fix or should-fix) are present. If the review produces only `consider` items, it completes without interruption.
+With `smart` mode, interactive sessions activate only when significant findings (must-fix or should-fix) are present. If the review produces only `consider` items that don't qualify as quick wins, it completes without interruption — though quick-win consider items are still auto-applied.
 
 ## Model Assignment
 

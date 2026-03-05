@@ -270,6 +270,8 @@ context: business
 ---
 ```
 
+Each specialist declares a single context value — comma-separated or array values are not supported.
+
 **Filtering by context:** Callers specify `context: <domain>` in the review context. Only specialists with matching context (case-insensitive) participate.
 
 **Default behaviors:**
@@ -286,6 +288,9 @@ context: business
 This means typos in context values are recoverable — you'll always get a clear warning rather than a silent failure.
 
 All 9 built-in specialists have `context: implementation`. To create specialists for other domains (compliance, business analysis, etc.), add the appropriate `context` field to your custom specialist's frontmatter.
+
+!!! tip
+    For `freeform` reviews of non-code content, always specify `context` to ensure only relevant specialists participate. Without an explicit `context`, all specialists are included regardless of domain.
 
 ## Custom Perspectives
 

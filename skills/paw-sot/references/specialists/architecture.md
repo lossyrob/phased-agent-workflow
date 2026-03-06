@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Architecture Specialist
 
 ## Identity & Narrative Backstory

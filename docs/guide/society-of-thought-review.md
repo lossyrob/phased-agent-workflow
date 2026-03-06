@@ -186,6 +186,7 @@ A specialist file is a markdown document that defines a persona. The filename (w
 
 ```markdown
 ---
+context: implementation
 shared_rules_included: false
 ---
 
@@ -256,6 +257,40 @@ shared rules (Finding → Grounds → Warrant → Rebuttal Conditions
 - **Anti-sycophancy is structural, not stylistic.** The shared rules enforce that every specialist must produce substantive analysis. Don't override these in custom specialists.
 - **Use `shared_rules_included` frontmatter.** Set to `true` only if your custom specialist includes its own anti-sycophancy rules, confidence scoring, and Toulmin output format. When `false` (default), shared rules are automatically injected.
 - **Include example findings.** 2-3 examples in the Toulmin format (Grounds → Warrant → Rebuttal → Verification) anchor the specialist's behavior more effectively than additional instructions.
+
+### Context Filtering
+
+Specialists can declare a domain context in their frontmatter, allowing callers to filter to only relevant specialists for their review type. This enables domain-specific reviews where implementation specialists (security, performance, etc.) don't participate when reviewing non-code content like business plans or documentation.
+
+**Declaring context in a specialist:**
+
+```yaml
+---
+context: business
+---
+```
+
+Each specialist declares a single context value — comma-separated or array values are not supported.
+
+**Filtering by context:** Callers specify `context: <domain>` in the review context. Only specialists with matching context (case-insensitive) participate.
+
+**Default behaviors:**
+
+- Specialists without a `context` field default to `implementation`
+- For `diff` and `artifacts` review types without explicit context, filtering defaults to `implementation`
+- For `freeform` review type without explicit context, no filtering occurs (all specialists participate)
+
+**Zero-match handling:** If no specialists match the requested context:
+
+- In **interactive** or **smart** mode, SoT warns you and asks how to proceed
+- In **non-interactive** mode, SoT warns and falls back to all specialists
+
+This means typos in context values are recoverable — you'll always get a clear warning rather than a silent failure.
+
+All 9 built-in specialists have `context: implementation`. To create specialists for other domains (compliance, business analysis, etc.), add the appropriate `context` field to your custom specialist's frontmatter.
+
+!!! tip
+    For `freeform` reviews of non-code content, always specify `context` to ensure only relevant specialists participate. Without an explicit `context`, all specialists are included regardless of domain.
 
 ## Custom Perspectives
 

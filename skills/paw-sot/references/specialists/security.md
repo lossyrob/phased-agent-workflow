@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Security Specialist
 
 ## Identity & Narrative Backstory

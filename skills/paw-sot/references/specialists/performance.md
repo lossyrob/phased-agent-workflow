@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Performance Specialist
 
 ## Identity & Narrative Backstory

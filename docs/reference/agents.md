@@ -7,6 +7,7 @@ PAW uses two AI chat modes ("agents") that orchestrate workflow activities throu
 | Agent | Purpose | Architecture |
 |-------|---------|--------------|
 | **PAW** | Implementation workflow orchestrator | Skills-based |
+| **PAW** (Lite) | Lightweight workflow via `paw-lite` skill | Skills-based |
 | **PAW Review** | PR review workflow orchestrator | Skills-based |
 
 Both agents follow the same pattern: a compact orchestrator that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
@@ -56,6 +57,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
+| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | Plan.md |
 
 **Utility Skills:**
 

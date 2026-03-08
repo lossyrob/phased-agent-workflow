@@ -1,13 +1,11 @@
 ---
 name: paw-lite
-description: Lightweight PAW workflow skill. Work shaping (optional) → plan → fleet-implement → configurable review → PR. Trusts frontier models for implementation decisions while keeping PAW's work shaping, review quality, git discipline, and artifact lifecycle.
+description: Lightweight PAW workflow skill. Optional work shaping → plan → parallel fleet-style implementation → configurable review (single-model, multi-model, or SoT) → PR. Uses SQL todos for coordination and delegates to paw-work-shaping, paw-sot, paw-git-operations, and paw-pr.
 ---
 
 # PAW Lite
 
 > **Execution Context**: This skill runs **directly** in the calling agent's session (not a subagent), preserving interactivity for work shaping Q&A, planning decisions, and review discussion.
-
-Lightweight workflow that keeps PAW's most valuable components — work shaping, SoT review, git discipline, artifact lifecycle — while replacing the rigid spec→plan→phased-implement pipeline with a flow that trusts frontier models to make implementation decisions in the moment.
 
 Prerequisite: WorkflowContext.md must exist (created by `paw-init` or manually).
 
@@ -24,15 +22,12 @@ Prerequisite: WorkflowContext.md must exist (created by `paw-init` or manually).
 
 **How**: Load the `paw-work-shaping` skill and follow its instructions. It produces `WorkShaping.md` in the work directory.
 
-**Skip criteria**: User provides a clear brief, references a detailed issue, or explicitly requests skipping.
-
 ### Stage 2: Plan
 
-Create a lightweight implementation plan. No rigid structure — let the model determine what's appropriate for the task.
+Create an implementation plan and save it to `.paw/work/<work-id>/Plan.md`.
 
 **Desired end states**:
-- A plan exists at `.paw/work/<work-id>/Plan.md`
-- Plan includes: approach summary, work items, and any key decisions
+- Plan includes approach summary, work items, and key decisions
 - Todos reflected in SQL for fleet coordination:
   ```sql
   INSERT INTO todos (id, title, description, status) VALUES ...;
@@ -41,9 +36,8 @@ Create a lightweight implementation plan. No rigid structure — let the model d
 - Plan committed per artifact lifecycle mode
 
 **Guidance**:
-- Keep plans light — approach and work items, not detailed code specifications
 - Structure todos to minimize dependencies and maximize parallel execution
-- If the task is simple enough for a single sequential implementation, skip fleet dispatch in Stage 3 and just implement directly
+- If the task is simple enough for a single sequential implementation, skip fleet dispatch in Stage 3 and implement directly
 
 ### Stage 3: Implement (Fleet-Style)
 
@@ -114,11 +108,11 @@ Before invoking paw-pr, ensure all todos are complete: `SELECT id, status FROM t
 
 ## Configuration
 
-All configuration lives in WorkflowContext.md. PAW Lite uses the same fields as full PAW but with lighter defaults:
+All configuration lives in WorkflowContext.md. PAW Lite defaults:
 
-| Field | PAW Lite Default | Notes |
-|-------|-----------------|-------|
-| Workflow Mode | `custom` | Always custom for PAW Lite |
-| Review Strategy | `local` | No intermediate PRs |
-| Review Policy | `final-pr-only` | Single review gate |
-| Artifact Lifecycle | `commit-and-clean` | Visible during work, cleaned from PR |
+| Field | Default |
+|-------|---------|
+| Workflow Mode | `custom` |
+| Review Strategy | `local` |
+| Review Policy | `final-pr-only` |
+| Artifact Lifecycle | `commit-and-clean` |

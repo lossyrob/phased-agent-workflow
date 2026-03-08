@@ -66,11 +66,7 @@ Implement the plan using parallel task subagents for independent work items.
 - Commit changes following selective staging discipline (never `git add .`)
 - Stage `.paw/` files per artifact lifecycle mode from WorkflowContext.md
 
-**Selective staging**: Follow `paw-git-operations` patterns:
-1. Check `Artifact Lifecycle:` in WorkflowContext.md
-2. `commit-and-clean` or `commit-and-persist`: stage all files including `.paw/`
-3. `never-commit`: stage non-`.paw/` files only
-4. Always verify branch before commit: `git branch --show-current`
+**Selective staging**: Follow `paw-git-operations` patterns for selective staging discipline and artifact lifecycle handling.
 
 ### Stage 4: Review (configurable)
 
@@ -100,23 +96,9 @@ Review the implementation before PR creation. Configuration comes from WorkflowC
 
 ### Stage 5: PR
 
-Create a pull request from the target branch to the base branch.
+Load the `paw-pr` skill and follow its instructions for final PR creation. It handles pre-flight validation, artifact lifecycle (commit-and-clean scoping to the work directory), and PR description scaling.
 
-**Pre-flight checks** (block on failures unless user overrides):
-- All todos complete in SQL
-- Target branch has implementation commits
-- Branch up-to-date with base (from WorkflowContext.md, default `main`)
-- No merge conflicts
-- Build/tests pass (if applicable)
-
-**Artifact lifecycle handling**:
-- `commit-and-clean`: Remove `.paw/` from git index (`git rm --cached -r .paw/`), add `.paw/.gitignore` with `*`, commit deletions. Artifacts remain on disk but not in the PR.
-- `commit-and-persist`: Include artifact links in PR description
-- `never-commit`: Omit artifacts section from PR
-
-**PR description**: Scale to change complexity:
-- **Simple**: Title, summary, key changes
-- **Complex**: Summary, changes by area, testing notes, breaking changes if any
+Before invoking paw-pr, ensure all todos are complete: `SELECT id, status FROM todos WHERE status != 'done'`
 
 ## Artifact Structure
 

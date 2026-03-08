@@ -151,7 +151,7 @@ The Review Workflow helps you thoroughly review any pull request through three s
 
 ## Workflow Characteristics
 
-Both workflows share PAW's core principles:
+All workflows share PAW's core principles:
 
 | Characteristic | Description |
 |----------------|-------------|

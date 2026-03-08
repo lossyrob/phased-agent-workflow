@@ -1,16 +1,17 @@
 # PAW Agents Reference
 
-PAW uses two AI chat modes ("agents") that orchestrate workflow activities through dynamically loaded skills. Each agent is a compact orchestrator that reasons about user intent and delegates to specialized skills.
+PAW uses two AI chat modes ("agents") that orchestrate workflow activities through dynamically loaded skills. Each agent is a compact orchestrator that reasons about user intent and delegates to specialized skills. The `paw-lite` skill can be loaded by any agent for a lightweight workflow.
 
 ## Agents Overview
 
 | Agent | Purpose | Architecture |
 |-------|---------|--------------|
 | **PAW** | Implementation workflow orchestrator | Skills-based |
-| **PAW** (Lite) | Lightweight workflow via `paw-lite` skill | Skills-based |
 | **PAW Review** | PR review workflow orchestrator | Skills-based |
 
 Both agents follow the same pattern: a compact orchestrator that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
+
+> **PAW Lite** is available as the `paw-lite` skill — any agent can load it on demand.
 
 ---
 

@@ -109,28 +109,29 @@ When writing shell commands in agent prompts or documentation, follow these guid
 
 When writing agent prompts, skills, or instructions, follow these guidelines to maximize agent effectiveness while minimizing token usage.
 
-### Write for the Agent, Not a Human Reader
+### Write for the Executing Agent, Not a Human Reader
 
-Every line in a prompt, skill, or agent file must be actionable by the agent that receives it. Strip text that explains *why the skill exists*, *what philosophy motivates it*, or *how it compares to alternatives* — these help a human understand the design but waste agent context.
+Prompt content (skills, agents, inline instructions) is consumed by an agent as operating instructions. Every line should direct the agent's behavior. Text that explains design rationale, motivates architectural choices, or compares approaches helps a human reader but wastes agent context tokens and dilutes actionable signal.
 
-**Anti-pattern**: Human-facing philosophy and marketing
+**Anti-pattern**: Narration and rationale embedded in instructions
 ```markdown
-Lightweight workflow that keeps PAW's most valuable components while replacing
-the rigid pipeline with a flow that trusts frontier models to make decisions
-in the moment.
+This workflow replaces the rigid spec→plan→implement pipeline with a lighter
+approach that trusts frontier models to make implementation decisions. Unlike
+full PAW, it skips the specification stage entirely.
 ```
 
-**Pattern**: Agent-actionable description
+**Pattern**: Direct the agent's behavior
 ```markdown
-Prerequisite: WorkflowContext.md must exist (created by paw-init or manually).
+Execute stages in order: plan → implement → review → PR. Skip specification.
 ```
 
-**Test**: For each sentence, ask: "Does this change what the agent does?" If it only helps a human understand the design rationale, remove it. Put design rationale in documentation (`docs/`), not in prompts.
+**Test**: For each sentence, ask: "Does this change what the agent does?" If it only explains *why* or provides background, move it to `docs/` or remove it.
 
 **Common violations**:
-- Comparative statements ("unlike full PAW, this workflow...")
-- Philosophy ("trusts models to...", "designed for frontier...")
-- Marketing descriptions in `description` frontmatter — the description should list concrete capabilities and trigger conditions for skill matching, not pitch the skill's value proposition
+- Design rationale ("this approach was chosen because...")
+- Comparative framing ("unlike X, this does Y...")
+- Philosophy or value statements ("trusts models to...", "designed for...")
+- Background context the agent can't act on ("models have advanced since...")
 
 ### Describe End States, Not Procedures
 

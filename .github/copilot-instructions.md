@@ -109,6 +109,29 @@ When writing shell commands in agent prompts or documentation, follow these guid
 
 When writing agent prompts, skills, or instructions, follow these guidelines to maximize agent effectiveness while minimizing token usage.
 
+### Write for the Agent, Not a Human Reader
+
+Every line in a prompt, skill, or agent file must be actionable by the agent that receives it. Strip text that explains *why the skill exists*, *what philosophy motivates it*, or *how it compares to alternatives* — these help a human understand the design but waste agent context.
+
+**Anti-pattern**: Human-facing philosophy and marketing
+```markdown
+Lightweight workflow that keeps PAW's most valuable components while replacing
+the rigid pipeline with a flow that trusts frontier models to make decisions
+in the moment.
+```
+
+**Pattern**: Agent-actionable description
+```markdown
+Prerequisite: WorkflowContext.md must exist (created by paw-init or manually).
+```
+
+**Test**: For each sentence, ask: "Does this change what the agent does?" If it only helps a human understand the design rationale, remove it. Put design rationale in documentation (`docs/`), not in prompts.
+
+**Common violations**:
+- Comparative statements ("unlike full PAW, this workflow...")
+- Philosophy ("trusts models to...", "designed for frontier...")
+- Marketing descriptions in `description` frontmatter — the description should list concrete capabilities and trigger conditions for skill matching, not pitch the skill's value proposition
+
 ### Describe End States, Not Procedures
 
 For autonomous agent tasks, describe desired outcomes rather than prescriptive steps—let the agent reason about how to achieve them. However, keep explicit steps for interactive protocols (user-facing flows where order and presentation matter).

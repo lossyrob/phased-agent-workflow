@@ -52,6 +52,7 @@ Implement the plan using parallel task subagents for independent work items.
 - Dispatch independent todos simultaneously via background `task` subagents
 - Never dispatch just a single background subagent — either use sync or dispatch multiple
 - Each sub-agent prompt must include the full task context and instruction to update SQL: `UPDATE todos SET status = 'done' WHERE id = '<id>'`
+- If `Implementation Model` in WorkflowContext.md is not `none`, pass it as the `model` parameter to each task subagent
 - After sub-agents complete, validate work quality and check todo status in SQL
 
 **After implementation**:
@@ -115,4 +116,5 @@ All configuration lives in WorkflowContext.md. PAW Lite defaults:
 | Workflow Mode | `custom` |
 | Review Strategy | `local` |
 | Review Policy | `final-pr-only` |
+| Implementation Model | `none` (session default) |
 | Artifact Lifecycle | `commit-and-clean` |

@@ -176,7 +176,7 @@ Save to: `.paw/work/<work-id>/ImplementationPlan.md`
 
 1. Read all context: Issue, Spec.md, SpecResearch.md, CodeResearch.md
 2. Create `.paw/work/<work-id>/planning/` directory if it doesn't exist
-3. Create `.paw/work/<work-id>/planning/.gitignore` with content `*` (if not already present)
+3. Create `.paw/work/<work-id>/planning/.gitignore` with content `*` (if not already present). This is a local-only scratch ignore marker — do NOT stage or commit it.
 4. Resolve model intents to actual model names (e.g., "latest GPT" → current GPT model)
 5. Present resolved models for confirmation:
    ```

@@ -92,13 +92,20 @@ Before staging `.paw/` files, determine the artifact lifecycle mode:
 
 ```bash
 # commit-and-clean or commit-and-persist: stage .paw/ files
-git add <all-changed-files>
+# (excluding local-only scratch ignore markers)
+git add <all-changed-files-except-scratch-ignore-markers>
 
 # never-commit: skip .paw/ files
 git add <non-paw-files-only>
 ```
 
 **Why**: Artifact lifecycle mode controls whether `.paw/` files are committed. `commit-and-clean` and `commit-and-persist` stage artifacts during development; `never-commit` keeps them local-only.
+
+**Scratch ignore markers are always local-only**:
+- Treat `.gitignore` files created to keep workflow/scratch areas local-only as lifecycle markers, not repository content
+- Examples: `.paw/work/<feature-slug>/.gitignore`, `.paw/work/<feature-slug>/planning/.gitignore`, `.paw/work/<feature-slug>/reviews/.gitignore`, and nested review output `.gitignore` files
+- Do NOT stage or commit them in normal commits
+- If any scratch ignore marker appears in `git ls-files`, `git diff --cached --name-only`, or the planned PR diff, remove it from the index before committing (for example `git rm --cached <marker-path>`)
 
 ## Branch Verification
 
@@ -122,8 +129,9 @@ git branch --show-current
 1. ✓ Verify current branch matches expected pattern
 2. ✓ Stage only related files (no `git add .`)
 3. ✓ Check artifact lifecycle mode before staging `.paw/` artifacts
-4. ✓ Review staged changes: `git diff --cached`
-5. ✓ Commit with descriptive message
+4. ✓ Verify no scratch ignore markers are staged or tracked
+5. ✓ Review staged changes: `git diff --cached`
+6. ✓ Commit with descriptive message
 
 ## Phase PR Creation
 

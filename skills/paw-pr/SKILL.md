@@ -46,6 +46,10 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - Latest build passes on target branch (if applicable)
 - All tests passing
 
+**Scratch Ignore Markers**:
+- No tracked scratch ignore markers under `.paw/work/<work-id>/` scratch areas
+- Scratch ignore markers (`.gitignore` files used to keep workflow/planning/reviews output local-only) must be removed from the index before PR creation if they became tracked
+
 **Open Questions Resolved**:
 - SpecResearch `## Open Unknowns` → resolved in Spec or clarified
 - CodeResearch `## Open Questions` → resolved in Plan or code
@@ -72,6 +76,8 @@ Before creating the PR, verify and report status. Block on failures unless user 
 
 Detect lifecycle mode using the same hierarchy as `paw-transition`: WorkflowContext.md `Artifact Lifecycle:` field → legacy field mapping (`artifact_tracking: enabled`/`track_artifacts: true` → `commit-and-clean`; `disabled`/`false` → `never-commit`) → `.gitignore` with `*` fallback → default `commit-and-clean`.
 
+Scratch ignore markers are local-only lifecycle markers even in `commit-and-clean` or `commit-and-persist` workflows. Never intentionally commit `.paw/work/<work-id>/.gitignore` or nested scratch-area markers such as `planning/.gitignore`, `reviews/.gitignore`, or review-output directory markers. If any are tracked, remove them from the git index before creating the final PR.
+
 ### Stop-Tracking Operation (`commit-and-clean` only)
 
 Execute **before** PR creation. Skip gracefully if no tracked `.paw/` files exist (idempotent).
@@ -80,7 +86,7 @@ Execute **before** PR creation. Skip gracefully if no tracked `.paw/` files exis
 2. `git rm --cached -r .paw/work/<work-id>/` — remove from index, preserve local files
 3. Create `.paw/work/<work-id>/.gitignore` containing `*` — this file self-ignores (the `*` matches the `.gitignore` itself), so it stays untracked
 4. `git commit -m "Stop tracking PAW artifacts for <work-id>"` — only the index deletions from step 2 are committed. Do NOT stage the `.gitignore` file.
-5. Verify: `git status` shows no `.paw/` files; `.gitignore` exists locally but is not tracked
+5. Verify: `git status` shows no tracked `.paw/` files or scratch ignore markers; `.gitignore` exists locally and is not tracked
 
 Log each step so the user sees what's happening.
 
@@ -146,6 +152,7 @@ After PR creation, provide:
 - [ ] All pre-flight checks pass (or user confirmed proceed)
 - [ ] PR description complete with all relevant sections
 - [ ] All artifact links valid (per lifecycle mode)
+- [ ] Scratch ignore markers are not tracked in the final PR diff
 - [ ] Intermediate PR links included (if prs strategy)
 - [ ] Breaking changes documented (or stated "None")
 - [ ] Issue URL linked in PR body

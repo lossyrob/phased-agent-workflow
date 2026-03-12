@@ -190,6 +190,12 @@ The `Artifact Lifecycle` parameter controls how `.paw/work/<work-id>/` artifacts
 3. Create `.paw/work/<work-id>/.gitignore` containing `*` — self-ignoring, never committed
 4. Commit the removal
 
+**Scratch ignore markers are local-only lifecycle markers**:
+
+- Never intentionally commit `.gitignore` files created to keep workflow areas local-only
+- This applies to both top-level workflow markers (for example `.paw/work/<work-id>/.gitignore`) and nested scratch-area markers such as `.paw/work/<work-id>/planning/.gitignore`, `.paw/work/<work-id>/reviews/.gitignore`, or review-output directory markers
+- If any scratch ignore marker becomes tracked, remove it from the git index before commit or final PR creation
+
 The WorkflowContext.md `Artifact Lifecycle:` field is not updated during PR-time stop-tracking because the workflow is completing. For mid-workflow stop-tracking (VS Code command), the field is updated to `never-commit`.
 
 The final PR diff against `main` shows zero `.paw/` file changes. The PR description links to artifacts at the recorded commit SHA.

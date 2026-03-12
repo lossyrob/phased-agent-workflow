@@ -404,8 +404,8 @@ Each implementation phase in the plan is a discrete chunk of work that can be re
 For each phase:
 
 1. `paw-implement` creates phase branch (PRs strategy) and implements changes
-2. `paw-implement` runs automated checks (tests, linting, type checking, build)
-3. `paw-impl-review` reviews changes, adds documentation improvements, pushes and opens Phase PR
+2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
+3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation improvements, and blocks missing or empty planned outputs before pushing/opening the Phase PR
 4. Developer reviews PR and provides feedback
 5. `paw-implement` addresses review comments with focused commits
 6. `paw-impl-review` verifies changes and pushes updates
@@ -430,7 +430,7 @@ When the plan includes a documentation phase, `paw-implement` loads the `paw-doc
 
 **Workflow:**
 
-1. `paw-final-review` reviews the full implementation diff against spec (if review enabled). Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (delegates to `paw-sot` for specialist personas with parallel or debate interaction)
+1. `paw-final-review` reviews the full implementation diff against spec and `ImplementationPlan.md` deliverables (if review enabled). Missing planned deliverables are `should-fix` minimum. Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (delegates to `paw-sot` for specialist personas with parallel or debate interaction)
 2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
 3. `paw-pr` crafts comprehensive PR description with decision audit trail
 4. `paw-pr` opens the final PR

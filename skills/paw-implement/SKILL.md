@@ -76,6 +76,7 @@ When plan conflicts with codebase reality or leaves critical gaps: **STOP immedi
 
 **Constraints**:
 - All verification commands from CodeResearch.md must pass before committing
+- Before marking the phase complete, verify each deliverable in the current phase's `### Changes Required` section exists in repo state. Planned files must exist; promised directories/tests must contain substantive deliverables rather than empty scaffolding; explicit minimums (for example "at minimum") must be satisfied.
 - Update ImplementationPlan.md: mark phase complete in Phase Status (`- [ ]` → `- [x]`)
 - Commit locally with descriptive message
 - **DO NOT push** — `paw-impl-review` handles that
@@ -141,6 +142,7 @@ Candidates are elaborated into full phases later via the promotion flow in `paw-
 ### Initial Phase Implementation
 
 - [ ] All automated success criteria green
+- [ ] All planned deliverables from the current phase `Changes Required` section exist and are non-empty where applicable
 - [ ] Phase Status checkbox marked complete in ImplementationPlan.md
 - [ ] Changes committed locally (NOT pushed)
 

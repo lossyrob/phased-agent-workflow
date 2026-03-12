@@ -282,7 +282,7 @@ This preserves user collaboration for interactive work while leveraging context 
 | `paw-implement` | Execute plan phases, make code changes | Code changes |
 | `paw-impl-review` | Review implementation, open PRs | Phase PRs, Docs.md |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
-| `paw-status` | Diagnose workflow state | Status reports |
+| `paw-status` | Diagnose workflow state, explain PAW/onboarding | Status reports |
 | `paw-work-shaping` | Pre-spec ideation and clarification | WorkShaping.md |
 | `paw-rewind` | Roll back to earlier workflow state | Restored artifacts |
 | `paw-transition` | Handle stage boundaries and policies | Transition decisions |

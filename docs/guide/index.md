@@ -2,6 +2,8 @@
 
 This guide will help you get up and running with **Phased Agent Workflow (PAW)** in just a few minutes.
 
+If you're using **GitHub Copilot CLI**, start with [CLI Installation](cli-installation.md). This page covers the **VS Code extension** setup flow.
+
 ## Prerequisites
 
 Before you begin, ensure you have:
@@ -12,7 +14,7 @@ Before you begin, ensure you have:
     - **GitHub** with GitHub MCP Tools
     - **Azure DevOps** with Azure DevOps MCP Tools
 
-## Quick Install
+## Quick Install (VS Code)
 
 1. **Download** the latest `.vsix` from the [Releases page](https://github.com/lossyrob/phased-agent-workflow/releases)
 

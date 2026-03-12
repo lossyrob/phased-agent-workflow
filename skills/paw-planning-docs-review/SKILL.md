@@ -62,7 +62,7 @@ If Spec.md or CodeResearch.md is missing, proceed with available artifacts. Note
 ### Step 3: Create Reviews Directory
 
 Create `.paw/work/<work-id>/reviews/planning/` if it doesn't exist.
-Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already present).
+Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already present). This is a local-only scratch ignore marker — do NOT stage or commit it.
 
 ### Review Prompt (shared)
 

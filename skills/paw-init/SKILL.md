@@ -249,7 +249,7 @@ Never create feature branch from current HEAD without explicit checkout of base.
 
 ### Artifact Lifecycle
 - **`commit-and-clean` or `commit-and-persist`**: WorkflowContext.md committed with message `Initialize PAW workflow for <Work Title>`
-- **`never-commit`**: `.gitignore` with `*` created in work directory; WorkflowContext.md is NOT committed
+- **`never-commit`**: `.gitignore` with `*` created in work directory as a local-only lifecycle marker; WorkflowContext.md is NOT committed and the marker itself remains untracked
 
 ### User Review
 - WorkflowContext.md presented for user review/confirmation

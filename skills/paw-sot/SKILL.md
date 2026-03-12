@@ -305,7 +305,7 @@ For each thread:
 
 ## Output Artifacts
 
-Create `.gitignore` with content `*` in the output directory (if not already present).
+Create `.gitignore` with content `*` in the output directory (if not already present). This is a local-only scratch ignore marker — do NOT stage or commit it.
 
 | Review Type | Files Created |
 |-------------|---------------|

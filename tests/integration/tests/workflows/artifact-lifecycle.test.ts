@@ -9,6 +9,7 @@
  * - Explicit commit-and-clean, commit-and-persist, never-commit values
  * - Legacy artifact_tracking: enabled → commit-and-clean
  * - Legacy artifact_tracking: disabled → never-commit
+ * - Final PR transition includes a stop-tracking action for commit-and-clean
  *
  * Requires: Copilot CLI auth
  * Runtime: ~3-5 minutes
@@ -111,11 +112,42 @@ function buildTransitionPrompt(skillContent: string, workId: string): string {
     "- Follow the Artifact Lifecycle Check rules in the skill (including legacy value mapping and detection hierarchy)",
     "- Return the TRANSITION RESULT block exactly as specified in the skill",
     "- The artifact_lifecycle field must reflect the detected lifecycle mode",
+    "- Include the artifact_lifecycle_action field exactly as specified in the skill output block",
     "- Do NOT ask the user questions — determine everything from WorkflowContext.md and the context provided",
     "",
     "Skill documentation:",
     skillContent,
   ].join("\n");
+}
+
+async function seedFinalPrReadyPlan(workDir: string, workId: string): Promise<void> {
+  const dir = join(workDir, ".paw/work", workId);
+  await mkdir(dir, { recursive: true });
+  await writeFile(join(dir, "ImplementationPlan.md"), [
+    "# Implementation Plan: Final PR Ready",
+    "",
+    "## Overview",
+    "Minimal seeded plan for testing the paw-pr transition boundary.",
+    "",
+    "## Phase Status",
+    "- [x] **Phase 1: Final PR Guardrail** - Complete",
+    "",
+    "---",
+    "",
+    "## Phase 1: Final PR Guardrail",
+    "",
+    "### Overview",
+    "Add the final PR lifecycle guardrail.",
+    "",
+    "### Status",
+    "- State: Complete",
+    "- Completed: Yes",
+    "- PR: N/A",
+    "",
+    "## Phase Candidates",
+    "- None",
+    "",
+  ].join("\n"));
 }
 
 describe("artifact lifecycle detection", { timeout: 600_000 }, () => {
@@ -161,6 +193,42 @@ describe("artifact lifecycle detection", { timeout: 600_000 }, () => {
     }, 120_000);
 
     return response?.data?.content ?? "";
+  }
+
+  async function runFinalPrTransition(label: string): Promise<{ response: string; workId: string }> {
+    const transitionSkill = await loadSkill("paw-transition");
+    const workId = `test-final-pr-${label}`;
+
+    const answerer = new RuleBasedAnswerer([
+      (req) => req.choices?.[0] ?? "yes",
+    ], false);
+
+    const ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: `final-pr-${label}`,
+      systemPrompt: buildTransitionPrompt(transitionSkill, workId),
+      answerer,
+    });
+    contexts.push(ctx);
+
+    await seedWorkflowContext(ctx.fixture.workDir, workId, "commit-and-clean");
+    await seedFinalPrReadyPlan(ctx.fixture.workDir, workId);
+
+    const response = await ctx.session.sendAndWait({
+      prompt: [
+        `Evaluate a transition for work ID: ${workId}`,
+        "",
+        "Context: paw-final-review just completed. All planned phases are complete and there are no unresolved phase candidates.",
+        "",
+        "Determine the next activity and return the TRANSITION RESULT block with all fields.",
+        "I specifically need the artifact_lifecycle and artifact_lifecycle_action values.",
+      ].join("\n"),
+    }, 120_000);
+
+    return {
+      response: response?.data?.content ?? "",
+      workId,
+    };
   }
 
   it("explicit commit-and-clean: detected correctly", async () => {
@@ -257,6 +325,31 @@ describe("artifact lifecycle detection", { timeout: 600_000 }, () => {
       response,
       /artifact_lifecycle:\s*never-commit/i,
       `Expected artifact_lifecycle: never-commit for legacy 'disabled'.\nResponse: ${response.slice(0, 500)}`,
+    );
+  });
+
+  it("final PR boundary includes stop-tracking action for commit-and-clean", async () => {
+    const { response, workId } = await runFinalPrTransition("commit-and-clean");
+
+    assert.match(
+      response,
+      /next_activity:\s*paw-pr/i,
+      `Expected next_activity: paw-pr at the final PR boundary.\nResponse: ${response.slice(0, 500)}`,
+    );
+
+    assert.match(
+      response,
+      /artifact_lifecycle:\s*commit-and-clean/i,
+      `Expected artifact_lifecycle: commit-and-clean at the final PR boundary.\nResponse: ${response.slice(0, 500)}`,
+    );
+
+    assert.match(
+      response,
+      new RegExp(
+        `artifact_lifecycle_action:\\s*stop-tracking \\(run \`git rm --cached -r \\.paw/work/${workId}/\` before PR creation\\)`,
+        "i",
+      ),
+      `Expected stop-tracking lifecycle action for final PR boundary.\nResponse: ${response.slice(0, 700)}`,
     );
   });
 });

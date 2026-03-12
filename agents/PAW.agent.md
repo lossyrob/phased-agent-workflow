@@ -53,7 +53,7 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 | Before Activity | Required Prerequisite |
 |-----------------|----------------------|
 | paw-implement (any phase) | Load `paw-git-operations`, verify correct branch |
-| paw-pr | All phase candidates resolved (run Candidate Promotion Flow if any `- [ ]` items in `## Phase Candidates`) |
+| paw-pr | Load `paw-pr` skill. Honor `artifact_lifecycle` and `artifact_lifecycle_action` from `paw-transition`. All phase candidates resolved (run Candidate Promotion Flow if any `- [ ]` items in `## Phase Candidates`) |
 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
@@ -103,7 +103,8 @@ Use TODOs to externalize workflow steps.
 
 **Transition response handling**:
 - `pause_at_milestone`: If `true`, PAUSE and wait for user confirmation. Applies at every phase boundary, including before entering candidate promotion and after each promoted phase.
-- `artifact_lifecycle`: Pass to next activity (if `never-commit`, don't stage `.paw/` files)
+- `artifact_lifecycle`: Pass to next activity. If `next_activity = paw-pr`, create the final PR through `paw-pr` rather than inline commands. If `never-commit`, don't stage `.paw/` files.
+- `artifact_lifecycle_action`: If `stop-tracking`, ensure `paw-pr` performs the stop-tracking operation before opening the final PR.
 - `preflight`: Report blocker if not `passed`
 - `promotion_pending`: If `true` **and not paused**, run Candidate Promotion Flow (see below)
 {{#vscode}}
@@ -132,6 +133,7 @@ When **stopping work or pausing the workflow**, verify:
 2. **If yes**—Run `paw-transition` first (don't yield yet)
 3. **If transition returned `pause_at_milestone: true`**—Safe to yield (milestone pause)
 4. **If transition returned `pause_at_milestone: false`**—Continue to next activity
+5. **Check artifact lifecycle before final PR**—If the next activity is `paw-pr` and `artifact_lifecycle_action = stop-tracking`, load `paw-pr` and verify it removes `.paw/` files from the git index before opening the final PR
 
 **Valid reasons to yield:**
 - Transition returned `pause_at_milestone: true`
@@ -180,7 +182,7 @@ When pausing at a milestone, provide:
 - After Planning PR created: **Delegate to `paw-transition`** (this is a stage boundary)
 - After `paw-impl-review` returns PASS: Load `paw-git-operations`, push/create PR
 - After Phase PR created or push complete: **Delegate to `paw-transition`** (this is a stage boundary)
-- After `paw-final-review` completes: **Delegate to `paw-transition`** (this is a stage boundary)
+- After `paw-final-review` completes: **Delegate to `paw-transition`** (this is a stage boundary). If it returns `next_activity = paw-pr`, load `paw-pr` directly—do NOT create the final PR inline or bypass the skill.
 - After any review subagent: Check result, handle accordingly, then `paw-transition` if at stage boundary
 
 ### Work Shaping Detection

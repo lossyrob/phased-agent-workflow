@@ -138,6 +138,10 @@ Before the next activity can start, verify:
 3. If absent, check `.paw/work/<work-id>/.gitignore` — if exists with `*` pattern: `never-commit`
 4. Default: `commit-and-clean`
 
+**Artifact Lifecycle Action** (for orchestrator handoff):
+- If `next_activity = paw-pr` and detected lifecycle is `commit-and-clean`: `artifact_lifecycle_action = stop-tracking (run \`git rm --cached -r .paw/work/<work-id>/\` before PR creation)`
+- Otherwise: `artifact_lifecycle_action = none`
+
 If any check fails, report blocker and stop.
 
 ### Step 5: Queue Next Activity
@@ -156,6 +160,7 @@ TRANSITION RESULT:
 - pause_at_milestone: [true | false]
 - next_activity: [activity name and context]
 - artifact_lifecycle: [commit-and-clean | commit-and-persist | never-commit]
+- artifact_lifecycle_action: [stop-tracking (run `git rm --cached -r .paw/work/<work-id>/` before PR creation) | none]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
@@ -166,6 +171,8 @@ TRANSITION RESULT:
 **If pause_at_milestone = true**: The PAW agent must PAUSE and wait for user confirmation before proceeding.
 
 **If session_action = new_session**: The PAW agent must call `paw_new_session` with the provided work_id and inline_instruction.
+
+**If artifact_lifecycle_action = stop-tracking**: The PAW agent must load `paw-pr` and let it perform the stop-tracking operation before opening the final PR.
 
 **If preflight = blocked**: The PAW agent must report the blocker to the user.
 
@@ -185,5 +192,7 @@ Unresolved: `- [ ]` items without terminal tags. Empty section or all-resolved �
 
 - Do NOT skip the stage boundary check (Step 3)
 - Do NOT return session_action = continue if boundary + per-stage policy
+- Do NOT omit `artifact_lifecycle_action` from the structured output
+- Do NOT return `next_activity = paw-pr` with `artifact_lifecycle = commit-and-clean` and `artifact_lifecycle_action = none`
 - Do NOT return preflight = passed if checks actually failed
 - Do NOT call paw_new_session directly—return the decision for PAW agent to act on

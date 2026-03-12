@@ -15,7 +15,7 @@ Serve as the workflow navigator and historian. Diagnose current workflow state, 
 
 - Diagnose current workflow state from artifacts and git
 - Recommend appropriate next steps
-- Explain PAW process and stages
+- Explain what PAW is, how the workflow works, and how to get started
 - List active work items across workspace
 - List available workflow presets (built-in and user-defined)
 - Post status updates to Issues/PRs (on explicit request)
@@ -156,6 +156,18 @@ When asked "What presets are available?" or "List presets":
 - If user preset has same name as built-in, show user version (it takes precedence)
 
 ## Help Mode
+
+For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
+- Use the exact name **Phased Agent Workflow**. Never invent an acronym expansion.
+- Ground the answer in repository docs before replying: `README.md` (`## What is PAW?`), `docs/index.md`, `docs/guide/index.md`, and `docs/guide/cli-installation.md`.
+- Explain briefly:
+  - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
+  - PAW supports two workflows: implementation and review.
+  - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
+- If the user also asks how to get started, tailor the answer by platform:
+  - **GitHub Copilot CLI**: install via `copilot plugin install lossyrob/phased-agent-workflow` or `npx @paw-workflow/cli install copilot`, then start with `copilot --agent PAW` (or `/agent PAW` in an existing session).
+  - **VS Code**: install the extension, then run `PAW: New PAW Workflow`.
+- Prefer concise, sourced onboarding language over improvisation.
 
 When asked "What does <stage> do?", provide:
 1. Purpose of the stage

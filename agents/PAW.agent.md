@@ -210,6 +210,7 @@ For each user request:
 - PR comment responses → `paw-review-response`
 - Documentation conventions → `paw-docs-guidance`
 - Status/help → `paw-status`
+- About PAW, onboarding, install, or "how do I get started?" questions → `paw-status`
 - Workflow rollback → `paw-rewind`
 
 ## Error Handling

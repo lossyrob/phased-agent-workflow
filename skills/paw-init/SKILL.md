@@ -48,6 +48,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `final_review_specialist_models` | No | `none` | `none`, model pool, pinned pairs, or mixed (see below) |
 | `final_review_perspectives` | No | `auto` | `none`, `auto`, comma-separated perspective names |
 | `final_review_perspective_cap` | No | `2` | positive integer |
+| `implementation_model` | No | `none` | `none` (session default), or model name/intent (e.g., `gpt-5.4`, `claude-opus-4.6-1m`, `latest Claude Opus`) |
 | `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model` |
 | `plan_generation_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
 | `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
@@ -152,14 +153,10 @@ When a preset is specified (explicitly or via default):
 - If `planning_review_mode` is `society-of-thought`, `planning_docs_review` MUST be `enabled`
 - Invalid combinations: STOP and report error
 
-### Model Resolution (multi-model only)
-When `final_review_mode` is `multi-model`:
-- Resolve model intents to concrete model names (e.g., "latest GPT" → `gpt-5.2`, "latest Gemini" → `gemini-3-pro-preview`, "latest Claude Opus" → `claude-opus-4.6`)
-- Present the resolved models for user confirmation as part of the configuration summary
-- If user requests changes, update the model list accordingly
-- Store the **resolved concrete model names** in WorkflowContext.md (not the intent strings)
+### Model Resolution
+Resolve model intents to concrete model names wherever they appear (e.g., "latest GPT" → `gpt-5.2`, "latest Gemini" → `gemini-3-pro-preview`, "latest Claude Opus" → `claude-opus-4.6`). This applies to `final_review_models`, `plan_generation_models`, `implementation_model`, and all specialist model fields. Present resolved models for user confirmation and store **resolved concrete model names** in WorkflowContext.md (not the intent strings).
 
-This ensures model selection is a one-time upfront decision during init, not a per-review-gate interruption.
+This ensures model selection is a one-time upfront decision during init, not a per-stage interruption.
 
 ### Society-of-Thought Configuration (society-of-thought only)
 When `final_review_mode` is `society-of-thought`:
@@ -215,6 +212,7 @@ Final Review Interaction Mode: <final_review_interaction_mode>
 Final Review Specialist Models: <final_review_specialist_models>
 Final Review Perspectives: <final_review_perspectives>
 Final Review Perspective Cap: <final_review_perspective_cap>
+Implementation Model: <implementation_model or "none">
 Plan Generation Mode: <plan_generation_mode>
 Plan Generation Models: <plan_generation_models>
 Planning Docs Review: <planning_docs_review>

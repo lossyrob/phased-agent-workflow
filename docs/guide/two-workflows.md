@@ -1,11 +1,12 @@
-# Two Workflows: Implementation and Review
+# Workflows
 
-PAW provides two complementary workflows for different development scenarios:
+PAW provides three workflows for different development scenarios:
 
-1. **Implementation Workflow** — Building new features from scratch
-2. **Review Workflow** — Thoroughly reviewing existing pull requests
+1. **Implementation Workflow** — Building new features through structured phases
+2. **PAW Lite** — Lightweight workflow for frontier models that reason well in the moment
+3. **Review Workflow** — Thoroughly reviewing existing pull requests
 
-Both workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
+All workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
 
 ## PAW Implementation Workflow
 
@@ -53,6 +54,57 @@ The **PAW agent** orchestrates the workflow by:
 - **Transparent** — All outputs are text-based and version-controlled
 - **Collaborative** — Humans guide, agents execute and record progress
 
+## PAW Lite
+
+A lightweight workflow that keeps PAW's most valuable components — work shaping, SoT review, git discipline, artifact lifecycle — while replacing the rigid spec→plan→phased-implement pipeline with a flow that trusts frontier models to make implementation decisions in the moment.
+
+```mermaid
+graph LR
+    A[Work Shaping] --> B[Plan]
+    B --> C[Implement]
+    C --> D[Review]
+    D --> E[PR]
+    style A stroke-dasharray: 5 5
+```
+
+### What It Does
+
+PAW Lite strips the multi-stage pipeline down to what matters:
+
+- **Work Shaping** (optional) → Clarify vague ideas through interactive Q&A
+- **Plan** → Lightweight plan with approach summary and work items (no rigid spec)
+- **Implement** → Fleet-style parallel dispatch using SQL todos and `task` subagents
+- **Review** → Configurable: single-model, multi-model, or full Society of Thought
+- **PR** → Final pull request with artifact cleanup
+
+### When to Use It
+
+- Tasks where frontier models can reason about implementation without a formal spec
+- Bug fixes and small-to-medium features where the goal is clear
+- When you want PAW's review quality and git discipline without the overhead
+- When you trust the model to make good implementation decisions given a light plan
+
+### Key Differences from Full PAW
+
+| Aspect | Full PAW | PAW Lite |
+|--------|----------|----------|
+| Specification | Formal Spec.md with requirements | Skipped (or captured in work shaping) |
+| Planning | Detailed phased ImplementationPlan.md | Light Plan.md with approach and work items |
+| Implementation | Sequential phases with per-phase review | Fleet-style parallel dispatch via SQL todos |
+| Review | Configurable per-phase + final | Single review gate (configurable mode) |
+| Best for | Complex features, formal requirements | Clear tasks, frontier model capabilities |
+
+### Configuration
+
+PAW Lite uses `custom` workflow mode with lighter defaults:
+
+| Field | Default |
+|-------|---------|
+| Workflow Mode | `custom` |
+| Review Strategy | `local` |
+| Review Policy | `final-pr-only` |
+| Artifact Lifecycle | `commit-and-clean` |
+
 ## PAW Review Workflow
 
 A structured three-stage process for thorough code review: systematically understands PR changes, evaluates impacts and gaps, and generates comprehensive evidence-based feedback.
@@ -90,16 +142,16 @@ The Review Workflow helps you thoroughly review any pull request through three s
 
 | Scenario | Use This Workflow |
 |----------|-------------------|
-| Building a new feature | Implementation |
-| Fixing a bug | Implementation |
-| Refactoring code | Implementation |
+| Large feature with formal requirements | Implementation |
+| Complex refactoring needing phased review | Implementation |
+| Clear task, frontier model available | PAW Lite |
+| Bug fix or small-to-medium feature | PAW Lite |
 | Reviewing someone else's PR | Review |
 | Doing a thorough code review | Review |
-| Understanding complex changes | Review |
 
 ## Workflow Characteristics
 
-Both workflows share PAW's core principles:
+All workflows share PAW's core principles:
 
 | Characteristic | Description |
 |----------------|-------------|
@@ -112,5 +164,6 @@ Both workflows share PAW's core principles:
 ## Next Steps
 
 - [Workflow Modes](workflow-modes.md) — Configure Full, Minimal, or Custom modes for implementation
+- [Society-of-Thought Review](society-of-thought-review.md) — Multi-perspective review engine used by PAW Lite's review stage
 - [Implementation Workflow Specification](../specification/implementation.md) — Deep dive into implementation stages
 - [Review Workflow Specification](../specification/review.md) — Deep dive into review stages

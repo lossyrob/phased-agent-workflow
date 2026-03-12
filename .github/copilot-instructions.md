@@ -109,6 +109,30 @@ When writing shell commands in agent prompts or documentation, follow these guid
 
 When writing agent prompts, skills, or instructions, follow these guidelines to maximize agent effectiveness while minimizing token usage.
 
+### Write for the Executing Agent, Not a Human Reader
+
+Prompt content (skills, agents, inline instructions) is consumed by an agent as operating instructions. Every line should direct the agent's behavior. Text that explains design rationale, motivates architectural choices, or compares approaches helps a human reader but wastes agent context tokens and dilutes actionable signal.
+
+**Anti-pattern**: Narration and rationale embedded in instructions
+```markdown
+This workflow replaces the rigid spec→plan→implement pipeline with a lighter
+approach that trusts frontier models to make implementation decisions. Unlike
+full PAW, it skips the specification stage entirely.
+```
+
+**Pattern**: Direct the agent's behavior
+```markdown
+Execute stages in order: plan → implement → review → PR. Skip specification.
+```
+
+**Test**: For each sentence, ask: "Does this change what the agent does?" If it only explains *why* or provides background, move it to `docs/` or remove it.
+
+**Common violations**:
+- Design rationale ("this approach was chosen because...")
+- Comparative framing ("unlike X, this does Y...")
+- Philosophy or value statements ("trusts models to...", "designed for...")
+- Background context the agent can't act on ("models have advanced since...")
+
 ### Describe End States, Not Procedures
 
 For autonomous agent tasks, describe desired outcomes rather than prescriptive steps—let the agent reason about how to achieve them. However, keep explicit steps for interactive protocols (user-facing flows where order and presentation matter).

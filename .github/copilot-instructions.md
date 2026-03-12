@@ -253,6 +253,17 @@ When reviewing implementation changes, verify cross-artifact consistency:
 
 **Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.
 
+### Agent Content vs Human Documentation
+
+Files in `agents/`, `skills/`, and `prompts/` are **agent-facing content** — they are loaded into LLM context at runtime, not read by humans during normal use. When reviewing changes to these files:
+
+- **Do NOT** suggest adding notes, guidance, or workarounds for human authors/users. Those belong in `docs/`.
+- **Do NOT** treat skill files like documentation pages (e.g., "specialist authors need a reference table here").
+- **DO** evaluate whether the content gives the agent clear, unambiguous instructions.
+- **DO** flag missing behavioral rules or ambiguous agent logic — that's what these files are for.
+
+Human-facing guidance (authoring guides, tutorials, field references) goes in `docs/guide/` or `docs/reference/`. Agent-facing content (behavioral rules, input contracts, execution logic) goes in skills and agents.
+
 ## Integration Testing
 
 Integration tests validate that skills and agents produce correct behavior when driven through the Copilot SDK. They replace manual "try it and see" validation.

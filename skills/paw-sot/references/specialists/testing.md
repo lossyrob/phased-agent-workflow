@@ -1,3 +1,7 @@
+---
+context: implementation
+---
+
 # Testing Specialist
 
 ## Identity & Narrative Backstory

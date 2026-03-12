@@ -28,6 +28,7 @@ The calling skill provides a **review context** describing what to review and ho
 | `coordinates` | yes | diff range, artifact paths, or content description | What to point specialists at |
 | `output_dir` | yes | directory path | Where to write REVIEW-*.md files |
 | `specialists` | no | `all` (default) \| comma-separated names \| `adaptive:<N>` | Which specialists to invoke |
+| `context` | no | string (type-dependent default — see Context Filtering) | Domain filter for specialists (case-insensitive match) |
 | `interaction_mode` | yes | `parallel` \| `debate` | How specialists interact |
 | `interactive` | yes | `true` \| `false` \| `smart` | Whether to pause for user decisions on trade-offs |
 | `specialist_models` | no | `none` \| model pool \| pinned pairs \| mixed | Model assignment for specialists |
@@ -65,9 +66,40 @@ Resolution rules:
 - Skip malformed or empty specialist files with a warning; continue with remaining roster
 - If zero specialists found after discovery, fall back to built-in defaults with a warning
 
+## Context Filtering
+
+> The `context` field (domain filter) is distinct from the review context input structure.
+
+When the review context includes a `context` field, filter discovered specialists to only those matching the specified domain. This enables domain-specific reviews where only relevant specialists participate.
+
+**Specialist context declaration**: Specialists declare their domain via a `context` field in YAML frontmatter:
+
+```yaml
+---
+context: implementation
+---
+```
+
+**Matching behavior**:
+- Each specialist declares a single context value (comma-separated or array values are not supported)
+- Case-insensitive string comparison (e.g., `Business` matches `business`)
+
+**Default behaviors**:
+- Specialists without a `context` field, or with an empty/whitespace-only `context` value, default to `implementation`
+- Callers without `context` field:
+  - `diff` and `artifacts` types → default to `implementation`
+  - `freeform` type → no filtering (all specialists participate)
+
+**Zero-match handling**: If context filtering results in zero matching specialists:
+- **Interactive mode** (`interactive: true`): Warn and prompt user — options: proceed with all specialists, specify different context, or abort
+- **Non-interactive mode** (`interactive: false`): Warn and proceed with all specialists as fallback
+- **Smart mode** (`interactive: smart`): Warn and prompt user (escalate on zero-match — context misconfiguration is more likely a setup error than a soft signal, warranting user confirmation)
+
+**Execution order**: Context filtering occurs after specialist discovery and before adaptive selection. When both context filtering and adaptive selection are active, the adaptive algorithm selects from the already-filtered pool. When a fixed specialist list is provided, context filtering is skipped — explicit naming overrides domain filtering.
+
 ## Adaptive Selection
 
-When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the full discovered roster based on content analysis.
+When `specialists` is `adaptive:<N>`, select the N most relevant specialists from the discovered roster (after any context filtering) based on content analysis.
 
 **Selection process**:
 1. Analyze the review target to identify dominant change categories — file types, affected subsystems, nature of changes (new logic, refactoring, config, API surface, data handling, test coverage)
@@ -228,6 +260,7 @@ The Finding sections (Must-Fix, Should-Fix, Consider) are the actionable items p
 ## Review Summary
 - Mode: society-of-thought (parallel | debate)
 - Specialists: [list of participating specialists]
+- Context: [context value used for filtering, or "none"]
 - Perspectives: [list of perspectives applied, or "none"]
 - Perspective cap: [configured cap value]
 - Selection rationale: [if adaptive mode was used]

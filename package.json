@@ -125,6 +125,8 @@
     ]
   },
   "scripts": {
+    "clean:out": "node -e \"require('fs').rmSync('out', { recursive: true, force: true })\"",
+    "precompile": "npm run clean:out",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

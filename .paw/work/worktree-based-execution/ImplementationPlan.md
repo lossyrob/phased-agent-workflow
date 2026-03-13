@@ -87,10 +87,10 @@ Additional rules:
 #### Automated Verification:
 - [x] Tests pass: `npm run lint`
 - [x] Tests pass: `npm run compile`
-- [ ] Tests pass: `npm test`
+- [x] Tests pass: `npm test`
 - [x] Updated unit/command suites explicitly assert: feature flag keeps worktree mode unavailable by default, worktree mode requires an explicit target branch, `WorkflowContext.md` and the local execution registry receive `Execution Mode` / `Repository Identity` / `Execution Binding`, reuse validation follows the documented evaluation order, dirty-state detection covers supported states, invalid-reuse failures return actionable guidance, and initialization stays under 500ms with ≤50 existing worktrees.
 
-> `npm test` still reports the pre-existing 22 baseline failures in `Context Tool` / `customInstructions` caused by the missing `workItemInitPrompt.template.md`. All new Phase 1 follow-up suites pass inside the full run.
+> `npm test` now passes after `npm run compile` cleans stale `out/` artifacts before rebuilding, matching CI's clean-checkout behavior.
 
 #### Manual Verification:
 - [x] With the feature flag enabled for internal testing, worktree mode writes the execution contract fields, records the local registry entry, launches PAW inside the execution checkout, and writes `.paw/work/` artifacts under the execution checkout instead of the caller workspace.

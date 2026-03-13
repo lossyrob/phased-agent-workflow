@@ -550,25 +550,25 @@ export async function validateReusableWorktree(
     });
   }
 
-  if (await hasInProgressGitOperation(candidatePath)) {
-    throw new Error(`Reusable worktree has an in-progress git operation: ${candidatePath}`);
-  }
-
-  if (await hasUncommittedChanges(candidatePath)) {
-    throw new Error(`Reusable worktree has uncommitted changes: ${candidatePath}`);
-  }
-
   const allowedBranches = new Set<string>();
   if (expectedBranch) {
     allowedBranches.add(expectedBranch);
   }
   allowedBranches.add(baseBranch);
 
-  if (registeredCandidate.detached && !expectedBranch) {
-    return candidatePath;
-  }
-
   if (registeredCandidate.detached) {
+    if (!expectedBranch) {
+      if (await hasInProgressGitOperation(candidatePath)) {
+        throw new Error(`Reusable worktree has an in-progress git operation: ${candidatePath}`);
+      }
+
+      if (await hasUncommittedChanges(candidatePath)) {
+        throw new Error(`Reusable worktree has uncommitted changes: ${candidatePath}`);
+      }
+
+      return candidatePath;
+    }
+
     throw new Error(`Reusable worktree is detached and cannot satisfy target branch ${expectedBranch}`);
   }
 
@@ -588,6 +588,14 @@ export async function validateReusableWorktree(
     if (currentCheckoutOwnsBranch || occupantConflict) {
       throw new Error(`Target branch is already checked out outside the reusable worktree: ${expectedBranch}`);
     }
+  }
+
+  if (await hasInProgressGitOperation(candidatePath)) {
+    throw new Error(`Reusable worktree has an in-progress git operation: ${candidatePath}`);
+  }
+
+  if (await hasUncommittedChanges(candidatePath)) {
+    throw new Error(`Reusable worktree has uncommitted changes: ${candidatePath}`);
   }
 
   return candidatePath;

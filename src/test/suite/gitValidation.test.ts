@@ -678,4 +678,32 @@ suite('Git Validation Helpers', () => {
       await rm(worktreeDir, { recursive: true, force: true });
     }
   });
+
+  test('validateReusableWorktree checks target branch before cleanliness', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+    const alternateBranch = 'feature/other-worktree';
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+      execFileSync('git', ['switch', '-c', alternateBranch], { cwd: worktreeDir });
+      await writeFile(join(worktreeDir, 'dirty.txt'), 'dirty\n');
+
+      await assert.rejects(
+        () => validateReusableWorktree(
+          buildReuseOptions(repoDir, worktreeDir, targetBranch, executionContract)
+        ),
+        new RegExp(`must be on ${targetBranch}, found ${alternateBranch}`)
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+    }
+  });
 });

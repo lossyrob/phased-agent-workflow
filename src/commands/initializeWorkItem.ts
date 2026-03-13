@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import { realpathSync } from 'fs';
 import { access } from 'fs/promises';
+import * as path from 'path';
 import {
   collectUserInputs,
   type FinalReviewConfig,
@@ -58,6 +60,14 @@ interface PromptArgumentsInput {
 
 function normalizePath(targetPath: string): string {
   return targetPath.replace(/\\/g, '/');
+}
+
+function canonicalizePath(targetPath: string): string {
+  try {
+    return normalizePath(realpathSync(targetPath));
+  } catch {
+    return normalizePath(path.resolve(targetPath));
+  }
 }
 
 /**
@@ -229,7 +239,7 @@ export function shouldResumePendingWorktreeInit(
     return false;
   }
 
-  return normalizePath(currentWorkspacePath) === normalizePath(pending.worktreePath);
+  return canonicalizePath(currentWorkspacePath) === canonicalizePath(pending.worktreePath);
 }
 
 async function prepareDedicatedWorktree(

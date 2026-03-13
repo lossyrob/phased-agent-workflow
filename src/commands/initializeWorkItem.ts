@@ -1,32 +1,56 @@
 import * as vscode from 'vscode';
-import { collectUserInputs, FinalReviewConfig, ArtifactLifecycle } from "../ui/userInput";
-import type { ReviewPolicy, SessionPolicy } from "../types/workflow";
-import { validateGitRepository } from "../git/validation";
+import {
+  collectUserInputs,
+  type FinalReviewConfig,
+  type ArtifactLifecycle,
+  type WorkItemInputs,
+} from '../ui/userInput';
+import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
+import {
+  validateGitRepository,
+  getRepositoryContext,
+  createWorktree,
+  deriveDefaultWorktreePath,
+  ensureUniqueWorktreePath,
+  validateReusableWorktree,
+} from '../git/validation';
+
+export const PENDING_WORKTREE_INIT_KEY = 'paw.pendingWorktreeInit';
+
+export interface PendingWorktreeInit {
+  worktreePath: string;
+  query: string;
+  mode: 'PAW';
+  createdAt: string;
+}
+
+interface PromptArgumentsInput {
+  targetBranch: string;
+  workflowMode: { mode: string; workflowCustomization?: string };
+  executionMode: string;
+  reviewStrategy: string;
+  reviewPolicy: ReviewPolicy;
+  sessionPolicy: SessionPolicy;
+  artifactLifecycle: ArtifactLifecycle;
+  finalReview: FinalReviewConfig;
+  issueUrl?: string;
+}
+
+function normalizePath(targetPath: string): string {
+  return targetPath.replace(/\\/g, '/');
+}
 
 /**
  * Constructs the configuration prompt arguments for the PAW agent.
- * 
- * @param inputs - User inputs collected from quick picks
- * @param workspacePath - Absolute path to the workspace root directory
- * @returns Formatted prompt arguments string for the PAW agent
  */
-function constructPawPromptArguments(
-  inputs: {
-    targetBranch: string;
-    workflowMode: { mode: string; workflowCustomization?: string };
-    reviewStrategy: string;
-    reviewPolicy: ReviewPolicy;
-    sessionPolicy: SessionPolicy;
-    artifactLifecycle: ArtifactLifecycle;
-    finalReview: FinalReviewConfig;
-    issueUrl?: string;
-  },
+export function constructPawPromptArguments(
+  inputs: PromptArgumentsInput,
   _workspacePath: string
 ): string {
-  // Build configuration object for paw-init skill
   const config: Record<string, string | boolean> = {
     target_branch: inputs.targetBranch.trim() || 'auto',
     workflow_mode: inputs.workflowMode.mode,
+    execution_mode: inputs.executionMode,
     review_strategy: inputs.reviewStrategy,
     review_policy: inputs.reviewPolicy,
     session_policy: inputs.sessionPolicy,
@@ -34,15 +58,12 @@ function constructPawPromptArguments(
     final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
 
-  // Add Final Review mode and interactive settings if enabled
   if (inputs.finalReview.enabled) {
     config.final_review_mode = inputs.finalReview.mode;
     config.final_review_interactive = inputs.finalReview.interactive;
-    // Include models for CLI compatibility (uses intent-based defaults)
     config.final_review_models = 'latest GPT, latest Gemini, latest Claude Opus';
   }
 
-  // Add optional fields
   if (inputs.issueUrl) {
     config.issue_url = inputs.issueUrl;
   }
@@ -51,9 +72,7 @@ function constructPawPromptArguments(
     config.custom_instructions = inputs.workflowMode.workflowCustomization;
   }
 
-  // Format as structured prompt arguments
-  let args = `## Initialization Parameters\n\n`;
-
+  let args = '## Initialization Parameters\n\n';
   for (const [key, value] of Object.entries(config)) {
     args += `- **${key}**: ${value}\n`;
   }
@@ -61,25 +80,115 @@ function constructPawPromptArguments(
   return args;
 }
 
+async function openPawChat(
+  query: string,
+  outputChannel: vscode.OutputChannel
+): Promise<void> {
+  await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async (value) => {
+    outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
+    await vscode.commands.executeCommand('workbench.action.chat.open', {
+      query,
+      mode: 'PAW',
+    });
+  });
+}
+
+function buildPendingWorktreeInit(worktreePath: string, query: string): PendingWorktreeInit {
+  return {
+    worktreePath,
+    query,
+    mode: 'PAW',
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export function shouldResumePendingWorktreeInit(
+  currentWorkspacePath: string,
+  pending: PendingWorktreeInit | undefined
+): boolean {
+  if (!pending) {
+    return false;
+  }
+
+  return normalizePath(currentWorkspacePath) === normalizePath(pending.worktreePath);
+}
+
+async function prepareDedicatedWorktree(
+  workspacePath: string,
+  inputs: WorkItemInputs,
+  outputChannel: vscode.OutputChannel
+): Promise<string> {
+  const branchName = inputs.targetBranch.trim();
+  const baseBranch = 'main';
+  const repositoryContext = await getRepositoryContext(workspacePath);
+  const worktreeConfig = inputs.worktree;
+
+  if (!worktreeConfig) {
+    throw new Error('Dedicated worktree mode requires worktree configuration.');
+  }
+
+  if (worktreeConfig.strategy === 'reuse') {
+    if (!worktreeConfig.path) {
+      throw new Error('Reusable worktree path is required.');
+    }
+
+    outputChannel.appendLine(`[INFO] Validating reusable worktree: ${worktreeConfig.path}`);
+    return validateReusableWorktree({
+      repositoryPath: workspacePath,
+      worktreePath: worktreeConfig.path,
+      expectedTargetBranch: branchName || undefined,
+      baseBranch,
+    });
+  }
+
+  const requestedPath = worktreeConfig.path?.trim();
+  const defaultPath = requestedPath && requestedPath.length > 0
+    ? requestedPath
+    : deriveDefaultWorktreePath(repositoryContext.rootPath, branchName, inputs.issueUrl);
+  const uniquePath = requestedPath && requestedPath.length > 0
+    ? defaultPath
+    : await ensureUniqueWorktreePath(defaultPath);
+
+  outputChannel.appendLine(`[INFO] Creating dedicated worktree at: ${uniquePath}`);
+  return createWorktree({
+    repositoryPath: workspacePath,
+    worktreePath: uniquePath,
+    targetBranch: branchName || undefined,
+    baseBranch,
+  });
+}
+
+/**
+ * Resume a pending dedicated-worktree initialization when the target window activates.
+ */
+export async function maybeResumePendingWorktreeInit(
+  context: vscode.ExtensionContext,
+  outputChannel: vscode.OutputChannel
+): Promise<void> {
+  const pending = context.globalState.get<PendingWorktreeInit>(PENDING_WORKTREE_INIT_KEY);
+  if (!pending) {
+    return;
+  }
+
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    return;
+  }
+
+  if (!shouldResumePendingWorktreeInit(workspaceFolder.uri.fsPath, pending)) {
+    return;
+  }
+
+  outputChannel.appendLine(`[INFO] Resuming pending worktree initialization for ${pending.worktreePath}`);
+  await context.globalState.update(PENDING_WORKTREE_INIT_KEY, undefined);
+  await openPawChat(pending.query, outputChannel);
+}
+
 /**
  * Main command handler for initializing a PAW workflow.
- * 
- * This is the entry point for the "PAW: New PAW Workflow" command. It orchestrates
- * the entire initialization workflow:
- * 1. Validates that a workspace folder is open
- * 2. Checks that the workspace is a Git repository
- * 3. Collects user inputs (target branch, optional issue URL)
- * 4. Constructs a comprehensive prompt for the GitHub Copilot agent
- * 5. Invokes the agent to create the PAW workflow structure
- * 
- * The function delegates complex tasks (file creation, git operations, slug normalization)
- * to the GitHub Copilot agent via a carefully crafted prompt, keeping the extension code
- * minimal and maintainable.
- * 
- * @param outputChannel - VS Code output channel for logging operations and debugging
- * @returns Promise that resolves when the command completes or is cancelled
  */
 export async function initializeWorkItemCommand(
+  context: vscode.ExtensionContext,
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
   outputChannel.appendLine('[INFO] Starting PAW workflow initialization...');
@@ -94,10 +203,12 @@ export async function initializeWorkItemCommand(
       return;
     }
 
-    outputChannel.appendLine(`[INFO] Workspace: ${workspaceFolder.uri.fsPath}`);
+    const workspacePath = workspaceFolder.uri.fsPath;
+
+    outputChannel.appendLine(`[INFO] Workspace: ${workspacePath}`);
     outputChannel.appendLine('[INFO] Validating git repository...');
 
-    const isGitRepo = await validateGitRepository(workspaceFolder.uri.fsPath);
+    const isGitRepo = await validateGitRepository(workspacePath);
     if (!isGitRepo) {
       vscode.window.showErrorMessage(
         'PAW requires a Git repository. Please initialize Git with: git init'
@@ -115,7 +226,14 @@ export async function initializeWorkItemCommand(
       return;
     }
 
-    outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch}`);
+    outputChannel.appendLine(`[INFO] Execution mode: ${inputs.executionMode}`);
+    outputChannel.appendLine(`[INFO] Target branch: ${inputs.targetBranch || '(auto)'}`);
+    if (inputs.worktree) {
+      outputChannel.appendLine(`[INFO] Worktree strategy: ${inputs.worktree.strategy}`);
+      if (inputs.worktree.path) {
+        outputChannel.appendLine(`[INFO] Worktree path: ${inputs.worktree.path}`);
+      }
+    }
     outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
     if (inputs.workflowMode.workflowCustomization) {
       outputChannel.appendLine(`[INFO] Workflow customization: ${inputs.workflowMode.workflowCustomization}`);
@@ -134,22 +252,26 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Constructing PAW agent prompt arguments...');
-    const promptArgs = constructPawPromptArguments(inputs, workspaceFolder.uri.fsPath);
+    const promptArgs = constructPawPromptArguments(inputs, workspacePath);
 
     outputChannel.appendLine('[INFO] Invoking PAW agent...');
     outputChannel.show(true);
 
-    // Create a new chat and invoke the PAW agent with initialization parameters
-    await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async value => {
-      outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
-      // Opens chat with PAW agent mode and initialization parameters
-      await vscode.commands.executeCommand('workbench.action.chat.open', {
-        query: promptArgs,
-        mode: 'PAW'
-      });
-    });
+    if (inputs.executionMode === 'current-checkout') {
+      await openPawChat(promptArgs, outputChannel);
+      outputChannel.appendLine('[INFO] PAW agent invoked - check chat panel for progress');
+      return;
+    }
 
-    outputChannel.appendLine('[INFO] PAW agent invoked - check chat panel for progress');
+    const worktreePath = await prepareDedicatedWorktree(workspacePath, inputs, outputChannel);
+    await context.globalState.update(
+      PENDING_WORKTREE_INIT_KEY,
+      buildPendingWorktreeInit(worktreePath, promptArgs)
+    );
+
+    outputChannel.appendLine(`[INFO] Opening dedicated worktree in a new window: ${worktreePath}`);
+    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(worktreePath), true);
+    outputChannel.appendLine('[INFO] Dedicated worktree opened - PAW will launch there on activation');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     outputChannel.appendLine(`[ERROR] Initialization failed: ${errorMessage}`);

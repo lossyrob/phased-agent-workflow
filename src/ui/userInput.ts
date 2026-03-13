@@ -13,6 +13,16 @@ export type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 export type WorkflowMode = 'full' | 'minimal' | 'custom';
 
 /**
+ * Execution mode determines whether PAW operates in the current checkout or a separate worktree.
+ */
+export type ExecutionMode = 'current-checkout' | 'worktree';
+
+/**
+ * Worktree strategy determines whether a dedicated worktree is created or reused.
+ */
+export type WorktreeStrategy = 'create' | 'reuse';
+
+/**
  * Review strategy determines how work is reviewed and merged.
  * - prs: Create intermediate PRs (planning, phase, docs branches)
  * - local: Single branch workflow with only final PR
@@ -26,6 +36,19 @@ export type ReviewStrategy = 'prs' | 'local';
  * - never-commit: Artifacts stay local only, never tracked in git
  */
 export type ArtifactLifecycle = 'commit-and-clean' | 'commit-and-persist' | 'never-commit';
+
+export interface WorktreeConfig {
+  /** Whether to create a fresh worktree or reuse an existing one */
+  strategy: WorktreeStrategy;
+
+  /**
+   * Optional worktree path.
+   *
+   * - create: optional override path, blank means auto-generated
+   * - reuse: required absolute or relative path to an existing worktree
+   */
+  path?: string;
+}
 
 /**
  * Workflow mode selection including optional custom instructions.
@@ -71,6 +94,12 @@ export interface WorkItemInputs {
   
   /** Workflow mode selection including optional custom instructions */
   workflowMode: WorkflowModeSelection;
+
+  /** Where the PAW workflow should execute */
+  executionMode: ExecutionMode;
+
+  /** Optional worktree configuration when executionMode is 'worktree' */
+  worktree?: WorktreeConfig;
   
   /** Review strategy for how work is reviewed and merged */
   reviewStrategy: ReviewStrategy;
@@ -113,6 +142,109 @@ export interface WorkItemInputs {
  */
 export function isValidBranchName(value: string): boolean {
   return /^[a-zA-Z0-9/_-]+$/.test(value);
+}
+
+/**
+ * Collect execution mode selection from user.
+ */
+export async function collectExecutionMode(
+  outputChannel: vscode.OutputChannel
+): Promise<ExecutionMode | undefined> {
+  const selection = await vscode.window.showQuickPick([
+    {
+      label: 'Current Checkout',
+      description: 'Run PAW in the currently open repository checkout (default)',
+      detail: 'Preserves today\'s behavior — PAW works directly in this workspace',
+      value: 'current-checkout' as ExecutionMode,
+    },
+    {
+      label: 'Dedicated Worktree',
+      description: 'Create or reuse a separate worktree and run PAW there',
+      detail: 'Keeps this checkout and branch untouched while PAW works elsewhere',
+      value: 'worktree' as ExecutionMode,
+    },
+  ], {
+    placeHolder: 'Select execution mode',
+    title: 'Execution Mode Selection',
+  });
+
+  if (!selection) {
+    outputChannel.appendLine('[INFO] Execution mode selection cancelled');
+    return undefined;
+  }
+
+  return selection.value;
+}
+
+/**
+ * Collect worktree creation or reuse preferences.
+ */
+export async function collectWorktreeConfig(
+  outputChannel: vscode.OutputChannel,
+  targetBranch: string
+): Promise<WorktreeConfig | undefined> {
+  const strategySelection = await vscode.window.showQuickPick([
+    {
+      label: 'Create New Worktree',
+      description: 'Provision a fresh execution checkout for this workflow',
+      detail: 'Recommended for new work — PAW will prepare a dedicated worktree',
+      value: 'create' as WorktreeStrategy,
+    },
+    {
+      label: 'Reuse Existing Worktree',
+      description: 'Point PAW at a pre-existing worktree',
+      detail: 'The worktree must already belong to this repository and pass safety checks',
+      value: 'reuse' as WorktreeStrategy,
+    },
+  ], {
+    placeHolder: 'Select worktree strategy',
+    title: 'Dedicated Worktree',
+  });
+
+  if (!strategySelection) {
+    outputChannel.appendLine('[INFO] Worktree strategy selection cancelled');
+    return undefined;
+  }
+
+  if (strategySelection.value === 'create') {
+    const pathInput = await vscode.window.showInputBox({
+      prompt: 'Optional worktree path override (press Enter to auto-generate)',
+      placeHolder: targetBranch
+        ? `../<repo>-paw-worktrees/${targetBranch.replace(/[^a-zA-Z0-9._-]+/g, '-').toLowerCase()}`
+        : '../<repo>-paw-worktrees/issue-123',
+    });
+
+    if (pathInput === undefined) {
+      outputChannel.appendLine('[INFO] Worktree path override cancelled');
+      return undefined;
+    }
+
+    return {
+      strategy: 'create',
+      path: pathInput.trim() === '' ? undefined : pathInput.trim(),
+    };
+  }
+
+  const reusePath = await vscode.window.showInputBox({
+    prompt: 'Enter the path to the existing worktree',
+    placeHolder: '/absolute/path/to/worktree or ../relative/path/to/worktree',
+    validateInput: (value: string) => {
+      if (!value || value.trim().length === 0) {
+        return 'A worktree path is required when reusing an existing worktree';
+      }
+      return undefined;
+    },
+  });
+
+  if (reusePath === undefined) {
+    outputChannel.appendLine('[INFO] Existing worktree path input cancelled');
+    return undefined;
+  }
+
+  return {
+    strategy: 'reuse',
+    path: reusePath.trim(),
+  };
 }
 
 /**
@@ -526,11 +658,20 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  const executionMode = await collectExecutionMode(outputChannel);
+  if (!executionMode) {
+    return undefined;
+  }
+
   // Collect target branch name (optional - empty triggers auto-derivation by agent)
   // Customize prompt text based on whether issue URL was provided
-  const branchPrompt = issueUrl && issueUrl.trim().length > 0
-    ? 'Enter branch name (or press Enter to auto-derive from issue)'
-    : 'Enter branch name (or press Enter to auto-derive)';
+  const branchPrompt = executionMode === 'worktree'
+    ? issueUrl && issueUrl.trim().length > 0
+      ? 'Enter branch name (or press Enter to auto-derive inside the dedicated worktree)'
+      : 'Enter branch name (or press Enter to auto-derive inside the dedicated worktree)'
+    : issueUrl && issueUrl.trim().length > 0
+      ? 'Enter branch name (or press Enter to auto-derive from issue)'
+      : 'Enter branch name (or press Enter to auto-derive)';
 
   const targetBranch = await vscode.window.showInputBox({
     prompt: branchPrompt,
@@ -553,6 +694,14 @@ export async function collectUserInputs(
   // Only undefined indicates cancellation - empty string is valid (triggers auto-derive)
   if (targetBranch === undefined) {
     outputChannel.appendLine('[INFO] Branch name input cancelled');
+    return undefined;
+  }
+
+  const worktree = executionMode === 'worktree'
+    ? await collectWorktreeConfig(outputChannel, targetBranch.trim())
+    : undefined;
+
+  if (executionMode === 'worktree' && !worktree) {
     return undefined;
   }
 
@@ -595,6 +744,8 @@ export async function collectUserInputs(
   return {
     targetBranch: targetBranch.trim(),
     workflowMode,
+    executionMode,
+    worktree,
     reviewStrategy,
     reviewPolicy,
     sessionPolicy,

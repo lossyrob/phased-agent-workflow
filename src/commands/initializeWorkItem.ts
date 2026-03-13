@@ -1,27 +1,46 @@
 import * as vscode from 'vscode';
+import { access } from 'fs/promises';
 import {
   collectUserInputs,
   type FinalReviewConfig,
   type ArtifactLifecycle,
   type WorkItemInputs,
+  isWorktreeExecutionEnabled,
 } from '../ui/userInput';
 import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 import {
   validateGitRepository,
-  getRepositoryContext,
   createWorktree,
   deriveDefaultWorktreePath,
+  deriveExecutionBinding,
+  deriveRepositoryIdentity,
   ensureUniqueWorktreePath,
+  getRepositoryContext,
+  resolveExecutionMode,
   validateReusableWorktree,
 } from '../git/validation';
 
 export const PENDING_WORKTREE_INIT_KEY = 'paw.pendingWorktreeInit';
+export const EXECUTION_REGISTRY_KEY = 'paw.executionRegistry';
+
+export interface ExecutionMetadata {
+  workId: string;
+  repositoryIdentity: string;
+  executionBinding: string;
+}
+
+export interface ExecutionRegistryEntry extends ExecutionMetadata {
+  worktreePath: string;
+  targetBranch: string;
+  updatedAt: string;
+}
 
 export interface PendingWorktreeInit {
   worktreePath: string;
   query: string;
   mode: 'PAW';
   createdAt: string;
+  executionMetadata: ExecutionMetadata;
 }
 
 interface PromptArgumentsInput {
@@ -34,6 +53,7 @@ interface PromptArgumentsInput {
   artifactLifecycle: ArtifactLifecycle;
   finalReview: FinalReviewConfig;
   issueUrl?: string;
+  executionMetadata?: ExecutionMetadata;
 }
 
 function normalizePath(targetPath: string): string {
@@ -57,6 +77,12 @@ export function constructPawPromptArguments(
     artifact_lifecycle: inputs.artifactLifecycle,
     final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
+
+  if (inputs.executionMetadata) {
+    config.work_id = inputs.executionMetadata.workId;
+    config.repository_identity = inputs.executionMetadata.repositoryIdentity;
+    config.execution_binding = inputs.executionMetadata.executionBinding;
+  }
 
   if (inputs.finalReview.enabled) {
     config.final_review_mode = inputs.finalReview.mode;
@@ -93,12 +119,105 @@ async function openPawChat(
   });
 }
 
-function buildPendingWorktreeInit(worktreePath: string, query: string): PendingWorktreeInit {
+async function executionPathExists(targetPath: string): Promise<boolean> {
+  try {
+    await access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function deriveWorkIdFromTargetBranch(targetBranch: string): string {
+  const normalizedBranch = targetBranch.trim().replace(/^[^/]+\//, '');
+  const workId = normalizedBranch
+    .replace(/[/_]+/g, '-')
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+
+  if (!workId) {
+    throw new Error(`Unable to derive Work ID from target branch: ${targetBranch}`);
+  }
+
+  return workId;
+}
+
+export function createExecutionRegistryLookupKey(
+  repositoryIdentity: string,
+  executionBinding: string
+): string {
+  return `${repositoryIdentity}::${executionBinding}`;
+}
+
+export function buildExecutionRegistryEntry(
+  executionMetadata: ExecutionMetadata,
+  worktreePath: string,
+  targetBranch: string
+): ExecutionRegistryEntry {
+  return {
+    ...executionMetadata,
+    worktreePath,
+    targetBranch,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function getExecutionRegistry(
+  context: vscode.ExtensionContext
+): Record<string, ExecutionRegistryEntry> {
+  return context.globalState.get<Record<string, ExecutionRegistryEntry>>(EXECUTION_REGISTRY_KEY, {});
+}
+
+function getExecutionRegistryEntry(
+  context: vscode.ExtensionContext,
+  executionMetadata: ExecutionMetadata
+): ExecutionRegistryEntry | undefined {
+  return getExecutionRegistry(context)[
+    createExecutionRegistryLookupKey(
+      executionMetadata.repositoryIdentity,
+      executionMetadata.executionBinding
+    )
+  ];
+}
+
+export async function recordExecutionRegistryEntry(
+  context: vscode.ExtensionContext,
+  entry: ExecutionRegistryEntry
+): Promise<void> {
+  const registry = {
+    ...getExecutionRegistry(context),
+    [createExecutionRegistryLookupKey(entry.repositoryIdentity, entry.executionBinding)]: entry,
+  };
+  await context.globalState.update(EXECUTION_REGISTRY_KEY, registry);
+}
+
+async function buildExecutionMetadata(
+  workspacePath: string,
+  targetBranch: string
+): Promise<ExecutionMetadata> {
+  const workId = deriveWorkIdFromTargetBranch(targetBranch);
+  const repositoryIdentity = await deriveRepositoryIdentity(workspacePath);
+
+  return {
+    workId,
+    repositoryIdentity,
+    executionBinding: deriveExecutionBinding(workId, targetBranch),
+  };
+}
+
+function buildPendingWorktreeInit(
+  worktreePath: string,
+  query: string,
+  executionMetadata: ExecutionMetadata
+): PendingWorktreeInit {
   return {
     worktreePath,
     query,
     mode: 'PAW',
     createdAt: new Date().toISOString(),
+    executionMetadata,
   };
 }
 
@@ -114,14 +233,17 @@ export function shouldResumePendingWorktreeInit(
 }
 
 async function prepareDedicatedWorktree(
+  context: vscode.ExtensionContext,
   workspacePath: string,
   inputs: WorkItemInputs,
+  executionMetadata: ExecutionMetadata,
   outputChannel: vscode.OutputChannel
 ): Promise<string> {
   const branchName = inputs.targetBranch.trim();
   const baseBranch = 'main';
   const repositoryContext = await getRepositoryContext(workspacePath);
   const worktreeConfig = inputs.worktree;
+  const registeredExecution = getExecutionRegistryEntry(context, executionMetadata);
 
   if (!worktreeConfig) {
     throw new Error('Dedicated worktree mode requires worktree configuration.');
@@ -137,8 +259,24 @@ async function prepareDedicatedWorktree(
       repositoryPath: workspacePath,
       worktreePath: worktreeConfig.path,
       expectedTargetBranch: branchName || undefined,
+      expectedRepositoryIdentity: executionMetadata.repositoryIdentity,
+      expectedExecutionBinding: executionMetadata.executionBinding,
+      expectedWorkId: executionMetadata.workId,
+      registeredExecutionPath: registeredExecution?.worktreePath,
       baseBranch,
     });
+  }
+
+  if (registeredExecution) {
+    if (await executionPathExists(registeredExecution.worktreePath)) {
+      throw new Error(
+        `An execution worktree for ${executionMetadata.workId} is already registered at ${registeredExecution.worktreePath}. Reopen that execution checkout or choose Reuse Existing Worktree.`
+      );
+    }
+
+    throw new Error(
+      `Execution binding is orphaned for ${executionMetadata.executionBinding}. Run 'git worktree list', reopen the original execution checkout if it still exists, or clear the stale registry entry before re-initializing.`
+    );
   }
 
   const requestedPath = worktreeConfig.path?.trim();
@@ -252,21 +390,59 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Constructing PAW agent prompt arguments...');
-    const promptArgs = constructPawPromptArguments(inputs, workspacePath);
+    const resolvedExecutionMode = resolveExecutionMode(
+      isWorktreeExecutionEnabled(),
+      inputs.executionMode
+    );
+    const effectiveInputs = resolvedExecutionMode === inputs.executionMode
+      ? inputs
+      : {
+          ...inputs,
+          executionMode: resolvedExecutionMode,
+          worktree: undefined,
+        };
+    const executionMetadata = effectiveInputs.executionMode === 'worktree'
+      ? await buildExecutionMetadata(workspacePath, effectiveInputs.targetBranch.trim())
+      : undefined;
+    const promptArgs = constructPawPromptArguments(
+      {
+        ...effectiveInputs,
+        executionMetadata,
+      },
+      workspacePath
+    );
 
     outputChannel.appendLine('[INFO] Invoking PAW agent...');
     outputChannel.show(true);
 
-    if (inputs.executionMode === 'current-checkout') {
+    if (effectiveInputs.executionMode === 'current-checkout') {
       await openPawChat(promptArgs, outputChannel);
       outputChannel.appendLine('[INFO] PAW agent invoked - check chat panel for progress');
       return;
     }
 
-    const worktreePath = await prepareDedicatedWorktree(workspacePath, inputs, outputChannel);
+    if (!executionMetadata) {
+      throw new Error('Dedicated worktree execution metadata could not be resolved.');
+    }
+
+    if (!effectiveInputs.targetBranch.trim()) {
+      throw new Error('Dedicated worktree execution requires an explicit target branch.');
+    }
+
+    const worktreePath = await prepareDedicatedWorktree(
+      context,
+      workspacePath,
+      effectiveInputs,
+      executionMetadata,
+      outputChannel
+    );
+    await recordExecutionRegistryEntry(
+      context,
+      buildExecutionRegistryEntry(executionMetadata, worktreePath, effectiveInputs.targetBranch.trim())
+    );
     await context.globalState.update(
       PENDING_WORKTREE_INIT_KEY,
-      buildPendingWorktreeInit(worktreePath, promptArgs)
+      buildPendingWorktreeInit(worktreePath, promptArgs, executionMetadata)
     );
 
     outputChannel.appendLine(`[INFO] Opening dedicated worktree in a new window: ${worktreePath}`);

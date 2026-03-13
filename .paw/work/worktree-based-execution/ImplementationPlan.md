@@ -10,7 +10,7 @@ Current initialization, agent guidance, and integration coverage all assume a si
 
 ## Desired End State
 
-PAW initialization supports an explicit worktree execution path in addition to the current-checkout flow. When worktree execution is selected, initialization provisions or validates a dedicated execution checkout, starts the PAW session there, persists only portable workflow metadata plus a portable execution binding (never an absolute path), and keeps all branch operations scoped to the execution checkout. The workflow contract, prompts, tests, and docs all describe and verify that separation, including fail-fast handling for ambiguous branch/reuse cases and explicit regression coverage for the existing current-checkout behavior.
+PAW initialization supports an explicit worktree execution path in addition to the current-checkout flow. When worktree execution is selected, initialization provisions or validates a dedicated execution checkout, starts the PAW session there, persists portable workflow metadata plus a deterministic execution contract (never an absolute path), and keeps all branch operations scoped to the execution checkout. The workflow contract, prompts, tests, and docs all describe and verify that separation, including deterministic fail-fast behavior for ambiguous branch/reuse cases and explicit regression coverage for the existing current-checkout behavior.
 
 ## Execution Contract
 
@@ -18,34 +18,57 @@ The following terms and invariants are authoritative for implementation, prompts
 
 - **Caller checkout** — the checkout/workspace where initialization starts. In dedicated worktree mode it must remain unchanged: branch, `HEAD`, upstream, and working tree status are preserved exactly before and after initialization and later workflow git operations.
 - **Execution checkout** — the checkout where PAW runs. In `Execution Mode: worktree`, it is a dedicated git worktree bound to the work item; in `Execution Mode: current-checkout`, it is the caller checkout.
-- **Target Branch** — the branch checked out in the execution checkout. In worktree mode, if the caller checkout is already on the target branch, initialization must fail fast and ask the user to choose a different target branch or use current-checkout mode.
-- **Execution Binding** — a portable, non-path-specific identifier that lets the workflow prove it is in the intended execution checkout before any git mutation. An acceptable implementation can use a deterministic worktree identifier derived from the work ID plus repository identity; if the binding cannot be proven, the workflow halts with guidance instead of guessing.
-- **Reuse policy** — an existing worktree is reusable only when repository identity/common-dir, canonical path, target branch, work-item binding, and cleanliness all match expectations. Foreign, symlinked, dirty, wrong-branch, or half-initialized worktrees are rejected with actionable guidance.
-- **Duplicate-init bound** — rerunning initialization for the same work item must reuse the verified execution checkout or fail fast; it must never silently create unbounded duplicate worktrees.
-- **Release gate** — worktree execution is not considered user-releasable until Phase 2 contract alignment and regression coverage land for both worktree and current-checkout modes.
+- **Target Branch** — the branch checked out in the execution checkout. In worktree mode it is always explicit user input (no auto-derive in this iteration). If the caller checkout is already on the target branch, initialization must fail fast and ask the user to choose a different target branch or use current-checkout mode.
+- **Canonical enforcement** — execution-mode resolution and execution-binding proof are deterministic TypeScript checks in `src/git/validation.ts` (`resolveExecutionMode()`, `deriveRepositoryIdentity()`, `deriveExecutionBinding()`, `validateExecutionBinding()`). Agent and skill prompts consume those results; they do not replace them with pure prompt reasoning.
+
+### Binding Contract
+
+| Record | Value / behavior | Written in | Consumed in |
+| --- | --- | --- | --- |
+| `Execution Mode` | `current-checkout` or `worktree`; if absent, default to `current-checkout` with no behavior change | Phase 1 `src/commands/initializeWorkItem.ts` | Phase 1/2 validation + current-checkout regression tests |
+| `Repository Identity` | Normalized `origin` repository slug plus root commit SHA (portable, path-free) | Phase 1 `src/commands/initializeWorkItem.ts` | Phase 1 reuse validation + Phase 2 agent/skill/runtime checks |
+| `Execution Binding` | `worktree:<work-id>:<target-branch>` | Phase 1 `src/commands/initializeWorkItem.ts` | Phase 1 reuse/recovery logic + Phase 2 binding validation |
+| Local execution registry (non-committed) | Maps `Repository Identity + Execution Binding` to canonical `fs.realpathSync()` execution path and last-known branch | Phase 1 command layer | Reuse, resume guidance, orphan recovery, and duplicate-init suppression |
+
+Additional rules:
+
+- Phase 1 owns writing `Execution Mode`, `Repository Identity`, and `Execution Binding` into `WorkflowContext.md`; Phase 2 teaches agents/skills/tests to consume them.
+- `Execution Binding` is valid only when `Repository Identity`, `Execution Binding`, and the canonical execution path from the local registry all agree.
+- If the binding cannot be proven, the workflow halts before any git mutation and gives actionable recovery guidance.
+- The execution-location picker stays behind a feature flag and remains disabled by default until Phase 2 lands.
+
+### Reuse and Recovery Contract
+
+- **Validation order**: canonical path (`fs.realpathSync()`) → repository identity → execution binding / local registry → target branch → cleanliness.
+- **Half-initialized worktree** — a git-valid worktree exists but its `WorkflowContext.md` and/or local registry entry is missing or does not prove the expected `Execution Binding`.
+- **Orphaned binding** — `WorkflowContext.md` contains the expected binding but the local registry path is missing; recovery guidance must offer `git worktree list`, explicit re-initialization, or reopening the located execution checkout.
+- **Concurrent initialization** — duplicate creation is serialized by `git worktree add`; the second caller must receive actionable guidance, not raw git plumbing output.
+- **Performance bound** — worktree enumeration is a single `git worktree list --porcelain` pass, repeated initialization reuses or rejects duplicates instead of creating more worktrees, and the initialization path stays under **500ms with ≤50 existing worktrees** in local validation tests.
+- **Canonical rejection catalog** — this plan is the planning source; once implemented, `skills/paw-init/SKILL.md` becomes the runtime canonical catalog for reuse/rejection cases and user-facing guidance.
 
 ### Branch-State Matrix
 
 | Execution Mode / Strategy | Caller checkout | Execution checkout |
 | --- | --- | --- |
 | `current-checkout` | Existing behavior; caller checkout is the execution checkout | `Target Branch` and any planning/phase/docs branches behave as they do today |
-| `worktree` + local | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on `Target Branch`; all local-strategy commits and pushes happen here |
-| `worktree` + PRs | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on `Target Branch`; planning/phase/docs branches are created, pushed, and reviewed from here |
+| `worktree` + local | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; all local-strategy commits and pushes happen here |
+| `worktree` + PRs | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; planning/phase/docs branches are created, pushed, and reviewed from here |
 
 ## What We're NOT Doing
 
 - Adding automatic cleanup or garbage collection for completed worktrees
-- Supporting arbitrary resume-from-caller-checkout discovery of a previously created worktree; if the execution binding cannot be proven, the workflow stops and tells the user to reopen the execution checkout
+- Supporting arbitrary resume-from-caller-checkout discovery of a previously created worktree; if the execution binding cannot be proven, the workflow stops and provides recovery guidance instead of guessing
+- Supporting branch auto-derive in dedicated worktree mode in this first iteration; worktree execution requires an explicit target branch
 - Reworking PAW Review / review-only flows beyond any shared initialization or git abstractions needed by implementation workflow support
 - Introducing path-specific committed metadata that would make `WorkflowContext.md` machine-dependent
 
 ## Phase Status
 
-- [x] **Phase 1: Worktree Bootstrap Flow** - Add the initialization inputs and git helpers needed to provision a dedicated execution worktree, enforce the execution contract, and launch PAW there.
+- [x] **Phase 1: Worktree Bootstrap Flow** - Add the initialization inputs and git helpers needed to provision a dedicated execution worktree, write the execution contract fields, and launch PAW there.
 - [ ] **Phase 2: Workflow Contract Alignment** - Update agent/skill/prompt/test surfaces so worktree execution is treated as a first-class execution context instead of a special case.
 - [ ] **Phase 3: Documentation** - Capture the as-built design and update user/reference docs for the new workflow option.
 
-> Phase 1 is a bootstrap milestone, not a release milestone. The worktree feature is not ready to ship until Phase 2 contract alignment and regression coverage are complete.
+> Phase 1 is internal-only. The feature flag stays off until Phase 2 contract alignment and regression coverage are complete.
 
 ## Phase Candidates
 
@@ -54,10 +77,10 @@ The following terms and invariants are authoritative for implementation, prompts
 ## Phase 1: Worktree Bootstrap Flow
 
 ### Changes Required:
-- **`src/ui/userInput.ts`**: Extend `WorkItemInputs` and the initialization prompt flow with an execution-location choice (`current checkout` vs `dedicated worktree`) that is collected *before* branch-name entry/auto-derive. In worktree mode, never offer “reuse the caller’s current branch”; instead, distinguish creating a new execution worktree from reusing a validated existing one.
-- **`src/commands/initializeWorkItem.ts`**: Carry the new execution-location inputs through prompt construction, capture caller-checkout state before initialization, enforce the target-branch collision rule, create or validate the execution worktree before launching the PAW session, and start the session with `workingDirectory` pointing at the execution checkout instead of always using the caller workspace.
-- **`src/git/validation.ts`**: Add repository/worktree helpers that resolve repository root/common-dir, canonicalize requested paths, inspect existing worktrees, validate repo identity and remote provenance, reject foreign/symlinked/dirty/wrong-branch/half-initialized reuse targets, and ensure repeated initialization for the same work item reuses or rejects duplicates instead of silently creating another worktree.
-- **`src/test/suite/userInput.test.ts`** and adjacent command/git helper tests: Cover execution-location-before-branch ordering, target-branch collision rejection, repo-identity/path-trust checks, safe reuse acceptance/rejection cases, duplicate-init handling, and caller-checkout state preservation (including dirty callers).
+- **`src/ui/userInput.ts`**: Extend `WorkItemInputs` and the initialization prompt flow with an execution-location choice (`current checkout` vs `dedicated worktree`) collected *before* branch input. When worktree mode is selected, require an explicit target branch, disable empty-input auto-derive, and keep the execution-location picker hidden/disabled behind a feature flag until Phase 2 is complete.
+- **`src/commands/initializeWorkItem.ts`**: Carry the new execution-location inputs through prompt construction, capture caller-checkout state before initialization, write `Execution Mode`, `Repository Identity`, and `Execution Binding` into `WorkflowContext.md`, maintain the non-committed local execution registry, enforce the target-branch collision rule, create or validate the execution worktree before launching the PAW session, route all `.paw/work/` artifact paths through the execution checkout root, and wrap invalid-reuse / concurrent-init failures with actionable guidance.
+- **`src/git/validation.ts`**: Add deterministic helpers for `resolveExecutionMode()`, `deriveRepositoryIdentity()`, `deriveExecutionBinding()`, and `validateExecutionBinding()`. Use `fs.realpathSync()` for path comparison, `git worktree list --porcelain` for single-pass discovery, explicit repository-identity checks (`origin` slug + root commit SHA), ordered reuse validation, dirty-state detection via `hasUncommittedChanges()`, half-initialized/orphaned-binding detection, and duplicate-init suppression.
+- **`src/test/suite/userInput.test.ts`** and adjacent command/git helper tests: Cover feature-flag behavior, execution-location-before-branch ordering, explicit-branch requirement in worktree mode, target-branch collision rejection, repository-identity/path-trust checks, binding + local-registry writes, ordered reuse acceptance/rejection cases, dirty-state detection (staged, unstaged, untracked, in-progress operations), orphaned-binding recovery, symlink normalization, concurrent-init error wrapping, and the performance bound for ≤50 existing worktrees.
 
 ### Success Criteria:
 
@@ -65,14 +88,13 @@ The following terms and invariants are authoritative for implementation, prompts
 - [x] Tests pass: `npm run lint`
 - [x] Tests pass: `npm run compile`
 - [ ] Tests pass: `npm test`
-- [x] Updated unit/command suites explicitly assert execution-location ordering, target-branch collision rejection, canonical-path/repo-identity validation, safe worktree reuse, duplicate-init suppression, and caller-checkout state preservation.
+- [x] Updated unit/command suites explicitly assert: feature flag keeps worktree mode unavailable by default, worktree mode requires an explicit target branch, `WorkflowContext.md` and the local execution registry receive `Execution Mode` / `Repository Identity` / `Execution Binding`, reuse validation follows the documented evaluation order, dirty-state detection covers supported states, invalid-reuse failures return actionable guidance, and initialization stays under 500ms with ≤50 existing worktrees.
 
-> `npm test` still reports the pre-existing 22 baseline failures in `Context Tool` / `customInstructions` caused by the missing `workItemInitPrompt.template.md`. The new Phase 1 worktree suites pass inside the full run.
+> `npm test` still reports the pre-existing 22 baseline failures in `Context Tool` / `customInstructions` caused by the missing `workItemInitPrompt.template.md`. All new Phase 1 follow-up suites pass inside the full run.
 
 #### Manual Verification:
-- [x] Selecting dedicated worktree execution leaves the caller checkout’s branch, `HEAD`, upstream, and working tree status unchanged before and after initialization.
-- [x] Selecting worktree mode while the caller checkout is already on the target branch fails fast with guidance to choose a different target branch or use current-checkout mode.
-- [x] Reusing an existing worktree succeeds only for a clean, matching execution checkout and rejects foreign, dirty, wrong-branch, or half-initialized worktrees with actionable guidance.
+- [x] With the feature flag enabled for internal testing, worktree mode writes the execution contract fields, records the local registry entry, launches PAW inside the execution checkout, and writes `.paw/work/` artifacts under the execution checkout instead of the caller workspace.
+- [x] Invalid reuse, orphaned binding, symlink-path, and concurrent-init scenarios produce deterministic recovery guidance rather than raw git errors.
 - [x] Re-running initialization for the same work item reuses or rejects duplicates instead of silently creating another worktree.
 
 ---
@@ -80,11 +102,16 @@ The following terms and invariants are authoritative for implementation, prompts
 ## Phase 2: Workflow Contract Alignment
 
 ### Changes Required:
-- **`agents/PAW.agent.md`**: Update work-context and git-behavior guidance so the agent reasons about the execution checkout/worktree, uses the canonical execution-contract vocabulary, and fails fast when `Execution Mode: worktree` is set but the current checkout cannot prove the execution binding.
-- **`skills/paw-init/SKILL.md`**: Extend the initialization contract and `WorkflowContext.md` schema to record portable execution metadata (at minimum `Execution Mode` plus a portable execution binding), document current-checkout backward compatibility for older `WorkflowContext.md` files, and state that worktree-mode continuous sessions may continue only from a checkout that proves that binding.
-- **`skills/paw-git-operations/SKILL.md`**: Clarify that branch verification, pull/push steps, local strategy behavior, and PR-strategy planning/phase/docs branch creation all operate inside the execution checkout; include the branch-state matrix and the rule that the caller checkout must never be mutated under worktree mode.
-- **`src/prompts/branchAutoDeriveWithIssue.template.md`** and **`src/prompts/branchAutoDeriveWithDescription.template.md`**: Make execution-location choice available before branch derivation, ensure worktree-backed initialization never encourages reusing the caller’s current branch, and surface explicit messaging for target-branch collisions and fail-fast resume cases.
-- **`tests/integration/lib/harness.ts`**, **`tests/integration/lib/fixtures.ts`**, **`tests/integration/tests/workflows/git-branching.test.ts`**, and dedicated worktree workflow tests: Add harness support for multi-checkout scenarios, add a `worktree-bootstrap` workflow test, add a `worktree-pr-strategy` workflow test, add a `current-checkout-regression` workflow test, and add artifact-level assertions that `WorkflowContext.md` persists only portable execution metadata.
+- **`agents/PAW.agent.md`**: Update work-context and git-behavior guidance so the agent reasons about the execution checkout/worktree using the canonical vocabulary, calls deterministic execution-binding validation before any git mutation, and halts with recovery guidance when validation fails.
+- **`skills/paw-init/SKILL.md`**: Extend the initialization contract and `WorkflowContext.md` schema to document `Execution Mode`, `Repository Identity`, `Execution Binding`, and `Execution Mode`-absent backward compatibility (`current-checkout`). Make this skill the runtime canonical owner of the rejection/recovery catalog and local-registry guidance.
+- **`skills/paw-git-operations/SKILL.md`**: Clarify that branch verification, pull/push steps, local strategy behavior, and PR-strategy planning/phase/docs branch creation all operate inside a *validated* execution checkout; include the branch-state matrix and the rule that the caller checkout must never be mutated under worktree mode.
+- **`src/prompts/branchAutoDeriveWithIssue.template.md`** and **`src/prompts/branchAutoDeriveWithDescription.template.md`**: Restrict auto-derive guidance to current-checkout mode, explain that worktree mode requires an explicit target branch, and surface the standardized recovery guidance for invalid binding / wrong-checkout resume cases.
+- **`tests/integration/lib/harness.ts`** and **`tests/integration/lib/fixtures.ts`**: Add a multi-checkout fixture API (for example `createCallerAndExecution()` returning independent caller/execution handles with branch/status/read/write helpers), explicit teardown / `git worktree prune`, and path assertions proving artifacts land in the execution checkout.
+- **`tests/integration/tests/workflows/worktree-bootstrap.test.ts`**, **`tests/integration/tests/workflows/git-branching.test.ts`**, **`tests/integration/tests/workflows/worktree-pr-strategy.test.ts`**, and **`tests/integration/tests/workflows/current-checkout-regression.test.ts`**: Define scenario-level intent up front:
+  - `worktree-bootstrap` — writes execution contract fields + local registry, keeps artifacts in execution checkout, preserves caller checkout branch/HEAD/upstream/status, exercises orphaned-binding and invalid-reuse guidance
+  - `git-branching` — current-checkout baseline remains unchanged
+  - `worktree-pr-strategy` — planning/phase/docs branches, push/PR prep, and caller-checkout immutability under PR strategy
+  - `current-checkout-regression` — explicit-branch flow, legacy `WorkflowContext.md` without `Execution Mode`, and current-checkout auto-derive remain unchanged
 
 ### Success Criteria:
 
@@ -98,21 +125,22 @@ The following terms and invariants are authoritative for implementation, prompts
 - [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/current-checkout-regression.test.ts`
 
 #### Manual Verification:
-- [ ] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and halting when the execution binding cannot be proven.
+- [ ] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and rely on deterministic binding validation rather than prompt-only reasoning.
 - [ ] A worktree-backed minimal/local workflow can complete its git preparation without changing the caller checkout’s branch, `HEAD`, upstream, or working tree status, and the committed `WorkflowContext.md` contains only portable execution metadata.
-- [ ] A paused worktree-backed workflow resumed from the wrong checkout fails fast with guidance instead of guessing or mutating git state.
+- [ ] A paused worktree-backed workflow resumed from the wrong checkout fails fast with actionable recovery guidance (`git worktree list`, reopen execution checkout, or re-initialize) instead of guessing or mutating git state.
 - [ ] A worktree-backed PR workflow can create planning/phase/docs branches, push them, and prepare PRs from the execution checkout without mutating the caller checkout.
 - [ ] Existing current-checkout flows — including explicit-branch, auto-derive, and pre-existing `WorkflowContext.md` files without `Execution Mode` — continue to behave as before.
+- [ ] The feature flag is enabled only after all Phase 2 criteria pass.
 
 ---
 
 ## Phase 3: Documentation
 
 ### Changes Required:
-- **`.paw/work/worktree-based-execution/Docs.md`**: Record the implemented execution contract, glossary, branch-state matrix, execution-binding rules, reuse/rejection cases, duplicate-init behavior, performance/reuse bounds, cleanup responsibility, verification commands, and worktree-specific caveats for future maintenance.
-- **`docs/guide/workflow-modes.md`**: Document when to choose worktree execution, how it relates to minimal/local and PR strategies, the target-branch collision rule, current-checkout compatibility expectations, and the expectation that the caller checkout remains untouched.
-- **`docs/guide/vscode-extension.md`**: Update the initialization walkthrough so it shows execution-location selection before branch derivation, explains fail-fast cases (collision, invalid reuse, ambiguous resume), and no longer implies that the extension always creates and checks out the target branch in the caller workspace.
-- **`docs/reference/artifacts.md`** and/or **`docs/specification/implementation.md`**: Update workflow-context/reference material for new persisted execution fields, current-checkout backward compatibility defaults, the distinction between artifact lifecycle and worktree lifetime, and the deliberate exclusion of path-specific committed metadata.
+- **`.paw/work/worktree-based-execution/Docs.md`**: Record the implemented execution contract, glossary, branch-state matrix, binding fields, local-registry behavior, reuse/rejection catalog, duplicate-init / orphan recovery behavior, performance bound, cleanup responsibility, verification commands, and worktree-specific caveats for future maintenance.
+- **`docs/guide/workflow-modes.md`**: Document when to choose worktree execution, how it relates to minimal/local and PR strategies, the explicit-target-branch requirement, current-checkout compatibility expectations, and the expectation that the caller checkout remains untouched.
+- **`docs/guide/vscode-extension.md`**: Update the initialization walkthrough so it shows execution-location selection before branch input, explains that worktree mode requires an explicit target branch, surfaces fail-fast cases (collision, invalid reuse, orphaned binding, ambiguous resume), and includes recovery guidance (`git worktree list`, reopen execution checkout, or re-initialize).
+- **`docs/reference/artifacts.md`** and/or **`docs/specification/implementation.md`**: Update workflow-context/reference material for `Execution Mode`, `Repository Identity`, `Execution Binding`, current-checkout backward compatibility defaults, the distinction between artifact lifecycle and worktree lifetime, and the deliberate exclusion of path-specific committed metadata.
 
 ### Success Criteria:
 
@@ -122,9 +150,9 @@ The following terms and invariants are authoritative for implementation, prompts
 - [ ] Docs build: `mkdocs build --strict`
 
 #### Manual Verification:
-- [ ] The docs clearly distinguish execution mode from review strategy and artifact lifecycle, and explicitly state that worktree lifetime/cleanup is a separate operator concern.
-- [ ] The docs call out excluded behaviors and caveats: no automatic cleanup, no arbitrary resume-from-caller-checkout discovery, fail-fast behavior on ambiguous execution binding, and reuse rejection cases.
-- [ ] The as-built documentation matches the final behavior, verification steps, and current-checkout compatibility story used during implementation.
+- [ ] The docs clearly distinguish execution mode from review strategy and artifact lifecycle, explicitly state that worktree lifetime/cleanup is a separate operator concern, and provide manual cleanup commands at workflow completion.
+- [ ] The docs call out excluded behaviors and caveats: no automatic cleanup, no arbitrary resume-from-caller-checkout discovery, worktree mode requires an explicit target branch, fail-fast behavior on ambiguous execution binding, and recovery/reuse rejection cases.
+- [ ] The as-built documentation matches the final behavior, verification steps, current-checkout compatibility story, and local-registry / recovery guidance used during implementation.
 
 ## References
 

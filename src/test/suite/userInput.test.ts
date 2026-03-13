@@ -10,7 +10,8 @@ import {
   ReviewStrategy,
   ArtifactLifecycle,
   WorkflowModeSelection,
-  FinalReviewConfig
+  FinalReviewConfig,
+  WORKTREE_EXECUTION_FEATURE_FLAG
 } from '../../ui/userInput';
 
 function createOutputChannel(): vscode.OutputChannel {
@@ -33,6 +34,40 @@ function findQuickPickValue<T extends { value: unknown }>(
   const match = items.find((item) => item.value === value);
   assert.ok(match, `Missing quick pick value: ${String(value)}`);
   return match!;
+}
+
+function overrideWorktreeExecutionFlag(enabled: boolean): () => void {
+  const originalGetConfiguration = vscode.workspace.getConfiguration;
+  (
+    vscode.workspace as unknown as {
+      getConfiguration: typeof vscode.workspace.getConfiguration;
+    }
+  ).getConfiguration = ((section?: string) => {
+    if (section === 'paw') {
+      return {
+        get: <T>(key: string, defaultValue?: T) => {
+          if (key === WORKTREE_EXECUTION_FEATURE_FLAG) {
+            return enabled as T;
+          }
+
+          return defaultValue as T;
+        },
+        has: () => true,
+        inspect: () => undefined,
+        update: async () => undefined,
+      } as unknown as vscode.WorkspaceConfiguration;
+    }
+
+    return originalGetConfiguration(section);
+  }) as typeof vscode.workspace.getConfiguration;
+
+  return () => {
+    (
+      vscode.workspace as unknown as {
+        getConfiguration: typeof vscode.workspace.getConfiguration;
+      }
+    ).getConfiguration = originalGetConfiguration;
+  };
 }
 
 /**
@@ -166,6 +201,7 @@ suite('Execution Mode Types', () => {
 
   test('collectUserInputs asks for execution mode before branch entry in worktree mode', async () => {
     const promptOrder: string[] = [];
+    const restoreConfiguration = overrideWorktreeExecutionFlag(true);
     const mutableWindow = vscode.window as unknown as {
       showQuickPick: typeof vscode.window.showQuickPick;
       showInputBox: typeof vscode.window.showInputBox;
@@ -210,7 +246,11 @@ suite('Execution Mode Types', () => {
           return '';
         }
 
-        if (prompt.startsWith('Enter branch name')) {
+        if (prompt.startsWith('Enter explicit branch name') || prompt.startsWith('Enter branch name')) {
+          assert.strictEqual(
+            options?.validateInput?.(''),
+            'Dedicated worktree execution requires an explicit target branch'
+          );
           return 'feature/test-worktree';
         }
 
@@ -230,7 +270,8 @@ suite('Execution Mode Types', () => {
 
       const executionModeIndex = promptOrder.indexOf('pick:Execution Mode Selection');
       const branchInputIndex = promptOrder.findIndex((entry) =>
-        entry.startsWith('input:Enter branch name')
+        entry.startsWith('input:Enter explicit branch name')
+        || entry.startsWith('input:Enter branch name')
       );
 
       assert.ok(executionModeIndex >= 0, 'Execution mode prompt should be shown');
@@ -246,6 +287,73 @@ suite('Execution Mode Types', () => {
     } finally {
       mutableWindow.showQuickPick = originalShowQuickPick;
       mutableWindow.showInputBox = originalShowInputBox;
+      restoreConfiguration();
+    }
+  });
+
+  test('collectUserInputs defaults to current-checkout when worktree execution is disabled', async () => {
+    const promptOrder: string[] = [];
+    const restoreConfiguration = overrideWorktreeExecutionFlag(false);
+    const mutableWindow = vscode.window as unknown as {
+      showQuickPick: typeof vscode.window.showQuickPick;
+      showInputBox: typeof vscode.window.showInputBox;
+    };
+    const originalShowQuickPick = mutableWindow.showQuickPick;
+    const originalShowInputBox = mutableWindow.showInputBox;
+
+    try {
+      mutableWindow.showQuickPick = (async (
+        items: ReadonlyArray<{ value: unknown }>,
+        options?: vscode.QuickPickOptions
+      ) => {
+        const title = options?.title ?? options?.placeHolder ?? 'unknown quick pick';
+        promptOrder.push(`pick:${title}`);
+
+        switch (title) {
+          case 'Workflow Mode Selection':
+            return findQuickPickValue(items, 'minimal');
+          case 'Review Policy Selection':
+            return findQuickPickValue(items, 'final-pr-only');
+          case 'Session Policy Selection':
+            return findQuickPickValue(items, 'continuous');
+          case 'Artifact Lifecycle':
+            return findQuickPickValue(items, 'commit-and-clean');
+          case 'Final Agent Review':
+            return findQuickPickValue(items, false);
+          default:
+            throw new Error(`Unexpected quick pick title: ${title}`);
+        }
+      }) as unknown as typeof vscode.window.showQuickPick;
+
+      mutableWindow.showInputBox = (async (options?: vscode.InputBoxOptions) => {
+        const prompt = options?.prompt ?? 'unknown input box';
+        promptOrder.push(`input:${prompt}`);
+
+        if (prompt.startsWith('Enter issue or work item URL')) {
+          return '';
+        }
+
+        if (prompt.startsWith('Enter branch name')) {
+          assert.strictEqual(options?.validateInput?.(''), undefined);
+          return '';
+        }
+
+        throw new Error(`Unexpected input box prompt: ${prompt}`);
+      }) as unknown as typeof vscode.window.showInputBox;
+
+      const inputs = await collectUserInputs(createOutputChannel());
+
+      assert.ok(inputs, 'Expected collectUserInputs to succeed');
+      assert.strictEqual(inputs?.executionMode, 'current-checkout');
+      assert.strictEqual(inputs?.targetBranch, '');
+      assert.ok(
+        !promptOrder.includes('pick:Execution Mode Selection'),
+        'Execution mode prompt should stay hidden while the feature flag is disabled'
+      );
+    } finally {
+      mutableWindow.showQuickPick = originalShowQuickPick;
+      mutableWindow.showInputBox = originalShowInputBox;
+      restoreConfiguration();
     }
   });
 });

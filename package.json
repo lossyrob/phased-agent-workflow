@@ -33,6 +33,11 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Absolute path to the VS Code prompts directory. When set, PAW installs agents here instead of using the auto-detected location."
+        },
+        "paw.enableWorktreeExecution": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable dedicated worktree execution mode for internal testing. Disabled by default until Phase 2 contract alignment is complete."
         }
       }
     },

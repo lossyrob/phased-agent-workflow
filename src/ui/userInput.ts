@@ -4,6 +4,8 @@ import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 // Re-export types for consumers that import from userInput.ts
 export type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 
+export const WORKTREE_EXECUTION_FEATURE_FLAG = 'enableWorktreeExecution';
+
 /**
  * Workflow mode determines which stages are included in the workflow.
  * - full: All stages (spec, code research, planning, implementation, docs, PR, status)
@@ -137,6 +139,10 @@ export interface WorkItemInputs {
   issueUrl?: string;
 }
 
+export function isWorktreeExecutionEnabled(): boolean {
+  return vscode.workspace.getConfiguration('paw').get<boolean>(WORKTREE_EXECUTION_FEATURE_FLAG, false);
+}
+
 /**
  * Determine whether the provided branch name uses only valid characters.
  */
@@ -150,6 +156,11 @@ export function isValidBranchName(value: string): boolean {
 export async function collectExecutionMode(
   outputChannel: vscode.OutputChannel
 ): Promise<ExecutionMode | undefined> {
+  if (!isWorktreeExecutionEnabled()) {
+    outputChannel.appendLine('[INFO] Dedicated worktree execution is disabled - defaulting to current checkout');
+    return 'current-checkout';
+  }
+
   const selection = await vscode.window.showQuickPick([
     {
       label: 'Current Checkout',
@@ -666,9 +677,7 @@ export async function collectUserInputs(
   // Collect target branch name (optional - empty triggers auto-derivation by agent)
   // Customize prompt text based on whether issue URL was provided
   const branchPrompt = executionMode === 'worktree'
-    ? issueUrl && issueUrl.trim().length > 0
-      ? 'Enter branch name (or press Enter to auto-derive inside the dedicated worktree)'
-      : 'Enter branch name (or press Enter to auto-derive inside the dedicated worktree)'
+    ? 'Enter explicit branch name for dedicated worktree execution'
     : issueUrl && issueUrl.trim().length > 0
       ? 'Enter branch name (or press Enter to auto-derive from issue)'
       : 'Enter branch name (or press Enter to auto-derive)';
@@ -677,8 +686,11 @@ export async function collectUserInputs(
     prompt: branchPrompt,
     placeHolder: 'feature/my-feature',
     validateInput: (value: string) => {
-      // Empty is valid - triggers auto-derivation by agent
       if (!value || value.trim().length === 0) {
+        if (executionMode === 'worktree') {
+          return 'Dedicated worktree execution requires an explicit target branch';
+        }
+
         return undefined;
       }
 

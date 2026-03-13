@@ -12,7 +12,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 ## Capabilities
 
 - Generate Work Title from issue URL, branch name, or user description
-- Generate Work ID from Work Title (normalized, unique)
+- Generate Work ID from Work Title (normalized, unique) unless `work_id` is provided explicitly
 - Create `.paw/work/<work-id>/` directory structure
 - Generate WorkflowContext.md with all configuration fields
 - Create and checkout git branch (explicit or auto-derived)
@@ -24,7 +24,11 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | Parameter | Required | Default | Values |
 |-----------|----------|---------|--------|
 | `base_branch` | No | `main` | branch name |
+| `work_id` | No | auto-derived from Work Title | lowercase slug |
 | `target_branch` | No | auto-derive from work ID | branch name |
+| `execution_mode` | No | `current-checkout` | `current-checkout`, `worktree` |
+| `repository_identity` | No | `none` | portable repository identity string |
+| `execution_binding` | No | `none` | portable execution binding string |
 | `preset` | No | none | preset name (built-in or user-defined) |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
@@ -144,6 +148,7 @@ When a preset is specified (explicitly or via default):
 - Format: lowercase letters, numbers, hyphens only; 1-100 chars
 - No leading/trailing/consecutive hyphens
 - Not reserved (`.`, `..`, `node_modules`, `.git`, `.paw`)
+- If `work_id` is provided explicitly, validate and use it instead of regenerating it from the Work Title
 - If conflict: append `-2`, `-3`, etc.
 
 ### Configuration Validation
@@ -196,9 +201,12 @@ Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
 # WorkflowContext
 
 Work Title: <generated_work_title>
-Work ID: <generated_work_id>
+Work ID: <work_id or generated_work_id>
 Base Branch: <base_branch>
 Target Branch: <target_branch>
+Execution Mode: <execution_mode>
+Repository Identity: <repository_identity or "none">
+Execution Binding: <execution_binding or "none">
 Workflow Mode: <workflow_mode>
 Review Strategy: <review_strategy>
 Review Policy: <review_policy>

@@ -7,11 +7,13 @@ import {
   createWorktree,
   deriveExecutionBinding,
   deriveRepositoryIdentity,
+  formatCreateWorktreeError,
   listGitWorktrees,
   normalizeRepositorySlug,
   parseWorktreeListPorcelain,
   parseWorkflowContextExecutionMetadata,
   resolveExecutionMode,
+  validateExecutionBinding,
   validateReusableWorktree,
 } from '../../git/validation';
 
@@ -197,6 +199,16 @@ suite('Git Validation Helpers', () => {
       executionBinding: 'worktree:test-worktree:feature/test-worktree',
       targetBranch: 'feature/test-worktree',
     });
+  });
+
+  test('formatCreateWorktreeError wraps concurrent-init git errors with guidance', () => {
+    assert.strictEqual(
+      formatCreateWorktreeError(
+        'feature/test-worktree',
+        "fatal: 'feature/test-worktree' is already checked out at /tmp/repo"
+      ),
+      'Target branch is already checked out for this work item: feature/test-worktree. Reopen the existing execution checkout or choose Reuse Existing Worktree.'
+    );
   });
 
   test('createWorktree creates a detached worktree when no target branch is supplied', async () => {
@@ -514,6 +526,156 @@ suite('Git Validation Helpers', () => {
     } finally {
       await rm(repoDir, { recursive: true, force: true });
       await rm(invalidWorktreeDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateExecutionBinding rejects repository identity mismatches', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+
+      await assert.rejects(
+        () => validateExecutionBinding({
+          workflowContextPath: join(worktreeDir, '.paw', 'work', executionContract.workId, 'WorkflowContext.md'),
+          expectedRepositoryIdentity: 'github.com/example/other-repo@abc123',
+          expectedExecutionBinding: executionContract.executionBinding,
+          expectedTargetBranch: targetBranch,
+          registeredExecutionPath: worktreeDir,
+          actualWorktreePath: worktreeDir,
+        }),
+        /expected github\.com\/example\/other-repo@abc123/
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateExecutionBinding rejects execution binding mismatches', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+
+      await assert.rejects(
+        () => validateExecutionBinding({
+          workflowContextPath: join(worktreeDir, '.paw', 'work', executionContract.workId, 'WorkflowContext.md'),
+          expectedRepositoryIdentity: executionContract.repositoryIdentity,
+          expectedExecutionBinding: 'worktree:test-worktree:feature/other-worktree',
+          expectedTargetBranch: targetBranch,
+          registeredExecutionPath: worktreeDir,
+          actualWorktreePath: worktreeDir,
+        }),
+        /expected worktree:test-worktree:feature\/other-worktree/
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateExecutionBinding rejects half-initialized metadata', async () => {
+    const workflowContextDir = await mkdtemp(join(tmpdir(), 'paw-half-initialized-'));
+    const workflowContextPath = join(workflowContextDir, 'WorkflowContext.md');
+
+    try {
+      await writeFile(
+        workflowContextPath,
+        ['# WorkflowContext', '', 'Execution Mode: worktree', 'Target Branch: feature/test-worktree'].join('\n')
+      );
+
+      await assert.rejects(
+        () => validateExecutionBinding({
+          workflowContextPath,
+          expectedRepositoryIdentity: 'github.com/example/paw-test@abc123',
+          expectedExecutionBinding: 'worktree:test-worktree:feature/test-worktree',
+          expectedTargetBranch: 'feature/test-worktree',
+          registeredExecutionPath: workflowContextDir,
+          actualWorktreePath: workflowContextDir,
+        }),
+        /half-initialized/
+      );
+    } finally {
+      await rm(workflowContextDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateExecutionBinding rejects registry path mismatches', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+    const alternatePath = `${repoDir}-alternate`;
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+      await mkdir(alternatePath, { recursive: true });
+
+      await assert.rejects(
+        () => validateExecutionBinding({
+          workflowContextPath: join(worktreeDir, '.paw', 'work', executionContract.workId, 'WorkflowContext.md'),
+          expectedRepositoryIdentity: executionContract.repositoryIdentity,
+          expectedExecutionBinding: executionContract.executionBinding,
+          expectedTargetBranch: targetBranch,
+          registeredExecutionPath: alternatePath,
+          actualWorktreePath: worktreeDir,
+        }),
+        /cannot be proven/
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+      await rm(alternatePath, { recursive: true, force: true });
+    }
+  });
+
+  test('validateReusableWorktree checks execution binding before cleanliness', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      await writeFile(join(worktreeDir, 'dirty.txt'), 'dirty\n');
+
+      await assert.rejects(
+        () => validateReusableWorktree({
+          repositoryPath: repoDir,
+          worktreePath: worktreeDir,
+          expectedTargetBranch: targetBranch,
+          expectedRepositoryIdentity: 'github.com/example/paw-test@abc123',
+          expectedExecutionBinding: 'worktree:test-worktree:feature/test-worktree',
+          expectedWorkId: 'test-worktree',
+          registeredExecutionPath: worktreeDir,
+        }),
+        /half-initialized/
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
     }
   });
 });

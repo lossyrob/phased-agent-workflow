@@ -484,12 +484,7 @@ export async function createWorktree(options: CreateWorktreeOptions): Promise<st
     await runGit(args, canonicalRepositoryPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (options.targetBranch && /already checked out/i.test(message)) {
-      throw new Error(
-        `Target branch is already checked out for this work item: ${options.targetBranch}. Reopen the existing execution checkout or choose Reuse Existing Worktree.`
-      );
-    }
-    throw new Error(`Failed to create worktree: ${message}`);
+    throw new Error(formatCreateWorktreeError(options.targetBranch, message));
   }
 
   const createdContext = await getRepositoryContext(worktreePath);
@@ -596,4 +591,15 @@ export async function validateReusableWorktree(
   }
 
   return candidatePath;
+}
+
+export function formatCreateWorktreeError(
+  targetBranch: string | undefined,
+  message: string
+): string {
+  if (targetBranch && /already checked out/i.test(message)) {
+    return `Target branch is already checked out for this work item: ${targetBranch}. Reopen the existing execution checkout or choose Reuse Existing Worktree.`;
+  }
+
+  return `Failed to create worktree: ${message}`;
 }

@@ -124,6 +124,8 @@ Additional rules:
 - [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-pr-strategy.test.ts`
 - [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/current-checkout-regression.test.ts`
 
+> Phase 2 contract-alignment updates for `agents/PAW.agent.md`, `skills/paw-git-operations/SKILL.md`, and the branch auto-derive prompt templates are now linted. The integration harness now supports caller/execution multi-checkout fixtures, secondary-root tool policy checks, and protocol-version fallback for the local SDK harness. Offline integration coverage for execution-checkout scoping and contract text now passes (`cd tests/integration && npx tsc --noEmit && npx tsx --test tests/skills/*.test.ts tests/workflows/current-checkout-regression.test.ts tests/workflows/worktree-bootstrap.test.ts`), while the new live SDK scenario files are present but gated pending an `@github/copilot-sdk` update that can answer protocol-v3 `permission.requested` events.
+
 #### Manual Verification:
 - [ ] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and rely on deterministic binding validation rather than prompt-only reasoning.
 - [ ] A worktree-backed minimal/local workflow can complete its git preparation without changing the caller checkout’s branch, `HEAD`, upstream, or working tree status, and the committed `WorkflowContext.md` contains only portable execution metadata.

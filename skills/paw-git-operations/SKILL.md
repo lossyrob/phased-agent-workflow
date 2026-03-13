@@ -18,6 +18,21 @@ description: Shared git mechanics for PAW activity skills including branch namin
 
 ## Strategy-Based Branching Logic
 
+## Execution Checkout Contract
+
+- Read `WorkflowContext.md` before any git mutation.
+- If `Execution Mode: worktree`, operate only inside the validated execution checkout for this work item.
+- In worktree mode, the caller checkout must never be mutated.
+- If the execution binding cannot be proven, STOP and report recovery guidance instead of guessing.
+
+### Branch-State Matrix
+
+| Execution Mode / Strategy | Caller checkout | Execution checkout |
+|---------------------------|-----------------|--------------------|
+| `current-checkout` | Existing behavior; caller checkout is the execution checkout | `Target Branch` and any planning/phase/docs branches behave as they do today |
+| `worktree` + local | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; all local-strategy commits and pushes happen here |
+| `worktree` + prs | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; planning/phase/docs branches are created, pushed, and reviewed from here |
+
 ### PRs Strategy
 
 Create intermediate branches for each workflow stage; push and create PRs for review.
@@ -25,8 +40,8 @@ Create intermediate branches for each workflow stage; push and create PRs for re
 **Phase work:**
 1. Check current branch: `git branch --show-current`
 2. If not on correct phase branch:
-   - Checkout target branch: `git checkout <target>`
-   - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+    - Checkout target branch: `git checkout <target>`
+    - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
    - Pull latest: `git pull`
    - Create phase branch from target: `git checkout -b <target>_phase[N]`
 3. Verify: `git branch --show-current`
@@ -116,6 +131,8 @@ git branch --show-current
 ```
 
 **If on wrong branch**: STOP immediately. Do not commit. Switch to correct branch first.
+
+**Worktree mode note**: The "current branch" above means the branch in the validated execution checkout, not the caller checkout that launched PAW.
 
 ## Pre-Commit Checklist
 

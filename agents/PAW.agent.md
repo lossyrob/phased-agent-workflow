@@ -57,6 +57,15 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
+### Execution Checkout Rules
+
+- Read `WorkflowContext.md` before any git mutation.
+- If `Execution Mode: worktree`, treat the current checkout as valid only when it matches the expected execution binding for this work item.
+- In worktree mode, all branch creation, checkout, pull, push, PR-prep, and artifact writes happen in the execution checkout.
+- In worktree mode, the caller checkout must never be mutated.
+- If the execution checkout cannot be proven, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
+- Branch auto-derive prompts apply only to `current-checkout`; dedicated worktree mode requires an explicit target branch.
+
 ### Review Policy Behavior
 
 **IMPORTANT**: Review Policy controls HUMAN review pauses only. It does NOT affect automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review). Those are mandatory per the Mandatory Transitions table regardless of Review Policy setting.

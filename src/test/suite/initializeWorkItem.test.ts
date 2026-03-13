@@ -5,14 +5,27 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import {
   buildExecutionRegistryEntry,
+  clearPendingWorktreeInit,
   constructPawPromptArguments,
   createExecutionRegistryLookupKey,
   deriveWorkIdFromTargetBranch,
+  initializeWorkItemCommand,
+  maybeResumePendingWorktreeInit,
   recordExecutionRegistryEntry,
+  recordPendingWorktreeInit,
+  removeExecutionRegistryEntry,
   shouldResumePendingWorktreeInit,
   type ExecutionMetadata,
   type PendingWorktreeInit,
 } from '../../commands/initializeWorkItem';
+import type { WorkItemInputs } from '../../ui/userInput';
+
+type InitializeWorkItemCommandDependencies = NonNullable<
+  Parameters<typeof initializeWorkItemCommand>[2]
+>;
+type ResumePendingWorktreeInitDependencies = NonNullable<
+  Parameters<typeof maybeResumePendingWorktreeInit>[2]
+>;
 
 function createMockContext(): vscode.ExtensionContext {
   const globalStateStore = new Map<string, unknown>();
@@ -26,12 +39,66 @@ function createMockContext(): vscode.ExtensionContext {
         return defaultValue as T;
       },
       update: async (key: string, value: unknown) => {
+        if (value === undefined) {
+          globalStateStore.delete(key);
+          return;
+        }
         globalStateStore.set(key, value);
       },
       keys: () => Array.from(globalStateStore.keys()),
       setKeysForSync: () => undefined,
     },
   } as unknown as vscode.ExtensionContext;
+}
+
+function createMockOutputChannel(): vscode.OutputChannel {
+  return {
+    appendLine: () => undefined,
+    append: () => undefined,
+    clear: () => undefined,
+    dispose: () => undefined,
+    hide: () => undefined,
+    replace: () => undefined,
+    show: () => undefined,
+    name: 'PAW Workflow Test',
+  } as unknown as vscode.OutputChannel;
+}
+
+function createWorkspaceFolder(fsPath: string): vscode.WorkspaceFolder {
+  return {
+    uri: vscode.Uri.file(fsPath),
+    name: 'test-workspace',
+    index: 0,
+  };
+}
+
+function createCurrentCheckoutInputs(): WorkItemInputs {
+  return {
+    targetBranch: '',
+    workflowMode: { mode: 'minimal' },
+    executionMode: 'current-checkout',
+    reviewStrategy: 'local',
+    reviewPolicy: 'final-pr-only',
+    sessionPolicy: 'continuous',
+    artifactLifecycle: 'commit-and-clean',
+    finalReview: {
+      enabled: true,
+      mode: 'single-model',
+      interactive: 'smart',
+    },
+  };
+}
+
+function createDedicatedWorktreeInputs(path?: string): WorkItemInputs {
+  return {
+    ...createCurrentCheckoutInputs(),
+    targetBranch: 'feature/test-worktree',
+    executionMode: 'worktree',
+    worktree: {
+      strategy: 'create',
+      path,
+    },
+  };
 }
 
 suite('Initialize Work Item Helpers', () => {
@@ -57,12 +124,12 @@ suite('Initialize Work Item Helpers', () => {
       },
     }, '/tmp/repo');
 
-      assert.ok(prompt.includes('- **target_branch**: auto'));
-      assert.ok(prompt.includes('- **execution_mode**: worktree'));
-      assert.ok(prompt.includes('- **issue_url**: https://github.com/example/repo/issues/123'));
-      assert.ok(prompt.includes('- **work_id**: test-worktree'));
-      assert.ok(prompt.includes('- **repository_identity**: github.com/example/repo@abc123'));
-      assert.ok(prompt.includes('- **execution_binding**: worktree:test-worktree:feature/test-worktree'));
+    assert.ok(prompt.includes('- **target_branch**: auto'));
+    assert.ok(prompt.includes('- **execution_mode**: worktree'));
+    assert.ok(prompt.includes('- **issue_url**: https://github.com/example/repo/issues/123'));
+    assert.ok(prompt.includes('- **work_id**: test-worktree'));
+    assert.ok(prompt.includes('- **repository_identity**: github.com/example/repo@abc123'));
+    assert.ok(prompt.includes('- **execution_binding**: worktree:test-worktree:feature/test-worktree'));
   });
 
   test('paw-init skill template persists execution contract fields in WorkflowContext', () => {
@@ -111,6 +178,106 @@ suite('Initialize Work Item Helpers', () => {
       registry?.[createExecutionRegistryLookupKey(metadata.repositoryIdentity, metadata.executionBinding)],
       entry
     );
+  });
+
+  test('removeExecutionRegistryEntry clears entries by repository identity and binding', async () => {
+    const context = createMockContext();
+    const metadata: ExecutionMetadata = {
+      workId: 'test-worktree',
+      repositoryIdentity: 'github.com/example/repo@abc123',
+      executionBinding: 'worktree:test-worktree:feature/test-worktree',
+    };
+
+    await recordExecutionRegistryEntry(
+      context,
+      buildExecutionRegistryEntry(metadata, '/tmp/repo-worktree', 'feature/test-worktree')
+    );
+    await removeExecutionRegistryEntry(context, metadata);
+
+    const registry = context.globalState.get<Record<string, unknown> | undefined>('paw.executionRegistry');
+    assert.strictEqual(registry, undefined);
+  });
+
+  test('recordPendingWorktreeInit stores multiple pending worktree launches by binding key', async () => {
+    const context = createMockContext();
+    const pendingEntries: PendingWorktreeInit[] = [
+      {
+        worktreePath: '/tmp/repo-worktree-a',
+        query: '## Initialization Parameters A',
+        mode: 'PAW',
+        createdAt: '2026-03-13T00:00:00.000Z',
+        executionMetadata: {
+          workId: 'test-worktree-a',
+          repositoryIdentity: 'github.com/example/repo@abc123',
+          executionBinding: 'worktree:test-worktree-a:feature/test-worktree-a',
+        },
+      },
+      {
+        worktreePath: '/tmp/repo-worktree-b',
+        query: '## Initialization Parameters B',
+        mode: 'PAW',
+        createdAt: '2026-03-13T00:00:01.000Z',
+        executionMetadata: {
+          workId: 'test-worktree-b',
+          repositoryIdentity: 'github.com/example/repo@abc123',
+          executionBinding: 'worktree:test-worktree-b:feature/test-worktree-b',
+        },
+      },
+    ];
+
+    await recordPendingWorktreeInit(context, pendingEntries[0]);
+    await recordPendingWorktreeInit(context, pendingEntries[1]);
+
+    const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(
+      'paw.pendingWorktreeInit',
+      {}
+    );
+
+    assert.strictEqual(Object.keys(pendingState).length, 2);
+    assert.deepStrictEqual(
+      Object.values(pendingState).map((pending) => pending.worktreePath).sort(),
+      ['/tmp/repo-worktree-a', '/tmp/repo-worktree-b']
+    );
+  });
+
+  test('clearPendingWorktreeInit removes only the matching pending worktree launch', async () => {
+    const context = createMockContext();
+    const pendingEntries: PendingWorktreeInit[] = [
+      {
+        worktreePath: '/tmp/repo-worktree-a',
+        query: '## Initialization Parameters A',
+        mode: 'PAW',
+        createdAt: '2026-03-13T00:00:00.000Z',
+        executionMetadata: {
+          workId: 'test-worktree-a',
+          repositoryIdentity: 'github.com/example/repo@abc123',
+          executionBinding: 'worktree:test-worktree-a:feature/test-worktree-a',
+        },
+      },
+      {
+        worktreePath: '/tmp/repo-worktree-b',
+        query: '## Initialization Parameters B',
+        mode: 'PAW',
+        createdAt: '2026-03-13T00:00:01.000Z',
+        executionMetadata: {
+          workId: 'test-worktree-b',
+          repositoryIdentity: 'github.com/example/repo@abc123',
+          executionBinding: 'worktree:test-worktree-b:feature/test-worktree-b',
+        },
+      },
+    ];
+
+    await recordPendingWorktreeInit(context, pendingEntries[0]);
+    await recordPendingWorktreeInit(context, pendingEntries[1]);
+    await clearPendingWorktreeInit(context, pendingEntries[0].executionMetadata);
+
+    const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(
+      'paw.pendingWorktreeInit',
+      {}
+    );
+
+    assert.strictEqual(Object.keys(pendingState).length, 1);
+    assert.deepStrictEqual(Object.values(pendingState)[0], pendingEntries[1]);
   });
 
   test('shouldResumePendingWorktreeInit matches normalized paths', () => {
@@ -165,5 +332,216 @@ suite('Initialize Work Item Helpers', () => {
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
+  });
+
+  test('initializeWorkItemCommand opens PAW chat immediately in current-checkout mode', async () => {
+    const context = createMockContext();
+    const outputChannel = createMockOutputChannel();
+    const prompts: string[] = [];
+    const steps: string[] = [];
+
+    const dependencies: InitializeWorkItemCommandDependencies = {
+      getWorkspaceFolder: () => createWorkspaceFolder('/tmp/repo'),
+      validateGitRepository: async () => true,
+      collectUserInputs: async () => createCurrentCheckoutInputs(),
+      isWorktreeExecutionEnabled: () => false,
+      resolveExecutionMode: () => 'current-checkout',
+      buildExecutionMetadata: async () => {
+        throw new Error('should not build execution metadata');
+      },
+      prepareDedicatedWorktree: async () => {
+        throw new Error('should not prepare a dedicated worktree');
+      },
+      openPawChat: async (query) => {
+        steps.push('openPawChat');
+        prompts.push(query);
+      },
+      openFolder: async () => {
+        throw new Error('should not open a dedicated worktree');
+      },
+      recordExecutionRegistryEntry: async () => {
+        throw new Error('should not write execution registry');
+      },
+      recordPendingWorktreeInit: async () => {
+        throw new Error('should not persist pending worktree init');
+      },
+      showErrorMessage: async () => undefined,
+      showOutput: () => undefined,
+    };
+
+    await initializeWorkItemCommand(context, outputChannel, dependencies);
+
+    assert.deepStrictEqual(steps, ['openPawChat']);
+    assert.strictEqual(prompts.length, 1);
+    assert.ok(prompts[0].includes('- **execution_mode**: current-checkout'));
+    assert.strictEqual(
+      context.globalState.get<Record<string, unknown> | undefined>('paw.executionRegistry'),
+      undefined
+    );
+    assert.strictEqual(
+      context.globalState.get<Record<string, unknown> | undefined>('paw.pendingWorktreeInit'),
+      undefined
+    );
+  });
+
+  test('initializeWorkItemCommand records registry and pending state before opening a dedicated worktree', async () => {
+    const context = createMockContext();
+    const outputChannel = createMockOutputChannel();
+    const executionMetadata: ExecutionMetadata = {
+      workId: 'test-worktree',
+      repositoryIdentity: 'github.com/example/repo@abc123',
+      executionBinding: 'worktree:test-worktree:feature/test-worktree',
+    };
+    const steps: string[] = [];
+
+    const dependencies: InitializeWorkItemCommandDependencies = {
+      getWorkspaceFolder: () => createWorkspaceFolder('/tmp/repo'),
+      validateGitRepository: async () => true,
+      collectUserInputs: async () => createDedicatedWorktreeInputs(),
+      isWorktreeExecutionEnabled: () => true,
+      resolveExecutionMode: () => 'worktree',
+      buildExecutionMetadata: async () => executionMetadata,
+      prepareDedicatedWorktree: async () => '/tmp/repo-worktree',
+      openPawChat: async () => {
+        throw new Error('should not open chat in the caller checkout');
+      },
+      openFolder: async () => {
+        steps.push('openFolder');
+      },
+      recordExecutionRegistryEntry: async (mockContext, entry) => {
+        steps.push('registry');
+        await recordExecutionRegistryEntry(mockContext, entry);
+      },
+      recordPendingWorktreeInit: async (mockContext, pending) => {
+        steps.push('pending');
+        await recordPendingWorktreeInit(mockContext, pending);
+      },
+      showErrorMessage: async () => undefined,
+      showOutput: () => undefined,
+    };
+
+    await initializeWorkItemCommand(context, outputChannel, dependencies);
+
+    assert.deepStrictEqual(steps, ['registry', 'pending', 'openFolder']);
+
+    const registry = context.globalState.get<Record<string, ReturnType<typeof buildExecutionRegistryEntry>>>(
+      'paw.executionRegistry',
+      {}
+    );
+    assert.deepStrictEqual(
+      registry[createExecutionRegistryLookupKey(
+        executionMetadata.repositoryIdentity,
+        executionMetadata.executionBinding
+      )],
+      buildExecutionRegistryEntry(
+        executionMetadata,
+        '/tmp/repo-worktree',
+        'feature/test-worktree'
+      )
+    );
+
+    const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(
+      'paw.pendingWorktreeInit',
+      {}
+    );
+    const pending = pendingState[createExecutionRegistryLookupKey(
+      executionMetadata.repositoryIdentity,
+      executionMetadata.executionBinding
+    )];
+    assert.ok(pending);
+    assert.strictEqual(pending.worktreePath, '/tmp/repo-worktree');
+    assert.ok(pending.query.includes('- **execution_mode**: worktree'));
+  });
+
+  test('maybeResumePendingWorktreeInit clears only the matching pending init after chat opens', async () => {
+    const context = createMockContext();
+    const outputChannel = createMockOutputChannel();
+    const matchingPending: PendingWorktreeInit = {
+      worktreePath: '/tmp/repo-worktree-a',
+      query: '## Initialization Parameters A',
+      mode: 'PAW',
+      createdAt: '2026-03-13T00:00:00.000Z',
+      executionMetadata: {
+        workId: 'test-worktree-a',
+        repositoryIdentity: 'github.com/example/repo@abc123',
+        executionBinding: 'worktree:test-worktree-a:feature/test-worktree-a',
+      },
+    };
+    const otherPending: PendingWorktreeInit = {
+      worktreePath: '/tmp/repo-worktree-b',
+      query: '## Initialization Parameters B',
+      mode: 'PAW',
+      createdAt: '2026-03-13T00:00:01.000Z',
+      executionMetadata: {
+        workId: 'test-worktree-b',
+        repositoryIdentity: 'github.com/example/repo@abc123',
+        executionBinding: 'worktree:test-worktree-b:feature/test-worktree-b',
+      },
+    };
+    const openedQueries: string[] = [];
+
+    await recordPendingWorktreeInit(context, matchingPending);
+    await recordPendingWorktreeInit(context, otherPending);
+
+    const dependencies: ResumePendingWorktreeInitDependencies = {
+      getWorkspaceFolder: () => createWorkspaceFolder('/tmp/repo-worktree-a'),
+      openPawChat: async (query) => {
+        openedQueries.push(query);
+      },
+      clearPendingWorktreeInit,
+      showErrorMessage: async () => undefined,
+    };
+
+    await maybeResumePendingWorktreeInit(context, outputChannel, dependencies);
+
+    assert.deepStrictEqual(openedQueries, ['## Initialization Parameters A']);
+    const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(
+      'paw.pendingWorktreeInit',
+      {}
+    );
+    assert.strictEqual(Object.keys(pendingState).length, 1);
+    assert.deepStrictEqual(Object.values(pendingState)[0], otherPending);
+  });
+
+  test('maybeResumePendingWorktreeInit preserves pending state when chat launch fails', async () => {
+    const context = createMockContext();
+    const outputChannel = createMockOutputChannel();
+    const pending: PendingWorktreeInit = {
+      worktreePath: '/tmp/repo-worktree-a',
+      query: '## Initialization Parameters A',
+      mode: 'PAW',
+      createdAt: '2026-03-13T00:00:00.000Z',
+      executionMetadata: {
+        workId: 'test-worktree-a',
+        repositoryIdentity: 'github.com/example/repo@abc123',
+        executionBinding: 'worktree:test-worktree-a:feature/test-worktree-a',
+      },
+    };
+    const errors: string[] = [];
+
+    await recordPendingWorktreeInit(context, pending);
+
+    const dependencies: ResumePendingWorktreeInitDependencies = {
+      getWorkspaceFolder: () => createWorkspaceFolder('/tmp/repo-worktree-a'),
+      openPawChat: async () => {
+        throw new Error('chat unavailable');
+      },
+      clearPendingWorktreeInit,
+      showErrorMessage: async (message) => {
+        errors.push(message);
+        return undefined;
+      },
+    };
+
+    await maybeResumePendingWorktreeInit(context, outputChannel, dependencies);
+
+    const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(
+      'paw.pendingWorktreeInit',
+      {}
+    );
+    assert.strictEqual(Object.keys(pendingState).length, 1);
+    assert.deepStrictEqual(Object.values(pendingState)[0], pending);
+    assert.strictEqual(errors.length, 1);
+    assert.ok(errors[0].includes('chat unavailable'));
   });
 });

@@ -79,8 +79,22 @@ async function pathExists(targetPath: string): Promise<boolean> {
   }
 }
 
-async function ensureUserPathIsCanonical(targetPath: string): Promise<string> {
-  const resolvedPath = path.resolve(targetPath);
+function resolveWorktreePath(basePath: string, targetPath: string): string {
+  return path.isAbsolute(targetPath)
+    ? path.resolve(targetPath)
+    : path.resolve(basePath, targetPath);
+}
+
+async function canonicalizeComparablePath(targetPath: string): Promise<string> {
+  try {
+    return await realpath(targetPath);
+  } catch {
+    return path.resolve(targetPath);
+  }
+}
+
+async function ensureUserPathIsCanonical(targetPath: string, basePath: string): Promise<string> {
+  const resolvedPath = resolveWorktreePath(basePath, targetPath);
   const stat = await lstat(resolvedPath);
   if (stat.isSymbolicLink()) {
     throw new Error(`Refusing symlinked worktree path: ${targetPath}`);
@@ -445,7 +459,7 @@ export async function ensureUniqueWorktreePath(worktreePath: string): Promise<st
 export async function createWorktree(options: CreateWorktreeOptions): Promise<string> {
   const baseBranch = options.baseBranch ?? 'main';
   const canonicalRepositoryPath = await realpath(options.repositoryPath);
-  const worktreePath = path.resolve(options.worktreePath);
+  const worktreePath = resolveWorktreePath(canonicalRepositoryPath, options.worktreePath);
   const repoContext = await getRepositoryContext(canonicalRepositoryPath);
 
   if (await pathExists(worktreePath)) {
@@ -503,7 +517,8 @@ export async function validateReusableWorktree(
 ): Promise<string> {
   const baseBranch = options.baseBranch ?? 'main';
   const sourceContext = await getRepositoryContext(options.repositoryPath);
-  const candidatePath = await ensureUserPathIsCanonical(options.worktreePath);
+  const candidatePath = await ensureUserPathIsCanonical(options.worktreePath, sourceContext.rootPath);
+  const canonicalCandidatePath = await canonicalizeComparablePath(candidatePath);
   let candidateContext: RepositoryContext;
   const expectedBranch = options.expectedTargetBranch?.trim();
 
@@ -518,9 +533,18 @@ export async function validateReusableWorktree(
   }
 
   const registeredWorktrees = await listGitWorktrees(options.repositoryPath);
-  const registeredCandidate = registeredWorktrees.find(
+  let registeredCandidate = registeredWorktrees.find(
     (worktree) => path.resolve(worktree.path) === path.resolve(candidatePath)
   );
+
+  if (!registeredCandidate) {
+    registeredCandidate = (await Promise.all(
+      registeredWorktrees.map(async (worktree) => ({
+        worktree,
+        canonicalPath: await canonicalizeComparablePath(worktree.path),
+      }))
+    )).find((entry) => entry.canonicalPath === canonicalCandidatePath)?.worktree;
+  }
 
   if (!registeredCandidate) {
     throw new Error(`Path is not a registered git worktree: ${candidatePath}`);
@@ -553,8 +577,9 @@ export async function validateReusableWorktree(
   const allowedBranches = new Set<string>();
   if (expectedBranch) {
     allowedBranches.add(expectedBranch);
+  } else {
+    allowedBranches.add(baseBranch);
   }
-  allowedBranches.add(baseBranch);
 
   if (registeredCandidate.detached) {
     if (!expectedBranch) {
@@ -581,9 +606,7 @@ export async function validateReusableWorktree(
   if (expectedBranch) {
     const branchOccupants = registeredWorktrees.filter((worktree) => worktree.branch === expectedBranch);
     const currentCheckoutOwnsBranch = sourceContext.currentBranch === expectedBranch;
-    const occupantConflict = branchOccupants.some(
-      (worktree) => path.resolve(worktree.path) !== path.resolve(candidatePath)
-    );
+    const occupantConflict = branchOccupants.some((worktree) => worktree !== registeredCandidate);
 
     if (currentCheckoutOwnsBranch || occupantConflict) {
       throw new Error(`Target branch is already checked out outside the reusable worktree: ${expectedBranch}`);

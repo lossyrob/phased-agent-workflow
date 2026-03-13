@@ -1,7 +1,7 @@
 import * as assert from 'assert';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
-import { join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
 import { execFileSync } from 'child_process';
 import {
   createWorktree,
@@ -232,6 +232,32 @@ suite('Git Validation Helpers', () => {
     }
   });
 
+  test('createWorktree resolves relative paths from the repository root', async () => {
+    const repoDir = await createTempRepo();
+    const cwdDir = await mkdtemp(join(tmpdir(), 'paw-git-validation-cwd-'));
+    const relativePath = '../repo-feature';
+    const expectedPath = resolve(repoDir, relativePath);
+    const originalCwd = process.cwd();
+
+    try {
+      process.chdir(cwdDir);
+      const createdPath = await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: relativePath,
+        targetBranch: 'feature/relative-create',
+      });
+
+      const canonicalExpectedPath = await realpath(expectedPath);
+      assert.strictEqual(createdPath, canonicalExpectedPath);
+      assert.strictEqual(await realpath(createdPath), canonicalExpectedPath);
+    } finally {
+      process.chdir(originalCwd);
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(expectedPath, { recursive: true, force: true });
+      await rm(cwdDir, { recursive: true, force: true });
+    }
+  });
+
   test('createWorktree rejects when the caller checkout already owns the target branch', async () => {
     const repoDir = await createTempRepo();
     const worktreeDir = `${repoDir}-feature`;
@@ -458,6 +484,66 @@ suite('Git Validation Helpers', () => {
     }
   });
 
+  test('validateReusableWorktree resolves relative paths from the repository root', async () => {
+    const repoDir = await createTempRepo();
+    const cwdDir = await mkdtemp(join(tmpdir(), 'paw-git-validation-cwd-'));
+    const relativePath = '../repo-feature';
+    const worktreeDir = resolve(repoDir, relativePath);
+    const targetBranch = 'feature/test-worktree';
+    const originalCwd = process.cwd();
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+      process.chdir(cwdDir);
+
+      const reusablePath = await validateReusableWorktree(
+        buildReuseOptions(repoDir, worktreeDir, targetBranch, executionContract, {
+          worktreePath: relativePath,
+        })
+      );
+
+      assert.strictEqual(reusablePath, await realpath(worktreeDir));
+    } finally {
+      process.chdir(originalCwd);
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+      await rm(cwdDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateReusableWorktree accepts worktrees discovered through an aliased path spelling', async () => {
+    const repoDir = await createTempRepo();
+    const linkedParent = `${repoDir}-parent-link`;
+    const targetBranch = 'feature/test-worktree';
+    const linkedWorktreePath = join(linkedParent, `${basename(repoDir)}-feature`);
+    const realWorktreePath = join(dirname(repoDir), `${basename(repoDir)}-feature`);
+
+    try {
+      await symlink(dirname(repoDir), linkedParent);
+      const createdPath = await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: linkedWorktreePath,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, createdPath, targetBranch);
+
+      const reusablePath = await validateReusableWorktree(
+        buildReuseOptions(repoDir, createdPath, targetBranch, executionContract)
+      );
+
+      assert.strictEqual(reusablePath, createdPath);
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(realWorktreePath, { recursive: true, force: true });
+      await rm(linkedParent, { recursive: true, force: true });
+    }
+  });
+
   test('validateReusableWorktree rejects orphaned execution bindings', async () => {
     const repoDir = await createTempRepo();
     const worktreeDir = `${repoDir}-feature`;
@@ -672,6 +758,40 @@ suite('Git Validation Helpers', () => {
           registeredExecutionPath: worktreeDir,
         }),
         /half-initialized/
+      );
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
+    }
+  });
+
+  test('validateReusableWorktree rejects bound worktrees checked out on the base branch', async () => {
+    const repoDir = await createTempRepo();
+    const worktreeDir = `${repoDir}-feature`;
+    const targetBranch = 'feature/test-worktree';
+
+    try {
+      await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+      const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
+      execFileSync('git', ['switch', '-c', 'feature/caller-checkout'], { cwd: repoDir });
+      execFileSync('git', ['switch', 'main'], { cwd: worktreeDir });
+      await writeExecutionWorkflowContext(
+        worktreeDir,
+        executionContract.workId,
+        targetBranch,
+        executionContract.repositoryIdentity,
+        executionContract.executionBinding
+      );
+
+      await assert.rejects(
+        () => validateReusableWorktree(
+          buildReuseOptions(repoDir, worktreeDir, targetBranch, executionContract)
+        ),
+        /must be on feature\/test-worktree, found main/
       );
     } finally {
       await rm(repoDir, { recursive: true, force: true });

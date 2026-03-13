@@ -45,6 +45,49 @@ export interface PendingWorktreeInit {
   executionMetadata: ExecutionMetadata;
 }
 
+type PendingWorktreeInitRecord = Record<string, PendingWorktreeInit>;
+
+interface InitializeWorkItemCommandDependencies {
+  getWorkspaceFolder(): vscode.WorkspaceFolder | undefined;
+  validateGitRepository(workspacePath: string): Promise<boolean>;
+  collectUserInputs(outputChannel: vscode.OutputChannel): Promise<WorkItemInputs | undefined>;
+  isWorktreeExecutionEnabled(): boolean;
+  resolveExecutionMode(
+    worktreeExecutionEnabled: boolean,
+    requestedMode?: string
+  ): 'current-checkout' | 'worktree';
+  buildExecutionMetadata(workspacePath: string, targetBranch: string): Promise<ExecutionMetadata>;
+  prepareDedicatedWorktree(
+    context: vscode.ExtensionContext,
+    workspacePath: string,
+    inputs: WorkItemInputs,
+    executionMetadata: ExecutionMetadata,
+    outputChannel: vscode.OutputChannel
+  ): Promise<string>;
+  openPawChat(query: string, outputChannel: vscode.OutputChannel): Promise<void>;
+  openFolder(worktreePath: string): Promise<unknown>;
+  recordExecutionRegistryEntry(
+    context: vscode.ExtensionContext,
+    entry: ExecutionRegistryEntry
+  ): Promise<void>;
+  recordPendingWorktreeInit(
+    context: vscode.ExtensionContext,
+    pending: PendingWorktreeInit
+  ): Promise<void>;
+  showErrorMessage(message: string): Thenable<string | undefined>;
+  showOutput(outputChannel: vscode.OutputChannel): void;
+}
+
+interface ResumePendingWorktreeInitDependencies {
+  getWorkspaceFolder(): vscode.WorkspaceFolder | undefined;
+  openPawChat(query: string, outputChannel: vscode.OutputChannel): Promise<void>;
+  clearPendingWorktreeInit(
+    context: vscode.ExtensionContext,
+    executionMetadata: ExecutionMetadata
+  ): Promise<void>;
+  showErrorMessage(message: string): Thenable<string | undefined>;
+}
+
 interface PromptArgumentsInput {
   targetBranch: string;
   workflowMode: { mode: string; workflowCustomization?: string };
@@ -68,6 +111,44 @@ function canonicalizePath(targetPath: string): string {
   } catch {
     return normalizePath(path.resolve(targetPath));
   }
+}
+
+function createPendingWorktreeInitLookupKey(executionMetadata: ExecutionMetadata): string {
+  return createExecutionRegistryLookupKey(
+    executionMetadata.repositoryIdentity,
+    executionMetadata.executionBinding
+  );
+}
+
+function isPendingWorktreeInit(value: unknown): value is PendingWorktreeInit {
+  return !!value
+    && typeof value === 'object'
+    && 'worktreePath' in value
+    && 'executionMetadata' in value;
+}
+
+function normalizePendingWorktreeInitState(
+  state: PendingWorktreeInit | PendingWorktreeInitRecord | undefined
+): PendingWorktreeInitRecord {
+  if (!state) {
+    return {};
+  }
+
+  if (isPendingWorktreeInit(state)) {
+    return {
+      [createPendingWorktreeInitLookupKey(state.executionMetadata)]: state,
+    };
+  }
+
+  return state;
+}
+
+function getPendingWorktreeInits(
+  context: vscode.ExtensionContext
+): PendingWorktreeInitRecord {
+  return normalizePendingWorktreeInitState(
+    context.globalState.get<PendingWorktreeInit | PendingWorktreeInitRecord>(PENDING_WORKTREE_INIT_KEY)
+  );
 }
 
 /**
@@ -120,12 +201,11 @@ async function openPawChat(
   query: string,
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
-  await vscode.commands.executeCommand('workbench.action.chat.newChat').then(async (value) => {
-    outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
-    await vscode.commands.executeCommand('workbench.action.chat.open', {
-      query,
-      mode: 'PAW',
-    });
+  const value = await vscode.commands.executeCommand('workbench.action.chat.newChat');
+  outputChannel.appendLine('[INFO] New chat session created: ' + String(value));
+  await vscode.commands.executeCommand('workbench.action.chat.open', {
+    query,
+    mode: 'PAW',
   });
 }
 
@@ -203,6 +283,25 @@ export async function recordExecutionRegistryEntry(
   await context.globalState.update(EXECUTION_REGISTRY_KEY, registry);
 }
 
+export async function removeExecutionRegistryEntry(
+  context: vscode.ExtensionContext,
+  executionMetadata: ExecutionMetadata
+): Promise<void> {
+  const registry = {
+    ...getExecutionRegistry(context),
+  };
+  delete registry[
+    createExecutionRegistryLookupKey(
+      executionMetadata.repositoryIdentity,
+      executionMetadata.executionBinding
+    )
+  ];
+  await context.globalState.update(
+    EXECUTION_REGISTRY_KEY,
+    Object.keys(registry).length > 0 ? registry : undefined
+  );
+}
+
 async function buildExecutionMetadata(
   workspacePath: string,
   targetBranch: string
@@ -217,6 +316,15 @@ async function buildExecutionMetadata(
   };
 }
 
+function resolveConfiguredWorktreePath(
+  repositoryRoot: string,
+  configuredPath: string
+): string {
+  return path.isAbsolute(configuredPath)
+    ? path.resolve(configuredPath)
+    : path.resolve(repositoryRoot, configuredPath);
+}
+
 function buildPendingWorktreeInit(
   worktreePath: string,
   query: string,
@@ -229,6 +337,40 @@ function buildPendingWorktreeInit(
     createdAt: new Date().toISOString(),
     executionMetadata,
   };
+}
+
+export async function recordPendingWorktreeInit(
+  context: vscode.ExtensionContext,
+  pending: PendingWorktreeInit
+): Promise<void> {
+  const pendingInits = {
+    ...getPendingWorktreeInits(context),
+    [createPendingWorktreeInitLookupKey(pending.executionMetadata)]: pending,
+  };
+  await context.globalState.update(PENDING_WORKTREE_INIT_KEY, pendingInits);
+}
+
+export async function clearPendingWorktreeInit(
+  context: vscode.ExtensionContext,
+  executionMetadata: ExecutionMetadata
+): Promise<void> {
+  const pendingInits = {
+    ...getPendingWorktreeInits(context),
+  };
+  delete pendingInits[createPendingWorktreeInitLookupKey(executionMetadata)];
+  await context.globalState.update(
+    PENDING_WORKTREE_INIT_KEY,
+    Object.keys(pendingInits).length > 0 ? pendingInits : undefined
+  );
+}
+
+function findPendingWorktreeInitForWorkspace(
+  currentWorkspacePath: string,
+  pendingInits: PendingWorktreeInitRecord
+): PendingWorktreeInit | undefined {
+  return Object.values(pendingInits).find((pending) =>
+    shouldResumePendingWorktreeInit(currentWorkspacePath, pending)
+  );
 }
 
 export function shouldResumePendingWorktreeInit(
@@ -253,21 +395,34 @@ async function prepareDedicatedWorktree(
   const baseBranch = 'main';
   const repositoryContext = await getRepositoryContext(workspacePath);
   const worktreeConfig = inputs.worktree;
-  const registeredExecution = getExecutionRegistryEntry(context, executionMetadata);
+  let registeredExecution = getExecutionRegistryEntry(context, executionMetadata);
 
   if (!worktreeConfig) {
     throw new Error('Dedicated worktree mode requires worktree configuration.');
   }
 
+  if (registeredExecution && !(await executionPathExists(registeredExecution.worktreePath))) {
+    outputChannel.appendLine(
+      `[WARN] Pruning stale execution registry entry for ${executionMetadata.executionBinding}: ${registeredExecution.worktreePath}`
+    );
+    await removeExecutionRegistryEntry(context, executionMetadata);
+    registeredExecution = undefined;
+  }
+
+  const requestedPath = worktreeConfig.path?.trim();
+  const resolvedRequestedPath = requestedPath && requestedPath.length > 0
+    ? resolveConfiguredWorktreePath(repositoryContext.rootPath, requestedPath)
+    : undefined;
+
   if (worktreeConfig.strategy === 'reuse') {
-    if (!worktreeConfig.path) {
+    if (!resolvedRequestedPath) {
       throw new Error('Reusable worktree path is required.');
     }
 
-    outputChannel.appendLine(`[INFO] Validating reusable worktree: ${worktreeConfig.path}`);
+    outputChannel.appendLine(`[INFO] Validating reusable worktree: ${resolvedRequestedPath}`);
     return validateReusableWorktree({
       repositoryPath: workspacePath,
-      worktreePath: worktreeConfig.path,
+      worktreePath: resolvedRequestedPath,
       expectedTargetBranch: branchName || undefined,
       expectedRepositoryIdentity: executionMetadata.repositoryIdentity,
       expectedExecutionBinding: executionMetadata.executionBinding,
@@ -289,11 +444,10 @@ async function prepareDedicatedWorktree(
     );
   }
 
-  const requestedPath = worktreeConfig.path?.trim();
-  const defaultPath = requestedPath && requestedPath.length > 0
-    ? requestedPath
+  const defaultPath = resolvedRequestedPath
+    ? resolvedRequestedPath
     : deriveDefaultWorktreePath(repositoryContext.rootPath, branchName, inputs.issueUrl);
-  const uniquePath = requestedPath && requestedPath.length > 0
+  const uniquePath = resolvedRequestedPath
     ? defaultPath
     : await ensureUniqueWorktreePath(defaultPath);
 
@@ -306,30 +460,69 @@ async function prepareDedicatedWorktree(
   });
 }
 
+const defaultInitializeWorkItemCommandDependencies: InitializeWorkItemCommandDependencies = {
+  getWorkspaceFolder: () => vscode.workspace.workspaceFolders?.[0],
+  validateGitRepository,
+  collectUserInputs,
+  isWorktreeExecutionEnabled,
+  resolveExecutionMode,
+  buildExecutionMetadata,
+  prepareDedicatedWorktree,
+  openPawChat,
+  openFolder: (worktreePath: string) =>
+    Promise.resolve(
+      vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(worktreePath), true)
+    ),
+  recordExecutionRegistryEntry,
+  recordPendingWorktreeInit,
+  showErrorMessage: (message: string) => vscode.window.showErrorMessage(message),
+  showOutput: (outputChannel: vscode.OutputChannel) => outputChannel.show(true),
+};
+
+const defaultResumePendingWorktreeInitDependencies: ResumePendingWorktreeInitDependencies = {
+  getWorkspaceFolder: () => vscode.workspace.workspaceFolders?.[0],
+  openPawChat,
+  clearPendingWorktreeInit,
+  showErrorMessage: (message: string) => vscode.window.showErrorMessage(message),
+};
+
 /**
  * Resume a pending dedicated-worktree initialization when the target window activates.
  */
 export async function maybeResumePendingWorktreeInit(
   context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  dependencies: ResumePendingWorktreeInitDependencies = defaultResumePendingWorktreeInitDependencies
 ): Promise<void> {
-  const pending = context.globalState.get<PendingWorktreeInit>(PENDING_WORKTREE_INIT_KEY);
-  if (!pending) {
+  const pendingInits = getPendingWorktreeInits(context);
+  if (Object.keys(pendingInits).length === 0) {
     return;
   }
 
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  const workspaceFolder = dependencies.getWorkspaceFolder();
   if (!workspaceFolder) {
     return;
   }
 
-  if (!shouldResumePendingWorktreeInit(workspaceFolder.uri.fsPath, pending)) {
+  const pending = findPendingWorktreeInitForWorkspace(workspaceFolder.uri.fsPath, pendingInits);
+  if (!pending) {
     return;
   }
 
   outputChannel.appendLine(`[INFO] Resuming pending worktree initialization for ${pending.worktreePath}`);
-  await context.globalState.update(PENDING_WORKTREE_INIT_KEY, undefined);
-  await openPawChat(pending.query, outputChannel);
+
+  try {
+    await dependencies.openPawChat(pending.query, outputChannel);
+    await dependencies.clearPendingWorktreeInit(context, pending.executionMetadata);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    outputChannel.appendLine(
+      `[ERROR] Failed to resume pending worktree initialization: ${errorMessage}`
+    );
+    await dependencies.showErrorMessage(
+      `Failed to resume pending PAW worktree initialization: ${errorMessage}`
+    );
+  }
 }
 
 /**
@@ -337,14 +530,15 @@ export async function maybeResumePendingWorktreeInit(
  */
 export async function initializeWorkItemCommand(
   context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  dependencies: InitializeWorkItemCommandDependencies = defaultInitializeWorkItemCommandDependencies
 ): Promise<void> {
   outputChannel.appendLine('[INFO] Starting PAW workflow initialization...');
 
   try {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const workspaceFolder = dependencies.getWorkspaceFolder();
     if (!workspaceFolder) {
-      vscode.window.showErrorMessage(
+      await dependencies.showErrorMessage(
         'No workspace folder open. Please open a workspace to initialize a PAW workflow.'
       );
       outputChannel.appendLine('[ERROR] No workspace folder open');
@@ -356,9 +550,9 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine(`[INFO] Workspace: ${workspacePath}`);
     outputChannel.appendLine('[INFO] Validating git repository...');
 
-    const isGitRepo = await validateGitRepository(workspacePath);
+    const isGitRepo = await dependencies.validateGitRepository(workspacePath);
     if (!isGitRepo) {
-      vscode.window.showErrorMessage(
+      await dependencies.showErrorMessage(
         'PAW requires a Git repository. Please initialize Git with: git init'
       );
       outputChannel.appendLine('[ERROR] Not a git repository');
@@ -368,7 +562,7 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine('[INFO] Git repository validated');
     outputChannel.appendLine('[INFO] Collecting user inputs...');
 
-    const inputs = await collectUserInputs(outputChannel);
+    const inputs = await dependencies.collectUserInputs(outputChannel);
     if (!inputs) {
       outputChannel.appendLine('[INFO] User cancelled initialization');
       return;
@@ -400,8 +594,8 @@ export async function initializeWorkItemCommand(
     }
 
     outputChannel.appendLine('[INFO] Constructing PAW agent prompt arguments...');
-    const resolvedExecutionMode = resolveExecutionMode(
-      isWorktreeExecutionEnabled(),
+    const resolvedExecutionMode = dependencies.resolveExecutionMode(
+      dependencies.isWorktreeExecutionEnabled(),
       inputs.executionMode
     );
     const effectiveInputs = resolvedExecutionMode === inputs.executionMode
@@ -412,7 +606,7 @@ export async function initializeWorkItemCommand(
           worktree: undefined,
         };
     const executionMetadata = effectiveInputs.executionMode === 'worktree'
-      ? await buildExecutionMetadata(workspacePath, effectiveInputs.targetBranch.trim())
+      ? await dependencies.buildExecutionMetadata(workspacePath, effectiveInputs.targetBranch.trim())
       : undefined;
     const promptArgs = constructPawPromptArguments(
       {
@@ -423,10 +617,10 @@ export async function initializeWorkItemCommand(
     );
 
     outputChannel.appendLine('[INFO] Invoking PAW agent...');
-    outputChannel.show(true);
+    dependencies.showOutput(outputChannel);
 
     if (effectiveInputs.executionMode === 'current-checkout') {
-      await openPawChat(promptArgs, outputChannel);
+      await dependencies.openPawChat(promptArgs, outputChannel);
       outputChannel.appendLine('[INFO] PAW agent invoked - check chat panel for progress');
       return;
     }
@@ -439,28 +633,28 @@ export async function initializeWorkItemCommand(
       throw new Error('Dedicated worktree execution requires an explicit target branch.');
     }
 
-    const worktreePath = await prepareDedicatedWorktree(
+    const worktreePath = await dependencies.prepareDedicatedWorktree(
       context,
       workspacePath,
       effectiveInputs,
       executionMetadata,
       outputChannel
     );
-    await recordExecutionRegistryEntry(
+    await dependencies.recordExecutionRegistryEntry(
       context,
       buildExecutionRegistryEntry(executionMetadata, worktreePath, effectiveInputs.targetBranch.trim())
     );
-    await context.globalState.update(
-      PENDING_WORKTREE_INIT_KEY,
+    await dependencies.recordPendingWorktreeInit(
+      context,
       buildPendingWorktreeInit(worktreePath, promptArgs, executionMetadata)
     );
 
     outputChannel.appendLine(`[INFO] Opening dedicated worktree in a new window: ${worktreePath}`);
-    await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(worktreePath), true);
+    await dependencies.openFolder(worktreePath);
     outputChannel.appendLine('[INFO] Dedicated worktree opened - PAW will launch there on activation');
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     outputChannel.appendLine(`[ERROR] Initialization failed: ${errorMessage}`);
-    vscode.window.showErrorMessage(`PAW initialization failed: ${errorMessage}`);
+    await dependencies.showErrorMessage(`PAW initialization failed: ${errorMessage}`);
   }
 }

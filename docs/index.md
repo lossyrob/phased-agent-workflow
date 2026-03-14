@@ -4,7 +4,7 @@
 <img src="https://raw.githubusercontent.com/lossyrob/phased-agent-workflow/main/img/paw-logo.png" alt="PAW Logo" width="200"/>
 </div>
 
-**PAW** is a VS Code extension that coordinates multi-stage AI agent workflows for feature implementation and code review. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
+**PAW** coordinates multi-stage AI agent workflows for feature implementation and code review across GitHub Copilot CLI and VS Code. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
 
 ## Why PAW?
 

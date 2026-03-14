@@ -33,6 +33,11 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Absolute path to the VS Code prompts directory. When set, PAW installs agents here instead of using the auto-detected location."
+        },
+        "paw.enableWorktreeExecution": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable dedicated worktree execution mode during PAW workflow initialization. Enabled by default; disable to always use the current checkout."
         }
       }
     },
@@ -120,6 +125,8 @@
     ]
   },
   "scripts": {
+    "clean:out": "node -e \"require('fs').rmSync('out', { recursive: true, force: true })\"",
+    "precompile": "npm run clean:out",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",

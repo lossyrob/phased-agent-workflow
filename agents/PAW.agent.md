@@ -57,6 +57,17 @@ The transition skill returns `pause_at_milestone`. If `true`, STOP and wait for 
 
 For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
+### Execution Checkout Rules
+
+- Read `WorkflowContext.md` before any git mutation.
+- Treat `Repository Identity` (`<normalized-origin-slug>@<root-commit-sha>`) and `Execution Binding` (`worktree:<work-id>:<target-branch>`) as exact contract strings from `WorkflowContext.md`. Compare them literally.
+- In worktree mode, continue only when the current repo/branch/worktree proves this session is already in the intended execution checkout.
+- If `Execution Mode: worktree`, only continue git work in the dedicated execution checkout already opened or validated for this work item.
+- In worktree mode, all branch creation, checkout, pull, push, PR-prep, and artifact writes happen in the execution checkout.
+- In worktree mode, the caller checkout must never be mutated.
+- If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
+- Branch auto-derive prompts apply only to `current-checkout`; dedicated worktree mode requires an explicit target branch.
+
 ### Review Policy Behavior
 
 **IMPORTANT**: Review Policy controls HUMAN review pauses only. It does NOT affect automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review). Those are mandatory per the Mandatory Transitions table regardless of Review Policy setting.
@@ -89,10 +100,9 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 When calling `paw_new_session`, include resume hint: intended next activity + relevant artifact paths.
 {{/vscode}}
 {{#cli}}
-- `per-stage`: N/A in CLI (single-session mode)
-- `continuous`: Single session throughout workflow (default in CLI)
-
-**Note**: CLI operates in single-session mode. Stage boundaries proceed directly to next activity without session reset.
+- `per-stage`: Unavailable; continue in the current session
+- `continuous`: Single session throughout workflow
+- At stage boundaries, continue directly to the next activity without session reset
 {{/cli}}
 
 ## Workflow Tracking
@@ -111,7 +121,7 @@ Use TODOs to externalize workflow steps.
 - `session_action`: Call `paw_new_session` if `new_session`
 {{/vscode}}
 {{#cli}}
-- `session_action`: Ignored in CLI (single-session mode)
+- `session_action`: Stay in the current session
 {{/cli}}
 
 ### Candidate Promotion Flow

@@ -65,6 +65,24 @@ describe("ToolPolicy", () => {
     assert.strictEqual(result.action, "allow");
   });
 
+  it("allows rm -rf for relative paths inside workspace", () => {
+    const localPolicy = new ToolPolicy("/tmp/paw-test-workspace/repo");
+    const result = localPolicy.check({
+      toolName: "bash",
+      input: { command: "rm -rf node_modules" },
+    });
+    assert.strictEqual(result.action, "allow");
+  });
+
+  it("denies rm -rf for relative paths escaping workspace", () => {
+    const localPolicy = new ToolPolicy("/tmp/paw-test-workspace/repo");
+    const result = localPolicy.check({
+      toolName: "bash",
+      input: { command: "rm -rf ../outside" },
+    });
+    assert.strictEqual(result.action, "deny");
+  });
+
   it("denies file create outside workspace", () => {
     const result = policy.check({
       toolName: "create",
@@ -85,6 +103,18 @@ describe("ToolPolicy", () => {
     const result = policy.check({
       toolName: "create",
       input: { path: "/tmp/paw-test-workspace/src/new-file.ts" },
+    });
+    assert.strictEqual(result.action, "allow");
+  });
+
+  it("allows file create inside a secondary allowed root", () => {
+    const multiRootPolicy = new ToolPolicy(
+      "/tmp/paw-test-workspace/caller",
+      ["/tmp/paw-test-workspace/execution"],
+    );
+    const result = multiRootPolicy.check({
+      toolName: "create",
+      input: { path: "/tmp/paw-test-workspace/execution/src/new-file.ts" },
     });
     assert.strictEqual(result.action, "allow");
   });

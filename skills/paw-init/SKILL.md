@@ -12,7 +12,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 ## Capabilities
 
 - Generate Work Title from issue URL, branch name, or user description
-- Generate Work ID from Work Title (normalized, unique)
+- Generate Work ID from Work Title (normalized, unique) unless `work_id` is provided explicitly
 - Create `.paw/work/<work-id>/` directory structure
 - Generate WorkflowContext.md with all configuration fields
 - Create and checkout git branch (explicit or auto-derived)
@@ -24,7 +24,11 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | Parameter | Required | Default | Values |
 |-----------|----------|---------|--------|
 | `base_branch` | No | `main` | branch name |
+| `work_id` | No | auto-derived from Work Title | lowercase slug |
 | `target_branch` | No | auto-derive from work ID | branch name |
+| `execution_mode` | No | `current-checkout` | `current-checkout`, `worktree` |
+| `repository_identity` | No | `none` | `<normalized-origin-slug>@<root-commit-sha>` |
+| `execution_binding` | No | `none` | `worktree:<work_id>:<target_branch>` |
 | `preset` | No | none | preset name (built-in or user-defined) |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
@@ -73,7 +77,7 @@ When parameters are not provided:
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
-This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
+Ask in this order and allow defaults where permitted.
 
 ## Preset System
 
@@ -144,6 +148,7 @@ When a preset is specified (explicitly or via default):
 - Format: lowercase letters, numbers, hyphens only; 1-100 chars
 - No leading/trailing/consecutive hyphens
 - Not reserved (`.`, `..`, `node_modules`, `.git`, `.paw`)
+- If `work_id` is provided explicitly, validate and use it instead of regenerating it from the Work Title
 - If conflict: append `-2`, `-3`, etc.
 
 ### Configuration Validation
@@ -196,9 +201,12 @@ Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
 # WorkflowContext
 
 Work Title: <generated_work_title>
-Work ID: <generated_work_id>
+Work ID: <work_id or generated_work_id>
 Base Branch: <base_branch>
 Target Branch: <target_branch>
+Execution Mode: <execution_mode>
+Repository Identity: <repository_identity or "none">
+Execution Binding: <execution_binding or "none">
 Workflow Mode: <workflow_mode>
 Review Strategy: <review_strategy>
 Review Policy: <review_policy>
@@ -232,6 +240,36 @@ Artifact Lifecycle: <artifact_lifecycle>
 Artifact Paths: auto-derived
 Additional Inputs: none
 ```
+
+### Execution Contract
+
+- If `Execution Mode` is absent in an older context, treat it as `current-checkout`.
+- `Repository Identity` and `Execution Binding` are portable proof only. Never write machine-local execution paths into `WorkflowContext.md`.
+- `Repository Identity` format: `<normalized-origin-slug>@<root-commit-sha>`. Normalize `origin` to lowercase `host/path` form and strip any trailing `.git` before appending the root commit SHA.
+- `Execution Binding` format: `worktree:<work_id>:<target_branch>` in worktree mode; otherwise write `none`.
+- Write these strings exactly in `WorkflowContext.md` and compare them literally.
+{{#vscode}}
+- Use the local execution registry to map `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
+- In worktree mode, create, reuse, or validate the execution checkout before continuing.
+{{/vscode}}
+{{#cli}}
+- Do not assume a registry or automatic handoff into another checkout.
+- Use `Execution Mode: worktree` only when this session already runs in the intended execution checkout.
+- In worktree mode, continue only when `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state prove that the current working directory is the intended execution checkout.
+- If the current working directory is still the caller checkout, STOP and tell the user to open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
+{{/cli}}
+- {{#vscode}}Initialization, reusable-worktree validation, and pending-worktree resume must prove the execution checkout before PAW continues. If that proof fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.{{/vscode}}
+- {{#cli}}If that proof fails, STOP and tell the user to reopen the execution checkout, run `git worktree list`, or re-initialize in `current-checkout` mode.{{/cli}}
+- After the execution checkout is open and proven, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
+- Classify failures clearly:
+  - missing dedicated-worktree metadata → half-initialized worktree
+{{#vscode}}
+  - missing or stale registry path → orphaned binding
+{{/vscode}}
+{{#cli}}
+  - current session is not in the intended execution checkout → wrong checkout; stop and reopen the worktree before continuing
+{{/cli}}
+  - repository, binding, or branch mismatch → invalid reuse; do not guess or auto-repair
 
 ### Git Branch
 > Branch creation and checkout follows `paw-git-operations` patterns.

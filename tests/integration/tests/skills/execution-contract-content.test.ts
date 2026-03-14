@@ -17,13 +17,17 @@ describe("execution checkout contract content", () => {
     assert.match(content, /## Execution Checkout Rules/);
     assert.match(content, /caller checkout must never be mutated/i);
     assert.match(content, /Branch auto-derive prompts apply only to `current-checkout`/);
+    assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
+    assert.match(content, /worktree:<work-id>:<target-branch>/);
   });
 
   it("documents execution checkout contract in paw-git-operations", async () => {
     const content = await readRepoFile("skills/paw-git-operations/SKILL.md");
     assert.match(content, /## Execution Checkout Contract/);
     assert.match(content, /caller checkout must never be mutated/i);
-    assert.match(content, /current branch".*validated execution checkout/is);
+    assert.match(content, /current branch".*established execution checkout/is);
+    assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
+    assert.match(content, /worktree:<work-id>:<target-branch>/);
   });
 
   it("fails fast for worktree mode in branch auto-derive prompts", async () => {

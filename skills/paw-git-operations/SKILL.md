@@ -21,6 +21,9 @@ description: Shared git mechanics for PAW activity skills including branch namin
 ## Execution Checkout Contract
 
 - Read `WorkflowContext.md` before any git mutation.
+- Treat `Repository Identity` as literal `<normalized-origin-slug>@<root-commit-sha>` metadata from `WorkflowContext.md`.
+- Treat `Execution Binding` as literal `worktree:<work-id>:<target-branch>` metadata from `WorkflowContext.md`.
+- In Copilot CLI sessions, compare those values literally; do not invent alternate formats or assume hidden runtime parsing.
 - If `Execution Mode: worktree`, operate only inside the dedicated execution checkout already opened or validated for this work item.
 - In worktree mode, the caller checkout must never be mutated.
 - If you are in the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.

@@ -60,6 +60,8 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 ### Execution Checkout Rules
 
 - Read `WorkflowContext.md` before any git mutation.
+- Treat `Repository Identity` (`<normalized-origin-slug>@<root-commit-sha>`) and `Execution Binding` (`worktree:<work-id>:<target-branch>`) as exact contract strings from `WorkflowContext.md`.
+- In Copilot CLI sessions, no external runtime normalizes these for you. Compare them literally and use git evidence only to confirm the current repo/branch/worktree matches them.
 - If `Execution Mode: worktree`, only continue git work in the dedicated execution checkout already opened or validated for this work item.
 - In worktree mode, all branch creation, checkout, pull, push, PR-prep, and artifact writes happen in the execution checkout.
 - In worktree mode, the caller checkout must never be mutated.

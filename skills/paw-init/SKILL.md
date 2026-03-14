@@ -27,8 +27,8 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `work_id` | No | auto-derived from Work Title | lowercase slug |
 | `target_branch` | No | auto-derive from work ID | branch name |
 | `execution_mode` | No | `current-checkout` | `current-checkout`, `worktree` |
-| `repository_identity` | No | `none` | portable repository identity string |
-| `execution_binding` | No | `none` | portable execution binding string |
+| `repository_identity` | No | `none` | `<normalized-origin-slug>@<root-commit-sha>` |
+| `execution_binding` | No | `none` | `worktree:<work_id>:<target_branch>` |
 | `preset` | No | none | preset name (built-in or user-defined) |
 | `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
 | `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
@@ -246,6 +246,9 @@ Additional Inputs: none
 - If `Execution Mode` is absent in an older context, treat it as `current-checkout`.
 - `Repository Identity` and `Execution Binding` are portable proof only. Never write machine-local execution paths into `WorkflowContext.md`.
 - The execution registry is machine-local, non-committed state mapping `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
+- `Repository Identity` format: `<normalized-origin-slug>@<root-commit-sha>`. Normalize `origin` to lowercase `host/path` form and strip any trailing `.git` before appending the root commit SHA.
+- `Execution Binding` format: `worktree:<work_id>:<target_branch>` in worktree mode; otherwise write `none`.
+- In Copilot CLI sessions, these are exact contract strings in `WorkflowContext.md`. Write them exactly and compare them literally; do not invent alternate spellings or assume external runtime code interprets them for you.
 - Initialization, reusable-worktree validation, and pending-worktree resume must prove the execution checkout before PAW continues. If that proof fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.
 - After the execution checkout is opened, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
 - Classify failures clearly:

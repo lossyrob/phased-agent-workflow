@@ -30,15 +30,11 @@ describe("execution checkout contract content", () => {
     assert.match(content, /worktree:<work-id>:<target-branch>/);
   });
 
-  it("fails fast for worktree mode in branch auto-derive prompts", async () => {
-    const issuePrompt = await readRepoFile("src/prompts/branchAutoDeriveWithIssue.template.md");
-    const descriptionPrompt = await readRepoFile("src/prompts/branchAutoDeriveWithDescription.template.md");
-
-    for (const prompt of [issuePrompt, descriptionPrompt]) {
-      assert.match(prompt, /Only use this prompt when PAW is running in `current-checkout` mode/);
-      assert.match(prompt, /Execution Mode: worktree/);
-      assert.match(prompt, /git worktree list/);
-      assert.match(prompt, /explicit target branch/i);
-    }
+  it("documents CLI-specific worktree limitations in paw-init", async () => {
+    const content = await readRepoFile("skills/paw-init/SKILL.md");
+    assert.match(content, /Copilot CLI does not execute the VS Code extension runtime/i);
+    assert.match(content, /already running in the intended execution checkout/i);
+    assert.match(content, /restart PAW there|re-initialize in `current-checkout` mode/i);
+    assert.match(content, /git worktree list/);
   });
 });

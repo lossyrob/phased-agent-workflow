@@ -85,9 +85,9 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Execution-mode notes:**
 
-- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW establish and re-prove the correct execution checkout during initialization, reuse, and resume before mutating repository state
+- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW and companion tooling establish and re-prove the correct execution checkout during initialization, reuse, and resume before mutating repository state
 - `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
-- `WorkflowContext.md` deliberately stores portable metadata only; machine-specific worktree paths live in local extension state, not in committed artifacts
+- `WorkflowContext.md` deliberately stores portable metadata only; VS Code may keep machine-specific worktree paths in local extension state, while Copilot CLI sessions rely on the committed metadata plus git/worktree evidence instead
 
 ### Spec.md
 

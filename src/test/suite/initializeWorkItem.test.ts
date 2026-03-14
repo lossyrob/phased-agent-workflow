@@ -147,6 +147,8 @@ suite('Initialize Work Item Helpers', () => {
     assert.ok(skillContent.includes('Execution Binding: <execution_binding or "none">'));
     assert.ok(skillContent.includes('<normalized-origin-slug>@<root-commit-sha>'));
     assert.ok(skillContent.includes('worktree:<work_id>:<target_branch>'));
+    assert.ok(skillContent.includes('Copilot CLI does not execute the VS Code extension runtime'));
+    assert.ok(skillContent.includes('already running in the intended execution checkout'));
     assert.ok(skillContent.includes('exact contract strings in `WorkflowContext.md`'));
     assert.ok(skillContent.includes('treat it as `current-checkout`'));
     assert.ok(skillContent.includes('execution registry is machine-local'));

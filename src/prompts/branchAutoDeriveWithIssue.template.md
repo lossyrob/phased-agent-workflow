@@ -1,7 +1,3 @@
-> Only use this prompt when PAW is running in `current-checkout` mode. Dedicated worktree mode requires an explicit target branch and should fail fast with recovery guidance if the execution binding is invalid.
-
-If `WorkflowContext.md` shows `Execution Mode: worktree`, STOP and tell the user to reopen the execution checkout, run `git worktree list`, or re-initialize with an explicit target branch.
-
 1. **Check Current Branch First:**
    - Run `git branch --show-current` to see current branch
    - If already on a feature/fix branch (not main/master/develop), offer to use it

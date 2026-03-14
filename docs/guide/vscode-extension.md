@@ -39,7 +39,7 @@ The extension:
 - Handles slug conflicts (prompts for alternatives if directory exists)
 - Creates and checks out the target branch in the execution checkout
 - Opens `WorkflowContext.md` for review
-- In Dedicated Worktree mode, creates or validates a separate worktree, opens that folder in a new VS Code window, and resumes PAW there without changing the caller checkout
+- In Dedicated Worktree mode, creates or validates a separate worktree, opens that folder in a new VS Code window, and starts the PAW chat there without changing the caller checkout
 
 ### PAW: Get Work Status
 

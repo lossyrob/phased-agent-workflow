@@ -95,12 +95,13 @@ Execution mode controls **where** PAW runs. It is independent of workflow mode a
 | Execution Mode | What happens | Best For |
 |------|-------------|----------|
 | **Current Checkout** | PAW runs in the currently open repository checkout. Existing branch auto-derive behavior and legacy `WorkflowContext.md` compatibility remain unchanged. | Standard single-checkout workflows |
-| **Dedicated Worktree** | PAW creates or reuses a separate worktree, runs there, and leaves the caller checkout untouched. This mode requires an explicit target branch. | Isolated automation, preserving in-progress local state, and PR/local workflows that should not mutate the open checkout |
+| **Dedicated Worktree** | In the VS Code extension, PAW can create or reuse a separate worktree, open it, and leave the caller checkout untouched. In Copilot CLI, use this mode only when the session is already running in the intended execution checkout. This mode requires an explicit target branch. | Isolated automation, preserving in-progress local state, and PR/local workflows that should not mutate the open checkout |
 
 **Important distinctions:**
 
 - **Review strategy** controls branch and PR behavior **inside the execution checkout**
 - **Artifact lifecycle** controls whether `.paw/work/` files are committed; it does **not** create, keep, or remove worktrees
+- In the VS Code extension, Dedicated Worktree can create/reuse and open the execution checkout for you; Copilot CLI does not move the session into another checkout automatically
 - Older `WorkflowContext.md` files without `Execution Mode` are treated as `current-checkout`
 
 ## Review Strategies Explained
@@ -114,7 +115,7 @@ Execution mode controls **where** PAW runs. It is independent of workflow mode a
 - Docs branch: `<target>_docs` → Docs PR to target branch
 - Final PR: target branch → base branch (usually `main`)
 
-When execution mode is `worktree`, these branches are created and pushed from the dedicated execution checkout. The caller checkout remains unchanged.
+When execution mode is `worktree`, these branches are created and pushed from the execution checkout. In VS Code, the extension opens that checkout for you; in Copilot CLI, start PAW there yourself. The caller checkout remains unchanged only when PAW is already running from the dedicated worktree.
 
 **Best for:**
 
@@ -138,7 +139,7 @@ When execution mode is `worktree`, these branches are created and pushed from th
 - All work committed directly to target branch
 - Final PR: target branch → base branch (usually `main`)
 
-All commits happen in the selected execution checkout. In dedicated worktree mode, the caller checkout still stays on its original branch and `HEAD`.
+All commits happen in the selected execution checkout. In dedicated worktree mode, the caller checkout stays on its original branch and `HEAD` only when PAW is already running from the dedicated worktree (or the VS Code extension opened it for you).
 
 **Best for:**
 

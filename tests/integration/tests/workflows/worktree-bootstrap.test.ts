@@ -7,9 +7,8 @@ import { assertArtifactExists, assertToolCalls } from "../../lib/assertions.js";
 import { createTestContext, destroyTestContext, type TestContext } from "../../lib/harness.js";
 import { createCallerAndExecution } from "../../lib/multi-checkout.js";
 
-const describeLiveWorktreeScenarios = process.env.PAW_TEST_ENABLE_LIVE_WORKTREE_SCENARIOS === "1"
-  ? describe
-  : describe.skip;
+const LIVE_MODEL = process.env.PAW_TEST_LIVE_MODEL ?? "claude-sonnet-4.6";
+const LIVE_TURN_TIMEOUT = 180_000;
 
 type CheckoutSnapshot = {
   branch: string;
@@ -71,14 +70,16 @@ function buildExecutionPrompt(workId: string, targetBranch: string): string {
     "- If Execution Mode is worktree and this checkout cannot be proven to be the execution checkout, STOP and give recovery guidance mentioning `git worktree list`, reopening the execution checkout, or re-initializing",
     "- Create only the files requested by the user prompt",
     "- Stage only the requested files and commit locally when asked",
+    "- Do not create or update session workspace files such as plan.md",
+    "- Do not run tests, builds, lint, or cleanup commands unless the user explicitly asks for them",
+    "- Once the requested files are committed, stop and report the branch used",
     "- Never push or create PRs",
     "- Do not invoke the skill tool or use SQL",
     "- Do NOT ask the user questions",
   ].join("\n");
 }
 
-// TODO: Enable by default once the Copilot SDK supports protocol v3 permission requests in this harness.
-describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout: 240_000 }, () => {
+describe("worktree execution bootstrap behavior", { timeout: 240_000 }, () => {
   const contexts: TestContext[] = [];
 
   after(async () => {
@@ -105,6 +106,7 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
       skillOrAgent: "worktree-bootstrap",
       systemPrompt: buildExecutionPrompt(workId, targetBranch),
       answerer,
+      model: LIVE_MODEL,
       excludedTools: ["skill", "sql"],
     });
     contexts.push(ctx);
@@ -116,8 +118,9 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
         "3. Create src/worktree-proof.ts containing `export const worktreeProof = true;`",
         "4. Stage only those two files and commit them locally with message 'Add worktree execution proof'.",
         "5. Report the branch you used.",
+        "6. Do not run tests, builds, lint, cleanup commands, or create session workspace files.",
       ].join("\n"),
-    }, 120_000);
+    }, LIVE_TURN_TIMEOUT);
 
     assert.strictEqual(ctx.workingDirectory, checkouts.execution.path);
     await assertArtifactExists(checkouts.execution.path, workId, "Spec.md");
@@ -131,7 +134,7 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
     assert.deepStrictEqual(callerAfter, callerBefore, "caller checkout should remain unchanged");
 
     assertToolCalls(ctx.toolLog, {
-      bashMustNotInclude: [/git push/, /gh\s+pr\s+create/],
+      bashMustNotInclude: [/git push/, /gh\s+pr\s+create/, /\bnpm test\b/, /\bnpm run build\b/, /\brm -rf dist\b/],
     });
   });
 
@@ -139,9 +142,9 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
     const workId = "test-worktree-wrong-checkout";
     const targetBranch = "feature/test-worktree-wrong-checkout";
     const checkouts = await createCallerAndExecution("minimal-ts", workId, targetBranch);
-    const callerBefore = await captureCheckoutSnapshot(checkouts.caller);
 
     await seedWorkflowContext(checkouts.caller.path, workId, targetBranch, "worktree");
+    const callerBefore = await captureCheckoutSnapshot(checkouts.caller);
 
     const answerer = new RuleBasedAnswerer([
       (req) => req.choices?.[0] ?? "yes",
@@ -152,6 +155,7 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
       skillOrAgent: "worktree-bootstrap-wrong-checkout",
       systemPrompt: buildExecutionPrompt(workId, targetBranch),
       answerer,
+      model: LIVE_MODEL,
       excludedTools: ["skill", "sql"],
     });
     contexts.push(ctx);
@@ -161,8 +165,9 @@ describeLiveWorktreeScenarios("worktree execution bootstrap behavior", { timeout
         `Read .paw/work/${workId}/WorkflowContext.md and determine whether git work can proceed from this checkout.`,
         "If the execution checkout cannot be proven, stop immediately and give recovery guidance.",
         "Do not create, edit, stage, or commit any files in that case.",
+        "Do not run tests, builds, lint, cleanup commands, or create session workspace files.",
       ].join("\n"),
-    }, 120_000);
+    }, LIVE_TURN_TIMEOUT);
 
     const content = response?.data?.content ?? "";
     assert.match(

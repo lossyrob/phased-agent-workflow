@@ -1,4 +1,4 @@
-import { CopilotClient } from "@github/copilot-sdk";
+import { CopilotClient, approveAll } from "@github/copilot-sdk";
 
 export interface UserInputRequest {
   question: string;
@@ -78,6 +78,7 @@ export class HybridAnswerer implements Answerer {
       sessionId: `answerer-${Date.now()}`,
       ...(this.model ? { model: this.model } : {}),
       systemMessage: { content: this.buildSystemPrompt() },
+      onPermissionRequest: approveAll,
     });
   }
 

@@ -171,9 +171,13 @@ export async function createTestContext(opts: {
                 : request.kind;
 
           const decision = policy.check({ toolName, input: policyInput });
-          return decision.action === "allow"
-            ? { kind: "approved" as const }
-            : { kind: "denied-by-rules" as const };
+          if (decision.action === "allow") {
+            return { kind: "approved" as const };
+          }
+          if (decision.action === "deny") {
+            return { kind: "denied-by-rules" as const, rules: [decision.reason] };
+          }
+          return { kind: "denied-by-rules" as const, rules: ["stubbed"] };
         },
 
         onUserInputRequest: async (req) => {

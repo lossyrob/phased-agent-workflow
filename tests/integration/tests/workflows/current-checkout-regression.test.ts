@@ -7,9 +7,8 @@ import { createTestContext, destroyTestContext, type TestContext } from "../../l
 import { TestFixture } from "../../lib/fixtures.js";
 import { join } from "path";
 
-const describeLiveWorktreeScenarios = process.env.PAW_TEST_ENABLE_LIVE_WORKTREE_SCENARIOS === "1"
-  ? describe
-  : describe.skip;
+const LIVE_MODEL = process.env.PAW_TEST_LIVE_MODEL ?? "claude-sonnet-4.6";
+const LIVE_TURN_TIMEOUT = 180_000;
 
 async function seedWorkflowContext(
   workDir: string,
@@ -55,14 +54,16 @@ function buildPrompt(workId: string, targetBranch: string): string {
     "- Stay on the target branch for all requested work",
     "- Create only the files requested by the user prompt",
     "- Stage only the requested files and commit locally when asked",
+    "- Do not create or update session workspace files such as plan.md",
+    "- Do not run tests, builds, lint, or cleanup commands unless the user explicitly asks for them",
+    "- Once the requested files are committed, stop and report the branch used",
     "- Never push or create PRs",
     "- Do not invoke the skill tool or use SQL",
     "- Do NOT ask the user questions",
   ].join("\n");
 }
 
-// TODO: Enable by default once the Copilot SDK supports protocol v3 permission requests in this harness.
-describeLiveWorktreeScenarios("current-checkout workflow regression coverage", { timeout: 240_000 }, () => {
+describe("current-checkout workflow regression coverage", { timeout: 240_000 }, () => {
   const contexts: TestContext[] = [];
 
   after(async () => {
@@ -90,6 +91,7 @@ describeLiveWorktreeScenarios("current-checkout workflow regression coverage", {
       skillOrAgent: `current-checkout-${label}`,
       systemPrompt: buildPrompt(workId, targetBranch),
       answerer,
+      model: LIVE_MODEL,
       excludedTools: ["skill", "sql"],
     });
     contexts.push(ctx);
@@ -101,8 +103,9 @@ describeLiveWorktreeScenarios("current-checkout workflow regression coverage", {
         "3. Create src/current-checkout-proof.ts containing `export const currentCheckoutProof = true;`",
         "4. Stage only those two files and commit them locally with message 'Add current checkout proof'.",
         "5. Report the branch you used.",
+        "6. Do not run tests, builds, lint, cleanup commands, or create session workspace files.",
       ].join("\n"),
-    }, 120_000);
+    }, LIVE_TURN_TIMEOUT);
 
     assert.strictEqual(ctx.workingDirectory, fixture.workDir);
     assert.strictEqual(await fixture.getBranch(), targetBranch);
@@ -112,7 +115,7 @@ describeLiveWorktreeScenarios("current-checkout workflow regression coverage", {
     assert.match(proofFile, /currentCheckoutProof/, "current-checkout proof file should exist");
 
     assertToolCalls(ctx.toolLog, {
-      bashMustNotInclude: [/git push/, /gh\s+pr\s+create/],
+      bashMustNotInclude: [/git push/, /gh\s+pr\s+create/, /\bnpm test\b/, /\bnpm run build\b/, /\brm -rf dist\b/],
     });
   }
 

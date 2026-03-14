@@ -119,12 +119,12 @@ Additional rules:
 - [ ] Tests pass: `npm run lint`
 - [ ] Tests pass: `npm run compile`
 - [ ] Tests pass: `npm test`
-- [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-bootstrap.test.ts`
+- [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-bootstrap.test.ts`
 - [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/git-branching.test.ts`
 - [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-pr-strategy.test.ts`
-- [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/current-checkout-regression.test.ts`
+- [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/current-checkout-regression.test.ts`
 
-> Phase 2 contract-alignment updates for `agents/PAW.agent.md`, `skills/paw-git-operations/SKILL.md`, and the branch auto-derive prompt templates are now linted. The integration harness now supports caller/execution multi-checkout fixtures, secondary-root tool policy checks, and protocol-version fallback for the local SDK harness. Offline integration coverage for execution-checkout scoping and contract text now passes (`cd tests/integration && npx tsc --noEmit && npx tsx --test tests/skills/*.test.ts tests/workflows/current-checkout-regression.test.ts tests/workflows/worktree-bootstrap.test.ts`), while the new live SDK scenario files are present but gated pending an `@github/copilot-sdk` update that can answer protocol-v3 `permission.requested` events.
+> Phase 2 contract-alignment updates for `agents/PAW.agent.md`, `skills/paw-git-operations/SKILL.md`, and the branch auto-derive prompt templates are now linted. The integration harness now supports caller/execution multi-checkout fixtures, secondary-root tool policy checks, and `@github/copilot-sdk@^0.1.32` for protocol-v3 permission handling. Live `current-checkout-regression` and `worktree-bootstrap` workflow suites now run by default on `claude-sonnet-4.6` (overridable with `PAW_TEST_LIVE_MODEL`) and pass alongside the offline contract/harness coverage (`cd tests/integration && npx tsc --noEmit && npx tsx --test tests/skills/*.test.ts tests/workflows/current-checkout-regression.test.ts tests/workflows/worktree-bootstrap.test.ts`).
 
 #### Manual Verification:
 - [ ] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and rely on deterministic binding validation rather than prompt-only reasoning.

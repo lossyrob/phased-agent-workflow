@@ -53,6 +53,9 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Work Title | Short name for PR titles |
 | Work ID | Normalized slug for artifact paths |
 | Target Branch | Branch where implementation merges |
+| Execution Mode | `current-checkout` or `worktree`; older files that omit this field default to `current-checkout` |
+| Repository Identity | Portable repository proof: normalized `origin` slug plus root commit SHA |
+| Execution Binding | Portable execution proof: `worktree:<work-id>:<target-branch>` |
 | Workflow Mode | `full`, `minimal`, or `custom` |
 | Review Strategy | `prs` or `local` |
 | Review Policy | `every-stage`, `milestones`, `planning-only`, or `final-pr-only` |
@@ -79,6 +82,12 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Planning Review Specialist Models | `none`, model pool, pinned pairs, or mixed |
 | Planning Review Perspectives | `none`, `auto`, or comma-separated perspective names |
 | Planning Review Perspective Cap | Positive integer |
+
+**Execution-mode notes:**
+
+- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW validate that git operations happen in the correct checkout before mutating repository state
+- `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
+- `WorkflowContext.md` deliberately stores portable metadata only; machine-specific worktree paths live in local extension state, not in committed artifacts
 
 ### Spec.md
 
@@ -183,7 +192,7 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 **Purpose:** Authoritative technical reference for the implemented work.
 
-**Created by:** `paw-docs-guidance` skill (via `paw-impl-review`)
+**Created by:** `paw-docs-guidance` skill (via `paw-implement` / `paw-impl-review`)
 
 **Contents:**
 

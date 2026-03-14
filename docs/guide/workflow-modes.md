@@ -10,6 +10,8 @@ PAW supports three workflow modes to match your task scope and development style
 | **Minimal** | Core stages (Code Research → Final PR) | Local only | Bug fixes, small enhancements |
 | **Custom** | User-defined | PRs or Local | Unique workflows |
 
+Workflow mode decides which stages PAW runs. Execution mode, review strategy, and artifact lifecycle are selected separately during initialization.
+
 ## Full Mode
 
 **Stages Included:** Spec → Spec Research → Code Research → Implementation Plan → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR → Status
@@ -50,7 +52,7 @@ Minimal mode is a streamlined workflow focusing on core implementation activitie
 
 ### Review Strategy for Minimal Mode
 
-Minimal mode **enforces local strategy** (single branch workflow) to simplify the process. No intermediate planning, phase, or docs branches or PRs—all work happens on the target branch with only a final PR created.
+Minimal mode **enforces local strategy** (single branch workflow) to simplify the process. No intermediate planning, phase, or docs branches or PRs—all work happens on the target branch in the selected execution checkout, with only a final PR created.
 
 !!! note "Quality Assurance"
     Even though specification and documentation stages are skipped, all quality gates (tests, linting, type checking, build verification) remain mandatory. The implementation plan still includes detailed success criteria and phase breakdown for reviewable work.
@@ -86,6 +88,21 @@ Include code research and implementation only, single branch workflow
 Full stages but combine all implementation phases into one, use local strategy
 ```
 
+## Execution Mode
+
+Execution mode controls **where** PAW runs. It is independent of workflow mode and review strategy.
+
+| Execution Mode | What happens | Best For |
+|------|-------------|----------|
+| **Current Checkout** | PAW runs in the currently open repository checkout. Existing branch auto-derive behavior and legacy `WorkflowContext.md` compatibility remain unchanged. | Standard single-checkout workflows |
+| **Dedicated Worktree** | PAW creates or reuses a separate worktree, runs there, and leaves the caller checkout untouched. This mode requires an explicit target branch. | Isolated automation, preserving in-progress local state, and PR/local workflows that should not mutate the open checkout |
+
+**Important distinctions:**
+
+- **Review strategy** controls branch and PR behavior **inside the execution checkout**
+- **Artifact lifecycle** controls whether `.paw/work/` files are committed; it does **not** create, keep, or remove worktrees
+- Older `WorkflowContext.md` files without `Execution Mode` are treated as `current-checkout`
+
 ## Review Strategies Explained
 
 ### PRs Strategy (Intermediate Pull Requests)
@@ -96,6 +113,8 @@ Full stages but combine all implementation phases into one, use local strategy
 - Phase branches: `<target>_phase[N]` → Phase PRs to target branch
 - Docs branch: `<target>_docs` → Docs PR to target branch
 - Final PR: target branch → base branch (usually `main`)
+
+When execution mode is `worktree`, these branches are created and pushed from the dedicated execution checkout. The caller checkout remains unchanged.
 
 **Best for:**
 
@@ -118,6 +137,8 @@ Full stages but combine all implementation phases into one, use local strategy
 
 - All work committed directly to target branch
 - Final PR: target branch → base branch (usually `main`)
+
+All commits happen in the selected execution checkout. In dedicated worktree mode, the caller checkout still stays on its original branch and `HEAD`.
 
 **Best for:**
 
@@ -207,8 +228,12 @@ Planning Docs Review runs during planning (Stage 02) to validate cross-artifact 
 
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:
 
-1. **Select workflow mode** (Full, Minimal, or Custom)
-2. **Select review strategy** (PRs or Local)—automatically set to Local for Minimal mode
-3. **Provide custom instructions** (if Custom mode selected)
+1. **Enter issue URL** (optional)
+2. **Select execution mode** (Current Checkout or Dedicated Worktree)
+3. **Enter branch name** (optional auto-derive in current-checkout mode, explicit in dedicated worktree mode)
+4. **Choose worktree strategy/path** (Dedicated Worktree only)
+5. **Select workflow mode** (Full, Minimal, or Custom)
+6. **Select review strategy** (PRs or Local)—automatically set to Local for Minimal mode
+7. **Provide custom instructions** (if Custom mode selected)
 
 Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.

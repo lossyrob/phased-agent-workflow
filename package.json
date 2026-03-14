@@ -36,8 +36,8 @@
         },
         "paw.enableWorktreeExecution": {
           "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable dedicated worktree execution mode for internal testing. Disabled by default until Phase 2 contract alignment is complete."
+          "default": true,
+          "markdownDescription": "Enable dedicated worktree execution mode during PAW workflow initialization. Enabled by default; disable to always use the current checkout."
         }
       }
     },

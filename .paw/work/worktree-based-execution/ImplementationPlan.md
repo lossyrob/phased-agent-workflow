@@ -65,10 +65,10 @@ Additional rules:
 ## Phase Status
 
 - [x] **Phase 1: Worktree Bootstrap Flow** - Add the initialization inputs and git helpers needed to provision a dedicated execution worktree, write the execution contract fields, and launch PAW there.
-- [ ] **Phase 2: Workflow Contract Alignment** - Update agent/skill/prompt/test surfaces so worktree execution is treated as a first-class execution context instead of a special case.
-- [ ] **Phase 3: Documentation** - Capture the as-built design and update user/reference docs for the new workflow option.
+- [x] **Phase 2: Workflow Contract Alignment** - Update agent/skill/prompt/test surfaces so worktree execution is treated as a first-class execution context instead of a special case.
+- [x] **Phase 3: Documentation** - Capture the as-built design and update user/reference docs for the new workflow option.
 
-> Phase 1 is internal-only. The feature flag stays off until Phase 2 contract alignment and regression coverage are complete.
+> Phase 1 was internal-only. Dedicated worktree execution is now enabled by default because Phase 2 contract alignment, regression coverage, and docs updates are complete.
 
 ## Phase Candidates
 
@@ -116,23 +116,23 @@ Additional rules:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Tests pass: `npm run lint`
-- [ ] Tests pass: `npm run compile`
-- [ ] Tests pass: `npm test`
+- [x] Tests pass: `npm run lint`
+- [x] Tests pass: `npm run compile`
+- [x] Tests pass: `npm test`
 - [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-bootstrap.test.ts`
-- [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/git-branching.test.ts`
-- [ ] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-pr-strategy.test.ts`
+- [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/git-branching.test.ts`
+- [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/worktree-pr-strategy.test.ts`
 - [x] Tests pass: `cd tests/integration && npx tsx --test tests/workflows/current-checkout-regression.test.ts`
 
-> Phase 2 contract-alignment updates for `agents/PAW.agent.md`, `skills/paw-git-operations/SKILL.md`, and the branch auto-derive prompt templates are now linted. The integration harness now supports caller/execution multi-checkout fixtures, secondary-root tool policy checks, and `@github/copilot-sdk@^0.1.32` for protocol-v3 permission handling. Live `current-checkout-regression` and `worktree-bootstrap` workflow suites now run by default on `claude-sonnet-4.6` (overridable with `PAW_TEST_LIVE_MODEL`) and pass alongside the offline contract/harness coverage (`cd tests/integration && npx tsc --noEmit && npx tsx --test tests/skills/*.test.ts tests/workflows/current-checkout-regression.test.ts tests/workflows/worktree-bootstrap.test.ts`).
+> Phase 2 contract-alignment updates for `agents/PAW.agent.md`, `skills/paw-git-operations/SKILL.md`, and the branch auto-derive prompt templates are linted. The integration harness supports caller/execution multi-checkout fixtures, secondary-root tool policy checks, and `@github/copilot-sdk@^0.1.32` for protocol-v3 permission handling. Full targeted integration validation now passes with `claude-sonnet-4.6` as the default live-workflow model (overridable with `PAW_TEST_LIVE_MODEL`): `cd tests/integration && npx tsc --noEmit && npx tsx --test tests/skills/*.test.ts && npx tsx --test tests/workflows/current-checkout-regression.test.ts tests/workflows/worktree-bootstrap.test.ts tests/workflows/git-branching.test.ts tests/workflows/worktree-pr-strategy.test.ts`.
 
 #### Manual Verification:
-- [ ] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and rely on deterministic binding validation rather than prompt-only reasoning.
-- [ ] A worktree-backed minimal/local workflow can complete its git preparation without changing the caller checkout’s branch, `HEAD`, upstream, or working tree status, and the committed `WorkflowContext.md` contains only portable execution metadata.
-- [ ] A paused worktree-backed workflow resumed from the wrong checkout fails fast with actionable recovery guidance (`git worktree list`, reopen execution checkout, or re-initialize) instead of guessing or mutating git state.
-- [ ] A worktree-backed PR workflow can create planning/phase/docs branches, push them, and prepare PRs from the execution checkout without mutating the caller checkout.
-- [ ] Existing current-checkout flows — including explicit-branch, auto-derive, and pre-existing `WorkflowContext.md` files without `Execution Mode` — continue to behave as before.
-- [ ] The feature flag is enabled only after all Phase 2 criteria pass.
+- [x] The workflow contract and prompts consistently describe branch operations as acting on the execution checkout and rely on deterministic binding validation rather than prompt-only reasoning.
+- [x] A worktree-backed minimal/local workflow can complete its git preparation without changing the caller checkout’s branch, `HEAD`, upstream, or working tree status, and the committed `WorkflowContext.md` contains only portable execution metadata.
+- [x] A paused worktree-backed workflow resumed from the wrong checkout fails fast with actionable recovery guidance (`git worktree list`, reopen execution checkout, or re-initialize) instead of guessing or mutating git state.
+- [x] A worktree-backed PR workflow can create planning/phase/docs branches, push them, and prepare PRs from the execution checkout without mutating the caller checkout.
+- [x] Existing current-checkout flows — including explicit-branch, auto-derive, and pre-existing `WorkflowContext.md` files without `Execution Mode` — continue to behave as before.
+- [x] The feature flag is enabled only after all Phase 2 criteria pass.
 
 ---
 
@@ -147,14 +147,14 @@ Additional rules:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Tests pass: `npm run lint`
-- [ ] Tests pass: `npm run compile`
-- [ ] Docs build: `mkdocs build --strict`
+- [x] Tests pass: `npm run lint`
+- [x] Tests pass: `npm run compile`
+- [x] Docs build: `mkdocs build --strict`
 
 #### Manual Verification:
-- [ ] The docs clearly distinguish execution mode from review strategy and artifact lifecycle, explicitly state that worktree lifetime/cleanup is a separate operator concern, and provide manual cleanup commands at workflow completion.
-- [ ] The docs call out excluded behaviors and caveats: no automatic cleanup, no arbitrary resume-from-caller-checkout discovery, worktree mode requires an explicit target branch, fail-fast behavior on ambiguous execution binding, and recovery/reuse rejection cases.
-- [ ] The as-built documentation matches the final behavior, verification steps, current-checkout compatibility story, and local-registry / recovery guidance used during implementation.
+- [x] The docs clearly distinguish execution mode from review strategy and artifact lifecycle, explicitly state that worktree lifetime/cleanup is a separate operator concern, and provide manual cleanup commands at workflow completion.
+- [x] The docs call out excluded behaviors and caveats: no automatic cleanup, no arbitrary resume-from-caller-checkout discovery, worktree mode requires an explicit target branch, fail-fast behavior on ambiguous execution binding, and recovery/reuse rejection cases.
+- [x] The as-built documentation matches the final behavior, verification steps, current-checkout compatibility story, and local-registry / recovery guidance used during implementation.
 
 ## References
 

@@ -145,6 +145,9 @@ suite('Initialize Work Item Helpers', () => {
     assert.ok(skillContent.includes('Execution Mode: <execution_mode>'));
     assert.ok(skillContent.includes('Repository Identity: <repository_identity or "none">'));
     assert.ok(skillContent.includes('Execution Binding: <execution_binding or "none">'));
+    assert.ok(skillContent.includes('treat it as `current-checkout`'));
+    assert.ok(skillContent.includes('execution registry is machine-local'));
+    assert.ok(skillContent.includes('`git worktree list`'));
   });
 
   test('deriveWorkIdFromTargetBranch normalizes branch suffixes', () => {

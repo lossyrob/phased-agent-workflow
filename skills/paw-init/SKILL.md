@@ -241,6 +241,17 @@ Artifact Paths: auto-derived
 Additional Inputs: none
 ```
 
+### Execution Contract
+
+- If `Execution Mode` is absent in an older context, treat it as `current-checkout`.
+- `Repository Identity` and `Execution Binding` are portable proof only. Never write machine-local execution paths into `WorkflowContext.md`.
+- The execution registry is machine-local, non-committed state mapping `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
+- In worktree mode, if the execution checkout cannot be proven, STOP before any git mutation and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.
+- Classify failures clearly:
+  - missing dedicated-worktree metadata → half-initialized worktree
+  - missing or stale registry path → orphaned binding
+  - repository, binding, or branch mismatch → invalid reuse; do not guess or auto-repair
+
 ### Git Branch
 > Branch creation and checkout follows `paw-git-operations` patterns.
 

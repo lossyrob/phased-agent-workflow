@@ -77,7 +77,7 @@ When parameters are not provided:
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
-This mirrors the VS Code command flow which prompts sequentially but allows skipping with defaults.
+Ask in this order and allow defaults where permitted.
 
 ## Preset System
 
@@ -247,18 +247,19 @@ Additional Inputs: none
 - `Repository Identity` and `Execution Binding` are portable proof only. Never write machine-local execution paths into `WorkflowContext.md`.
 - `Repository Identity` format: `<normalized-origin-slug>@<root-commit-sha>`. Normalize `origin` to lowercase `host/path` form and strip any trailing `.git` before appending the root commit SHA.
 - `Execution Binding` format: `worktree:<work_id>:<target_branch>` in worktree mode; otherwise write `none`.
+- Write these strings exactly in `WorkflowContext.md` and compare them literally.
 {{#vscode}}
-- The execution registry is machine-local VS Code extension state mapping `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
-- VS Code dedicated-worktree initialization may create or reuse the execution checkout before PAW continues.
+- Use the local execution registry to map `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
+- In worktree mode, create, reuse, or validate the execution checkout before continuing.
 {{/vscode}}
 {{#cli}}
-- Copilot CLI does not execute the VS Code extension runtime and has no extension registry or automatic handoff into another checkout.
-- In CLI, use `Execution Mode: worktree` only when this session is already running in the intended execution checkout, or when an external launcher has already opened PAW there.
-- If the current CLI session is still in the caller checkout, STOP and tell the user to create/open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
+- Do not assume a registry or automatic handoff into another checkout.
+- Use `Execution Mode: worktree` only when this session already runs in the intended execution checkout.
+- In worktree mode, continue only when `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state prove that the current working directory is the intended execution checkout.
+- If the current working directory is still the caller checkout, STOP and tell the user to open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
 {{/cli}}
-- In Copilot CLI sessions, these are exact contract strings in `WorkflowContext.md`. Write them exactly and compare them literally; do not invent alternate spellings or assume external runtime code interprets them for you.
 - {{#vscode}}Initialization, reusable-worktree validation, and pending-worktree resume must prove the execution checkout before PAW continues. If that proof fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.{{/vscode}}
-- {{#cli}}In CLI worktree mode, only continue when `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state prove that this session is already in the intended execution checkout.{{/cli}}
+- {{#cli}}If that proof fails, STOP and tell the user to reopen the execution checkout, run `git worktree list`, or re-initialize in `current-checkout` mode.{{/cli}}
 - After the execution checkout is open and proven, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
 - Classify failures clearly:
   - missing dedicated-worktree metadata → half-initialized worktree
@@ -272,10 +273,6 @@ Additional Inputs: none
 
 ### Git Branch
 > Branch creation and checkout follows `paw-git-operations` patterns.
-
-{{#cli}}
-**CLI worktree note**: `Execution Mode: worktree` does not automatically create or switch checkouts. If this session is not already in the intended execution checkout, STOP before branch creation and give recovery guidance.
-{{/cli}}
 
 **Branch creation sequence** (REQUIRED):
 1. Checkout base branch: `git checkout <base_branch>`

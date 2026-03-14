@@ -23,12 +23,11 @@ description: Shared git mechanics for PAW activity skills including branch namin
 - Read `WorkflowContext.md` before any git mutation.
 - Treat `Repository Identity` as literal `<normalized-origin-slug>@<root-commit-sha>` metadata from `WorkflowContext.md`.
 - Treat `Execution Binding` as literal `worktree:<work-id>:<target-branch>` metadata from `WorkflowContext.md`.
-- In Copilot CLI sessions, compare those values literally; do not invent alternate formats or assume hidden runtime parsing.
-- In Copilot CLI, no extension runtime or registry will move this session into the worktree for you.
-- If this session is not already inside the intended execution checkout, STOP and tell the user to open/restart there or use `current-checkout` mode.
+- Compare those values literally; do not invent alternate formats.
+- In worktree mode, continue only when the current repo/branch/worktree proves this session is already in the intended execution checkout.
 - If `Execution Mode: worktree`, operate only inside the dedicated execution checkout already opened or validated for this work item.
 - In worktree mode, the caller checkout must never be mutated.
-- If you are in the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.
+- If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.
 
 ### Branch-State Matrix
 

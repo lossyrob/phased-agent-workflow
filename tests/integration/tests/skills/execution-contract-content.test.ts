@@ -19,6 +19,7 @@ describe("execution checkout contract content", () => {
     assert.match(content, /Branch auto-derive prompts apply only to `current-checkout`/);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
+    assert.match(content, /current repo\/branch\/worktree proves this session is already in the intended execution checkout/i);
   });
 
   it("documents execution checkout contract in paw-git-operations", async () => {
@@ -32,8 +33,8 @@ describe("execution checkout contract content", () => {
 
   it("documents CLI-specific worktree limitations in paw-init", async () => {
     const content = await readRepoFile("skills/paw-init/SKILL.md");
-    assert.match(content, /Copilot CLI does not execute the VS Code extension runtime/i);
-    assert.match(content, /already running in the intended execution checkout/i);
+    assert.match(content, /Do not assume a registry or automatic handoff into another checkout/i);
+    assert.match(content, /already runs? in the intended execution checkout/i);
     assert.match(content, /restart PAW there|re-initialize in `current-checkout` mode/i);
     assert.match(content, /git worktree list/);
   });

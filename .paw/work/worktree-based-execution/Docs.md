@@ -7,7 +7,7 @@ This work adds a first-class execution-mode concept to PAW workflow initializati
 - **Current Checkout** — preserve the existing single-checkout behavior
 - **Dedicated Worktree** — create or reuse a separate execution checkout and run PAW there
 
-The feature solves a practical workflow problem: previously, starting PAW in VS Code meant branch creation, artifact writes, and later workflow git operations all happened in the caller checkout. That made it awkward to keep local exploratory work open while letting PAW execute in isolation. Worktree execution separates those concerns by keeping the caller checkout unchanged while moving PAW's git activity and `.paw/work/<work-id>/` artifacts into a validated execution checkout.
+The feature solves a practical workflow problem: previously, starting PAW in VS Code meant branch creation, artifact writes, and later workflow git operations all happened in the caller checkout. That made it awkward to keep local exploratory work open while letting PAW execute in isolation. Worktree execution separates those concerns by keeping the caller checkout unchanged while moving PAW's git activity and `.paw/work/<work-id>/` artifacts into a dedicated execution checkout established during initialization/reuse.
 
 The implementation also adds a durable execution contract so agents, skills, and runtime helpers can prove they are operating in the intended checkout before changing git state. That contract uses portable metadata in `WorkflowContext.md` plus machine-local registry state for canonical path matching and recovery.
 
@@ -46,11 +46,11 @@ When the user selects **Dedicated Worktree**, initialization creates or validate
 
 `WorkflowContext.md` stores only portable execution metadata (`Execution Mode`, `Repository Identity`, `Execution Binding`). Absolute filesystem paths are intentionally excluded so committed workflow artifacts remain reusable across machines and clones.
 
-Machine-specific execution paths are kept in VS Code local state. That local registry maps `Repository Identity + Execution Binding` to the canonical execution path and last-known branch. The split lets PAW validate intent portably while still performing local recovery and duplicate-init checks safely.
+Machine-specific execution paths are kept in VS Code local state. That local registry maps `Repository Identity + Execution Binding` to the canonical execution path and last-known branch. The split lets PAW keep committed intent portable while still performing local recovery and duplicate-init checks safely.
 
-#### Fail fast on ambiguous execution binding
+#### Fail fast on ambiguous execution checkout
 
-When PAW cannot prove it is in the correct execution checkout, it stops before any git mutation. The system does not guess which worktree to use and does not silently "repair" state by switching branches in the caller checkout.
+When initialization, reuse, or pending-resume cannot prove the correct execution checkout, PAW stops before opening or resuming it. The system does not guess which worktree to use and does not silently "repair" state by switching branches in the caller checkout.
 
 This applies to wrong-checkout resumes, stale registry entries, orphaned bindings, invalid reuse attempts, and repository mismatches. Recovery guidance points the user to concrete actions like reopening the execution checkout, running `git worktree list`, or re-initializing the workflow.
 
@@ -76,7 +76,7 @@ Dedicated worktree lifetime is an operator concern. After a workflow completes, 
 | `src/commands/initializeWorkItem.ts` | Build execution metadata, create/reuse worktrees, record local registry state, open the execution checkout, and resume PAW |
 | `src/git/validation.ts` | Resolve execution mode, derive repository identity/binding, validate reusable worktrees, and enforce wrong-checkout rejection |
 | `skills/paw-init/SKILL.md` | Persist execution contract fields into `WorkflowContext.md` |
-| `skills/paw-git-operations/SKILL.md` | Treat the validated execution checkout as the only place branch and push logic may run |
+| `skills/paw-git-operations/SKILL.md` | Treat the established execution checkout as the only place branch and push logic may run |
 | Integration harness and workflow tests | Prove caller/execution checkout separation for current-checkout, local, and PR-strategy flows |
 
 ## User Guide

@@ -85,7 +85,7 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 **Execution-mode notes:**
 
-- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW validate that git operations happen in the correct checkout before mutating repository state
+- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW establish and re-prove the correct execution checkout during initialization, reuse, and resume before mutating repository state
 - `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
 - `WorkflowContext.md` deliberately stores portable metadata only; machine-specific worktree paths live in local extension state, not in committed artifacts
 

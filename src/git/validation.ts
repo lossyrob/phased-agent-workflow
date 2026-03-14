@@ -418,6 +418,18 @@ export async function branchExists(repositoryPath: string, branchName: string): 
 }
 
 /**
+ * Determine whether a remote branch exists on origin.
+ */
+async function remoteBranchExists(repositoryPath: string, branchName: string): Promise<boolean> {
+  try {
+    await runGit(['show-ref', '--verify', '--quiet', `refs/remotes/origin/${branchName}`], repositoryPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Derive a default worktree path adjacent to the repository.
  */
 export function deriveDefaultWorktreePath(
@@ -490,6 +502,8 @@ export async function createWorktree(options: CreateWorktreeOptions): Promise<st
     args.push('--detach', worktreePath, baseBranch);
   } else if (await branchExists(canonicalRepositoryPath, options.targetBranch)) {
     args.push(worktreePath, options.targetBranch);
+  } else if (await remoteBranchExists(canonicalRepositoryPath, options.targetBranch)) {
+    args.push('-b', options.targetBranch, worktreePath, `origin/${options.targetBranch}`);
   } else {
     args.push('-b', options.targetBranch, worktreePath, baseBranch);
   }

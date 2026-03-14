@@ -60,10 +60,10 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 ### Execution Checkout Rules
 
 - Read `WorkflowContext.md` before any git mutation.
-- If `Execution Mode: worktree`, treat the current checkout as valid only when it matches the expected execution binding for this work item.
+- If `Execution Mode: worktree`, only continue git work in the dedicated execution checkout already opened or validated for this work item.
 - In worktree mode, all branch creation, checkout, pull, push, PR-prep, and artifact writes happen in the execution checkout.
 - In worktree mode, the caller checkout must never be mutated.
-- If the execution checkout cannot be proven, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
+- If you are in the caller checkout, or the execution checkout is ambiguous, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
 - Branch auto-derive prompts apply only to `current-checkout`; dedicated worktree mode requires an explicit target branch.
 
 ### Review Policy Behavior

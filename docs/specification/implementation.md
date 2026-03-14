@@ -101,7 +101,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
 5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
-6. Open Planning PR for review from the validated execution checkout (PRs strategy)
+6. Open Planning PR for review from the execution checkout established during initialization/reuse (PRs strategy)
 
 ### Stage 03 — Phased Implementation
 
@@ -125,7 +125,7 @@ Execute plan phases with automated verification, peer review, and quality gates.
 
 For each phase:
 
-1. `paw-implement` creates the phase branch and implements changes in the validated execution checkout
+1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
 2. `paw-implement` runs automated checks (tests, linting, type checking)
 3. `paw-impl-review` reviews changes, adds documentation
 4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
@@ -206,7 +206,7 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 
 1. `paw-pr` verifies all prerequisites are complete (including open questions resolution)
 2. `paw-pr` crafts comprehensive PR description with decision audit trail
-3. `paw-pr` opens the final PR from the target branch in the validated execution checkout
+3. `paw-pr` opens the final PR from the target branch in the execution checkout established during initialization/reuse
 4. Address any review comments (using implementation skills)
 5. Merge when approved
 

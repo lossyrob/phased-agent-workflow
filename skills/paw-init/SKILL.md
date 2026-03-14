@@ -246,7 +246,8 @@ Additional Inputs: none
 - If `Execution Mode` is absent in an older context, treat it as `current-checkout`.
 - `Repository Identity` and `Execution Binding` are portable proof only. Never write machine-local execution paths into `WorkflowContext.md`.
 - The execution registry is machine-local, non-committed state mapping `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
-- In worktree mode, if the execution checkout cannot be proven, STOP before any git mutation and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.
+- Initialization, reusable-worktree validation, and pending-worktree resume must prove the execution checkout before PAW continues. If that proof fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.
+- After the execution checkout is opened, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
 - Classify failures clearly:
   - missing dedicated-worktree metadata → half-initialized worktree
   - missing or stale registry path → orphaned binding

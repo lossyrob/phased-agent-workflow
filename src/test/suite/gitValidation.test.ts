@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { basename, dirname, join, resolve } from 'path';
 import { execFileSync } from 'child_process';
@@ -335,6 +335,43 @@ suite('Git Validation Helpers', () => {
       await rm(repoDir, { recursive: true, force: true });
       await rm(firstWorktreeDir, { recursive: true, force: true });
       await rm(secondWorktreeDir, { recursive: true, force: true });
+    }
+  });
+
+  test('createWorktree uses a remote-only target branch instead of recreating it from the base branch', async () => {
+    const repoDir = await createTempRepo();
+    const remoteDir = await mkdtemp(join(tmpdir(), 'paw-git-validation-remote-'));
+    const worktreeDir = `${repoDir}-remote-only`;
+    const targetBranch = 'feature/remote-only';
+
+    try {
+      execFileSync('git', ['init', '--bare', remoteDir], { cwd: remoteDir });
+      execFileSync('git', ['remote', 'set-url', 'origin', remoteDir], { cwd: repoDir });
+      execFileSync('git', ['push', '-u', 'origin', 'main'], { cwd: repoDir });
+
+      execFileSync('git', ['checkout', '-b', targetBranch], { cwd: repoDir });
+      await writeFile(join(repoDir, 'remote-only.txt'), 'remote branch content\n');
+      execFileSync('git', ['add', 'remote-only.txt'], { cwd: repoDir });
+      execFileSync('git', ['commit', '-m', 'Remote branch commit'], { cwd: repoDir });
+      const remoteHead = gitOutput(repoDir, ['rev-parse', 'HEAD']);
+      execFileSync('git', ['push', '-u', 'origin', targetBranch], { cwd: repoDir });
+
+      execFileSync('git', ['checkout', 'main'], { cwd: repoDir });
+      execFileSync('git', ['branch', '-D', targetBranch], { cwd: repoDir });
+
+      const createdPath = await createWorktree({
+        repositoryPath: repoDir,
+        worktreePath: worktreeDir,
+        targetBranch,
+      });
+
+      assert.strictEqual(gitOutput(createdPath, ['branch', '--show-current']), targetBranch);
+      assert.strictEqual(gitOutput(createdPath, ['rev-parse', 'HEAD']), remoteHead);
+      assert.strictEqual(await readFile(join(createdPath, 'remote-only.txt'), 'utf8'), 'remote branch content\n');
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+      await rm(remoteDir, { recursive: true, force: true });
+      await rm(worktreeDir, { recursive: true, force: true });
     }
   });
 

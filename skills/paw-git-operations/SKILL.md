@@ -21,9 +21,9 @@ description: Shared git mechanics for PAW activity skills including branch namin
 ## Execution Checkout Contract
 
 - Read `WorkflowContext.md` before any git mutation.
-- If `Execution Mode: worktree`, operate only inside the validated execution checkout for this work item.
+- If `Execution Mode: worktree`, operate only inside the dedicated execution checkout already opened or validated for this work item.
 - In worktree mode, the caller checkout must never be mutated.
-- If the execution binding cannot be proven, STOP and report recovery guidance instead of guessing.
+- If you are in the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.
 
 ### Branch-State Matrix
 
@@ -132,7 +132,7 @@ git branch --show-current
 
 **If on wrong branch**: STOP immediately. Do not commit. Switch to correct branch first.
 
-**Worktree mode note**: The "current branch" above means the branch in the validated execution checkout, not the caller checkout that launched PAW.
+**Worktree mode note**: The "current branch" above means the branch in the established execution checkout, not the caller checkout that launched PAW.
 
 ## Pre-Commit Checklist
 

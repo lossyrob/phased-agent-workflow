@@ -136,6 +136,7 @@ describe("worktree PR strategy branch behavior", { timeout: 240_000 }, () => {
 
     await setupLocalOrigin(checkouts, targetBranch);
     await seedWorkflowContext(checkouts.execution.path, workId, targetBranch);
+    const targetHeadBefore = (await checkouts.execution.git.raw(["rev-parse", targetBranch])).trim();
     const callerBefore = await captureCheckoutSnapshot(checkouts.caller);
 
     const answerer = new RuleBasedAnswerer([
@@ -185,6 +186,28 @@ describe("worktree PR strategy branch behavior", { timeout: 240_000 }, () => {
 
     const docsContent = await checkouts.execution.git.raw(["show", `${docsBranch}:.paw/work/${workId}/Docs.md`]);
     assert.match(docsContent, /docs/i, "docs branch should contain Docs artifact");
+
+    const planMergeBase = (await checkouts.execution.git.raw(["merge-base", targetBranch, planBranch])).trim();
+    const phaseMergeBase = (await checkouts.execution.git.raw(["merge-base", targetBranch, phaseBranch])).trim();
+    const docsMergeBase = (await checkouts.execution.git.raw(["merge-base", targetBranch, docsBranch])).trim();
+    assert.strictEqual(planMergeBase, targetHeadBefore, "planning branch should fork from the target branch head");
+    assert.strictEqual(phaseMergeBase, targetHeadBefore, "phase branch should fork from the target branch head");
+    assert.strictEqual(docsMergeBase, targetHeadBefore, "docs branch should fork from the target branch head");
+    assert.strictEqual(
+      (await checkouts.execution.git.raw(["rev-parse", targetBranch])).trim(),
+      targetHeadBefore,
+      "target branch should remain unchanged while side branches are prepared",
+    );
+
+    const planTree = await checkouts.execution.git.raw(["ls-tree", "-r", "--name-only", planBranch]);
+    const phaseTree = await checkouts.execution.git.raw(["ls-tree", "-r", "--name-only", phaseBranch]);
+    const docsTree = await checkouts.execution.git.raw(["ls-tree", "-r", "--name-only", docsBranch]);
+    assert.doesNotMatch(planTree, /^src\/worktree-pr-proof\.ts$/m, "planning branch should not contain phase artifact");
+    assert.doesNotMatch(planTree, new RegExp(`^\\.paw/work/${workId}/Docs\\.md$`, "m"), "planning branch should not contain docs artifact");
+    assert.doesNotMatch(phaseTree, new RegExp(`^\\.paw/work/${workId}/ImplementationPlan\\.md$`, "m"), "phase branch should not contain planning artifact");
+    assert.doesNotMatch(phaseTree, new RegExp(`^\\.paw/work/${workId}/Docs\\.md$`, "m"), "phase branch should not contain docs artifact");
+    assert.doesNotMatch(docsTree, new RegExp(`^\\.paw/work/${workId}/ImplementationPlan\\.md$`, "m"), "docs branch should not contain planning artifact");
+    assert.doesNotMatch(docsTree, /^src\/worktree-pr-proof\.ts$/m, "docs branch should not contain phase artifact");
 
     assertToolCalls(ctx.toolLog, {
       bashMustInclude: [

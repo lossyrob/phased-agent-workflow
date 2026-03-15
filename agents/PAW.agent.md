@@ -64,7 +64,6 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 - If `Execution Mode: worktree`, continue only when the current repo/branch/worktree proves this session is in the intended execution checkout. All branch creation, checkout, pull, push, PR-prep, and artifact writes happen there.
 - In worktree mode, the caller checkout must never be mutated.
 - If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
-- Branch auto-derive prompts apply only to `current-checkout`; dedicated worktree mode requires an explicit target branch.
 
 ### Review Policy Behavior
 

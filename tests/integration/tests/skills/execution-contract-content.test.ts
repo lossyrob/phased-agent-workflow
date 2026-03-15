@@ -16,7 +16,6 @@ describe("execution checkout contract content", () => {
     const content = await readRepoFile("agents/PAW.agent.md");
     assert.match(content, /## Execution Checkout Rules/);
     assert.match(content, /caller checkout must never be mutated/i);
-    assert.match(content, /Branch auto-derive prompts apply only to `current-checkout`/);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
     assert.match(content, /current repo\/branch\/worktree proves this session is (already )?in the intended execution checkout/i);

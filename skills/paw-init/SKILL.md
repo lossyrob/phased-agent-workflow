@@ -250,16 +250,13 @@ Additional Inputs: none
 - Write these strings exactly in `WorkflowContext.md` and compare them literally.
 {{#vscode}}
 - Use the local execution registry to map `Repository Identity + Execution Binding` to the canonical execution checkout path for reuse and recovery.
-- In worktree mode, create, reuse, or validate the execution checkout before continuing.
+- In worktree mode, create, reuse, or validate the execution checkout before continuing. If validation fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.
 {{/vscode}}
 {{#cli}}
 - Do not assume a registry or automatic handoff into another checkout.
-- Use `Execution Mode: worktree` only when this session already runs in the intended execution checkout.
-- In worktree mode, continue only when `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state prove that the current working directory is the intended execution checkout.
-- If the current working directory is still the caller checkout, STOP and tell the user to open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
+- Use `Execution Mode: worktree` only when this session already runs in the intended execution checkout. Prove this with `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state.
+- If proof fails (wrong checkout, branch mismatch, missing metadata), STOP and tell the user to open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
 {{/cli}}
-- {{#vscode}}Initialization, reusable-worktree validation, and pending-worktree resume must prove the execution checkout before PAW continues. If that proof fails, STOP and give recovery guidance: `git worktree list`, reopen the execution checkout, or re-initialize.{{/vscode}}
-- {{#cli}}If that proof fails, STOP and tell the user to reopen the execution checkout, run `git worktree list`, or re-initialize in `current-checkout` mode.{{/cli}}
 - After the execution checkout is open and proven, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
 - Classify failures clearly:
   - missing dedicated-worktree metadata → half-initialized worktree

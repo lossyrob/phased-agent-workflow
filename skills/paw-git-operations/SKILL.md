@@ -16,17 +16,13 @@ description: Shared git mechanics for PAW activity skills including branch namin
 
 **Target branch** is the feature branch from WorkflowContext.md (e.g., `feature/auth-system`).
 
-## Strategy-Based Branching Logic
-
 ## Execution Checkout Contract
 
 - Read `WorkflowContext.md` before any git mutation.
 - Treat `Repository Identity` as literal `<normalized-origin-slug>@<root-commit-sha>` metadata from `WorkflowContext.md`.
 - Treat `Execution Binding` as literal `worktree:<work-id>:<target-branch>` metadata from `WorkflowContext.md`.
 - Compare those values literally; do not invent alternate formats.
-- In worktree mode, continue only when the current repo/branch/worktree proves this session is already in the intended execution checkout.
-- If `Execution Mode: worktree`, operate only inside the dedicated execution checkout already opened or validated for this work item.
-- In worktree mode, the caller checkout must never be mutated.
+- If `Execution Mode: worktree`, continue only when the current repo/branch/worktree proves this session is in the intended execution checkout. The caller checkout must never be mutated.
 - If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.
 
 ### Branch-State Matrix
@@ -36,6 +32,8 @@ description: Shared git mechanics for PAW activity skills including branch namin
 | `current-checkout` | Existing behavior; caller checkout is the execution checkout | `Target Branch` and any planning/phase/docs branches behave as they do today |
 | `worktree` + local | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; all local-strategy commits and pushes happen here |
 | `worktree` + prs | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; planning/phase/docs branches are created, pushed, and reviewed from here |
+
+## Strategy-Based Branching Logic
 
 ### PRs Strategy
 

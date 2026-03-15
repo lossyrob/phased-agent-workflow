@@ -19,7 +19,7 @@ describe("execution checkout contract content", () => {
     assert.match(content, /Branch auto-derive prompts apply only to `current-checkout`/);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
-    assert.match(content, /current repo\/branch\/worktree proves this session is already in the intended execution checkout/i);
+    assert.match(content, /current repo\/branch\/worktree proves this session is (already )?in the intended execution checkout/i);
   });
 
   it("documents execution checkout contract in paw-git-operations", async () => {

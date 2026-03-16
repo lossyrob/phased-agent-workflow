@@ -159,7 +159,7 @@ When asked "What presets are available?" or "List presets":
 
 For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
 - Use the exact name **Phased Agent Workflow**. Never invent an acronym expansion.
-- Ground the answer in repository docs before replying: `README.md` (`## What is PAW?`), `docs/index.md`, `docs/guide/index.md`, and `docs/guide/cli-installation.md`.
+- For full documentation, see: https://lossyrob.github.io/phased-agent-workflow/ (overview), https://lossyrob.github.io/phased-agent-workflow/guide/ (getting started), https://lossyrob.github.io/phased-agent-workflow/guide/cli-installation/ (CLI install).
 - Explain briefly:
   - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
   - PAW supports two workflows: implementation and review.

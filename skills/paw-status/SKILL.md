@@ -166,10 +166,10 @@ For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
   - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
 - If the user also asks how to get started:
 {{#cli}}
-  - Install via `copilot plugin install lossyrob/phased-agent-workflow` or `npx @paw-workflow/cli install copilot`, then start with `copilot --agent PAW` (or `/agent PAW` in an existing session).
+  - Select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
 {{/cli}}
 {{#vscode}}
-  - Install the extension, then run `PAW: New PAW Workflow`.
+  - Run `PAW: New PAW Workflow`.
 {{/vscode}}
 - Prefer concise, sourced onboarding language over improvisation.
 

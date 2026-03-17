@@ -126,8 +126,8 @@ Execute plan phases with automated verification, peer review, and quality gates.
 For each phase:
 
 1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
-2. `paw-implement` runs automated checks (tests, linting, type checking)
-3. `paw-impl-review` reviews changes, adds documentation
+2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
+3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before pushing/opening the Phase PR
 4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
 5. Human reviews PR and provides feedback
 6. `paw-implement` addresses review comments
@@ -244,15 +244,15 @@ Executes plan phases by making code changes and ensures quality by running autom
 
 ### paw-impl-review
 
-Reviews code changes, generates docstrings and comments, commits improvements, pushes branches, and opens PRs. Verifies review comment responses and replies to reviewers.
+Reviews code changes, verifies current-phase deliverables from `ImplementationPlan.md` against actual repo state, generates docstrings and comments, commits improvements, pushes branches, and opens PRs. Verifies review comment responses and replies to reviewers.
 
-**Focus:** Quality gate—making code reviewable.
+**Focus:** Quality gate—making code reviewable and complete against the plan.
 
 ### paw-final-review
 
-Reviews implementation against specification after all phases complete. Supports multi-model parallel review (CLI) or single-model review (VS Code). For society-of-thought mode, delegates SoT orchestration to the `paw-sot` utility skill. Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
+Reviews implementation against specification and `ImplementationPlan.md` deliverables after all phases complete. Missing planned deliverables are `should-fix` minimum. Supports multi-model parallel review (CLI) or single-model review (VS Code). For society-of-thought mode, delegates SoT orchestration to the `paw-sot` utility skill. Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
 
-**Focus:** Catch issues before external PR review.
+**Focus:** Catch issues and missing planned deliverables before external PR review.
 
 ### paw-planning-docs-review
 

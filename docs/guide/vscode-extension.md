@@ -77,7 +77,7 @@ Switches a workflow's artifact lifecycle to `never-commit`, removing artifacts f
 **What happens:**
 
 - Artifacts are untracked from git index (files remain locally)
-- A `.gitignore` file is created in the workflow directory
+- A local-only `.gitignore` file is created in the workflow directory and remains untracked
 - WorkflowContext.md `Artifact Lifecycle` field is updated to `never-commit`
 - Future commits won't include workflow artifacts
 

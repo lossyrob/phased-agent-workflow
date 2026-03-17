@@ -49,7 +49,7 @@ If mode is `society-of-thought`, also read:
 ### Step 3: Create Reviews Directory
 
 Create `.paw/work/<work-id>/reviews/` if it doesn't exist.
-Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already present).
+Create `.paw/work/<work-id>/reviews/.gitignore` with content `*` (if not already present). This is a local-only scratch ignore marker — do NOT stage or commit it.
 
 ### Review Prompt (shared)
 
@@ -68,10 +68,11 @@ Start by gathering the diff and reading the spec, then review against these crit
 
 ## Review Criteria
 1. **Correctness**: Do changes implement all spec requirements? Any gaps?
-2. **Pattern Consistency**: Does implementation follow established codebase patterns?
-3. **Bugs and Issues**: Logic errors, edge cases, race conditions, error handling gaps
-4. **Token Efficiency**: For prompts/skills, opportunities to reduce verbosity
-5. **Documentation**: Missing or outdated documentation
+2. **Plan Deliverable Coverage**: Compare `ImplementationPlan.md` `Changes Required` sections and explicit minimum commitments against actual implementation. Missing planned deliverables or empty scaffolding where the plan promised concrete output is `should-fix` minimum, not `consider`.
+3. **Pattern Consistency**: Does implementation follow established codebase patterns?
+4. **Bugs and Issues**: Logic errors, edge cases, race conditions, error handling gaps
+5. **Token Efficiency**: For prompts/skills, opportunities to reduce verbosity
+6. **Documentation**: Missing or outdated documentation
 
 For each finding, provide:
 - Issue description

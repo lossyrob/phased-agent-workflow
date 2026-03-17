@@ -4,7 +4,7 @@
 <img src="https://raw.githubusercontent.com/lossyrob/phased-agent-workflow/main/img/paw-logo.png" alt="PAW Logo" width="200"/>
 </div>
 
-**PAW** is a VS Code extension that coordinates multi-stage AI agent workflows for feature implementation and code review. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
+**PAW** works with **GitHub Copilot CLI** and **VS Code** to coordinate multi-stage AI agent workflows for feature implementation and code review. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
 
 ## Why PAW?
 
@@ -20,9 +20,9 @@ PAW provides:
 
 ## Quick Start
 
-1. [Install the extension](guide/index.md#quick-install) from GitHub Releases
-2. Open a Git repository in VS Code
-3. Run `PAW: New PAW Workflow` from the Command Palette
+1. Install PAW for your platform: [CLI installation](guide/cli-installation.md) or [VS Code extension setup](guide/index.md#quick-install-vs-code)
+2. Open a Git repository in your tool of choice
+3. Start PAW: `copilot --agent PAW` (CLI) or `PAW: New PAW Workflow` (VS Code)
 4. Follow the guided workflow through each stage
 
 [Get Started →](guide/index.md){ .md-button .md-button--primary }

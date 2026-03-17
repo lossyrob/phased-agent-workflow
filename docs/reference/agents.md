@@ -57,7 +57,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
-| `paw-status` | Diagnose workflow state, recommend next steps | Status reports |
+| `paw-status` | Diagnose workflow state, recommend next steps, explain PAW/onboarding | Status reports |
 | `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | Plan.md |
 
 **Utility Skills:**
@@ -198,6 +198,7 @@ The PAW agent understands natural language requests and routes them to appropria
 - "Research how X works" → `paw-spec-research` or `paw-code-research`
 - "Create an implementation plan" → `paw-planning` skill
 - "Implement phase N" → `paw-implement` skill
+- "What is PAW?" or "How do I get started?" → `paw-status` skill
 - "What's the status?" → `paw-status` skill
 
 ### Review Policy Modes

@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { initializeWorkItemCommand } from './commands/initializeWorkItem';
+import {
+  initializeWorkItemCommand,
+  maybeResumePendingWorktreeInit,
+} from './commands/initializeWorkItem';
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
 import { registerHandoffTool } from './tools/handoffTool';
@@ -59,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const initCommand = vscode.commands.registerCommand(
     'paw.initializeWorkItem',
-    () => initializeWorkItemCommand(outputChannel)
+    () => initializeWorkItemCommand(context, outputChannel)
   );
   context.subscriptions.push(initCommand);
   outputChannel.appendLine('[INFO] Registered command: paw.initializeWorkItem');
@@ -70,6 +73,7 @@ export async function activate(context: vscode.ExtensionContext) {
   registerStopTrackingCommand(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered command: paw.stopTrackingArtifacts');
 
+  await maybeResumePendingWorktreeInit(context, outputChannel);
   outputChannel.appendLine('[INFO] PAW Workflow extension ready');
 }
 

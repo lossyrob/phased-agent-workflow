@@ -1,4 +1,4 @@
-import { CopilotClient } from "@github/copilot-sdk";
+import { CopilotClient, approveAll } from "@github/copilot-sdk";
 
 const DEBUG = !!process.env.PAW_TEST_DEBUG;
 
@@ -26,6 +26,7 @@ export class Judge {
     this.session = await this.client.createSession({
       sessionId: `judge-${Date.now()}`,
       systemMessage: { content: JUDGE_SYSTEM_PROMPT },
+      onPermissionRequest: approveAll,
     });
   }
 

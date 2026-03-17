@@ -13,12 +13,16 @@ Creates a complete PAW workflow structure with all necessary files and directori
 1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`)
 2. Type **"PAW: New PAW Workflow"**
 3. Follow the prompts:
-    - **Issue URL** (optional): GitHub Issue or Azure DevOps Work Item URL
-    - **Branch name** (optional): Target branch name, or auto-derive from issue
-    - **Workflow mode**: Full, Minimal, or Custom
-    - **Review strategy**: PRs or Local (Minimal enforces Local)
-    - **Review policy**: Every Stage, Milestones, Planning-Only, or Final PR Only
-    - **Artifact lifecycle**: Commit & Clean (default), Commit & Persist, or Never Commit
+     - **Issue URL** (optional): GitHub Issue or Azure DevOps Work Item URL
+     - **Execution mode**: Current Checkout or Dedicated Worktree
+     - **Branch name**: Optional auto-derive in Current Checkout mode, explicit in Dedicated Worktree mode
+     - **Worktree strategy** (Dedicated Worktree only): Create New Worktree or Reuse Existing Worktree
+     - **Workflow mode**: Full, Minimal, or Custom
+     - **Review strategy**: PRs or Local (Minimal enforces Local)
+     - **Review policy**: Every Stage, Milestones, Planning-Only, or Final PR Only
+     - **Session policy**: Per-Stage or Continuous
+     - **Artifact lifecycle**: Commit & Clean (default), Commit & Persist, or Never Commit
+     - **Final Agent Review**: Enabled or Disabled, then interaction mode if enabled
 
 **What gets created:**
 
@@ -27,12 +31,15 @@ Creates a complete PAW workflow structure with all necessary files and directori
   WorkflowContext.md    # Workflow parameters and configuration
 ```
 
+The workflow directory is created in the **execution checkout**. In Current Checkout mode this is the open workspace. In Dedicated Worktree mode it is the created or reused worktree.
+
 The extension:
 
 - Normalizes your branch name into a valid feature slug
 - Handles slug conflicts (prompts for alternatives if directory exists)
-- Creates and checks out the target branch
+- Creates and checks out the target branch in the execution checkout
 - Opens `WorkflowContext.md` for review
+- In Dedicated Worktree mode, creates or validates a separate worktree, opens that folder in a new VS Code window, and starts the PAW chat there without changing the caller checkout
 
 ### PAW: Get Work Status
 
@@ -109,6 +116,19 @@ To use a custom location, set the `paw.promptDirectory` setting:
 !!! note "VS Code Variants"
     PAW automatically detects VS Code variants (Insiders, Code-OSS, VSCodium) and uses their appropriate configuration directories.
 
+### Dedicated Worktree Execution
+
+The `paw.enableWorktreeExecution` setting controls whether the initialization flow offers Dedicated Worktree mode:
+
+```json
+{
+  "paw.enableWorktreeExecution": true
+}
+```
+
+- `true` (default): show the execution-mode picker with **Current Checkout** and **Dedicated Worktree**
+- `false`: skip the picker and always initialize in the current checkout
+
 ## Output Channel
 
 For detailed logging during workflow operations, check the **PAW Workflow** output channel:
@@ -156,9 +176,20 @@ If PAW agents don't show up in GitHub Copilot Chat:
 If workflow initialization fails:
 
 1. Ensure you're in a git repository
-2. Check for uncommitted changes that might block branch creation
-3. Review the **PAW Workflow** output channel for detailed errors
-4. Verify disk permissions for the `.paw/` directory
+2. If using Dedicated Worktree mode, provide an explicit target branch and avoid choosing the branch already checked out in the caller workspace
+3. For reuse or resume errors, run `git worktree list`, reopen the expected execution checkout, or re-initialize the workflow
+4. Review the **PAW Workflow** output channel for detailed errors
+5. Verify disk permissions for the `.paw/` directory and any configured worktree location
+
+### Dedicated Worktree Recovery
+
+Dedicated Worktree mode fails fast when PAW cannot prove it is running in the correct execution checkout. Common recovery steps:
+
+1. Run `git worktree list` to identify the expected execution checkout
+2. Reopen that worktree in VS Code if it still exists
+3. If the worktree was removed manually, re-run initialization and create or reuse a valid worktree
+
+PAW stores only portable execution metadata in `WorkflowContext.md`. The machine-specific worktree path stays in VS Code local state, so moving or deleting a worktree outside PAW requires reopening or re-initializing it.
 
 ### WSL (Windows Subsystem for Linux)
 

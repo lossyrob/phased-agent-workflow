@@ -73,6 +73,14 @@ PRs that **only** affect VS Code extension code should have the `vscode` label. 
 
 PRs that touch agents, skills, prompts, or shared code don't need a platform label—they're included in both changelogs by default. Platform labels are applied at release-prep time using `prepare-cli-release.prompt.md`.
 
+## Platform Runtime Separation
+
+- PAW has two runtimes: GitHub Copilot CLI and the VS Code extension.
+- Copilot CLI executes installed `agents/`, `skills/`, and prompt content directly. It does **not** run `src/` TypeScript or access `vscode.ExtensionContext` state.
+- `src/` is VS Code-only automation (commands, extension state, worktree handoff, prompt/template loading). Do not treat it as hidden runtime support for CLI behavior.
+- If a behavior depends on VS Code-only automation or state, document it as VS Code-only or provide a CLI analogue in agent/skill text.
+- `tests/integration/` exercises CLI runtime behavior through the Copilot SDK, not the VS Code extension implementation.
+
 IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations, agents provide decision-making logic and reasoning. Rely on agents to use reasoning and logic over hardcoding procedural steps into tools.
 
 ## Skill Development

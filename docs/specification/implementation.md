@@ -17,6 +17,19 @@ The implementation workflow uses a **skills-based architecture**:
 Issue → Specification → Planning → Implementation → Finalization
 ```
 
+## Execution Context
+
+Workflow initialization chooses an **execution checkout** and records it in `WorkflowContext.md`.
+
+- **`current-checkout`** — PAW runs in the currently open repository checkout
+- **`worktree`** — In the VS Code extension, PAW can create or reuse a dedicated worktree, open the workflow there, and leave the caller checkout unchanged. In Copilot CLI, worktree mode assumes the session is already running in the intended execution checkout.
+
+Execution mode is separate from review strategy:
+
+- **Review strategy** controls branch and PR flow inside the execution checkout
+- **Artifact lifecycle** controls whether `.paw/work/` artifacts are committed and does not imply worktree cleanup
+- Older `WorkflowContext.md` files without `Execution Mode` are treated as `current-checkout`
+
 ### Pre-Specification: Work Shaping (Optional)
 
 **Skill:** `paw-work-shaping`
@@ -88,7 +101,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
 5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
-6. Open Planning PR for review (PRs strategy)
+6. Open Planning PR for review from the execution checkout established during initialization/reuse (PRs strategy)
 
 ### Stage 03 — Phased Implementation
 
@@ -112,7 +125,7 @@ Execute plan phases with automated verification, peer review, and quality gates.
 
 For each phase:
 
-1. `paw-implement` creates phase branch and implements changes
+1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
 2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
 3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before pushing/opening the Phase PR
 4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
@@ -193,7 +206,7 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 
 1. `paw-pr` verifies all prerequisites are complete (including open questions resolution)
 2. `paw-pr` crafts comprehensive PR description with decision audit trail
-3. `paw-pr` opens final PR
+3. `paw-pr` opens the final PR from the target branch in the execution checkout established during initialization/reuse
 4. Address any review comments (using implementation skills)
 5. Merge when approved
 

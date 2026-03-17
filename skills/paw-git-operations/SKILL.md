@@ -16,6 +16,23 @@ description: Shared git mechanics for PAW activity skills including branch namin
 
 **Target branch** is the feature branch from WorkflowContext.md (e.g., `feature/auth-system`).
 
+## Execution Checkout Contract
+
+- Read `WorkflowContext.md` before any git mutation.
+- Treat `Repository Identity` as literal `<normalized-origin-slug>@<root-commit-sha>` metadata from `WorkflowContext.md`.
+- Treat `Execution Binding` as literal `worktree:<work-id>:<target-branch>` metadata from `WorkflowContext.md`.
+- Compare those values literally; do not invent alternate formats.
+- If `Execution Mode: worktree`, continue only when the current repo/branch/worktree proves this session is in the intended execution checkout. The caller checkout must never be mutated.
+- If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and report recovery guidance instead of guessing.
+
+### Branch-State Matrix
+
+| Execution Mode / Strategy | Caller checkout | Execution checkout |
+|---------------------------|-----------------|--------------------|
+| `current-checkout` | Existing behavior; caller checkout is the execution checkout | `Target Branch` and any planning/phase/docs branches behave as they do today |
+| `worktree` + local | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; all local-strategy commits and pushes happen here |
+| `worktree` + prs | Branch, `HEAD`, upstream, and status remain unchanged for the full run | Starts on explicit `Target Branch`; planning/phase/docs branches are created, pushed, and reviewed from here |
+
 ## Strategy-Based Branching Logic
 
 ### PRs Strategy
@@ -25,8 +42,8 @@ Create intermediate branches for each workflow stage; push and create PRs for re
 **Phase work:**
 1. Check current branch: `git branch --show-current`
 2. If not on correct phase branch:
-   - Checkout target branch: `git checkout <target>`
-   - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
+    - Checkout target branch: `git checkout <target>`
+    - Set upstream if not set: `git branch --set-upstream-to=<remote>/<target>`
    - Pull latest: `git pull`
    - Create phase branch from target: `git checkout -b <target>_phase[N]`
 3. Verify: `git branch --show-current`
@@ -123,6 +140,8 @@ git branch --show-current
 ```
 
 **If on wrong branch**: STOP immediately. Do not commit. Switch to correct branch first.
+
+**Worktree mode note**: The "current branch" above means the branch in the established execution checkout, not the caller checkout that launched PAW.
 
 ## Pre-Commit Checklist
 

@@ -10,7 +10,7 @@
     "test:workflows": "npx tsx --test tests/workflows/*.test.ts"
   },
   "dependencies": {
-    "@github/copilot-sdk": "^0.1.20",
+    "@github/copilot-sdk": "^0.1.32",
     "simple-git": "^3.27.0"
   },
   "devDependencies": {

@@ -274,7 +274,7 @@ Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md)
 
 ### paw-status
 
-Diagnoses current workflow state, recommends next steps, explains PAW process, and posts status updates to Issues/PRs.
+Diagnoses current workflow state, recommends next steps, explains PAW/onboarding, and posts status updates to Issues/PRs.
 
 ### paw-pr
 

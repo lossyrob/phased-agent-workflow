@@ -164,9 +164,13 @@ For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
   - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
   - PAW supports two workflows: implementation and review.
   - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
-- If the user also asks how to get started, tailor the answer by platform:
-  - **GitHub Copilot CLI**: install via `copilot plugin install lossyrob/phased-agent-workflow` or `npx @paw-workflow/cli install copilot`, then start with `copilot --agent PAW` (or `/agent PAW` in an existing session).
-  - **VS Code**: install the extension, then run `PAW: New PAW Workflow`.
+- If the user also asks how to get started:
+{{#cli}}
+  - Select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
+{{/cli}}
+{{#vscode}}
+  - Run `PAW: New PAW Workflow`.
+{{/vscode}}
 - Prefer concise, sourced onboarding language over improvisation.
 
 When asked "What does <stage> do?", provide:

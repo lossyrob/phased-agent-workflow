@@ -186,6 +186,7 @@ describe("worktree execution bootstrap behavior", { timeout: 240_000 }, () => {
     assert.deepStrictEqual(callerAfter, callerBefore, "caller checkout should remain unchanged");
 
     assertToolCalls(ctx.toolLog, {
+      bashMustInclude: [/git worktree list/],
       bashMustNotInclude: [/git push/, /gh\s+pr\s+create/, /\bnpm test\b/, /\bnpm run build\b/, /\brm -rf dist\b/],
     });
   });
@@ -199,6 +200,7 @@ describe("worktree execution bootstrap behavior", { timeout: 240_000 }, () => {
     await seedWorkflowContext(checkouts.caller.path, workId, targetBranch, "worktree");
     await checkouts.execution.git.raw(["switch", "-c", alternateBranch]);
     const callerBefore = await captureCheckoutSnapshot(checkouts.caller);
+    const executionBefore = await captureCheckoutSnapshot(checkouts.execution);
 
     const answerer = new RuleBasedAnswerer([
       (req) => req.choices?.[0] ?? "yes",
@@ -232,6 +234,8 @@ describe("worktree execution bootstrap behavior", { timeout: 240_000 }, () => {
 
     const callerAfter = await captureCheckoutSnapshot(checkouts.caller);
     assert.deepStrictEqual(callerAfter, callerBefore, "caller checkout should remain unchanged");
+    const executionAfter = await captureCheckoutSnapshot(checkouts.execution);
+    assert.deepStrictEqual(executionAfter, executionBefore, "execution checkout should remain unchanged when proof fails");
 
     assertToolCalls(ctx.toolLog, {
       forbidden: ["create", "edit"],

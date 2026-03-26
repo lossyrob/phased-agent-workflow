@@ -149,7 +149,7 @@ suite('Initialize Work Item Helpers', () => {
     assert.ok(skillContent.includes('worktree:<work_id>:<target_branch>'));
     assert.ok(skillContent.includes('Write these strings exactly in `WorkflowContext.md` and compare them literally.'));
     assert.ok(skillContent.includes('Do not assume a registry or automatic handoff into another checkout.'));
-    assert.ok(skillContent.includes('already runs in the intended execution checkout'));
+    assert.ok(skillContent.includes('session cwd may differ from the execution checkout'));
     assert.ok(skillContent.includes('treat it as `current-checkout`'));
     assert.ok(skillContent.includes('local execution registry'));
     assert.ok(skillContent.includes('`git worktree list`'));

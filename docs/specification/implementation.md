@@ -22,7 +22,7 @@ Issue → Specification → Planning → Implementation → Finalization
 Workflow initialization chooses an **execution checkout** and records it in `WorkflowContext.md`.
 
 - **`current-checkout`** — PAW runs in the currently open repository checkout
-- **`worktree`** — In the VS Code extension, PAW can create or reuse a dedicated worktree, open the workflow there, and leave the caller checkout unchanged. In Copilot CLI, worktree mode assumes the session is already running in the intended execution checkout.
+- **`worktree`** — In the VS Code extension, PAW can create or reuse a dedicated worktree, open the workflow there, and leave the caller checkout unchanged. In Copilot CLI, worktree mode can operate on a proven execution checkout even when the session remains in a different checkout; all mutations stay isolated to the execution checkout.
 
 Execution mode is separate from review strategy:
 

@@ -61,9 +61,10 @@ For PRs strategy, phase branches are required (e.g., `feature/123_phase1`).
 
 - Read `WorkflowContext.md` before any git mutation.
 - Treat `Repository Identity` (`<normalized-origin-slug>@<root-commit-sha>`) and `Execution Binding` (`worktree:<work-id>:<target-branch>`) as exact contract strings from `WorkflowContext.md`. Compare them literally.
-- If `Execution Mode: worktree`, continue only when the current repo/branch/worktree proves this session is in the intended execution checkout. All branch creation, checkout, pull, push, PR-prep, and artifact writes happen there.
+- If `Execution Mode: worktree`, continue only when the intended execution checkout can be proven from `WorkflowContext.md` plus the current repo/branch/worktree state. The session cwd may differ from the execution checkout.
+- All branch creation, checkout, pull, push, PR-prep, and artifact writes happen only in the proven execution checkout.
 - In worktree mode, the caller checkout must never be mutated.
-- If the current working directory is the caller checkout, or the execution checkout is ambiguous, STOP and give recovery guidance (`git worktree list`, reopen the execution checkout, or re-initialize).
+- If the execution checkout is ambiguous or cannot be proven, STOP and give recovery guidance (`git worktree list`, locate or reopen the execution checkout, or re-initialize).
 
 ### Review Policy Behavior
 

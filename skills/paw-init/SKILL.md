@@ -254,17 +254,17 @@ Additional Inputs: none
 {{/vscode}}
 {{#cli}}
 - Do not assume a registry or automatic handoff into another checkout.
-- Use `Execution Mode: worktree` only when this session already runs in the intended execution checkout. Prove this with `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state.
-- If proof fails (wrong checkout, branch mismatch, missing metadata), STOP and tell the user to open the worktree and restart PAW there, or re-initialize in `current-checkout` mode.
+- In worktree mode, prove the intended execution checkout with `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state before continuing. The session cwd may differ from the execution checkout when that checkout path is already known or can be derived safely.
+- If proof fails (execution checkout unknown, branch mismatch, missing metadata), STOP and give recovery guidance: `git worktree list`, identify or reopen the execution checkout, or re-initialize in `current-checkout` mode.
 {{/cli}}
-- After the execution checkout is open and proven, later workflow stages stay in that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
+- After the execution checkout is identified and proven, later workflow stages stay scoped to that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.
 - Classify failures clearly:
   - missing dedicated-worktree metadata → half-initialized worktree
 {{#vscode}}
   - missing or stale registry path → orphaned binding
 {{/vscode}}
 {{#cli}}
-  - current session is not in the intended execution checkout → wrong checkout; stop and reopen the worktree before continuing
+  - execution checkout cannot be proven from this session → unknown checkout; stop and recover before continuing
 {{/cli}}
   - repository, binding, or branch mismatch → invalid reuse; do not guess or auto-repair
 

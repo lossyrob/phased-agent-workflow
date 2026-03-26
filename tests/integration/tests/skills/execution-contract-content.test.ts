@@ -18,14 +18,17 @@ describe("execution checkout contract content", () => {
     assert.match(content, /caller checkout must never be mutated/i);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
-    assert.match(content, /current repo\/branch\/worktree proves this session is (already )?in the intended execution checkout/i);
+    assert.match(content, /execution checkout can be proven/i);
+    assert.match(content, /session cwd may differ from the execution checkout/i);
+    assert.doesNotMatch(content, /this session is (already )?in the intended execution checkout/i);
   });
 
   it("documents execution checkout contract in paw-git-operations", async () => {
     const content = await readRepoFile("skills/paw-git-operations/SKILL.md");
     assert.match(content, /## Execution Checkout Contract/);
     assert.match(content, /caller checkout must never be mutated/i);
-    assert.match(content, /current branch".*established execution checkout/is);
+    assert.match(content, /session cwd may differ from the execution checkout/i);
+    assert.match(content, /execution checkout is ambiguous or cannot be proven/i);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
   });
@@ -33,8 +36,9 @@ describe("execution checkout contract content", () => {
   it("documents CLI-specific worktree limitations in paw-init", async () => {
     const content = await readRepoFile("skills/paw-init/SKILL.md");
     assert.match(content, /Do not assume a registry or automatic handoff into another checkout/i);
-    assert.match(content, /already runs? in the intended execution checkout/i);
-    assert.match(content, /restart PAW there|re-initialize in `current-checkout` mode/i);
+    assert.match(content, /session cwd may differ from the execution checkout/i);
+    assert.match(content, /identify or reopen the execution checkout|re-initialize in `current-checkout` mode/i);
     assert.match(content, /git worktree list/);
+    assert.doesNotMatch(content, /already runs? in the intended execution checkout/i);
   });
 });

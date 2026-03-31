@@ -254,7 +254,8 @@ Additional Inputs: none
 {{/vscode}}
 {{#cli}}
 - Do not assume a registry or automatic handoff into another checkout.
-- In worktree mode, prove the intended execution checkout with `WorkflowContext.md`, `git worktree list`, and the current repo/branch/worktree state before continuing. The session cwd may differ from the execution checkout when that checkout path is already known or can be derived safely.
+- In worktree mode, prove the intended execution checkout path with `WorkflowContext.md`, `git worktree list`, and the repo/branch/worktree state for that candidate checkout before continuing. The session cwd may differ from the execution checkout when that path is already known or can be derived safely.
+- When the session cwd differs, run git commands against that candidate/proven execution checkout path (for example, `git -C <execution-checkout-path> ...` or switch cwd there) and keep artifact writes there. Do not treat the caller checkout's branch/status as authoritative proof, fallback, or a mutation target.
 - If proof fails (execution checkout unknown, branch mismatch, missing metadata), STOP and give recovery guidance: `git worktree list`, identify or reopen the execution checkout, or re-initialize in `current-checkout` mode.
 {{/cli}}
 - After the execution checkout is identified and proven, later workflow stages stay scoped to that checkout; they do not try to rediscover or auto-repair execution state from the caller checkout.

@@ -15,11 +15,13 @@ describe("execution checkout contract content", () => {
   it("documents execution checkout rules in PAW.agent.md", async () => {
     const content = await readRepoFile("agents/PAW.agent.md");
     assert.match(content, /## Execution Checkout Rules/);
-    assert.match(content, /caller checkout must never be mutated/i);
+    assert.match(content, /never mutate it/i);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
-    assert.match(content, /execution checkout can be proven/i);
+    assert.match(content, /execution checkout path can be proven/i);
     assert.match(content, /session cwd may differ from the execution checkout/i);
+    assert.match(content, /proven execution checkout path as the working directory/i);
+    assert.match(content, /git -C <execution-checkout-path>/i);
     assert.doesNotMatch(content, /this session is (already )?in the intended execution checkout/i);
   });
 
@@ -29,6 +31,8 @@ describe("execution checkout contract content", () => {
     assert.match(content, /caller checkout must never be mutated/i);
     assert.match(content, /session cwd may differ from the execution checkout/i);
     assert.match(content, /execution checkout is ambiguous or cannot be proven/i);
+    assert.match(content, /all git operations must execute in the proven execution checkout directory/i);
+    assert.match(content, /git -C <execution-checkout-path>/i);
     assert.match(content, /<normalized-origin-slug>@<root-commit-sha>/);
     assert.match(content, /worktree:<work-id>:<target-branch>/);
   });
@@ -37,6 +41,8 @@ describe("execution checkout contract content", () => {
     const content = await readRepoFile("skills/paw-init/SKILL.md");
     assert.match(content, /Do not assume a registry or automatic handoff into another checkout/i);
     assert.match(content, /session cwd may differ from the execution checkout/i);
+    assert.match(content, /git commands against that candidate\/proven execution checkout path/i);
+    assert.match(content, /caller checkout's branch\/status as authoritative proof/i);
     assert.match(content, /identify or reopen the execution checkout|re-initialize in `current-checkout` mode/i);
     assert.match(content, /git worktree list/);
     assert.doesNotMatch(content, /already runs? in the intended execution checkout/i);

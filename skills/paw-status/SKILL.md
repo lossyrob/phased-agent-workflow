@@ -57,6 +57,16 @@ Read WorkflowContext.md for:
 - Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)
 - Final Review Specialist Models: `none` | model pool | pinned pairs | mixed (when society-of-thought)
 
+### Hardened-State Detection
+
+If `WorkflowContext.md` contains `## Hardened State`, read:
+- `Reconciliation:` marker
+- Required activity items
+- Gate items
+- Configured procedure items
+
+Treat embedded hardened state as the durable workflow source of truth when present. If the section is absent, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+
 ### Phase Counting
 
 Parse ImplementationPlan.md with regex: `^## Phase \d+:`
@@ -96,7 +106,13 @@ When PRs exist:
 
 ## Workflow Stage Progression
 
-Map state to guidance:
+Map state to guidance.
+
+When hardened state is present:
+- Derive the current workflow position from the first required activity item whose status is not terminal (`resolved` or `not_applicable`).
+- Report any earlier `blocked`, `pending`, or `in_progress` gate/procedure items that should already be terminal as blockers rather than inferring progress past them.
+- If `Reconciliation` is `stale` or `external_unverified`, do not imply freshness. Report a read-only/unverified status and name the unresolved control-state items.
+- If `Reconciliation` is `not_run`, say reconciliation is still required before mutation-affecting work can safely proceed.
 
 | State | Recommendation |
 |-------|----------------|
@@ -191,6 +207,7 @@ For "How do I start?", explain:
 ## Status Dashboard Format
 
 Synthesize findings into sections:
+- **Control State**: hardened vs legacy mode, reconciliation marker, unresolved gate/procedure items
 - **Artifacts**: Existence and status
 - **Phases**: Current progress (N of M)
 - **Phase Candidates**: Pending/resolved candidate counts (if any exist)
@@ -201,6 +218,9 @@ Synthesize findings into sections:
 ## Guardrails
 
 - Verify phase count from ImplementationPlan.md—never assume
+- If hardened state is present, do not report progress past unresolved required items, gate items, or procedure items
+- If reconciliation is `stale` or `external_unverified`, label the result read-only/unverified instead of implying mutation-safe readiness
+- If hardened state is absent, explicitly say legacy best-effort mode is active
 - Never mutate issue descriptions or PR content outside summary blocks
 - Never push, merge, or rewrite git history
 - Be idempotent: same state → same summary

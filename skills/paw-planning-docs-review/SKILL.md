@@ -32,6 +32,13 @@ Read WorkflowContext.md for:
 
 If `Planning Docs Review` is `disabled`, report skip and return `complete`.
 
+If `WorkflowContext.md` contains `## Hardened State`, treat `procedure:planning-review` as the configured procedure item:
+- Set it to `not_applicable` when `Planning Docs Review` is `disabled`
+- Reconcile control state before executing the review
+- Mark it `in_progress` only when the configured review mode is actually about to run
+- Mark it `resolved` only after the configured mode completes successfully
+- Mark it `blocked` when the configured mode cannot run in the current runtime; do not silently downgrade
+
 {{#cli}}
 If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
 
@@ -43,7 +50,7 @@ If mode is `society-of-thought`, also read:
 - `Planning Review Perspective Cap`: positive integer (default `2`)
 {{/cli}}
 {{#vscode}}
-**Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
+**Note**: VS Code only supports `single-model` mode.
 {{/vscode}}
 
 ### Step 2: Gather Review Context
@@ -170,11 +177,9 @@ After paw-sot completes orchestration and synthesis, tag each REVIEW-SYNTHESIS.m
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
-**Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
+If `Planning Review Mode` is `multi-model` or `society-of-thought`, preserve the configured mode in status/control-state surfaces, set `procedure:planning-review` to `blocked`, and report: "Configured planning review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
 
-If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240). Running single-model review."
-
-Execute single-model review using the shared review prompt above. Save to `reviews/planning/REVIEW.md`.
+If `Planning Review Mode` is `single-model`, execute the shared review prompt above and save the output to `reviews/planning/REVIEW.md`.
 {{/vscode}}
 
 ### Step 5: Resolution

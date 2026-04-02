@@ -56,6 +56,12 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - ImplementationPlan `## Open Questions` → empty
 - Unresolved items → block and report with recommendation
 
+**Hardened Control State**:
+- If `WorkflowContext.md` contains `## Hardened State`, reconcile it before PR creation.
+- Required activity items, gate items, and configured procedure items must all be `resolved` or `not_applicable` before final PR creation can proceed.
+- If reconciliation cannot prove the live state, or any required hardened-state item remains `pending`, `in_progress`, or `blocked`, treat it as a blocker.
+- If `## Hardened State` is absent, continue in legacy best-effort mode and explicitly note that hardened protections are inactive.
+
 ## Workflow Mode Handling
 
 ### Full Mode

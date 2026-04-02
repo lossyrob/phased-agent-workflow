@@ -109,7 +109,8 @@ Use TODOs as a mirror of active required workflow items.
 
 - If `WorkflowContext.md` contains `## Hardened State`, treat that section as the durable source of truth for required items, gate items, configured procedure items, and later terminal states.
 - Keep TODOs aligned only with items whose status is `pending`, `in_progress`, or `blocked`; do not treat TODOs as the portable source of truth when the embedded state exists.
-- Before yield, delegation, or side-effect execution, reconcile the embedded state when present. If the section is absent, continue in legacy best-effort mode.
+- Before yield, delegation, or side-effect execution, reconcile the embedded state when present. If reconciliation cannot make the state `current`, STOP and report the blocker instead of delegating or mutating git/GitHub state. If the section is absent, continue in legacy best-effort mode and explicitly note that hardened protections are inactive.
+- When hardened state is present, do not advance past required activity items, gate items, or configured procedure items that remain `pending`, `in_progress`, or `blocked`.
 
 **Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 

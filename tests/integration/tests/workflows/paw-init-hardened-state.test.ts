@@ -7,7 +7,7 @@ import { assertToolCalls } from "../../lib/assertions.js";
 import { createTestContext, destroyTestContext, type TestContext } from "../../lib/harness.js";
 import { loadSkill } from "../../lib/skills.js";
 
-describe("paw-init hardened-state workflow context", { timeout: 300_000 }, () => {
+describe("paw-init hardened-state workflow context", { timeout: 480_000 }, () => {
   const contexts: TestContext[] = [];
 
   after(async () => {

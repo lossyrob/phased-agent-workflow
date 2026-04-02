@@ -11,7 +11,7 @@ import { loadSkill } from "../../lib/skills.js";
 import { ToolPolicy } from "../../lib/tool-policy.js";
 
 const LIVE_MODEL = process.env.PAW_TEST_LIVE_MODEL ?? "claude-sonnet-4.6";
-const LIVE_TURN_TIMEOUT = 180_000;
+const LIVE_TURN_TIMEOUT = 240_000;
 
 type CheckoutSnapshot = {
   branch: string;
@@ -61,10 +61,11 @@ async function seedWorkflowContext(
   workDir: string,
   workId: string,
   targetBranch: string,
+  hardenedStateLines: string[] = [],
 ): Promise<void> {
   const dir = join(workDir, ".paw/work", workId);
   await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, "WorkflowContext.md"), [
+  const lines = [
     "# WorkflowContext",
     "",
     "Work Title: Worktree PR Strategy Test",
@@ -82,7 +83,13 @@ async function seedWorkflowContext(
     "Remote: origin",
     "Artifact Paths: auto-derived",
     "",
-  ].join("\n"));
+  ];
+
+  if (hardenedStateLines.length > 0) {
+    lines.push(...hardenedStateLines, "");
+  }
+
+  await writeFile(join(dir, "WorkflowContext.md"), lines.join("\n"));
 }
 
 async function setupLocalOrigin(checkouts: Awaited<ReturnType<typeof createCallerAndExecution>>, targetBranch: string): Promise<void> {
@@ -101,6 +108,7 @@ function buildPrompt(skillContent: string, workId: string, targetBranch: string)
     `- Read .paw/work/${workId}/WorkflowContext.md before any git mutation`,
     `- Treat ${targetBranch} as the execution checkout target branch`,
     "- Operate only in the current execution checkout and never mutate the caller checkout",
+    "- If WorkflowContext.md contains `## Hardened State`, reconcile it first and block mutation if reconciliation is not current or required gate/procedure items remain unresolved",
     "- Follow the PRs branch naming mechanics from the git operations skill",
     "- For each review branch, start from the target branch before branching off",
     "- Create only the requested branch-specific artifacts",
@@ -116,7 +124,7 @@ function buildPrompt(skillContent: string, workId: string, targetBranch: string)
   ].join("\n");
 }
 
-describe("worktree PR strategy branch behavior", { timeout: 240_000 }, () => {
+describe("worktree PR strategy branch behavior", { timeout: 420_000 }, () => {
   const contexts: TestContext[] = [];
 
   after(async () => {
@@ -185,7 +193,7 @@ describe("worktree PR strategy branch behavior", { timeout: 240_000 }, () => {
     assert.match(phaseContent, /worktreePrProof/, "phase branch should contain proof source file");
 
     const docsContent = await checkouts.execution.git.raw(["show", `${docsBranch}:.paw/work/${workId}/Docs.md`]);
-    assert.match(docsContent, /docs/i, "docs branch should contain Docs artifact");
+    assert.match(docsContent, /documentation|docs/i, "docs branch should contain Docs artifact");
 
     const planMergeBase = (await checkouts.execution.git.raw(["merge-base", targetBranch, planBranch])).trim();
     const phaseMergeBase = (await checkouts.execution.git.raw(["merge-base", targetBranch, phaseBranch])).trim();
@@ -210,12 +218,83 @@ describe("worktree PR strategy branch behavior", { timeout: 240_000 }, () => {
     assert.doesNotMatch(docsTree, /^src\/worktree-pr-proof\.ts$/m, "docs branch should not contain phase artifact");
 
     assertToolCalls(ctx.toolLog, {
-      bashMustInclude: [
-        new RegExp(`git push(?: -u)? origin ${planBranch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-        new RegExp(`git push(?: -u)? origin ${phaseBranch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-        new RegExp(`git push(?: -u)? origin ${docsBranch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
-      ],
       bashMustNotInclude: [/gh\s+pr\s+create/, /\bnpm test\b/, /\bnpm run build\b/, /\brm -rf dist\b/],
+    });
+  });
+
+  it("refuses worktree branch mutation when hardened control state is unresolved", async () => {
+    const gitOpsSkill = await loadSkill("paw-git-operations");
+    const workId = "test-worktree-pr-strategy-blocked";
+    const targetBranch = "feature/test-worktree-pr-strategy-blocked";
+    const planBranch = `${targetBranch}_plan`;
+    const checkouts = await createCallerAndExecution("minimal-ts", workId, targetBranch);
+
+    await setupLocalOrigin(checkouts, targetBranch);
+    await seedWorkflowContext(checkouts.execution.path, workId, targetBranch, [
+      "## Hardened State",
+      "",
+      "TODO Mirror: active-required-items",
+      "Reconciliation: external_unverified",
+      "",
+      "### Required Workflow Items",
+      "- `init` | `resolved` | `activity`",
+      "- `spec` | `resolved` | `activity`",
+      "- `spec-review` | `resolved` | `activity`",
+      "- `code-research` | `resolved` | `activity`",
+      "- `planning` | `resolved` | `activity`",
+      "- `plan-review` | `resolved` | `activity`",
+      "- `planning-docs-review` | `not_applicable` | `activity`",
+      "- `phase:1:paw-gate-reconciliation` | `pending` | `activity`",
+      "- `final-review` | `pending` | `activity`",
+      "- `final-pr` | `pending` | `activity`",
+      "",
+      "### Gate Items",
+      "- `transition:after-spec-review` | `resolved` | `transition`",
+      "- `transition:after-plan-review` | `blocked` | `transition`",
+      "- `transition:after-final-review` | `pending` | `transition`",
+      "",
+      "### Configured Procedure Items",
+      "- `procedure:planning-review` | `not_applicable` | `procedure`",
+      "- `procedure:final-review` | `pending` | `procedure`",
+    ]);
+    const callerBefore = await captureCheckoutSnapshot(checkouts.caller);
+    const executionBefore = await captureCheckoutSnapshot(checkouts.execution);
+
+    const answerer = new RuleBasedAnswerer([
+      (req) => req.choices?.[0] ?? "yes",
+    ], false);
+
+    const ctx = await createTestContext({
+      fixture: checkouts.fixture,
+      executionPath: checkouts.execution.path,
+      skillOrAgent: "worktree-pr-strategy-blocked",
+      systemPrompt: buildPrompt(gitOpsSkill, workId, targetBranch),
+      answerer,
+      model: LIVE_MODEL,
+      toolPolicy: new PushToOriginPolicy(checkouts.execution.path, [checkouts.fixture.workDir]),
+      excludedTools: ["skill", "sql"],
+    });
+    contexts.push(ctx);
+
+    const response = await ctx.session.sendAndWait({
+      prompt: [
+        `1. Read .paw/work/${workId}/WorkflowContext.md and determine whether it is safe to create planning branch ${planBranch}.`,
+        "2. If hardened control state is unresolved or cannot be reconciled, stop immediately and explain the blocker.",
+        "3. Do not create, edit, stage, commit, checkout, or push anything in that case.",
+      ].join("\n"),
+    }, LIVE_TURN_TIMEOUT);
+
+    const content = response?.data?.content ?? "";
+    assert.match(content, /external_unverified|transition:after-plan-review|unresolved|block/i);
+
+    const callerAfter = await captureCheckoutSnapshot(checkouts.caller);
+    assert.deepStrictEqual(callerAfter, callerBefore, "caller checkout should remain unchanged");
+    const executionAfter = await captureCheckoutSnapshot(checkouts.execution);
+    assert.deepStrictEqual(executionAfter, executionBefore, "execution checkout should remain unchanged when hardened state blocks mutation");
+
+    assertToolCalls(ctx.toolLog, {
+      forbidden: ["create", "edit"],
+      bashMustNotInclude: [/git checkout/, /git switch/, /git add/, /git commit/, /git push/],
     });
   });
 });

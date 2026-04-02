@@ -20,6 +20,7 @@ describe("paw-init hardened-state workflow context", { timeout: 300_000 }, () =>
     const workflowContext = await runInitCase({
       contexts,
       workId: "test-init-hardened-state",
+      workflowMode: "full",
       finalAgentReview: "enabled",
       finalReviewMode: "society-of-thought",
       planningDocsReview: "enabled",
@@ -45,6 +46,7 @@ describe("paw-init hardened-state workflow context", { timeout: 300_000 }, () =>
     const workflowContext = await runInitCase({
       contexts,
       workId: "test-init-disabled-review-flows",
+      workflowMode: "full",
       finalAgentReview: "disabled",
       finalReviewMode: "multi-model",
       planningDocsReview: "disabled",
@@ -59,11 +61,30 @@ describe("paw-init hardened-state workflow context", { timeout: 300_000 }, () =>
     assert.match(workflowContext, /`procedure:planning-review` \| `not_applicable` \| `procedure`/);
     assert.match(workflowContext, /`procedure:final-review` \| `not_applicable` \| `procedure`/);
   });
+
+  it("writes not_applicable for spec-stage items in minimal mode", async () => {
+    const workflowContext = await runInitCase({
+      contexts,
+      workId: "test-init-minimal-mode",
+      workflowMode: "minimal",
+      finalAgentReview: "disabled",
+      finalReviewMode: "multi-model",
+      planningDocsReview: "disabled",
+      planningReviewMode: "multi-model",
+    });
+
+    assert.match(workflowContext, /`spec` \| `not_applicable` \| `activity`/);
+    assert.match(workflowContext, /`spec-review` \| `not_applicable` \| `activity`/);
+    assert.match(workflowContext, /`transition:after-spec-review` \| `not_applicable` \| `transition`/);
+    assert.match(workflowContext, /`code-research` \| `pending` \| `activity`/);
+    assert.match(workflowContext, /`planning` \| `pending` \| `activity`/);
+  });
 });
 
 async function runInitCase(opts: {
   contexts: TestContext[];
   workId: string;
+  workflowMode: "full" | "minimal";
   finalAgentReview: "enabled" | "disabled";
   finalReviewMode: "single-model" | "multi-model" | "society-of-thought";
   planningDocsReview: "enabled" | "disabled";
@@ -102,7 +123,7 @@ async function runInitCase(opts: {
       "Base Branch: main",
       `Target Branch: feature/${opts.workId}`,
       "Execution Mode: current-checkout",
-      "Workflow Mode: full",
+      `Workflow Mode: ${opts.workflowMode}`,
       "Review Strategy: local",
       "Review Policy: planning-only",
       "Session Policy: continuous",

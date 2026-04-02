@@ -78,6 +78,10 @@ describe("control-state contract content", () => {
     assert.match(workflow, /procedure:planning-review/);
     assert.match(
       workflow,
+      /Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`\./,
+    );
+    assert.match(
+      workflow,
       /Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`\./,
     );
     assert.match(
@@ -94,6 +98,14 @@ describe("control-state contract content", () => {
 
     assert.match(init, /## Hardened State/);
     assert.match(init, /TODO Mirror:\s*active-required-items/i);
+    assert.match(
+      init,
+      /`spec` \| `<pending\|not_applicable>` \| `activity`/,
+    );
+    assert.match(
+      init,
+      /Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`\./,
+    );
     assert.match(
       init,
       /`planning-docs-review` \| `<pending\|not_applicable>` \| `activity`/,

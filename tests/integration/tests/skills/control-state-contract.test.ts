@@ -108,6 +108,14 @@ describe("control-state contract content", () => {
     );
     assert.match(
       init,
+      /After planning defines named implementation phases, append `phase:<n>:<slug>` items under `### Required Workflow Items`\./,
+    );
+    assert.doesNotMatch(
+      init,
+      /- add `phase:<n>:<slug>` items after planning defines named implementation phases/,
+    );
+    assert.match(
+      init,
       /`planning-docs-review` \| `<pending\|not_applicable>` \| `activity`/,
     );
     assert.match(

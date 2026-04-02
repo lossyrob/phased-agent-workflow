@@ -255,7 +255,6 @@ Reconciliation: not_run
 - `planning-docs-review` | `<pending|not_applicable>` | `activity`
 - `final-review` | `<pending|not_applicable>` | `activity`
 - `final-pr` | `pending` | `activity`
-- add `phase:<n>:<slug>` items after planning defines named implementation phases
 
 ### Gate Items
 - `transition:after-spec-review` | `<pending|not_applicable>` | `transition`
@@ -270,6 +269,7 @@ Reconciliation: not_run
 ```
 
 - Resolve config-dependent hardened-state rows to concrete values before writing `WorkflowContext.md`:
+  - After planning defines named implementation phases, append `phase:<n>:<slug>` items under `### Required Workflow Items`.
   - Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`.
   - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
   - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.

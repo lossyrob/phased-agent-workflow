@@ -159,6 +159,7 @@ async function runInitCase(opts: {
     join(ctx.fixture.workDir, ".paw/work", opts.workId, "WorkflowContext.md"), "utf-8",
   );
 
+  assert.doesNotMatch(workflowContext, /- add `phase:<n>:<slug>` items after planning defines named implementation phases/i);
   assertToolCalls(ctx.toolLog, {
     forbidden: ["git_push"],
     bashMustNotInclude: [/git push/, /gh\s+pr\s+create/],

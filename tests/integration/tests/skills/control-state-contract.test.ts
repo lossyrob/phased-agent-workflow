@@ -88,7 +88,7 @@ describe("control-state contract content", () => {
     assert.match(init, /TODO Mirror:\s*active-required-items/i);
     assert.match(
       init,
-      /`planning-docs-review` \| `<pending if enabled else not_applicable>` \| `activity`/,
+      /`planning-docs-review` \| `<pending\|not_applicable>` \| `activity`/,
     );
     assert.match(init, /transition:after-plan-review/);
     assert.match(init, /procedure:planning-review/);

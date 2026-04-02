@@ -61,6 +61,7 @@ describe("control-state contract content", () => {
       assert.match(content, /## Shared Core/);
       assert.match(content, /legacy best-effort mode/i);
       assert.match(content, /TODOs are an execution mirror|built-in TODOs are a mirror/i);
+      assert.match(content, /- \\`<item-id>\\` \| \\`<status>\\` \| \\`<kind>\\`/);
       assert.match(content, /`pending`/);
       assert.match(content, /`in_progress`/);
       assert.match(content, /`blocked`/);
@@ -85,6 +86,10 @@ describe("control-state contract content", () => {
 
     assert.match(init, /## Hardened State/);
     assert.match(init, /TODO Mirror:\s*active-required-items/i);
+    assert.match(
+      init,
+      /`planning-docs-review` \| `<pending if enabled else not_applicable>` \| `activity`/,
+    );
     assert.match(init, /transition:after-plan-review/);
     assert.match(init, /procedure:planning-review/);
 

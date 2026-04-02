@@ -17,7 +17,7 @@
   - `stale`
   - `external_unverified`
 - Shared item line format:
-  - `- <item-id> | <status> | <kind>`
+  - `- \`<item-id>\` | \`<status>\` | \`<kind>\``
 - Preserve unknown additive fields or items when updating the section.
 
 ## WorkflowContext Embedding

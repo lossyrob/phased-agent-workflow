@@ -252,21 +252,21 @@ Reconciliation: not_run
 - `code-research` | `pending` | `activity`
 - `planning` | `pending` | `activity`
 - `plan-review` | `pending` | `activity`
-- `planning-docs-review` | <pending if enabled else not_applicable> | `activity`
-- `final-review` | <pending if enabled else not_applicable> | `activity`
+- `planning-docs-review` | `<pending if enabled else not_applicable>` | `activity`
+- `final-review` | `<pending if enabled else not_applicable>` | `activity`
 - `final-pr` | `pending` | `activity`
 - add `phase:<n>:<slug>` items after planning defines named implementation phases
 
 ### Gate Items
 - `transition:after-spec-review` | `pending` | `transition`
 - `transition:after-plan-review` | `pending` | `transition`
-- `transition:after-planning-docs-review` | <pending if enabled else not_applicable> | `transition`
+- `transition:after-planning-docs-review` | `<pending if enabled else not_applicable>` | `transition`
 - `transition:after-phase:<n>` | `pending` | `transition`
-- `transition:after-final-review` | <pending if enabled else not_applicable> | `transition`
+- `transition:after-final-review` | `<pending if enabled else not_applicable>` | `transition`
 
 ### Configured Procedure Items
-- `procedure:planning-review` | <pending if enabled else not_applicable> | `procedure`
-- `procedure:final-review` | <pending if enabled else not_applicable> | `procedure`
+- `procedure:planning-review` | `<pending if enabled else not_applicable>` | `procedure`
+- `procedure:final-review` | `<pending if enabled else not_applicable>` | `procedure`
 ```
 
 ### Execution Contract

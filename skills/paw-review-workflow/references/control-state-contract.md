@@ -8,7 +8,7 @@
   - built-in TODOs are a mirror, not the durable source of truth
   - shared status values are `pending`, `in_progress`, `blocked`, `resolved`, and `not_applicable`
   - shared reconciliation markers are `not_run`, `current`, `stale`, and `external_unverified`
-  - shared item line format is `- <item-id> | <status> | <kind>`
+  - shared item line format is `- \`<item-id>\` | \`<status>\` | \`<kind>\``
 
 ## ReviewContext Embedding
 

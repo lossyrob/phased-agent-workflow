@@ -41,6 +41,13 @@ Execute Step 4 only: Derive specification from baseline research.
 
 **Detection**: Both ReviewContext.md AND CodeResearch.md exist at artifact path.
 
+## Hardened-State Resume Rules
+
+- Initial mode seeds `## Hardened State` with `understanding` in progress, later review stage items pending, `procedure:review-mode` pending, terminal external review state `none`, and pending review identifiers set to `none`.
+- If ReviewContext.md already contains `## Hardened State`, preserve the existing review identifier, stage items, terminal external review state, and pending review identifiers when resuming; do not reset them to defaults.
+- After Step 4 creates `DerivedSpec.md`, update hardened state so `understanding` is `resolved`, `evaluation` is `pending`, and `Reconciliation` is `current`.
+- If ReviewContext.md exists without `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+
 ## Context Detection
 
 Determine context type before proceeding:
@@ -282,7 +289,6 @@ Reconciliation: not_run
 
 ### Terminal External Review State
 - `none`
-- `pending-review-created`
 
 Pending Review ID: `none`
 Pending Review URL: `none`

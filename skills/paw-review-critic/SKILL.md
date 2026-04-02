@@ -24,6 +24,21 @@ Also verify access to all supporting artifacts:
 
 If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
 
+## Hardened Review Control State
+
+If `ReviewContext.md` contains `## Hardened State`, also read:
+- `Reconciliation:` marker
+- Review stage items
+- Terminal external review state
+
+Apply these sequencing rules:
+- `paw-review-critic` requires `output:feedback` to be `resolved` and `output:critic` to be `pending` or `in_progress`
+- If prerequisites are not met, report blocked status with the unresolved review-state item
+- After assessments are written, update `ReviewContext.md` so `output:critic` is `resolved`, `output:critique-response` remains/ becomes `pending`, and `Reconciliation` is `current`
+- Preserve the existing terminal external review state and pending review identifiers when updating `ReviewContext.md`
+
+If `ReviewContext.md` does not contain `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+
 ## Core Responsibilities
 
 - Read and understand all generated review comments

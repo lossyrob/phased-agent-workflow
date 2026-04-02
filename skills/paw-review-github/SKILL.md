@@ -24,6 +24,22 @@ If ReviewComments.md is not finalized or missing `**Final**:` markers, report bl
 
 **Non-GitHub Context**: If this is not a GitHub PR review (e.g., local branch diff), skip GitHub posting and provide manual posting instructions instead.
 
+## Hardened Review Control State
+
+If `ReviewContext.md` contains `## Hardened State`, also read:
+- `Reconciliation:` marker
+- Review stage items
+- Terminal external review state
+- `Pending Review ID` and `Pending Review URL`
+
+Apply these sequencing rules:
+- `paw-review-github` requires `output:critique-response` to be `resolved` and `output:github` to be `pending` or `in_progress`
+- If prerequisites are not met, report blocked status with the unresolved review-state item
+- After a pending review is created, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `pending-review-created`, `Pending Review ID` / `Pending Review URL` are populated, and `Reconciliation` is `current`
+- After non-GitHub manual posting instructions are written, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` stay `none`, and `Reconciliation` is `current`
+
+If `ReviewContext.md` does not contain `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+
 ## Core Responsibilities
 
 - Read all comments from finalized ReviewComments.md
@@ -122,7 +138,7 @@ return 'Anonymous';
 ```
 ```
 
-### Step 4: Update ReviewComments.md
+### Step 4: Update ReviewComments.md and ReviewContext.md
 
 After posting, update each posted comment in ReviewComments.md:
 
@@ -144,6 +160,17 @@ Update the file header:
 **Pending Review ID**: 12345678
 **Comments Posted**: 6 of 8 (2 skipped per critique)
 ```
+
+If `ReviewContext.md` contains `## Hardened State`, also update:
+```markdown
+### Terminal External Review State
+- `pending-review-created`
+
+Pending Review ID: `12345678`
+Pending Review URL: `<pending-review-url-or-none>`
+```
+
+Set `output:github` to `resolved` and `Reconciliation` to `current`.
 
 ### Step 5: Multi-PR Pending Reviews
 
@@ -192,6 +219,7 @@ For non-GitHub workflows (local branch review):
 **Skip GitHub Posting:**
 - Do not attempt to call GitHub MCP tools
 - Update ReviewComments.md status to `finalized (non-GitHub)`
+- If `ReviewContext.md` contains `## Hardened State`, update it so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` remain `none`, and `Reconciliation` is `current`
 
 **Provide Manual Posting Instructions:**
 

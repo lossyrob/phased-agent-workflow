@@ -129,6 +129,16 @@ Example: `acme-corp/my-api-service` → `my-api-service`
 
 **Multi-repo detection**: Use when multiple workspace folders are open in VS Code OR multiple PRs provided.
 
+## Embedded Review Control State
+
+- If `ReviewContext.md` contains `## Hardened State`, use it as the durable source of truth for review stage sequencing and terminal external-review state.
+- Reconcile `ReviewContext.md` against review artifacts before stage advancement, critique finalization, or GitHub/manual-posting output. If reconciliation cannot make the state `current`, stop and report the blocker.
+- Determine the active stage from the first review stage item whose status is not terminal (`resolved` or `not_applicable`).
+- Do not advance to evaluation while `understanding` is unresolved, or to later output steps while an earlier output item remains `pending`, `in_progress`, or `blocked`.
+- `procedure:review-mode` resolves only when the configured evaluation path actually ran. Failed or mismatched evaluation paths block instead of silently falling back.
+- `output:github` resolves only after a pending review is created or manual posting instructions are produced for non-GitHub contexts.
+- If `## Hardened State` is absent, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+
 ## Workflow Orchestration
 
 The workflow executes stages in sequence, with each stage producing artifacts consumed by downstream stages.
@@ -249,6 +259,12 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
 
 **Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
 
+**Hardened-state output sequencing**:
+- `output:feedback` runs only after `evaluation` is resolved
+- `output:critic` runs only after `output:feedback` is resolved
+- `output:critique-response` runs only after `output:critic` is resolved
+- `output:github` runs only after `output:critique-response` is resolved
+
 **Human Control Point**: The pending review is created but NOT submitted. Human reviewer:
 - Reviews generated comments in GitHub UI
 - Can see full comment history in ReviewComments.md (original → assessment → updated)
@@ -261,6 +277,7 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
 Upon workflow completion, report:
 - Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
 - **GitHub PRs**: Pending review ID and comment counts (e.g., "Pending review created: Review ID 12345678, 6 comments posted, 2 skipped per critique")
+- Terminal external review state from `ReviewContext.md`
 - **Non-GitHub**: Manual posting instructions location
 - **Multi-repo reviews**: Cross-repo findings summary (interface contracts analyzed, mismatches found, deployment order)
 - Comment evolution summary: original comments generated, modified per critique, skipped per critique

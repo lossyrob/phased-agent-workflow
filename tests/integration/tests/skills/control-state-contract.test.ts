@@ -90,6 +90,8 @@ describe("control-state contract content", () => {
     );
     assert.match(review, /output:feedback/);
     assert.match(review, /pending-review-created/);
+    assert.match(review, /manual-posting-provided/);
+    assert.match(review, /must contain exactly one current marker/i);
   });
 
   it("documents hardened-state templates in init and review-understanding", async () => {

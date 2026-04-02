@@ -56,7 +56,7 @@ After implementation:
 
 - [x] **Phase 1: Embedded Control-State Contract** - Introduce compact hardened-state sections in the existing context artifacts and define how built-in TODOs mirror them.
 - [x] **Phase 2: PAW Gate Reconciliation** - Make PAW transition, status, and configured-review paths enforce the embedded control state and block on unresolved gates.
-- [ ] **Phase 3: Review State Tracking** - Make PAW Review sequence and terminal external-review state derive from explicit review control state.
+- [x] **Phase 3: Review State Tracking** - Make PAW Review sequence and terminal external-review state derive from explicit review control state.
 - [ ] **Phase 4: VS Code Contract Parity** - Align extension types, initialization, and status surfaces with the explicit workflow contract without relocating orchestration logic.
 - [ ] **Phase 5: Documentation** - Record the as-built design and update workflow/spec/reference docs for the new state model.
 
@@ -149,8 +149,8 @@ After implementation:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Prompt linting passes for changed review agents/skills: `npm run lint:agent:all`
-- [ ] Review workflow coverage passes: `cd tests/integration && npx tsx --test tests/workflows/review-control-state-sequencing.test.ts tests/workflows/review-terminal-state-tracking.test.ts tests/workflows/review-legacy-control-state-mode.test.ts`
+- [x] Prompt linting passes for changed review agents/skills: `bash -lc "./scripts/lint-prompting.sh agents/'PAW Review.agent.md' skills/paw-review-workflow/SKILL.md skills/paw-review-understanding/SKILL.md skills/paw-review-feedback/SKILL.md skills/paw-review-critic/SKILL.md skills/paw-review-github/SKILL.md"`
+- [x] Review workflow coverage passes: `cd tests/integration && npx tsx --test tests/skills/control-state-contract.test.ts tests/workflows/review-control-state-sequencing.test.ts tests/workflows/review-terminal-state-tracking.test.ts tests/workflows/review-legacy-control-state-mode.test.ts`
 
 #### Manual Verification:
 - [ ] A review workflow cannot advance past required feedback, critique, or finalization stages while tracked review-state items remain unresolved

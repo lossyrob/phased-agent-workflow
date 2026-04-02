@@ -48,6 +48,12 @@ When the user requests society-of-thought review mode:
 - Pass any user-specified interaction mode, interactive setting, or model preferences
 - Do NOT select specialists yourself — let the SoT engine handle adaptive selection from the full set
 
+## Embedded Review Control State
+
+- If `ReviewContext.md` contains `## Hardened State`, treat that section as the durable source of truth for review-stage items and terminal external-review facts.
+- Keep any built-in TODOs aligned only as an execution mirror.
+- Before yield, delegation, or GitHub posting, reconcile the embedded state when present. If the section is absent, continue in legacy best-effort mode.
+
 ## Skill-Based Execution
 
 {{#vscode}}

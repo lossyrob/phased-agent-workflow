@@ -54,7 +54,7 @@ After implementation:
 
 ## Phase Status
 
-- [ ] **Phase 1: Embedded Control-State Contract** - Introduce compact hardened-state sections in the existing context artifacts and define how built-in TODOs mirror them.
+- [x] **Phase 1: Embedded Control-State Contract** - Introduce compact hardened-state sections in the existing context artifacts and define how built-in TODOs mirror them.
 - [ ] **Phase 2: PAW Gate Reconciliation** - Make PAW transition, status, and configured-review paths enforce the embedded control state and block on unresolved gates.
 - [ ] **Phase 3: Review State Tracking** - Make PAW Review sequence and terminal external-review state derive from explicit review control state.
 - [ ] **Phase 4: VS Code Contract Parity** - Align extension types, initialization, and status surfaces with the explicit workflow contract without relocating orchestration logic.
@@ -93,10 +93,10 @@ After implementation:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Prompt linting passes for the changed agent/skill files: `npm run lint:agent:all`
-- [ ] Workflow artifact initialization coverage passes: `cd tests/integration && npx tsx --test tests/workflows/full-local-workflow.test.ts tests/workflows/minimal-workflow.test.ts`
-- [ ] Guardrail coverage passes: `cd tests/integration && npx tsx --test tests/skills/paw-agent-guardrails.test.ts`
-- [ ] Shared control-state fixture coverage passes: `cd tests/integration && npx tsx --test tests/skills/control-state-contract.test.ts`
+- [x] Prompt linting passes for the changed agent/skill files: `npm run lint:agent:all`
+- [x] Workflow artifact initialization coverage passes: `cd tests/integration && npx tsx --test tests/workflows/full-local-workflow.test.ts tests/workflows/minimal-workflow.test.ts`
+- [x] Guardrail coverage passes: `cd tests/integration && npx tsx --test tests/skills/paw-agent-guardrails.test.ts`
+- [x] Shared control-state fixture coverage passes: `cd tests/integration && npx tsx --test tests/skills/control-state-contract.test.ts`
 
 #### Manual Verification:
 - [ ] Initializing a new PAW workflow creates a hardened-state section inside `WorkflowContext.md` and mirrors active required items into TODOs

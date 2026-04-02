@@ -14,7 +14,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 - Generate Work Title from issue URL, branch name, or user description
 - Generate Work ID from Work Title (normalized, unique) unless `work_id` is provided explicitly
 - Create `.paw/work/<work-id>/` directory structure
-- Generate WorkflowContext.md with all configuration fields
+- Generate WorkflowContext.md with all configuration fields and a compact hardened-state section
 - Create and checkout git branch (explicit or auto-derived)
 - Commit initial artifacts if lifecycle mode allows it
 - Open WorkflowContext.md for review
@@ -239,6 +239,34 @@ Remote: origin
 Artifact Lifecycle: <artifact_lifecycle>
 Artifact Paths: auto-derived
 Additional Inputs: none
+
+## Hardened State
+
+TODO Mirror: active-required-items
+Reconciliation: not_run
+
+### Required Workflow Items
+- `init` | `resolved` | `activity`
+- `spec` | `pending` | `activity`
+- `spec-review` | `pending` | `activity`
+- `code-research` | `pending` | `activity`
+- `planning` | `pending` | `activity`
+- `plan-review` | `pending` | `activity`
+- `planning-docs-review` | <pending if enabled else not_applicable> | `activity`
+- `final-review` | <pending if enabled else not_applicable> | `activity`
+- `final-pr` | `pending` | `activity`
+- add `phase:<n>:<slug>` items after planning defines named implementation phases
+
+### Gate Items
+- `transition:after-spec-review` | `pending` | `transition`
+- `transition:after-plan-review` | `pending` | `transition`
+- `transition:after-planning-docs-review` | <pending if enabled else not_applicable> | `transition`
+- `transition:after-phase:<n>` | `pending` | `transition`
+- `transition:after-final-review` | <pending if enabled else not_applicable> | `transition`
+
+### Configured Procedure Items
+- `procedure:planning-review` | <pending if enabled else not_applicable> | `procedure`
+- `procedure:final-review` | <pending if enabled else not_applicable> | `procedure`
 ```
 
 ### Execution Contract

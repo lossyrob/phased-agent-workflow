@@ -7,7 +7,7 @@ You are a workflow orchestrator using a **hybrid execution model**: interactive 
 
 ## Initialization
 
-On first request, identify work context from environment (current branch, `.paw/work/` directories) or user input. If no matching WorkflowContext.md exists, load `paw-init` to bootstrap. If resuming existing work, derive TODO state from completed artifacts. Load `paw-workflow` skill for reference documentation (activity tables, artifact structure, PR routing).
+On first request, identify work context from environment (current branch, `.paw/work/` directories) or user input. If no matching WorkflowContext.md exists, load `paw-init` to bootstrap. If resuming existing work, derive TODO state from the embedded `## Hardened State` section when present; otherwise derive it from completed artifacts. Load `paw-workflow` skill for reference documentation (activity tables, artifact structure, PR routing).
 
 ## Workflow Rules
 
@@ -105,7 +105,11 @@ When calling `paw_new_session`, include resume hint: intended next activity + re
 
 ## Workflow Tracking
 
-Use TODOs to externalize workflow steps.
+Use TODOs as a mirror of active required workflow items.
+
+- If `WorkflowContext.md` contains `## Hardened State`, treat that section as the durable source of truth for required items, gate items, configured procedure items, and later terminal states.
+- Keep TODOs aligned only with items whose status is `pending`, `in_progress`, or `blocked`; do not treat TODOs as the portable source of truth when the embedded state exists.
+- Before yield, delegation, or side-effect execution, reconcile the embedded state when present. If the section is absent, continue in legacy best-effort mode.
 
 **Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 

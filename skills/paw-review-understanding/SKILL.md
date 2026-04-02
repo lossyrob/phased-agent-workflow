@@ -15,6 +15,7 @@ Analyze pull request changes to create comprehensive understanding artifacts. Th
 - Generate research prompt for baseline codebase analysis
 - Derive specification from PR description, code analysis, and baseline understanding
 - Create ReviewContext.md as authoritative parameter source
+- Seed ReviewContext.md with a compact hardened-state section for review stages and terminal review state
 - Validate all artifacts meet quality standards
 
 ## Non-Responsibilities
@@ -98,7 +99,7 @@ related_prs:
 4. **Create ReviewContext.md**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`
    - Use template structure below
-   - Include all metadata and flags
+   - Include all metadata, flags, and the hardened-state section
 
 ## Step 2: Research Questions Generation
 
@@ -264,6 +265,27 @@ status: complete
 **Review Perspective Cap**: <2 (default) | positive integer>
 
 *SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above. In particular, if `Review Mode` is `society-of-thought` and no `Review Specialists` value is provided, default to `all` — do not select a subset.*
+
+## Hardened State
+
+TODO Mirror: active-required-items
+Reconciliation: not_run
+
+### Review Stage Items
+- `understanding` | `in_progress` | `stage`
+- `evaluation` | `pending` | `stage`
+- `output:feedback` | `pending` | `stage`
+- `output:critic` | `pending` | `stage`
+- `output:critique-response` | `pending` | `stage`
+- `output:github` | `pending` | `stage`
+- `procedure:review-mode` | `pending` | `procedure`
+
+### Terminal External Review State
+- `none`
+- `pending-review-created`
+
+Pending Review ID: `none`
+Pending Review URL: `none`
 
 ## Description
 

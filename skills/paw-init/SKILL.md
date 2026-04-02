@@ -269,6 +269,10 @@ Reconciliation: not_run
 - `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
 
+- Resolve config-dependent hardened-state rows to concrete values before writing `WorkflowContext.md`:
+  - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
+  - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.
+
 ### Execution Contract
 
 - If `Execution Mode` is absent in an older context, treat it as `current-checkout`.

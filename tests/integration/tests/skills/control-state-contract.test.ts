@@ -76,6 +76,14 @@ describe("control-state contract content", () => {
 
     assert.match(workflow, /phase:<n>:<slug>/);
     assert.match(workflow, /procedure:planning-review/);
+    assert.match(
+      workflow,
+      /Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`\./,
+    );
+    assert.match(
+      workflow,
+      /Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`\./,
+    );
     assert.match(review, /output:feedback/);
     assert.match(review, /pending-review-created/);
   });
@@ -89,6 +97,14 @@ describe("control-state contract content", () => {
     assert.match(
       init,
       /`planning-docs-review` \| `<pending\|not_applicable>` \| `activity`/,
+    );
+    assert.match(
+      init,
+      /Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`\./,
+    );
+    assert.match(
+      init,
+      /Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`\./,
     );
     assert.match(init, /transition:after-plan-review/);
     assert.match(init, /procedure:planning-review/);

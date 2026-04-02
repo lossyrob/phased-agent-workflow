@@ -53,6 +53,10 @@ Reconciliation: not_run
 - `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
 
+Resolve config-dependent rows to concrete values before writing the section:
+- Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
+- Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.
+
 ## Workflow Item IDs
 
 - Fixed activity IDs:

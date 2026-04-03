@@ -3,7 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { loadAgentTemplates } from '../../agents/agentTemplates';
 import { installAgents, needsInstallation, isDevelopmentVersion, removeInstalledAgents } from '../../agents/installer';
+import { loadPromptTemplates } from '../../agents/promptTemplates';
 
 function mockWorkspaceConfiguration(promptsDir: string): vscode.WorkspaceConfiguration {
   return {
@@ -256,10 +258,15 @@ suite('Agent Installation', () => {
   test('installAgents continues on individual file failures', async () => {
     const promptsDir = path.join(testDir, 'prompts');
     fs.mkdirSync(promptsDir, { recursive: true });
-    
-    // Make prompts directory read-only to cause write errors
-    fs.chmodSync(promptsDir, 0o444);
-    
+    const agentTemplates = loadAgentTemplates(mockContext.extension.extensionUri);
+    const promptTemplates = loadPromptTemplates(mockContext.extension.extensionUri);
+    const failingPaths = [...agentTemplates, ...promptTemplates].map((template) =>
+      path.join(promptsDir, template.filename)
+    );
+    for (const failingPath of failingPaths) {
+      fs.mkdirSync(failingPath, { recursive: true });
+    }
+
     const restoreConfig = overridePromptDirectoryConfig(promptsDir);
     
     try {
@@ -274,8 +281,6 @@ suite('Agent Installation', () => {
       assert.ok(state, 'Should create installation state');
       assert.strictEqual(state.success, false, 'Should mark as failed');
     } finally {
-      // Restore permissions for cleanup
-      fs.chmodSync(promptsDir, 0o755);
       restoreConfig();
     }
   });

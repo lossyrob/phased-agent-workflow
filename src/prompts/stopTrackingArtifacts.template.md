@@ -15,6 +15,8 @@ PAW stores workflow artifacts in `.paw/work/<work-id>/` directories including:
 
 These artifacts help agents understand context and maintain state across workflow stages. However, some users prefer not to commit them (e.g., contributing to non-PAW repositories).
 
+Treat `WorkflowContext.md` as the durable artifact-lifecycle source of truth. If it includes a `## Hardened State` section, preserve that section exactly and update only the lifecycle field. If hardened state is absent, treat the workflow as legacy best-effort mode.
+
 ## Parameters
 
 - **Work ID**: {{WORK_ID}}
@@ -43,7 +45,7 @@ This pattern ignores all files in the directory, including the `.gitignore` itse
 
 ### 3. Update WorkflowContext.md Lifecycle Field
 
-Update the `Artifact Lifecycle:` field in `.paw/work/{{WORK_ID}}/WorkflowContext.md` to `never-commit`. If the field doesn't exist, add `Artifact Lifecycle: never-commit` near other configuration fields. This makes the lifecycle change durable for any agent that reads the workflow context.
+Update the `Artifact Lifecycle:` field in `.paw/work/{{WORK_ID}}/WorkflowContext.md` to `never-commit`. If the field doesn't exist, add `Artifact Lifecycle: never-commit` near other configuration fields. This makes the lifecycle change durable for any agent that reads the workflow context. Do not rewrite or remove unrelated hardened-state or legacy-state lines.
 
 ### 4. Commit the Removal
 

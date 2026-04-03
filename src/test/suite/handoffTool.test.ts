@@ -138,6 +138,8 @@ suite('Handoff Tool', () => {
       };
       const prompt = constructPromptMessage(params);
       assert.ok(prompt.includes('Work ID: test-feature'));
+      assert.ok(prompt.includes('WorkflowContext.md'));
+      assert.ok(prompt.includes('legacy best-effort mode'));
       assert.ok(prompt.includes('Focus on error handling'));
     });
 
@@ -147,7 +149,19 @@ suite('Handoff Tool', () => {
         work_id: 'test-feature',
       };
       const prompt = constructPromptMessage(params);
-      assert.strictEqual(prompt, 'Work ID: test-feature');
+      assert.ok(prompt.includes('Work ID: test-feature'));
+      assert.ok(prompt.includes('WorkflowContext.md'));
+      assert.ok(prompt.includes('legacy best-effort mode'));
+    });
+
+    test('constructs review handoff prompt with ReviewContext guidance', () => {
+      const params: HandoffParams = {
+        target_agent: 'PAW Review',
+        work_id: 'test-feature',
+      };
+      const prompt = constructPromptMessage(params);
+      assert.ok(prompt.includes('ReviewContext.md'));
+      assert.ok(prompt.includes('legacy best-effort mode'));
     });
   });
 
@@ -261,6 +275,16 @@ function validateWorkIdFormat(workId: string): void {
  */
 function constructPromptMessage(params: HandoffParams): string {
   let prompt = `Work ID: ${params.work_id}`;
+
+  if (params.target_agent === 'PAW Review') {
+    prompt += '\n\nBefore acting, read the existing review artifacts for this work item.';
+    prompt += '\nUse `ReviewContext.md` as the durable review-state source when embedded hardened state is present.';
+    prompt += '\nIf hardened review state is absent, continue in legacy best-effort mode and say so explicitly.';
+  } else {
+    prompt += '\n\nBefore acting, read the existing workflow artifacts for this work item.';
+    prompt += '\nUse `WorkflowContext.md` as the durable workflow-state source when embedded hardened state is present.';
+    prompt += '\nIf hardened workflow state is absent, continue in legacy best-effort mode and say so explicitly.';
+  }
 
   if (params.inline_instruction) {
     prompt += `\n\n${params.inline_instruction}`;

@@ -1,5 +1,14 @@
 import * as vscode from 'vscode';
-import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
+import type {
+  FinalReviewMode,
+  PlanningReviewMode,
+  ReviewConfig as AgentReviewConfig,
+  ReviewInteractionMode,
+  ReviewPerspectiveSelection,
+  ReviewPolicy,
+  ReviewSpecialistSelection,
+  SessionPolicy,
+} from '../types/workflow';
 
 // Re-export types for consumers that import from userInput.ts
 export type { ReviewPolicy, SessionPolicy } from '../types/workflow';
@@ -39,6 +48,13 @@ export type ReviewStrategy = 'prs' | 'local';
  */
 export type ArtifactLifecycle = 'commit-and-clean' | 'commit-and-persist' | 'never-commit';
 
+const DEFAULT_REVIEW_MODELS = 'latest GPT, latest Gemini, latest Claude Opus';
+const DEFAULT_REVIEW_SPECIALISTS: ReviewSpecialistSelection = 'all';
+const DEFAULT_REVIEW_INTERACTION_MODE: ReviewInteractionMode = 'parallel';
+const DEFAULT_REVIEW_SPECIALIST_MODELS = 'none';
+const DEFAULT_REVIEW_PERSPECTIVES: ReviewPerspectiveSelection = 'auto';
+const DEFAULT_REVIEW_PERSPECTIVE_CAP = 2;
+
 export interface WorktreeConfig {
   /** Whether to create a fresh worktree or reuse an existing one */
   strategy: WorktreeStrategy;
@@ -66,16 +82,12 @@ export interface WorkflowModeSelection {
 /**
  * Final Agent Review configuration for pre-PR review step.
  */
-export interface FinalReviewConfig {
-  /** Whether Final Agent Review is enabled */
-  enabled: boolean;
-  
-  /** Review mode: single-model or multi-model (only applies if enabled) */
-  mode: 'single-model' | 'multi-model';
-  
-  /** Whether review is interactive (apply/skip/discuss), auto-apply, or smart (auto-apply consensus, interactive for ambiguous) */
-  interactive: boolean | 'smart';
-}
+export interface FinalReviewConfig extends AgentReviewConfig {}
+
+/**
+ * Planning documents review configuration captured during initialization.
+ */
+export interface PlanningReviewConfig extends AgentReviewConfig {}
 
 /**
  * User inputs collected for work item initialization.
@@ -121,6 +133,9 @@ export interface WorkItemInputs {
    * - never-commit: Local only, never tracked in git
    */
   artifactLifecycle: ArtifactLifecycle;
+
+  /** Planning documents review configuration */
+  planningReview: PlanningReviewConfig;
   
   /** Final Agent Review configuration for pre-PR review step */
   finalReview: FinalReviewConfig;
@@ -141,6 +156,330 @@ export interface WorkItemInputs {
 
 export function isWorktreeExecutionEnabled(): boolean {
   return vscode.workspace.getConfiguration('paw').get<boolean>(WORKTREE_EXECUTION_FEATURE_FLAG, false);
+}
+
+function createEnabledReviewConfig(mode: FinalReviewMode | PlanningReviewMode): AgentReviewConfig {
+  return {
+    enabled: true,
+    mode,
+    interactive: 'smart',
+    models: DEFAULT_REVIEW_MODELS,
+    specialists: DEFAULT_REVIEW_SPECIALISTS,
+    interactionMode: DEFAULT_REVIEW_INTERACTION_MODE,
+    specialistModels: DEFAULT_REVIEW_SPECIALIST_MODELS,
+    perspectives: DEFAULT_REVIEW_PERSPECTIVES,
+    perspectiveCap: DEFAULT_REVIEW_PERSPECTIVE_CAP,
+  };
+}
+
+function createDisabledReviewConfig(): AgentReviewConfig {
+  return {
+    enabled: false,
+    mode: 'single-model',
+    interactive: true,
+    models: DEFAULT_REVIEW_MODELS,
+    specialists: DEFAULT_REVIEW_SPECIALISTS,
+    interactionMode: DEFAULT_REVIEW_INTERACTION_MODE,
+    specialistModels: DEFAULT_REVIEW_SPECIALIST_MODELS,
+    perspectives: DEFAULT_REVIEW_PERSPECTIVES,
+    perspectiveCap: DEFAULT_REVIEW_PERSPECTIVE_CAP,
+  };
+}
+
+async function collectReviewSpecialists(
+  outputChannel: vscode.OutputChannel,
+  reviewLabel: string
+): Promise<ReviewSpecialistSelection | undefined> {
+  const selection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'All Specialists',
+        description: 'Run every available specialist (default)',
+        detail: 'Preserves the widest review surface',
+        value: 'all' as const,
+      },
+      {
+        label: 'Adaptive Subset',
+        description: 'Let PAW choose a focused subset',
+        detail: 'Stored as adaptive:N in WorkflowContext.md',
+        value: 'adaptive' as const,
+      },
+      {
+        label: 'Custom List',
+        description: 'Enter a comma-separated specialist list',
+        detail: 'Use exact specialist names',
+        value: 'custom' as const,
+      },
+    ],
+    {
+      placeHolder: 'Select specialist configuration',
+      title: `${reviewLabel} Specialists`,
+    }
+  );
+
+  if (!selection) {
+    outputChannel.appendLine(`[INFO] ${reviewLabel} specialist selection cancelled`);
+    return undefined;
+  }
+
+  if (selection.value === 'all') {
+    return DEFAULT_REVIEW_SPECIALISTS;
+  }
+
+  if (selection.value === 'adaptive') {
+    const adaptiveCount = await vscode.window.showInputBox({
+      prompt: `Enter ${reviewLabel.toLowerCase()} adaptive specialist count`,
+      placeHolder: '3',
+      validateInput: (value: string) => {
+        const parsed = Number.parseInt(value, 10);
+        return Number.isInteger(parsed) && parsed > 0
+          ? undefined
+          : 'Enter a positive integer';
+      },
+    });
+
+    if (adaptiveCount === undefined) {
+      outputChannel.appendLine(`[INFO] ${reviewLabel} adaptive specialist count cancelled`);
+      return undefined;
+    }
+
+    return `adaptive:${Number.parseInt(adaptiveCount, 10)}`;
+  }
+
+  const customSpecialists = await vscode.window.showInputBox({
+    prompt: `Enter ${reviewLabel.toLowerCase()} specialists (comma-separated)`,
+    placeHolder: 'security, performance, maintainability',
+    validateInput: (value: string) =>
+      value.trim().length > 0 ? undefined : 'Enter at least one specialist name',
+  });
+
+  if (customSpecialists === undefined) {
+    outputChannel.appendLine(`[INFO] ${reviewLabel} custom specialist entry cancelled`);
+    return undefined;
+  }
+
+  return customSpecialists.trim();
+}
+
+async function collectReviewInteractionMode(
+  outputChannel: vscode.OutputChannel,
+  reviewLabel: string
+): Promise<ReviewInteractionMode | undefined> {
+  const selection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'Parallel',
+        description: 'Run specialists independently (default)',
+        detail: 'Fastest path for broad coverage',
+        value: 'parallel' as ReviewInteractionMode,
+      },
+      {
+        label: 'Debate',
+        description: 'Have specialists challenge each other',
+        detail: 'Slower, but useful for deeper trade-off analysis',
+        value: 'debate' as ReviewInteractionMode,
+      },
+    ],
+    {
+      placeHolder: 'Select specialist interaction mode',
+      title: `${reviewLabel} Interaction Mode`,
+    }
+  );
+
+  if (!selection) {
+    outputChannel.appendLine(`[INFO] ${reviewLabel} interaction mode selection cancelled`);
+    return undefined;
+  }
+
+  return selection.value;
+}
+
+async function collectReviewPerspectives(
+  outputChannel: vscode.OutputChannel,
+  reviewLabel: string
+): Promise<ReviewPerspectiveSelection | undefined> {
+  const selection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'Auto',
+        description: 'Let PAW choose perspective overlays (default)',
+        detail: 'Uses the built-in auto perspective strategy',
+        value: 'auto' as ReviewPerspectiveSelection,
+      },
+      {
+        label: 'None',
+        description: 'Run without extra perspective overlays',
+        detail: 'Keeps review in its base specialist mode',
+        value: 'none' as ReviewPerspectiveSelection,
+      },
+      {
+        label: 'Custom List',
+        description: 'Enter comma-separated perspective names',
+        detail: 'Use exact perspective names',
+        value: 'custom' as const,
+      },
+    ],
+    {
+      placeHolder: 'Select perspective configuration',
+      title: `${reviewLabel} Perspectives`,
+    }
+  );
+
+  if (!selection) {
+    outputChannel.appendLine(`[INFO] ${reviewLabel} perspective selection cancelled`);
+    return undefined;
+  }
+
+  if (selection.value !== 'custom') {
+    return selection.value;
+  }
+
+  const customPerspectives = await vscode.window.showInputBox({
+    prompt: `Enter ${reviewLabel.toLowerCase()} perspectives (comma-separated)`,
+    placeHolder: 'premortem, red-team',
+    validateInput: (value: string) =>
+      value.trim().length > 0 ? undefined : 'Enter at least one perspective name',
+  });
+
+  if (customPerspectives === undefined) {
+    outputChannel.appendLine(`[INFO] ${reviewLabel} custom perspective entry cancelled`);
+    return undefined;
+  }
+
+  return customPerspectives.trim();
+}
+
+async function collectReviewConfig(
+  outputChannel: vscode.OutputChannel,
+  options: {
+    enableTitle: string;
+    enablePrompt: string;
+    enabledDescription: string;
+    disabledDescription: string;
+    reviewLabel: string;
+  }
+): Promise<AgentReviewConfig | undefined> {
+  const enabledSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'Enabled',
+        description: options.enabledDescription,
+        detail: 'Stored explicitly in WorkflowContext.md',
+        value: true,
+      },
+      {
+        label: 'Disabled',
+        description: options.disabledDescription,
+        detail: 'Stored explicitly in WorkflowContext.md',
+        value: false,
+      },
+    ],
+    {
+      placeHolder: options.enablePrompt,
+      title: options.enableTitle,
+    }
+  );
+
+  if (!enabledSelection) {
+    outputChannel.appendLine(`[INFO] ${options.enableTitle} selection cancelled`);
+    return undefined;
+  }
+
+  if (!enabledSelection.value) {
+    return createDisabledReviewConfig();
+  }
+
+  const modeSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'Multi-Model',
+        description: 'Preserve the default multi-model review path',
+        detail: 'Uses the standard multi-model review configuration',
+        value: 'multi-model' as FinalReviewMode,
+      },
+      {
+        label: 'Single Model',
+        description: 'Use a single model for this review surface',
+        detail: 'Fastest review path',
+        value: 'single-model' as FinalReviewMode,
+      },
+      {
+        label: 'Society-of-Thought',
+        description: 'Use specialist personas and explicit review coordination',
+        detail: 'Preserves SoT configuration in WorkflowContext.md',
+        value: 'society-of-thought' as FinalReviewMode,
+      },
+    ],
+    {
+      placeHolder: 'Select review mode',
+      title: `${options.reviewLabel} Mode`,
+    }
+  );
+
+  if (!modeSelection) {
+    outputChannel.appendLine(`[INFO] ${options.reviewLabel} mode selection cancelled`);
+    return undefined;
+  }
+
+  const interactiveSelection = await vscode.window.showQuickPick(
+    [
+      {
+        label: 'Smart',
+        description: 'Auto-apply obvious fixes, stay interactive for ambiguity (default)',
+        detail: 'Matches the PAW default interactive mode',
+        value: 'smart' as boolean | 'smart',
+      },
+      {
+        label: 'Interactive',
+        description: 'Review each finding before applying changes',
+        detail: 'Maximizes user control during review resolution',
+        value: true as boolean | 'smart',
+      },
+      {
+        label: 'Auto-Apply',
+        description: 'Apply recommended fixes automatically',
+        detail: 'Minimizes interaction during review resolution',
+        value: false as boolean | 'smart',
+      },
+    ],
+    {
+      placeHolder: 'Select interaction mode',
+      title: `${options.reviewLabel} Interaction`,
+    }
+  );
+
+  if (!interactiveSelection) {
+    outputChannel.appendLine(`[INFO] ${options.reviewLabel} interaction selection cancelled`);
+    return undefined;
+  }
+
+  const reviewConfig = createEnabledReviewConfig(modeSelection.value);
+  reviewConfig.interactive = interactiveSelection.value;
+
+  if (modeSelection.value !== 'society-of-thought') {
+    return reviewConfig;
+  }
+
+  const specialists = await collectReviewSpecialists(outputChannel, options.reviewLabel);
+  if (specialists === undefined) {
+    return undefined;
+  }
+
+  const interactionMode = await collectReviewInteractionMode(outputChannel, options.reviewLabel);
+  if (interactionMode === undefined) {
+    return undefined;
+  }
+
+  const perspectives = await collectReviewPerspectives(outputChannel, options.reviewLabel);
+  if (perspectives === undefined) {
+    return undefined;
+  }
+
+  reviewConfig.specialists = specialists;
+  reviewConfig.interactionMode = interactionMode;
+  reviewConfig.perspectives = perspectives;
+
+  return reviewConfig;
 }
 
 /**
@@ -547,11 +886,9 @@ export async function collectArtifactLifecycle(
  * 
  * Presents Quick Pick menus for:
  * 1. Enable/disable Final Agent Review
- * 2. If enabled: Review mode (single-model or multi-model)
+ * 2. If enabled: Exact review mode (single-model, multi-model, or society-of-thought)
  * 3. If enabled: Interactive mode (apply/skip/discuss vs auto-apply)
- * 
- * Note: VS Code can only execute single-model mode. Multi-model is CLI-only
- * and will fall back to single-model in VS Code.
+ * 4. If society-of-thought: specialist, interaction-mode, and perspective settings
  * 
  * @param outputChannel - Output channel for logging user interaction events
  * @returns Promise resolving to FinalReviewConfig, or undefined if user cancelled
@@ -559,83 +896,37 @@ export async function collectArtifactLifecycle(
 export async function collectFinalReviewConfig(
   outputChannel: vscode.OutputChannel
 ): Promise<FinalReviewConfig | undefined> {
-  // Step 1: Enable/disable Final Agent Review
-  const enabledSelection = await vscode.window.showQuickPick(
-    [
-      {
-        label: "Enabled",
-        description: "Run automated review before Final PR (default)",
-        detail: "Catches issues before external PR review",
-        value: true,
-      },
-      {
-        label: "Disabled",
-        description: "Skip pre-PR review step",
-        detail: "Go directly from implementation to Final PR",
-        value: false,
-      },
-    ],
-    {
-      placeHolder: "Enable Final Agent Review?",
-      title: "Final Agent Review",
-    }
-  );
+  return collectReviewConfig(outputChannel, {
+    enableTitle: 'Final Agent Review',
+    enablePrompt: 'Enable Final Agent Review?',
+    enabledDescription: 'Run automated review before Final PR (default)',
+    disabledDescription: 'Skip pre-PR review step',
+    reviewLabel: 'Final Review',
+  });
+}
 
-  if (!enabledSelection) {
-    outputChannel.appendLine("[INFO] Final Agent Review selection cancelled");
-    return undefined;
+/**
+ * Collect planning documents review configuration from user.
+ *
+ * Minimal workflows skip this surface and keep planning review disabled to
+ * preserve the existing minimal workflow contract.
+ */
+export async function collectPlanningReviewConfig(
+  outputChannel: vscode.OutputChannel,
+  workflowMode: WorkflowMode
+): Promise<PlanningReviewConfig | undefined> {
+  if (workflowMode === 'minimal') {
+    outputChannel.appendLine('[INFO] Planning docs review disabled in minimal workflow mode');
+    return createDisabledReviewConfig();
   }
 
-  // If disabled, return config with defaults for mode/interactive
-  if (!enabledSelection.value) {
-    return {
-      enabled: false,
-      mode: 'single-model',
-      interactive: true,
-    };
-  }
-
-  // VS Code only supports single-model (multi-model requires parallel subagents)
-  // Skip mode selection - always use single-model
-
-  // Step 2: Interactive mode (only if enabled)
-  const interactiveSelection = await vscode.window.showQuickPick(
-    [
-      {
-        label: "Smart",
-        description: "Auto-apply consensus fixes, interactive for ambiguous (default)",
-        detail: "In multi-model (CLI): obvious fixes applied automatically. In single-model: interactive",
-        value: 'smart' as boolean | 'smart',
-      },
-      {
-        label: "Interactive",
-        description: "Review each finding: apply, skip, or discuss",
-        detail: "You control what gets changed",
-        value: true as boolean | 'smart',
-      },
-      {
-        label: "Auto-Apply",
-        description: "Automatically apply recommended fixes",
-        detail: "Faster but less control over changes",
-        value: false as boolean | 'smart',
-      },
-    ],
-    {
-      placeHolder: "Select interaction mode",
-      title: "Final Review Interaction",
-    }
-  );
-
-  if (!interactiveSelection) {
-    outputChannel.appendLine("[INFO] Final review interaction selection cancelled");
-    return undefined;
-  }
-
-  return {
-    enabled: true,
-    mode: 'single-model',
-    interactive: interactiveSelection.value,
-  };
+  return collectReviewConfig(outputChannel, {
+    enableTitle: 'Planning Docs Review',
+    enablePrompt: 'Enable Planning Docs Review?',
+    enabledDescription: 'Review Spec, CodeResearch, and ImplementationPlan before coding (default)',
+    disabledDescription: 'Skip the planning documents review stage',
+    reviewLabel: 'Planning Review',
+  });
 }
 
 /**
@@ -747,6 +1038,12 @@ export async function collectUserInputs(
     return undefined;
   }
 
+  // Collect planning documents review configuration
+  const planningReview = await collectPlanningReviewConfig(outputChannel, workflowMode.mode);
+  if (planningReview === undefined) {
+    return undefined;
+  }
+
   // Collect Final Agent Review configuration
   const finalReview = await collectFinalReviewConfig(outputChannel);
   if (finalReview === undefined) {
@@ -762,6 +1059,7 @@ export async function collectUserInputs(
     reviewPolicy,
     sessionPolicy,
     artifactLifecycle,
+    planningReview,
     finalReview,
     issueUrl: issueUrl.trim() === '' ? undefined : issueUrl.trim()
   };

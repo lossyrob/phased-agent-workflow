@@ -53,12 +53,29 @@ function validateWorkId(workId: string): void {
  */
 function constructPrompt(params: HandoffParams): string {
   let prompt = `Work ID: ${params.work_id}`;
+  prompt += `\n\n${buildResumeInstructions(params.target_agent)}`;
 
   if (params.inline_instruction) {
     prompt += `\n\n${params.inline_instruction}`;
   }
 
   return prompt;
+}
+
+function buildResumeInstructions(targetAgent: AgentName): string {
+  if (targetAgent === 'PAW Review') {
+    return [
+      'Before acting, read the existing review artifacts for this work item.',
+      'Use `ReviewContext.md` as the durable review-state source when embedded hardened state is present.',
+      'If hardened review state is absent, continue in legacy best-effort mode and say so explicitly.',
+    ].join('\n');
+  }
+
+  return [
+    'Before acting, read the existing workflow artifacts for this work item.',
+    'Use `WorkflowContext.md` as the durable workflow-state source when embedded hardened state is present.',
+    'If hardened workflow state is absent, continue in legacy best-effort mode and say so explicitly.',
+  ].join('\n');
 }
 
 /**

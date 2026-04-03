@@ -81,6 +81,11 @@ function createCurrentCheckoutInputs(): WorkItemInputs {
     reviewPolicy: 'final-pr-only',
     sessionPolicy: 'continuous',
     artifactLifecycle: 'commit-and-clean',
+    planningReview: {
+      enabled: false,
+      mode: 'single-model',
+      interactive: true,
+    },
     finalReview: {
       enabled: true,
       mode: 'single-model',
@@ -111,10 +116,25 @@ suite('Initialize Work Item Helpers', () => {
       reviewPolicy: 'final-pr-only',
       sessionPolicy: 'continuous',
       artifactLifecycle: 'commit-and-clean',
+      planningReview: {
+        enabled: true,
+        mode: 'society-of-thought',
+        interactive: 'smart',
+        specialists: 'all',
+        interactionMode: 'parallel',
+        specialistModels: 'none',
+        perspectives: 'auto',
+        perspectiveCap: 2,
+      },
       finalReview: {
         enabled: true,
-        mode: 'single-model',
+        mode: 'society-of-thought',
         interactive: 'smart',
+        specialists: 'all',
+        interactionMode: 'parallel',
+        specialistModels: 'none',
+        perspectives: 'auto',
+        perspectiveCap: 2,
       },
       issueUrl: 'https://github.com/example/repo/issues/123',
       executionMetadata: {
@@ -130,6 +150,19 @@ suite('Initialize Work Item Helpers', () => {
     assert.ok(prompt.includes('- **work_id**: test-worktree'));
     assert.ok(prompt.includes('- **repository_identity**: github.com/example/repo@abc123'));
     assert.ok(prompt.includes('- **execution_binding**: worktree:test-worktree:feature/test-worktree'));
+    assert.ok(prompt.includes('- **planning_docs_review**: enabled'));
+    assert.ok(prompt.includes('- **planning_review_mode**: society-of-thought'));
+    assert.ok(prompt.includes('- **planning_review_specialists**: all'));
+    assert.ok(prompt.includes('- **planning_review_interaction_mode**: parallel'));
+    assert.ok(prompt.includes('- **planning_review_specialist_models**: none'));
+    assert.ok(prompt.includes('- **planning_review_perspectives**: auto'));
+    assert.ok(prompt.includes('- **planning_review_perspective_cap**: 2'));
+    assert.ok(prompt.includes('- **final_review_mode**: society-of-thought'));
+    assert.ok(prompt.includes('- **final_review_specialists**: all'));
+    assert.ok(prompt.includes('- **final_review_interaction_mode**: parallel'));
+    assert.ok(prompt.includes('- **final_review_specialist_models**: none'));
+    assert.ok(prompt.includes('- **final_review_perspectives**: auto'));
+    assert.ok(prompt.includes('- **final_review_perspective_cap**: 2'));
   });
 
   test('paw-init skill template persists execution contract fields in WorkflowContext', () => {
@@ -437,15 +470,21 @@ suite('Initialize Work Item Helpers', () => {
       {}
     );
     assert.deepStrictEqual(
-      registry[createExecutionRegistryLookupKey(
-        executionMetadata.repositoryIdentity,
-        executionMetadata.executionBinding
-      )],
-      buildExecutionRegistryEntry(
-        executionMetadata,
-        '/tmp/repo-worktree',
-        'feature/test-worktree'
-      )
+      {
+        ...registry[createExecutionRegistryLookupKey(
+          executionMetadata.repositoryIdentity,
+          executionMetadata.executionBinding
+        )],
+        updatedAt: '<normalized>',
+      },
+      {
+        ...buildExecutionRegistryEntry(
+          executionMetadata,
+          '/tmp/repo-worktree',
+          'feature/test-worktree'
+        ),
+        updatedAt: '<normalized>',
+      }
     );
 
     const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(

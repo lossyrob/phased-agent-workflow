@@ -5,6 +5,7 @@ import * as path from 'path';
 import {
   collectUserInputs,
   type FinalReviewConfig,
+  type PlanningReviewConfig,
   type ArtifactLifecycle,
   type WorkItemInputs,
   isWorktreeExecutionEnabled,
@@ -96,9 +97,25 @@ interface PromptArgumentsInput {
   reviewPolicy: ReviewPolicy;
   sessionPolicy: SessionPolicy;
   artifactLifecycle: ArtifactLifecycle;
+  planningReview: PlanningReviewConfig;
   finalReview: FinalReviewConfig;
   issueUrl?: string;
   executionMetadata?: ExecutionMetadata;
+}
+
+function appendReviewParameters(
+  config: Record<string, string | boolean | number>,
+  prefix: 'planning_review' | 'final_review',
+  review: PlanningReviewConfig | FinalReviewConfig
+): void {
+  config[`${prefix}_mode`] = review.mode;
+  config[`${prefix}_interactive`] = review.interactive;
+  config[`${prefix}_models`] = review.models ?? 'latest GPT, latest Gemini, latest Claude Opus';
+  config[`${prefix}_specialists`] = review.specialists ?? 'all';
+  config[`${prefix}_interaction_mode`] = review.interactionMode ?? 'parallel';
+  config[`${prefix}_specialist_models`] = review.specialistModels ?? 'none';
+  config[`${prefix}_perspectives`] = review.perspectives ?? 'auto';
+  config[`${prefix}_perspective_cap`] = review.perspectiveCap ?? 2;
 }
 
 function normalizePath(targetPath: string): string {
@@ -158,7 +175,7 @@ export function constructPawPromptArguments(
   inputs: PromptArgumentsInput,
   _workspacePath: string
 ): string {
-  const config: Record<string, string | boolean> = {
+  const config: Record<string, string | boolean | number> = {
     target_branch: inputs.targetBranch.trim() || 'auto',
     workflow_mode: inputs.workflowMode.mode,
     execution_mode: inputs.executionMode,
@@ -166,6 +183,7 @@ export function constructPawPromptArguments(
     review_policy: inputs.reviewPolicy,
     session_policy: inputs.sessionPolicy,
     artifact_lifecycle: inputs.artifactLifecycle,
+    planning_docs_review: inputs.planningReview.enabled ? 'enabled' : 'disabled',
     final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
   };
 
@@ -175,10 +193,12 @@ export function constructPawPromptArguments(
     config.execution_binding = inputs.executionMetadata.executionBinding;
   }
 
+  if (inputs.planningReview.enabled) {
+    appendReviewParameters(config, 'planning_review', inputs.planningReview);
+  }
+
   if (inputs.finalReview.enabled) {
-    config.final_review_mode = inputs.finalReview.mode;
-    config.final_review_interactive = inputs.finalReview.interactive;
-    config.final_review_models = 'latest GPT, latest Gemini, latest Claude Opus';
+    appendReviewParameters(config, 'final_review', inputs.finalReview);
   }
 
   if (inputs.issueUrl) {
@@ -584,10 +604,25 @@ export async function initializeWorkItemCommand(
     outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
     outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
     outputChannel.appendLine(`[INFO] Artifact lifecycle: ${inputs.artifactLifecycle}`);
+    outputChannel.appendLine(`[INFO] Planning Docs Review: ${inputs.planningReview.enabled ? 'enabled' : 'disabled'}`);
+    if (inputs.planningReview.enabled) {
+      outputChannel.appendLine(`[INFO] Planning Review mode: ${inputs.planningReview.mode}`);
+      outputChannel.appendLine(`[INFO] Planning Review interactive: ${inputs.planningReview.interactive}`);
+      if (inputs.planningReview.mode === 'society-of-thought') {
+        outputChannel.appendLine(`[INFO] Planning Review specialists: ${inputs.planningReview.specialists}`);
+        outputChannel.appendLine(`[INFO] Planning Review interaction mode: ${inputs.planningReview.interactionMode}`);
+        outputChannel.appendLine(`[INFO] Planning Review perspectives: ${inputs.planningReview.perspectives}`);
+      }
+    }
     outputChannel.appendLine(`[INFO] Final Review: ${inputs.finalReview.enabled ? 'enabled' : 'disabled'}`);
     if (inputs.finalReview.enabled) {
       outputChannel.appendLine(`[INFO] Final Review mode: ${inputs.finalReview.mode}`);
       outputChannel.appendLine(`[INFO] Final Review interactive: ${inputs.finalReview.interactive}`);
+      if (inputs.finalReview.mode === 'society-of-thought') {
+        outputChannel.appendLine(`[INFO] Final Review specialists: ${inputs.finalReview.specialists}`);
+        outputChannel.appendLine(`[INFO] Final Review interaction mode: ${inputs.finalReview.interactionMode}`);
+        outputChannel.appendLine(`[INFO] Final Review perspectives: ${inputs.finalReview.perspectives}`);
+      }
     }
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);

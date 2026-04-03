@@ -1,6 +1,8 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { 
+  collectFinalReviewConfig,
+  collectPlanningReviewConfig,
   collectUserInputs,
   isValidBranchName, 
   WorkflowMode,
@@ -11,6 +13,7 @@ import {
   ArtifactLifecycle,
   WorkflowModeSelection,
   FinalReviewConfig,
+  PlanningReviewConfig,
   WORKTREE_EXECUTION_FEATURE_FLAG
 } from '../../ui/userInput';
 
@@ -409,6 +412,98 @@ suite('Final Review Config Types', () => {
     assert.strictEqual(config.enabled, true);
     assert.strictEqual(config.mode, 'multi-model');
     assert.strictEqual(config.interactive, 'smart');
+  });
+
+  test('FinalReviewConfig works with society-of-thought mode', () => {
+    const config: FinalReviewConfig = {
+      enabled: true,
+      mode: 'society-of-thought',
+      interactive: 'smart',
+      specialists: 'all',
+      interactionMode: 'parallel',
+      specialistModels: 'none',
+      perspectives: 'auto',
+      perspectiveCap: 2,
+    };
+
+    assert.strictEqual(config.mode, 'society-of-thought');
+    assert.strictEqual(config.specialists, 'all');
+    assert.strictEqual(config.interactionMode, 'parallel');
+    assert.strictEqual(config.perspectives, 'auto');
+  });
+});
+
+suite('Planning Review Config Types', () => {
+  test('PlanningReviewConfig works when disabled', () => {
+    const config: PlanningReviewConfig = {
+      enabled: false,
+      mode: 'single-model',
+      interactive: true,
+    };
+
+    assert.strictEqual(config.enabled, false);
+    assert.strictEqual(config.mode, 'single-model');
+  });
+});
+
+suite('Structured Review Collection', () => {
+  test('collectFinalReviewConfig preserves society-of-thought selections', async () => {
+    const mutableWindow = vscode.window as unknown as {
+      showQuickPick: typeof vscode.window.showQuickPick;
+      showInputBox: typeof vscode.window.showInputBox;
+    };
+    const originalShowQuickPick = mutableWindow.showQuickPick;
+    const originalShowInputBox = mutableWindow.showInputBox;
+
+    try {
+      mutableWindow.showQuickPick = (async (
+        items: ReadonlyArray<{ value: unknown }>,
+        options?: vscode.QuickPickOptions
+      ) => {
+        const title = options?.title ?? 'unknown quick pick';
+        switch (title) {
+          case 'Final Agent Review':
+            return findQuickPickValue(items, true);
+          case 'Final Review Mode':
+            return findQuickPickValue(items, 'society-of-thought');
+          case 'Final Review Interaction':
+            return findQuickPickValue(items, 'smart');
+          case 'Final Review Specialists':
+            return findQuickPickValue(items, 'all');
+          case 'Final Review Interaction Mode':
+            return findQuickPickValue(items, 'parallel');
+          case 'Final Review Perspectives':
+            return findQuickPickValue(items, 'auto');
+          default:
+            throw new Error(`Unexpected quick pick title: ${title}`);
+        }
+      }) as unknown as typeof vscode.window.showQuickPick;
+
+      mutableWindow.showInputBox = (async () => {
+        throw new Error('No input box expected for default SoT selections');
+      }) as unknown as typeof vscode.window.showInputBox;
+
+      const config = await collectFinalReviewConfig(createOutputChannel());
+
+      assert.ok(config);
+      assert.strictEqual(config?.enabled, true);
+      assert.strictEqual(config?.mode, 'society-of-thought');
+      assert.strictEqual(config?.interactive, 'smart');
+      assert.strictEqual(config?.specialists, 'all');
+      assert.strictEqual(config?.interactionMode, 'parallel');
+      assert.strictEqual(config?.perspectives, 'auto');
+    } finally {
+      mutableWindow.showQuickPick = originalShowQuickPick;
+      mutableWindow.showInputBox = originalShowInputBox;
+    }
+  });
+
+  test('collectPlanningReviewConfig keeps minimal workflows on disabled planning review', async () => {
+    const config = await collectPlanningReviewConfig(createOutputChannel(), 'minimal');
+
+    assert.ok(config);
+    assert.strictEqual(config?.enabled, false);
+    assert.strictEqual(config?.mode, 'single-model');
   });
 });
 

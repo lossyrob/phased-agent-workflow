@@ -57,7 +57,7 @@ After implementation:
 - [x] **Phase 1: Embedded Control-State Contract** - Introduce compact hardened-state sections in the existing context artifacts and define how built-in TODOs mirror them.
 - [x] **Phase 2: PAW Gate Reconciliation** - Make PAW transition, status, and configured-review paths enforce the embedded control state and block on unresolved gates.
 - [x] **Phase 3: Review State Tracking** - Make PAW Review sequence and terminal external-review state derive from explicit review control state.
-- [ ] **Phase 4: VS Code Contract Parity** - Align extension types, initialization, and status surfaces with the explicit workflow contract without relocating orchestration logic.
+- [x] **Phase 4: VS Code Contract Parity** - Align extension types, initialization, and status surfaces with the explicit workflow contract without relocating orchestration logic.
 - [ ] **Phase 5: Documentation** - Record the as-built design and update workflow/spec/reference docs for the new state model.
 
 ## Phase Candidates
@@ -174,10 +174,10 @@ After implementation:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] TypeScript compilation succeeds: `npm run compile`
-- [ ] Extension/unit tests covering parity changes pass: `npm test`
-- [ ] Extension linting passes: `npm run lint`
-- [ ] Contract-parity coverage passes: `cd tests/integration && npx tsx --test tests/skills/execution-contract-content.test.ts`
+- [x] TypeScript compilation succeeds: `npm run compile`
+- [x] Extension/unit tests covering parity changes pass: `npm test`
+- [x] Extension linting passes: `npm run lint`
+- [x] Contract-parity coverage passes: `cd tests/integration && npx tsx --test tests/skills/execution-contract-content.test.ts`
 
 #### Manual Verification:
 - [ ] Initializing PAW from VS Code preserves explicit review-mode selections instead of narrowing them to the old type surface

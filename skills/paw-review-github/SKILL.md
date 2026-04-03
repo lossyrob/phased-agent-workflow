@@ -33,7 +33,8 @@ If `ReviewContext.md` contains `## Hardened State`, also read:
 - `Pending Review ID` and `Pending Review URL`
 
 Apply these sequencing rules:
-- `paw-review-github` requires `output:critique-response` to be `resolved` and `output:github` to be `pending` or `in_progress`
+- If terminal external review state already shows `pending-review-created` or `manual-posting-provided`, treat this skill as idempotent completion: report the existing outcome, preserve it, and do not create a second pending review or append a second manual-posting section
+- Otherwise `paw-review-github` requires `Reconciliation` to be `current`, `output:critique-response` to be `resolved`, and `output:github` to be `pending` or `in_progress`
 - If prerequisites are not met, report blocked status with the unresolved review-state item
 - After a pending review is created, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `pending-review-created`, `Pending Review ID` / `Pending Review URL` are populated, and `Reconciliation` is `current`
 - After non-GitHub manual posting instructions are written, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` stay `none`, and `Reconciliation` is `current`
@@ -84,6 +85,8 @@ Build list of postable comments with:
 - Suggestion code (use `**Updated Suggestion:**` if present, otherwise original)
 
 ### Step 3: Create Pending Review (GitHub PRs)
+
+Before any GitHub create call, check whether `ReviewContext.md` already records `pending-review-created`. If it does, report the existing pending review ID/URL and stop without creating another pending review. Only backfill missing local annotations if that can be done without repeating the external side effect.
 
 Use GitHub MCP tools to create pending review:
 
@@ -220,6 +223,7 @@ For non-GitHub workflows (local branch review):
 - Do not attempt to call GitHub MCP tools
 - Update ReviewComments.md status to `finalized (non-GitHub)`
 - If `ReviewContext.md` contains `## Hardened State`, update it so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` remain `none`, and `Reconciliation` is `current`
+- If manual posting instructions were already provided for this review job, preserve the existing section and do not append a duplicate copy
 
 **Provide Manual Posting Instructions:**
 

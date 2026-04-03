@@ -14,32 +14,48 @@ export type AgentName = "PAW" | "PAW Review";
 export interface HandoffParams {
   /** The target agent to invoke */
   target_agent: AgentName;
-  /** The normalized Work ID (feature slug) */
+  /** Workflow work ID or review identifier, depending on the target agent */
   work_id: string;
   /** Optional inline instruction to pass to the target agent (e.g., user feedback, prompt file paths, or agent-to-agent context) */
   inline_instruction?: string;
 }
 
 /**
- * Pattern to validate Work ID (feature slug) format.
- * Work IDs must contain only lowercase letters, numbers, and hyphens.
+ * Patterns to validate PAW workflow and review resume identifiers.
  */
 const WORK_ID_PATTERN = /^[a-z0-9-]+$/;
+const REVIEW_ID_PATTERN = /^(?:PR-\d+(?:-[a-z0-9-]+)?|[a-z0-9-]+)$/;
 
 /**
- * Validates Work ID format.
- *
- * @param workId - Work ID to validate
- * @throws Error if Work ID is invalid
+ * Validates the workflow work ID or review identifier for a handoff target.
  */
-function validateWorkId(workId: string): void {
-  if (!workId || workId.trim().length === 0) {
-    throw new Error("Work ID cannot be empty");
+function getContextLabel(targetAgent: AgentName): string {
+  return targetAgent === "PAW Review" ? "Review ID" : "Work ID";
+}
+
+function getConfirmationTarget(targetAgent: AgentName): string {
+  return targetAgent === "PAW Review" ? "review" : "feature";
+}
+
+function validateContextId(targetAgent: AgentName, contextId: string): void {
+  if (!contextId || contextId.trim().length === 0) {
+    throw new Error(`${getContextLabel(targetAgent)} cannot be empty`);
   }
 
-  if (!WORK_ID_PATTERN.test(workId)) {
+  if (targetAgent === "PAW Review") {
+    if (!REVIEW_ID_PATTERN.test(contextId)) {
+      throw new Error(
+        `Invalid review identifier format: "${contextId}". ` +
+          'Review identifiers must be PR IDs like "PR-123" or "PR-123-my-repo", or lowercase local review slugs.'
+      );
+    }
+
+    return;
+  }
+
+  if (!WORK_ID_PATTERN.test(contextId)) {
     throw new Error(
-      `Invalid Work ID format: "${workId}". ` +
+      `Invalid Work ID format: "${contextId}". ` +
         "Work IDs must contain only lowercase letters, numbers, and hyphens."
     );
   }
@@ -52,7 +68,7 @@ function validateWorkId(workId: string): void {
  * @returns Formatted prompt string
  */
 function constructPrompt(params: HandoffParams): string {
-  let prompt = `Work ID: ${params.work_id}`;
+  let prompt = `${getContextLabel(params.target_agent)}: ${params.work_id}`;
   prompt += `\n\n${buildResumeInstructions(params.target_agent)}`;
 
   if (params.inline_instruction) {
@@ -65,7 +81,7 @@ function constructPrompt(params: HandoffParams): string {
 function buildResumeInstructions(targetAgent: AgentName): string {
   if (targetAgent === 'PAW Review') {
     return [
-      'Before acting, read the existing review artifacts for this work item.',
+      'Before acting, read the existing review artifacts for this review identifier.',
       'Use `ReviewContext.md` as the durable review-state source when embedded hardened state is present.',
       'If hardened review state is absent, continue in legacy best-effort mode and say so explicitly.',
     ].join('\n');
@@ -90,9 +106,10 @@ async function invokeAgent(
   outputChannel: vscode.OutputChannel
 ): Promise<void> {
   const prompt = constructPrompt(params);
+  const contextLabel = getContextLabel(params.target_agent);
 
   outputChannel.appendLine(`[INFO] Invoking agent: ${params.target_agent}`);
-  outputChannel.appendLine(`[INFO] Work ID: ${params.work_id}`);
+  outputChannel.appendLine(`[INFO] ${contextLabel}: ${params.work_id}`);
   if (params.inline_instruction) {
     outputChannel.appendLine(`[INFO] Inline instruction provided`);
   }
@@ -124,8 +141,10 @@ export function registerHandoffTool(
   const tool = vscode.lm.registerTool<HandoffParams>("paw_new_session", {
     async prepareInvocation(options, _token) {
       const { target_agent, work_id, inline_instruction } = options.input;
+      const contextLabel = getContextLabel(target_agent);
+      const contextTarget = getConfirmationTarget(target_agent);
 
-      let message = `This will start a new chat with **${target_agent}** for feature: ${work_id}`;
+      let message = `This will start a new chat with **${target_agent}** for ${contextTarget}: ${work_id}`;
       if (inline_instruction) {
         message += `\n\nWith instruction: "${inline_instruction}"`;
       }
@@ -134,7 +153,9 @@ export function registerHandoffTool(
         invocationMessage: `Calling ${target_agent} for ${work_id}`,
         confirmationMessages: {
           title: "Call PAW Agent",
-          message: new vscode.MarkdownString(message),
+          message: new vscode.MarkdownString(
+            `${contextLabel}: ${work_id}\n\n${message}`
+          ),
         },
       };
     },
@@ -149,8 +170,8 @@ export function registerHandoffTool(
 
         const params = options.input;
 
-        // Validate Work ID
-        validateWorkId(params.work_id);
+        // Validate work/review identifier
+        validateContextId(params.target_agent, params.work_id);
 
         // Invoke the target agent
         await invokeAgent(params, outputChannel);

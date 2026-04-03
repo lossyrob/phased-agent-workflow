@@ -67,4 +67,41 @@ describe("review terminal state tracking", { timeout: 240_000 }, () => {
     assert.match(reviewContext, /Pending Review ID:\s*`none`/i);
     assert.match(reviewContext, /Reconciliation:\s*current/i);
   });
+
+  it("does not append duplicate manual posting instructions when terminal state already exists", async () => {
+    const skillContent = await loadSkill("paw-review-github");
+    const identifier = "feature-review-state-idempotent";
+
+    const ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "review-terminal-state-tracking-idempotent",
+      systemPrompt: buildGithubPrompt(skillContent, identifier, true),
+      answerer: new RuleBasedAnswerer([(req) => req.choices?.[0] ?? "yes"], false),
+      excludedTools: ["skill", "sql"],
+    });
+    contexts.push(ctx);
+
+    await seedReviewArtifacts(ctx.fixture.workDir, identifier, true, {
+      outputGithubStatus: "resolved",
+      terminalState: "manual-posting-provided",
+      includeManualPostingInstructions: true,
+    });
+
+    await ctx.session.sendAndWait({
+      prompt: [
+        `Process .paw/reviews/${identifier}/ReviewComments.md for posting.`,
+        "This review already has manual posting instructions for a local branch review.",
+        "Preserve the existing terminal state and avoid duplicating the manual posting section.",
+      ].join("\n"),
+    }, LIVE_TURN_TIMEOUT);
+
+    const reviewComments = await readFile(join(ctx.fixture.workDir, ".paw/reviews", identifier, "ReviewComments.md"), "utf-8");
+    const reviewContext = await readFile(join(ctx.fixture.workDir, ".paw/reviews", identifier, "ReviewContext.md"), "utf-8");
+
+    const manualSections = reviewComments.match(/^## Manual Posting Instructions$/gm) ?? [];
+    assert.strictEqual(manualSections.length, 1);
+    assert.match(reviewContext, /`output:github` \| `resolved` \| `stage`/);
+    assert.match(reviewContext, /### Terminal External Review State[\s\S]*- `manual-posting-provided`/);
+    assert.match(reviewContext, /Pending Review ID:\s*`none`/i);
+  });
 });

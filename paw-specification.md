@@ -1077,7 +1077,7 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 - Only relevant when `Final Review Mode` is `society-of-thought`
 - Controls whether specialists share a pool, pin to specific models, or use mixed specialist/model assignment
 
-**Final Review Perspectives** (Optional, defaults to `none`)
+**Final Review Perspectives** (Optional, defaults to `auto`)
 - Only relevant when `Final Review Mode` is `society-of-thought`
 - Applies perspective overlays such as temporal or adversarial lenses without changing specialist identity
 

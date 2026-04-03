@@ -15,16 +15,18 @@ describe("configured review mode enforcement content", () => {
   it("blocks unsupported planning review modes instead of silently downgrading", async () => {
     const planning = await readRepoFile("skills/paw-planning-docs-review/SKILL.md");
 
-    assert.match(planning, /set `procedure:planning-review` to `blocked`/);
+    assert.match(planning, /persist `procedure:planning-review` as `blocked` in `WorkflowContext\.md`/);
     assert.match(planning, /Do not run a single-model fallback\./);
-    assert.doesNotMatch(planning, /Running single-model review\./);
+    assert.match(planning, /When hardened state is absent, continue in legacy best-effort mode/i);
+    assert.match(planning, /run a single-model fallback review/i);
   });
 
   it("blocks unsupported final review modes instead of silently downgrading", async () => {
     const finalReview = await readRepoFile("skills/paw-final-review/SKILL.md");
 
-    assert.match(finalReview, /set `procedure:final-review` to `blocked`/);
+    assert.match(finalReview, /persist `procedure:final-review` as `blocked` in `WorkflowContext\.md`/);
     assert.match(finalReview, /Do not run a single-model fallback\./);
-    assert.doesNotMatch(finalReview, /Running single-model review\./);
+    assert.match(finalReview, /When hardened state is absent, continue in legacy best-effort mode/i);
+    assert.match(finalReview, /run a single-model fallback review/i);
   });
 });

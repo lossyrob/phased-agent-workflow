@@ -252,7 +252,7 @@ Each comment shows its complete history:
 - **Assessment** — Critic evaluation
 - **Updated** — Refined version if modification was recommended
 - **Final** — Ready for posting or skipped per critique
-- **Posted** — GitHub pending review ID
+- **Posted** — Per-comment pending review/comment status in `ReviewComments.md`
     - Regenerate with adjusted tone if requested
 
 ---
@@ -275,7 +275,7 @@ When hardened state is present, `ReviewContext.md` also stores:
 
 - Review-stage items (`understanding` → `evaluation` → `output`)
 - The configured review mode and procedure-resolution markers
-- Terminal external-review state such as pending review creation, manual-posting guidance, or posted outcome
+- Terminal external-review state such as pending review creation or manual-posting guidance
 
 ### DerivedSpec.md
 
@@ -355,7 +355,6 @@ When hardened state is present, PAW Review persists the review job's external ou
 
 - Pending review created on GitHub
 - Manual posting guidance provided for non-GitHub contexts
-- Posted/skipped completion state after output is finalized
 
 This lets resumed sessions report whether a review is already awaiting submission instead of reverting to an earlier inferred stage.
 

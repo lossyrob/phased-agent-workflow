@@ -1,9 +1,26 @@
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 
-export async function seedReviewArtifacts(workDir: string, identifier: string, hardened: boolean): Promise<void> {
+interface SeedReviewArtifactOptions {
+  outputGithubStatus?: "pending" | "in_progress" | "resolved";
+  terminalState?: "none" | "pending-review-created" | "manual-posting-provided";
+  pendingReviewId?: string;
+  pendingReviewUrl?: string;
+  includeManualPostingInstructions?: boolean;
+}
+
+export async function seedReviewArtifacts(
+  workDir: string,
+  identifier: string,
+  hardened: boolean,
+  options: SeedReviewArtifactOptions = {},
+): Promise<void> {
   const dir = join(workDir, ".paw/reviews", identifier);
   await mkdir(dir, { recursive: true });
+  const outputGithubStatus = options.outputGithubStatus ?? "pending";
+  const terminalState = options.terminalState ?? "none";
+  const pendingReviewId = options.pendingReviewId ?? "none";
+  const pendingReviewUrl = options.pendingReviewUrl ?? "none";
 
   const reviewContextLines = [
     "# ReviewContext",
@@ -51,14 +68,14 @@ export async function seedReviewArtifacts(workDir: string, identifier: string, h
       "- `output:feedback` | `resolved` | `stage`",
       "- `output:critic` | `resolved` | `stage`",
       "- `output:critique-response` | `resolved` | `stage`",
-      "- `output:github` | `pending` | `stage`",
+      `- \`output:github\` | \`${outputGithubStatus}\` | \`stage\``,
       "- `procedure:review-mode` | `resolved` | `procedure`",
       "",
       "### Terminal External Review State",
-      "- `none`",
+      `- \`${terminalState}\``,
       "",
-      "Pending Review ID: `none`",
-      "Pending Review URL: `none`",
+      `Pending Review ID: \`${pendingReviewId}\``,
+      `Pending Review URL: \`${pendingReviewUrl}\``,
       "",
     );
   }
@@ -94,7 +111,17 @@ export async function seedReviewArtifacts(workDir: string, identifier: string, h
     "- **Impact**: Duplicate logic risks drift",
     "- **Best Practice**: Reuse shared normalization helpers",
     "",
-    "**Final**: ✓ Ready for GitHub posting",
-    "",
-  ].join("\n"));
+      "**Final**: ✓ Ready for GitHub posting",
+      "",
+      ...(options.includeManualPostingInstructions
+        ? [
+            "---",
+            "",
+            "## Manual Posting Instructions",
+            "",
+            "Existing manual posting guidance.",
+            "",
+          ]
+        : []),
+    ].join("\n"));
 }

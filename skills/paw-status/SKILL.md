@@ -51,7 +51,7 @@ Read WorkflowContext.md for:
 - Plan Generation Mode: `single-model` | `multi-model`
 - Plan Generation Models: comma-separated model names (for multi-model modes)
 - Implementation Model: `none` (session default) | concrete model name
-- Planning Review Mode: `single-model` | `multi-model`
+- Planning Review Mode: `single-model` | `multi-model` | `society-of-thought`
 - Planning Review Interactive: `true` | `false` | `smart`
 - Final Review Specialists: `all` | `adaptive:<N>` | comma-separated list (when society-of-thought)
 - Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)

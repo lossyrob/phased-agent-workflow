@@ -394,7 +394,7 @@ When hardened state is present, `ReviewContext.md` also stores:
 
 - Required review-stage items (`understanding` → `evaluation` → `output`)
 - The configured review mode and procedure-resolution markers
-- Terminal external-review state such as pending review creation, manual-posting guidance, or posted outcome
+- Terminal external-review state such as pending review creation or manual-posting guidance
 
 If the section is absent, PAW Review falls back to legacy best-effort mode and reports that status explicitly.
 
@@ -619,7 +619,7 @@ Each comment shows its complete history:
 2. **Assessment** — Critic evaluation (Include/Modify/Skip recommendation)
 3. **Updated** — Refined version if modification was recommended
 4. **Final** — Ready for posting or skipped per critique
-5. **Posted** — GitHub pending review ID (after GitHub posting)
+5. **Posted** — Per-comment pending review/comment status in `ReviewComments.md` (after GitHub posting)
 
 **Key Sections:**
 - **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice

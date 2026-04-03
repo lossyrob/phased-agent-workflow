@@ -43,7 +43,8 @@ describe("control-state reconciliation content", () => {
     assert.match(pawAgent, /If reconciliation cannot make the state `current`, STOP and report the blocker/i);
     assert.match(pawAgent, /do not advance past required activity items, gate items, or configured procedure items/i);
 
-    assert.match(pawPr, /Required activity items, gate items, and configured procedure items must all be `resolved` or `not_applicable`/);
+    assert.match(pawPr, /Required activity items earlier than `final-pr`, plus all gate items and configured procedure items, must all be `resolved` or `not_applicable`/);
+    assert.match(pawPr, /Treat `final-pr` as the current activity/i);
     assert.match(pawPr, /hardened protections are inactive/i);
   });
 });

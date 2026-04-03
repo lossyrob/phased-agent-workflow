@@ -163,7 +163,9 @@ After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resoluti
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
-If `Final Review Mode` is `multi-model` or `society-of-thought`, preserve the configured mode in status/control-state surfaces, set `procedure:final-review` to `blocked`, and report: "Configured final review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
+If `Final Review Mode` is `multi-model` or `society-of-thought`:
+- When `WorkflowContext.md` contains `## Hardened State`, preserve the configured mode in status/control-state surfaces, persist `procedure:final-review` as `blocked` in `WorkflowContext.md`, and report: "Configured final review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
+- When hardened state is absent, continue in legacy best-effort mode, explicitly report that hardened protections are inactive, and run a single-model fallback review in `REVIEW.md`.
 
 If `Final Review Mode` is `single-model`, execute the shared review prompt above and save the output to `REVIEW.md`.
 {{/vscode}}

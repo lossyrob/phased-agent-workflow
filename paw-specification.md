@@ -202,6 +202,22 @@ The final PR diff against `main` shows zero `.paw/` file changes. The PR descrip
 
 **VS Code Integration:** The "Stop Tracking Artifacts" command provides a mid-workflow escape hatch, switching any tracked workflow to `never-commit`.
 
+### Hardened Control-State Model
+
+Current PAW workflows embed a compact `## Hardened State` section inside `WorkflowContext.md`.
+
+- The section records required activities, gate items, configured-procedure items, and lifecycle markers that must resolve before the workflow can advance.
+- Built-in TODOs mirror the active required items from this section for in-session execution, but the embedded artifact state remains the durable source of truth across resume and cross-runtime handoff.
+- The section is portable: CLI agents and VS Code surfaces both read the same serialized state instead of reconstructing workflow progress from prompt prose alone.
+
+If the section is absent, PAW treats the workflow as **legacy best-effort mode**. Older workflows remain usable, but transition, status, and resume surfaces explicitly report that hardened protections are inactive.
+
+### Gate Reconciliation and Exact Procedure Handling
+
+Before stage transitions, status reporting, handoff/resume, or repository mutation, PAW reconciles the embedded workflow state with artifact, git, and PR reality. Unresolved required items block progression with explicit reasons instead of relying on inferred progress.
+
+Planning-docs review and final review must run the configured procedure exactly. If the configured mode cannot run, PAW records a blocked outcome rather than silently downgrading to a different mode. VS Code surfaces preserve and forward the same configuration; they do not implement a separate workflow runtime in `src/`.
+
 ---
 
 ## Repository Layout & Naming
@@ -1056,6 +1072,27 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 - Only relevant when `Final Review Mode` is `society-of-thought`
 - `parallel`: All specialists review independently, then synthesis
 - `debate`: Thread-based debate with specialist interaction
+
+**Final Review Specialist Models** (Optional, defaults to `none`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- Controls whether specialists share a pool, pin to specific models, or use mixed specialist/model assignment
+
+**Final Review Perspectives** (Optional, defaults to `none`)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- Applies perspective overlays such as temporal or adversarial lenses without changing specialist identity
+
+**Final Review Perspective Cap** (Optional)
+- Only relevant when `Final Review Mode` is `society-of-thought`
+- Limits how many perspectives can be applied per specialist
+
+**Planning Review Configuration** (Optional)
+- `Planning Docs Review` enables or disables the planning-docs review gate
+- When enabled, `Planning Review Mode`, `Planning Review Interactive`, `Planning Review Models`, `Planning Review Specialists`, `Planning Review Interaction Mode`, `Planning Review Specialist Models`, `Planning Review Perspectives`, and `Planning Review Perspective Cap` use the same configuration shape as final review
+
+**Hardened State Section** (Current workflows)
+- The embedded `## Hardened State` block records required activities, gate items, configured-procedure items, and lifecycle markers
+- Presence of this section enables hardened behavior; absence means legacy best-effort mode
+- Built-in TODOs mirror active required items from this block and can be regenerated from it
 
 #### Usage
 

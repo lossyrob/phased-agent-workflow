@@ -50,6 +50,16 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 Every subagent MUST call `paw_get_skill` FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
 
+## Review Control-State and Stage Gating
+
+Current review jobs embed a compact `## Hardened State` section inside `ReviewContext.md`.
+
+- The section records the review-job identifier, configured review mode, required stage items, and terminal external-review outcomes.
+- `ReviewComments.md` remains the complete feedback history, while the embedded control state tracks whether the job is still in understanding, evaluation, output, or a terminal posting/manual-posting state.
+- Resume, status, critique, and posting paths reconcile the embedded state before advancing so the workflow re-enters the same review job instead of re-inferring progress from prompt prose.
+
+If the hardened section is absent, PAW Review remains usable in **legacy best-effort mode** and explicitly reports that the new protections are inactive.
+
 ## Cross-Repository Review
 
 PAW Review supports coordinated review of multiple related PRs across repositories.
@@ -104,7 +114,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Outputs:**
 
-- `ReviewContext.md` — PR metadata, changed files, flags
+- `ReviewContext.md` — PR metadata, changed files, flags, and embedded review control state
 - `ResearchQuestions.md` — Research questions for baseline analysis
 - `CodeResearch.md` — Pre-change baseline understanding
 - `DerivedSpec.md` — Reverse-engineered intent and acceptance criteria
@@ -114,6 +124,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 1. **Fetch PR metadata and create ReviewContext.md**
     - Document all changed files with additions/deletions
     - Set flags: CI failures, breaking changes suspected
+    - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when hardened state is active
 
 2. **Research pre-change baseline**
     - Analyze codebase at base commit (pre-change state)
@@ -150,6 +161,8 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 - `REVIEW-{SPECIALIST}.md` — Per-specialist findings
 - `REVIEW-SYNTHESIS.md` — Confidence-weighted synthesized findings
 
+**Stage gate:** Evaluation begins only after the Understanding items recorded in `ReviewContext.md` are resolved. Single-model mode resolves through `ImpactAnalysis.md` + `GapAnalysis.md`; society-of-thought mode resolves through `REVIEW-SYNTHESIS.md`.
+
 **Process (single-model):**
 
 1. **Analyze impact**
@@ -179,6 +192,8 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 2. Specialists review PR diff with distinct cognitive strategies
 3. Synthesis merges findings with confidence weighting and conflict resolution
 
+The configured review mode remains authoritative. If the expected procedure cannot run, the workflow blocks instead of silently switching to another mode.
+
 See [Society-of-Thought Review](../guide/society-of-thought-review.md) for configuration details.
 
 ---
@@ -198,6 +213,8 @@ See [Society-of-Thought Review](../guide/society-of-thought-review.md) for confi
 
 - `ReviewComments.md` — Complete feedback with full comment history
 - **GitHub pending review** (GitHub context) — Draft review with filtered comments
+
+**Stage gate:** Output begins only when the evaluation artifacts required by the configured review mode are resolved in `ReviewContext.md`.
 
 **Process:**
 
@@ -224,8 +241,9 @@ The Output stage uses an **iterative feedback-critique pattern**:
 4. **GitHub Posting** (`paw-review-github`, GitHub only)
     - Filter to only comments marked "Ready for GitHub posting"
     - Create pending review with filtered comments
+    - Persist the terminal external-review outcome back into `ReviewContext.md`
     - Skipped comments remain in artifact but are NOT posted
-    - Non-GitHub: provides manual posting instructions
+    - Non-GitHub: provides manual posting instructions and records that manual-posting guidance was provided
 
 **Comment Evolution in ReviewComments.md:**
 
@@ -252,6 +270,12 @@ Authoritative parameter source for the review workflow.
 - Changed files summary
 - CI Status and flags
 - Description and metadata
+
+When hardened state is present, `ReviewContext.md` also stores:
+
+- Review-stage items (`understanding` → `evaluation` → `output`)
+- The configured review mode and procedure-resolution markers
+- Terminal external-review state such as pending review creation, manual-posting guidance, or posted outcome
 
 ### DerivedSpec.md
 
@@ -322,6 +346,18 @@ Complete feedback with full comment history showing evolution from original to p
 - Updated comment/suggestion (if modified per critique)
 - Final status (`Ready for GitHub posting` or `Skipped per critique`)
 - Posted status (pending review ID after GitHub posting)
+
+`**Final**:` markers determine which comments `paw-review-github` can post. Pending review IDs or manual-posting outcomes live in `ReviewContext.md`, so status and resume surfaces can report the terminal review state without re-reading GitHub first.
+
+## Terminal External-Review Outcomes
+
+When hardened state is present, PAW Review persists the review job's external outcome back into `ReviewContext.md`:
+
+- Pending review created on GitHub
+- Manual posting guidance provided for non-GitHub contexts
+- Posted/skipped completion state after output is finalized
+
+This lets resumed sessions report whether a review is already awaiting submission instead of reverting to an earlier inferred stage.
 
 ---
 

@@ -71,6 +71,9 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 | Final Review Models | Comma-separated model names |
 | Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` (society-of-thought only) |
 | Final Review Interaction Mode | `parallel` or `debate` (society-of-thought only) |
+| Final Review Specialist Models | `none`, model pool, pinned pairs, or mixed (society-of-thought only) |
+| Final Review Perspectives | `none`, `auto`, or comma-separated perspective names (society-of-thought only) |
+| Final Review Perspective Cap | Positive integer (society-of-thought only) |
 | Planning Docs Review | `enabled` or `disabled` |
 | Plan Generation Mode | `single-model` or `multi-model` |
 | Plan Generation Models | Comma-separated model names |
@@ -88,6 +91,13 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 - `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW and companion tooling establish and re-prove the correct execution checkout during initialization, reuse, and resume before mutating repository state
 - `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
 - `WorkflowContext.md` deliberately stores portable metadata only; VS Code may keep machine-specific worktree paths in local extension state, while Copilot CLI sessions rely on the committed metadata plus git/worktree evidence instead
+
+**Hardened-state section (current workflows):**
+
+- `WorkflowContext.md` includes a compact `## Hardened State` block recording required activities, gate items, configured-procedure items, and lifecycle markers
+- Built-in TODOs mirror the active required items from this block for in-session execution, but the embedded artifact state remains the durable source of truth
+- `paw-transition`, `paw-status`, handoff/resume paths, and final PR readiness checks reconcile against this section before proceeding
+- If the section is absent, the workflow runs in legacy best-effort mode and reports that hardened protections are inactive
 
 ### Spec.md
 
@@ -222,6 +232,8 @@ This decouples intent capture from phase elaboration, preserving implementer mom
 
 When perspectives are active, each finding includes a `**Perspective**` field indicating which lens surfaced it (`baseline` for findings without a perspective overlay).
 
+`REVIEW-SYNTHESIS.md` is also the artifact that resolves the configured evaluation/review procedure for society-of-thought flows. If the configured mode requires synthesis and this artifact is missing, the workflow stays blocked instead of silently falling back to another procedure.
+
 ---
 
 ## Review Workflow Artifacts
@@ -242,6 +254,12 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 | Changed Files | Count, additions, deletions |
 | CI Status | Passing, failing, pending |
 | Flags | CI failures, breaking changes suspected |
+
+**Hardened-state section (current reviews):**
+
+- `ReviewContext.md` includes a compact `## Hardened State` block for review-job identifier, configured review mode, required stage items, and terminal external-review outcomes
+- The section lets resume, status, critique, and posting paths re-enter the same review job without re-inferring state from prompt prose
+- If the section is absent, PAW Review uses legacy best-effort mode and says so explicitly
 
 ### ResearchQuestions.md
 
@@ -329,6 +347,8 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 - **Comment text** — What gets posted
 - **Rationale** — Evidence, baseline pattern, impact, best practice
 - **Assessment** — Usefulness, accuracy, trade-offs (never posted)
+- **Final marker** — `**Final**:` status that determines whether the comment is ready for posting
+- **Posted/manual state** — Pending review IDs or manual-posting guidance reflected in the associated review control state
 
 ---
 

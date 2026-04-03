@@ -58,7 +58,7 @@ After implementation:
 - [x] **Phase 2: PAW Gate Reconciliation** - Make PAW transition, status, and configured-review paths enforce the embedded control state and block on unresolved gates.
 - [x] **Phase 3: Review State Tracking** - Make PAW Review sequence and terminal external-review state derive from explicit review control state.
 - [x] **Phase 4: VS Code Contract Parity** - Align extension types, initialization, and status surfaces with the explicit workflow contract without relocating orchestration logic.
-- [ ] **Phase 5: Documentation** - Record the as-built design and update workflow/spec/reference docs for the new state model.
+- [x] **Phase 5: Documentation** - Record the as-built design and update workflow/spec/reference docs for the new state model.
 
 ## Phase Candidates
 
@@ -202,8 +202,8 @@ After implementation:
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Documentation build passes: `mkdocs build --strict`
-- [ ] Repository verification passes after documentation updates: `npm run lint && npm run compile && npm test`
+- [x] Documentation build passes: `mkdocs build --strict`
+- [x] Repository verification passes after documentation updates: `npm run lint && npm run compile && npm test`
 
 #### Manual Verification:
 - [ ] Docs.md accurately describes the as-built control-state, review-state, and reconciliation model

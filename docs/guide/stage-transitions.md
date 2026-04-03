@@ -36,6 +36,16 @@ continue
 
 This tells the PAW agent to proceed to the recommended next activity.
 
+## Hardened Control-State and Reconciliation
+
+Current PAW workflows embed a compact `## Hardened State` section inside `WorkflowContext.md` (and `ReviewContext.md` for PAW Review).
+
+- The embedded state records required activities, gate items, configured-procedure items, and terminal outcomes that matter for progression.
+- Built-in TODOs mirror the active required items for execution convenience, but the embedded artifact state remains the durable source of truth across resume and handoff.
+- Transition, status, handoff, resume, and repository-mutation paths reconcile against this state before proceeding.
+
+If the hardened section is absent, PAW continues in **legacy best-effort mode** and reports that hardened protections are inactive.
+
 ## Review Policies
 
 PAW supports four review policies that control when the workflow pauses for human review at artifact boundaries:
@@ -134,6 +144,16 @@ Session Policy: per-stage
 
 To change the policy for an existing workflow, edit `WorkflowContext.md` directly.
 
+## Exact Configured Procedure Enforcement
+
+Planning-docs review, final review, and PAW Review evaluation run the configured review mode exactly:
+
+- `single-model` runs the single-model procedure
+- `multi-model` runs the configured multi-model procedure
+- `society-of-thought` runs the specialist-based procedure
+
+If the configured procedure cannot run in the current context, PAW blocks with an explicit reason instead of silently downgrading to a different mode.
+
 ## Inline Instructions
 
 You can customize activity behavior by adding instructions to your requests:
@@ -202,7 +222,8 @@ The `paw-status` skill analyzes:
 2. **Phase Progress**: Current implementation phase and completion status
 3. **Git State**: Branch, commits ahead/behind, uncommitted changes
 4. **PR Analysis**: Open PRs, review comments needing attention
-5. **Recommended Actions**: Clear next steps based on current state
+5. **Control-State Status**: Reconciled gate items, configured-procedure state, terminal review state, and legacy-mode reporting
+6. **Recommended Actions**: Clear next steps based on current state
 
 ## Handling PR Review Comments
 
@@ -273,3 +294,4 @@ Session Policy controls chat context management. This is primarily relevant for 
 
 Session Policy is stored in `WorkflowContext.md` and can be changed by editing the file directly.
 
+When `per-stage` mode opens a fresh session in VS Code, the next session resumes from the same embedded control state in `WorkflowContext.md` or `ReviewContext.md`. Session boundaries do not reset required activities or review-stage progress.

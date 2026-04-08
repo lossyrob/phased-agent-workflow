@@ -97,24 +97,30 @@ git rm -r .paw/work/ && git commit -m "Remove PAW workflow artifacts"
 
 ## Configuration
 
-### Custom Prompts Directory
+### Custom Agent Directory
 
-By default, PAW installs agents to the VS Code-standard prompts directory for your platform:
+PAW requires **VS Code 1.109 or newer** for native prompt and skill contributions.
 
-- **Windows**: `%APPDATA%\Code\User\prompts\`
-- **macOS**: `~/Library/Application Support/Code/User/prompts/`
-- **Linux**: `~/.config/Code/User/prompts/`
+By default, PAW installs agents to the user agent directory for your platform:
 
-To use a custom location, set the `paw.promptDirectory` setting:
+- **Windows**: `%USERPROFILE%\\.copilot\\agents\\`
+- **macOS**: `~/.copilot/agents/`
+- **Linux**: `~/.copilot/agents/`
+- **WSL**: `~/.copilot/agents/` inside the Linux home directory
+
+To use a custom location, set the `paw.agentDirectory` setting:
 
 ```json
 {
-  "paw.promptDirectory": "/path/to/custom/prompts"
+  "paw.agentDirectory": "/path/to/custom/agents"
 }
 ```
 
 !!! note "VS Code Variants"
-    PAW automatically detects VS Code variants (Insiders, Code-OSS, VSCodium) and uses their appropriate configuration directories.
+    PAW still detects VS Code variants (Insiders, Code-OSS, VSCodium) when cleaning up legacy prompt-directory installs from older releases.
+
+!!! note "Deprecated fallback"
+    `paw.promptDirectory` is still honored as a backward-compatible fallback, but new configurations should use `paw.agentDirectory`.
 
 ### Dedicated Worktree Execution
 
@@ -143,15 +149,26 @@ This is useful for:
 
 ## Agent Installation
 
-When you install the PAW extension, all PAW agents are automatically installed to your VS Code prompts directory. The extension handles:
+When you install the PAW extension, all PAW agents are automatically installed to `~/.copilot/agents` (or your configured override). The extension handles:
 
 - **Fresh installations**: All agents installed on first activation
 - **Upgrades**: Old agents removed, new agents installed
-- **Downgrades**: Version detection ensures correct agents for extension version
 - **Repairs**: Missing agent files are automatically restored
+- **Migration cleanup**: Legacy `User/prompts` installs from older releases are removed during upgrade
+
+Downgrading to a pre-migration release is **not yet validated end-to-end**. If you install an older PAW VSIX after using a release that installs agents into `~/.copilot/agents`, remove the PAW-managed files from `~/.copilot/agents` and reload VS Code if the older release does not behave correctly.
 
 !!! info "Agent Discovery"
     After installation, you may need to reload VS Code for GitHub Copilot to discover the new agents. If agents don't appear in Copilot Chat, try reloading the window (`Ctrl+Shift+P` → "Developer: Reload Window").
+
+## Prompt Files and Skills
+
+PAW prompt files and skills are now contributed natively by the extension:
+
+- **Prompt files** (`/paw`, `/paw-review`) are provided through `chatPromptFiles`
+- **Skills** are provided through `chatSkills`
+
+These assets are bundled with the extension and do not need separate on-disk installation.
 
 ## Troubleshooting
 
@@ -167,9 +184,10 @@ If PAW commands don't appear in Command Palette:
 
 If PAW agents don't show up in GitHub Copilot Chat:
 
-1. Verify agents were installed: Check your prompts directory for `*.agent.md` files
+1. Verify agents were installed: Check your agent directory for `*.agent.md` files
 2. Reload VS Code: `Ctrl+Shift+P` → "Developer: Reload Window"
 3. Check Copilot is active and signed in
+4. Confirm you're on VS Code 1.109 or newer
 
 ### Initialization Failures
 
@@ -195,12 +213,13 @@ PAW stores only portable execution metadata in `WorkflowContext.md`. The machine
 
 When using VS Code with WSL:
 
-- **Prompts directory**: The extension resolves the Windows-side path automatically (`/mnt/c/Users/<username>/AppData/Roaming/Code/User/prompts/`)
-- **File permissions**: Ensure the WSL user has write access to the Windows prompts directory
+- **Agent directory**: PAW installs agents into the Linux-side home directory (`~/.copilot/agents/`)
+- **Legacy cleanup**: Older prompt-directory installs are cleaned up from the Windows-side VS Code path when it can be resolved
+- **File permissions**: Ensure the WSL user has write access to `~/.copilot/agents/`
 - **Git operations**: Git runs in the WSL environment; ensure git is installed in WSL
 
-If agents aren't found, verify the prompts directory exists:
+If agents aren't found, verify the agent directory exists:
 
 ```bash
-ls /mnt/c/Users/$USER/AppData/Roaming/Code/User/prompts/
+ls ~/.copilot/agents/
 ```

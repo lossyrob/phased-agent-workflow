@@ -15,15 +15,15 @@
       }
     },
     {
-      // Watch mode: continuously recompile TypeScript on file changes.
-      // Useful for iterative development. Start this task manually with
-      // Terminal > Run Task > "npm: watch"
+      // Watch mode: keeps TypeScript output current and rerenders VS Code
+      // skill assets when files under skills/ change. Start this task
+      // manually with Terminal > Run Task > "npm: watch"
       "type": "npm",
       "script": "watch",
       "group": "build",
       "problemMatcher": "$tsc-watch",
       "label": "npm: watch",
-      "detail": "tsc -watch -p ./",
+      "detail": "watch TypeScript and VS Code skill assets",
       "isBackground": true,
       "presentation": {
         "reveal": "silent"

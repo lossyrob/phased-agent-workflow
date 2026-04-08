@@ -436,16 +436,29 @@ suite('Initialize Work Item Helpers', () => {
       'paw.executionRegistry',
       {}
     );
+    const registryEntry = registry[createExecutionRegistryLookupKey(
+      executionMetadata.repositoryIdentity,
+      executionMetadata.executionBinding
+    )];
     assert.deepStrictEqual(
-      registry[createExecutionRegistryLookupKey(
-        executionMetadata.repositoryIdentity,
-        executionMetadata.executionBinding
-      )],
-      buildExecutionRegistryEntry(
-        executionMetadata,
-        '/tmp/repo-worktree',
-        'feature/test-worktree'
-      )
+      {
+        workId: registryEntry?.workId,
+        repositoryIdentity: registryEntry?.repositoryIdentity,
+        executionBinding: registryEntry?.executionBinding,
+        worktreePath: registryEntry?.worktreePath,
+        targetBranch: registryEntry?.targetBranch,
+      },
+      {
+        workId: executionMetadata.workId,
+        repositoryIdentity: executionMetadata.repositoryIdentity,
+        executionBinding: executionMetadata.executionBinding,
+        worktreePath: '/tmp/repo-worktree',
+        targetBranch: 'feature/test-worktree',
+      }
+    );
+    assert.ok(
+      registryEntry?.updatedAt,
+      'Registry entry should record an updatedAt timestamp'
     );
 
     const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(

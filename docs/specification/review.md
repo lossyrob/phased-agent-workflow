@@ -41,14 +41,14 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | `paw-review-critic` | Activity | Output | Assessment sections |
 | `paw-review-github` | Activity | Output | GitHub pending review |
 
-**Tool Support:**
+**Skill Delivery:**
 
-- `paw_get_skills` — Retrieves catalog of available skills
-- `paw_get_skill` — Loads specific skill content by name
+- VS Code contributes review skills natively through `chatSkills`
+- Copilot CLI reads installed review skill files directly
 
 **Subagent Skill Loading:**
 
-Every subagent MUST call `paw_get_skill` FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
+Every subagent MUST load its assigned skill FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load the `paw-review-<skill-name>` skill, then execute the activity."
 
 ## Cross-Repository Review
 

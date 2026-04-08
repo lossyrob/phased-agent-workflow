@@ -30,7 +30,7 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 **Architecture:** The PAW agent uses a skills-based architecture with a **hybrid execution model**. Skill loading is platform-specific:
 
 1. Loads the `paw-workflow` skill for orchestration guidance
-2. Resolves activity skills using the current platform's mechanism (`paw_get_skills` / `paw_get_skill` in VS Code; installed skill files in Copilot CLI)
+2. Loads activity skills through the current platform's native skill system (extension-contributed skills in VS Code; installed skill files in Copilot CLI)
 3. Delegates activities to specialized skills
 4. Applies Review Policy and Session Policy for workflow control
 

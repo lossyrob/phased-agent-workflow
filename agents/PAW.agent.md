@@ -201,12 +201,7 @@ Detect when pre-spec ideation would be beneficial (exploratory language, explici
 
 For each user request:
 1. **Reason about intent**: What does the user want to accomplish?
-{{#vscode}}
-2. **Consult skills catalog** via `paw_get_skills`: Which skill has this capability?
-{{/vscode}}
-{{#cli}}
-2. **Consult skills catalog**: Identify skill from `skills/*/SKILL.md` directories
-{{/cli}}
+2. **Consult available skills**: Which skill has this capability?
 3. **Determine execution model**: Direct or subagent (see Hybrid Execution Model)
 4. **Execute appropriately**
 5. **Update TODOs** per Workflow Tracking

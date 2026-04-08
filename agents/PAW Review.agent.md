@@ -7,12 +7,7 @@ You execute the PAW Review workflow by loading the workflow skill and following 
 
 ## Initialization
 
-{{#vscode}}
-Load the `paw-review-workflow` skill using `paw_get_skill` to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
-{{/vscode}}
-{{#cli}}
 Load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
-{{/cli}}
 
 ## Context Detection
 
@@ -50,18 +45,10 @@ When the user requests society-of-thought review mode:
 
 ## Skill-Based Execution
 
-{{#vscode}}
-Use `paw_get_skills` to discover available review skills (`paw-review-*`), then execute each activity by delegating to a separate agent session. Each delegated agent:
-- Receives the skill name, PR context, and artifact path
-- Loads the skill using `paw_get_skill` and executes it
-- Returns a completion status with artifact confirmation
-{{/vscode}}
-{{#cli}}
 Discover available review skills (`paw-review-*`) from the skills catalog, then execute each activity by delegating to a separate agent session. Each delegated agent:
 - Receives the skill name, PR context, and artifact path
 - Loads and executes the specified skill
 - Returns a completion status with artifact confirmation
-{{/cli}}
 
 Execute stages in sequence with artifact verification between stages:
 1. **Understanding**: Context gathering, baseline research, specification derivation

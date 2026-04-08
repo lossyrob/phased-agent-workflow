@@ -181,7 +181,7 @@
               "description": "The exact name of the PAW agent to invoke",
               "enum": [
                 "PAW",
-                "PAW Review"
+                "PAW-Review"
               ]
             },
             "work_id": {

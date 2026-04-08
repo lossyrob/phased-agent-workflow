@@ -89,7 +89,7 @@ suite('Handoff Tool', () => {
     test('accepts all valid PAW agent names', () => {
       const validAgentNames: HandoffParams['target_agent'][] = [
         'PAW',
-        'PAW Review',
+        'PAW-Review',
       ];
 
       validAgentNames.forEach(agentName => {

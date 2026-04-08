@@ -45,7 +45,7 @@ export interface InstallationState {
  * Storage key for installation state in globalState.
  */
 export const INSTALLATION_STATE_KEY = 'paw.agentInstallation';
-const LEGACY_PROMPT_FILENAMES = ['paw.prompt.md', 'paw-review.prompt.md'];
+const LEGACY_PROMPT_FILENAMES = ['paw.prompt.md', 'paw-review.prompt.md', 'PAW Review.agent.md'];
 
 /**
  * Result of uninstall cleanup when removing installed agents.

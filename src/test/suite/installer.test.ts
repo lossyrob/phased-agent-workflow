@@ -15,7 +15,7 @@ import { loadAgentTemplates } from '../../agents/agentTemplates';
 import { getPlatformInfo, resolveLegacyPromptsDirectory } from '../../agents/platformDetection';
 
 const EXTENSION_ROOT = path.resolve(__dirname, '../../..');
-const LEGACY_PROMPT_FILENAMES = ['paw.prompt.md', 'paw-review.prompt.md'];
+const LEGACY_PROMPT_FILENAMES = ['paw.prompt.md', 'paw-review.prompt.md', 'PAW Review.agent.md'];
 
 type PawSettings = {
   agentDirectory?: string;

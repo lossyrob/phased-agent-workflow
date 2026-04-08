@@ -189,12 +189,12 @@ export function constructPawPromptArguments(
     config.custom_instructions = inputs.workflowMode.workflowCustomization;
   }
 
-  let args = '## Initialization Parameters\n\n';
+  let params = '';
   for (const [key, value] of Object.entries(config)) {
-    args += `- **${key}**: ${value}\n`;
+    params += `- **${key}**: ${value}\n`;
   }
 
-  return args;
+  return `Load the \`paw-workflow\` skill and execute it.\n\n## Initialization Parameters\n\n${params}`;
 }
 
 async function openPawChat(

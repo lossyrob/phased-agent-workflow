@@ -124,6 +124,7 @@ suite('Initialize Work Item Helpers', () => {
       },
     }, '/tmp/repo');
 
+    assert.ok(prompt.includes('Load the `paw-workflow` skill and execute it.'));
     assert.ok(prompt.includes('- **target_branch**: auto'));
     assert.ok(prompt.includes('- **execution_mode**: worktree'));
     assert.ok(prompt.includes('- **issue_url**: https://github.com/example/repo/issues/123'));
@@ -381,6 +382,7 @@ suite('Initialize Work Item Helpers', () => {
 
     assert.deepStrictEqual(steps, ['openPawChat']);
     assert.strictEqual(prompts.length, 1);
+    assert.ok(prompts[0].includes('Load the `paw-workflow` skill and execute it.'));
     assert.ok(prompts[0].includes('- **execution_mode**: current-checkout'));
     assert.strictEqual(
       context.globalState.get<Record<string, unknown> | undefined>('paw.executionRegistry'),

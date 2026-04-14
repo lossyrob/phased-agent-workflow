@@ -1,9 +1,9 @@
-# Control-State Contract
+# Control State Contract
 
 ## Shared Core
 
 - Reuse the same shared core meanings as the workflow contract:
-  - presence of `## Hardened State` enables hardened behavior
+  - presence of `## Control State` enables control-state behavior
   - absence falls back to legacy best-effort mode
   - built-in TODOs are a mirror, not the durable source of truth
   - shared status values are `pending`, `in_progress`, `blocked`, `resolved`, and `not_applicable`
@@ -15,7 +15,7 @@
 Seed this section in `.paw/reviews/<identifier>/ReviewContext.md`:
 
 ```markdown
-## Hardened State
+## Control State
 
 TODO Mirror: active-required-items
 Reconciliation: not_run
@@ -53,7 +53,7 @@ Pending Review URL: `none`
 
 ## Reconciliation Rules
 
-- When `## Hardened State` is present, `ReviewContext.md` is the durable review control-state source of truth.
+- When `## Control State` is present, `ReviewContext.md` is the durable review control-state source of truth.
 - Reconcile it against `ReviewComments.md`, evaluation artifacts, and external review facts before stage advancement, critique finalization, or GitHub/manual-posting output.
 - Mutation-affecting review decisions include delegated stage advancement, comment finalization, pending review creation, and terminal external-review updates.
 - Determine current review position from the first review stage item whose status is not terminal (`resolved` or `not_applicable`).
@@ -62,4 +62,4 @@ Pending Review URL: `none`
 - `output:github` becomes `resolved` only after a pending review is created or manual posting instructions are written for non-GitHub contexts.
 - `### Terminal External Review State` must contain exactly one current marker.
 - `pending-review-created` requires `Pending Review ID` to be populated; `manual-posting-provided` requires `Pending Review ID` and `Pending Review URL` to remain `none`.
-- When `## Hardened State` is absent, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+- When `## Control State` is absent, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.

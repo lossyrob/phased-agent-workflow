@@ -32,7 +32,7 @@ async function seedLegacyWorkflowFiles(workDir: string, workId: string): Promise
     "# Implementation Plan",
     "",
     "## Phase Status",
-    "- [x] Phase 1: Embedded Control-State Contract",
+    "- [x] Phase 1: Embedded Control State Contract",
     "- [ ] Phase 2: PAW Gate Reconciliation",
     "",
   ].join("\n"));
@@ -44,7 +44,7 @@ function buildStatusPrompt(skillContent: string, workId: string): string {
     "",
     "CRITICAL RULES:",
     `- Read .paw/work/${workId}/WorkflowContext.md and .paw/work/${workId}/ImplementationPlan.md`,
-    "- If hardened state is absent, explicitly say legacy best-effort mode is active and hardened protections are inactive",
+    "- If control state is absent, explicitly say legacy best-effort mode is active and control-state protections are inactive",
     "- Do NOT ask the user questions",
     "",
     "Skill documentation:",
@@ -61,7 +61,7 @@ describe("legacy control-state mode reporting", { timeout: 240_000 }, () => {
     }
   });
 
-  it("explicitly reports legacy best-effort mode when hardened state is absent", async () => {
+  it("explicitly reports legacy best-effort mode when control state is absent", async () => {
     const pawStatus = await loadSkill("paw-status");
     const workId = "test-legacy-control-state-mode";
 
@@ -81,6 +81,6 @@ describe("legacy control-state mode reporting", { timeout: 240_000 }, () => {
 
     const content = response?.data?.content ?? "";
     assert.match(content, /legacy/i);
-    assert.match(content, /hardened protections[\s\S]*inactive/i);
+    assert.match(content, /control-state protections[\s\S]*inactive/i);
   });
 });

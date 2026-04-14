@@ -26,7 +26,7 @@ If ReviewComments.md is not finalized or missing `**Final**:` markers, report bl
 
 ## Hardened Review Control State
 
-If `ReviewContext.md` contains `## Hardened State`, also read:
+If `ReviewContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker
 - Review stage items
 - Terminal external review state
@@ -39,7 +39,7 @@ Apply these sequencing rules:
 - After a pending review is created, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `pending-review-created`, `Pending Review ID` / `Pending Review URL` are populated, and `Reconciliation` is `current`
 - After non-GitHub manual posting instructions are written, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` stay `none`, and `Reconciliation` is `current`
 
-If `ReviewContext.md` does not contain `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+If `ReviewContext.md` does not contain `## Control State`, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 
 ## Core Responsibilities
 
@@ -164,7 +164,7 @@ Update the file header:
 **Comments Posted**: 6 of 8 (2 skipped per critique)
 ```
 
-If `ReviewContext.md` contains `## Hardened State`, also update:
+If `ReviewContext.md` contains `## Control State`, also update:
 ```markdown
 ### Terminal External Review State
 - `pending-review-created`
@@ -222,7 +222,7 @@ For non-GitHub workflows (local branch review):
 **Skip GitHub Posting:**
 - Do not attempt to call GitHub MCP tools
 - Update ReviewComments.md status to `finalized (non-GitHub)`
-- If `ReviewContext.md` contains `## Hardened State`, update it so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` remain `none`, and `Reconciliation` is `current`
+- If `ReviewContext.md` contains `## Control State`, update it so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` remain `none`, and `Reconciliation` is `current`
 - If manual posting instructions were already provided for this review job, preserve the existing section and do not append a duplicate copy
 
 **Provide Manual Posting Instructions:**

@@ -18,7 +18,7 @@ describe("review legacy control-state mode", { timeout: 240_000 }, () => {
     }
   });
 
-  it("keeps non-GitHub review posting usable without hardened state and reports legacy mode", async () => {
+  it("keeps non-GitHub review posting usable without control state and reports legacy mode", async () => {
     const skillContent = await loadSkill("paw-review-github");
     const identifier = "feature-review-legacy-test";
 
@@ -31,7 +31,7 @@ describe("review legacy control-state mode", { timeout: 240_000 }, () => {
         "CRITICAL RULES:",
         `- Read .paw/reviews/${identifier}/ReviewContext.md and .paw/reviews/${identifier}/ReviewComments.md`,
         "- This is a non-GitHub review context, so do not call GitHub tools",
-        "- Because hardened review state is absent, explicitly report legacy best-effort mode and inactive hardened protections",
+        "- Because review control state is absent, explicitly report legacy best-effort mode and inactive control-state protections",
         "- Do NOT ask the user questions",
         "",
         "Skill documentation:",
@@ -55,7 +55,7 @@ describe("review legacy control-state mode", { timeout: 240_000 }, () => {
     const reviewComments = await readFile(join(ctx.fixture.workDir, ".paw/reviews", identifier, "ReviewComments.md"), "utf-8");
 
     assert.match(content, /legacy/i);
-    assert.match(content, /hardened[\s\S]*protections[\s\S]*inactive/i);
+    assert.match(content, /control-state protections[\s\S]*inactive/i);
     assert.match(reviewComments, /## Manual Posting Instructions/);
   });
 });

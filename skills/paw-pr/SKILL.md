@@ -23,20 +23,37 @@ Create the final PR merging all implementation work to the base branch (from Wor
 
 Before creating the PR, verify and report status. Block on failures unless user explicitly confirms (except hard blockers — those cannot be overridden).
 
+### Workflow Identity Detection
+
+Read `WorkflowContext.md` for `Workflow Identity`.
+
+- `paw` → standard PAW profile
+- `paw-lite` → lite profile
+- If `Workflow Identity` is absent, default to `paw`
+- Legacy lite compatibility fallback: if `Plan.md` exists and `ImplementationPlan.md` does not, use lite artifact expectations for read-only compatibility reporting only, explicitly report that workflow identity is missing, and STOP final PR creation until `Workflow Identity: paw-lite` is persisted
+
 ### Required Checks
 
-**Phase Implementation**:
-- All phases in ImplementationPlan.md marked complete
+**Standard PAW profile**:
+- All phases in `ImplementationPlan.md` marked complete
 - All phase PRs merged (prs strategy) or commits pushed (local strategy)
 - Target branch exists with implementation commits
 - No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`) — **hard blocker**: do NOT resolve or bypass; report to orchestrator to run Candidate Promotion Flow before retrying
 
-**Artifacts Exist** (check existence per Workflow Mode):
-- CodeResearch.md (required: all modes)
-- ImplementationPlan.md (required: all modes)
-- Spec.md (required: full mode; optional: minimal/custom)
-- SpecResearch.md (optional: all modes)
-- Docs.md (required: full mode; optional: minimal/custom)
+**Standard PAW artifacts** (check existence per Workflow Mode):
+- `CodeResearch.md` (required: all modes)
+- `ImplementationPlan.md` (required: all modes)
+- `Spec.md` (required: full mode; optional: minimal/custom)
+- `SpecResearch.md` (optional: all modes)
+- `Docs.md` (required: full mode; optional: minimal/custom)
+
+**PAW Lite profile**:
+- `Plan.md` exists
+- `## Work Items` exists and all checkboxes are resolved
+- Target branch exists with implementation commits
+- If `Final Agent Review` is `enabled`, `reviews/FINAL-REVIEW.md` exists, reflects the current post-fix state, and records a resolved non-blocking review outcome
+- `Workflow Identity: paw-lite` is persisted before mutation-affecting execution
+- Legacy lite compatibility mode is reporting-only compatibility; new workflows should persist `Workflow Identity: paw-lite`
 
 **Branch Status**:
 - Target branch up to date with base branch (from WorkflowContext.md, defaults to `main`)
@@ -51,33 +68,44 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - Scratch ignore markers (`.gitignore` files used to keep workflow/planning/reviews output local-only) must be removed from the index before PR creation if they became tracked
 
 **Open Questions Resolved**:
-- SpecResearch `## Open Unknowns` → resolved in Spec or clarified
-- CodeResearch `## Open Questions` → resolved in Plan or code
-- ImplementationPlan `## Open Questions` → empty
+- Standard PAW:
+  - `SpecResearch` `## Open Unknowns` → resolved in Spec or clarified
+  - `CodeResearch` `## Open Questions` → resolved in Plan or code
+  - `ImplementationPlan` `## Open Questions` → empty
+- PAW Lite:
+  - `Plan.md` `## Open Questions` → empty or explicitly `None`
 - Unresolved items → block and report with recommendation
 
-**Hardened Control State**:
-- If `WorkflowContext.md` contains `## Hardened State`, reconcile it before PR creation.
+**Control State**:
+- If `WorkflowContext.md` contains `## Control State`, reconcile it before PR creation.
 - Required activity items earlier than `final-pr`, plus all gate items and configured procedure items, must all be `resolved` or `not_applicable` before final PR creation can proceed.
 - Treat `final-pr` as the current activity: it may still be `pending` or `in_progress` when `paw-pr` starts and becomes `resolved` only after PR creation succeeds.
-- If reconciliation cannot prove the live state, or any earlier required hardened-state item or dependent gate/procedure item remains `pending`, `in_progress`, or `blocked`, treat it as a blocker.
-- If `## Hardened State` is absent, continue in legacy best-effort mode and explicitly note that hardened protections are inactive.
+- If reconciliation cannot prove the live state, or any earlier required control-state item or dependent gate/procedure item remains `pending`, `in_progress`, or `blocked`, treat it as a blocker.
+- If `## Control State` is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 
-## Workflow Mode Handling
+## Workflow Profile Handling
 
-### Full Mode
+### Standard PAW Modes
+
+#### Full Mode
 - Reference all artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
 - PRs strategy: Include links to intermediate PRs (Planning, Phase, Docs)
 - Local strategy: Describe work directly from commits
 
-### Minimal Mode
+#### Minimal Mode
 - Reference only core artifacts: CodeResearch.md, ImplementationPlan.md
 - Check Spec.md and Docs.md existence before including
 - Local strategy only (enforced)
 
-### Custom Mode
+#### Custom Mode
 - Dynamically check which artifacts exist
 - Adapt references based on Custom Workflow Instructions
+
+### PAW Lite
+- Reference core lite artifacts: `Plan.md`, optional `WorkShaping.md`, and `reviews/FINAL-REVIEW.md` when final review ran
+- Describe implementation directly from commits plus the durable `Plan.md` work items
+- Do not require `ImplementationPlan.md`, phase PRs, phase candidates, or planning-docs-review artifacts
+- `Review Strategy` should be `local`
 
 ## Artifact Lifecycle Handling
 

@@ -26,7 +26,7 @@ If ReviewComments.md is missing, report blocked status—Feedback Generation mus
 
 ## Hardened Review Control State
 
-If `ReviewContext.md` contains `## Hardened State`, also read:
+If `ReviewContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker
 - Review stage items
 - Terminal external review state
@@ -37,7 +37,7 @@ Apply these sequencing rules:
 - After assessments are written, update `ReviewContext.md` so `output:critic` is `resolved`, `output:critique-response` remains/ becomes `pending`, and `Reconciliation` is `current`
 - Preserve the existing terminal external review state and pending review identifiers when updating `ReviewContext.md`
 
-If `ReviewContext.md` does not contain `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+If `ReviewContext.md` does not contain `## Control State`, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 
 ## Core Responsibilities
 

@@ -30,18 +30,17 @@ Serve as the workflow navigator and historian. Diagnose current workflow state, 
 
 Check `.paw/work/<work-id>/` for:
 - WorkflowContext.md (required for workflow context)
-- Spec.md, SpecResearch.md (specification stage)
-- CodeResearch.md (research stage)
-- ImplementationPlan.md (planning stage)
-- Docs.md (documentation if separate from implementation)
+- Standard PAW artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+- PAW Lite artifacts: WorkShaping.md, Plan.md, `reviews/FINAL-REVIEW.md`
 - `reviews/` directory (Final Agent Review artifacts)
 - `reviews/planning/` directory (Planning Documents Review artifacts)
 
-Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
+Note existence vs intentionally skipped. Standard minimal mode skips Spec/Docs; paw-lite skips standard PAW planning artifacts entirely.
 
 ### Configuration Detection
 
 Read WorkflowContext.md for:
+- Workflow Identity: `paw` | `paw-lite`
 - Workflow Mode, Review Strategy, Review Policy
 - Artifact Lifecycle: `commit-and-clean` | `commit-and-persist` | `never-commit`
 - Final Agent Review: `enabled` | `disabled`
@@ -57,15 +56,22 @@ Read WorkflowContext.md for:
 - Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)
 - Final Review Specialist Models: `none` | model pool | pinned pairs | mixed (when society-of-thought)
 
-### Hardened-State Detection
+### Workflow Identity Detection
 
-If `WorkflowContext.md` contains `## Hardened State`, read:
+- `Workflow Identity: paw` → standard PAW profile
+- `Workflow Identity: paw-lite` → lite profile
+- If `Workflow Identity` is absent, default to standard PAW handling
+- Legacy lite compatibility fallback: if `Plan.md` exists and `ImplementationPlan.md` does not, use lite artifact expectations for status reporting and explicitly say workflow identity is missing
+
+### Control State Detection
+
+If `WorkflowContext.md` contains `## Control State`, read:
 - `Reconciliation:` marker
 - Required activity items
 - Gate items
 - Configured procedure items
 
-Treat embedded hardened state as the durable workflow source of truth when present. If the section is absent, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+Treat embedded control state as the durable workflow source of truth when present. If the section is absent, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 
 ### Phase Counting
 
@@ -74,11 +80,22 @@ Parse ImplementationPlan.md with regex: `^## Phase \d+:`
 - Report: "Phase N of M" or "Phase N (plan shows M phases total)"
 - Never assume total—always verify
 
+Only apply phase counting to the standard PAW profile. Do not invent phases for paw-lite.
+
 ### Phase Candidates
 
 Check `## Phase Candidates` section in ImplementationPlan.md:
 - Count unresolved (`- [ ]`), promoted (`[promoted]`), skipped (`[skipped]`), deferred (`[deferred]`), not feasible (`[not feasible]`)
 - If unresolved exist after last phase: report "N phase candidates pending review"
+
+Only apply phase-candidate reporting to the standard PAW profile.
+
+### Lite Work Item Counting
+
+For the paw-lite profile, parse `Plan.md` `## Work Items` checkboxes:
+- Count complete vs incomplete work items
+- Report: "Work items X of Y complete"
+- Use `FINAL-REVIEW.md` presence only for review-state reporting, not as a substitute for unresolved work items
 
 ### Git Status
 
@@ -108,11 +125,17 @@ When PRs exist:
 
 Map state to guidance.
 
-When hardened state is present:
+When control state is present:
 - Derive the current workflow position from the first required activity item whose status is not terminal (`resolved` or `not_applicable`).
 - Report any earlier `blocked`, `pending`, or `in_progress` gate/procedure items that should already be terminal as blockers rather than inferring progress past them.
 - If `Reconciliation` is `stale` or `external_unverified`, do not imply freshness. Report a read-only/unverified status and name the unresolved control-state items.
 - If `Reconciliation` is `not_run`, say reconciliation is still required before mutation-affecting work can safely proceed.
+- If the profile is `paw-lite`, map the first non-terminal required activity to lite guidance:
+  - `planning` → "Create or continue the lite plan: `plan`"
+  - `implementation` → "Continue lite implementation: `implement`"
+  - `final-review` → "Run lite final review: `final-review`"
+  - `final-pr` → "Create the final PR: `pr`"
+- For paw-lite, do not report progress past unresolved work items or an unresolved `FINAL-REVIEW.md` requirement.
 
 | State | Recommendation |
 |-------|----------------|
@@ -127,6 +150,12 @@ When hardened state is present:
 | All phases complete, review disabled | "Create final PR: `pr`" |
 | All complete + unresolved candidates | "Review phase candidates before PR" |
 
+When control state is absent and legacy lite compatibility mode is active:
+- Missing `Plan.md` → "Create the lite plan: `plan`"
+- `Plan.md` exists with unresolved work items → "Continue lite implementation: `implement`"
+- All work items resolved, final review enabled, and `reviews/FINAL-REVIEW.md` missing → "Run lite final review: `final-review`"
+- All work items resolved and review is disabled, or `reviews/FINAL-REVIEW.md` exists → "Create the final PR: `pr`"
+
 ## Workflow Mode Behavior
 
 ### Full Mode
@@ -138,6 +167,10 @@ Skips: Spec, Spec Research (local strategy enforced)
 
 ### Custom Mode
 Inspect disk to discover actual stages per Custom Workflow Instructions.
+
+### PAW Lite
+Expect: Work Shaping (optional) → Plan → Implementation → Final Review (if enabled) → Final PR
+Skips: Spec, Code Research, ImplementationPlan, planning-docs review, phase candidates
 
 ## Multi-Work Management
 
@@ -175,17 +208,19 @@ When asked "What presets are available?" or "List presets":
 
 For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
 - Use the exact name **Phased Agent Workflow**. Never invent an acronym expansion.
+- Ground onboarding answers in these repository sources: `README.md`, `docs/index.md`, `docs/guide/index.md`, `docs/guide/cli-installation.md`.
 - For full documentation, see: https://lossyrob.github.io/phased-agent-workflow/ (overview), https://lossyrob.github.io/phased-agent-workflow/guide/ (getting started), https://lossyrob.github.io/phased-agent-workflow/guide/cli-installation/ (CLI install).
 - Explain briefly:
   - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
   - PAW supports two workflows: implementation and review.
   - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
+- Keep onboarding guidance aligned across **GitHub Copilot CLI** and **VS Code**.
 - If the user also asks how to get started:
 {{#cli}}
-  - Select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
+  - In **GitHub Copilot CLI**, select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
 {{/cli}}
 {{#vscode}}
-  - Run `PAW: New PAW Workflow`.
+  - In **VS Code**, run `PAW: New PAW Workflow`.
 {{/vscode}}
 - Prefer concise, sourced onboarding language over improvisation.
 
@@ -207,10 +242,10 @@ For "How do I start?", explain:
 ## Status Dashboard Format
 
 Synthesize findings into sections:
-- **Control State**: hardened vs legacy mode, reconciliation marker, unresolved gate/procedure items
+- **Control State**: present vs legacy mode, reconciliation marker, unresolved gate/procedure items
 - **Artifacts**: Existence and status
-- **Phases**: Current progress (N of M)
-- **Phase Candidates**: Pending/resolved candidate counts (if any exist)
+- **Phases / Work Items**: Standard PAW phase progress or paw-lite work-item progress
+- **Phase Candidates**: Pending/resolved candidate counts (standard PAW only, if any exist)
 - **Branch & Git**: Current state, divergence
 - **PRs**: Open/merged status, review comments
 - **Next Actions**: Recommended commands
@@ -218,9 +253,10 @@ Synthesize findings into sections:
 ## Guardrails
 
 - Verify phase count from ImplementationPlan.md—never assume
-- If hardened state is present, do not report progress past unresolved required items, gate items, or procedure items
+- If control state is present, do not report progress past unresolved required items, gate items, or procedure items
 - If reconciliation is `stale` or `external_unverified`, label the result read-only/unverified instead of implying mutation-safe readiness
-- If hardened state is absent, explicitly say legacy best-effort mode is active
+- If control state is absent, explicitly say legacy best-effort mode is active
+- If legacy lite compatibility mode is active, explicitly say workflow identity is missing and the result is compatibility-only
 - Never mutate issue descriptions or PR content outside summary blocks
 - Never push, merge, or rewrite git history
 - Be idempotent: same state → same summary

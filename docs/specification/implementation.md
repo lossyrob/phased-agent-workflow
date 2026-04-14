@@ -30,15 +30,15 @@ Execution mode is separate from review strategy:
 - **Artifact lifecycle** controls whether `.paw/work/` artifacts are committed and does not imply worktree cleanup
 - Older `WorkflowContext.md` files without `Execution Mode` are treated as `current-checkout`
 
-### Control-State and Reconciliation
+### Control State and Reconciliation
 
-Current workflows embed a compact `## Hardened State` section inside `WorkflowContext.md`.
+Current workflows embed a compact `## Control State` section inside `WorkflowContext.md`.
 
 - The section records required activities, gate items, configured-procedure items, and lifecycle markers that must resolve before the workflow can advance.
 - Built-in TODOs mirror the active required items from this section for in-session execution, but the embedded artifact state remains the durable source of truth across resume and cross-runtime handoff.
 - `paw-transition`, `paw-status`, handoff/resume flows, and repository-mutation paths reconcile this state against artifacts, git, and PR reality before proceeding.
 
-If hardened state is absent, PAW falls back to **legacy best-effort mode**. Older workflows still run, but status and resume surfaces explicitly report that hardened protections are inactive.
+If control state is absent, PAW falls back to **legacy best-effort mode**. Older workflows still run, but status and resume surfaces explicitly report that control-state protections are inactive.
 
 ### Pre-Specification: Work Shaping (Optional)
 
@@ -289,7 +289,7 @@ Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md)
 
 ### paw-status
 
-Diagnoses current workflow state, recommends next steps, explains PAW/onboarding, and posts status updates to Issues/PRs. When hardened state is present it reports reconciled control-state status; otherwise it reports legacy best-effort mode explicitly.
+Diagnoses current workflow state, recommends next steps, explains PAW/onboarding, and posts status updates to Issues/PRs. When control state is present it reports reconciled control-state status; otherwise it reports legacy best-effort mode explicitly.
 
 ### paw-pr
 
@@ -297,10 +297,10 @@ Opens the **final PR** from the target branch to main and performs comprehensive
 
 ## Legacy Best-Effort Mode
 
-Workflows created before the hardened-state model, or artifacts edited in ways that remove the embedded `## Hardened State` section, still remain usable.
+Workflows created before the control-state model, or artifacts edited in ways that remove the embedded `## Control State` section, still remain usable.
 
 - Agents fall back to artifact and git inference for progression
-- Status and resume paths say that hardened protections are inactive
+- Status and resume paths say that control-state protections are inactive
 - Exact configured-procedure handling and gate reconciliation apply only when the embedded state is present
 
 New workflows should prefer the embedded control-state model so CLI and VS Code surfaces re-enter the same durable contract.

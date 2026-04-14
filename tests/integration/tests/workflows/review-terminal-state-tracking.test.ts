@@ -9,16 +9,16 @@ import { seedReviewArtifacts } from "./review-terminal-state-tracking.test-helpe
 
 const LIVE_TURN_TIMEOUT = 180_000;
 
-function buildGithubPrompt(skillContent: string, identifier: string, hardened: boolean): string {
+function buildGithubPrompt(skillContent: string, identifier: string, controlState: boolean): string {
   return [
     "You are executing the paw-review-github skill. Follow the skill exactly.",
     "",
     "CRITICAL RULES:",
     `- Read .paw/reviews/${identifier}/ReviewContext.md and .paw/reviews/${identifier}/ReviewComments.md`,
     "- This is a non-GitHub review context, so do not call GitHub tools",
-    hardened
-      ? "- Because hardened review state exists, update ReviewContext.md terminal state and output:github status when manual posting instructions are added"
-      : "- Because hardened review state is absent, explicitly report legacy best-effort mode and inactive hardened protections",
+    controlState
+      ? "- Because review control state exists, update ReviewContext.md terminal state and output:github status when manual posting instructions are added"
+      : "- Because review control state is absent, explicitly report legacy best-effort mode and inactive control-state protections",
     "- Do NOT ask the user questions",
     "",
     "Skill documentation:",

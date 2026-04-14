@@ -49,7 +49,7 @@ describe("minimal workflow (plan + implement, no spec)", { timeout: 300_000 }, (
         "",
         "Do the following in order:",
         "1. Read the codebase",
-        `2. Create .paw/work/${workId}/WorkflowContext.md with a \`## Hardened State\` section and \`TODO Mirror: active-required-items\``,
+        `2. Create .paw/work/${workId}/WorkflowContext.md with a \`## Control State\` section and \`TODO Mirror: active-required-items\``,
         `3. Create an implementation plan at .paw/work/${workId}/ImplementationPlan.md (with phases + success criteria)`,
         "4. Implement the plan by modifying the code",
         "5. Run tests to verify (e.g. `npm test`)",
@@ -84,7 +84,7 @@ describe("minimal workflow (plan + implement, no spec)", { timeout: 300_000 }, (
     const workflowContext = await readFile(
       join(ctx.fixture.workDir, ".paw/work", workId, "WorkflowContext.md"), "utf-8",
     );
-    assert.match(workflowContext, /## Hardened State/);
+    assert.match(workflowContext, /## Control State/);
     assert.match(workflowContext, /TODO Mirror:\s*active-required-items/i);
 
     // Assert: src/app.ts modified with stats/counting concepts
@@ -141,7 +141,7 @@ function buildMinimalPrompt(opts: { planningSkill: string; implementSkill: strin
     "",
     "IMPORTANT RULES:",
     `- Write workflow context to .paw/work/${opts.workId}/WorkflowContext.md`,
-    "- WorkflowContext.md MUST include a `## Hardened State` section and `TODO Mirror: active-required-items`",
+    "- WorkflowContext.md MUST include a `## Control State` section and `TODO Mirror: active-required-items`",
     `- Write the plan to .paw/work/${opts.workId}/ImplementationPlan.md`,
     "- Plan MUST have: phases (## Phase N: <name>), each with Success Criteria",
     "- Implement the planned changes by writing code in the repo",

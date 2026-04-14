@@ -62,7 +62,7 @@
       {
         "name": "paw_new_session",
         "displayName": "Start New PAW Session",
-        "modelDescription": "Start a fresh PAW agent chat session with cleared context. The new session should resume from WorkflowContext.md or ReviewContext.md, use embedded hardened state when present, and report legacy best-effort mode when that state is absent. Use for session resets, stage transitions, or when user requests 'clear context' / 'new session'. Includes work ID or review identifier context and optional inline instructions.",
+        "modelDescription": "Start a fresh PAW agent chat session with cleared context. The new session should resume from WorkflowContext.md or ReviewContext.md, use embedded control state when present, and report legacy best-effort mode when that state is absent. Use for session resets, stage transitions, or when user requests 'clear context' / 'new session'. Includes work ID or review identifier context and optional inline instructions.",
         "toolReferenceName": "pawHandoff",
         "canBeReferencedInPrompt": true,
         "inputSchema": {

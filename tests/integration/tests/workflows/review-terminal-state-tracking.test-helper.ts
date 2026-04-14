@@ -12,7 +12,7 @@ interface SeedReviewArtifactOptions {
 export async function seedReviewArtifacts(
   workDir: string,
   identifier: string,
-  hardened: boolean,
+  controlState: boolean,
   options: SeedReviewArtifactOptions = {},
 ): Promise<void> {
   const dir = join(workDir, ".paw/reviews", identifier);
@@ -55,9 +55,9 @@ export async function seedReviewArtifacts(
     "",
   ];
 
-  if (hardened) {
+  if (controlState) {
     reviewContextLines.push(
-      "## Hardened State",
+      "## Control State",
       "",
       "TODO Mirror: active-required-items",
       "Reconciliation: current",

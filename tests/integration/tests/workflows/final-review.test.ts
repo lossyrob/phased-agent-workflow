@@ -17,7 +17,7 @@ describe("configured review mode enforcement content", () => {
 
     assert.match(planning, /persist `procedure:planning-review` as `blocked` in `WorkflowContext\.md`/);
     assert.match(planning, /Do not run a single-model fallback\./);
-    assert.match(planning, /When hardened state is absent, continue in legacy best-effort mode/i);
+    assert.match(planning, /When control state is absent, continue in legacy best-effort mode/i);
     assert.match(planning, /run a single-model fallback review/i);
   });
 
@@ -26,7 +26,7 @@ describe("configured review mode enforcement content", () => {
 
     assert.match(finalReview, /persist `procedure:final-review` as `blocked` in `WorkflowContext\.md`/);
     assert.match(finalReview, /Do not run a single-model fallback\./);
-    assert.match(finalReview, /When hardened state is absent, continue in legacy best-effort mode/i);
+    assert.match(finalReview, /When control state is absent, continue in legacy best-effort mode/i);
     assert.match(finalReview, /run a single-model fallback review/i);
   });
 });

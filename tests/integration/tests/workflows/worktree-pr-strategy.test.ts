@@ -61,7 +61,7 @@ async function seedWorkflowContext(
   workDir: string,
   workId: string,
   targetBranch: string,
-  hardenedStateLines: string[] = [],
+  controlStateLines: string[] = [],
 ): Promise<void> {
   const dir = join(workDir, ".paw/work", workId);
   await mkdir(dir, { recursive: true });
@@ -85,8 +85,8 @@ async function seedWorkflowContext(
     "",
   ];
 
-  if (hardenedStateLines.length > 0) {
-    lines.push(...hardenedStateLines, "");
+  if (controlStateLines.length > 0) {
+    lines.push(...controlStateLines, "");
   }
 
   await writeFile(join(dir, "WorkflowContext.md"), lines.join("\n"));
@@ -108,7 +108,7 @@ function buildPrompt(skillContent: string, workId: string, targetBranch: string)
     `- Read .paw/work/${workId}/WorkflowContext.md before any git mutation`,
     `- Treat ${targetBranch} as the execution checkout target branch`,
     "- Operate only in the current execution checkout and never mutate the caller checkout",
-    "- If WorkflowContext.md contains `## Hardened State`, reconcile it first and block mutation if reconciliation is not current or required gate/procedure items remain unresolved",
+    "- If WorkflowContext.md contains `## Control State`, reconcile it first and block mutation if reconciliation is not current or required gate/procedure items remain unresolved",
     "- Follow the PRs branch naming mechanics from the git operations skill",
     "- For each review branch, start from the target branch before branching off",
     "- Create only the requested branch-specific artifacts",
@@ -222,7 +222,7 @@ describe("worktree PR strategy branch behavior", { timeout: 420_000 }, () => {
     });
   });
 
-  it("refuses worktree branch mutation when hardened control state is unresolved", async () => {
+  it("refuses worktree branch mutation when control state is unresolved", async () => {
     const gitOpsSkill = await loadSkill("paw-git-operations");
     const workId = "test-worktree-pr-strategy-blocked";
     const targetBranch = "feature/test-worktree-pr-strategy-blocked";
@@ -231,7 +231,7 @@ describe("worktree PR strategy branch behavior", { timeout: 420_000 }, () => {
 
     await setupLocalOrigin(checkouts, targetBranch);
     await seedWorkflowContext(checkouts.execution.path, workId, targetBranch, [
-      "## Hardened State",
+      "## Control State",
       "",
       "TODO Mirror: active-required-items",
       "Reconciliation: external_unverified",
@@ -279,7 +279,7 @@ describe("worktree PR strategy branch behavior", { timeout: 420_000 }, () => {
     const response = await ctx.session.sendAndWait({
       prompt: [
         `1. Read .paw/work/${workId}/WorkflowContext.md and determine whether it is safe to create planning branch ${planBranch}.`,
-        "2. If hardened control state is unresolved or cannot be reconciled, stop immediately and explain the blocker.",
+        "2. If control state is unresolved or cannot be reconciled, stop immediately and explain the blocker.",
         "3. Do not create, edit, stage, commit, checkout, or push anything in that case.",
       ].join("\n"),
     }, LIVE_TURN_TIMEOUT);
@@ -290,7 +290,7 @@ describe("worktree PR strategy branch behavior", { timeout: 420_000 }, () => {
     const callerAfter = await captureCheckoutSnapshot(checkouts.caller);
     assert.deepStrictEqual(callerAfter, callerBefore, "caller checkout should remain unchanged");
     const executionAfter = await captureCheckoutSnapshot(checkouts.execution);
-    assert.deepStrictEqual(executionAfter, executionBefore, "execution checkout should remain unchanged when hardened state blocks mutation");
+    assert.deepStrictEqual(executionAfter, executionBefore, "execution checkout should remain unchanged when control state blocks mutation");
 
     assertToolCalls(ctx.toolLog, {
       forbidden: ["create", "edit"],

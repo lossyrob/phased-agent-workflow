@@ -131,13 +131,13 @@ Example: `acme-corp/my-api-service` → `my-api-service`
 
 ## Embedded Review Control State
 
-- If `ReviewContext.md` contains `## Hardened State`, use it as the durable source of truth for review stage sequencing and terminal external-review state.
+- If `ReviewContext.md` contains `## Control State`, use it as the durable source of truth for review stage sequencing and terminal external-review state.
 - Reconcile `ReviewContext.md` against review artifacts before stage advancement, critique finalization, or GitHub/manual-posting output. If reconciliation cannot make the state `current`, stop and report the blocker.
 - Determine the active stage from the first review stage item whose status is not terminal (`resolved` or `not_applicable`).
 - Do not advance to evaluation while `understanding` is unresolved, or to later output steps while an earlier output item remains `pending`, `in_progress`, or `blocked`.
 - `procedure:review-mode` resolves only when the configured evaluation path actually ran. Failed or mismatched evaluation paths block instead of silently falling back.
 - `output:github` resolves only after a pending review is created or manual posting instructions are produced for non-GitHub contexts.
-- If `## Hardened State` is absent, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+- If `## Control State` is absent, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 
 ## Workflow Orchestration
 
@@ -259,7 +259,7 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
 
 **Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
 
-**Hardened-state output sequencing**:
+**Control-state output sequencing**:
 - `output:feedback` runs only after `evaluation` is resolved
 - `output:critic` runs only after `output:feedback` is resolved
 - `output:critique-response` runs only after `output:critic` is resolved

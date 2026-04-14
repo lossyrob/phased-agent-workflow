@@ -37,7 +37,7 @@ function serializeControlStateFixture(parsed: {
   terminalMarkers: string[];
 }): string {
   const lines = [
-    "## Hardened State",
+    "## Control State",
     "",
     `TODO Mirror: ${parsed.todoMirror}`,
     `Reconciliation: ${parsed.reconciliation}`,
@@ -53,7 +53,7 @@ function serializeControlStateFixture(parsed: {
 }
 
 describe("control-state contract content", () => {
-  it("defines a shared hardened-state core for workflow and review references", async () => {
+  it("defines a shared control-state core for workflow and review references", async () => {
     const workflow = await readRepoFile("skills/paw-workflow/references/control-state-contract.md");
     const review = await readRepoFile("skills/paw-review-workflow/references/control-state-contract.md");
 
@@ -71,10 +71,14 @@ describe("control-state contract content", () => {
       assert.match(content, /`current`/);
       assert.match(content, /`stale`/);
       assert.match(content, /`external_unverified`/);
-      assert.match(content, /## Hardened State/);
+      assert.match(content, /## Control State/);
     }
 
     assert.match(workflow, /phase:<n>:<slug>/);
+    assert.match(workflow, /Workflow Identity: paw/);
+    assert.match(workflow, /Workflow Identity: paw-lite/);
+    assert.match(workflow, /## PAW Lite WorkflowContext Embedding/);
+    assert.match(workflow, /`implementation` \| `pending` \| `activity`/);
     assert.match(workflow, /procedure:planning-review/);
     assert.match(
       workflow,
@@ -94,11 +98,12 @@ describe("control-state contract content", () => {
     assert.match(review, /must contain exactly one current marker/i);
   });
 
-  it("documents hardened-state templates in init and review-understanding", async () => {
+  it("documents control-state templates in init and review-understanding", async () => {
     const init = await readRepoFile("skills/paw-init/SKILL.md");
     const review = await readRepoFile("skills/paw-review-understanding/SKILL.md");
 
-    assert.match(init, /## Hardened State/);
+    assert.match(init, /## Control State/);
+    assert.match(init, /Workflow Identity: <workflow_identity or "paw">/);
     assert.match(init, /TODO Mirror:\s*active-required-items/i);
     assert.match(
       init,
@@ -128,17 +133,29 @@ describe("control-state contract content", () => {
       init,
       /Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`\./,
     );
+    assert.match(
+      init,
+      /When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with:/,
+    );
+    assert.match(
+      init,
+      /`implementation` \| `pending` \| `activity`/,
+    );
+    assert.match(
+      init,
+      /Keep `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, and `planning_docs_review=disabled` unless the current request explicitly supplies different supported values\./,
+    );
     assert.match(init, /transition:after-plan-review/);
     assert.match(init, /procedure:planning-review/);
 
-    assert.match(review, /## Hardened State/);
+    assert.match(review, /## Control State/);
     assert.match(review, /output:critique-response/);
     assert.match(review, /Pending Review ID:\s*`none`/i);
   });
 
   it("parses serialized control-state fixtures idempotently", () => {
     const fixture = [
-      "## Hardened State",
+      "## Control State",
       "",
       "TODO Mirror: active-required-items",
       "Reconciliation: current",

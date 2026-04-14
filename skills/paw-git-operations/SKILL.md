@@ -27,13 +27,13 @@ description: Shared git mechanics for PAW activity skills including branch namin
 - The caller checkout must never be mutated.
 - If the execution checkout is ambiguous or cannot be proven from this session, STOP and report recovery guidance instead of guessing.
 
-## Control-State Reconciliation Gate
+## Control State Reconciliation Gate
 
-- When `WorkflowContext.md` contains `## Hardened State`, reconcile it before any branch creation, checkout, pull, commit, push, PR-prep mutation, or artifact write.
+- When `WorkflowContext.md` contains `## Control State`, reconcile it before any branch creation, checkout, pull, commit, push, PR-prep mutation, or artifact write.
 - Treat `Reconciliation: current` as required for mutation-affecting git work.
 - If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile first; if reconciliation cannot prove the live state, STOP and report a blocker instead of mutating git state.
 - If any required activity item, gate item, or configured procedure item that should already be terminal remains `pending`, `in_progress`, or `blocked`, STOP and report that unresolved control-state item instead of bypassing it with git mutation.
-- If `## Hardened State` is absent, continue in legacy best-effort mode and explicitly note that hardened protections are inactive.
+- If `## Control State` is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 
 ### Branch-State Matrix
 

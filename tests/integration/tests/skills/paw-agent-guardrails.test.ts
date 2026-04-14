@@ -30,20 +30,29 @@ describe("PAW agent guardrails", () => {
     );
   });
 
-  it("treats embedded hardened state as the durable workflow source of truth", async () => {
+  it("treats embedded control state as the durable workflow source of truth", async () => {
     const content = await readFile(resolve(REPO_ROOT, "agents/PAW.agent.md"), "utf-8");
 
-    assert.match(content, /## Hardened State/i);
+    assert.match(content, /## Control State/i);
     assert.match(content, /durable source of truth/i);
     assert.match(content, /TODOs as a mirror of active required workflow items/i);
     assert.match(content, /legacy best-effort mode/i);
+  });
+
+  it("stops standard orchestration for paw-lite workflow contexts", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "agents/PAW.agent.md"), "utf-8");
+
+    assert.match(content, /Workflow Identity: paw-lite/);
+    assert.match(content, /STOP standard PAW orchestration and tell the user this work item should continue with the `paw-lite` skill/i);
+    assert.match(content, /\| paw-init \| paw-lite \(if `Workflow Identity: paw-lite`\) or paw-spec or paw-work-shaping \|/);
+    assert.match(content, /If `paw-init` created a lite workflow, do not continue into standard PAW specification\/planning flow/i);
   });
 
   it("documents embedded review control state handling in PAW Review.agent.md", async () => {
     const content = await readFile(resolve(REPO_ROOT, "agents/PAW Review.agent.md"), "utf-8");
 
     assert.match(content, /## Embedded Review Control State/);
-    assert.match(content, /contains `## Hardened State`/i);
+    assert.match(content, /contains `## Control State`/i);
     assert.match(content, /terminal external-review facts/i);
     assert.match(content, /legacy best-effort mode/i);
   });

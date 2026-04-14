@@ -28,7 +28,7 @@ Read WorkflowContext.md for:
 - `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
-If `WorkflowContext.md` contains `## Hardened State`, treat `procedure:final-review` as the configured procedure item:
+If `WorkflowContext.md` contains `## Control State`, treat `procedure:final-review` as the configured procedure item:
 - Reconcile control state before executing the review
 - Mark it `in_progress` only when the configured review mode is actually about to run
 - Mark it `resolved` only after the configured mode completes successfully
@@ -164,8 +164,8 @@ After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resoluti
 ### Step 4: Execute Review (VS Code)
 
 If `Final Review Mode` is `multi-model` or `society-of-thought`:
-- When `WorkflowContext.md` contains `## Hardened State`, preserve the configured mode in status/control-state surfaces, persist `procedure:final-review` as `blocked` in `WorkflowContext.md`, and report: "Configured final review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
-- When hardened state is absent, continue in legacy best-effort mode, explicitly report that hardened protections are inactive, and run a single-model fallback review in `REVIEW.md`.
+- When `WorkflowContext.md` contains `## Control State`, preserve the configured mode in status/control-state surfaces, persist `procedure:final-review` as `blocked` in `WorkflowContext.md`, and report: "Configured final review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
+- When control state is absent, continue in legacy best-effort mode, explicitly report that control-state protections are inactive, and run a single-model fallback review in `REVIEW.md`.
 
 If `Final Review Mode` is `single-model`, execute the shared review prompt above and save the output to `REVIEW.md`.
 {{/vscode}}

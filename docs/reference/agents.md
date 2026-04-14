@@ -15,14 +15,14 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 
 > **PAW Lite** is available as the `paw-lite` skill — any agent can load it on demand.
 
-## Hardened-State Parity
+## Control State Parity
 
-Current PAW and PAW Review sessions embed a compact `## Hardened State` section inside their context artifacts.
+Current PAW, PAW Lite, and PAW Review sessions can embed a compact `## Control State` section inside their context artifacts.
 
-- `WorkflowContext.md` tracks required implementation activities, gate items, configured review procedures, and lifecycle markers
+- `WorkflowContext.md` tracks required implementation activities, lifecycle markers, and any configured review procedures for the active workflow profile (`paw` or `paw-lite`)
 - `ReviewContext.md` tracks review-stage progression, configured review mode, and terminal external-review outcomes
 - Built-in TODOs mirror the active required items for execution convenience, but the embedded artifact state remains the durable source of truth across resume and handoff
-- If hardened state is absent, agents continue in legacy best-effort mode and say so explicitly
+- If control state is absent, agents continue in legacy best-effort mode and say so explicitly
 
 ---
 
@@ -41,7 +41,7 @@ Current PAW and PAW Review sessions embed a compact `## Hardened State` section 
 1. Loads the `paw-workflow` skill for orchestration guidance
 2. Resolves activity skills using the current platform's mechanism (`paw_get_skills` / `paw_get_skill` in VS Code; installed skill files in Copilot CLI)
 3. Delegates activities to specialized skills
-4. Reads `WorkflowContext.md`, reconciles hardened state when present, and applies Review Policy and Session Policy for workflow control
+4. Reads `WorkflowContext.md`, reconciles control state when present, and applies Review Policy and Session Policy for workflow control
 
 **Hybrid Execution Model:**
 
@@ -71,7 +71,7 @@ Before transitions, resume/handoff, or repository mutation, the PAW agent reconc
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps, explain PAW/onboarding | Status reports |
-| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | Plan.md |
+| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | WorkflowContext.md, Plan.md, reviews/FINAL-REVIEW.md |
 
 **Utility Skills:**
 
@@ -134,7 +134,7 @@ Before transitions, resume/handoff, or repository mutation, the PAW agent reconc
 
 **Invocation (Copilot CLI):** `copilot --agent PAW-Review` then provide the PR number or URL
 
-**Architecture:** The PAW Review agent uses a skills-based architecture. The shared review logic lives in skills; VS Code-specific automation remains in `src/` only. The agent reads `ReviewContext.md`, enforces hardened review state when present, and falls back to legacy best-effort mode when it is absent.
+**Architecture:** The PAW Review agent uses a skills-based architecture. The shared review logic lives in skills; VS Code-specific automation remains in `src/` only. The agent reads `ReviewContext.md`, enforces review control state when present, and falls back to legacy best-effort mode when it is absent.
 
 1. Loads the `paw-review-workflow` skill for orchestration
 2. Executes activity skills via subagents for each stage

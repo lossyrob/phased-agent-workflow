@@ -48,15 +48,15 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 ---
 
-## Review Control-State Model
+## Review Control State Model
 
-Current PAW Review runs embed a compact `## Hardened State` section inside `ReviewContext.md`.
+Current PAW Review runs embed a compact `## Control State` section inside `ReviewContext.md`.
 
 - The section records the review-job identifier, configured review mode, required stage items, and terminal external-review outcomes.
 - `ReviewComments.md` continues to hold full comment history, while the embedded control state tracks whether the job is still in understanding, evaluation, output, or a terminal posting/manual-posting state.
 - Resume, status, critique, and posting paths re-enter the same review job by reconciling this embedded state before advancing.
 
-If the hardened section is absent, PAW Review stays usable in **legacy best-effort mode** and explicitly reports that the new protections are inactive.
+If the control-state section is absent, PAW Review stays usable in **legacy best-effort mode** and explicitly reports that the control-state protections are inactive.
 
 ---
 
@@ -167,7 +167,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 ## Workflow Stages
 
-Each stage reads `ReviewContext.md` before acting. When hardened state is present, PAW Review advances only after the prior required items are resolved and records terminal external-review outcomes back into the same artifact.
+Each stage reads `ReviewContext.md` before acting. When control state is present, PAW Review advances only after the prior required items are resolved and records terminal external-review outcomes back into the same artifact.
 
 ### Stage R1 — Understanding
 
@@ -193,7 +193,7 @@ Each stage reads `ReviewContext.md` before acting. When hardened state is presen
    - Document all changed files with additions/deletions
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
-   - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when hardened state is active
+   - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when control state is active
 
 2. **Research pre-change baseline**
    - Analyze codebase at base commit (pre-change state)
@@ -390,7 +390,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 - Flags (CI failures present, breaking changes suspected)
 - Metadata (created timestamp, git commit SHA, reviewer)
 
-When hardened state is present, `ReviewContext.md` also stores:
+When control state is present, `ReviewContext.md` also stores:
 
 - Required review-stage items (`understanding` → `evaluation` → `output`)
 - The configured review mode and procedure-resolution markers

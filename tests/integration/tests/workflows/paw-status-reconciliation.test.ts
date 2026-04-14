@@ -27,7 +27,7 @@ async function seedWorkflowFiles(workDir: string, workId: string): Promise<void>
     "Remote: origin",
     "Artifact Paths: auto-derived",
     "",
-    "## Hardened State",
+    "## Control State",
     "",
     "TODO Mirror: active-required-items",
     "Reconciliation: stale",
@@ -61,10 +61,10 @@ async function seedWorkflowFiles(workDir: string, workId: string): Promise<void>
     "# Implementation Plan",
     "",
     "## Phase Status",
-    "- [x] Phase 1: Embedded Control-State Contract",
+    "- [x] Phase 1: Embedded Control State Contract",
     "- [ ] Phase 2: PAW Gate Reconciliation",
     "",
-    "## Phase 1: Embedded Control-State Contract",
+    "## Phase 1: Embedded Control State Contract",
     "Complete.",
     "",
     "## Phase 2: PAW Gate Reconciliation",
@@ -79,7 +79,7 @@ function buildStatusPrompt(skillContent: string, workId: string): string {
     "",
     "CRITICAL RULES:",
     `- Read .paw/work/${workId}/WorkflowContext.md and .paw/work/${workId}/ImplementationPlan.md`,
-    "- When hardened state exists, use it as the durable source of truth",
+    "- When control state exists, use it as the durable source of truth",
     "- Do NOT ask the user questions",
     "",
     "Skill documentation:",
@@ -96,7 +96,7 @@ describe("paw-status reconciliation reporting", { timeout: 240_000 }, () => {
     }
   });
 
-  it("reports stale hardened control state as read-only/unverified", async () => {
+  it("reports stale control state as read-only/unverified", async () => {
     const pawStatus = await loadSkill("paw-status");
     const workId = "test-paw-status-reconciliation";
 

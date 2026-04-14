@@ -36,15 +36,15 @@ continue
 
 This tells the PAW agent to proceed to the recommended next activity.
 
-## Hardened Control-State and Reconciliation
+## Control State and Reconciliation
 
-Current PAW workflows embed a compact `## Hardened State` section inside `WorkflowContext.md` (and `ReviewContext.md` for PAW Review).
+Current PAW workflows embed a compact `## Control State` section inside `WorkflowContext.md` (and `ReviewContext.md` for PAW Review).
 
 - The embedded state records required activities, gate items, configured-procedure items, and terminal outcomes that matter for progression.
 - Built-in TODOs mirror the active required items for execution convenience, but the embedded artifact state remains the durable source of truth across resume and handoff.
 - Transition, status, handoff, resume, and repository-mutation paths reconcile against this state before proceeding.
 
-If the hardened section is absent, PAW continues in **legacy best-effort mode** and reports that hardened protections are inactive.
+If the control-state section is absent, PAW continues in **legacy best-effort mode** and reports that control-state protections are inactive.
 
 ## Review Policies
 
@@ -222,7 +222,7 @@ The `paw-status` skill analyzes:
 2. **Phase Progress**: Current implementation phase and completion status
 3. **Git State**: Branch, commits ahead/behind, uncommitted changes
 4. **PR Analysis**: Open PRs, review comments needing attention
-5. **Control-State Status**: Reconciled gate items, configured-procedure state, terminal review state, and legacy-mode reporting
+5. **Control State Status**: Reconciled gate items, configured-procedure state, terminal review state, and legacy-mode reporting
 6. **Recommended Actions**: Clear next steps based on current state
 
 ## Handling PR Review Comments

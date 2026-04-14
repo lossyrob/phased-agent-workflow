@@ -50,15 +50,15 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 Every subagent MUST call `paw_get_skill` FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
 
-## Review Control-State and Stage Gating
+## Review Control State and Stage Gating
 
-Current review jobs embed a compact `## Hardened State` section inside `ReviewContext.md`.
+Current review jobs embed a compact `## Control State` section inside `ReviewContext.md`.
 
 - The section records the review-job identifier, configured review mode, required stage items, and terminal external-review outcomes.
 - `ReviewComments.md` remains the complete feedback history, while the embedded control state tracks whether the job is still in understanding, evaluation, output, or a terminal posting/manual-posting state.
 - Resume, status, critique, and posting paths reconcile the embedded state before advancing so the workflow re-enters the same review job instead of re-inferring progress from prompt prose.
 
-If the hardened section is absent, PAW Review remains usable in **legacy best-effort mode** and explicitly reports that the new protections are inactive.
+If the control-state section is absent, PAW Review remains usable in **legacy best-effort mode** and explicitly reports that the control-state protections are inactive.
 
 ## Cross-Repository Review
 
@@ -124,7 +124,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 1. **Fetch PR metadata and create ReviewContext.md**
     - Document all changed files with additions/deletions
     - Set flags: CI failures, breaking changes suspected
-    - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when hardened state is active
+    - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when control state is active
 
 2. **Research pre-change baseline**
     - Analyze codebase at base commit (pre-change state)
@@ -271,7 +271,7 @@ Authoritative parameter source for the review workflow.
 - CI Status and flags
 - Description and metadata
 
-When hardened state is present, `ReviewContext.md` also stores:
+When control state is present, `ReviewContext.md` also stores:
 
 - Review-stage items (`understanding` → `evaluation` → `output`)
 - The configured review mode and procedure-resolution markers
@@ -351,7 +351,7 @@ Complete feedback with full comment history showing evolution from original to p
 
 ## Terminal External-Review Outcomes
 
-When hardened state is present, PAW Review persists the review job's external outcome back into `ReviewContext.md`:
+When control state is present, PAW Review persists the review job's external outcome back into `ReviewContext.md`:
 
 - Pending review created on GitHub
 - Manual posting guidance provided for non-GitHub contexts

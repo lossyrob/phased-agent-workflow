@@ -82,15 +82,15 @@ function buildResumeInstructions(targetAgent: AgentName): string {
   if (targetAgent === 'PAW Review') {
     return [
       'Before acting, read the existing review artifacts for this review identifier.',
-      'Use `ReviewContext.md` as the durable review-state source when embedded hardened state is present.',
-      'If hardened review state is absent, continue in legacy best-effort mode and say so explicitly.',
+      'Use `ReviewContext.md` as the durable review-state source when embedded control state is present.',
+      'If review control state is absent, continue in legacy best-effort mode and say so explicitly.',
     ].join('\n');
   }
 
   return [
     'Before acting, read the existing workflow artifacts for this work item.',
-    'Use `WorkflowContext.md` as the durable workflow-state source when embedded hardened state is present.',
-    'If hardened workflow state is absent, continue in legacy best-effort mode and say so explicitly.',
+    'Use `WorkflowContext.md` as the durable workflow-state source when embedded control state is present.',
+    'If workflow control state is absent, continue in legacy best-effort mode and say so explicitly.',
   ].join('\n');
 }
 

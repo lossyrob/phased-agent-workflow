@@ -115,8 +115,8 @@ export function constructGetWorkStatusQuery(workId?: string): string {
     header,
     '',
     'Run `paw-status` and read WorkflowContext.md before inferring current workflow state.',
-    'If WorkflowContext.md includes `## Hardened State`, use that embedded control state as the durable source of truth.',
-    'If hardened state is absent, report legacy best-effort mode explicitly.',
+    'If WorkflowContext.md includes `## Control State`, use that embedded control state as the durable source of truth.',
+    'If control state is absent, report legacy best-effort mode explicitly.',
     'Preserve blocked, pending, and stale/unverified reconciliation status instead of implying fresh state.',
   ].join('\n');
 }

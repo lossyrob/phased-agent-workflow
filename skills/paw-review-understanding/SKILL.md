@@ -15,7 +15,7 @@ Analyze pull request changes to create comprehensive understanding artifacts. Th
 - Generate research prompt for baseline codebase analysis
 - Derive specification from PR description, code analysis, and baseline understanding
 - Create ReviewContext.md as authoritative parameter source
-- Seed ReviewContext.md with a compact hardened-state section for review stages and terminal review state
+- Seed ReviewContext.md with a compact control-state section for review stages and terminal review state
 - Validate all artifacts meet quality standards
 
 ## Non-Responsibilities
@@ -41,12 +41,12 @@ Execute Step 4 only: Derive specification from baseline research.
 
 **Detection**: Both ReviewContext.md AND CodeResearch.md exist at artifact path.
 
-## Hardened-State Resume Rules
+## Control State Resume Rules
 
-- Initial mode seeds `## Hardened State` with `understanding` in progress, later review stage items pending, `procedure:review-mode` pending, terminal external review state `none`, and pending review identifiers set to `none`.
-- If ReviewContext.md already contains `## Hardened State`, preserve the existing review identifier, stage items, terminal external review state, and pending review identifiers when resuming; do not reset them to defaults.
-- After Step 4 creates `DerivedSpec.md`, update hardened state so `understanding` is `resolved`, `evaluation` is `pending`, and `Reconciliation` is `current`.
-- If ReviewContext.md exists without `## Hardened State`, continue in legacy best-effort mode and explicitly report that hardened protections are inactive.
+- Initial mode seeds `## Control State` with `understanding` in progress, later review stage items pending, `procedure:review-mode` pending, terminal external review state `none`, and pending review identifiers set to `none`.
+- If ReviewContext.md already contains `## Control State`, preserve the existing review identifier, stage items, terminal external review state, and pending review identifiers when resuming; do not reset them to defaults.
+- After Step 4 creates `DerivedSpec.md`, update control state so `understanding` is `resolved`, `evaluation` is `pending`, and `Reconciliation` is `current`.
+- If ReviewContext.md exists without `## Control State`, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 
 ## Context Detection
 
@@ -106,7 +106,7 @@ related_prs:
 4. **Create ReviewContext.md**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`
    - Use template structure below
-   - Include all metadata, flags, and the hardened-state section
+   - Include all metadata, flags, and the control-state section
 
 ## Step 2: Research Questions Generation
 
@@ -273,7 +273,7 @@ status: complete
 
 *SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above. In particular, if `Review Mode` is `society-of-thought` and no `Review Specialists` value is provided, default to `all` — do not select a subset.*
 
-## Hardened State
+## Control State
 
 TODO Mirror: active-required-items
 Reconciliation: not_run

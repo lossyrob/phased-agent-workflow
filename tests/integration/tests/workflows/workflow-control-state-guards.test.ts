@@ -38,7 +38,7 @@ async function seedPhase2WorkflowContext(
     "Artifact Lifecycle: commit-and-clean",
     "Artifact Paths: auto-derived",
     "",
-    "## Hardened State",
+    "## Control State",
     "",
     "TODO Mirror: active-required-items",
     "Reconciliation: current",
@@ -75,10 +75,10 @@ async function seedImplementationPlan(workDir: string, workId: string, phase2Com
     "# Implementation Plan",
     "",
     "## Phase Status",
-    "- [x] Phase 1: Embedded Control-State Contract",
+    "- [x] Phase 1: Embedded Control State Contract",
     `- [${phase2Complete ? "x" : " "}] Phase 2: PAW Gate Reconciliation`,
     "",
-    "## Phase 1: Embedded Control-State Contract",
+    "## Phase 1: Embedded Control State Contract",
     "Complete.",
     "",
     "## Phase 2: PAW Gate Reconciliation",
@@ -96,7 +96,7 @@ function buildTransitionPrompt(skillContent: string, workId: string): string {
     "",
     "CRITICAL RULES:",
     `- Read .paw/work/${workId}/WorkflowContext.md and .paw/work/${workId}/ImplementationPlan.md`,
-    "- When hardened state exists, use it as the durable source of truth",
+    "- When control state exists, use it as the durable source of truth",
     "- Use only evidence that is available from the seeded workflow files and the local git checkout",
     "- If the required live state cannot be proven from that evidence, block instead of inferring",
     "- Return the TRANSITION RESULT block exactly as specified in the skill",
@@ -169,7 +169,7 @@ describe("workflow control-state guards", { timeout: 360_000 }, () => {
       "Artifact Lifecycle: commit-and-clean",
       "Artifact Paths: auto-derived",
       "",
-      "## Hardened State",
+      "## Control State",
       "",
       "TODO Mirror: active-required-items",
       "Reconciliation: external_unverified",
@@ -232,7 +232,7 @@ describe("workflow control-state guards", { timeout: 360_000 }, () => {
     assert.match(response, /preflight:\s*blocked:.*transition:after-phase:1.*unresolved/i);
   });
 
-  it("allows transition when hardened state is current and the phase gate is resolved", async () => {
+  it("allows transition when control state is current and the phase gate is resolved", async () => {
     const response = await runPhase2Transition({
       workId: "test-transition-phase2-ready",
       phaseBoundaryStatus: "resolved",

@@ -62,7 +62,7 @@ describe("full local workflow (spec → plan → implement)", { timeout: 600_000
         "Include a test that verifies the endpoint.",
         "",
         "Stages to execute IN ORDER:",
-        `0. CONTEXT: Create .paw/work/${workId}/WorkflowContext.md with a \`## Hardened State\` section and \`TODO Mirror: active-required-items\``,
+        `0. CONTEXT: Create .paw/work/${workId}/WorkflowContext.md with a \`## Control State\` section and \`TODO Mirror: active-required-items\``,
         `1. SPEC: Write a specification to .paw/work/${workId}/Spec.md`,
         `2. PLAN: Create an implementation plan at .paw/work/${workId}/ImplementationPlan.md`,
         "3. IMPLEMENT: Make the code changes, write REAL tests (not placeholders!), run `npm test`, commit locally",
@@ -85,7 +85,7 @@ describe("full local workflow (spec → plan → implement)", { timeout: 600_000
     const workflowContext = await readFile(
       join(ctx.fixture.workDir, ".paw/work", workId, "WorkflowContext.md"), "utf-8",
     );
-    assert.match(workflowContext, /## Hardened State/);
+    assert.match(workflowContext, /## Control State/);
     assert.match(workflowContext, /TODO Mirror:\s*active-required-items/i);
 
     // Plan exists with phases
@@ -192,7 +192,7 @@ function buildFullWorkflowPrompt(opts: {
      "",
      "CRITICAL RULES:",
       `- Write workflow context to .paw/work/${opts.workId}/WorkflowContext.md`,
-      "- WorkflowContext.md MUST include a `## Hardened State` section and `TODO Mirror: active-required-items`",
+      "- WorkflowContext.md MUST include a `## Control State` section and `TODO Mirror: active-required-items`",
       `- Write spec to .paw/work/${opts.workId}/Spec.md`,
       `- Write plan to .paw/work/${opts.workId}/ImplementationPlan.md`,
     "- Spec MUST have: Overview, FR-xxx requirements, SC-xxx success criteria",

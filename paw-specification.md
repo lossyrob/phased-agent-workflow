@@ -202,15 +202,15 @@ The final PR diff against `main` shows zero `.paw/` file changes. The PR descrip
 
 **VS Code Integration:** The "Stop Tracking Artifacts" command provides a mid-workflow escape hatch, switching any tracked workflow to `never-commit`.
 
-### Hardened Control-State Model
+### Control State Model
 
-Current PAW workflows embed a compact `## Hardened State` section inside `WorkflowContext.md`.
+Current PAW workflows embed a compact `## Control State` section inside `WorkflowContext.md`.
 
 - The section records required activities, gate items, configured-procedure items, and lifecycle markers that must resolve before the workflow can advance.
 - Built-in TODOs mirror the active required items from this section for in-session execution, but the embedded artifact state remains the durable source of truth across resume and cross-runtime handoff.
 - The section is portable: CLI agents and VS Code surfaces both read the same serialized state instead of reconstructing workflow progress from prompt prose alone.
 
-If the section is absent, PAW treats the workflow as **legacy best-effort mode**. Older workflows remain usable, but transition, status, and resume surfaces explicitly report that hardened protections are inactive.
+If the section is absent, PAW treats the workflow as **legacy best-effort mode**. Older workflows remain usable, but transition, status, and resume surfaces explicitly report that control-state protections are inactive.
 
 ### Gate Reconciliation and Exact Procedure Handling
 
@@ -1089,9 +1089,9 @@ The **Workflow Context** document centralizes workflow parameters (target branch
 - `Planning Docs Review` enables or disables the planning-docs review gate
 - When enabled, `Planning Review Mode`, `Planning Review Interactive`, `Planning Review Models`, `Planning Review Specialists`, `Planning Review Interaction Mode`, `Planning Review Specialist Models`, `Planning Review Perspectives`, and `Planning Review Perspective Cap` use the same configuration shape as final review
 
-**Hardened State Section** (Current workflows)
-- The embedded `## Hardened State` block records required activities, gate items, configured-procedure items, and lifecycle markers
-- Presence of this section enables hardened behavior; absence means legacy best-effort mode
+**Control State Section** (Current workflows)
+- The embedded `## Control State` block records required activities, gate items, configured-procedure items, and lifecycle markers
+- Presence of this section enables control-state behavior; absence means legacy best-effort mode
 - Built-in TODOs mirror active required items from this block and can be regenerated from it
 
 #### Usage

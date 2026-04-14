@@ -92,12 +92,12 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 - `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
 - `WorkflowContext.md` deliberately stores portable metadata only; VS Code may keep machine-specific worktree paths in local extension state, while Copilot CLI sessions rely on the committed metadata plus git/worktree evidence instead
 
-**Hardened-state section (current workflows):**
+**Control-state section (current workflows):**
 
-- `WorkflowContext.md` includes a compact `## Hardened State` block recording required activities, gate items, configured-procedure items, and lifecycle markers
+- `WorkflowContext.md` includes a compact `## Control State` block recording required activities, gate items, configured-procedure items, and lifecycle markers
 - Built-in TODOs mirror the active required items from this block for in-session execution, but the embedded artifact state remains the durable source of truth
 - `paw-transition`, `paw-status`, handoff/resume paths, and final PR readiness checks reconcile against this section before proceeding
-- If the section is absent, the workflow runs in legacy best-effort mode and reports that hardened protections are inactive
+- If the section is absent, the workflow runs in legacy best-effort mode and reports that control-state protections are inactive
 
 ### Spec.md
 
@@ -255,9 +255,9 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 | CI Status | Passing, failing, pending |
 | Flags | CI failures, breaking changes suspected |
 
-**Hardened-state section (current reviews):**
+**Control-state section (current reviews):**
 
-- `ReviewContext.md` includes a compact `## Hardened State` block for review-job identifier, configured review mode, required stage items, and terminal external-review outcomes
+- `ReviewContext.md` includes a compact `## Control State` block for review-job identifier, configured review mode, required stage items, and terminal external-review outcomes
 - The section lets resume, status, critique, and posting paths re-enter the same review job without re-inferring state from prompt prose
 - If the section is absent, PAW Review uses legacy best-effort mode and says so explicitly
 

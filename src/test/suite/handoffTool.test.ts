@@ -339,12 +339,12 @@ function constructPromptMessage(params: HandoffParams): string {
 
   if (params.target_agent === 'PAW Review') {
     prompt += '\n\nBefore acting, read the existing review artifacts for this review identifier.';
-    prompt += '\nUse `ReviewContext.md` as the durable review-state source when embedded hardened state is present.';
-    prompt += '\nIf hardened review state is absent, continue in legacy best-effort mode and say so explicitly.';
+    prompt += '\nUse `ReviewContext.md` as the durable review-state source when embedded control state is present.';
+    prompt += '\nIf review control state is absent, continue in legacy best-effort mode and say so explicitly.';
   } else {
     prompt += '\n\nBefore acting, read the existing workflow artifacts for this work item.';
-    prompt += '\nUse `WorkflowContext.md` as the durable workflow-state source when embedded hardened state is present.';
-    prompt += '\nIf hardened workflow state is absent, continue in legacy best-effort mode and say so explicitly.';
+    prompt += '\nUse `WorkflowContext.md` as the durable workflow-state source when embedded control state is present.';
+    prompt += '\nIf workflow control state is absent, continue in legacy best-effort mode and say so explicitly.';
   }
 
   if (params.inline_instruction) {

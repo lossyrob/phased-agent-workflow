@@ -66,7 +66,7 @@ describe("execution checkout contract content", () => {
 
     assert.ok(handoffTool, "Expected paw_new_session language model tool to exist");
     assert.match(handoffTool.modelDescription, /WorkflowContext\.md|ReviewContext\.md/i);
-    assert.match(handoffTool.modelDescription, /hardened state/i);
+    assert.match(handoffTool.modelDescription, /control state/i);
     assert.match(handoffTool.modelDescription, /legacy best-effort mode/i);
   });
 
@@ -74,8 +74,8 @@ describe("execution checkout contract content", () => {
     const content = await readRepoFile("src/prompts/stopTrackingArtifacts.template.md");
     assert.match(content, /WorkflowContext\.md/);
     assert.match(content, /Artifact Lifecycle:/);
-    assert.match(content, /## Hardened State/);
+    assert.match(content, /## Control State/);
     assert.match(content, /legacy best-effort mode/i);
-    assert.match(content, /Do not rewrite or remove unrelated hardened-state or legacy-state lines/i);
+    assert.match(content, /Do not rewrite or remove unrelated control-state or legacy-state lines/i);
   });
 });

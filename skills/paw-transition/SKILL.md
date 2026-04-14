@@ -32,13 +32,13 @@ Read WorkflowContext.md to determine:
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
 
-If `WorkflowContext.md` contains `## Hardened State`, also read:
+If `WorkflowContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker
 - Required activity items
 - Gate items
 - Configured procedure items
 
-When hardened state is present, treat it as the durable workflow source of truth. Determine the last completed activity and next required activity from the required activity items, not from inferred artifact order alone. If the section is absent, continue in legacy best-effort mode and explicitly note that hardened protections are inactive.
+When control state is present, treat it as the durable workflow source of truth. Determine the last completed activity and next required activity from the required activity items, not from inferred artifact order alone. If the section is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 
 ### Step 2: Determine Next Activity
 
@@ -57,7 +57,7 @@ Use the Mandatory Transitions table:
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
 
-When hardened state is present, map the first non-terminal required activity item to the next activity:
+When control state is present, map the first non-terminal required activity item to the next activity:
 - `spec` → `paw-spec`
 - `spec-review` → `paw-spec-review`
 - `code-research` → `paw-code-research`
@@ -161,12 +161,12 @@ Before the next activity can start, verify:
 - If `next_activity = paw-pr` and detected lifecycle is `commit-and-clean`: `artifact_lifecycle_action = stop-tracking (run \`git rm --cached -r .paw/work/<work-id>/\` before PR creation)`
 - Otherwise: `artifact_lifecycle_action = none`
 
-**Hardened-state reconciliation** (when `## Hardened State` exists):
+**Control-state reconciliation** (when `## Control State` exists):
 1. Treat `Reconciliation: current` as required for mutation-affecting next activities.
 2. If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile the embedded state against artifacts, git state, PR state, and the just-completed boundary before returning `preflight: passed`.
 3. If reconciliation cannot prove the relevant live state, return `preflight: blocked: reconciliation incomplete` and explicitly report whether the state is `stale` or `external_unverified`.
 4. If any required activity item before `next_activity`, any relevant gate item, or any relevant configured procedure item remains `pending`, `in_progress`, or `blocked` when it should already be terminal, return `preflight: blocked: <item-id> unresolved`.
-5. Only return `preflight: passed` when the reconciled hardened state supports the computed `next_activity`.
+5. Only return `preflight: passed` when the reconciled control state supports the computed `next_activity`.
 
 If any check fails, report blocker and stop.
 
@@ -176,7 +176,7 @@ Add TODO for next activity:
 - `[ ] <activity-name> (<context>)`
 - `[ ] paw-transition`
 
-When hardened state is present, TODOs are a mirror only. Queue TODOs only for required activity items whose status is `pending`, `in_progress`, or `blocked`.
+When control state is present, TODOs are a mirror only. Queue TODOs only for required activity items whose status is `pending`, `in_progress`, or `blocked`.
 
 ## Completion
 

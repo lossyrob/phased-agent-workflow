@@ -31,7 +31,7 @@ describe("review control-state sequencing content", () => {
     assert.match(workflow, /`output:github` runs only after `output:critique-response` is resolved/i);
 
     assert.match(understanding, /preserve the existing review identifier, stage items, terminal external review state, and pending review identifiers/i);
-    assert.match(understanding, /After Step 4 creates `DerivedSpec\.md`, update hardened state so `understanding` is `resolved`, `evaluation` is `pending`, and `Reconciliation` is `current`/i);
+    assert.match(understanding, /After Step 4 creates `DerivedSpec\.md`, update control state so `understanding` is `resolved`, `evaluation` is `pending`, and `Reconciliation` is `current`/i);
 
     assert.match(feedback, /Initial feedback generation requires `evaluation` to be `resolved` and `output:feedback` to be `pending` or `in_progress`/);
     assert.match(feedback, /Critique Response Mode requires `output:critic` to be `resolved` and `output:critique-response` to be `pending` or `in_progress`/);

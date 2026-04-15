@@ -95,6 +95,7 @@ describe("control-state contract content", () => {
     assert.match(review, /output:feedback/);
     assert.match(review, /pending-review-created/);
     assert.match(review, /manual-posting-provided/);
+    assert.match(review, /no-comments-to-post/);
     assert.match(review, /must contain exactly one current marker/i);
   });
 
@@ -115,11 +116,7 @@ describe("control-state contract content", () => {
     );
     assert.match(
       init,
-      /After planning defines named implementation phases, append `phase:<n>:<slug>` items under `### Required Workflow Items`\./,
-    );
-    assert.doesNotMatch(
-      init,
-      /- add `phase:<n>:<slug>` items after planning defines named implementation phases/,
+      /When planning materializes phases, insert `phase:<n>:<slug>` items before `final-review`/,
     );
     assert.match(
       init,
@@ -162,7 +159,6 @@ describe("control-state contract content", () => {
       "- `transition:after-plan-review` | `pending` | `transition`",
       "",
       "### Terminal External Review State",
-      "- `none`",
       "- `pending-review-created`",
     ].join("\n");
 
@@ -170,5 +166,6 @@ describe("control-state contract content", () => {
     const reparsed = parseControlStateFixture(serializeControlStateFixture(parsed));
 
     assert.deepStrictEqual(reparsed, parsed);
+    assert.strictEqual(parsed.terminalMarkers.length, 1, "Terminal section must contain exactly one current marker");
   });
 });

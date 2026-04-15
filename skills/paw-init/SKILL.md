@@ -276,7 +276,7 @@ Reconciliation: not_run
 
 - Resolve config-dependent control-state rows to concrete values before writing `WorkflowContext.md`:
   - When `Workflow Identity` is `paw`, use the standard rows above:
-    - After planning defines named implementation phases, append `phase:<n>:<slug>` items under `### Required Workflow Items`.
+    - When planning materializes phases, insert `phase:<n>:<slug>` items before `final-review` (not appended after the template).
     - Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`.
     - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
     - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.

@@ -14,7 +14,7 @@ Post finalized review comments to GitHub as a pending review. This skill only po
 Verify `ReviewComments.md` exists in `.paw/reviews/<identifier>/` with:
 - Status: `finalized`
 - All comments have `**Final**:` markers
-- At least one comment marked `**Final**: ✓ Ready for GitHub posting`
+- At least one comment marked `**Final**: ✓ Ready for GitHub posting`, or ReviewComments.md is finalized with zero postable comments (valid no-op outcome)
 
 Also verify:
 - GitHub PR context available (owner, repo, PR number)
@@ -24,7 +24,7 @@ If ReviewComments.md is not finalized or missing `**Final**:` markers, report bl
 
 **Non-GitHub Context**: If this is not a GitHub PR review (e.g., local branch diff), skip GitHub posting and provide manual posting instructions instead.
 
-## Hardened Review Control State
+## Review Control State
 
 If `ReviewContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker
@@ -38,6 +38,7 @@ Apply these sequencing rules:
 - If prerequisites are not met, report blocked status with the unresolved review-state item
 - After a pending review is created, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `pending-review-created`, `Pending Review ID` / `Pending Review URL` are populated, and `Reconciliation` is `current`
 - After non-GitHub manual posting instructions are written, update `ReviewContext.md` so `output:github` is `resolved`, terminal external review state is `manual-posting-provided`, `Pending Review ID` / `Pending Review URL` stay `none`, and `Reconciliation` is `current`
+- If ReviewComments.md is finalized with zero postable comments, resolve `output:github` with terminal state `no-comments-to-post` and `Reconciliation` `current`
 
 If `ReviewContext.md` does not contain `## Control State`, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
 

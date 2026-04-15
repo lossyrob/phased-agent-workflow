@@ -24,7 +24,7 @@ Also verify access to all supporting artifacts:
 
 If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
 
-## Hardened Review Control State
+## Review Control State
 
 If `ReviewContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker

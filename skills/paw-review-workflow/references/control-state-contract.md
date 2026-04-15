@@ -50,6 +50,7 @@ Pending Review URL: `none`
   - `none`
   - `pending-review-created`
   - `manual-posting-provided`
+  - `no-comments-to-post`
 
 ## Reconciliation Rules
 
@@ -59,7 +60,7 @@ Pending Review URL: `none`
 - Determine current review position from the first review stage item whose status is not terminal (`resolved` or `not_applicable`).
 - Later review stage items must block when an earlier review stage item or configured procedure item remains `pending`, `in_progress`, or `blocked`.
 - `procedure:review-mode` becomes `resolved` only when the configured evaluation path actually ran and produced its required artifacts.
-- `output:github` becomes `resolved` only after a pending review is created or manual posting instructions are written for non-GitHub contexts.
+- `output:github` becomes `resolved` only after a pending review is created, manual posting instructions are written, or a zero-comment finalized review is recorded as `no-comments-to-post`.
 - `### Terminal External Review State` must contain exactly one current marker.
 - `pending-review-created` requires `Pending Review ID` to be populated; `manual-posting-provided` requires `Pending Review ID` and `Pending Review URL` to remain `none`.
 - When `## Control State` is absent, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.

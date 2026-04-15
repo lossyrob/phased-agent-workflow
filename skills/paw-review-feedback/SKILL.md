@@ -23,7 +23,7 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 
 If any required artifact is missing, report blocked status—earlier stages must complete first.
 
-## Hardened Review Control State
+## Review Control State
 
 If `ReviewContext.md` contains `## Control State`, also read:
 - `Reconciliation:` marker

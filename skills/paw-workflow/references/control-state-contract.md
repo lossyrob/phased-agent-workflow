@@ -19,6 +19,7 @@
 - Shared item line format:
   - `- \`<item-id>\` | \`<status>\` | \`<kind>\``
 - Preserve unknown additive fields or items when updating the section.
+- Schema evolution: additive changes only. Unknown fields/items must survive writer mutations.
 
 ## Workflow Identity
 

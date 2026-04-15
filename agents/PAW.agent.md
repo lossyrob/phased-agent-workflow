@@ -7,7 +7,7 @@ You are a workflow orchestrator using a **hybrid execution model**: interactive 
 
 ## Initialization
 
-On first request, identify work context from environment (current branch, `.paw/work/` directories) or user input. If no matching WorkflowContext.md exists, load `paw-init` to bootstrap. If resuming existing work, derive TODO state from the embedded `## Control State` section when present; otherwise derive it from completed artifacts. If an existing `WorkflowContext.md` contains `Workflow Identity: paw-lite`, STOP standard PAW orchestration and tell the user this work item should continue with the `paw-lite` skill instead. If `paw-init` just created `Workflow Identity: paw-lite`, hand off to `paw-lite` or its recommended next step instead of entering standard PAW transitions. Load `paw-workflow` skill for reference documentation (activity tables, artifact structure, PR routing).
+On first request, identify work context from environment (current branch, `.paw/work/` directories) or user input. If no matching WorkflowContext.md exists, load `paw-init` to bootstrap. If `Workflow Identity: paw-lite`, hand off to `paw-lite` instead of standard PAW orchestration. If resuming standard PAW work, derive TODO state from `## Control State` when present. Load `paw-workflow` skill for reference documentation.
 
 ## Workflow Rules
 
@@ -29,9 +29,7 @@ On first request, identify work context from environment (current branch, `.paw/
 
 **Skippable = NO**: Execute immediately without pausing or asking for confirmation.
 
-If `paw-init` created a lite workflow, do not continue into standard PAW specification/planning flow. Hand off to `paw-lite` immediately or tell the user to continue with `paw-lite`/`plan`.
-
-**Post plan-review flow**: After `paw-plan-review` returns PASS, check if Planning Docs Review is enabled. If enabled, load `paw-planning-docs-review` and execute directly (interactive). After planning-docs-review completes, delegate to `paw-transition` (stage boundary). If disabled, proceed directly to Planning PR (PRs strategy) or implementation (local strategy).
+**Post plan-review flow**:After `paw-plan-review` returns PASS, check if Planning Docs Review is enabled. If enabled, load `paw-planning-docs-review` and execute directly (interactive). After planning-docs-review completes, delegate to `paw-transition` (stage boundary). If disabled, proceed directly to Planning PR (PRs strategy) or implementation (local strategy).
 
 **Post impl-review flow** (PRs strategy): After `paw-impl-review` returns PASS, load `paw-git-operations` and create Phase PR. For local strategy, push to target branch (no PR).
 
@@ -224,7 +222,7 @@ For each user request:
 - Git/branch operations → `paw-git-operations`
 - PR comment responses → `paw-review-response`
 - Documentation conventions → `paw-docs-guidance`
-- Existing or newly initialized work with `Workflow Identity: paw-lite` → stop standard orchestration and direct the user to continue with `paw-lite`
+- `Workflow Identity: paw-lite` → hand off to `paw-lite`
 - Status/help → `paw-status`
 - About PAW, onboarding, install, or "how do I get started?" questions → `paw-status`
 - Workflow rollback → `paw-rewind`

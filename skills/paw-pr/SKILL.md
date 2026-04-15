@@ -25,12 +25,7 @@ Before creating the PR, verify and report status. Block on failures unless user 
 
 ### Workflow Identity Detection
 
-Read `WorkflowContext.md` for `Workflow Identity`.
-
-- `paw` → standard PAW profile
-- `paw-lite` → lite profile
-- If `Workflow Identity` is absent, default to `paw`
-- Legacy lite compatibility fallback: if `Plan.md` exists and `ImplementationPlan.md` does not, use lite artifact expectations for read-only compatibility reporting only, explicitly report that workflow identity is missing, and STOP final PR creation until `Workflow Identity: paw-lite` is persisted
+Read `Workflow Identity` from `WorkflowContext.md`: `paw` (default) or `paw-lite`. Legacy lite fallback (`Plan.md` exists, `ImplementationPlan.md` does not) → report identity missing, STOP final PR creation until persisted.
 
 ### Required Checks
 
@@ -48,12 +43,10 @@ Read `WorkflowContext.md` for `Workflow Identity`.
 - `Docs.md` (required: full mode; optional: minimal/custom)
 
 **PAW Lite profile**:
-- `Plan.md` exists
-- `## Work Items` exists and all checkboxes are resolved
+- `Plan.md` exists with `## Work Items` — all checkboxes resolved
 - Target branch exists with implementation commits
-- If `Final Agent Review` is `enabled`, `reviews/FINAL-REVIEW.md` exists, reflects the current post-fix state, and records a resolved non-blocking review outcome
-- `Workflow Identity: paw-lite` is persisted before mutation-affecting execution
-- Legacy lite compatibility mode is reporting-only compatibility; new workflows should persist `Workflow Identity: paw-lite`
+- If final review enabled, `reviews/FINAL-REVIEW.md` exists with non-blocking outcome
+- `Workflow Identity: paw-lite` must be persisted
 
 **Branch Status**:
 - Target branch up to date with base branch (from WorkflowContext.md, defaults to `main`)
@@ -77,11 +70,7 @@ Read `WorkflowContext.md` for `Workflow Identity`.
 - Unresolved items → block and report with recommendation
 
 **Control State**:
-- If `WorkflowContext.md` contains `## Control State`, reconcile it before PR creation.
-- Required activity items earlier than `final-pr`, plus all gate items and configured procedure items, must all be `resolved` or `not_applicable` before final PR creation can proceed.
-- Treat `final-pr` as the current activity: it may still be `pending` or `in_progress` when `paw-pr` starts and becomes `resolved` only after PR creation succeeds.
-- If reconciliation cannot prove the live state, or any earlier required control-state item or dependent gate/procedure item remains `pending`, `in_progress`, or `blocked`, treat it as a blocker.
-- If `## Control State` is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
+- If `## Control State` exists, reconcile before PR creation. All items before `final-pr` must be terminal. Absent → legacy best-effort mode.
 
 ## Workflow Profile Handling
 

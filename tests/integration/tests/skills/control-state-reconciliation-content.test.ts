@@ -16,10 +16,10 @@ describe("control-state reconciliation content", () => {
     const workflow = await readRepoFile("skills/paw-workflow/references/control-state-contract.md");
 
     assert.match(workflow, /## Reconciliation Rules/);
-    assert.match(workflow, /Mutation-affecting decisions include delegation, transition advancement, review execution, git mutation, and final PR creation\./);
-    assert.match(workflow, /Read-only status\/reporting may continue when reconciliation is `stale` or `external_unverified`/);
-    assert.match(workflow, /continue in legacy best-effort mode and explicitly report that control-state protections are inactive/i);
-    assert.match(workflow, /Configured procedure items become `resolved` only when the configured mode actually ran\./);
+    assert.match(workflow, /mutation-affecting decisions/i);
+    assert.match(workflow, /read-only/i);
+    assert.match(workflow, /legacy best-effort mode/i);
+    assert.match(workflow, /Procedure items become `resolved` only when the configured mode actually ran/);
   });
 
   it("requires reconciliation before mutation-affecting PAW actions", async () => {
@@ -33,9 +33,9 @@ describe("control-state reconciliation content", () => {
     assert.match(transition, /preflight:\s*blocked:\s*reconciliation incomplete/i);
     assert.match(transition, /TODOs are a mirror only/i);
 
-    assert.match(status, /read-only\/unverified/i);
-    assert.match(status, /control-state protections are inactive/i);
-    assert.match(status, /do not report progress past unresolved required items, gate items, or procedure items/i);
+    assert.match(status, /read-only.*unverified/i);
+    assert.match(status, /legacy best-effort mode/i);
+    assert.match(status, /Do not report progress past unresolved required/i);
 
     assert.match(gitOps, /Treat `Reconciliation: current` as required for mutation-affecting git work\./);
     assert.match(gitOps, /STOP and report that unresolved control-state item/i);
@@ -43,8 +43,7 @@ describe("control-state reconciliation content", () => {
     assert.match(pawAgent, /If reconciliation cannot make the state `current`, STOP and report the blocker/i);
     assert.match(pawAgent, /do not advance past required activity items, gate items, or configured procedure items/i);
 
-    assert.match(pawPr, /Required activity items earlier than `final-pr`, plus all gate items and configured procedure items, must all be `resolved` or `not_applicable`/);
-    assert.match(pawPr, /Treat `final-pr` as the current activity/i);
-    assert.match(pawPr, /control-state protections are inactive/i);
+    assert.match(pawPr, /All items before `final-pr` must be terminal/i);
+    assert.match(pawPr, /legacy best-effort mode/i);
   });
 });

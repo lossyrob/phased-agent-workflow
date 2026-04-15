@@ -78,7 +78,7 @@ When parameters are not provided:
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
-When `workflow_identity` resolves to `paw-lite`, use these lite profile defaults for fields not explicitly set in the current request: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, `planning_docs_review=disabled`. Ignore conflicting table, user-default, or preset values for those fields unless the current request explicitly overrides them.
+When `workflow_identity` resolves to `paw-lite`, override defaults: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, `planning_docs_review=disabled`.
 
 Ask in this order and allow defaults where permitted.
 
@@ -157,11 +157,8 @@ When a preset is specified (explicitly or via default):
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
 - If `review_policy` is `planning-only` or `final-pr-only`, `review_strategy` MUST be `local`
-- If `workflow_mode` is `custom`, `custom_instructions` MUST be provided unless `workflow_identity` is `paw-lite`
-- If `workflow_identity` is `paw-lite`, `workflow_mode` MUST be `custom`
-- If `workflow_identity` is `paw-lite`, `review_strategy` MUST be `local`
-- If `workflow_identity` is `paw-lite`, `review_policy` MUST be `final-pr-only`
-- If `workflow_identity` is `paw-lite`, `planning_docs_review` MUST be `disabled`
+- `paw-lite` requires: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, `planning_docs_review=disabled`
+- `workflow_mode=custom` requires `custom_instructions` unless `workflow_identity=paw-lite`
 - If `final_review_mode` is `society-of-thought`, `final_agent_review` MUST be `enabled`
 - If `planning_review_mode` is `society-of-thought`, `planning_docs_review` MUST be `enabled`
 - Invalid combinations: STOP and report error
@@ -283,7 +280,7 @@ Reconciliation: not_run
     - Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`.
     - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
     - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.
-  - When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with:
+  - When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with the lite profile (items: `init`→resolved, `planning`, `implementation`, `final-review`, `final-pr`; procedure: `procedure:final-review`; no gates). Use `not_applicable` for `final-review` and `procedure:final-review` when `Final Agent Review` is `disabled`.
 
 ```markdown
 ## Control State
@@ -301,10 +298,6 @@ Reconciliation: not_run
 ### Configured Procedure Items
 - `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
-
-  - For the lite profile:
-    - Use `not_applicable` for `final-review` and `procedure:final-review` when `Final Agent Review` is `disabled`; otherwise use `pending`.
-    - Keep `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, and `planning_docs_review=disabled` unless the current request explicitly supplies different supported values.
 
 ### Execution Contract
 

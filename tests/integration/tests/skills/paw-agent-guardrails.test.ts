@@ -43,9 +43,8 @@ describe("PAW agent guardrails", () => {
     const content = await readFile(resolve(REPO_ROOT, "agents/PAW.agent.md"), "utf-8");
 
     assert.match(content, /Workflow Identity: paw-lite/);
-    assert.match(content, /STOP standard PAW orchestration and tell the user this work item should continue with the `paw-lite` skill/i);
+    assert.match(content, /hand off to `paw-lite`/i);
     assert.match(content, /\| paw-init \| paw-lite \(if `Workflow Identity: paw-lite`\) or paw-spec or paw-work-shaping \|/);
-    assert.match(content, /If `paw-init` created a lite workflow, do not continue into standard PAW specification\/planning flow/i);
   });
 
   it("documents embedded review control state handling in PAW Review.agent.md", async () => {

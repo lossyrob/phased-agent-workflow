@@ -58,20 +58,12 @@ Read WorkflowContext.md for:
 
 ### Workflow Identity Detection
 
-- `Workflow Identity: paw` → standard PAW profile
-- `Workflow Identity: paw-lite` → lite profile
-- If `Workflow Identity` is absent, default to standard PAW handling
-- Legacy lite compatibility fallback: if `Plan.md` exists and `ImplementationPlan.md` does not, use lite artifact expectations for status reporting and explicitly say workflow identity is missing
+- Read `Workflow Identity` from `WorkflowContext.md`: `paw` | `paw-lite` (absent → `paw`)
+- Legacy lite compatibility fallback: `Plan.md` exists and `ImplementationPlan.md` does not → use lite expectations for reporting, say workflow identity is missing
 
 ### Control State Detection
 
-If `WorkflowContext.md` contains `## Control State`, read:
-- `Reconciliation:` marker
-- Required activity items
-- Gate items
-- Configured procedure items
-
-Treat embedded control state as the durable workflow source of truth when present. If the section is absent, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
+If `WorkflowContext.md` contains `## Control State`, read reconciliation marker, required items, gates, and procedures. Absent → legacy best-effort mode.
 
 ### Phase Counting
 
@@ -92,10 +84,7 @@ Only apply phase-candidate reporting to the standard PAW profile.
 
 ### Lite Work Item Counting
 
-For the paw-lite profile, parse `Plan.md` `## Work Items` checkboxes:
-- Count complete vs incomplete work items
-- Report: "Work items X of Y complete"
-- Use `FINAL-REVIEW.md` presence only for review-state reporting, not as a substitute for unresolved work items
+For paw-lite, count `Plan.md` `## Work Items` checkboxes: "Work items X of Y complete".
 
 ### Git Status
 
@@ -126,16 +115,10 @@ When PRs exist:
 Map state to guidance.
 
 When control state is present:
-- Derive the current workflow position from the first required activity item whose status is not terminal (`resolved` or `not_applicable`).
-- Report any earlier `blocked`, `pending`, or `in_progress` gate/procedure items that should already be terminal as blockers rather than inferring progress past them.
-- If `Reconciliation` is `stale` or `external_unverified`, do not imply freshness. Report a read-only/unverified status and name the unresolved control-state items.
-- If `Reconciliation` is `not_run`, say reconciliation is still required before mutation-affecting work can safely proceed.
-- If the profile is `paw-lite`, map the first non-terminal required activity to lite guidance:
-  - `planning` → "Create or continue the lite plan: `plan`"
-  - `implementation` → "Continue lite implementation: `implement`"
-  - `final-review` → "Run lite final review: `final-review`"
-  - `final-pr` → "Create the final PR: `pr`"
-- For paw-lite, do not report progress past unresolved work items or an unresolved `FINAL-REVIEW.md` requirement.
+- Current position = first non-terminal required activity item
+- Report `blocked`/unresolved gate/procedure items as blockers
+- Non-`current` reconciliation → read-only/unverified status
+- For paw-lite, map the first non-terminal item to lite guidance (`planning`→plan, `implementation`→implement, `final-review`→final-review, `final-pr`→pr)
 
 | State | Recommendation |
 |-------|----------------|
@@ -150,11 +133,7 @@ When control state is present:
 | All phases complete, review disabled | "Create final PR: `pr`" |
 | All complete + unresolved candidates | "Review phase candidates before PR" |
 
-When control state is absent and legacy lite compatibility mode is active:
-- Missing `Plan.md` → "Create the lite plan: `plan`"
-- `Plan.md` exists with unresolved work items → "Continue lite implementation: `implement`"
-- All work items resolved, final review enabled, and `reviews/FINAL-REVIEW.md` missing → "Run lite final review: `final-review`"
-- All work items resolved and review is disabled, or `reviews/FINAL-REVIEW.md` exists → "Create the final PR: `pr`"
+When control state is absent, infer lite status from artifacts if legacy lite compatibility is active.
 
 ## Workflow Mode Behavior
 
@@ -252,15 +231,12 @@ Synthesize findings into sections:
 
 ## Guardrails
 
-- Verify phase count from ImplementationPlan.md—never assume
-- If control state is present, do not report progress past unresolved required items, gate items, or procedure items
-- If reconciliation is `stale` or `external_unverified`, label the result read-only/unverified instead of implying mutation-safe readiness
-- If control state is absent, explicitly say legacy best-effort mode is active
-- If legacy lite compatibility mode is active, explicitly say workflow identity is missing and the result is compatibility-only
+- Do not report progress past unresolved required/gate/procedure items
+- Non-`current` reconciliation → label read-only/unverified
+- Absent control state → say legacy best-effort mode
 - Never mutate issue descriptions or PR content outside summary blocks
 - Never push, merge, or rewrite git history
 - Be idempotent: same state → same summary
-- If required info missing, state blocker and resolution
 
 ## Completion Response
 

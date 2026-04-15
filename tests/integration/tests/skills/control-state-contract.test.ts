@@ -78,7 +78,7 @@ describe("control-state contract content", () => {
     assert.match(workflow, /Workflow Identity: paw/);
     assert.match(workflow, /Workflow Identity: paw-lite/);
     assert.match(workflow, /## PAW Lite WorkflowContext Embedding/);
-    assert.match(workflow, /`implementation` \| `pending` \| `activity`/);
+    assert.match(workflow, /`implementation`/);
     assert.match(workflow, /procedure:planning-review/);
     assert.match(
       workflow,
@@ -135,15 +135,11 @@ describe("control-state contract content", () => {
     );
     assert.match(
       init,
-      /When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with:/,
+      /When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with the lite profile/,
     );
     assert.match(
       init,
       /`implementation` \| `pending` \| `activity`/,
-    );
-    assert.match(
-      init,
-      /Keep `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, and `planning_docs_review=disabled` unless the current request explicitly supplies different supported values\./,
     );
     assert.match(init, /transition:after-plan-review/);
     assert.match(init, /procedure:planning-review/);

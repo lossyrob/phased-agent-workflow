@@ -8,8 +8,6 @@ import {
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
 import { registerHandoffTool } from './tools/handoffTool';
-import { registerSkillTool } from './tools/skillTool';
-import { registerSkillsTool } from './tools/skillsTool';
 import {
   installAgents,
   needsInstallation,
@@ -17,7 +15,7 @@ import {
   INSTALLATION_STATE_KEY,
   InstallationState
 } from './agents/installer';
-import { getPlatformInfo, resolvePromptsDirectory } from './agents/platformDetection';
+import { getPlatformInfo, resolveAgentDirectory } from './agents/platformDetection';
 
 const OUTPUT_CHANNEL_NAME = 'PAW Workflow';
 
@@ -37,43 +35,89 @@ const OUTPUT_CHANNEL_NAME = 'PAW Workflow';
  * @param context - Extension context provided by VS Code, used for registering
  *                  disposable resources and accessing extension-specific APIs
  */
-export async function activate(context: vscode.ExtensionContext) {
+export interface ActivationDependencies {
+  createOutputChannel?: (name: string) => vscode.OutputChannel;
+  installAgentsIfNeeded?: (
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel,
+    options?: InstallAgentsIfNeededOptions
+  ) => Promise<void>;
+  installOptions?: InstallAgentsIfNeededOptions;
+  checkForDeprecatedInstructions?: (outputChannel: vscode.OutputChannel) => Promise<void>;
+  registerHandoffTool?: (context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) => void;
+  registerInitializeWorkItemCommand?: (
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+  ) => vscode.Disposable | void;
+  registerGetWorkStatusCommand?: (
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+  ) => void;
+  registerStopTrackingCommand?: (
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+  ) => void;
+  maybeResumePendingWorktreeInit?: (
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+  ) => Promise<void>;
+}
+
+export async function activate(
+  context: vscode.ExtensionContext,
+  dependencies: ActivationDependencies = {}
+) {
   // Create output channel for logging
   // The channel provides transparency into PAW operations and helps with debugging
-  const outputChannel = vscode.window.createOutputChannel(OUTPUT_CHANNEL_NAME);
+  const outputChannel = (dependencies.createOutputChannel ?? vscode.window.createOutputChannel)(
+    OUTPUT_CHANNEL_NAME
+  );
   context.subscriptions.push(outputChannel);
   
   outputChannel.appendLine('[INFO] PAW Workflow extension activated');
 
   // Install or update PAW agents if needed
-  await installAgentsIfNeeded(context, outputChannel);
+  await (dependencies.installAgentsIfNeeded ?? installAgentsIfNeeded)(
+    context,
+    outputChannel,
+    dependencies.installOptions
+  );
 
   // Check for deprecated .paw/instructions directories
-  await checkForDeprecatedInstructions(outputChannel);
+  await (dependencies.checkForDeprecatedInstructions ?? checkForDeprecatedInstructions)(
+    outputChannel
+  );
 
-  registerHandoffTool(context, outputChannel);
+  (dependencies.registerHandoffTool ?? registerHandoffTool)(context, outputChannel);
   outputChannel.appendLine('[INFO] Registered language model tool: paw_new_session');
 
-  registerSkillsTool(context, outputChannel);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_skills');
-
-  registerSkillTool(context, outputChannel);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_get_skill');
-
-  const initCommand = vscode.commands.registerCommand(
-    'paw.initializeWorkItem',
-    () => initializeWorkItemCommand(context, outputChannel)
-  );
-  context.subscriptions.push(initCommand);
+  const initCommand = dependencies.registerInitializeWorkItemCommand
+    ? dependencies.registerInitializeWorkItemCommand(context, outputChannel)
+    : vscode.commands.registerCommand(
+      'paw.initializeWorkItem',
+      () => initializeWorkItemCommand(context, outputChannel)
+    );
+  if (initCommand) {
+    context.subscriptions.push(initCommand);
+  }
   outputChannel.appendLine('[INFO] Registered command: paw.initializeWorkItem');
 
-  registerGetWorkStatusCommand(context, outputChannel);
+  (dependencies.registerGetWorkStatusCommand ?? registerGetWorkStatusCommand)(
+    context,
+    outputChannel
+  );
   outputChannel.appendLine('[INFO] Registered command: paw.getWorkStatus');
 
-  registerStopTrackingCommand(context, outputChannel);
+  (dependencies.registerStopTrackingCommand ?? registerStopTrackingCommand)(
+    context,
+    outputChannel
+  );
   outputChannel.appendLine('[INFO] Registered command: paw.stopTrackingArtifacts');
 
-  await maybeResumePendingWorktreeInit(context, outputChannel);
+  await (dependencies.maybeResumePendingWorktreeInit ?? maybeResumePendingWorktreeInit)(
+    context,
+    outputChannel
+  );
   outputChannel.appendLine('[INFO] PAW Workflow extension ready');
 }
 
@@ -88,29 +132,43 @@ export async function activate(context: vscode.ExtensionContext) {
  * to function, and users can still use non-agent features.
  * 
  * Note: Agent installation is skipped when running in test mode to prevent test runs
- * from overwriting agents in the user's real prompts directory.
- * 
+ * from overwriting agents in the user's real agent directory.
+ *
  * @param context - Extension context for version tracking and state storage
  * @param outputChannel - Output channel for detailed logging
  */
-async function installAgentsIfNeeded(
+export interface InstallAgentsIfNeededOptions {
+  allowTestModeInstallation?: boolean;
+}
+
+export async function installAgentsIfNeeded(
   context: vscode.ExtensionContext,
-  outputChannel: vscode.OutputChannel
+  outputChannel: vscode.OutputChannel,
+  options: InstallAgentsIfNeededOptions = {}
 ): Promise<void> {
   // Skip agent installation in test mode to prevent test runs from overwriting
-  // agents in the user's real prompts directory (important when working on
+  // agents in the user's real agent directory (important when working on
   // multiple PAW branches simultaneously)
-  if (context.extensionMode === vscode.ExtensionMode.Test) {
+  if (
+    context.extensionMode === vscode.ExtensionMode.Test &&
+    options.allowTestModeInstallation !== true
+  ) {
     outputChannel.appendLine('[INFO] Running in test mode - skipping agent installation');
     return;
   }
 
   try {
-    // Determine prompts directory path
-    const customPath = vscode.workspace.getConfiguration('paw').get<string>('promptDirectory');
-    const customPromptDir = customPath && customPath.trim().length > 0 ? customPath : undefined;
+    // Determine agent directory path
+    const config = vscode.workspace.getConfiguration('paw');
+    const configuredAgentDir = config.get<string>('agentDirectory');
+    const deprecatedPromptDir = config.get<string>('promptDirectory');
+    const customAgentDir = configuredAgentDir && configuredAgentDir.trim().length > 0
+      ? configuredAgentDir.trim()
+      : deprecatedPromptDir && deprecatedPromptDir.trim().length > 0
+        ? deprecatedPromptDir.trim()
+        : undefined;
     const platformInfo = getPlatformInfo();
-    const promptsDir = resolvePromptsDirectory(platformInfo, customPromptDir);
+    const agentDir = resolveAgentDirectory(platformInfo, customAgentDir);
     const currentVersion = context.extension.packageJSON.version as string;
     const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
 
@@ -132,7 +190,7 @@ async function installAgentsIfNeeded(
     const installationNeeded = needsInstallation(
       context,
       context.extension.extensionUri,
-      promptsDir
+      agentDir
     );
     
     if (!installationNeeded) {
@@ -175,13 +233,18 @@ async function installAgentsIfNeeded(
       }
       
       // Log remediation guidance
-      outputChannel.appendLine('[INFO] If you encounter permission errors, you can set a custom prompts directory:');
+      outputChannel.appendLine('[INFO] If you encounter permission errors, you can set a custom agent directory:');
       outputChannel.appendLine('[INFO]   1. Open Settings (Cmd/Ctrl+,)');
-      outputChannel.appendLine('[INFO]   2. Search for "paw.promptDirectory"');
+      outputChannel.appendLine('[INFO]   2. Search for "paw.agentDirectory"');
       outputChannel.appendLine('[INFO]   3. Set a path where you have write permissions');
     } else {
       // Full success - log to output channel only (no notification popup)
       outputChannel.appendLine(`[INFO] PAW agent installation completed successfully`);
+      if (configuredAgentDir && configuredAgentDir.trim().length > 0) {
+        outputChannel.appendLine('[INFO] Installed agents using paw.agentDirectory override');
+      } else if (deprecatedPromptDir && deprecatedPromptDir.trim().length > 0) {
+        outputChannel.appendLine('[WARN] Installed agents using deprecated paw.promptDirectory fallback');
+      }
     }
   } catch (error) {
     // Catch-all for unexpected errors during the installation check/process

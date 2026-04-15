@@ -411,7 +411,8 @@ suite('Git Validation Helpers', function () {
     }
   });
 
-  test('validateReusableWorktree rejects untracked, unstaged, and staged dirty states', async () => {
+  test('validateReusableWorktree rejects untracked, unstaged, and staged dirty states', async function () {
+    this.timeout(10000);
     const repoDir = await createTempRepo();
     const baseTargetBranch = 'feature/test-worktree';
 

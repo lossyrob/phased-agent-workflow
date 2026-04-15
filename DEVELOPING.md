@@ -127,7 +127,7 @@ code --install-extension paw-workflow-0.0.1-dev.vsix
 ### Development Workflow
 
 - Launch the extension in an Extension Development Host by pressing `F5` in VS Code.
-- Use `npm run watch` to recompile on TypeScript file changes.
+- Use `npm run watch` to recompile TypeScript and rerender VS Code skill assets when files under `skills/` change.
 - Reload the development host window (`Ctrl+R` / `Cmd+R`) after changes.
 
 ### Developing PAW with PAW

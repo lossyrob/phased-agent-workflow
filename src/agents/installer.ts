@@ -2,8 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { loadAgentTemplates } from './agentTemplates';
-import { loadPromptTemplates } from './promptTemplates';
-import { getPlatformInfo, resolvePromptsDirectory } from './platformDetection';
+import {
+  getPlatformInfo,
+  resolveAgentDirectory,
+  resolveLegacyPromptsDirectory,
+} from './platformDetection';
 
 /**
  * Result of an agent installation operation.
@@ -24,8 +27,10 @@ export interface InstallationResult {
 export interface InstallationState {
   /** The extension version when agents were last installed */
   version: string;
-  /** List of installed agent filenames for cleanup and verification */
+  /** List of installed filenames for cleanup and verification */
   filesInstalled: string[];
+  /** Directory where agents were last installed */
+  installDirectory?: string;
   /** Timestamp of installation (ISO 8601 format) */
   installedAt: string;
   /** Whether the installation completed successfully */
@@ -40,6 +45,7 @@ export interface InstallationState {
  * Storage key for installation state in globalState.
  */
 export const INSTALLATION_STATE_KEY = 'paw.agentInstallation';
+const LEGACY_PROMPT_FILENAMES = ['paw.prompt.md', 'paw-review.prompt.md', 'PAW Review.agent.md'];
 
 /**
  * Result of uninstall cleanup when removing installed agents.
@@ -48,6 +54,16 @@ export interface AgentCleanupResult {
   /** Names of agent files successfully removed during cleanup */
   filesRemoved: string[];
   /** Error messages describing files that could not be removed */
+  errors: string[];
+}
+
+/**
+ * Result of cleanup operation for previous installation.
+ */
+interface CleanupResult {
+  /** Count of files successfully deleted */
+  filesDeleted: number;
+  /** Error messages for any failed deletions */
   errors: string[];
 }
 
@@ -63,109 +79,154 @@ export function isDevelopmentVersion(version: string | undefined | null): boolea
   return version.includes('-dev');
 }
 
-/**
- * Gets the custom prompts directory path from configuration, if set.
- * 
- * @returns Custom path or undefined if not configured
- */
-function getCustomPromptsDirectory(): string | undefined {
-  const config = vscode.workspace.getConfiguration('paw');
-  const customPath = config.get<string>('promptDirectory');
-  return customPath && customPath.trim().length > 0 ? customPath : undefined;
+function getConfiguredPath(settingName: 'agentDirectory' | 'promptDirectory'): string | undefined {
+  const configuredPath = vscode.workspace.getConfiguration('paw').get<string>(settingName);
+  return configuredPath && configuredPath.trim().length > 0 ? configuredPath.trim() : undefined;
 }
 
-/**
- * Determines the prompts directory path where agents should be installed.
- * 
- * @returns Absolute path to the prompts directory
- * @throws {Error} If platform is unsupported and no custom path is configured
- */
-function getPromptsDirectoryPath(): string {
-  const customPath = getCustomPromptsDirectory();
+function getDeprecatedPromptDirectory(): string | undefined {
+  return getConfiguredPath('promptDirectory');
+}
+
+function getAgentDirectoryOverride(): string | undefined {
+  return getConfiguredPath('agentDirectory') ?? getDeprecatedPromptDirectory();
+}
+
+function getAgentDirectoryPath(): string {
   const platformInfo = getPlatformInfo();
-  return resolvePromptsDirectory(platformInfo, customPath);
+  return resolveAgentDirectory(platformInfo, getAgentDirectoryOverride());
+}
+
+function getManagedAgentFilenames(extensionUri: vscode.Uri): string[] {
+  return loadAgentTemplates(extensionUri).map(template => template.filename);
+}
+
+function collectCleanupCandidateFiles(
+  previousState: InstallationState | undefined,
+  managedAgentFilenames: string[]
+): string[] {
+  const filenames = new Set<string>([...managedAgentFilenames, ...LEGACY_PROMPT_FILENAMES]);
+
+  for (const filename of previousState?.filesInstalled ?? []) {
+    if (filename && filename.trim().length > 0) {
+      filenames.add(filename);
+    }
+  }
+
+  return [...filenames];
+}
+
+function getCleanupDirectories(
+  currentAgentDir: string,
+  previousState?: InstallationState,
+  outputChannel?: vscode.OutputChannel
+): string[] {
+  const directories = new Set<string>();
+  directories.add(currentAgentDir);
+
+  if (previousState?.installDirectory) {
+    directories.add(previousState.installDirectory);
+  }
+
+  const deprecatedPromptDirectory = getDeprecatedPromptDirectory();
+  if (deprecatedPromptDirectory) {
+    directories.add(deprecatedPromptDirectory);
+  }
+
+  try {
+    directories.add(resolveLegacyPromptsDirectory(getPlatformInfo()));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    outputChannel?.appendLine(`[WARN] Unable to resolve legacy prompt directory for cleanup: ${message}`);
+  }
+
+  return [...directories].filter(directory => directory && directory.trim().length > 0);
+}
+
+function hasResidualManagedFiles(
+  currentAgentDir: string,
+  previousState: InstallationState | undefined,
+  managedAgentFilenames: string[]
+): boolean {
+  const cleanupDirectories = getCleanupDirectories(currentAgentDir, previousState).filter(
+    directory => directory !== currentAgentDir
+  );
+  const candidateFiles = collectCleanupCandidateFiles(previousState, managedAgentFilenames);
+
+  for (const directory of cleanupDirectories) {
+    for (const filename of candidateFiles) {
+      if (fs.existsSync(path.join(directory, filename))) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 /**
  * Checks if agent installation is needed.
- * 
+ *
  * Installation is needed if:
  * - No previous installation record exists (fresh install)
  * - Extension version has changed since last installation (upgrade/downgrade)
+ * - Installation previously failed
+ * - The configured install directory changed
  * - Any expected agent files are missing (repair)
- * 
+ *
  * @param context - Extension context for accessing globalState
  * @param extensionUri - Extension root URI for loading agent templates
- * @param promptsDir - Path to the prompts directory
+ * @param agentDir - Path to the agent directory
  * @returns True if installation is needed, false if agents are up to date
  */
 export function needsInstallation(
   context: vscode.ExtensionContext,
   extensionUri: vscode.Uri,
-  promptsDir: string
+  agentDir: string
 ): boolean {
-  // Check if we have a previous installation record
   const state = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
   const currentVersion = context.extension.packageJSON.version;
-  
-  if (!state) {
-    // No previous installation record - fresh install needed
+  const managedAgentFilenames = loadAgentTemplates(extensionUri).map(template => template.filename);
+
+  if (!state || !state.version) {
     return true;
   }
 
-  if (!state.version) {
-    // Safety fallback - treat missing version as needing reinstall
+  if (!state.success) {
     return true;
   }
 
-  // Development builds always reinstall to pick up agent content edits
   if (isDevelopmentVersion(state.version) || isDevelopmentVersion(currentVersion)) {
     return true;
   }
 
-  // Check if version has changed (upgrade/downgrade)
   if (state.version !== currentVersion) {
     return true;
   }
 
-  // Check if any expected agent files are missing (repair case)
-  const agentTemplates = loadAgentTemplates(extensionUri);
-  for (const template of agentTemplates) {
-    const filePath = path.join(promptsDir, template.filename);
+  if (state.installDirectory && state.installDirectory !== agentDir) {
+    return true;
+  }
+
+  for (const filename of managedAgentFilenames) {
+    const filePath = path.join(agentDir, filename);
     if (!fs.existsSync(filePath)) {
-      // Expected file is missing - repair needed
       return true;
     }
   }
 
-  // Check if any expected prompt files are missing (repair case)
-  const promptTemplates = loadPromptTemplates(extensionUri);
-  for (const template of promptTemplates) {
-    const filePath = path.join(promptsDir, template.filename);
-    if (!fs.existsSync(filePath)) {
-      // Expected prompt file is missing - repair needed
-      return true;
-    }
+  if (hasResidualManagedFiles(agentDir, state, managedAgentFilenames)) {
+    return true;
   }
 
-  // All checks passed - agents and prompts are up to date
   return false;
 }
 
-/**
- * Updates the installation state in globalState.
- * 
- * @param context - Extension context for accessing globalState
- * @param version - Current extension version
- * @param filesInstalled - List of installed filenames
- * @param success - Whether installation completed successfully
- * @param previousVersion - Optional previous version before this installation
- * @param filesDeleted - Optional count of files deleted during cleanup
- */
 async function updateInstallationState(
   context: vscode.ExtensionContext,
   version: string,
   filesInstalled: string[],
+  installDirectory: string,
   success: boolean,
   previousVersion?: string,
   filesDeleted?: number
@@ -173,40 +234,19 @@ async function updateInstallationState(
   const state: InstallationState = {
     version,
     filesInstalled,
+    installDirectory,
     installedAt: new Date().toISOString(),
     success,
     previousVersion,
     filesDeleted
   };
-  
+
   await context.globalState.update(INSTALLATION_STATE_KEY, state);
 }
 
-/**
- * Result of cleanup operation for previous installation.
- */
-interface CleanupResult {
-  /** Count of files successfully deleted */
-  filesDeleted: number;
-  /** Error messages for any failed deletions */
-  errors: string[];
-}
-
-/**
- * Cleans up all previously installed agent files.
- * 
- * This function deletes all files listed in the previous installation state
- * to ensure clean version changes (upgrades and downgrades). Individual
- * deletion failures are logged but don't prevent the cleanup from continuing.
- * 
- * @param context - Extension context for accessing globalState
- * @param promptsDir - Path to the prompts directory
- * @param outputChannel - Optional output channel for logging deletion operations
- * @returns Cleanup result with count of files deleted and any errors
- */
 function cleanupPreviousInstallation(
-  context: vscode.ExtensionContext,
-  promptsDir: string,
+  directories: string[],
+  candidateFiles: string[],
   outputChannel?: vscode.OutputChannel
 ): CleanupResult {
   const result: CleanupResult = {
@@ -214,41 +254,21 @@ function cleanupPreviousInstallation(
     errors: [],
   };
 
-  // Get previous installation state
-  const state = context.globalState.get<InstallationState>(
-    INSTALLATION_STATE_KEY
-  );
-  if (!state || !state.filesInstalled || state.filesInstalled.length === 0) {
-    // No previous installation to clean up
-    return result;
-  }
+  for (const directory of directories) {
+    for (const filename of candidateFiles) {
+      const filePath = path.join(directory, filename);
 
-  // Delete each previously installed file
-  // Note: Missing files are treated as already cleaned (no error), but
-  // permission errors or other failures are logged without blocking cleanup
-  for (const filename of state.filesInstalled) {
-    const filePath = path.join(promptsDir, filename);
-
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        result.filesDeleted++;
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[INFO] Deleted previous agent: ${filename}`
-          );
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          result.filesDeleted++;
+          outputChannel?.appendLine(`[INFO] Deleted previous managed file: ${filePath}`);
         }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Failed to delete ${filePath}: ${message}`);
+        outputChannel?.appendLine(`[ERROR] Failed to delete ${filePath}: ${message}`);
       }
-      // If file doesn't exist, consider it already cleaned up (no error)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to delete ${filename}: ${message}`);
-      if (outputChannel) {
-        outputChannel.appendLine(
-          `[ERROR] Failed to delete ${filename}: ${message}`
-        );
-      }
-      // Continue with remaining files (errors don't block cleanup)
     }
   }
 
@@ -256,19 +276,8 @@ function cleanupPreviousInstallation(
 }
 
 /**
- * Installs PAW agent templates to the prompts directory.
- * 
- * This function:
- * 1. Determines the prompts directory path (platform-specific or custom)
- * 2. Creates the prompts directory if it doesn't exist
- * 3. Loads agent templates from the extension's agents/ directory
- * 4. Writes each agent file to the prompts directory (overwrites existing)
- * 5. Updates installation state in globalState
- * 6. Returns structured result with success/failure details
- * 
- * The operation is idempotent - safe to run multiple times. Individual file
- * failures are tracked but don't prevent other files from being installed.
- * 
+ * Installs PAW agent templates to the current user agent directory.
+ *
  * @param context - Extension context for version tracking and state storage
  * @param outputChannel - Optional output channel for logging installation details
  * @returns Installation result with files installed, skipped, and any errors
@@ -284,75 +293,12 @@ export async function installAgents(
   };
 
   try {
-    // Determine where to install agents
-    const promptsDir = getPromptsDirectoryPath();
-
-    // Create prompts directory if needed (recursive)
-    try {
-      if (!fs.existsSync(promptsDir)) {
-        fs.mkdirSync(promptsDir, { recursive: true });
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[INFO] Created prompts directory: ${promptsDir}`
-          );
-        }
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to create prompts directory: ${message}`);
-      return result;
-    }
-
-    // Check for version change and clean up previous installation if needed
+    const agentDir = getAgentDirectoryPath();
     const currentVersion = context.extension.packageJSON.version;
-    const previousState = context.globalState.get<InstallationState>(
-      INSTALLATION_STATE_KEY
-    );
-    const currentIsDev = isDevelopmentVersion(currentVersion);
-    let previousVersion: string | undefined;
+    const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+    const previousVersion = previousState?.version;
     let filesDeleted = 0;
 
-    const shouldCleanup = Boolean(
-      previousState &&
-        (previousState.version !== currentVersion ||
-          isDevelopmentVersion(previousState.version) ||
-          currentIsDev)
-    );
-
-    if (shouldCleanup && previousState?.version) {
-      previousVersion = previousState.version;
-
-      // Log prompts directory and platform info before cleanup
-      if (outputChannel) {
-        outputChannel.appendLine(
-          `[INFO] Prompts directory path: ${promptsDir}`
-        );
-        const customPath = getCustomPromptsDirectory();
-        if (customPath) {
-          outputChannel.appendLine(
-            `[INFO] Using custom prompts directory from configuration`
-          );
-        } else {
-          const platformInfo = getPlatformInfo();
-          outputChannel.appendLine(`[INFO] Platform: ${platformInfo.platform}`);
-          outputChannel.appendLine(
-            `[INFO] VS Code variant: ${platformInfo.variant}`
-          );
-        }
-      }
-
-      const cleanupResult = cleanupPreviousInstallation(
-        context,
-        promptsDir,
-        outputChannel
-      );
-      filesDeleted = cleanupResult.filesDeleted;
-
-      // Add cleanup errors to result but don't stop installation
-      result.errors.push(...cleanupResult.errors);
-    }
-
-    // Load agent templates from extension resources
     let templates;
     try {
       templates = loadAgentTemplates(context.extension.extensionUri);
@@ -362,61 +308,60 @@ export async function installAgents(
       return result;
     }
 
-    // Install each agent file
+    const managedAgentFilenames = templates.map(template => template.filename);
+
+    try {
+      if (!fs.existsSync(agentDir)) {
+        fs.mkdirSync(agentDir, { recursive: true });
+        outputChannel?.appendLine(`[INFO] Created agent directory: ${agentDir}`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Failed to create agent directory: ${message}`);
+      return result;
+    }
+
+    if (outputChannel) {
+      outputChannel.appendLine(`[INFO] Agent directory path: ${agentDir}`);
+      if (getConfiguredPath('agentDirectory')) {
+        outputChannel.appendLine('[INFO] Using paw.agentDirectory override from configuration');
+      } else if (getDeprecatedPromptDirectory()) {
+        outputChannel.appendLine('[WARN] Using deprecated paw.promptDirectory fallback for agent installation');
+      } else {
+        const platformInfo = getPlatformInfo();
+        outputChannel.appendLine(`[INFO] Platform: ${platformInfo.platform}`);
+        outputChannel.appendLine(`[INFO] VS Code variant: ${platformInfo.variant}`);
+      }
+    }
+
+    const cleanupResult = cleanupPreviousInstallation(
+      getCleanupDirectories(agentDir, previousState, outputChannel),
+      collectCleanupCandidateFiles(previousState, managedAgentFilenames),
+      outputChannel
+    );
+    filesDeleted = cleanupResult.filesDeleted;
+    result.errors.push(...cleanupResult.errors);
+
     for (const template of templates) {
-      const filePath = path.join(promptsDir, template.filename);
+      const filePath = path.join(agentDir, template.filename);
 
       try {
-        fs.writeFileSync(filePath, template.content, "utf-8");
+        fs.writeFileSync(filePath, template.content, 'utf-8');
         result.filesInstalled.push(template.filename);
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[INFO] Installed agent: ${template.filename}`
-          );
-        }
+        outputChannel?.appendLine(`[INFO] Installed agent: ${template.filename}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result.errors.push(`Failed to write ${template.filename}: ${message}`);
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[ERROR] Failed to write ${template.filename}: ${message}`
-          );
-        }
-        // Continue installing other files
+        outputChannel?.appendLine(`[ERROR] Failed to write ${template.filename}: ${message}`);
       }
     }
 
-    // Load and install prompt templates from extension resources
-    const promptTemplates = loadPromptTemplates(context.extension.extensionUri);
-    for (const template of promptTemplates) {
-      const filePath = path.join(promptsDir, template.filename);
-
-      try {
-        fs.writeFileSync(filePath, template.content, "utf-8");
-        result.filesInstalled.push(template.filename);
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[INFO] Installed prompt: ${template.filename}`
-          );
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        result.errors.push(`Failed to write ${template.filename}: ${message}`);
-        if (outputChannel) {
-          outputChannel.appendLine(
-            `[ERROR] Failed to write ${template.filename}: ${message}`
-          );
-        }
-        // Continue installing other files
-      }
-    }
-
-    // Update installation state
     const success = result.errors.length === 0;
     await updateInstallationState(
       context,
       currentVersion,
       result.filesInstalled,
+      agentDir,
       success,
       previousVersion,
       filesDeleted > 0 ? filesDeleted : undefined
@@ -424,7 +369,6 @@ export async function installAgents(
 
     return result;
   } catch (error) {
-    // Catch-all for unexpected errors
     const message = error instanceof Error ? error.message : String(error);
     result.errors.push(`Unexpected error during installation: ${message}`);
     return result;
@@ -432,13 +376,7 @@ export async function installAgents(
 }
 
 /**
- * Removes installed PAW agent files from the prompts directory.
- *
- * This helper is used during extension deactivation/uninstall to ensure that
- * PAW agents do not remain on the user's system after the extension is
- * removed. The cleanup is conservative: it attempts to delete the files tracked
- * in installation state and any additional files that match the PAW agent
- * filename pattern. Errors are collected but do not throw.
+ * Removes installed PAW agent files from the current and legacy installation locations.
  *
  * @param context - Extension context for accessing configuration and global state
  * @returns Cleanup summary with removed files and any errors encountered
@@ -451,50 +389,55 @@ export async function removeInstalledAgents(
     errors: []
   };
 
-  let promptsDir: string;
+  const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
+  const candidateDirectories = new Set<string>();
+
+  if (previousState?.installDirectory) {
+    candidateDirectories.add(previousState.installDirectory);
+  }
+
   try {
-    promptsDir = getPromptsDirectoryPath();
+    candidateDirectories.add(getAgentDirectoryPath());
+  } catch (error) {
+    if (!previousState?.installDirectory) {
+      const message = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Unable to determine agent directory for cleanup: ${message}`);
+    }
+  }
+
+  const deprecatedPromptDirectory = getDeprecatedPromptDirectory();
+  if (deprecatedPromptDirectory) {
+    candidateDirectories.add(deprecatedPromptDirectory);
+  }
+
+  try {
+    candidateDirectories.add(resolveLegacyPromptsDirectory(getPlatformInfo()));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    result.errors.push(`Unable to determine prompts directory for cleanup: ${message}`);
-    // Still clear global state so the uninstall is treated as complete
-    await context.globalState.update(INSTALLATION_STATE_KEY, undefined);
-    return result;
+    result.errors.push(`Unable to resolve legacy prompt directory for cleanup: ${message}`);
   }
 
-  const candidateFiles = new Set<string>();
-  const previousState = context.globalState.get<InstallationState>(INSTALLATION_STATE_KEY);
-  if (previousState?.filesInstalled?.length) {
-    for (const filename of previousState.filesInstalled) {
-      candidateFiles.add(filename);
-    }
+  let managedAgentFilenames: string[] = [];
+  try {
+    managedAgentFilenames = getManagedAgentFilenames(context.extension.extensionUri);
+  } catch {
+    // Use tracked filenames only if bundled templates are unavailable.
   }
 
-  if (fs.existsSync(promptsDir)) {
-    try {
-      const directoryEntries = fs.readdirSync(promptsDir);
-      for (const entry of directoryEntries) {
-        // Match PAW agent files and PAW prompt files
-        if (/^paw-.*\.agent\.md$/i.test(entry) || /^paw-.*\.prompt\.md$/i.test(entry)) {
-          candidateFiles.add(entry);
+  const candidateFiles = collectCleanupCandidateFiles(previousState, managedAgentFilenames);
+
+  for (const directory of candidateDirectories) {
+    for (const filename of candidateFiles) {
+      const filePath = path.join(directory, filename);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          result.filesRemoved.push(filename);
         }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push(`Failed to delete ${filePath}: ${message}`);
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Unable to list prompts directory contents: ${message}`);
-    }
-  }
-
-  for (const filename of candidateFiles) {
-    const filePath = path.join(promptsDir, filename);
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        result.filesRemoved.push(filename);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to delete ${filename}: ${message}`);
     }
   }
 

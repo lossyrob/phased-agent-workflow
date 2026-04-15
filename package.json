@@ -10,7 +10,7 @@
   },
   "license": "MIT",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.109.0"
   },
   "categories": [
     "Other"
@@ -29,10 +29,15 @@
     "configuration": {
       "title": "PAW Workflow",
       "properties": {
+        "paw.agentDirectory": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute path to the user agent directory. When set, PAW installs agents here instead of using the default `~/.copilot/agents` location."
+        },
         "paw.promptDirectory": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Absolute path to the VS Code prompts directory. When set, PAW installs agents here instead of using the auto-detected location."
+          "markdownDescription": "Deprecated fallback for legacy prompt-directory installs. When set and `paw.agentDirectory` is empty, PAW installs agents here instead of using `~/.copilot/agents`."
         },
         "paw.enableWorktreeExecution": {
           "type": "boolean",
@@ -58,6 +63,109 @@
         "category": "PAW"
       }
     ],
+    "chatPromptFiles": [
+      {
+        "path": "./prompts/paw-review.prompt.md"
+      },
+      {
+        "path": "./prompts/paw.prompt.md"
+      }
+    ],
+    "chatSkills": [
+      {
+        "path": "./vscode-assets/skills/paw-code-research/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-docs-guidance/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-final-review/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-git-operations/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-impl-review/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-implement/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-init/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-lite/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-plan-review/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-planning/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-planning-docs-review/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-pr/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-baseline/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-correlation/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-critic/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-feedback/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-gap/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-github/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-impact/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-response/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-understanding/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-review-workflow/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-rewind/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-sot/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-spec/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-spec-research/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-spec-review/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-status/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-transition/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-work-shaping/SKILL.md"
+      },
+      {
+        "path": "./vscode-assets/skills/paw-workflow/SKILL.md"
+      }
+    ],
     "languageModelTools": [
       {
         "name": "paw_new_session",
@@ -73,7 +181,7 @@
               "description": "The exact name of the PAW agent to invoke",
               "enum": [
                 "PAW",
-                "PAW Review"
+                "PAW-Review"
               ]
             },
             "work_id": {
@@ -90,46 +198,17 @@
             "work_id"
           ]
         }
-      },
-      {
-        "name": "paw_get_skills",
-        "displayName": "Get PAW Skills Catalog",
-        "modelDescription": "Retrieve a catalog of available PAW skills with metadata. Returns skill names, descriptions, and types for the agent to select appropriate skills.",
-        "toolReferenceName": "pawSkillsCatalog",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {},
-          "required": []
-        }
-      },
-      {
-        "name": "paw_get_skill",
-        "displayName": "Get PAW Skill Content",
-        "modelDescription": "Retrieve the full content of a specific PAW skill by name. Use after consulting the catalog to load skills needed for the current task.",
-        "toolReferenceName": "pawSkillContent",
-        "canBeReferencedInPrompt": true,
-        "inputSchema": {
-          "type": "object",
-          "properties": {
-            "skill_name": {
-              "type": "string",
-              "description": "The name of the skill to load"
-            }
-          },
-          "required": [
-            "skill_name"
-          ]
-        }
       }
     ]
   },
   "scripts": {
     "clean:out": "node -e \"require('fs').rmSync('out', { recursive: true, force: true })\"",
-    "precompile": "npm run clean:out",
+    "clean:vscode-assets": "node -e \"require('fs').rmSync('vscode-assets', { recursive: true, force: true })\"",
+    "precompile": "npm run clean:out && npm run clean:vscode-assets",
+    "postcompile": "node ./scripts/render-vscode-skills.js",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "watch": "node ./scripts/watch-vscode-assets.js",
     "pretest": "npm run compile",
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src --ext ts",
@@ -149,7 +228,7 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "^18.x",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.109.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "@vscode/test-electron": "^2.3.8",

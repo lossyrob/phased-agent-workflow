@@ -67,20 +67,11 @@ Activity skills are executed via delegated agent sessions.
 
 **Every subagent MUST load their skill FIRST before executing any work**:
 
-{{#vscode}}
-1. Call `paw_get_skill` with the skill name (e.g., `paw-review-understanding`)
-2. Read and internalize the skill instructions
-3. Only then begin executing the activity
-
-**Delegation prompt must include**: "First load your skill using `paw_get_skill('paw-review-<skill-name>')`, then execute the activity."
-{{/vscode}}
-{{#cli}}
 1. Load the skill by name (e.g., `paw-review-understanding`)
 2. Read and internalize the skill instructions
 3. Only then begin executing the activity
 
 **Delegation prompt must include**: "First load the `paw-review-<skill-name>` skill, then execute the activity."
-{{/cli}}
 
 ### Response Format
 

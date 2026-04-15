@@ -7,7 +7,7 @@ PAW uses two AI chat modes ("agents") that orchestrate workflow activities throu
 | Agent | Purpose | Architecture |
 |-------|---------|--------------|
 | **PAW** | Implementation workflow orchestrator | Skills-based |
-| **PAW Review** | PR review workflow orchestrator | Skills-based |
+| **PAW-Review** | PR review workflow orchestrator | Skills-based |
 
 Both agents follow the same pattern: a compact orchestrator that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
 
@@ -39,7 +39,7 @@ Current PAW, PAW Lite, and PAW Review sessions can embed a compact `## Control S
 **Architecture:** The PAW agent uses a skills-based architecture with a **hybrid execution model**. Skill loading is platform-specific:
 
 1. Loads the `paw-workflow` skill for orchestration guidance
-2. Resolves activity skills using the current platform's mechanism (`paw_get_skills` / `paw_get_skill` in VS Code; installed skill files in Copilot CLI)
+2. Loads activity skills through the current platform's native skill system (extension-contributed skills in VS Code; installed skill files in Copilot CLI)
 3. Delegates activities to specialized skills
 4. Reads `WorkflowContext.md`, reconciles control state when present, and applies Review Policy and Session Policy for workflow control
 
@@ -126,7 +126,7 @@ Before transitions, resume/handoff, or repository mutation, the PAW agent reconc
 
 ## Review Workflow
 
-### PAW Review
+### PAW-Review
 
 **Purpose:** Execute the complete PAW Review workflow using dynamically loaded skills.
 

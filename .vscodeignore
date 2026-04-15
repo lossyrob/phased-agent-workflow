@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.paw/**
 src/**
 !src/prompts/*.template.md
 .gitignore

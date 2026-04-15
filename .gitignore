@@ -17,6 +17,7 @@ coverage/
 dist/
 build/
 out/
+vscode-assets/
 *.vsix
 
 # MkDocs build output

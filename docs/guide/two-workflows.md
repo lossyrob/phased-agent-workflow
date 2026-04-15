@@ -36,7 +36,7 @@ The Implementation Workflow transforms feature ideas into production-ready code 
 The **PAW agent** orchestrates the workflow by:
 
 1. Loading the `paw-workflow` skill for guidance
-2. Discovering available skills via `paw_get_skills`
+2. Loading available skills through the platform's native skill system
 3. Delegating activities to specialized skills (e.g., `paw-spec`, `paw-planning`, `paw-implement`)
 4. Applying Review Policy for pause decisions at artifact boundaries
 

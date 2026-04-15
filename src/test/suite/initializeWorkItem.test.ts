@@ -81,11 +81,6 @@ function createCurrentCheckoutInputs(): WorkItemInputs {
     reviewPolicy: 'final-pr-only',
     sessionPolicy: 'continuous',
     artifactLifecycle: 'commit-and-clean',
-    planningReview: {
-      enabled: false,
-      mode: 'single-model',
-      interactive: true,
-    },
     finalReview: {
       enabled: true,
       mode: 'single-model',
@@ -116,25 +111,10 @@ suite('Initialize Work Item Helpers', () => {
       reviewPolicy: 'final-pr-only',
       sessionPolicy: 'continuous',
       artifactLifecycle: 'commit-and-clean',
-      planningReview: {
-        enabled: true,
-        mode: 'society-of-thought',
-        interactive: 'smart',
-        specialists: 'all',
-        interactionMode: 'parallel',
-        specialistModels: 'none',
-        perspectives: 'auto',
-        perspectiveCap: 2,
-      },
       finalReview: {
         enabled: true,
-        mode: 'society-of-thought',
+        mode: 'single-model',
         interactive: 'smart',
-        specialists: 'all',
-        interactionMode: 'parallel',
-        specialistModels: 'none',
-        perspectives: 'auto',
-        perspectiveCap: 2,
       },
       issueUrl: 'https://github.com/example/repo/issues/123',
       executionMetadata: {
@@ -144,25 +124,13 @@ suite('Initialize Work Item Helpers', () => {
       },
     }, '/tmp/repo');
 
+    assert.ok(prompt.includes('Load the `paw-workflow` skill and execute it.'));
     assert.ok(prompt.includes('- **target_branch**: auto'));
     assert.ok(prompt.includes('- **execution_mode**: worktree'));
     assert.ok(prompt.includes('- **issue_url**: https://github.com/example/repo/issues/123'));
     assert.ok(prompt.includes('- **work_id**: test-worktree'));
     assert.ok(prompt.includes('- **repository_identity**: github.com/example/repo@abc123'));
     assert.ok(prompt.includes('- **execution_binding**: worktree:test-worktree:feature/test-worktree'));
-    assert.ok(prompt.includes('- **planning_docs_review**: enabled'));
-    assert.ok(prompt.includes('- **planning_review_mode**: society-of-thought'));
-    assert.ok(prompt.includes('- **planning_review_specialists**: all'));
-    assert.ok(prompt.includes('- **planning_review_interaction_mode**: parallel'));
-    assert.ok(prompt.includes('- **planning_review_specialist_models**: none'));
-    assert.ok(prompt.includes('- **planning_review_perspectives**: auto'));
-    assert.ok(prompt.includes('- **planning_review_perspective_cap**: 2'));
-    assert.ok(prompt.includes('- **final_review_mode**: society-of-thought'));
-    assert.ok(prompt.includes('- **final_review_specialists**: all'));
-    assert.ok(prompt.includes('- **final_review_interaction_mode**: parallel'));
-    assert.ok(prompt.includes('- **final_review_specialist_models**: none'));
-    assert.ok(prompt.includes('- **final_review_perspectives**: auto'));
-    assert.ok(prompt.includes('- **final_review_perspective_cap**: 2'));
   });
 
   test('paw-init skill template persists execution contract fields in WorkflowContext', () => {
@@ -414,6 +382,7 @@ suite('Initialize Work Item Helpers', () => {
 
     assert.deepStrictEqual(steps, ['openPawChat']);
     assert.strictEqual(prompts.length, 1);
+    assert.ok(prompts[0].includes('Load the `paw-workflow` skill and execute it.'));
     assert.ok(prompts[0].includes('- **execution_mode**: current-checkout'));
     assert.strictEqual(
       context.globalState.get<Record<string, unknown> | undefined>('paw.executionRegistry'),
@@ -469,22 +438,29 @@ suite('Initialize Work Item Helpers', () => {
       'paw.executionRegistry',
       {}
     );
+    const registryEntry = registry[createExecutionRegistryLookupKey(
+      executionMetadata.repositoryIdentity,
+      executionMetadata.executionBinding
+    )];
     assert.deepStrictEqual(
       {
-        ...registry[createExecutionRegistryLookupKey(
-          executionMetadata.repositoryIdentity,
-          executionMetadata.executionBinding
-        )],
-        updatedAt: '<normalized>',
+        workId: registryEntry?.workId,
+        repositoryIdentity: registryEntry?.repositoryIdentity,
+        executionBinding: registryEntry?.executionBinding,
+        worktreePath: registryEntry?.worktreePath,
+        targetBranch: registryEntry?.targetBranch,
       },
       {
-        ...buildExecutionRegistryEntry(
-          executionMetadata,
-          '/tmp/repo-worktree',
-          'feature/test-worktree'
-        ),
-        updatedAt: '<normalized>',
+        workId: executionMetadata.workId,
+        repositoryIdentity: executionMetadata.repositoryIdentity,
+        executionBinding: executionMetadata.executionBinding,
+        worktreePath: '/tmp/repo-worktree',
+        targetBranch: 'feature/test-worktree',
       }
+    );
+    assert.ok(
+      registryEntry?.updatedAt,
+      'Registry entry should record an updatedAt timestamp'
     );
 
     const pendingState = context.globalState.get<Record<string, PendingWorktreeInit>>(

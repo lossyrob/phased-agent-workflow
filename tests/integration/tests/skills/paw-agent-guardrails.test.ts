@@ -48,7 +48,7 @@ describe("PAW agent guardrails", () => {
   });
 
   it("documents embedded review control state handling in PAW Review.agent.md", async () => {
-    const content = await readFile(resolve(REPO_ROOT, "agents/PAW Review.agent.md"), "utf-8");
+    const content = await readFile(resolve(REPO_ROOT, "agents/PAW-Review.agent.md"), "utf-8");
 
     assert.match(content, /## Embedded Review Control State/);
     assert.match(content, /contains `## Control State`/i);

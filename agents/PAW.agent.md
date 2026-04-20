@@ -111,6 +111,7 @@ Use TODOs as a mirror of active required workflow items.
 - Keep TODOs aligned only with items whose status is `pending`, `in_progress`, or `blocked`; do not treat TODOs as the portable source of truth when the embedded state exists.
 - Before yield, delegation, or side-effect execution, reconcile the embedded state when present. If reconciliation cannot make the state `current`, STOP and report the blocker instead of delegating or mutating git/GitHub state. If the section is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 - When control state is present, do not advance past required activity items, gate items, or configured procedure items that remain `pending`, `in_progress`, or `blocked`.
+- When control state is present, a persistent SQL todo `reconcile:<work-id>` is seeded by `paw-init` and kept open by skills per the control-state contract. Treat its presence in `<todo_status>` as a per-turn reminder to run the reconciliation-on-read preamble on any skill that reads `WorkflowContext.md`. Never mark it `done` without confirming `Reconciliation: current` and no drift.
 
 **Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 

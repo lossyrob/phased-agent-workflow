@@ -70,7 +70,7 @@ Read `Workflow Identity` from `WorkflowContext.md`: `paw` (default) or `paw-lite
 - Unresolved items → block and report with recommendation
 
 **Control State**:
-- If `## Control State` exists, reconcile before PR creation. All items before `final-pr` must be terminal. Absent → legacy best-effort mode.
+- If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) on skill load, then reconcile before PR creation. All items before `final-pr` must be terminal. Absent → legacy best-effort mode.
 
 ## Workflow Profile Handling
 

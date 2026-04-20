@@ -162,11 +162,12 @@ Before the next activity can start, verify:
 - Otherwise: `artifact_lifecycle_action = none`
 
 **Control-state reconciliation** (when `## Control State` exists):
-1. Treat `Reconciliation: current` as required for mutation-affecting next activities.
-2. If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile the embedded state against artifacts, git state, PR state, and the just-completed boundary before returning `preflight: passed`.
-3. If reconciliation cannot prove the relevant live state, return `preflight: blocked: reconciliation incomplete` and explicitly report whether the state is `stale` or `external_unverified`.
-4. If any required activity item before `next_activity`, any relevant gate item, or any relevant configured procedure item remains `pending`, `in_progress`, or `blocked` when it should already be terminal, return `preflight: blocked: <item-id> unresolved`.
-5. Only return `preflight: passed` when the reconciled control state supports the computed `next_activity`.
+1. Apply the reconciliation-on-read preamble from the control-state contract on skill load (drift check + `reconcile:<work-id>` todo). On entering this transition, re-open `reconcile:<work-id>` to `pending` until the steps below confirm `current`.
+2. Treat `Reconciliation: current` as required for mutation-affecting next activities.
+3. If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile the embedded state against artifacts, git state, PR state, and the just-completed boundary before returning `preflight: passed`.
+4. If reconciliation cannot prove the relevant live state, return `preflight: blocked: reconciliation incomplete` and explicitly report whether the state is `stale` or `external_unverified`.
+5. If any required activity item before `next_activity`, any relevant gate item, or any relevant configured procedure item remains `pending`, `in_progress`, or `blocked` when it should already be terminal, return `preflight: blocked: <item-id> unresolved`.
+6. Only return `preflight: passed` when the reconciled control state supports the computed `next_activity`. On `preflight: passed`, mark `reconcile:<work-id>` todo `done`.
 
 If any check fails, report blocker and stop.
 

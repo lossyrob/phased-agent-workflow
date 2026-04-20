@@ -30,6 +30,8 @@ Read WorkflowContext.md for:
 - `Planning Review Interactive`: `true` | `false` | `smart`
 - `Planning Review Models`: comma-separated model names (for multi-model)
 
+If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) before proceeding.
+
 If `Planning Docs Review` is `disabled`, report skip and return `complete`.
 
 If `WorkflowContext.md` contains `## Control State`, treat `procedure:planning-review` as the configured procedure item:

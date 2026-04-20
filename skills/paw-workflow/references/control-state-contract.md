@@ -84,3 +84,12 @@ For `Workflow Identity: paw-lite`, seed a simplified `## Control State` with ite
 - Next activity = first non-terminal required item. `blocked` items block advancement.
 - Gate/procedure items must be terminal before dependent activities proceed.
 - Procedure items become `resolved` only when the configured mode actually ran.
+
+## Reconciliation on Skill Load
+
+Every skill that reads `WorkflowContext.md` (or `ReviewContext.md`) as its first action inherits this preamble. Apply it immediately after reading the file and before executing skill-specific procedure steps.
+
+- **Drift check**: Compare each embedded activity/gate/procedure status against live evidence — artifacts in the work directory, `reviews/` outputs, git branch/commit state, and any PR/external state the skill can observe. Terminal statuses (`resolved`, `not_applicable`) must match live evidence.
+- **Block on drift**: If any embedded status disagrees with live evidence, or if `Reconciliation` is `not_run`/`stale`/`external_unverified` and the skill is about to perform mutation-affecting work, STOP and report the specific drift. Do not auto-correct embedded state silently.
+- **Persistent reconcile todo**: While `## Control State` exists, a SQL todo with id `reconcile:<work-id>` must exist. Create it with `INSERT OR IGNORE` if missing (status `pending`, title `Reconcile control state with live evidence`). Mark it `done` only when reconciliation confirms `Reconciliation: current` and no drift. Re-open it to `pending` whenever the skill advances to a new activity, enters a stage boundary, or detects any condition that invalidates the last reconciliation. The todo stays visible in the per-turn `<todo_status>` so reconciliation is surfaced even when no skill is loaded.
+- **Absent control state**: Legacy best-effort mode; no reconcile todo is required, but note explicitly that control-state protections are inactive.

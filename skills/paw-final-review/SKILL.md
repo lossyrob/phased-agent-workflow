@@ -28,6 +28,8 @@ Read WorkflowContext.md for:
 - `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
+If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) before proceeding.
+
 If `WorkflowContext.md` contains `## Control State`, treat `procedure:final-review` as the configured procedure item:
 - Reconcile control state before executing the review
 - Mark it `in_progress` only when the configured review mode is actually about to run

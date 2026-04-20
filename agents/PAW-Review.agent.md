@@ -49,6 +49,7 @@ When the user requests society-of-thought review mode:
 - Keep any built-in TODOs aligned only as an execution mirror.
 - Before yield, delegation, or GitHub posting, reconcile the embedded state when present. If reconciliation cannot make the state `current`, STOP and report the blocker instead of delegating or posting. If the section is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 - Do not advance past review-stage items or terminal external-review facts that remain unresolved when control state is present.
+- When control state is present, a persistent SQL todo `reconcile:<work-id>` tracks reconciliation readiness per the control-state contract. Treat its presence in `<todo_status>` as a per-turn reminder to run the reconciliation-on-read preamble on any skill that reads `ReviewContext.md`.
 
 ## Skill-Based Execution
 

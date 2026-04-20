@@ -63,7 +63,7 @@ Read WorkflowContext.md for:
 
 ### Control State Detection
 
-If `WorkflowContext.md` contains `## Control State`, read reconciliation marker, required items, gates, and procedures. Absent → legacy best-effort mode.
+If `WorkflowContext.md` contains `## Control State`, read reconciliation marker, required items, gates, and procedures. As a read-only skill, apply the drift check from the control-state contract's reconciliation-on-read preamble and surface any disagreement between embedded status and live evidence in the status report. Do not mutate the embedded state; do ensure `reconcile:<work-id>` SQL todo exists (pending) when drift is detected. Absent `## Control State` → legacy best-effort mode.
 
 ### Phase Counting
 

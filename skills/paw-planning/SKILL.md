@@ -20,6 +20,8 @@ Read WorkflowContext.md for:
 - `Plan Generation Mode`: `single-model` | `multi-model`
 - `Plan Generation Models`: comma-separated model names (for multi-model modes)
 
+If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) before proceeding.
+
 The plan generation mode is set during `paw-init`. If the field is missing (legacy workflow), default to `single-model` (backwards compatibility).
 
 {{#cli}}

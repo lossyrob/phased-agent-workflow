@@ -299,6 +299,8 @@ Reconciliation: not_run
 - `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
 
+After writing `## Control State` (either profile), seed a per-session SQL todo `reconcile:<work-id>` with status `pending` (title: `Reconcile control state with live evidence`). Use `INSERT OR IGNORE` so re-running init is idempotent. This todo makes reconciliation visible in every turn's `<todo_status>` and is managed by the control-state contract's reconciliation-on-read preamble going forward.
+
 ### Execution Contract
 
 - If `Execution Mode` is absent in an older context, treat it as `current-checkout`.

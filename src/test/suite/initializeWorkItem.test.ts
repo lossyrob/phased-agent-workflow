@@ -86,6 +86,11 @@ function createCurrentCheckoutInputs(): WorkItemInputs {
       mode: 'single-model',
       interactive: 'smart',
     },
+    planningReview: {
+      enabled: false,
+      mode: 'single-model',
+      interactive: 'smart',
+    },
   };
 }
 
@@ -113,6 +118,11 @@ suite('Initialize Work Item Helpers', () => {
       artifactLifecycle: 'commit-and-clean',
       finalReview: {
         enabled: true,
+        mode: 'single-model',
+        interactive: 'smart',
+      },
+      planningReview: {
+        enabled: false,
         mode: 'single-model',
         interactive: 'smart',
       },

@@ -93,7 +93,7 @@ suite('Handoff Tool', () => {
 
       validReviewIds.forEach(reviewId => {
         assert.doesNotThrow(() => {
-          validateContextIdFormat('PAW Review', reviewId);
+          validateContextIdFormat('PAW-Review', reviewId);
         });
       });
     });
@@ -108,7 +108,7 @@ suite('Handoff Tool', () => {
 
       invalidReviewIds.forEach(reviewId => {
         assert.throws(
-          () => validateContextIdFormat('PAW Review', reviewId),
+          () => validateContextIdFormat('PAW-Review', reviewId),
           /Invalid review identifier format/,
           `Should reject invalid review identifier: ${reviewId}`
         );
@@ -126,7 +126,7 @@ suite('Handoff Tool', () => {
       validAgentNames.forEach(agentName => {
         const params: HandoffParams = {
           target_agent: agentName,
-          work_id: agentName === 'PAW Review' ? 'PR-123' : 'test-feature',
+          work_id: agentName === 'PAW-Review' ? 'PR-123' : 'test-feature',
         };
         assert.strictEqual(params.target_agent, agentName);
       });
@@ -187,7 +187,7 @@ suite('Handoff Tool', () => {
 
     test('constructs review handoff prompt with ReviewContext guidance', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW Review',
+        target_agent: 'PAW-Review',
         work_id: 'PR-123',
       };
       const prompt = constructPromptMessage(params);
@@ -209,7 +209,7 @@ suite('Handoff Tool', () => {
 
     test('includes Review ID in PAW Review prompt', () => {
       const params: HandoffParams = {
-        target_agent: 'PAW Review',
+        target_agent: 'PAW-Review',
         work_id: 'PR-123-my-api',
       };
       const prompt = constructPromptMessage(params);
@@ -275,8 +275,8 @@ suite('Handoff Tool', () => {
     });
 
     test('constructs review confirmation message with review identifier', () => {
-      const message = constructConfirmationMessage('PAW Review', 'PR-123-my-api');
-      assert.ok(message.includes('PAW Review'));
+      const message = constructConfirmationMessage('PAW-Review', 'PR-123-my-api');
+      assert.ok(message.includes('PAW-Review'));
       assert.ok(message.includes('PR-123-my-api'));
       assert.ok(message.includes('review'));
     });
@@ -308,10 +308,10 @@ function validateContextIdFormat(targetAgent: HandoffParams['target_agent'], wor
   const REVIEW_ID_PATTERN = /^(?:PR-\d+(?:-[a-z0-9-]+)?|[a-z0-9-]+)$/;
 
   if (!workId || workId.trim().length === 0) {
-    throw new Error(targetAgent === 'PAW Review' ? 'Review ID cannot be empty' : 'Work ID cannot be empty');
+    throw new Error(targetAgent === 'PAW-Review' ? 'Review ID cannot be empty' : 'Work ID cannot be empty');
   }
 
-  if (targetAgent === 'PAW Review') {
+  if (targetAgent === 'PAW-Review') {
     if (!REVIEW_ID_PATTERN.test(workId)) {
       throw new Error(
         `Invalid review identifier format: "${workId}". ` +
@@ -334,10 +334,10 @@ function validateContextIdFormat(targetAgent: HandoffParams['target_agent'], wor
  * Constructs prompt message (mirrors logic in handoffTool.ts)
  */
 function constructPromptMessage(params: HandoffParams): string {
-  const contextLabel = params.target_agent === 'PAW Review' ? 'Review ID' : 'Work ID';
+  const contextLabel = params.target_agent === 'PAW-Review' ? 'Review ID' : 'Work ID';
   let prompt = `${contextLabel}: ${params.work_id}`;
 
-  if (params.target_agent === 'PAW Review') {
+  if (params.target_agent === 'PAW-Review') {
     prompt += '\n\nBefore acting, read the existing review artifacts for this review identifier.';
     prompt += '\nUse `ReviewContext.md` as the durable review-state source when embedded control state is present.';
     prompt += '\nIf review control state is absent, continue in legacy best-effort mode and say so explicitly.';
@@ -369,7 +369,7 @@ function constructConfirmationMessage(
   workId: string,
   inlineInstruction?: string
 ): string {
-  const targetLabel = targetAgent === 'PAW Review' ? 'review' : 'feature';
+  const targetLabel = targetAgent === 'PAW-Review' ? 'review' : 'feature';
   let message = `This will start a new chat with **${targetAgent}** for ${targetLabel}: ${workId}`;
   if (inlineInstruction) {
     message += `\n\nWith instruction: "${inlineInstruction}"`;

@@ -30,11 +30,11 @@ const REVIEW_ID_PATTERN = /^(?:PR-\d+(?:-[a-z0-9-]+)?|[a-z0-9-]+)$/;
  * Validates the workflow work ID or review identifier for a handoff target.
  */
 function getContextLabel(targetAgent: AgentName): string {
-  return targetAgent === "PAW Review" ? "Review ID" : "Work ID";
+  return targetAgent === "PAW-Review" ? "Review ID" : "Work ID";
 }
 
 function getConfirmationTarget(targetAgent: AgentName): string {
-  return targetAgent === "PAW Review" ? "review" : "feature";
+  return targetAgent === "PAW-Review" ? "review" : "feature";
 }
 
 function validateContextId(targetAgent: AgentName, contextId: string): void {
@@ -42,7 +42,7 @@ function validateContextId(targetAgent: AgentName, contextId: string): void {
     throw new Error(`${getContextLabel(targetAgent)} cannot be empty`);
   }
 
-  if (targetAgent === "PAW Review") {
+  if (targetAgent === "PAW-Review") {
     if (!REVIEW_ID_PATTERN.test(contextId)) {
       throw new Error(
         `Invalid review identifier format: "${contextId}". ` +
@@ -79,7 +79,7 @@ function constructPrompt(params: HandoffParams): string {
 }
 
 function buildResumeInstructions(targetAgent: AgentName): string {
-  if (targetAgent === 'PAW Review') {
+  if (targetAgent === 'PAW-Review') {
     return [
       'Before acting, read the existing review artifacts for this review identifier.',
       'Use `ReviewContext.md` as the durable review-state source when embedded control state is present.',

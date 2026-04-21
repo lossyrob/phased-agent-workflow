@@ -89,7 +89,27 @@ For `Workflow Identity: paw-lite`, seed a simplified `## Control State` with ite
 
 Every skill that reads `WorkflowContext.md` (or `ReviewContext.md`) as its first action inherits this preamble. Apply it immediately after reading the file and before executing skill-specific procedure steps.
 
+- **State-echo banner**: Before any other action, emit a single line to the user of the form `[<skill-name>] work-id=<id> | <item1>=<status1> <item2>=<status2> ... | Reconciliation=<marker> | Next gate: <N→M or none>`. Include every required activity item and every non-terminal gate/procedure item. The echo forces you to observe staleness and gives the user an audit trail. Emit it on every skill load, not just the first.
 - **Drift check**: Compare each embedded activity/gate/procedure status against live evidence — artifacts in the work directory, `reviews/` outputs, git branch/commit state, and any PR/external state the skill can observe. Terminal statuses (`resolved`, `not_applicable`) must match live evidence.
 - **Block on drift**: If any embedded status disagrees with live evidence, or if `Reconciliation` is `not_run`/`stale`/`external_unverified` and the skill is about to perform mutation-affecting work, STOP and report the specific drift. Do not auto-correct embedded state silently.
 - **Persistent reconcile todo**: While `## Control State` exists, a SQL todo with id `reconcile:<work-id>` must exist. Create it with `INSERT OR IGNORE` if missing (status `pending`, title `Reconcile control state with live evidence`). Mark it `done` only when reconciliation confirms `Reconciliation: current` and no drift. Re-open it to `pending` whenever the skill advances to a new activity, enters a stage boundary, or detects any condition that invalidates the last reconciliation. The todo stays visible in the per-turn `<todo_status>` so reconciliation is surfaced even when no skill is loaded.
+- **Halt on unknown activity**: If the user requests a stage, review, or activity with no matching item in the embedded control-state profile, STOP and report the mismatch. Do not improvise a slot; do not silently skip the request. If the user insists, report that the profile must be updated (or identity/mode changed) before the activity can be tracked.
 - **Absent control state**: Legacy best-effort mode; no reconcile todo is required, but note explicitly that control-state protections are inactive.
+
+## Summarization Protocol
+
+Sessions that summarize or checkpoint mid-run must include the following verbatim in the summary, or the resumed agent cannot trust embedded state:
+
+- The entire `## Control State` section from `WorkflowContext.md` (or `ReviewContext.md`).
+- Current SQL todo rows for `reconcile:<work-id>` and any `lite:<work-id>:*` or equivalent activity-mirror rows.
+- Any gate transitions completed since the last summary (e.g., `Stage Boundary Gate (2→3) passed at <commit-sha>`).
+
+Omitting these makes resume-from-summary unsafe: the resumed agent will fall back to prose progress notes and skip reconciliation-on-read.
+
+## Subagent Dispatch Discipline
+
+Control-state discipline is **main-session** discipline. Subagents dispatched via `task` do not inherit workflow context, skill loads, SQL state beyond what you pass in the prompt, or gate enforcement.
+
+- Run the Stage Boundary Gate (or the equivalent activity-mirror update) **in the main session before dispatching** any subagent for a stage's work.
+- Include the expected post-task mirror update in the subagent's prompt (e.g., "on completion, report: implementation-phase-N=resolved"), and update the activity mirror and embedded state yourself when the subagent returns.
+- Fleet-style Stage 3, multi-model Stage 4, and society-of-thought reviews are all subagent-heavy — they are the main path that silently routes around the gate if you dispatch first and reconcile later.

@@ -138,6 +138,7 @@ When a preset is specified (explicitly or via default):
 - **Invalid YAML / circular extends / multiple defaults**: Report error, ask user to resolve
 - **Unknown fields in `config:`**: Warn but don't fail (forward compatibility)
 - **Empty preset / missing `~/.paw/presets/`**: Skip gracefully (no-op / no user presets)
+- **Unknown stage, review, or activity requested**: If the user or a downstream skill requests an activity (e.g., "run a planning review in paw-lite without `planning_docs_review` enabled", or "run spec review in paw-lite") that has no matching item in the resolved control-state profile, STOP and report the mismatch. Offer to re-initialize with a different identity/configuration or enable the relevant flag. Do not improvise a slot or silently map it to an unrelated activity — the absence of a profile item is the signal that the activity is unsupported for this identity/mode.
 
 ## Desired End States
 

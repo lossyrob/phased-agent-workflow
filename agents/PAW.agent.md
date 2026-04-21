@@ -113,6 +113,15 @@ Use TODOs as a mirror of active required workflow items.
 - When control state is present, do not advance past required activity items, gate items, or configured procedure items that remain `pending`, `in_progress`, or `blocked`.
 - When control state is present, a persistent SQL todo `reconcile:<work-id>` is seeded by `paw-init` and kept open by skills per the control-state contract. Treat its presence in `<todo_status>` as a per-turn reminder to run the reconciliation-on-read preamble on any skill that reads `WorkflowContext.md`. Never mark it `done` without confirming `Reconciliation: current` and no drift.
 
+### Summarization and Checkpoint Protocol
+
+When you summarize the session, produce a checkpoint, or hand off to a resuming agent, include verbatim:
+- The entire `## Control State` section from `WorkflowContext.md`.
+- Current SQL todo rows for `reconcile:<work-id>` and any activity-mirror rows (`lite:<work-id>:*` for paw-lite; relevant `transition:*` and activity TODOs for standard paw).
+- Any gate transitions completed since the previous summary (e.g., "Stage Boundary Gate (3→4) passed").
+
+Omitting these makes resume unsafe — the resumed session will rebuild progress from prose, not reconciliation.
+
 **Core rule**: After completing ANY activity, determine if you're at a stage boundary (see Stage Boundary Rule). If yes, delegate to `paw-transition` before doing anything else.
 
 **Transition response handling**:

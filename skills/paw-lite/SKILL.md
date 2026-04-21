@@ -39,7 +39,17 @@ Apply this gate at every stage transition (2→2.5, 2.5→3, 2→3 when planning
 3. **Block on drift**: If any prior activity item is non-terminal, or if reconciliation cannot prove live state, STOP and report the specific drift. Do not auto-correct embedded state; do not proceed into the next stage.
 4. **Advance**: Only after the check passes, set the next activity's embedded status to `in_progress`, update the matching `lite:*` SQL mirror row, and re-open `reconcile:<work-id>` (pending) so the next skill load must re-verify before mutation.
 
-At Stage 5 specifically: the gate must pass before the instruction "Load `paw-pr`" executes. Do not perform stop-tracking, `git rm`, or PR creation from this skill directly — the gate proves prerequisites, and `paw-pr` + `paw-git-operations` perform the scoped mutations.
+**Pre-dispatch discipline (subagent-heavy stages)**: Running the gate is main-session discipline. If you will dispatch `task` subagents for the upcoming stage (Stage 3 fleet, multi-model Stage 4, SoT Stage 4), run the gate and update the activity mirror **in-session before dispatch**. Subagents do not inherit gate discipline, skill loads, or control-state context. Include the expected post-task mirror update in the subagent's prompt (e.g., "on completion, report: `lite:<work-id>:implementation`=resolved") and apply those updates yourself when the subagent returns.
+
+At Stage 5 specifically: the gate must pass before the instruction "Load `paw-pr`" executes. Do not perform stop-tracking, `git rm`, `git push origin <target>`, or `gh pr create` from this skill or inline — the gate proves prerequisites, and `paw-pr` + `paw-git-operations` perform the scoped mutations. Direct remote-affecting commands from a paw-lite session are a contract violation.
+
+### Summarization and Checkpoint Protocol
+
+When this session summarizes, checkpoints, or hands off to a resuming agent, include the entire `## Control State` section from `WorkflowContext.md` verbatim, plus current `reconcile:<work-id>` and `lite:<work-id>:*` todo rows. Omitting them makes resume unsafe: the resumed agent will fall back to prose progress notes and bypass reconciliation-on-read.
+
+### Halt on Unknown Activity
+
+If the user requests a stage, review, or activity with no matching item in this profile (e.g., "run spec review in paw-lite"), STOP and report the mismatch. Do not improvise a slot. Offer the closest supported activity or recommend re-initializing with a different identity/configuration.
 
 ### Stage 1: Work Shaping (optional)
 

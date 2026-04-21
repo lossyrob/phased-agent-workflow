@@ -30,6 +30,7 @@ description: Shared git mechanics for PAW activity skills including branch namin
 ## Control State Reconciliation Gate
 
 - When `WorkflowContext.md` contains `## Control State`, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) on skill load, then reconcile it before any branch creation, checkout, pull, commit, push, PR-prep mutation, or artifact write.
+- **Contract violation (paw-lite)**: Direct `git push origin <target-branch>` or `gh pr create` from a paw-lite session is a contract violation unless invoked through `paw-pr`. If called out-of-band, STOP and report that the Stage 5 boundary gate must run and `paw-pr` must own the PR creation. This rule applies even when control state is absent — paw-lite identity is the trigger.
 - Treat `Reconciliation: current` as required for mutation-affecting git work.
 - If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile first; if reconciliation cannot prove the live state, STOP and report a blocker instead of mutating git state.
 - If any required activity item, gate item, or configured procedure item that should already be terminal remains `pending`, `in_progress`, or `blocked`, STOP and report that unresolved control-state item instead of bypassing it with git mutation.

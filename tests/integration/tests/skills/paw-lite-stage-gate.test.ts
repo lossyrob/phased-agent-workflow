@@ -112,4 +112,73 @@ describe("paw-lite stage boundary gate and reconciliation preamble", () => {
     assert.match(transition, /re-open `reconcile:<work-id>`/i);
     assert.match(transition, /mark `reconcile:<work-id>` todo `done`/i);
   });
+
+  it("defines a state-echo banner on skill load in the control-state contract", async () => {
+    const contract = await readRepoFile("skills/paw-workflow/references/control-state-contract.md");
+
+    assert.match(contract, /State-echo banner/i);
+    assert.match(contract, /\[<skill-name>\]/);
+    assert.match(contract, /work-id=<id>/);
+    assert.match(contract, /Reconciliation=<marker>/);
+    assert.match(contract, /Next gate:/);
+  });
+
+  it("defines summarization and subagent-dispatch protocols in the control-state contract", async () => {
+    const contract = await readRepoFile("skills/paw-workflow/references/control-state-contract.md");
+
+    assert.match(contract, /## Summarization Protocol/);
+    assert.match(contract, /include the following verbatim/i);
+    assert.match(contract, /## Subagent Dispatch Discipline/);
+    assert.match(contract, /main-session/i);
+    assert.match(contract, /before dispatching/i);
+  });
+
+  it("adds pre-dispatch subagent discipline to the paw-lite Stage Boundary Gate", async () => {
+    const lite = await readRepoFile("skills/paw-lite/SKILL.md");
+
+    assert.match(lite, /Pre-dispatch discipline/i);
+    assert.match(lite, /main-session discipline/i);
+    assert.match(lite, /Subagents do not inherit/i);
+  });
+
+  it("adds a Stage 5 admission precondition in paw-pr for paw-lite", async () => {
+    const pr = await readRepoFile("skills/paw-pr/SKILL.md");
+
+    assert.match(pr, /Stage 5 Admission Check \(paw-lite\)/);
+    assert.match(pr, /lite:<work-id>:final-pr/);
+    assert.match(pr, /in_progress/);
+    assert.match(pr, /STOP/);
+  });
+
+  it("flags direct remote-affecting git operations as contract violations from paw-lite", async () => {
+    const git = await readRepoFile("skills/paw-git-operations/SKILL.md");
+
+    assert.match(git, /Contract violation \(paw-lite\)/i);
+    assert.match(git, /gh pr create/);
+    assert.match(git, /git push origin/);
+    assert.match(git, /paw-pr/);
+  });
+
+  it("requires summarization protocols in agent-level tracking guidance", async () => {
+    const paw = await readRepoFile("agents/PAW.agent.md");
+    const pawReview = await readRepoFile("agents/PAW-Review.agent.md");
+
+    assert.match(paw, /Summarization and Checkpoint Protocol/);
+    assert.match(paw, /`## Control State`/);
+    assert.match(paw, /verbatim/i);
+    assert.match(pawReview, /Summarization and Checkpoint Protocol/);
+    assert.match(pawReview, /verbatim/i);
+  });
+
+  it("requires paw-lite and paw-init to halt on unknown activity requests", async () => {
+    const lite = await readRepoFile("skills/paw-lite/SKILL.md");
+    const init = await readRepoFile("skills/paw-init/SKILL.md");
+    const contract = await readRepoFile("skills/paw-workflow/references/control-state-contract.md");
+
+    assert.match(lite, /Halt on Unknown Activity/i);
+    assert.match(lite, /Do not improvise/i);
+    assert.match(init, /Unknown stage, review, or activity/i);
+    assert.match(init, /Do not improvise/i);
+    assert.match(contract, /Halt on unknown activity/i);
+  });
 });

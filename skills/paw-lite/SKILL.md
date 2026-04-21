@@ -12,30 +12,30 @@ Prerequisite: `WorkflowContext.md` must exist (created by `paw-init` or manually
 ## Workflow Stages
 
 ```
-[Work Shaping] → [Plan] → [Implement] → [Review] → [PR]
-  (optional)     (light)  (fleet-style) (configurable)
+[Work Shaping] → [Plan] → [Planning Docs Review] → [Implement] → [Review] → [PR]
+  (optional)     (light)   (optional)              (fleet-style) (configurable)
 ```
 
 ## Workflow Identity and Durable State
 
-- If `Workflow Identity: paw-lite` and `## Control State` exist, use the lite control-state profile (items: `init`, `planning`, `implementation`, `final-review`, `final-pr`; procedure: `procedure:final-review`)
+- If `Workflow Identity: paw-lite` and `## Control State` exist, use the lite control-state profile (items: `init`, `planning`, `planning-docs-review` (optional), `implementation`, `final-review`, `final-pr`; procedures: `procedure:planning-review` (optional), `procedure:final-review`)
 - If `Workflow Identity` is absent but `Plan.md` exists without `ImplementationPlan.md`, enter read-only **legacy paw-lite compatibility mode** — report status only, STOP before mutation-affecting work until `Workflow Identity: paw-lite` is persisted
-- Durable artifacts (`WorkflowContext.md`, `Plan.md`, `reviews/FINAL-REVIEW.md`) win over SQL; rebuild SQL from them on resume
+- Durable artifacts (`WorkflowContext.md`, `Plan.md`, `reviews/planning/`, `reviews/FINAL-REVIEW.md`) win over SQL; rebuild SQL from them on resume
 - When `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` SQL todo) on every skill load and at every stage boundary below.
 
 ### SQL Mirroring
 
-- Activity-level IDs: `lite:<work-id>:{planning,implementation,final-review,final-pr}` — rebuild at every stage boundary, not only during implementation
+- Activity-level IDs: `lite:<work-id>:{planning,planning-docs-review,implementation,final-review,final-pr}` — rebuild at every stage boundary, not only during implementation. Include `planning-docs-review` only when `Planning Docs Review: enabled`.
 - Work-item IDs: `lite-task:<work-id>:<slug>` — mirror durable checkboxes in `Plan.md`
 - Reconcile-on-read todo: `reconcile:<work-id>` — seeded by `paw-init`, kept `pending` until reconciliation proves `current`
 - Create idempotently (`INSERT OR IGNORE`); rebuild from durable artifacts on resume
 
 ### Stage Boundary Gate
 
-Apply this gate at every stage transition (2→3, 3→4, 4→5) before entering the next stage or loading any downstream skill:
+Apply this gate at every stage transition (2→2.5, 2.5→3, 2→3 when planning docs review is disabled, 3→4, 4→5) before entering the next stage or loading any downstream skill:
 
-1. **Rebuild activity mirror**: Ensure `lite:<work-id>:{planning,implementation,final-review,final-pr}` todos exist in SQL with statuses matching the embedded `## Control State`. Never trust prior-turn memory for these rows.
-2. **Reconcile**: Run the reconciliation-on-read check (same semantics as `paw-transition` Step 4). Compare each activity item to live evidence — `Plan.md` checkboxes, `reviews/FINAL-REVIEW.md`, target-branch commits, and any external state the stage requires.
+1. **Rebuild activity mirror**: Ensure `lite:<work-id>:*` todos exist in SQL with statuses matching the embedded `## Control State`. Include or omit `planning-docs-review` per configuration. Never trust prior-turn memory for these rows.
+2. **Reconcile**: Run the reconciliation-on-read check (same semantics as `paw-transition` Step 4). Compare each activity item to live evidence — `Plan.md` checkboxes, `reviews/planning/` (when enabled), `reviews/FINAL-REVIEW.md` (when enabled), target-branch commits, and any external state the stage requires.
 3. **Block on drift**: If any prior activity item is non-terminal, or if reconciliation cannot prove live state, STOP and report the specific drift. Do not auto-correct embedded state; do not proceed into the next stage.
 4. **Advance**: Only after the check passes, set the next activity's embedded status to `in_progress`, update the matching `lite:*` SQL mirror row, and re-open `reconcile:<work-id>` (pending) so the next skill load must re-verify before mutation.
 
@@ -62,11 +62,25 @@ Create `.paw/work/<work-id>/Plan.md`.
 - If the task is simple enough for single-threaded implementation, skip fleet dispatch in Stage 3 and implement directly.
 - `## Open Questions` must be explicit. Use `None` when there are no open questions.
 
+### Stage 2.5: Planning Docs Review (optional)
+
+**When to run**: `Planning Docs Review: enabled` in `WorkflowContext.md`. Otherwise skip directly from Stage 2 to Stage 3.
+
+**Before entering Stage 2.5**: Run the Stage Boundary Gate (2→2.5). Block if `planning` is non-terminal.
+
+**How**: Load `paw-planning-docs-review` and follow its instructions. The skill runs against `Plan.md` (the lite planning artifact) using the configured `Planning Review Mode` (`single-model` | `multi-model` | `society-of-thought`). Review artifacts land in `.paw/work/<work-id>/reviews/planning/`.
+
+**After review**:
+- If the verdict is blocking, update `Plan.md` (return to Stage 2) and re-run Stage 2.5 until non-blocking.
+- Mark `planning-docs-review` resolved and `procedure:planning-review` resolved only when the configured mode completed successfully.
+
+**Before entering Stage 3**: Run the Stage Boundary Gate (2.5→3).
+
 ### Stage 3: Implement (Fleet-Style)
 
 Implement the plan using parallel task subagents for independent work items.
 
-**Before entering Stage 3**: Run the Stage Boundary Gate (2→3). Block if planning is not terminal or reconciliation cannot prove `Plan.md` matches embedded state.
+**Before entering Stage 3**: Run the Stage Boundary Gate. Block if planning is not terminal, or if `Planning Docs Review: enabled` and `planning-docs-review` is not terminal, or if reconciliation cannot prove `Plan.md` matches embedded state.
 
 **Getting started**:
 1. If control state is active, mark `implementation` in progress (gate has already reconciled)
@@ -118,6 +132,7 @@ If control state is active, update `final-pr` status accordingly. Load `paw-pr` 
 ├── WorkShaping.md           # Optional: from Stage 1
 ├── Plan.md                  # Durable lite plan and work-item checklist
 └── reviews/
+    ├── planning/            # Optional: Stage 2.5 planning docs review artifacts
     ├── FINAL-REVIEW.md      # Durable review result when final review is enabled
     ├── REVIEW-*.md          # Optional: per-specialist reviews
     └── REVIEW-SYNTHESIS.md  # Optional: synthesized findings

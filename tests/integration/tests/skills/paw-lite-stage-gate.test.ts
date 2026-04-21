@@ -36,12 +36,31 @@ describe("paw-lite stage boundary gate and reconciliation preamble", () => {
 
     assert.match(lite, /### Stage Boundary Gate/);
     assert.match(lite, /Rebuild activity mirror/i);
-    assert.match(lite, /lite:<work-id>:\{planning,implementation,final-review,final-pr\}/);
+    assert.match(lite, /lite:<work-id>:/);
     assert.match(lite, /Reconcile/i);
     assert.match(lite, /Block on drift/i);
-    assert.match(lite, /Stage Boundary Gate \(2→3\)/);
     assert.match(lite, /Stage Boundary Gate \(3→4\)/);
     assert.match(lite, /Stage Boundary Gate \(4→5\)/);
+  });
+
+  it("supports optional planning docs review in paw-lite", async () => {
+    const lite = await readRepoFile("skills/paw-lite/SKILL.md");
+    const init = await readRepoFile("skills/paw-init/SKILL.md");
+
+    // paw-lite has a Stage 2.5 for planning docs review
+    assert.match(lite, /### Stage 2\.5: Planning Docs Review/);
+    assert.match(lite, /paw-planning-docs-review/);
+    assert.match(lite, /reviews\/planning\//);
+    assert.match(lite, /planning-docs-review/);
+    assert.match(lite, /`procedure:planning-review`/);
+
+    // paw-init allows planning_docs_review=enabled for paw-lite
+    assert.doesNotMatch(
+      init,
+      /paw-lite requires:[^\n]*planning_docs_review=disabled/,
+      "paw-init must not require planning_docs_review=disabled for paw-lite",
+    );
+    assert.match(init, /paw-lite[^\n]*`planning_docs_review`[^\n]*explicitly `enabled`/i);
   });
 
   it("requires the Stage 5 gate to pass before loading paw-pr", async () => {

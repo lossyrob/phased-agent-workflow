@@ -56,7 +56,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `implementation_model` | No | `none` | `none` (session default), or model name/intent (e.g., `gpt-5.4`, `claude-opus-4.6-1m`, `latest Claude Opus`) |
 | `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model` |
 | `plan_generation_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
-| `planning_docs_review` | No | `enabled` (`disabled` if minimal or paw-lite) | `enabled`, `disabled` |
+| `planning_docs_review` | No | `enabled` (`disabled` if minimal or paw-lite; may be explicitly `enabled` for paw-lite) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model`, `society-of-thought` |
 | `planning_review_interactive` | No | `smart` | `true`, `false`, `smart` |
 | `planning_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
@@ -78,7 +78,7 @@ When parameters are not provided:
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
-When `workflow_identity` resolves to `paw-lite`, override defaults: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, `planning_docs_review=disabled`.
+When `workflow_identity` resolves to `paw-lite`, override defaults: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`. `planning_docs_review` defaults to `disabled` but may be explicitly set to `enabled`.
 
 Ask in this order and allow defaults where permitted.
 
@@ -157,7 +157,7 @@ When a preset is specified (explicitly or via default):
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
 - If `review_policy` is `planning-only` or `final-pr-only`, `review_strategy` MUST be `local`
-- `paw-lite` requires: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`, `planning_docs_review=disabled`
+- `paw-lite` requires: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`. `planning_docs_review` defaults to `disabled` for paw-lite but may be explicitly `enabled`.
 - `workflow_mode=custom` requires `custom_instructions` unless `workflow_identity=paw-lite`
 - If `final_review_mode` is `society-of-thought`, `final_agent_review` MUST be `enabled`
 - If `planning_review_mode` is `society-of-thought`, `planning_docs_review` MUST be `enabled`
@@ -280,7 +280,7 @@ Reconciliation: not_run
     - Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`.
     - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
     - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.
-  - When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with the lite profile (items: `init`→resolved, `planning`, `implementation`, `final-review`, `final-pr`; procedure: `procedure:final-review`; no gates). Use `not_applicable` for `final-review` and `procedure:final-review` when `Final Agent Review` is `disabled`.
+  - When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with the lite profile. Items: `init`→resolved, `planning`, `planning-docs-review` (`pending` if `Planning Docs Review: enabled`, else `not_applicable`), `implementation`, `final-review`, `final-pr`. Procedure: `procedure:planning-review` (`pending` if `Planning Docs Review: enabled`, else `not_applicable`) and `procedure:final-review` (`pending` if `Final Agent Review: enabled`, else `not_applicable`). No gates.
 
 ```markdown
 ## Control State
@@ -291,11 +291,13 @@ Reconciliation: not_run
 ### Required Workflow Items
 - `init` | `resolved` | `activity`
 - `planning` | `pending` | `activity`
+- `planning-docs-review` | `<pending|not_applicable>` | `activity`
 - `implementation` | `pending` | `activity`
 - `final-review` | `<pending|not_applicable>` | `activity`
 - `final-pr` | `pending` | `activity`
 
 ### Configured Procedure Items
+- `procedure:planning-review` | `<pending|not_applicable>` | `procedure`
 - `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
 

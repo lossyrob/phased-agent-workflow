@@ -57,6 +57,43 @@ if ($Target -eq "claude") {
     $DefaultAgentsOut = Join-Path $env:USERPROFILE ".copilot\agents"
 }
 
+function Write-FileForce {
+    param(
+        [string]$Path,
+        [string]$Content
+    )
+
+    # Try a straight write first; if the file is locked by a reader
+    # (e.g., Copilot CLI has it open), retry with a FileStream opened
+    # using FileShare.ReadWrite so we can write even while it's being read.
+    $attempts = 0
+    $maxAttempts = 5
+    while ($true) {
+        try {
+            $attempts++
+            $fs = [System.IO.File]::Open(
+                $Path,
+                [System.IO.FileMode]::Create,
+                [System.IO.FileAccess]::Write,
+                [System.IO.FileShare]::ReadWrite
+            )
+            try {
+                $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($Content)
+                $fs.Write($bytes, 0, $bytes.Length)
+            } finally {
+                $fs.Dispose()
+            }
+            return
+        } catch [System.IO.IOException] {
+            if ($attempts -ge $maxAttempts) {
+                Write-Warning "File '$Path' is locked after $attempts attempts; skipping."
+                throw
+            }
+            Start-Sleep -Milliseconds (200 * $attempts)
+        }
+    }
+}
+
 function Process-Conditionals {
     param([string]$Content)
     
@@ -91,7 +128,7 @@ function Export-Skill {
     $Content = Process-Conditionals $Content
     
     $OutputPath = Join-Path $OutputSkillDir "SKILL.md"
-    Set-Content -Path $OutputPath -Value $Content -NoNewline
+    Write-FileForce -Path $OutputPath -Content $Content
     
     # Copy references directory if it exists (e.g., specialist personas)
     $RefsDir = Join-Path $SkillsDir "$SkillName\references"
@@ -127,7 +164,7 @@ function Export-Agent {
     $OutputFilename = $AgentName -replace ' ', '-'
     
     $OutputPath = Join-Path $OutDir "$OutputFilename.agent.md"
-    Set-Content -Path $OutputPath -Value $Content -NoNewline
+    Write-FileForce -Path $OutputPath -Content $Content
     Write-Host "Exported agent: $AgentName -> $OutputPath"
 }
 

@@ -51,7 +51,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 - [x] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
 - [x] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
 - [x] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
-- [ ] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
+- [x] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
 - [ ] **Phase 6: Documentation** - Capture as-built behavior and update user-facing transition/workflow documentation where warranted.
 
 ## Phase Candidates
@@ -213,30 +213,30 @@ None initially.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Fast skill suite passes: `cd tests/integration && npm run test:integration:skills`
-- [ ] Targeted workflow tests pass:
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-boundary-chain.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-planning-docs-review-routing.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-todo-filtering.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-preset-obligations.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-review-policy.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-final-pr-handoff.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/transition-obligations.test.ts`
-- [ ] Existing relevant regressions pass:
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/transition-review-policy.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/artifact-lifecycle.test.ts`
-  - [ ] `cd tests/integration && npx tsx --test tests/workflows/planning-docs-review.test.ts`
-- [ ] Repository lint passes: `npm run lint`
-- [ ] Compile passes if test harness or TypeScript code changes: `npm run compile`
+- [x] Fast skill suite passes: `cd tests/integration && npm run test:integration:skills`
+- [x] Targeted workflow tests pass:
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-boundary-chain.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-planning-docs-review-routing.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-todo-filtering.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-preset-obligations.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-review-policy.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/paw-lite-final-pr-handoff.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/transition-obligations.test.ts`
+- [x] Existing relevant regressions pass:
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/transition-review-policy.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/artifact-lifecycle.test.ts`
+  - [x] `cd tests/integration && npx tsx --test tests/workflows/planning-docs-review.test.ts`
+- [x] Repository lint passes: `npm run lint`
+- [x] Compile passes if test harness or TypeScript code changes: `npm run compile`
 
 #### Manual Verification:
-- [ ] Tests are targeted and do not require broad manual PAW-Lite end-to-end execution for every acceptance scenario.
-- [ ] Test names and assertions map clearly to FR-001 through FR-010 and SC-001 through SC-008.
-- [ ] New tests use semantic pattern assertions rather than brittle exact full-response strings where possible.
-- [ ] Tests do not depend on generated `WorkflowContext.md` runtime control state.
-- [ ] At least one test validates a generated WorkflowContext artifact, not only the prompt template.
-- [ ] At least one test validates preset-derived boundary obligations through real preset resolution.
-- [ ] At least one runtime-lifetime test validates later workflow activity does not append control state to `WorkflowContext.md`.
+- [x] Tests are targeted and do not require broad manual PAW-Lite end-to-end execution for every acceptance scenario.
+- [x] Test names and assertions map clearly to FR-001 through FR-010 and SC-001 through SC-008.
+- [x] New tests use semantic pattern assertions rather than brittle exact full-response strings where possible.
+- [x] Tests do not depend on generated `WorkflowContext.md` runtime control state.
+- [x] At least one test validates a generated WorkflowContext artifact, not only the prompt template.
+- [x] At least one test validates preset-derived boundary obligations through real preset resolution.
+- [x] At least one runtime-lifetime test validates later workflow activity does not append control state to `WorkflowContext.md`.
 
 ---
 

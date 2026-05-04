@@ -24,4 +24,22 @@ describe("PAW-Lite TODO category filtering", () => {
     assert.match(content, /Boundary TODOs gate only their named checkpoint/i);
     assert.match(content, /Before invoking paw-pr, ensure implementation work todos are complete/i);
   });
+
+  it("keeps work-item completion separate from active and future boundary TODOs", () => {
+    const workId = "runtime-todo-filter";
+    const todos = [
+      { id: `lite:${workId}:work:update-prompt`, status: "done" },
+      { id: `lite:${workId}:work:add-tests`, status: "done" },
+      { id: `lite:${workId}:boundary:implement->final-review`, status: "pending" },
+      { id: `lite:${workId}:boundary:final-review->final-pr`, status: "pending" },
+    ];
+
+    const unfinishedWork = todos.filter((todo) =>
+      todo.status !== "done" && todo.id.startsWith(`lite:${workId}:work:`));
+    const activeBoundary = todos.find((todo) =>
+      todo.id === `lite:${workId}:boundary:implement->final-review`);
+
+    assert.deepStrictEqual(unfinishedWork, []);
+    assert.strictEqual(activeBoundary?.status, "pending");
+  });
 });

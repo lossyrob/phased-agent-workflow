@@ -3,6 +3,12 @@ import assert from "node:assert";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { destroyTestContext } from "../../lib/harness.js";
+import {
+  createPawLiteBoundaryContext,
+  evaluatePawLiteBoundary,
+  seedPawLiteWork,
+} from "../../lib/paw-lite-boundary.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
@@ -31,5 +37,35 @@ describe("PAW-Lite final PR handoff", () => {
     assert.match(content, /inline `git push`/);
     assert.match(content, /inline stop-tracking\/artifact cleanup are incorrect/i);
     assert.match(content, /`paw-pr` owns pre-flight validation, artifact lifecycle detection, stop-tracking, push, PR creation/i);
+  });
+
+  it("evaluates reviewed and review-disabled final PR handoffs from seeded artifacts", { timeout: 240_000 }, async () => {
+    const ctx = await createPawLiteBoundaryContext("final-pr-handoff");
+    const reviewedWorkId = "runtime-reviewed-final-pr";
+    const disabledWorkId = "runtime-disabled-final-pr";
+
+    try {
+      await seedPawLiteWork(ctx.fixture.workDir, reviewedWorkId, {
+        finalAgentReview: "enabled",
+        finalReviewMode: "multi-model",
+      });
+      await seedPawLiteWork(ctx.fixture.workDir, disabledWorkId, {
+        finalAgentReview: "disabled",
+      });
+
+      const reviewed = await evaluatePawLiteBoundary(ctx, reviewedWorkId, "final-review->final-pr");
+      assert.match(reviewed, /final-review->final-pr/i);
+      assert.match(reviewed, /findings.*resolved|resolved.*findings/i);
+      assert.match(reviewed, /paw-pr/i);
+      assert.match(reviewed, /inline.*incorrect|incorrect.*inline/i);
+
+      const disabled = await evaluatePawLiteBoundary(ctx, disabledWorkId, "implement->final-pr");
+      assert.match(disabled, /implement->final-pr/i);
+      assert.match(disabled, /Final Agent Review:\s*disabled/i);
+      assert.match(disabled, /skip|skipped/i);
+      assert.match(disabled, /paw-pr/i);
+    } finally {
+      await destroyTestContext(ctx);
+    }
   });
 });

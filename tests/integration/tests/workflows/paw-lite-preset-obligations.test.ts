@@ -3,6 +3,12 @@ import assert from "node:assert";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { destroyTestContext } from "../../lib/harness.js";
+import {
+  createPawLiteBoundaryContext,
+  evaluatePawLiteBoundary,
+  seedPawLiteWork,
+} from "../../lib/paw-lite-boundary.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
@@ -58,5 +64,32 @@ describe("PAW-Lite preset-derived obligations", () => {
     assert.match(content, /Final Review Mode/);
     assert.match(content, /society-of-thought/);
     assert.match(content, /generic self-review or ad-hoc single-model review is incorrect/i);
+  });
+
+  it("evaluates a boundary using values resolved from the real auto-full preset", { timeout: 240_000 }, async () => {
+    const resolved = await resolvePreset("auto-full");
+    const ctx = await createPawLiteBoundaryContext("preset-obligations");
+    const workId = "runtime-auto-full";
+
+    try {
+      await seedPawLiteWork(ctx.fixture.workDir, workId, {
+        planningDocsReview: resolved.planning_docs_review as "enabled",
+        planningReviewMode: resolved.planning_review_mode as "multi-model",
+        reviewPolicy: resolved.review_policy as "final-pr-only",
+        finalAgentReview: resolved.final_agent_review as "enabled",
+        finalReviewMode: resolved.final_review_mode as "society-of-thought",
+        finalReviewSpecialists: resolved.final_review_specialists,
+        finalReviewInteractionMode: resolved.final_review_interaction_mode as "debate",
+      });
+
+      const response = await evaluatePawLiteBoundary(ctx, workId, "implement->final-review");
+      assert.match(response, /implement->final-review/i);
+      assert.match(response, /Final Agent Review:\s*enabled/i);
+      assert.match(response, /society-of-thought/i);
+      assert.match(response, /paw-sot|configured/i);
+      assert.match(response, /generic self-review|ad-hoc single-model review/i);
+    } finally {
+      await destroyTestContext(ctx);
+    }
   });
 });

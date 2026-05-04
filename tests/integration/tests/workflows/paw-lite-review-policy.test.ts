@@ -3,6 +3,12 @@ import assert from "node:assert";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { destroyTestContext } from "../../lib/harness.js";
+import {
+  createPawLiteBoundaryContext,
+  evaluatePawLiteBoundary,
+  seedPawLiteWork,
+} from "../../lib/paw-lite-boundary.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
@@ -37,5 +43,34 @@ describe("PAW-Lite review policy and final review routing", () => {
     assert.match(content, /Load `paw-sot` and invoke with configured specialists/i);
     assert.match(content, /specialist models, and perspectives/i);
     assert.match(content, /Use the configured `paw-sot` path/i);
+  });
+
+  it("keeps final review mandatory at runtime when review policy is final-pr-only", { timeout: 240_000 }, async () => {
+    const ctx = await createPawLiteBoundaryContext("review-policy");
+    const workId = "runtime-review-policy";
+
+    try {
+      await seedPawLiteWork(ctx.fixture.workDir, workId, {
+        reviewPolicy: "final-pr-only",
+        finalAgentReview: "enabled",
+        finalReviewMode: "society-of-thought",
+        finalReviewInteractionMode: "debate",
+      });
+
+      const response = await evaluatePawLiteBoundary(
+        ctx,
+        workId,
+        "implement->final-review",
+        "Emphasize whether Review Policy changes the configured final review obligation.",
+      );
+
+      assert.match(response, /final-pr-only/i);
+      assert.match(response, /Final Agent Review:\s*enabled/i);
+      assert.match(response, /final review/i);
+      assert.match(response, /mandatory/i);
+      assert.match(response, /society-of-thought/i);
+    } finally {
+      await destroyTestContext(ctx);
+    }
   });
 });

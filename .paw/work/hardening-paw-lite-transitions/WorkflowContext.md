@@ -48,22 +48,28 @@ Reconciliation: current
 
 ### Required Workflow Items
 - `init` | `resolved` | `activity`
-- `spec` | `pending` | `activity`
-- `spec-review` | `pending` | `activity`
-- `code-research` | `pending` | `activity`
-- `planning` | `pending` | `activity`
-- `plan-review` | `pending` | `activity`
-- `planning-docs-review` | `pending` | `activity`
+- `spec` | `resolved` | `activity`
+- `spec-review` | `resolved` | `activity`
+- `code-research` | `resolved` | `activity`
+- `planning` | `resolved` | `activity`
+- `plan-review` | `resolved` | `activity`
+- `planning-docs-review` | `resolved` | `activity`
+- `phase:1:workflowcontext-configuration-guardrails` | `pending` | `activity`
+- `phase:2:paw-lite-boundary-checkpoint-todo-chain` | `pending` | `activity`
+- `phase:3:paw-lite-review-final-pr-boundaries` | `pending` | `activity`
+- `phase:4:standard-paw-transition-output-tightening` | `pending` | `activity`
+- `phase:5:integration-coverage-regression-consolidation` | `pending` | `activity`
+- `phase:6:documentation` | `pending` | `activity`
 - `final-review` | `pending` | `activity`
 - `final-pr` | `pending` | `activity`
 
 ### Gate Items
-- `transition:after-spec-review` | `pending` | `transition`
-- `transition:after-plan-review` | `pending` | `transition`
-- `transition:after-planning-docs-review` | `pending` | `transition`
+- `transition:after-spec-review` | `resolved` | `transition`
+- `transition:after-plan-review` | `resolved` | `transition`
+- `transition:after-planning-docs-review` | `resolved` | `transition`
 - `transition:after-phase:<n>` | `pending` | `transition`
 - `transition:after-final-review` | `pending` | `transition`
 
 ### Configured Procedure Items
-- `procedure:planning-review` | `pending` | `procedure`
+- `procedure:planning-review` | `resolved` | `procedure`
 - `procedure:final-review` | `pending` | `procedure`

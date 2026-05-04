@@ -48,7 +48,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 ## Phase Status
 
 - [x] **Phase 1: WorkflowContext and configuration obligation guardrails** - Lock config-only context generation and establish resolved configuration as mandatory workflow obligations.
-- [ ] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
+- [x] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
 - [ ] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
 - [ ] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
 - [ ] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
@@ -113,20 +113,20 @@ None initially.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Fast PAW-Lite boundary content test passes: `cd tests/integration && npx tsx --test tests/skills/paw-lite-boundary-content.test.ts`
-- [ ] Boundary chain workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-boundary-chain.test.ts`
-- [ ] Planning docs review routing test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-planning-docs-review-routing.test.ts`
-- [ ] Boundary TODO filtering test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-todo-filtering.test.ts`
-- [ ] Prompt lint passes and reports before/after token counts for `skills/paw-lite/SKILL.md`.
-- [ ] Integration skill suite passes: `cd tests/integration && npm run test:integration:skills`
-- [ ] Repository lint passes: `npm run lint`
+- [x] Fast PAW-Lite boundary content test passes: `cd tests/integration && npx tsx --test tests/skills/paw-lite-boundary-content.test.ts`
+- [x] Boundary chain workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-boundary-chain.test.ts`
+- [x] Planning docs review routing test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-planning-docs-review-routing.test.ts`
+- [x] Boundary TODO filtering test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-todo-filtering.test.ts`
+- [x] Prompt lint passes and reports before/after token counts for `skills/paw-lite/SKILL.md`.
+- [ ] Integration skill suite passes: `cd tests/integration && npm run test:integration:skills` (script absent; actual `npm run test:skills` was attempted and reproduced the pre-existing hang after `pawCommonRules`)
+- [x] Repository lint passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Planning boundary guidance is compact and operational rather than tutorial prose.
-- [ ] Planning docs review enabled executes `paw-planning-docs-review` before implementation; a boundary brief or TODO alone is not considered sufficient.
-- [ ] Disabled planning docs review does not require that review, but still maintains the next implementation boundary TODO.
-- [ ] Boundary TODO guidance does not mutate `WorkflowContext.md`, and readiness checks separate boundary checkpoint TODOs from implementation work-item TODOs.
-- [ ] Workflow tests have a deterministic boundary entry strategy and do not rely on unstated PAW-Lite boundary hooks.
+- [x] Planning boundary guidance is compact and operational rather than tutorial prose.
+- [x] Planning docs review enabled executes `paw-planning-docs-review` before implementation; a boundary brief or TODO alone is not considered sufficient.
+- [x] Disabled planning docs review does not require that review, but still maintains the next implementation boundary TODO.
+- [x] Boundary TODO guidance does not mutate `WorkflowContext.md`, and readiness checks separate boundary checkpoint TODOs from implementation work-item TODOs.
+- [x] Workflow tests have a deterministic boundary entry strategy and do not rely on unstated PAW-Lite boundary hooks.
 
 ---
 

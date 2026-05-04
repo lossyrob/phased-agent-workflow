@@ -55,7 +55,7 @@ Reconciliation: current
 - `plan-review` | `resolved` | `activity`
 - `planning-docs-review` | `resolved` | `activity`
 - `phase:1:workflowcontext-configuration-guardrails` | `resolved` | `activity`
-- `phase:2:paw-lite-boundary-checkpoint-todo-chain` | `pending` | `activity`
+- `phase:2:paw-lite-boundary-checkpoint-todo-chain` | `resolved` | `activity`
 - `phase:3:paw-lite-review-final-pr-boundaries` | `pending` | `activity`
 - `phase:4:standard-paw-transition-output-tightening` | `pending` | `activity`
 - `phase:5:integration-coverage-regression-consolidation` | `pending` | `activity`
@@ -67,7 +67,7 @@ Reconciliation: current
 - `transition:after-spec-review` | `resolved` | `transition`
 - `transition:after-plan-review` | `resolved` | `transition`
 - `transition:after-planning-docs-review` | `resolved` | `transition`
-- `transition:after-phase:<n>` | `pending` | `transition`
+- `transition:after-phase:<n>` | `resolved` | `transition`
 - `transition:after-final-review` | `pending` | `transition`
 
 ### Configured Procedure Items

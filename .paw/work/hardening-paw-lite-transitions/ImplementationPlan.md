@@ -50,7 +50,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 - [x] **Phase 1: WorkflowContext and configuration obligation guardrails** - Lock config-only context generation and establish resolved configuration as mandatory workflow obligations.
 - [x] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
 - [x] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
-- [ ] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
+- [x] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
 - [ ] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
 - [ ] **Phase 6: Documentation** - Capture as-built behavior and update user-facing transition/workflow documentation where warranted.
 
@@ -181,17 +181,17 @@ None initially.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Existing transition review-policy test passes with new assertions: `cd tests/integration && npx tsx --test tests/workflows/transition-review-policy.test.ts`
-- [ ] New standard transition obligation test passes: `cd tests/integration && npx tsx --test tests/workflows/transition-obligations.test.ts`
-- [ ] Fast PAW agent guardrail test passes: `cd tests/integration && npx tsx --test tests/skills/paw-agent-guardrails.test.ts`
-- [ ] Prompt lint passes and reports before/after token counts for `skills/paw-transition/SKILL.md` and, if changed, `agents/PAW.agent.md`.
-- [ ] Repository lint passes: `npm run lint`
+- [x] Existing transition review-policy test passes with new assertions: `cd tests/integration && npx tsx --test tests/workflows/transition-review-policy.test.ts`
+- [x] New standard transition obligation test passes: `cd tests/integration && npx tsx --test tests/workflows/transition-obligations.test.ts`
+- [x] Fast PAW agent guardrail test passes: `cd tests/integration && npx tsx --test tests/skills/paw-agent-guardrails.test.ts`
+- [x] Prompt lint passes and reports before/after token counts for `skills/paw-transition/SKILL.md`.
+- [x] Repository lint passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] `paw-transition` still queues next activity plus next transition TODOs.
-- [ ] Output tightening is additive and does not require embedded runtime state, hooks, MCPs, or broad tool-call inspection.
-- [ ] Standard PAW final PR readiness still routes through `paw-pr` and does not inline PR creation.
-- [ ] Existing `pause_at_milestone` semantics remain tied to human pauses only.
+- [x] `paw-transition` still queues next activity plus next transition TODOs.
+- [x] Output tightening is additive and does not require embedded runtime state, hooks, MCPs, or broad tool-call inspection.
+- [x] Standard PAW final PR readiness still routes through `paw-pr` and does not inline PR creation.
+- [x] Existing `pause_at_milestone` semantics remain tied to human pauses only.
 
 ---
 

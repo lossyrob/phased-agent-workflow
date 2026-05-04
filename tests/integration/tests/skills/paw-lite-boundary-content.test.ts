@@ -70,4 +70,36 @@ describe("PAW-Lite boundary configuration content", () => {
     assert.match(content, /Planning Docs Review: disabled/);
     assert.match(content, /proceed to implementation with tracked work-item TODOs/i);
   });
+
+  it("routes implementation to final review or final PR from Final Agent Review config", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "skills/paw-lite/SKILL.md"), "utf-8");
+
+    assert.match(content, /If `Final Agent Review: enabled`/);
+    assert.match(content, /output `implement->final-review`/);
+    assert.match(content, /Final review is mandatory before final PR/i);
+    assert.match(content, /honor configured `Final Review Mode`, models, specialists, and interaction settings/i);
+    assert.match(content, /If `Final Agent Review: disabled`/);
+    assert.match(content, /output `implement->final-pr`/);
+    assert.match(content, /intentionally skip Stage 4 by configuration/i);
+    assert.match(content, /Final PR still routes through `paw-pr`/);
+  });
+
+  it("treats configured review modes as mandatory procedures", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "skills/paw-lite/SKILL.md"), "utf-8");
+
+    assert.match(content, /Treat `Final Review Mode` and related WorkflowContext\.md fields as the configured procedure/i);
+    assert.match(content, /Review Policy does not make final review optional/i);
+    assert.match(content, /Delegate to configured `Final Review Models`/);
+    assert.match(content, /Load `paw-sot` and invoke with configured specialists/i);
+    assert.match(content, /generic self-review or ad-hoc single-model review is incorrect/i);
+  });
+
+  it("hands final PR creation and artifact lifecycle to paw-pr", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "skills/paw-lite/SKILL.md"), "utf-8");
+
+    assert.match(content, /output `final-review->final-pr`/);
+    assert.match(content, /findings are resolved or intentionally carried forward/i);
+    assert.match(content, /Inline PR creation, inline `git push`, and inline stop-tracking\/artifact cleanup are incorrect/i);
+    assert.match(content, /`paw-pr` owns pre-flight validation, artifact lifecycle detection, stop-tracking, push, PR creation/i);
+  });
 });

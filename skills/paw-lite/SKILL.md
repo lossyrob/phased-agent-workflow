@@ -90,19 +90,25 @@ Implement the plan using parallel task subagents for independent work items.
 - Commit changes following selective staging discipline (never `git add .`)
 - Stage `.paw/` files per artifact lifecycle mode from WorkflowContext.md
 
+**Boundary after implementation**:
+- If `Final Agent Review: enabled`, output `implement->final-review`, create/maintain `lite:<work-id>:boundary:implement->final-review`, then execute Stage 4. Final review is mandatory before final PR; honor configured `Final Review Mode`, models, specialists, and interaction settings. Ad-hoc substitutes are incorrect.
+- If `Final Agent Review: disabled`, output `implement->final-pr`, create/maintain `lite:<work-id>:boundary:implement->final-pr`, intentionally skip Stage 4 by configuration, then hand off to Stage 5. Final PR still routes through `paw-pr`.
+
 **Selective staging**: Follow `paw-git-operations` patterns for selective staging discipline and artifact lifecycle handling.
 
 ### Stage 4: Review (configurable)
 
-Review the implementation before PR creation. Configuration comes from WorkflowContext.md fields `Final Review Mode` and related settings.
+Review the implementation before PR creation. Treat `Final Review Mode` and related WorkflowContext.md fields as the configured procedure; Review Policy does not make final review optional when `Final Agent Review: enabled`.
 
 **Review modes**:
 
 | Mode | What happens |
 |------|-------------|
 | `single-model` | Agent reviews its own changes — check diff, verify tests, assess quality |
-| `multi-model` | Delegate review to multiple models via `task` subagents with different models, synthesize findings |
-| `society-of-thought` | Load `paw-sot` skill and invoke with review context from WorkflowContext.md |
+| `multi-model` | Delegate to configured `Final Review Models` via `task` subagents, then synthesize findings |
+| `society-of-thought` | Load `paw-sot` and invoke with configured specialists, interaction mode, specialist models, and perspectives |
+
+For `society-of-thought`, generic self-review or ad-hoc single-model review is incorrect. Use the configured `paw-sot` path.
 
 **For SoT invocation**, provide the review context:
 
@@ -116,11 +122,11 @@ Review the implementation before PR creation. Configuration comes from WorkflowC
 | `interactive` | WorkflowContext.md `Final Review Interactive` |
 | `specialist_models` | WorkflowContext.md `Final Review Specialist Models` |
 
-**After review**: Present findings to user. Apply fixes if straightforward, discuss trade-offs if not.
+**After review**: Present findings to user. Apply fixes if straightforward, discuss trade-offs if not. Once findings are resolved or intentionally carried forward, output `final-review->final-pr`, create/maintain `lite:<work-id>:boundary:final-review->final-pr`, and hand off to Stage 5. Inline PR creation, inline `git push`, and inline stop-tracking/artifact cleanup are incorrect.
 
 ### Stage 5: PR
 
-Load the `paw-pr` skill and follow its instructions for final PR creation. It handles pre-flight validation, artifact lifecycle (commit-and-clean scoping to the work directory), and PR description scaling.
+Load the `paw-pr` skill and follow its instructions for final PR creation. `paw-pr` owns pre-flight validation, artifact lifecycle detection, stop-tracking, push, PR creation, and PR description scaling.
 
 Before invoking paw-pr, ensure implementation work todos are complete: `SELECT id, status FROM todos WHERE status != 'done' AND id LIKE 'lite:<work-id>:work:%'`
 

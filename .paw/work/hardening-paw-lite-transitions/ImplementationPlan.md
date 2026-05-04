@@ -49,7 +49,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 
 - [x] **Phase 1: WorkflowContext and configuration obligation guardrails** - Lock config-only context generation and establish resolved configuration as mandatory workflow obligations.
 - [x] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
-- [ ] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
+- [x] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
 - [ ] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
 - [ ] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
 - [ ] **Phase 6: Documentation** - Capture as-built behavior and update user-facing transition/workflow documentation where warranted.
@@ -149,19 +149,19 @@ None initially.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Fast PAW-Lite boundary content test passes: `cd tests/integration && npx tsx --test tests/skills/paw-lite-boundary-content.test.ts`
-- [ ] Preset obligation workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-preset-obligations.test.ts`
-- [ ] PAW-Lite review policy workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-review-policy.test.ts`
-- [ ] PAW-Lite final PR handoff workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-final-pr-handoff.test.ts`
-- [ ] Prompt lint passes and reports before/after token counts for `skills/paw-lite/SKILL.md` and, if changed, `skills/paw-pr/SKILL.md`.
-- [ ] Repository lint passes: `npm run lint`
+- [x] Fast PAW-Lite boundary content test passes: `cd tests/integration && npx tsx --test tests/skills/paw-lite-boundary-content.test.ts`
+- [x] Preset obligation workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-preset-obligations.test.ts`
+- [x] PAW-Lite review policy workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-review-policy.test.ts`
+- [x] PAW-Lite final PR handoff workflow test passes: `cd tests/integration && npx tsx --test tests/workflows/paw-lite-final-pr-handoff.test.ts`
+- [x] Prompt lint passes and reports before/after token counts for `skills/paw-lite/SKILL.md`.
+- [x] Repository lint passes: `npm run lint`
 
 #### Manual Verification:
-- [ ] Final review enabled/disabled routing is explicit and matches `WorkflowContext.md`.
-- [ ] Preset-derived SoT final review cannot be interpreted as optional or replaceable by self-review.
-- [ ] At least one test proves obligations came through actual preset resolution, not only manually seeded fields.
-- [ ] Review policy text does not imply automated gates or configured review procedures can be skipped.
-- [ ] PAW-Lite does not duplicate stop-tracking, artifact cleanup, push, or PR creation steps owned by `paw-pr`.
+- [x] Final review enabled/disabled routing is explicit and matches `WorkflowContext.md`.
+- [x] Preset-derived SoT final review cannot be interpreted as optional or replaceable by self-review.
+- [x] At least one test proves obligations came through actual preset resolution, not only manually seeded fields.
+- [x] Review policy text does not imply automated gates or configured review procedures can be skipped.
+- [x] PAW-Lite does not duplicate stop-tracking, artifact cleanup, push, or PR creation steps owned by `paw-pr`.
 
 ---
 

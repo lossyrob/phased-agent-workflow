@@ -77,6 +77,8 @@ When parameters are not provided:
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
 
+Resolved values stored in WorkflowContext.md are active workflow obligations for downstream skills. Defaults, user defaults, presets, and explicit overrides all become equally authoritative once written.
+
 Ask in this order and allow defaults where permitted.
 
 ## Preset System
@@ -196,6 +198,8 @@ When `planning_review_mode` is `society-of-thought`:
 
 ### WorkflowContext.md
 Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
+
+WorkflowContext.md is durable configuration only. Do not add runtime progress, gate status, reconciliation markers, TODO mirrors, SQL mirror data, or other mutable workflow bookkeeping to this artifact during init or later updates.
 
 ```markdown
 # WorkflowContext

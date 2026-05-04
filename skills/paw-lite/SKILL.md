@@ -9,6 +9,14 @@ description: Lightweight PAW workflow skill. Optional work shaping → plan → 
 
 Prerequisite: WorkflowContext.md must exist (created by `paw-init` or manually).
 
+## Configuration Contract
+
+Read resolved WorkflowContext.md values before each stage boundary and treat them as active obligations. Defaults, presets, and explicit overrides are equally authoritative once written.
+
+- WorkflowContext.md is durable configuration only; do not write runtime progress, boundary status, reconciliation markers, TODO mirrors, or SQL mirror data into it.
+- `Planning Docs Review`, `Planning Review Mode`, `Final Agent Review`, `Final Review Mode`, `Review Policy`, `Artifact Lifecycle`, and model fields determine required procedures.
+- Review Policy controls human pause points only. It does not disable configured planning docs review, configured final review, automated gates, or final PR handoff.
+
 ## Workflow Stages
 
 ```

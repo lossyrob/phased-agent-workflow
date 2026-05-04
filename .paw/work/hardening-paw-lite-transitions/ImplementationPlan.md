@@ -47,7 +47,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 
 ## Phase Status
 
-- [ ] **Phase 1: WorkflowContext and configuration obligation guardrails** - Lock config-only context generation and establish resolved configuration as mandatory workflow obligations.
+- [x] **Phase 1: WorkflowContext and configuration obligation guardrails** - Lock config-only context generation and establish resolved configuration as mandatory workflow obligations.
 - [ ] **Phase 2: PAW-Lite boundary checkpoint contract and TODO chain** - Add recurring compact boundary briefs and visible boundary TODO maintenance to PAW-Lite.
 - [ ] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
 - [ ] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.

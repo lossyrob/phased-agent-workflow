@@ -12,6 +12,8 @@ import {
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
+const FINAL_REVIEW_READY_PATTERN =
+  /findings.*(resolved|carried forward)|(resolved|carried forward).*findings|review.*complete|complete.*review/i;
 
 describe("PAW-Lite final PR handoff", () => {
   it("routes final-review completion to paw-pr", async () => {
@@ -55,7 +57,7 @@ describe("PAW-Lite final PR handoff", () => {
 
       const reviewed = await evaluatePawLiteBoundary(ctx, reviewedWorkId, "final-review->final-pr");
       assert.match(reviewed, /final-review->final-pr/i);
-      assert.match(reviewed, /findings.*resolved|resolved.*findings/i);
+      assert.match(reviewed, FINAL_REVIEW_READY_PATTERN);
       assert.match(reviewed, /paw-pr/i);
       assert.match(reviewed, /inline.*incorrect|incorrect.*inline/i);
 

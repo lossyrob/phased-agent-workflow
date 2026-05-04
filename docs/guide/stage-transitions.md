@@ -12,7 +12,7 @@ The PAW agent is an intelligent orchestrator that understands natural language r
 | "Research how X works" | `paw-spec-research` or `paw-code-research` | Answer research questions (context-dependent) |
 | "Create an implementation plan" | `paw-planning` | Create an implementation plan |
 | "Implement phase N" | `paw-implement` | Execute an implementation phase |
-| "Review my changes" | `paw-impl-review` | Verify and push implementation |
+| "Review my changes" | `paw-impl-review` | Verify implementation quality |
 | "Run final review" | `paw-final-review` | Pre-PR review of implementation |
 | "Create the final PR" | `paw-pr` | Create the final pull request |
 | "What's the status?" | `paw-status` | Check workflow progress |

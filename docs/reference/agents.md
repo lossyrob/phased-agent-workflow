@@ -56,7 +56,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-plan-review` | Validate plan feasibility and spec alignment | Structured feedback |
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
-| `paw-impl-review` | Review implementation, add docs, open PRs | Phase PRs |
+| `paw-impl-review` | Review implementation, add docs, return verdict | Structured feedback, Docs.md |
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps, explain PAW/onboarding | Status reports |

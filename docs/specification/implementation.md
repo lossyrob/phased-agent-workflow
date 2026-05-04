@@ -127,11 +127,11 @@ For each phase:
 
 1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
 2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
-3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before pushing/opening the Phase PR
-4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
+3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before the orchestrator handles any push or Phase PR
+4. The PAW orchestrator uses `paw-git-operations` to push and open the Phase PR (PRs strategy) after `paw-impl-review` returns PASS
 5. Human reviews PR and provides feedback
 6. `paw-implement` addresses review comments
-7. `paw-impl-review` verifies and pushes updates
+7. `paw-impl-review` verifies updates, then the PAW orchestrator handles any required push
 8. Merge when approved, repeat for next phase
 
 **Phase Candidates:**

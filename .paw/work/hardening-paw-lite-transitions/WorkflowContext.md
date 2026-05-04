@@ -59,7 +59,7 @@ Reconciliation: current
 - `phase:3:paw-lite-review-final-pr-boundaries` | `resolved` | `activity`
 - `phase:4:standard-paw-transition-output-tightening` | `resolved` | `activity`
 - `phase:5:integration-coverage-regression-consolidation` | `resolved` | `activity`
-- `phase:6:documentation` | `pending` | `activity`
+- `phase:6:documentation` | `resolved` | `activity`
 - `final-review` | `pending` | `activity`
 - `final-pr` | `pending` | `activity`
 

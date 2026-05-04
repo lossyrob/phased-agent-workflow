@@ -52,7 +52,7 @@ The approach preserves PAW's architecture philosophy: tools and SQL TODOs provid
 - [x] **Phase 3: PAW-Lite review and final PR boundaries** - Harden final review enabled/disabled routing, SoT non-substitution, review-policy language, and paw-pr handoff.
 - [x] **Phase 4: Standard PAW transition output tightening** - Align `paw-transition` output with mandatory gate, configured procedure, and final PR routing expectations.
 - [x] **Phase 5: Integration coverage and regression consolidation** - Add targeted SDK workflow coverage across PAW-Lite and standard transition boundaries.
-- [ ] **Phase 6: Documentation** - Capture as-built behavior and update user-facing transition/workflow documentation where warranted.
+- [x] **Phase 6: Documentation** - Capture as-built behavior and update user-facing transition/workflow documentation where warranted.
 
 ## Phase Candidates
 
@@ -254,16 +254,16 @@ None initially.
 ### Success Criteria:
 
 #### Automated Verification:
-- [ ] Prompt lint still passes for all modified agent/skill files: `npm run lint:agent:all`
-- [ ] TypeScript lint passes: `npm run lint`
-- [ ] Documentation build passes: `mkdocs build --strict`
-- [ ] Relevant integration tests from earlier phases still pass after documentation edits.
+- [x] Prompt lint still passes for all modified agent/skill files: `npm run lint:agent:all`
+- [x] TypeScript lint passes: `npm run lint`
+- [x] Documentation build passes: `mkdocs build --strict`
+- [x] Relevant integration tests from earlier phases still pass after documentation edits.
 
 #### Manual Verification:
-- [ ] `Docs.md` accurately describes actual implemented behavior and verification results.
-- [ ] User-facing docs describe outcomes and workflow expectations without exposing implementation-only prompt mechanics unnecessarily.
-- [ ] Documentation states `WorkflowContext.md` is durable configuration, not runtime state.
-- [ ] Documentation states final PR creation remains owned by `paw-pr`.
+- [x] `Docs.md` accurately describes actual implemented behavior and verification results.
+- [x] User-facing docs describe outcomes and workflow expectations without exposing implementation-only prompt mechanics unnecessarily.
+- [x] Documentation states `WorkflowContext.md` is durable configuration, not runtime state.
+- [x] Documentation states final PR creation remains owned by `paw-pr`.
 
 ---
 

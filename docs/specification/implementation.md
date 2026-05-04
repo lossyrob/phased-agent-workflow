@@ -100,7 +100,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
-5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
+5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**; Review Policy does not disable this configured gate
 6. Open Planning PR for review from the execution checkout established during initialization/reuse (PRs strategy)
 
 ### Stage 03 — Phased Implementation
@@ -181,7 +181,7 @@ Automated review of the complete implementation against specification before Fin
 **Configuration:**
 
 - `Final Agent Review`: `enabled` | `disabled` (default: enabled)
-- `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Final Review Mode`: `single-model` | `multi-model` | `society-of-thought` (default: multi-model)
 - `Final Review Interactive`: `true` | `false` | `smart` (default: smart)
 - `Final Review Models`: comma-separated model names (for multi-model)
 
@@ -209,6 +209,8 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 3. `paw-pr` opens the final PR from the target branch in the execution checkout established during initialization/reuse
 4. Address any review comments (using implementation skills)
 5. Merge when approved
+
+Final PR preparation remains owned by `paw-pr`, including pre-flight validation, artifact lifecycle action, push, PR creation, and PR description scaling.
 
 ---
 

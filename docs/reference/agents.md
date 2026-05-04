@@ -60,7 +60,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps, explain PAW/onboarding | Status reports |
-| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | Plan.md |
+| `paw-lite` | Lightweight workflow: plan → boundary checkpoints → fleet-implement → review → PR | Plan.md |
 
 **Utility Skills:**
 
@@ -107,9 +107,11 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | Policy | Behavior |
 |--------|----------|
 | `every-stage` | Pause after every artifact is produced |
-| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
-| `planning-only` | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| `final-pr-only` | Only pause at final PR — auto-proceed through all intermediate stages |
+| `milestones` | Pause at key artifacts (Spec.md, ImplementationPlan.md, Planning Documents Review completion if enabled, Phase completion, Final PR) |
+| `planning-only` | Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion if enabled, and Final PR; auto-proceed at phases (requires `local` strategy) |
+| `final-pr-only` | Only pause at final PR; auto-proceed through all intermediate stages |
+
+Review Policy controls human pauses only. Mandatory automated gates and configured review procedures still run.
 
 ---
 
@@ -210,9 +212,11 @@ PAW supports four review policies that control when the workflow pauses for huma
 | Policy | Behavior |
 |--------|----------|
 | **every-stage** | Pause after every artifact is produced |
-| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Phase completion, Final PR) |
-| **planning-only** | Pause at Spec.md, ImplementationPlan.md, and Final PR only; auto-proceed at phases (requires `local` strategy) |
-| **final-pr-only** | Only pause at final PR — auto-proceed through all intermediate stages |
+| **milestones** | Pause at key artifacts (Spec.md, ImplementationPlan.md, Planning Documents Review completion if enabled, Phase completion, Final PR) |
+| **planning-only** | Pause at Spec.md, ImplementationPlan.md, Planning Documents Review completion if enabled, and Final PR; auto-proceed at phases (requires `local` strategy) |
+| **final-pr-only** | Only pause at final PR; auto-proceed through all intermediate stages |
+
+Review Policy controls human pauses only. Mandatory automated gates and configured review procedures still run.
 
 **Legacy Review Policy Mapping:** Older WorkflowContext.md files may use `never` or `always`. The mapping is: `never` → `final-pr-only`, `always` → `every-stage`.
 

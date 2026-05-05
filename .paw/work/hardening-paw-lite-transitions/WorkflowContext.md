@@ -60,7 +60,7 @@ Reconciliation: current
 - `phase:4:standard-paw-transition-output-tightening` | `resolved` | `activity`
 - `phase:5:integration-coverage-regression-consolidation` | `resolved` | `activity`
 - `phase:6:documentation` | `resolved` | `activity`
-- `final-review` | `pending` | `activity`
+- `final-review` | `resolved` | `activity`
 - `final-pr` | `pending` | `activity`
 
 ### Gate Items
@@ -72,4 +72,4 @@ Reconciliation: current
 
 ### Configured Procedure Items
 - `procedure:planning-review` | `resolved` | `procedure`
-- `procedure:final-review` | `pending` | `procedure`
+- `procedure:final-review` | `resolved` | `procedure`

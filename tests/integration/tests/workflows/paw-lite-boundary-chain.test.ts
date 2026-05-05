@@ -20,6 +20,9 @@ describe("PAW-Lite boundary chain contract", () => {
     assert.match(content, /lite:<work-id>:boundary:<boundary-name>/);
     assert.match(content, /lite:<work-id>:boundary:planning-docs-review->implement/);
     assert.match(content, /lite:<work-id>:boundary:plan->implement/);
+    assert.match(content, /INSERT INTO todos \(id, title, description, status\)/);
+    assert.match(content, /ON CONFLICT\(id\) DO UPDATE/);
+    assert.match(content, /WHERE id = 'lite:<work-id>:boundary:<completed-boundary-name>'/);
     assert.match(content, /keep the implementation boundary TODO visible/i);
     assert.match(content, /Boundary TODOs gate only their named checkpoint/i);
   });

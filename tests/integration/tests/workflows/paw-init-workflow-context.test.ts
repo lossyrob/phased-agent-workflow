@@ -4,6 +4,9 @@ import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
+import { RuleBasedAnswerer } from "../../lib/answerer.js";
+import { createTestContext, destroyTestContext } from "../../lib/harness.js";
+import { loadSkill } from "../../lib/skills.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
@@ -113,6 +116,71 @@ describe("paw-init WorkflowContext artifact contract", () => {
       }
     } finally {
       await rm(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it("creates a WorkflowContext artifact through paw-init without runtime state markers", { timeout: 180_000 }, async () => {
+    const workId = "runtime-init-context";
+    const pawInitSkill = await loadSkill("paw-init");
+    const answerer = new RuleBasedAnswerer([(req) => req.choices?.[0] ?? "proceed"], false);
+    const ctx = await createTestContext({
+      fixtureName: "minimal-ts",
+      skillOrAgent: "paw-init-workflow-context",
+      systemPrompt: [
+        "You are executing the paw-init skill in a deterministic integration test.",
+        `Create only .paw/work/${workId}/WorkflowContext.md, then stop.`,
+        "Use durable configuration fields only. Do not add runtime progress, control state, TODO mirrors, reconciliation markers, or SQL mirror data.",
+        "Do not commit, push, create pull requests, or ask the user questions.",
+        "",
+        "paw-init skill documentation:",
+        pawInitSkill,
+      ].join("\n"),
+      answerer,
+    });
+
+    try {
+      await ctx.session.sendAndWait({
+        prompt: [
+          "Initialize a PAW workflow with these exact values:",
+          "Work Title: Runtime Init Context",
+          `Work ID: ${workId}`,
+          "Base Branch: main",
+          "Target Branch: feature/runtime-init-context",
+          "Execution Mode: current-checkout",
+          "Repository Identity: none",
+          "Execution Binding: none",
+          "Workflow Mode: full",
+          "Review Strategy: local",
+          "Review Policy: planning-only",
+          "Session Policy: continuous",
+          "Final Agent Review: enabled",
+          "Final Review Mode: single-model",
+          "Final Review Interactive: smart",
+          "Plan Generation Mode: single-model",
+          "Planning Docs Review: enabled",
+          "Planning Review Mode: multi-model",
+          "Artifact Lifecycle: commit-and-clean",
+          "Initial Prompt: deterministic init test",
+          "Issue URL: none",
+          "Remote: origin",
+          "Additional Inputs: none",
+        ].join("\n"),
+      }, 120_000);
+
+      const artifact = await readFile(
+        join(ctx.fixture.workDir, ".paw/work", workId, "WorkflowContext.md"),
+        "utf-8",
+      );
+
+      assert.match(artifact, /Work ID: runtime-init-context/);
+      assert.match(artifact, /Workflow Mode: full/);
+      assert.match(artifact, /Planning Docs Review: enabled/);
+      assert.match(artifact, /Artifact Lifecycle: commit-and-clean/);
+      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
+        assert.doesNotMatch(artifact, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+      }
+    } finally {
+      await destroyTestContext(ctx);
     }
   });
 });

@@ -55,6 +55,8 @@ describe("PAW-Lite boundary configuration content", () => {
 
     assert.match(content, /lite:<work-id>:boundary:<boundary-name>/);
     assert.match(content, /lite:<work-id>:work:<slug>/);
+    assert.match(content, /ON CONFLICT\(id\) DO UPDATE/);
+    assert.match(content, /UPDATE todos SET status = 'done'/);
     assert.match(content, /Filter readiness checks by category/i);
     assert.match(content, /id LIKE 'lite:<work-id>:work:%'/);
     assert.match(content, /pending future boundary TODOs must not block implementation, review, or PR readiness/i);

@@ -39,6 +39,8 @@ PAW-Lite separates implementation work from boundary checkpoints:
 - Work-item TODOs use `lite:<work-id>:work:<item>`.
 - Boundary TODOs use `lite:<work-id>:boundary:<boundary-name>`.
 
+Boundary TODOs are persisted with SQL upsert semantics so repeated boundary evaluations refresh the same checkpoint instead of creating duplicates. When a checkpoint completes, its active boundary TODO is marked `done` before the next boundary TODO is created as `pending`.
+
 Completion checks for implementation and final PR readiness filter by category. Pending future-boundary TODOs do not block completed implementation work, while the active named boundary still gates the next workflow step.
 
 ### Configuration Obligations

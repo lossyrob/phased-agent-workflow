@@ -25,6 +25,17 @@ describe("PAW-Lite TODO category filtering", () => {
     assert.match(content, /Before invoking paw-pr, ensure implementation work todos are complete/i);
   });
 
+  it("defines persistent SQL maintenance for boundary TODO checkpoints", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "skills/paw-lite/SKILL.md"), "utf-8");
+
+    assert.match(content, /Upsert the next boundary as `pending`/);
+    assert.match(content, /INSERT INTO todos \(id, title, description, status\)/);
+    assert.match(content, /VALUES \('lite:<work-id>:boundary:<boundary-name>'/);
+    assert.match(content, /ON CONFLICT\(id\) DO UPDATE/);
+    assert.match(content, /mark its active boundary TODO `done`/);
+    assert.match(content, /WHERE id = 'lite:<work-id>:boundary:<completed-boundary-name>'/);
+  });
+
   it("keeps work-item completion separate from active and future boundary TODOs", () => {
     const workId = "runtime-todo-filter";
     const todos = [

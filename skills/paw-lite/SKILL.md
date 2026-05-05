@@ -27,6 +27,14 @@ Use SQL TODO categories:
 - Boundary TODOs: `lite:<work-id>:boundary:<boundary-name>`
 - Work-item TODOs: `lite:<work-id>:work:<slug>`
 
+Maintain boundary TODOs persistently. Upsert the next boundary as `pending`; when a checkpoint completes, mark its active boundary TODO `done` before creating the next one.
+```sql
+INSERT INTO todos (id, title, description, status)
+VALUES ('lite:<work-id>:boundary:<boundary-name>', 'Boundary: <boundary-name>', '<brief>', 'pending')
+ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, updated_at = datetime('now');
+UPDATE todos SET status = 'done', updated_at = datetime('now') WHERE id = 'lite:<work-id>:boundary:<completed-boundary-name>';
+```
+
 Filter readiness checks by category. Work-item completion checks must use `id LIKE 'lite:<work-id>:work:%'`; pending future boundary TODOs must not block implementation, review, or PR readiness. Boundary TODOs gate only their named checkpoint.
 
 For deterministic resume/tests, if asked to evaluate a named boundary, produce that boundary brief and TODO guidance from existing artifacts and WorkflowContext.md without advancing unrelated stages.

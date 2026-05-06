@@ -32,7 +32,7 @@ Read WorkflowContext.md to determine:
 - Planning Docs Review (`enabled` | `disabled`)
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
-- Final Review Mode and related model/specialist fields
+- Final Review Mode, Final Review Models, Final Review Specialists, Final Review Interaction Mode, Final Review Interactive, Final Review Specialist Models
 - Artifact Lifecycle
 
 Identify last completed activity from TODOs or artifacts.
@@ -50,7 +50,9 @@ Use the Mandatory Transitions table:
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
 | paw-plan-review (passes, planning docs enabled) | paw-planning-docs-review | NO |
-| paw-plan-review (passes, planning docs disabled) | paw-implement (Phase 1) | Per Review Strategy |
+| paw-plan-review (passes, planning docs disabled) | paw-implement (Phase 1) | Per Review Policy |
+| paw-planning-docs-review (passes) | paw-implement (Phase 1) | Per Review Policy |
+| paw-planning-docs-review (blocked findings) | paw-planning (rework) | NO |
 | paw-impl-review (passes, more phases) | paw-implement (next phase) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
 | paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
@@ -61,7 +63,9 @@ Use the Mandatory Transitions table:
 Prepare `obligation_summary`:
 - `paw-planning-docs-review`: `Planning Docs Review: enabled` requires `paw-planning-docs-review` before implementation.
 - `paw-final-review`: `Final Agent Review: enabled` requires configured `Final Review Mode` with configured models/specialists; do not substitute ad-hoc review.
-- `paw-pr`: final PR must be created by `paw-pr`; inline PR creation, push, or artifact cleanup are not transition responsibilities. If final review is enabled, it must be complete before `paw-pr`.
+- `paw-pr`: final PR must be created by `paw-pr`. If final review is enabled, emit `Final Agent Review: enabled is complete; final PR must be created by paw-pr`. If final review is disabled, emit `Final Agent Review: disabled by configuration; final PR must be created by paw-pr`. If final review is enabled, it must be complete before `paw-pr`. inline PR creation, push, or artifact cleanup are not transition responsibilities.
+- All other targets: `none`.
+- The next-activity TODO suffix in Step 5 must be derived from `obligation_summary` verbatim; do not author the suffix independently.
 
 ### Step 2.5: Candidate Promotion Check
 
@@ -164,7 +168,7 @@ Add TODO for next activity:
 - `[ ] <activity-name> (<context>)`
 - `[ ] paw-transition`
 
-Keep both the next activity and the following transition visible. Include the configured obligation in the next activity TODO when one applies: planning docs review enabled, final review mode, or `paw-pr` final PR ownership.
+Keep both the next activity and the following transition visible. Include the configured obligation in the next activity TODO when `obligation_summary` is not `none`. The TODO-line suffix must be derived from `obligation_summary` (Step 2) verbatim; do not author it independently.
 
 ## Completion
 

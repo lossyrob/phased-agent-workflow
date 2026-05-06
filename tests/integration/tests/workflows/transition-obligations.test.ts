@@ -68,10 +68,21 @@ describe("paw-transition configured obligation output", () => {
   it("names final review mode obligations before final PR routing", async () => {
     const content = await readTransitionSkill();
 
-    assert.match(content, /Final Review Mode and related model\/specialist fields/);
+    assert.match(content, /Final Review Mode, Final Review Models, Final Review Specialists/);
+    assert.match(content, /Final Review Interaction Mode, Final Review Interactive/);
+    assert.match(content, /Final Review Specialist Models/);
     assert.match(content, /`paw-final-review`: `Final Agent Review: enabled` requires configured `Final Review Mode`/);
     assert.match(content, /do not substitute ad-hoc review/);
     assert.match(content, /Do NOT return `next_activity = paw-final-review` without naming the configured Final Review Mode/);
+  });
+
+  it("defines planning-docs-review exits and review-policy pause vocabulary", async () => {
+    const content = await readTransitionSkill();
+
+    assert.match(content, /paw-plan-review \(passes, planning docs disabled\).+Per Review Policy/);
+    assert.match(content, /paw-planning-docs-review \(passes\).+paw-implement \(Phase 1\).+Per Review Policy/);
+    assert.match(content, /paw-planning-docs-review \(blocked findings\).+paw-planning \(rework\).+NO/);
+    assert.doesNotMatch(content, /Per Review Strategy/);
   });
 
   it("keeps final PR ownership with paw-pr and artifact lifecycle action", async () => {
@@ -87,8 +98,22 @@ describe("paw-transition configured obligation output", () => {
     const content = await readTransitionSkill();
 
     assert.match(content, /Keep both the next activity and the following transition visible/);
-    assert.match(content, /Include the configured obligation in the next activity TODO/);
-    assert.match(content, /planning docs review enabled, final review mode, or `paw-pr` final PR ownership/);
+    assert.match(content, /Include the configured obligation in the next activity TODO when `obligation_summary` is not `none`/);
+    assert.match(content, /TODO-line suffix must be derived from `obligation_summary`/);
+  });
+
+  it("specifies obligation_summary defaults and final-review-plus-PR ordering", async () => {
+    const content = await readTransitionSkill();
+    const expectedSummaries = [
+      "All other targets: `none`",
+      "Final Agent Review: enabled is complete; final PR must be created by paw-pr",
+      "Final Agent Review: disabled by configuration; final PR must be created by paw-pr",
+    ];
+
+    for (const summary of expectedSummaries) {
+      assert.match(content, new RegExp(summary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    }
+    assert.match(content, /next-activity TODO suffix.+derived from `obligation_summary` verbatim/is);
   });
 
   it("forbids hook, MCP, or broad tool-call inspection dependencies", async () => {
@@ -129,10 +154,11 @@ describe("paw-transition configured obligation output", () => {
 
       assert.match(text, /next_activity:\s*paw-pr/i);
       assert.match(text, /artifact_lifecycle_action:\s*stop-tracking/i);
-      assert.match(text, /obligation_summary:.*paw-pr/is);
+      assert.match(text, /obligation_summary:.*Final Agent Review:\s*enabled.*complete.*paw-pr/is);
       assert.match(text, /preflight:\s*passed/i);
     } finally {
       await destroyTestContext(ctx);
     }
   });
+
 });

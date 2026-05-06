@@ -156,6 +156,15 @@ Your selections are stored in `WorkflowContext.md` and guide all agents througho
 
 All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected.
 
+### Configured Obligation Surfaces
+
+Resolved configuration values are runtime obligations once written to WorkflowContext.md. Standard PAW and PAW-Lite surface those obligations differently:
+
+- **Standard PAW** delegates stage boundaries to `paw-transition`, which returns a structured `obligation_summary` and queues the next activity plus following transition.
+- **PAW-Lite** runs as a flat agent loop without orchestrator-side `paw-transition`, so it surfaces the same configured obligations through compact boundary checkpoint briefs and named SQL TODOs.
+
+Both surfaces must keep configured planning docs review, final review, review policy, and final PR routing visible at the relevant boundary while keeping WorkflowContext.md durable configuration only.
+
 ### Defaults
 
 When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowContext.md, agents use the following defaults:

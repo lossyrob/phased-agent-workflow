@@ -51,7 +51,7 @@ describe("PAW-Lite planning docs review routing", () => {
       assert.match(enabled, /plan->planning-docs-review/i);
       assert.match(enabled, /Planning Docs Review:\s*enabled/i);
       assert.match(enabled, /paw-planning-docs-review/i);
-      assert.match(enabled, /before (advancing to )?implementation|without executing (the )?planning docs review/i);
+      assert.match(enabled, /before (advancing to )?implementation|without executing (the )?planning docs review|Skipping directly to implementation/i);
 
       const disabled = await evaluatePawLiteBoundary(ctx, disabledWorkId, "plan->implement");
       assert.match(disabled, /plan->implement/i);

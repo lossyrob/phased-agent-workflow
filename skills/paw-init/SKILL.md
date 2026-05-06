@@ -24,7 +24,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | Parameter | Required | Default | Values |
 |-----------|----------|---------|--------|
 | `base_branch` | No | `main` | branch name |
-| `work_id` | No | auto-derived from Work Title | lowercase slug |
+| `work_id` | No | auto-derived from Work Title | lowercase slug matching `^[a-z0-9-]+$` plus Work ID constraints below |
 | `target_branch` | No | auto-derive from work ID | branch name |
 | `execution_mode` | No | `current-checkout` | `current-checkout`, `worktree` |
 | `repository_identity` | No | `none` | `<normalized-origin-slug>@<root-commit-sha>` |
@@ -150,7 +150,7 @@ When a preset is specified (explicitly or via default):
 - Format: lowercase letters, numbers, hyphens only; 1-100 chars
 - No leading/trailing/consecutive hyphens
 - Not reserved (`.`, `..`, `node_modules`, `.git`, `.paw`)
-- If `work_id` is provided explicitly, validate and use it instead of regenerating it from the Work Title
+- If `work_id` is provided explicitly, validate it before any artifact path, SQL TODO, branch, or binding use; reject invalid values with a clear message identifying the offending character or empty input
 - If conflict: append `-2`, `-3`, etc.
 
 ### Configuration Validation

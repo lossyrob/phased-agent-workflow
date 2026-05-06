@@ -9,6 +9,7 @@ import {
   evaluatePawLiteBoundary,
   seedPawLiteWork,
 } from "../../lib/paw-lite-boundary.js";
+import { upsertBoundaryTodo, type PawLiteTodo } from "../../lib/paw-lite-todos.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
@@ -22,6 +23,7 @@ describe("PAW-Lite boundary chain contract", () => {
     assert.match(content, /lite:<work-id>:boundary:plan->implement/);
     assert.match(content, /INSERT INTO todos \(id, title, description, status\)/);
     assert.match(content, /ON CONFLICT\(id\) DO UPDATE/);
+    assert.match(content, /status = excluded\.status/);
     assert.match(content, /WHERE id = 'lite:<work-id>:boundary:<completed-boundary-name>'/);
     assert.match(content, /keep the implementation boundary TODO visible/i);
     assert.match(content, /Boundary TODOs gate only their named checkpoint/i);
@@ -34,6 +36,25 @@ describe("PAW-Lite boundary chain contract", () => {
     assert.match(content, /evaluate a named boundary/i);
     assert.match(content, /produce that boundary brief and TODO guidance/i);
     assert.match(content, /without advancing unrelated stages/i);
+  });
+
+  it("resets a previously completed boundary TODO to pending on re-entry", () => {
+    const workId = "runtime-boundary-chain";
+    const todos: PawLiteTodo[] = [{
+      id: `lite:${workId}:boundary:plan->planning-docs-review`,
+      title: "Boundary: plan->planning-docs-review",
+      description: "old brief",
+      status: "done",
+    }];
+
+    upsertBoundaryTodo(todos, workId, "plan->planning-docs-review", "new brief");
+
+    assert.deepStrictEqual(todos, [{
+      id: `lite:${workId}:boundary:plan->planning-docs-review`,
+      title: "Boundary: plan->planning-docs-review",
+      description: "new brief",
+      status: "pending",
+    }]);
   });
 
   it("evaluates successive seeded boundaries without advancing unrelated stages", { timeout: 300_000 }, async () => {

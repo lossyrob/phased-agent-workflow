@@ -13,7 +13,7 @@ Prerequisite: WorkflowContext.md must exist (created by `paw-init` or manually).
 
 Read resolved WorkflowContext.md values before each stage boundary and treat them as active obligations. Defaults, presets, and explicit overrides are equally authoritative once written.
 
-- WorkflowContext.md is durable configuration only; do not write runtime progress, boundary status, reconciliation markers, TODO mirrors, or SQL mirror data into it.
+- WorkflowContext.md is durable configuration only. Do not add runtime progress, gate status, reconciliation markers, TODO mirrors, SQL mirror data, or other mutable workflow bookkeeping to this artifact during init or later updates.
 - `Planning Docs Review`, `Planning Review Mode`, `Final Agent Review`, `Final Review Mode`, `Review Policy`, `Artifact Lifecycle`, and model fields determine required procedures.
 - Review Policy controls human pause points only. It does not disable configured planning docs review, configured final review, automated gates, or final PR handoff.
 
@@ -31,11 +31,13 @@ Maintain boundary TODOs persistently. Upsert the next boundary as `pending`; whe
 ```sql
 INSERT INTO todos (id, title, description, status)
 VALUES ('lite:<work-id>:boundary:<boundary-name>', 'Boundary: <boundary-name>', '<brief>', 'pending')
-ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, updated_at = datetime('now');
+ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, status = excluded.status, updated_at = datetime('now');
 UPDATE todos SET status = 'done', updated_at = datetime('now') WHERE id = 'lite:<work-id>:boundary:<completed-boundary-name>';
 ```
 
 Filter readiness checks by category. Work-item completion checks must use `id LIKE 'lite:<work-id>:work:%'`; pending future boundary TODOs must not block implementation, review, or PR readiness. Boundary TODOs gate only their named checkpoint.
+Work ID values are validated by `paw-init` before use; if a legacy WorkflowContext.md has an empty work ID or characters outside lowercase letters, numbers, and hyphens, STOP before running TODO readiness queries.
+Pre-PR readiness fails closed: zero unfinished work TODOs is not enough. Require at least one completed `lite:<work-id>:work:%` TODO, or create and complete `lite:<work-id>:work:no-work-required` for doc-only/no-op work.
 
 For deterministic resume/tests, if asked to evaluate a named boundary, produce that boundary brief and TODO guidance from existing artifacts and WorkflowContext.md without advancing unrelated stages.
 
@@ -94,6 +96,7 @@ Implement the plan using parallel task subagents for independent work items.
 
 **After implementation**:
 - Verify work todos are done: `SELECT id, status FROM todos WHERE status != 'done' AND id LIKE 'lite:<work-id>:work:%'`
+- Verify work existed or no-work was attested: `SELECT id FROM todos WHERE status = 'done' AND id LIKE 'lite:<work-id>:work:%' LIMIT 1`
 - Run project verification (tests, lint, build) per repository norms
 - Commit changes following selective staging discipline (never `git add .`)
 - Stage `.paw/` files per artifact lifecycle mode from WorkflowContext.md
@@ -136,7 +139,7 @@ For `society-of-thought`, generic self-review or ad-hoc single-model review is i
 
 Load the `paw-pr` skill and follow its instructions for final PR creation. `paw-pr` owns pre-flight validation, artifact lifecycle detection, stop-tracking, push, PR creation, and PR description scaling.
 
-Before invoking paw-pr, ensure implementation work todos are complete: `SELECT id, status FROM todos WHERE status != 'done' AND id LIKE 'lite:<work-id>:work:%'`
+Before invoking paw-pr, ensure implementation work todos are complete and work did not fail open: `SELECT id, status FROM todos WHERE status != 'done' AND id LIKE 'lite:<work-id>:work:%'` returns no rows, and `SELECT id FROM todos WHERE status = 'done' AND id LIKE 'lite:<work-id>:work:%' LIMIT 1` returns a completed work item or `lite:<work-id>:work:no-work-required`.
 
 ## Artifact Structure
 

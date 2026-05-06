@@ -13,7 +13,7 @@ import {
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
 const FINAL_REVIEW_READY_PATTERN =
-  /\bfindings\b.*\b(?:resolved|carried forward)\b|\b(?:resolved|carried forward)\b.*\bfindings\b|\breview\s+(?:is\s+)?complete\b|\bcomplete(?:d)?\s+(?:final\s+)?review\b/i;
+  /\bfindings\b.*\b(?:resolve(?:d)?|carried[- ]forward)\b|\b(?:resolve(?:d)?|carried[- ]forward)\b.*\bfindings\b|\breview\s+(?:is\s+)?complete\b|\bcomplete(?:d)?\s+(?:final\s+)?review\b/i;
 
 describe("PAW-Lite final PR handoff", () => {
   it("routes final-review completion to paw-pr", async () => {

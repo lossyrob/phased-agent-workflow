@@ -47,11 +47,31 @@ describe("PAW-Lite TODO category filtering", () => {
   it("keeps work-item completion separate from active and future boundary TODOs", () => {
     const workId = "runtime-todo-filter";
     const todos: PawLiteTodo[] = [
-      { id: `lite:${workId}:work:update-prompt`, status: "done" },
-      { id: `lite:${workId}:work:add-tests`, status: "done" },
-      { id: `lite:${workId}:boundary:implement->final-review`, status: "pending" },
-      { id: `lite:${workId}:boundary:final-review->final-pr`, status: "pending" },
-    ].map((todo) => ({ ...todo, title: todo.id, description: "" }));
+      {
+        id: `lite:${workId}:work:update-prompt`,
+        title: `lite:${workId}:work:update-prompt`,
+        description: "",
+        status: "done",
+      },
+      {
+        id: `lite:${workId}:work:add-tests`,
+        title: `lite:${workId}:work:add-tests`,
+        description: "",
+        status: "done",
+      },
+      {
+        id: `lite:${workId}:boundary:implement->final-review`,
+        title: `lite:${workId}:boundary:implement->final-review`,
+        description: "",
+        status: "pending",
+      },
+      {
+        id: `lite:${workId}:boundary:final-review->final-pr`,
+        title: `lite:${workId}:boundary:final-review->final-pr`,
+        description: "",
+        status: "pending",
+      },
+    ];
 
     const unfinishedWork = unfinishedWorkTodos(todos, workId);
     const activeBoundary = todos.find((todo) =>

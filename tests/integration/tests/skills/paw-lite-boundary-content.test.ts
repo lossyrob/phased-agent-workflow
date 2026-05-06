@@ -35,7 +35,7 @@ describe("PAW-Lite boundary configuration content", () => {
     const content = await readFile(resolve(REPO_ROOT, "skills/paw-lite/SKILL.md"), "utf-8");
 
     assert.match(content, /WorkflowContext\.md is durable configuration only/i);
-    assert.match(content, /do not write runtime progress, boundary status, reconciliation markers, TODO mirrors, or SQL mirror data/i);
+    assert.match(content, /Do not add runtime progress, gate status, reconciliation markers, TODO mirrors, SQL mirror data, or other mutable workflow bookkeeping/i);
   });
 
   it("defines compact boundary checkpoints and deterministic boundary evaluation", async () => {
@@ -56,6 +56,7 @@ describe("PAW-Lite boundary configuration content", () => {
     assert.match(content, /lite:<work-id>:boundary:<boundary-name>/);
     assert.match(content, /lite:<work-id>:work:<slug>/);
     assert.match(content, /ON CONFLICT\(id\) DO UPDATE/);
+    assert.match(content, /status = excluded\.status/);
     assert.match(content, /UPDATE todos SET status = 'done'/);
     assert.match(content, /Filter readiness checks by category/i);
     assert.match(content, /id LIKE 'lite:<work-id>:work:%'/);

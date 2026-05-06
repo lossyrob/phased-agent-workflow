@@ -11,18 +11,13 @@ import {
   seedPawLiteWork,
 } from "../../lib/paw-lite-boundary.js";
 import { loadSkill } from "../../lib/skills.js";
+import {
+  assertNoRuntimeMarkers,
+  assertWorkflowContextConfigOnly,
+} from "../../lib/workflow-context-invariants.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
-
-const FORBIDDEN_RUNTIME_MARKERS = [
-  "## Control State",
-  "TODO Mirror:",
-  "Reconciliation:",
-  "### Required Workflow Items",
-  "### Gate Items",
-  "### Configured Procedure Items",
-];
 
 async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(resolve(REPO_ROOT, relativePath), "utf-8");
@@ -78,13 +73,7 @@ describe("WorkflowContext lifetime guardrails", () => {
       "skills/paw-planning-docs-review/SKILL.md",
     ]) {
       const content = await readRepoFile(relativePath);
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(
-          content,
-          new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-          `${relativePath} should not contain runtime WorkflowContext marker ${marker}`,
-        );
-      }
+      assertNoRuntimeMarkers(content, relativePath);
     }
   });
 
@@ -104,9 +93,7 @@ describe("WorkflowContext lifetime guardrails", () => {
       assert.match(response, /plan->planning-docs-review/i);
       const after = await readFile(contextPath, "utf-8");
       assert.strictEqual(after, before);
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(after, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-      }
+      assertWorkflowContextConfigOnly(after, "PAW-Lite WorkflowContext artifact");
     } finally {
       await destroyTestContext(ctx);
     }
@@ -146,9 +133,7 @@ describe("WorkflowContext lifetime guardrails", () => {
       assert.match(text, /paw-planning-docs-review/i);
       const after = await readFile(contextPath, "utf-8");
       assert.strictEqual(after, before);
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(after, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-      }
+      assertWorkflowContextConfigOnly(after, "standard PAW WorkflowContext artifact");
     } finally {
       await destroyTestContext(ctx);
     }

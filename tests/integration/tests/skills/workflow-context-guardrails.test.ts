@@ -3,27 +3,17 @@ import assert from "node:assert";
 import { readdir, readFile } from "fs/promises";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
+import {
+  assertNoRuntimeMarkers,
+  assertWorkflowContextConfigOnly,
+  extractWorkflowContextTemplate,
+} from "../../lib/workflow-context-invariants.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
 
-const FORBIDDEN_RUNTIME_MARKERS = [
-  "## Control State",
-  "TODO Mirror:",
-  "Reconciliation:",
-  "### Required Workflow Items",
-  "### Gate Items",
-  "### Configured Procedure Items",
-];
-
 async function readRepoFile(relativePath: string): Promise<string> {
   return readFile(resolve(REPO_ROOT, relativePath), "utf-8");
-}
-
-function extractWorkflowContextTemplate(content: string): string {
-  const match = content.match(/```markdown\r?\n# WorkflowContext\r?\n[\s\S]*?\r?\n```/);
-  assert.ok(match, "paw-init should contain a fenced WorkflowContext.md template");
-  return match[0];
 }
 
 async function listPromptFiles(dir: string): Promise<string[]> {
@@ -43,13 +33,7 @@ describe("WorkflowContext config-only guardrails", () => {
     const content = await readRepoFile("skills/paw-init/SKILL.md");
     const template = extractWorkflowContextTemplate(content);
 
-    for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-      assert.doesNotMatch(
-        template,
-        new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-        `WorkflowContext template should not contain runtime marker: ${marker}`,
-      );
-    }
+    assertWorkflowContextConfigOnly(template, "WorkflowContext template");
 
     assert.match(content, /WorkflowContext\.md is durable configuration only/i);
     assert.match(content, /Do not add runtime progress, gate status, reconciliation markers, TODO mirrors, SQL mirror data/i);
@@ -70,13 +54,7 @@ describe("WorkflowContext config-only guardrails", () => {
 
     for (const file of promptFiles) {
       const content = await readFile(file, "utf-8");
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(
-          content,
-          new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-          `${file} should not contain runtime WorkflowContext marker ${marker}`,
-        );
-      }
+      assertNoRuntimeMarkers(content, file);
     }
   });
 });

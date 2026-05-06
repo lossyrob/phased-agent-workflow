@@ -7,24 +7,13 @@ import { fileURLToPath } from "url";
 import { RuleBasedAnswerer } from "../../lib/answerer.js";
 import { createTestContext, destroyTestContext } from "../../lib/harness.js";
 import { loadSkill } from "../../lib/skills.js";
+import {
+  assertWorkflowContextConfigOnly,
+  extractWorkflowContextTemplate,
+} from "../../lib/workflow-context-invariants.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const REPO_ROOT = resolve(__dirname, "../../../..");
-
-const FORBIDDEN_RUNTIME_MARKERS = [
-  "## Control State",
-  "TODO Mirror:",
-  "Reconciliation:",
-  "### Required Workflow Items",
-  "### Gate Items",
-  "### Configured Procedure Items",
-];
-
-function extractWorkflowContextTemplate(content: string): string {
-  const match = content.match(/```markdown\r?\n# WorkflowContext\r?\n[\s\S]*?\r?\n```/);
-  assert.ok(match, "paw-init should contain a fenced WorkflowContext.md template");
-  return match[0].replace(/^```markdown\r?\n/, "").replace(/\r?\n```$/, "");
-}
 
 describe("paw-init WorkflowContext artifact contract", () => {
   it("defines a generated artifact shape with configuration fields only", async () => {
@@ -49,13 +38,7 @@ describe("paw-init WorkflowContext artifact contract", () => {
       assert.match(generatedShape, new RegExp(requiredField.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     }
 
-    for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-      assert.doesNotMatch(
-        generatedShape,
-        new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-        `Generated WorkflowContext shape should not contain runtime marker: ${marker}`,
-      );
-    }
+    assertWorkflowContextConfigOnly(generatedShape, "Generated WorkflowContext shape");
   });
 
   it("materializes a WorkflowContext artifact without runtime state markers", async () => {
@@ -107,13 +90,7 @@ describe("paw-init WorkflowContext artifact contract", () => {
       assert.match(artifact, /Work ID: runtime-context/);
       assert.match(artifact, /Planning Docs Review: enabled/);
       assert.match(artifact, /Artifact Lifecycle: commit-and-clean/);
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(
-          artifact,
-          new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-          `Materialized WorkflowContext artifact should not contain runtime marker: ${marker}`,
-        );
-      }
+      assertWorkflowContextConfigOnly(artifact, "Materialized WorkflowContext artifact");
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }
@@ -176,9 +153,7 @@ describe("paw-init WorkflowContext artifact contract", () => {
       assert.match(artifact, /Workflow Mode: full/);
       assert.match(artifact, /Planning Docs Review: enabled/);
       assert.match(artifact, /Artifact Lifecycle: commit-and-clean/);
-      for (const marker of FORBIDDEN_RUNTIME_MARKERS) {
-        assert.doesNotMatch(artifact, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-      }
+      assertWorkflowContextConfigOnly(artifact, "paw-init-generated WorkflowContext artifact");
     } finally {
       await destroyTestContext(ctx);
     }

@@ -100,10 +100,12 @@ This creates `dist/` with processed agents and skills for the npm package.
 
 ### Plugin Distribution
 
-The Copilot CLI plugin reads `plugin.json` from the repository root on `main`. The `agents/` and `skills/` directories on `main` serve as the canonical source for plugin installation:
+The Copilot CLI marketplace reads `.github/plugin/marketplace.json`, which points at the repository root plugin manifest. The `agents/` and `skills/` directories on `main` serve as the canonical source for plugin installation:
 
 ```bash
-copilot plugin install lossyrob/phased-agent-workflow
+copilot plugin marketplace add lossyrob/phased-agent-workflow
+copilot plugin marketplace browse paw-workflow
+copilot plugin install paw-workflow@paw-workflow
 ```
 
 Users wanting versioned/stable installs should use the npm CLI (`npx @paw-workflow/cli@<version>`).

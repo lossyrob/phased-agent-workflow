@@ -9,10 +9,12 @@
 ### Copilot CLI Plugin (Recommended)
 
 ```bash
-copilot plugin install lossyrob/phased-agent-workflow
+copilot plugin marketplace add lossyrob/phased-agent-workflow
+copilot plugin marketplace browse paw-workflow
+copilot plugin install paw-workflow@paw-workflow
 ```
 
-This installs PAW as a [Copilot CLI plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) with native update and uninstall support. Then start a workflow:
+This installs PAW as a [Copilot CLI plugin](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace) from the PAW marketplace, with native update and uninstall support. If you previously installed PAW directly from the repository, uninstall that copy first with `copilot plugin uninstall paw-workflow`. Then start a workflow:
 
 ```bash
 copilot --agent PAW          # Implementation workflow
@@ -21,7 +23,7 @@ copilot --agent PAW-Review   # PR review workflow
 
 Or use `/agent` inside your session to switch agents.
 
-Update with `copilot plugin update paw-workflow`, uninstall with `copilot plugin uninstall paw-workflow`.
+Refresh the marketplace catalog with `copilot plugin marketplace update paw-workflow`, update with `copilot plugin update paw-workflow`, and uninstall with `copilot plugin uninstall paw-workflow`.
 
 **Requirements**: [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed.
 
@@ -58,7 +60,7 @@ PAW works with both **GitHub Copilot CLI** (terminal) and **VS Code** (GUI):
 
 | Platform | Installation | Best For |
 |----------|--------------|----------|
-| **Copilot CLI** (Plugin) | `copilot plugin install lossyrob/phased-agent-workflow` | Terminal workflows, quick iteration |
+| **Copilot CLI** (Plugin) | `copilot plugin marketplace add lossyrob/phased-agent-workflow` then `copilot plugin install paw-workflow@paw-workflow` | Terminal workflows, quick iteration |
 | **Copilot CLI** (NPM) | `npx @paw-workflow/cli install copilot` | Fallback, or if you also use Claude Code |
 | **VS Code Extension** | Download `.vsix` from [Releases](https://github.com/lossyrob/phased-agent-workflow/releases) | IDE integration, visual workflow |
 
@@ -93,16 +95,19 @@ All comments are created as a pending review—you edit, delete, or add to them 
 
 Install as a Copilot CLI plugin:
 ```bash
-copilot plugin install lossyrob/phased-agent-workflow
+copilot plugin marketplace add lossyrob/phased-agent-workflow
+copilot plugin marketplace browse paw-workflow
+copilot plugin install paw-workflow@paw-workflow
 ```
 
 Then start a session with `copilot --agent PAW` or `copilot --agent PAW-Review`.
 
 Manage your installation:
 ```bash
-copilot plugin list                     # Show installed plugins
-copilot plugin update paw-workflow      # Update to latest
-copilot plugin uninstall paw-workflow   # Remove PAW
+copilot plugin marketplace update paw-workflow  # Refresh PAW marketplace catalog
+copilot plugin list                             # Show installed plugins
+copilot plugin update paw-workflow              # Update installed plugin
+copilot plugin uninstall paw-workflow           # Remove PAW
 ```
 
 <details>
@@ -116,7 +121,7 @@ npx @paw-workflow/cli upgrade           # Check for updates
 npx @paw-workflow/cli uninstall         # Remove PAW
 ```
 
-**Note**: If switching from NPM CLI to the plugin, uninstall the NPM version first to avoid duplicate agents (user-level files take precedence over plugin files).
+**Note**: If switching from NPM CLI or the old direct repository plugin install to the marketplace plugin, uninstall the previous copy first to avoid duplicate agents (user-level files take precedence over plugin files).
 </details>
 
 ### VS Code Extension
@@ -148,4 +153,3 @@ Configuration is set in `WorkflowContext.md` during initialization. See the [PAW
 Inspired by Dex Horthy's "Advanced Context Engineering for Coding Agents" [talk](https://youtu.be/IS_y40zY-hc?si=27dVJV7LlYDh7woA) and [writeup](https://github.com/humanlayer/advanced-context-engineering-for-coding-agents/blob/main/ace-fca.md). Original agent prompts adapted from HumanLayer's [Claude subagents and commands](https://github.com/humanlayer/humanlayer/tree/main/.claude).
 
 Specification structure and checklist concepts were further informed by ideas from the open-source [Spec Kit](https://github.com/github/spec-kit) project, whose emphasis on prioritized user stories, explicit clarification markers, measurable success criteria, and structured quality checklists influenced the current spec workflow adaptation.
-

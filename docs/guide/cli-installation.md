@@ -8,19 +8,24 @@ Install PAW agents and skills to your GitHub Copilot CLI configuration.
 
 ## Plugin Installation (Recommended)
 
-Install PAW as a native Copilot CLI plugin:
+Install PAW as a native Copilot CLI plugin from the PAW marketplace:
 
 ```bash
-copilot plugin install lossyrob/phased-agent-workflow
+copilot plugin marketplace add lossyrob/phased-agent-workflow
+copilot plugin marketplace browse paw-workflow
+copilot plugin install paw-workflow@paw-workflow
 ```
 
-This installs PAW agents and skills as a managed plugin, with native update and uninstall support.
+This installs PAW agents and skills as a managed plugin, with native update and uninstall support. If you previously installed PAW directly from the repository, uninstall that copy first with `copilot plugin uninstall paw-workflow`.
 
 ### Plugin Commands
 
 | Command | Description |
 |---------|-------------|
-| `copilot plugin install lossyrob/phased-agent-workflow` | Install PAW plugin |
+| `copilot plugin marketplace add lossyrob/phased-agent-workflow` | Register the PAW marketplace |
+| `copilot plugin marketplace browse paw-workflow` | Confirm the marketplace exposes the PAW plugin |
+| `copilot plugin install paw-workflow@paw-workflow` | Install PAW plugin from the marketplace |
+| `copilot plugin marketplace update paw-workflow` | Refresh the PAW marketplace catalog |
 | `copilot plugin list` | Show installed plugins |
 | `copilot plugin update paw-workflow` | Update to latest version |
 | `copilot plugin uninstall paw-workflow` | Remove PAW plugin |
@@ -56,16 +61,18 @@ Use `--force` or `-f` to skip confirmation prompts.
 
 ## What Gets Installed
 
+The marketplace plugin is managed by Copilot CLI and exposes PAW agents and skills from the plugin. The NPM CLI alternative writes the same agents and skills into `~/.copilot/` or `~/.claude/`.
+
 ### Agents
 
-Two agent files are installed to `~/.copilot/agents/`:
+Two agent files are provided:
 
 - **PAW.agent.md** - The main PAW workflow orchestrator for implementation workflows
 - **PAW-Review.agent.md** - The PAW Review workflow orchestrator for code review
 
 ### Skills
 
-Activity and utility skills are installed to `~/.copilot/skills/`, including:
+Activity and utility skills are provided, including:
 
 - Specification skills: `paw-spec`, `paw-spec-research`, `paw-spec-review`
 - Planning skills: `paw-planning`, `paw-plan-review`, `paw-code-research`
@@ -91,13 +98,20 @@ See [Two Workflows](two-workflows.md) for detailed usage instructions.
 
 ## Updating
 
-Check for updates and upgrade:
+For marketplace plugin installs:
+
+```bash
+copilot plugin marketplace update paw-workflow
+copilot plugin update paw-workflow
+```
+
+For NPM CLI installs:
 
 ```bash
 npx @paw-workflow/cli upgrade
 ```
 
-Or reinstall to get the latest version:
+Or reinstall the NPM CLI copy to get the latest version:
 
 ```bash
 npx @paw-workflow/cli install copilot --force
@@ -105,15 +119,21 @@ npx @paw-workflow/cli install copilot --force
 
 ## Uninstalling
 
-Remove all PAW files:
+For marketplace plugin installs:
+
+```bash
+copilot plugin uninstall paw-workflow
+```
+
+For NPM CLI installs:
 
 ```bash
 npx @paw-workflow/cli uninstall
 ```
 
-This removes installed agents, skills, and the manifest file.
+The NPM uninstall removes installed agents, skills, and the manifest file.
 
-## Switching from NPM CLI to Plugin
+## Switching from NPM CLI or Direct Repository Install to Plugin
 
 If you previously installed PAW via the NPM CLI and want to switch to the plugin:
 
@@ -123,15 +143,18 @@ If you previously installed PAW via the NPM CLI and want to switch to the plugin
    ```
 2. Install as a plugin:
    ```bash
-   copilot plugin install lossyrob/phased-agent-workflow
+   copilot plugin marketplace add lossyrob/phased-agent-workflow
+   copilot plugin install paw-workflow@paw-workflow
    ```
+
+If you previously installed PAW directly with `copilot plugin install lossyrob/phased-agent-workflow`, uninstall it first with `copilot plugin uninstall paw-workflow`, then reinstall from the marketplace.
 
 !!! warning
     If both installations are active, the NPM-installed files at `~/.copilot/agents/` take precedence over plugin-provided agents (Copilot CLI uses first-found-wins for agents and skills).
 
 ## Troubleshooting
 
-### "Distribution files not found"
+### NPM CLI: "Distribution files not found"
 
 The package may be corrupted. Try reinstalling:
 
@@ -142,7 +165,14 @@ npx @paw-workflow/cli install copilot
 
 ### Files not showing in Copilot CLI
 
-Verify the files were installed:
+For marketplace plugin installs, verify the marketplace and plugin are registered:
+
+```bash
+copilot plugin marketplace browse paw-workflow
+copilot plugin list
+```
+
+For NPM CLI installs, verify the files were installed:
 
 ```bash
 ls ~/.copilot/agents/
@@ -153,6 +183,6 @@ Restart your Copilot CLI session after installation.
 
 ### Permission errors
 
-Ensure you have write access to:
+For NPM CLI installs, ensure you have write access to:
 - `~/.copilot/` — where agents and skills are installed
 - `~/.paw/copilot-cli/` — where the manifest file is stored

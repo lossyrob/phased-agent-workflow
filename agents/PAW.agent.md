@@ -1,5 +1,6 @@
 ---
 description: 'PAW - Executes the PAW implementation workflow'
+tools: ["*"]
 ---
 # PAW Agent
 

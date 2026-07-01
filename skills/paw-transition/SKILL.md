@@ -29,10 +29,15 @@ Read WorkflowContext.md to determine:
   - If missing, check for legacy `Handoff Mode:` field and map: `manual`→`every-stage`, `semi-auto`→`milestones`, `auto`→`final-pr-only`
   - Also map legacy Review Policy values: `always`→`every-stage`, `never`→`final-pr-only`
   - If neither present, default to `milestones`
+- Planning Docs Review (`enabled` | `disabled`)
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
+- Final Review Mode, Final Review Models, Final Review Specialists, Final Review Interaction Mode, Final Review Interactive, Final Review Specialist Models
+- Artifact Lifecycle
 
 Identify last completed activity from TODOs or artifacts.
+
+Review Policy controls human pause points only. It never disables mandatory gates, configured planning docs review, configured final review procedures, or final PR routing through `paw-pr`.
 
 ### Step 2: Determine Next Activity
 
@@ -44,12 +49,23 @@ Use the Mandatory Transitions table:
 | paw-implement (any phase) | paw-impl-review | NO |
 | paw-spec | paw-spec-review | NO |
 | paw-planning | paw-plan-review | NO |
+| paw-plan-review (passes, planning docs enabled) | paw-planning-docs-review | NO |
+| paw-plan-review (passes, planning docs disabled) | paw-implement (Phase 1) | Per Review Policy |
+| paw-planning-docs-review (passes) | paw-implement (Phase 1) | Per Review Policy |
+| paw-planning-docs-review (blocked findings) | paw-planning (rework) | NO |
 | paw-impl-review (passes, more phases) | paw-implement (next phase) | NO |
 | paw-impl-review (passes, last phase, review enabled) | paw-final-review | NO |
 | paw-impl-review (passes, last phase, review disabled) | paw-pr | Per Review Policy |
 | paw-final-review | paw-pr | NO |
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
+
+Prepare `obligation_summary`:
+- `paw-planning-docs-review`: `Planning Docs Review: enabled` requires `paw-planning-docs-review` before implementation.
+- `paw-final-review`: `Final Agent Review: enabled` requires configured `Final Review Mode` with configured models/specialists; do not substitute ad-hoc review.
+- `paw-pr`: final PR must be created by `paw-pr`. If final review is enabled, emit `Final Agent Review: enabled is complete; final PR must be created by paw-pr`. If final review is disabled, emit `Final Agent Review: disabled by configuration; final PR must be created by paw-pr`. If final review is enabled, it must be complete before `paw-pr`. inline PR creation, push, or artifact cleanup are not transition responsibilities.
+- All other targets: `none`.
+- The next-activity TODO suffix in Step 5 must be derived from `obligation_summary` verbatim; do not author the suffix independently.
 
 ### Step 2.5: Candidate Promotion Check
 
@@ -96,6 +112,8 @@ If `promotion_pending = true`, return candidates in structured output. PAW orche
 - If Review Policy = `final-pr-only`:
   - Final PR: `pause_at_milestone = true`
   - All other milestones: `pause_at_milestone = false`
+
+`pause_at_milestone` decides only whether to stop for human confirmation. It must not alter the required next activity, configured procedure, or automated gate.
 
 **Determine session_action**:
 - If crossing a stage boundary AND Session Policy = `per-stage`: set `session_action = new_session`
@@ -150,6 +168,8 @@ Add TODO for next activity:
 - `[ ] <activity-name> (<context>)`
 - `[ ] paw-transition`
 
+Keep both the next activity and the following transition visible. Include the configured obligation in the next activity TODO when `obligation_summary` is not `none`. The TODO-line suffix must be derived from `obligation_summary` (Step 2) verbatim; do not author it independently.
+
 ## Completion
 
 After completing all steps, return structured output:
@@ -161,6 +181,7 @@ TRANSITION RESULT:
 - next_activity: [activity name and context]
 - artifact_lifecycle: [commit-and-clean | commit-and-persist | never-commit]
 - artifact_lifecycle_action: [stop-tracking (run `git rm --cached -r .paw/work/<work-id>/` before PR creation) | none]
+- obligation_summary: [mandatory gate/procedure/final-PR routing obligation or none]
 - preflight: [passed | blocked: <reason>]
 - work_id: [current work ID]
 - inline_instruction: [for new_session only: resume hint]
@@ -193,6 +214,11 @@ Unresolved: `- [ ]` items without terminal tags. Empty section or all-resolved �
 - Do NOT skip the stage boundary check (Step 3)
 - Do NOT return session_action = continue if boundary + per-stage policy
 - Do NOT omit `artifact_lifecycle_action` from the structured output
+- Do NOT omit `obligation_summary` from the structured output
 - Do NOT return `next_activity = paw-pr` with `artifact_lifecycle = commit-and-clean` and `artifact_lifecycle_action = none`
+- Do NOT let Review Policy disable automated gates or configured procedures
+- Do NOT return `next_activity = paw-final-review` without naming the configured Final Review Mode in `obligation_summary`
+- Do NOT return `next_activity = paw-pr` without routing final PR creation through `paw-pr`
+- Do NOT make transition output depend on hooks, MCPs, or broad tool-call inspection
 - Do NOT return preflight = passed if checks actually failed
 - Do NOT call paw_new_session directly—return the decision for PAW agent to act on

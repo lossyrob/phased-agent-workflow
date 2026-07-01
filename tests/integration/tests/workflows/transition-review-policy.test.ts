@@ -89,6 +89,16 @@ describe("paw-transition review policy handling", { timeout: 300_000 }, () => {
     }
   });
 
+  it("documents review policy as human pauses only, separate from automated gates", async () => {
+    const transitionSkill = await loadSkill("paw-transition");
+
+    assert.match(transitionSkill, /Review Policy controls human pause points only/i);
+    assert.match(transitionSkill, /never disables mandatory gates/i);
+    assert.match(transitionSkill, /configured planning docs review/i);
+    assert.match(transitionSkill, /configured final review procedures/i);
+    assert.match(transitionSkill, /pause_at_milestone.+human confirmation/is);
+  });
+
   async function runTransition(
     reviewPolicy: string,
     stageContext: string,

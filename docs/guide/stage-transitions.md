@@ -12,7 +12,7 @@ The PAW agent is an intelligent orchestrator that understands natural language r
 | "Research how X works" | `paw-spec-research` or `paw-code-research` | Answer research questions (context-dependent) |
 | "Create an implementation plan" | `paw-planning` | Create an implementation plan |
 | "Implement phase N" | `paw-implement` | Execute an implementation phase |
-| "Review my changes" | `paw-impl-review` | Verify and push implementation |
+| "Review my changes" | `paw-impl-review` | Verify implementation quality |
 | "Run final review" | `paw-final-review` | Pre-PR review of implementation |
 | "Create the final PR" | `paw-pr` | Create the final pull request |
 | "What's the status?" | `paw-status` | Check workflow progress |
@@ -39,6 +39,9 @@ This tells the PAW agent to proceed to the recommended next activity.
 ## Review Policies
 
 PAW supports four review policies that control when the workflow pauses for human review at artifact boundaries:
+
+!!! note "Automated gates still run"
+    Review Policy controls human pauses only. It does not disable mandatory automated gates or configured procedures such as planning docs review, implementation review, final review, or final PR handoff through `paw-pr`.
 
 ### Every-Stage Review Policy
 
@@ -107,9 +110,6 @@ In `final-pr-only` mode, the workflow only pauses at the final PR — auto-proce
 !!! warning "Local Strategy Required"
     The `final-pr-only` review policy requires **local review strategy**. It's incompatible with PRs strategy because intermediate PR reviews require human decisions.
 
-!!! note "Automated Quality Gates Still Run"
-    Review Policy controls HUMAN review pauses only. Automated quality gates (paw-spec-review, paw-plan-review, paw-impl-review) are mandatory regardless of Review Policy setting.
-
 **Best for:**
 
 - Routine, well-understood tasks
@@ -133,6 +133,12 @@ Session Policy: per-stage
 ```
 
 To change the policy for an existing workflow, edit `WorkflowContext.md` directly.
+
+## Boundary Checkpoints
+
+Standard PAW uses `paw-transition` at stage boundaries to identify the next activity, preflight status, artifact lifecycle action, and any configured obligation that must be honored before proceeding.
+
+PAW Lite does not delegate to `paw-transition`, so it emits compact boundary checkpoints inline. These checkpoints state what completed, what comes next, which configured gate or procedure applies, which shortcut is incorrect, and which TODOs keep the next boundary visible. Final PR creation is always handed off to `paw-pr`; inline PR creation, push, or artifact cleanup are not PAW Lite boundary responsibilities.
 
 ## Inline Instructions
 
@@ -272,4 +278,3 @@ Session Policy controls chat context management. This is primarily relevant for 
 **Note:** GitHub Copilot CLI always uses `continuous` mode (single-session).
 
 Session Policy is stored in `WorkflowContext.md` and can be changed by editing the file directly.
-

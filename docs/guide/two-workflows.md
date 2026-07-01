@@ -73,6 +73,7 @@ PAW Lite strips the multi-stage pipeline down to what matters:
 
 - **Work Shaping** (optional) → Clarify vague ideas through interactive Q&A
 - **Plan** → Lightweight plan with approach summary and work items (no rigid spec)
+- **Boundary checkpoints** → Compact reminders before each stage handoff
 - **Implement** → Fleet-style parallel dispatch using SQL todos and `task` subagents
 - **Review** → Configurable: single-model, multi-model, or full Society of Thought
 - **PR** → Final pull request with artifact cleanup
@@ -94,6 +95,12 @@ PAW Lite strips the multi-stage pipeline down to what matters:
 | Review | Configurable per-phase + final | Single review gate (configurable mode) |
 | Best for | Complex features, formal requirements | Clear tasks, frontier model capabilities |
 
+### Boundary Checkpoints
+
+PAW Lite keeps stage handoffs visible with compact boundary checkpoints. Each checkpoint states what completed, what comes next, which configured review or PR obligation applies, and which shortcut to avoid. Planning docs review and final review settings from `WorkflowContext.md` are treated as required procedures, not optional suggestions.
+
+Boundary TODOs use `lite:<work-id>:boundary:<boundary-name>` while implementation work uses `lite:<work-id>:work:<item>`. This lets PAW Lite distinguish future handoff checkpoints from current implementation work.
+
 ### Configuration
 
 PAW Lite uses `custom` workflow mode with lighter defaults:
@@ -104,6 +111,8 @@ PAW Lite uses `custom` workflow mode with lighter defaults:
 | Review Strategy | `local` |
 | Review Policy | `final-pr-only` |
 | Artifact Lifecycle | `commit-and-clean` |
+
+Planning docs review and final review behavior come from resolved `WorkflowContext.md` configuration when present. Review Policy controls human pauses only; it does not disable configured planning docs review, configured final review, or final PR routing through `paw-pr`.
 
 ## PAW Review Workflow
 

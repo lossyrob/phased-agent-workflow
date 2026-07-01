@@ -32,7 +32,13 @@ Read WorkflowContext.md to determine:
 - Final Agent Review (`enabled` | `disabled`)
   - If missing, default to `enabled`
 
-Identify last completed activity from TODOs or artifacts.
+If `WorkflowContext.md` contains `## Control State`, also read:
+- `Reconciliation:` marker
+- Required activity items
+- Gate items
+- Configured procedure items
+
+When control state is present, treat it as the durable workflow source of truth. Determine the last completed activity and next required activity from the required activity items, not from inferred artifact order alone. If the section is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
 
 ### Step 2: Determine Next Activity
 
@@ -50,6 +56,19 @@ Use the Mandatory Transitions table:
 | paw-final-review | paw-pr | NO |
 
 **Skippable = NO**: Add activity TODO and execute immediately after transition completes.
+
+When control state is present, map the first non-terminal required activity item to the next activity:
+- `spec` → `paw-spec`
+- `spec-review` → `paw-spec-review`
+- `code-research` → `paw-code-research`
+- `planning` → `paw-planning`
+- `plan-review` → `paw-plan-review`
+- `planning-docs-review` → `paw-planning-docs-review`
+- `phase:<n>:<slug>` → `paw-implement (Phase <n>: <slug>)`
+- `final-review` → `paw-final-review`
+- `final-pr` → `paw-pr`
+
+If the first non-terminal required activity item disagrees with the transition table or the observed artifact state, report a blocker instead of inferring around the mismatch.
 
 ### Step 2.5: Candidate Promotion Check
 
@@ -142,6 +161,14 @@ Before the next activity can start, verify:
 - If `next_activity = paw-pr` and detected lifecycle is `commit-and-clean`: `artifact_lifecycle_action = stop-tracking (run \`git rm --cached -r .paw/work/<work-id>/\` before PR creation)`
 - Otherwise: `artifact_lifecycle_action = none`
 
+**Control-state reconciliation** (when `## Control State` exists):
+1. Apply the reconciliation-on-read preamble from the control-state contract on skill load (drift check + `reconcile:<work-id>` todo). On entering this transition, re-open `reconcile:<work-id>` to `pending` until the steps below confirm `current`.
+2. Treat `Reconciliation: current` as required for mutation-affecting next activities.
+3. If `Reconciliation` is `not_run`, `stale`, or `external_unverified`, reconcile the embedded state against artifacts, git state, PR state, and the just-completed boundary before returning `preflight: passed`.
+4. If reconciliation cannot prove the relevant live state, return `preflight: blocked: reconciliation incomplete` and explicitly report whether the state is `stale` or `external_unverified`.
+5. If any required activity item before `next_activity`, any relevant gate item, or any relevant configured procedure item remains `pending`, `in_progress`, or `blocked` when it should already be terminal, return `preflight: blocked: <item-id> unresolved`.
+6. Only return `preflight: passed` when the reconciled control state supports the computed `next_activity`. On `preflight: passed`, mark `reconcile:<work-id>` todo `done`.
+
 If any check fails, report blocker and stop.
 
 ### Step 5: Queue Next Activity
@@ -149,6 +176,8 @@ If any check fails, report blocker and stop.
 Add TODO for next activity:
 - `[ ] <activity-name> (<context>)`
 - `[ ] paw-transition`
+
+When control state is present, TODOs are a mirror only. Queue TODOs only for required activity items whose status is `pending`, `in_progress`, or `blocked`.
 
 ## Completion
 

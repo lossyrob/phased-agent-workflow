@@ -85,7 +85,7 @@ export async function getWorkStatusCommand(
     }
 
     // Construct query for Status Agent
-    const query = selection.value ? `Work ID: ${selection.value}` : 'What is the current work status?';
+    const query = constructGetWorkStatusQuery(selection.value || undefined);
 
     outputChannel.appendLine(
       `[INFO] Opening Status Agent${selection.value ? ` for ${selection.value}` : ' (auto-detect)'}`
@@ -106,6 +106,19 @@ export async function getWorkStatusCommand(
     outputChannel.appendLine(`[ERROR] Get work status failed: ${errorMessage}`);
     vscode.window.showErrorMessage(`PAW get work status failed: ${errorMessage}`);
   }
+}
+
+export function constructGetWorkStatusQuery(workId?: string): string {
+  const header = workId ? `Work ID: ${workId}` : 'What is the current work status?';
+
+  return [
+    header,
+    '',
+    'Run `paw-status` and read WorkflowContext.md before inferring current workflow state.',
+    'If WorkflowContext.md includes `## Control State`, use that embedded control state as the durable source of truth.',
+    'If control state is absent, report legacy best-effort mode explicitly.',
+    'Preserve blocked, pending, and stale/unverified reconciliation status instead of implying fresh state.',
+  ].join('\n');
 }
 
 /**

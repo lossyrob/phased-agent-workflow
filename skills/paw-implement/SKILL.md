@@ -63,6 +63,10 @@ When plan conflicts with codebase reality or leaves critical gaps: **STOP immedi
 
 **Exception**: If delegation explicitly allows degraded verification for non-critical checks (e.g., flaky tests, optional linters), report as `⚠️ warning` and proceed.
 
+## Control State Preamble
+
+Before any code or git mutation, read `WorkflowContext.md`. If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) and STOP if drift is detected.
+
 ## Execution Contexts
 
 ### Initial Phase Development

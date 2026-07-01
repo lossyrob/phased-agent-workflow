@@ -30,18 +30,17 @@ Serve as the workflow navigator and historian. Diagnose current workflow state, 
 
 Check `.paw/work/<work-id>/` for:
 - WorkflowContext.md (required for workflow context)
-- Spec.md, SpecResearch.md (specification stage)
-- CodeResearch.md (research stage)
-- ImplementationPlan.md (planning stage)
-- Docs.md (documentation if separate from implementation)
+- Standard PAW artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
+- PAW Lite artifacts: WorkShaping.md, Plan.md, `reviews/FINAL-REVIEW.md`
 - `reviews/` directory (Final Agent Review artifacts)
 - `reviews/planning/` directory (Planning Documents Review artifacts)
 
-Note existence vs intentionally skipped (minimal mode skips Spec/Docs).
+Note existence vs intentionally skipped. Standard minimal mode skips Spec/Docs; paw-lite skips standard PAW planning artifacts entirely.
 
 ### Configuration Detection
 
 Read WorkflowContext.md for:
+- Workflow Identity: `paw` | `paw-lite`
 - Workflow Mode, Review Strategy, Review Policy
 - Artifact Lifecycle: `commit-and-clean` | `commit-and-persist` | `never-commit`
 - Final Agent Review: `enabled` | `disabled`
@@ -51,11 +50,20 @@ Read WorkflowContext.md for:
 - Plan Generation Mode: `single-model` | `multi-model`
 - Plan Generation Models: comma-separated model names (for multi-model modes)
 - Implementation Model: `none` (session default) | concrete model name
-- Planning Review Mode: `single-model` | `multi-model`
+- Planning Review Mode: `single-model` | `multi-model` | `society-of-thought`
 - Planning Review Interactive: `true` | `false` | `smart`
 - Final Review Specialists: `all` | `adaptive:<N>` | comma-separated list (when society-of-thought)
 - Final Review Interaction Mode: `parallel` | `debate` (when society-of-thought)
 - Final Review Specialist Models: `none` | model pool | pinned pairs | mixed (when society-of-thought)
+
+### Workflow Identity Detection
+
+- Read `Workflow Identity` from `WorkflowContext.md`: `paw` | `paw-lite` (absent → `paw`)
+- Legacy lite compatibility fallback: `Plan.md` exists and `ImplementationPlan.md` does not → use lite expectations for reporting, say workflow identity is missing
+
+### Control State Detection
+
+If `WorkflowContext.md` contains `## Control State`, read reconciliation marker, required items, gates, and procedures. As a read-only skill, apply the drift check from the control-state contract's reconciliation-on-read preamble and surface any disagreement between embedded status and live evidence in the status report. Do not mutate the embedded state; do ensure `reconcile:<work-id>` SQL todo exists (pending) when drift is detected. Absent `## Control State` → legacy best-effort mode.
 
 ### Phase Counting
 
@@ -64,11 +72,19 @@ Parse ImplementationPlan.md with regex: `^## Phase \d+:`
 - Report: "Phase N of M" or "Phase N (plan shows M phases total)"
 - Never assume total—always verify
 
+Only apply phase counting to the standard PAW profile. Do not invent phases for paw-lite.
+
 ### Phase Candidates
 
 Check `## Phase Candidates` section in ImplementationPlan.md:
 - Count unresolved (`- [ ]`), promoted (`[promoted]`), skipped (`[skipped]`), deferred (`[deferred]`), not feasible (`[not feasible]`)
 - If unresolved exist after last phase: report "N phase candidates pending review"
+
+Only apply phase-candidate reporting to the standard PAW profile.
+
+### Lite Work Item Counting
+
+For paw-lite, count `Plan.md` `## Work Items` checkboxes: "Work items X of Y complete".
 
 ### Git Status
 
@@ -96,7 +112,13 @@ When PRs exist:
 
 ## Workflow Stage Progression
 
-Map state to guidance:
+Map state to guidance.
+
+When control state is present:
+- Current position = first non-terminal required activity item
+- Report `blocked`/unresolved gate/procedure items as blockers
+- Non-`current` reconciliation → read-only/unverified status
+- For paw-lite, map the first non-terminal item to lite guidance (`planning`→plan, `implementation`→implement, `final-review`→final-review, `final-pr`→pr)
 
 | State | Recommendation |
 |-------|----------------|
@@ -111,6 +133,8 @@ Map state to guidance:
 | All phases complete, review disabled | "Create final PR: `pr`" |
 | All complete + unresolved candidates | "Review phase candidates before PR" |
 
+When control state is absent, infer lite status from artifacts if legacy lite compatibility is active.
+
 ## Workflow Mode Behavior
 
 ### Full Mode
@@ -122,6 +146,10 @@ Skips: Spec, Spec Research (local strategy enforced)
 
 ### Custom Mode
 Inspect disk to discover actual stages per Custom Workflow Instructions.
+
+### PAW Lite
+Expect: Work Shaping (optional) → Plan → Implementation → Final Review (if enabled) → Final PR
+Skips: Spec, Code Research, ImplementationPlan, planning-docs review, phase candidates
 
 ## Multi-Work Management
 
@@ -159,17 +187,19 @@ When asked "What presets are available?" or "List presets":
 
 For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
 - Use the exact name **Phased Agent Workflow**. Never invent an acronym expansion.
+- Ground onboarding answers in these repository sources: `README.md`, `docs/index.md`, `docs/guide/index.md`, `docs/guide/cli-installation.md`.
 - For full documentation, see: https://lossyrob.github.io/phased-agent-workflow/ (overview), https://lossyrob.github.io/phased-agent-workflow/guide/ (getting started), https://lossyrob.github.io/phased-agent-workflow/guide/cli-installation/ (CLI install).
 - Explain briefly:
   - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
   - PAW supports two workflows: implementation and review.
   - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
+- Keep onboarding guidance aligned across **GitHub Copilot CLI** and **VS Code**.
 - If the user also asks how to get started:
 {{#cli}}
-  - Select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
+  - In **GitHub Copilot CLI**, select the PAW custom agent (e.g. `copilot --agent PAW` or `/agent PAW`) and say "start a new PAW workflow".
 {{/cli}}
 {{#vscode}}
-  - Run `PAW: New PAW Workflow`.
+  - In **VS Code**, run `PAW: New PAW Workflow`.
 {{/vscode}}
 - Prefer concise, sourced onboarding language over improvisation.
 
@@ -191,20 +221,22 @@ For "How do I start?", explain:
 ## Status Dashboard Format
 
 Synthesize findings into sections:
+- **Control State**: present vs legacy mode, reconciliation marker, unresolved gate/procedure items
 - **Artifacts**: Existence and status
-- **Phases**: Current progress (N of M)
-- **Phase Candidates**: Pending/resolved candidate counts (if any exist)
+- **Phases / Work Items**: Standard PAW phase progress or paw-lite work-item progress
+- **Phase Candidates**: Pending/resolved candidate counts (standard PAW only, if any exist)
 - **Branch & Git**: Current state, divergence
 - **PRs**: Open/merged status, review comments
 - **Next Actions**: Recommended commands
 
 ## Guardrails
 
-- Verify phase count from ImplementationPlan.md—never assume
+- Do not report progress past unresolved required/gate/procedure items
+- Non-`current` reconciliation → label read-only/unverified
+- Absent control state → say legacy best-effort mode
 - Never mutate issue descriptions or PR content outside summary blocks
 - Never push, merge, or rewrite git history
 - Be idempotent: same state → same summary
-- If required info missing, state blocker and resolution
 
 ## Completion Response
 

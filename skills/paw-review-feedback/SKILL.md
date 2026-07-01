@@ -23,6 +23,23 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 
 If any required artifact is missing, report blocked status—earlier stages must complete first.
 
+## Review Control State
+
+If `ReviewContext.md` contains `## Control State`, also read:
+- `Reconciliation:` marker
+- Review stage items
+- Terminal external review state
+
+Apply these sequencing rules:
+- Initial feedback generation requires `evaluation` to be `resolved` and `output:feedback` to be `pending` or `in_progress`
+- Critique Response Mode requires `output:critic` to be `resolved` and `output:critique-response` to be `pending` or `in_progress`
+- If prerequisites are not met, report blocked status with the unresolved review-state item
+- After the initial pass, update `ReviewContext.md` so `output:feedback` is `resolved`, `output:critic` remains/ becomes `pending`, and `Reconciliation` is `current`
+- After critique response, update `ReviewContext.md` so `output:critique-response` is `resolved`, `output:github` remains/ becomes `pending`, and `Reconciliation` is `current`
+- Preserve the existing terminal external review state and pending review identifiers when updating `ReviewContext.md`
+
+If `ReviewContext.md` does not contain `## Control State`, continue in legacy best-effort mode and explicitly report that control-state protections are inactive.
+
 **SoT mode input mapping**: When `REVIEW-SYNTHESIS.md` is the evaluation source, map findings to the comment pipeline as follows:
 - Severity: must-fix → Must, should-fix → Should, consider → Could
 - Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix (note: this mapping is active only when `Review Interactive` is `true` or `smart`; with `false` default, trade-offs are auto-resolved by paw-sot and appear as regular findings)

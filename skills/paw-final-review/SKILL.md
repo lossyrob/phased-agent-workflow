@@ -28,6 +28,14 @@ Read WorkflowContext.md for:
 - `Final Review Interactive`: `true` | `false` | `smart`
 - `Final Review Models`: comma-separated model names (for multi-model)
 
+If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) before proceeding.
+
+If `WorkflowContext.md` contains `## Control State`, treat `procedure:final-review` as the configured procedure item:
+- Reconcile control state before executing the review
+- Mark it `in_progress` only when the configured review mode is actually about to run
+- Mark it `resolved` only after the configured mode completes successfully
+- Mark it `blocked` when the configured mode cannot run in the current runtime; do not silently downgrade
+
 {{#cli}}
 If mode is `multi-model`, parse the models list. Default: `latest GPT, latest Gemini, latest Claude Opus`.
 
@@ -37,7 +45,7 @@ If mode is `society-of-thought`, also read:
 - `Final Review Specialist Models`: `none` (default) | model pool | pinned pairs | mixed
 {{/cli}}
 {{#vscode}}
-**Note**: VS Code only supports `single-model` mode. If `multi-model` is configured, proceed with single-model using the current session's model.
+**Note**: VS Code only supports `single-model` mode.
 {{/vscode}}
 
 ### Step 2: Gather Review Context
@@ -157,11 +165,11 @@ After paw-sot completes orchestration and synthesis, proceed to Step 5 (Resoluti
 {{#vscode}}
 ### Step 4: Execute Review (VS Code)
 
-**Note**: VS Code only supports single-model mode. If `multi-model` is configured, report to user: "Multi-model not available in VS Code; running single-model review."
+If `Final Review Mode` is `multi-model` or `society-of-thought`:
+- When `WorkflowContext.md` contains `## Control State`, preserve the configured mode in status/control-state surfaces, persist `procedure:final-review` as `blocked` in `WorkflowContext.md`, and report: "Configured final review mode `<mode>` is unavailable in VS Code. Re-run this review in CLI." Do not run a single-model fallback. Stop after reporting the blocker.
+- When control state is absent, continue in legacy best-effort mode, explicitly report that control-state protections are inactive, and run a single-model fallback review in `REVIEW.md`.
 
-If `society-of-thought` is configured, report to user: "Society-of-thought requires CLI for specialist persona loading (see issue #240). Running single-model review."
-
-Execute single-model review using the shared review prompt above. Save to `REVIEW.md`.
+If `Final Review Mode` is `single-model`, execute the shared review prompt above and save the output to `REVIEW.md`.
 {{/vscode}}
 
 ### Step 5: Resolution

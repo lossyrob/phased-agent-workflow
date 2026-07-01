@@ -11,9 +11,18 @@ PAW uses two AI chat modes ("agents") that orchestrate workflow activities throu
 
 Both agents follow the same pattern: a compact orchestrator that loads a workflow skill for guidance, then delegates activities to specialized skills via subagents.
 
-> **Platform runtime note:** Copilot CLI runs installed `agents/`, `skills/`, and prompt content directly. The VS Code extension uses `src/` TypeScript for commands, setup, and handoff, but that code is not executed in CLI sessions.
+> **Platform runtime note:** Copilot CLI runs installed `agents/`, `skills/`, and prompt content directly. The VS Code extension uses `src/` TypeScript for commands, setup, status, and handoff, but that code is not executed in CLI sessions. Both runtimes rely on the same durable contract in `WorkflowContext.md` and `ReviewContext.md`; VS Code surfaces preserve and forward that contract rather than implementing alternate workflow logic.
 
 > **PAW Lite** is available as the `paw-lite` skill — any agent can load it on demand.
+
+## Control State Parity
+
+Current PAW, PAW Lite, and PAW Review sessions can embed a compact `## Control State` section inside their context artifacts.
+
+- `WorkflowContext.md` tracks required implementation activities, lifecycle markers, and any configured review procedures for the active workflow profile (`paw` or `paw-lite`)
+- `ReviewContext.md` tracks review-stage progression, configured review mode, and terminal external-review outcomes
+- Built-in TODOs mirror the active required items for execution convenience, but the embedded artifact state remains the durable source of truth across resume and handoff
+- If control state is absent, agents continue in legacy best-effort mode and say so explicitly
 
 ---
 
@@ -32,7 +41,7 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 1. Loads the `paw-workflow` skill for orchestration guidance
 2. Loads activity skills through the current platform's native skill system (extension-contributed skills in VS Code; installed skill files in Copilot CLI)
 3. Delegates activities to specialized skills
-4. Applies Review Policy and Session Policy for workflow control
+4. Reads `WorkflowContext.md`, reconciles control state when present, and applies Review Policy and Session Policy for workflow control
 
 **Hybrid Execution Model:**
 
@@ -42,6 +51,8 @@ Both agents follow the same pattern: a compact orchestrator that loads a workflo
 | **Subagent** (isolated) | `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`, `paw-transition` | Research and review activities that benefit from context isolation |
 
 This preserves conversation flow for interactive work while leveraging fresh context for focused research and review.
+
+Before transitions, resume/handoff, or repository mutation, the PAW agent reconciles the embedded workflow state with artifact, git, and PR reality. Unresolved required items block progression with explicit reasons.
 
 **Activity Skills:**
 
@@ -60,7 +71,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, recommend next steps, explain PAW/onboarding | Status reports |
-| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | Plan.md |
+| `paw-lite` | Lightweight workflow: plan → fleet-implement → review → PR | WorkflowContext.md, Plan.md, reviews/FINAL-REVIEW.md |
 
 **Utility Skills:**
 
@@ -123,7 +134,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 **Invocation (Copilot CLI):** `copilot --agent PAW-Review` then provide the PR number or URL
 
-**Architecture:** The PAW Review agent uses a skills-based architecture. The shared review logic lives in skills; VS Code-specific automation remains in `src/` only.
+**Architecture:** The PAW Review agent uses a skills-based architecture. The shared review logic lives in skills; VS Code-specific automation remains in `src/` only. The agent reads `ReviewContext.md`, enforces review control state when present, and falls back to legacy best-effort mode when it is absent.
 
 1. Loads the `paw-review-workflow` skill for orchestration
 2. Executes activity skills via subagents for each stage
@@ -162,7 +173,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
    - **Critique response**: Updates comments per recommendations, marks final status
    - **GitHub posting**: Creates pending review with only approved comments
 
-**Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
+**Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique. Terminal external-review outcomes such as pending review creation or manual-posting guidance are persisted in `ReviewContext.md`.
 
 **Human Control:** Pending review is never auto-submitted. User reviews comments, edits/deletes as needed, consults ReviewComments.md for full context, then submits manually.
 

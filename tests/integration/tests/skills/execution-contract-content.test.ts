@@ -47,4 +47,35 @@ describe("execution checkout contract content", () => {
     assert.match(content, /git worktree list/);
     assert.doesNotMatch(content, /already runs? in the intended execution checkout/i);
   });
+
+  it("documents SoT-capable review parameters in paw-init", async () => {
+    const content = await readRepoFile("skills/paw-init/SKILL.md");
+    assert.match(content, /`final_review_mode`[\s\S]*`society-of-thought`/i);
+    assert.match(content, /`planning_review_mode`[\s\S]*`society-of-thought`/i);
+    assert.match(content, /`final_review_specialists`/);
+    assert.match(content, /`planning_review_specialists`/);
+    assert.match(content, /`final_review_interaction_mode`/);
+    assert.match(content, /`planning_review_interaction_mode`/);
+  });
+
+  it("documents resume-aware handoff behavior in the VS Code tool schema", async () => {
+    const packageJson = JSON.parse(await readRepoFile("package.json"));
+    const handoffTool = packageJson.contributes?.languageModelTools?.find(
+      (tool: { name?: string }) => tool.name === "paw_new_session"
+    );
+
+    assert.ok(handoffTool, "Expected paw_new_session language model tool to exist");
+    assert.match(handoffTool.modelDescription, /WorkflowContext\.md|ReviewContext\.md/i);
+    assert.match(handoffTool.modelDescription, /control state/i);
+    assert.match(handoffTool.modelDescription, /legacy best-effort mode/i);
+  });
+
+  it("documents lifecycle-only WorkflowContext updates in the stop-tracking prompt", async () => {
+    const content = await readRepoFile("src/prompts/stopTrackingArtifacts.template.md");
+    assert.match(content, /WorkflowContext\.md/);
+    assert.match(content, /Artifact Lifecycle:/);
+    assert.match(content, /## Control State/);
+    assert.match(content, /legacy best-effort mode/i);
+    assert.match(content, /Do not rewrite or remove unrelated control-state or legacy-state lines/i);
+  });
 });

@@ -49,10 +49,11 @@ describe("minimal workflow (plan + implement, no spec)", { timeout: 300_000 }, (
         "",
         "Do the following in order:",
         "1. Read the codebase",
-        `2. Create an implementation plan at .paw/work/${workId}/ImplementationPlan.md (with phases + success criteria)`,
-        "3. Implement the plan by modifying the code",
-        "4. Run tests to verify (e.g. `npm test`)",
-        "5. Commit changes locally",
+        `2. Create .paw/work/${workId}/WorkflowContext.md with a \`## Control State\` section and \`TODO Mirror: active-required-items\``,
+        `3. Create an implementation plan at .paw/work/${workId}/ImplementationPlan.md (with phases + success criteria)`,
+        "4. Implement the plan by modifying the code",
+        "5. Run tests to verify (e.g. `npm test`)",
+        "6. Commit changes locally",
         "",
         "IMPORTANT:",
         `- Do NOT create .paw/work/${workId}/Spec.md (minimal mode skips it)`,
@@ -79,6 +80,12 @@ describe("minimal workflow (plan + implement, no spec)", { timeout: 300_000 }, (
       minPhases: 1,
       hasSuccessCriteria: true,
     });
+
+    const workflowContext = await readFile(
+      join(ctx.fixture.workDir, ".paw/work", workId, "WorkflowContext.md"), "utf-8",
+    );
+    assert.match(workflowContext, /## Control State/);
+    assert.match(workflowContext, /TODO Mirror:\s*active-required-items/i);
 
     // Assert: src/app.ts modified with stats/counting concepts
     const appContent = await readFile(join(ctx.fixture.workDir, "src/app.ts"), "utf-8");
@@ -133,6 +140,8 @@ function buildMinimalPrompt(opts: { planningSkill: string; implementSkill: strin
     "You are a PAW minimal-mode agent. You will plan and implement directly from a feature brief.",
     "",
     "IMPORTANT RULES:",
+    `- Write workflow context to .paw/work/${opts.workId}/WorkflowContext.md`,
+    "- WorkflowContext.md MUST include a `## Control State` section and `TODO Mirror: active-required-items`",
     `- Write the plan to .paw/work/${opts.workId}/ImplementationPlan.md`,
     "- Plan MUST have: phases (## Phase N: <name>), each with Success Criteria",
     "- Implement the planned changes by writing code in the repo",

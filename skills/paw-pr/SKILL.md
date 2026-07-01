@@ -23,20 +23,30 @@ Create the final PR merging all implementation work to the base branch (from Wor
 
 Before creating the PR, verify and report status. Block on failures unless user explicitly confirms (except hard blockers — those cannot be overridden).
 
+### Workflow Identity Detection
+
+Read `Workflow Identity` from `WorkflowContext.md`: `paw` (default) or `paw-lite`. Legacy lite fallback (`Plan.md` exists, `ImplementationPlan.md` does not) → report identity missing, STOP final PR creation until persisted.
+
 ### Required Checks
 
-**Phase Implementation**:
-- All phases in ImplementationPlan.md marked complete
+**Standard PAW profile**:
+- All phases in `ImplementationPlan.md` marked complete
 - All phase PRs merged (prs strategy) or commits pushed (local strategy)
 - Target branch exists with implementation commits
 - No unresolved phase candidates (`- [ ]` items in `## Phase Candidates`) — **hard blocker**: do NOT resolve or bypass; report to orchestrator to run Candidate Promotion Flow before retrying
 
-**Artifacts Exist** (check existence per Workflow Mode):
-- CodeResearch.md (required: all modes)
-- ImplementationPlan.md (required: all modes)
-- Spec.md (required: full mode; optional: minimal/custom)
-- SpecResearch.md (optional: all modes)
-- Docs.md (required: full mode; optional: minimal/custom)
+**Standard PAW artifacts** (check existence per Workflow Mode):
+- `CodeResearch.md` (required: all modes)
+- `ImplementationPlan.md` (required: all modes)
+- `Spec.md` (required: full mode; optional: minimal/custom)
+- `SpecResearch.md` (optional: all modes)
+- `Docs.md` (required: full mode; optional: minimal/custom)
+
+**PAW Lite profile**:
+- `Plan.md` exists with `## Work Items` — all checkboxes resolved
+- Target branch exists with implementation commits
+- If final review enabled, `reviews/FINAL-REVIEW.md` exists with non-blocking outcome
+- `Workflow Identity: paw-lite` must be persisted
 
 **Branch Status**:
 - Target branch up to date with base branch (from WorkflowContext.md, defaults to `main`)
@@ -51,26 +61,47 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - Scratch ignore markers (`.gitignore` files used to keep workflow/planning/reviews output local-only) must be removed from the index before PR creation if they became tracked
 
 **Open Questions Resolved**:
-- SpecResearch `## Open Unknowns` → resolved in Spec or clarified
-- CodeResearch `## Open Questions` → resolved in Plan or code
-- ImplementationPlan `## Open Questions` → empty
+- Standard PAW:
+  - `SpecResearch` `## Open Unknowns` → resolved in Spec or clarified
+  - `CodeResearch` `## Open Questions` → resolved in Plan or code
+  - `ImplementationPlan` `## Open Questions` → empty
+- PAW Lite:
+  - `Plan.md` `## Open Questions` → empty or explicitly `None`
 - Unresolved items → block and report with recommendation
 
-## Workflow Mode Handling
+**Control State**:
+- If `## Control State` exists, apply the reconciliation-on-read preamble from the control-state contract (drift check + `reconcile:<work-id>` todo) on skill load, then reconcile before PR creation. All items before `final-pr` must be terminal. Absent → legacy best-effort mode.
 
-### Full Mode
+**Stage 5 Admission Check (paw-lite)**:
+- When `Workflow Identity: paw-lite`, before any remote-affecting action (`git push origin <target>`, `gh pr create`), verify both:
+  - Embedded `final-pr` status in `## Control State` is `in_progress` (or resolved from a prior attempt).
+  - SQL todo `lite:<work-id>:final-pr` exists and is `in_progress`.
+- If either is absent or still `pending`, STOP and report: "Stage 5 Boundary Gate was skipped. Re-run the paw-lite Stage 5 gate in the main session before PR creation." This is a hard blocker — do not override.
+- This admission check converts the paw-lite Stage 5 prose chokepoint into a runtime precondition that `paw-pr` enforces regardless of how it was invoked.
+
+## Workflow Profile Handling
+
+### Standard PAW Modes
+
+#### Full Mode
 - Reference all artifacts: Spec.md, SpecResearch.md, CodeResearch.md, ImplementationPlan.md, Docs.md
 - PRs strategy: Include links to intermediate PRs (Planning, Phase, Docs)
 - Local strategy: Describe work directly from commits
 
-### Minimal Mode
+#### Minimal Mode
 - Reference only core artifacts: CodeResearch.md, ImplementationPlan.md
 - Check Spec.md and Docs.md existence before including
 - Local strategy only (enforced)
 
-### Custom Mode
+#### Custom Mode
 - Dynamically check which artifacts exist
 - Adapt references based on Custom Workflow Instructions
+
+### PAW Lite
+- Reference core lite artifacts: `Plan.md`, optional `WorkShaping.md`, and `reviews/FINAL-REVIEW.md` when final review ran
+- Describe implementation directly from commits plus the durable `Plan.md` work items
+- Do not require `ImplementationPlan.md`, phase PRs, phase candidates, or planning-docs-review artifacts
+- `Review Strategy` should be `local`
 
 ## Artifact Lifecycle Handling
 

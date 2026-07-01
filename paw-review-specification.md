@@ -48,6 +48,18 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 
 ---
 
+## Review Control State Model
+
+Current PAW Review runs embed a compact `## Control State` section inside `ReviewContext.md`.
+
+- The section records the review-job identifier, configured review mode, required stage items, and terminal external-review outcomes.
+- `ReviewComments.md` continues to hold full comment history, while the embedded control state tracks whether the job is still in understanding, evaluation, output, or a terminal posting/manual-posting state.
+- Resume, status, critique, and posting paths re-enter the same review job by reconciling this embedded state before advancing.
+
+If the control-state section is absent, PAW Review stays usable in **legacy best-effort mode** and explicitly reports that the control-state protections are inactive.
+
+---
+
 ## Cross-Repository Review
 
 PAW Review supports reviewing coordinated changes across multiple repositories—common in monorepo setups, microservice architectures, or multi-package releases.
@@ -155,6 +167,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 ## Workflow Stages
 
+Each stage reads `ReviewContext.md` before acting. When control state is present, PAW Review advances only after the prior required items are resolved and records terminal external-review outcomes back into the same artifact.
+
 ### Stage R1 — Understanding
 
 **Goal:** Comprehensively understand what changed and why
@@ -167,7 +181,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 * Repository context
 
 **Outputs:**
-* `.paw/reviews/<identifier>/ReviewContext.md` – PR metadata, changed files, flags (authoritative parameter source)
+ * `.paw/reviews/<identifier>/ReviewContext.md` – PR metadata, changed files, flags, and embedded review control state (authoritative parameter source)
 * `.paw/reviews/<identifier>/CodeResearch.md` – Pre-change baseline understanding
 * `.paw/reviews/<identifier>/DerivedSpec.md` – Reverse-engineered intent and acceptance criteria
 
@@ -179,6 +193,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
    - Document all changed files with additions/deletions
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
+   - Seed review-job state for stage progression, configured mode, and terminal external-review placeholders when control state is active
 
 2. **Research pre-change baseline**
    - Analyze codebase at base commit (pre-change state)
@@ -226,6 +241,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 * `.paw/reviews/<identifier>/REVIEW-{SPECIALIST}.md` – Per-specialist findings with cognitive strategy and evidence
 * `.paw/reviews/<identifier>/REVIEW-SYNTHESIS.md` – Confidence-weighted synthesis with specialist attribution and conflict resolution
 
+**Stage gate:** Evaluation begins only after the Understanding items recorded in `ReviewContext.md` are resolved. Single-model mode resolves the evaluation procedure through `ImpactAnalysis.md` + `GapAnalysis.md`; society-of-thought mode resolves it through `REVIEW-SYNTHESIS.md`.
+
 **Process (single-model):**
 
 1. **Analyze impact**
@@ -260,6 +277,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 1. **Construct review context** from ReviewContext.md configuration fields and pass PR diff + understanding artifacts to `paw-sot`
 2. **Specialist execution** — Specialists review independently (parallel) or engage in structured debate, each applying their cognitive strategy
 3. **Synthesis** — Confidence-weighted merge of specialist findings with conflict resolution and specialist attribution
+4. **Mode preservation** — The configured review mode stays authoritative; the workflow blocks instead of silently switching procedures
 
 **Human Workflow:**
 
@@ -284,6 +302,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
 * **GitHub pending review** (GitHub context only) – Draft review with filtered comments (only those marked ready after critique)
+
+**Stage gate:** Output begins only when the evaluation artifacts required by the configured review mode are resolved in `ReviewContext.md`.
 
 **Process:**
 
@@ -323,8 +343,9 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
    - Filter to only comments marked "Ready for GitHub posting"
    - Create pending review with filtered comments
    - Update ReviewComments.md with posted status and review IDs
+   - Persist the terminal external-review outcome back into `ReviewContext.md`
    - Skipped comments remain in artifact for reference but are NOT posted
-   - **Non-GitHub context**: Provides manual posting instructions instead
+   - **Non-GitHub context**: Provides manual posting instructions instead and records that manual posting guidance was provided
 
 **Human Workflow:**
 
@@ -368,6 +389,14 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 - Description (PR description or "Derived from commit messages")
 - Flags (CI failures present, breaking changes suspected)
 - Metadata (created timestamp, git commit SHA, reviewer)
+
+When control state is present, `ReviewContext.md` also stores:
+
+- Required review-stage items (`understanding` → `evaluation` → `output`)
+- The configured review mode and procedure-resolution markers
+- Terminal external-review state such as pending review creation or manual-posting guidance
+
+If the section is absent, PAW Review falls back to legacy best-effort mode and reports that status explicitly.
 
 **Purpose:** Single source of truth for all review parameters; read first by all downstream stages; updated when new information discovered.
 
@@ -590,7 +619,7 @@ Each comment shows its complete history:
 2. **Assessment** — Critic evaluation (Include/Modify/Skip recommendation)
 3. **Updated** — Refined version if modification was recommended
 4. **Final** — Ready for posting or skipped per critique
-5. **Posted** — GitHub pending review ID (after GitHub posting)
+5. **Posted** — Per-comment pending review/comment status in `ReviewComments.md` (after GitHub posting)
 
 **Key Sections:**
 - **Rationale** (local only, not posted): Evidence, Baseline Pattern, Impact, Best Practice
@@ -833,4 +862,3 @@ Each stage produces artifacts that should meet these quality standards:
 - **Post-review:** Can create implementation issues/PRs from Must/Should items using PAW implementation workflow
 - **Artifacts:** Review artifacts can inform future implementation planning
 - **Patterns:** Gap analysis categories can improve future Spec and Implementation Plan quality
-

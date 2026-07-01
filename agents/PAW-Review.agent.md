@@ -44,6 +44,18 @@ When the user requests society-of-thought review mode:
 - Pass any user-specified interaction mode, interactive setting, or model preferences
 - Do NOT select specialists yourself — let the SoT engine handle adaptive selection from the full set
 
+## Embedded Review Control State
+
+- If `ReviewContext.md` contains `## Control State`, treat that section as the durable source of truth for review-stage items and terminal external-review facts.
+- Keep any built-in TODOs aligned only as an execution mirror.
+- Before yield, delegation, or GitHub posting, reconcile the embedded state when present. If reconciliation cannot make the state `current`, STOP and report the blocker instead of delegating or posting. If the section is absent, continue in legacy best-effort mode and explicitly note that control-state protections are inactive.
+- Do not advance past review-stage items or terminal external-review facts that remain unresolved when control state is present.
+- When control state is present, a persistent SQL todo `reconcile:<work-id>` tracks reconciliation readiness per the control-state contract. Treat its presence in `<todo_status>` as a per-turn reminder to run the reconciliation-on-read preamble on any skill that reads `ReviewContext.md`.
+
+### Summarization and Checkpoint Protocol
+
+When summarizing or checkpointing, include verbatim the `## Control State` section from `ReviewContext.md`, current `reconcile:<work-id>` todo row, and any review-stage activity/gate transitions completed since the previous summary. Omitting these makes resume-from-summary unsafe.
+
 ## Skill-Based Execution
 
 Discover available review skills (`paw-review-*`) from the skills catalog, then execute each activity by delegating to a separate agent session. Each delegated agent:

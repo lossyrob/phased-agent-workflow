@@ -1,4 +1,4 @@
-import { resolve } from "path";
+import { resolve, sep } from "path";
 
 type Decision =
   | { action: "allow" }
@@ -13,7 +13,7 @@ export class ToolPolicy {
   constructor(private workspaceRoot: string, extraRoots: string[] = []) {
     this.workspaceRoot = resolve(workspaceRoot);
     this.allowedRoots = [...new Set([this.workspaceRoot, ...extraRoots.map((root) => resolve(root))])];
-    this.normalizedRoots = this.allowedRoots.map((root) => `${root}/`);
+    this.normalizedRoots = this.allowedRoots.map((root) => `${root}${sep}`);
   }
 
   private isInsideWorkspace(filePath: string): boolean {

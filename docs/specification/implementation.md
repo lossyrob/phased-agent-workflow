@@ -30,6 +30,16 @@ Execution mode is separate from review strategy:
 - **Artifact lifecycle** controls whether `.paw/work/` artifacts are committed and does not imply worktree cleanup
 - Older `WorkflowContext.md` files without `Execution Mode` are treated as `current-checkout`
 
+### Control State and Reconciliation
+
+Current workflows embed a compact `## Control State` section inside `WorkflowContext.md`.
+
+- The section records required activities, gate items, configured-procedure items, and lifecycle markers that must resolve before the workflow can advance.
+- Built-in TODOs mirror the active required items from this section for in-session execution, but the embedded artifact state remains the durable source of truth across resume and cross-runtime handoff.
+- `paw-transition`, `paw-status`, handoff/resume flows, and repository-mutation paths reconcile this state against artifacts, git, and PR reality before proceeding.
+
+If control state is absent, PAW falls back to **legacy best-effort mode**. Older workflows still run, but status and resume surfaces explicitly report that control-state protections are inactive.
+
 ### Pre-Specification: Work Shaping (Optional)
 
 **Skill:** `paw-work-shaping`
@@ -100,7 +110,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
-5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
+5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)** and resolves the configured planning-review procedure only when that exact mode runs
 6. Open Planning PR for review from the execution checkout established during initialization/reuse (PRs strategy)
 
 ### Stage 03 — Phased Implementation
@@ -125,8 +135,8 @@ Execute plan phases with automated verification, peer review, and quality gates.
 
 For each phase:
 
-1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
-2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
+1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse after transition has reconciled the current workflow state
+2. `paw-implement` runs automated checks (tests, linting, type checking, build), verifies the current phase's `Changes Required` deliverables actually exist, and resolves the phase's required control-state items before marking the phase complete
 3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before pushing/opening the Phase PR
 4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
 5. Human reviews PR and provides feedback
@@ -173,7 +183,7 @@ Automated review of the complete implementation against specification before Fin
 **Process:**
 
 1. `paw-final-review` reads configuration from WorkflowContext (mode, interactive, models)
-2. Executes review (single-model or multi-model based on config); for society-of-thought mode, delegates to `paw-sot`
+2. Executes the exact configured review mode (single-model, multi-model, or society-of-thought); for society-of-thought mode, delegates to `paw-sot`
 3. For multi-model: synthesizes findings across models
 4. Presents findings for resolution (interactive) or auto-applies (non-interactive)
 5. Proceeds to `paw-pr` when complete
@@ -181,11 +191,16 @@ Automated review of the complete implementation against specification before Fin
 **Configuration:**
 
 - `Final Agent Review`: `enabled` | `disabled` (default: enabled)
-- `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Final Review Mode`: `single-model` | `multi-model` | `society-of-thought` (default: multi-model)
 - `Final Review Interactive`: `true` | `false` | `smart` (default: smart)
 - `Final Review Models`: comma-separated model names (for multi-model)
+- `Final Review Specialists`: `all` | comma-separated names | `adaptive:<N>` (for society-of-thought)
+- `Final Review Interaction Mode`: `parallel` | `debate` (for society-of-thought)
+- `Final Review Specialist Models`: `none` | model pool | pinned pairs | mixed (for society-of-thought)
+- `Final Review Perspectives`: `none` | `auto` | comma-separated names (for society-of-thought)
+- `Final Review Perspective Cap`: positive integer (for society-of-thought)
 
-**Note:** VS Code only supports single-model mode due to environment limitations.
+**Note:** VS Code and Copilot CLI both preserve the configured review mode in `WorkflowContext.md`. If a configured procedure cannot run in the current context, the workflow blocks explicitly instead of silently downgrading to another mode.
 
 ### Stage 04 — Final PR
 
@@ -250,13 +265,13 @@ Reviews code changes, verifies current-phase deliverables from `ImplementationPl
 
 ### paw-final-review
 
-Reviews implementation against specification and `ImplementationPlan.md` deliverables after all phases complete. Missing planned deliverables are `should-fix` minimum. Supports multi-model parallel review (CLI) or single-model review (VS Code). For society-of-thought mode, delegates SoT orchestration to the `paw-sot` utility skill. Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
+Reviews implementation against specification and `ImplementationPlan.md` deliverables after all phases complete. Missing planned deliverables are `should-fix` minimum. Supports single-model, multi-model, or society-of-thought review; if the configured procedure cannot run, the workflow blocks instead of silently switching modes. For society-of-thought mode, delegates SoT orchestration to the `paw-sot` utility skill. Interactive mode presents findings for apply/skip/discuss; non-interactive mode auto-applies.
 
 **Focus:** Catch issues and missing planned deliverables before external PR review.
 
 ### paw-planning-docs-review
 
-Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md) as a holistic bundle after plan-review passes. Supports single-model, multi-model parallel review, or society-of-thought review via `paw-sot` engine (CLI). VS Code supports single-model only. Catches cross-artifact consistency issues before implementation begins.
+Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md) as a holistic bundle after plan-review passes. Supports single-model, multi-model parallel review, or society-of-thought review via `paw-sot`. As with final review, the configured procedure is preserved and unsupported combinations block explicitly instead of downgrading. Catches cross-artifact consistency issues before implementation begins.
 
 **Focus:** Cross-artifact consistency gate before implementation.
 
@@ -274,11 +289,21 @@ Reviews all planning artifacts (Spec.md, ImplementationPlan.md, CodeResearch.md)
 
 ### paw-status
 
-Diagnoses current workflow state, recommends next steps, explains PAW/onboarding, and posts status updates to Issues/PRs.
+Diagnoses current workflow state, recommends next steps, explains PAW/onboarding, and posts status updates to Issues/PRs. When control state is present it reports reconciled control-state status; otherwise it reports legacy best-effort mode explicitly.
 
 ### paw-pr
 
 Opens the **final PR** from the target branch to main and performs comprehensive pre-flight readiness checks to assess completeness.
+
+## Legacy Best-Effort Mode
+
+Workflows created before the control-state model, or artifacts edited in ways that remove the embedded `## Control State` section, still remain usable.
+
+- Agents fall back to artifact and git inference for progression
+- Status and resume paths say that control-state protections are inactive
+- Exact configured-procedure handling and gate reconciliation apply only when the embedded state is present
+
+New workflows should prefer the embedded control-state model so CLI and VS Code surfaces re-enter the same durable contract.
 
 ---
 

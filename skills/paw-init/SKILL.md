@@ -14,7 +14,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 - Generate Work Title from issue URL, branch name, or user description
 - Generate Work ID from Work Title (normalized, unique) unless `work_id` is provided explicitly
 - Create `.paw/work/<work-id>/` directory structure
-- Generate WorkflowContext.md with all configuration fields
+- Generate WorkflowContext.md with all configuration fields and a profile-appropriate control-state section
 - Create and checkout git branch (explicit or auto-derived)
 - Commit initial artifacts if lifecycle mode allows it
 - Open WorkflowContext.md for review
@@ -30,9 +30,10 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `repository_identity` | No | `none` | `<normalized-origin-slug>@<root-commit-sha>` |
 | `execution_binding` | No | `none` | `worktree:<work_id>:<target_branch>` |
 | `preset` | No | none | preset name (built-in or user-defined) |
-| `workflow_mode` | No | `full` | `full`, `minimal`, `custom` |
-| `review_strategy` | No | `prs` (`local` if minimal) | `prs`, `local` |
-| `review_policy` | No | `milestones` | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
+| `workflow_identity` | No | `paw` | `paw`, `paw-lite` |
+| `workflow_mode` | No | `full` (`custom` if paw-lite) | `full`, `minimal`, `custom` |
+| `review_strategy` | No | `prs` (`local` if minimal or paw-lite) | `prs`, `local` |
+| `review_policy` | No | `milestones` (`final-pr-only` if paw-lite) | `every-stage`, `milestones`, `planning-only`, `final-pr-only` |
 {{#vscode}}
 | `session_policy` | No | `per-stage` | `per-stage`, `continuous` |
 {{/vscode}}
@@ -41,7 +42,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 {{/cli}}
 | `artifact_lifecycle` | No | `commit-and-clean` | `commit-and-clean`, `commit-and-persist`, `never-commit` |
 | `issue_url` | No | none | URL |
-| `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom`) |
+| `custom_instructions` | Conditional | — | text (required if `workflow_mode` is `custom` unless `workflow_identity` is `paw-lite`) |
 | `work_description` | No | none | text |
 | `final_agent_review` | No | `enabled` | `enabled`, `disabled` |
 | `final_review_mode` | No | `multi-model` | `single-model`, `multi-model`, `society-of-thought` |
@@ -55,7 +56,7 @@ Bootstrap skill that initializes the PAW workflow directory structure. This runs
 | `implementation_model` | No | `none` | `none` (session default), or model name/intent (e.g., `gpt-5.4`, `claude-opus-4.6-1m`, `latest Claude Opus`) |
 | `plan_generation_mode` | No | `single-model` | `single-model`, `multi-model` |
 | `plan_generation_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
-| `planning_docs_review` | No | `enabled` (`disabled` if minimal) | `enabled`, `disabled` |
+| `planning_docs_review` | No | `enabled` (`disabled` if minimal or paw-lite; may be explicitly `enabled` for paw-lite) | `enabled`, `disabled` |
 | `planning_review_mode` | No | `multi-model` | `single-model`, `multi-model`, `society-of-thought` |
 | `planning_review_interactive` | No | `smart` | `true`, `false`, `smart` |
 | `planning_review_models` | No | `latest GPT, latest Gemini, latest Claude Opus` | comma-separated model names or intents |
@@ -76,6 +77,8 @@ When parameters are not provided:
 6. If user requests changes, update values and re-confirm
 
 Precedence (lowest → highest): table defaults → user-level defaults → preset → explicit overrides.
+
+When `workflow_identity` resolves to `paw-lite`, override defaults: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`. `planning_docs_review` defaults to `disabled` but may be explicitly set to `enabled`.
 
 Ask in this order and allow defaults where permitted.
 
@@ -135,6 +138,7 @@ When a preset is specified (explicitly or via default):
 - **Invalid YAML / circular extends / multiple defaults**: Report error, ask user to resolve
 - **Unknown fields in `config:`**: Warn but don't fail (forward compatibility)
 - **Empty preset / missing `~/.paw/presets/`**: Skip gracefully (no-op / no user presets)
+- **Unknown stage, review, or activity requested**: If the user or a downstream skill requests an activity (e.g., "run a planning review in paw-lite without `planning_docs_review` enabled", or "run spec review in paw-lite") that has no matching item in the resolved control-state profile, STOP and report the mismatch. Offer to re-initialize with a different identity/configuration or enable the relevant flag. Do not improvise a slot or silently map it to an unrelated activity — the absence of a profile item is the signal that the activity is unsupported for this identity/mode.
 
 ## Desired End States
 
@@ -154,6 +158,8 @@ When a preset is specified (explicitly or via default):
 ### Configuration Validation
 - If `workflow_mode` is `minimal`, `review_strategy` MUST be `local`
 - If `review_policy` is `planning-only` or `final-pr-only`, `review_strategy` MUST be `local`
+- `paw-lite` requires: `workflow_mode=custom`, `review_strategy=local`, `review_policy=final-pr-only`. `planning_docs_review` defaults to `disabled` for paw-lite but may be explicitly `enabled`.
+- `workflow_mode=custom` requires `custom_instructions` unless `workflow_identity=paw-lite`
 - If `final_review_mode` is `society-of-thought`, `final_agent_review` MUST be `enabled`
 - If `planning_review_mode` is `society-of-thought`, `planning_docs_review` MUST be `enabled`
 - Invalid combinations: STOP and report error
@@ -202,6 +208,7 @@ Created at `.paw/work/<work-id>/WorkflowContext.md` with all input parameters:
 
 Work Title: <generated_work_title>
 Work ID: <work_id or generated_work_id>
+Workflow Identity: <workflow_identity or "paw">
 Base Branch: <base_branch>
 Target Branch: <target_branch>
 Execution Mode: <execution_mode>
@@ -239,7 +246,63 @@ Remote: origin
 Artifact Lifecycle: <artifact_lifecycle>
 Artifact Paths: auto-derived
 Additional Inputs: none
+
+## Control State
+
+TODO Mirror: active-required-items
+Reconciliation: not_run
+
+### Required Workflow Items
+- `init` | `resolved` | `activity`
+- `spec` | `<pending|not_applicable>` | `activity`
+- `spec-review` | `<pending|not_applicable>` | `activity`
+- `code-research` | `pending` | `activity`
+- `planning` | `pending` | `activity`
+- `plan-review` | `pending` | `activity`
+- `planning-docs-review` | `<pending|not_applicable>` | `activity`
+- `final-review` | `<pending|not_applicable>` | `activity`
+- `final-pr` | `pending` | `activity`
+
+### Gate Items
+- `transition:after-spec-review` | `<pending|not_applicable>` | `transition`
+- `transition:after-plan-review` | `pending` | `transition`
+- `transition:after-planning-docs-review` | `<pending|not_applicable>` | `transition`
+- `transition:after-phase:<n>` | `pending` | `transition`
+- `transition:after-final-review` | `<pending|not_applicable>` | `transition`
+
+### Configured Procedure Items
+- `procedure:planning-review` | `<pending|not_applicable>` | `procedure`
+- `procedure:final-review` | `<pending|not_applicable>` | `procedure`
 ```
+
+- Resolve config-dependent control-state rows to concrete values before writing `WorkflowContext.md`:
+  - When `Workflow Identity` is `paw`, use the standard rows above:
+    - When planning materializes phases, insert `phase:<n>:<slug>` items before `final-review` (not appended after the template).
+    - Use `not_applicable` for `spec`, `spec-review`, and `transition:after-spec-review` when `Workflow Mode` is `minimal`; otherwise use `pending`.
+    - Use `pending` for `planning-docs-review`, `transition:after-planning-docs-review`, and `procedure:planning-review` when `Planning Docs Review` is `enabled`; otherwise use `not_applicable`.
+    - Use `pending` for `final-review`, `transition:after-final-review`, and `procedure:final-review` when `Final Agent Review` is `enabled`; otherwise use `not_applicable`.
+  - When `Workflow Identity` is `paw-lite`, replace the standard `## Control State` section above with the lite profile. Items: `init`→resolved, `planning`, `planning-docs-review` (`pending` if `Planning Docs Review: enabled`, else `not_applicable`), `implementation`, `final-review`, `final-pr`. Procedure: `procedure:planning-review` (`pending` if `Planning Docs Review: enabled`, else `not_applicable`) and `procedure:final-review` (`pending` if `Final Agent Review: enabled`, else `not_applicable`). No gates.
+
+```markdown
+## Control State
+
+TODO Mirror: active-required-items
+Reconciliation: not_run
+
+### Required Workflow Items
+- `init` | `resolved` | `activity`
+- `planning` | `pending` | `activity`
+- `planning-docs-review` | `<pending|not_applicable>` | `activity`
+- `implementation` | `pending` | `activity`
+- `final-review` | `<pending|not_applicable>` | `activity`
+- `final-pr` | `pending` | `activity`
+
+### Configured Procedure Items
+- `procedure:planning-review` | `<pending|not_applicable>` | `procedure`
+- `procedure:final-review` | `<pending|not_applicable>` | `procedure`
+```
+
+After writing `## Control State` (either profile), seed a per-session SQL todo `reconcile:<work-id>` with status `pending` (title: `Reconcile control state with live evidence`). Use `INSERT OR IGNORE` so re-running init is idempotent. This todo makes reconciliation visible in every turn's `<todo_status>` and is managed by the control-state contract's reconciliation-on-read preamble going forward.
 
 ### Execution Contract
 
@@ -292,13 +355,13 @@ Never create feature branch from current HEAD without explicit checkout of base.
 
 ## Completion Response
 
-Report initialization results to PAW agent including: work ID, workflow mode, target branch, and the recommended next step. Next step defaults by workflow mode (full → spec, minimal → code research, custom → per instructions) but is overridden by the preset's `initial_activity` if set (e.g., `work-shaping`).
+Report initialization results to PAW agent including: work ID, workflow identity, workflow mode, target branch, and the recommended next step. Next step defaults by profile (`paw-lite` → `plan`; otherwise full → `spec`, minimal → `code research`, custom → per instructions) but is overridden by the preset's `initial_activity` if set (e.g., `work-shaping`).
 
 ## Validation Checklist
 
 - [ ] Work ID is unique and valid format
 - [ ] Review strategy valid for workflow mode
-- [ ] WorkflowContext.md created with all fields
+- [ ] WorkflowContext.md created with all fields and the correct control-state profile
 - [ ] Git branch created and checked out
 - [ ] Artifacts committed (if lifecycle is `commit-and-clean` or `commit-and-persist`)
 - [ ] WorkflowContext.md opened for review

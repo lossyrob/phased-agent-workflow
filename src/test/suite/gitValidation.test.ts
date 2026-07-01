@@ -29,6 +29,10 @@ async function createTempRepo(): Promise<string> {
   return repoDir;
 }
 
+async function createDirectoryLink(targetPath: string, linkPath: string): Promise<void> {
+  await symlink(targetPath, linkPath, process.platform === 'win32' ? 'junction' : 'dir');
+}
+
 function gitOutput(repoDir: string, args: string[]): string {
   return execFileSync('git', args, { cwd: repoDir, encoding: 'utf8' }).trim();
 }
@@ -117,7 +121,9 @@ function buildReuseOptions(
   };
 }
 
-suite('Git Validation Helpers', () => {
+suite('Git Validation Helpers', function () {
+  this.timeout(30_000);
+
   test('parseWorktreeListPorcelain parses branches and detached entries', () => {
     const parsed = parseWorktreeListPorcelain([
       'worktree /tmp/repo',
@@ -222,7 +228,13 @@ suite('Git Validation Helpers', () => {
       });
 
       const worktrees = await listGitWorktrees(repoDir);
-      const created = worktrees.find((worktree) => worktree.path === createdPath);
+      const canonicalCreatedPath = await realpath(createdPath);
+      const created = (await Promise.all(
+        worktrees.map(async (worktree) => ({
+          worktree,
+          canonicalPath: await realpath(worktree.path),
+        }))
+      )).find((entry) => entry.canonicalPath === canonicalCreatedPath)?.worktree;
 
       assert.ok(created, 'Expected created worktree to be registered');
       assert.strictEqual(created?.detached, true);
@@ -235,7 +247,7 @@ suite('Git Validation Helpers', () => {
   test('createWorktree resolves relative paths from the repository root', async () => {
     const repoDir = await createTempRepo();
     const cwdDir = await mkdtemp(join(tmpdir(), 'paw-git-validation-cwd-'));
-    const relativePath = '../repo-feature';
+    const relativePath = `../${basename(repoDir)}-relative-feature`;
     const expectedPath = resolve(repoDir, relativePath);
     const originalCwd = process.cwd();
 
@@ -480,7 +492,7 @@ suite('Git Validation Helpers', () => {
         targetBranch,
       });
       const executionContract = await createExecutionContract(repoDir, worktreeDir, targetBranch);
-      await symlink(worktreeDir, linkPath);
+      await createDirectoryLink(worktreeDir, linkPath);
 
       await assert.rejects(
         () => validateReusableWorktree(
@@ -562,7 +574,7 @@ suite('Git Validation Helpers', () => {
     const realWorktreePath = join(dirname(repoDir), `${basename(repoDir)}-feature`);
 
     try {
-      await symlink(dirname(repoDir), linkedParent);
+      await createDirectoryLink(dirname(repoDir), linkedParent);
       const createdPath = await createWorktree({
         repositoryPath: repoDir,
         worktreePath: linkedWorktreePath,

@@ -51,9 +51,9 @@ Reconciliation: current
 - `planning` | `resolved` | `activity`
 - `planning-docs-review` | `resolved` | `activity`
 - `implementation` | `resolved` | `activity`
-- `final-review` | `pending` | `activity`
+- `final-review` | `resolved` | `activity`
 - `final-pr` | `pending` | `activity`
 
 ### Configured Procedure Items
 - `procedure:planning-review` | `resolved` | `procedure`
-- `procedure:final-review` | `pending` | `procedure`
+- `procedure:final-review` | `resolved` | `procedure`

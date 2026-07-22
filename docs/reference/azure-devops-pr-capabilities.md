@@ -1,6 +1,6 @@
-# Azure DevOps Pull Request Capability Contract
+# Azure DevOps Pull Request Capability Evidence and Contract
 
-This document records the Azure DevOps behavior that was verified for PAW Review integration work in issues #314, #315, and #316.
+This document records verified Azure DevOps behavior and explicit evidence gaps for PAW Review integration work in issues #314, #315, and #316. It is an implementation input, not a substitute for re-verifying the production credential, organization configuration, or preview API shape.
 
 **Observed:** 2026-07-22
 
@@ -34,12 +34,61 @@ HTTP success alone is not sufficient evidence. A capability is `verified` only w
 
 Concrete user, tenant, project, repository, and identity IDs were used only in memory or local cleanup ledgers. They are intentionally omitted here.
 
+### Scope of generalization
+
+- Verified platform: Azure DevOps Services (`dev.azure.com`), not Azure DevOps Server.
+- Verified identity: one interactive, over-privileged Microsoft Entra user with an existing Azure CLI login.
+- Verified surface: direct REST and Azure DevOps CLI behavior in one organization and repository.
+- Not verified: service principal, managed identity, workload identity federation, PAT, lower-privilege principal, SDK, or MCP behavior.
+- Issues #314-#316 must re-establish authentication and permission behavior using their real runtime principal before relying on mutation rows.
+
+## Capability Evidence Ledger
+
+This ledger preserves the per-row provenance required for re-verification without publishing raw response bodies or identity values.
+
+| ID | Consumer | State | Observed | Oracle or shape fingerprint | Validity, trigger, and owner |
+|----|----------|-------|----------|-----------------------------|------------------------------|
+| AUTH-1 | #314-#316 | `verified` | 2026-07-22 | JSON connection data; non-anonymous identity; audience, tenant, and identity matched in memory | 30 days; re-run for credential/runtime change; owner: each consuming issue |
+| REPO-1 | #314 | `verified` | 2026-07-22 | Repository/project/default branch matched the approved immutable handle | 180 days; re-run on repository rename/move; owner: #314 |
+| REF-1 | #314-#315 | `verified` | 2026-07-22 | Ref create returned `success=true`, `updateStatus=succeeded` | 180 days; re-run on Git API change; owner: #315 |
+| REF-2 | #314-#315 | `verified` | 2026-07-22 | Duplicate ref create returned HTTP 200 plus `success=false`, `staleOldObjectId` | 180 days; re-run on Git API change; owner: #315 |
+| PERM-1 | #314-#316 | `endpoint-reachable` | 2026-07-22 | Repository ACL rows were inherited/`Not set`; successful operations proved access but not minimum grants | Per runtime principal; owner: each consuming issue |
+| PR-1 | #314 | `verified` | 2026-07-22 | HTTP 201; source/target refs, draft flag, and active state matched fixture | 180 days; owner: #314 |
+| DIFF-1 | #314-#315 | `verified` | 2026-07-22 | Exact fixture paths plus change types and `changeTrackingId`; identical-iteration negative control returned zero | 180 days; owner: #314 |
+| THREAD-1 | #315 | `verified` | 2026-07-22 | Two identical creates produced distinct thread IDs and two matching server threads | 180 days; owner: #315 |
+| THREAD-2 | #315 | `verified` | 2026-07-22 | Reply create/update/delete and `active -> fixed -> active` round-tripped | 180 days; owner: #315 |
+| THREAD-3 | #315 | `verified` | 2026-07-22 | Stale iteration-1 positional write returned HTTP 200 with no rejection signal | 90 days; re-run on iteration/thread API change; owner: #315 |
+| THREAD-4 | #315 | `verified` | 2026-07-22 | At iteration 3/base 1, moved/renamed/deleted targets were left-side-only (`rightLine=0`) | 90 days; re-run on tracking behavior change; owner: #315 |
+| VOTE-1 | #316 | `verified` | 2026-07-22 | Non-draft self-reviewer votes `-10,-5,5,10,0` persisted; invalid `999` returned 400 | 90 days; re-run on draft/policy/identity change; owner: #316 |
+| VOTE-2 | #316 | `verified` | 2026-07-22 | Draft non-zero votes returned HTTP 200 but read back as `0` | 90 days; owner: #316 |
+| STATUS-1 | #314-#315 | `verified` | 2026-07-22 | PR status POST/GET matched context, state, description, and iteration | 90 days; re-run on status-policy change; owner: #315 |
+| STATUS-2 | #315 | `verified` | 2026-07-22 | Status delete succeeded while active; abandoned delete returned 403 `GitPullRequestStatusNotEditableException` | 90 days; owner: #315 |
+| POLICY-1 | #314 | `verified` | 2026-07-22 | Requested 7.1-preview.1; shape `count,value[].{status,configuration.type,configuration.isBlocking}`; four config-specific rows in non-draft fixture | 30 days or policy change; owner: #314 |
+| BUILD-1 | #314 | `endpoint-reachable` | 2026-07-22 | Requested 7.1; shape `count,value[]`; zero source and merge-ref builds | 30 days or pipeline change; owner: #314 |
+| FAIL-1 | #314 | `verified` | 2026-07-22 | Missing repository returned 404 JSON `GitRepositoryNotFoundException` | 180 days; owner: #314 |
+| FAIL-2 | #314-#316 | `verified` | 2026-07-22 | Corrected resolved-repository request with `api-version=0.0` returned 404 HTML | 30 days; re-run on routing/version change; owner: each consuming issue |
+| FAIL-3 | #315 | `verified` | 2026-07-22 | `firstComparingIteration=0` returned 400 `ArgumentOutOfRangeException` | 180 days; owner: #315 |
+| AUTHZ-GAP | #314-#316 | `inferred` | 2026-07-22 | No second principal; no genuine controlled 403 or minimum-permission boundary | Re-run for every production principal; owner: each consuming issue |
+| THROTTLE-GAP | #314-#316 | `not-observed` | 2026-07-22 | No deliberate load test; no incidental 429 | Re-run only if safely observed; owner: each consuming issue |
+| TRANSPORT-GAP | #315 | `not-observed` | 2026-07-22 | Duplicate behavior observed; true transport loss/server partial commit not induced | Resolve in client design/tests; owner: #315 |
+| TERMINAL-1 | #314-#315 | `verified` | 2026-07-22 | Abandoned PR remained readable and accepted a new thread | 90 days; owner: #315 |
+
 ## Authentication Contract
 
 ### Verified paths
 
-1. `az account get-access-token --resource 499b84ac-1321-427f-aa17-267ca6975798` returned an Azure DevOps bearer token from the existing Azure CLI session.
-2. `az account get-access-token --scope 499b84ac-1321-427f-aa17-267ca6975798/.default` also returned a token with the expected Azure DevOps audience.
+1. The following acquisition forms returned an Azure DevOps bearer token from the existing Azure CLI session:
+
+   ```powershell
+   # Capture directly into memory. Do not print the response or token.
+   $tokenResponse = az account get-access-token `
+       --resource 499b84ac-1321-427f-aa17-267ca6975798 `
+       --output json | ConvertFrom-Json
+   $token = $tokenResponse.accessToken
+   ```
+
+   The equivalent `--scope 499b84ac-1321-427f-aa17-267ca6975798/.default` form also returned the expected audience.
+
 3. `GET /_apis/connectionData?api-version=7.1-preview.1` returned JSON and a non-anonymous identity.
 4. The token audience, tenant, and preferred username matched the active Azure CLI and Azure DevOps identities when compared in memory.
 5. `az repos pr show` read a PR non-interactively while `AZURE_DEVOPS_EXT_PAT` was unset.
@@ -51,6 +100,8 @@ Concrete user, tenant, project, repository, and identity IDs were used only in m
 - A 401 must be compared with token expiry before it is classified as a permission failure.
 - The resource ID is the documented Azure DevOps audience. The `.default` scope form should be retained as the forward-compatible acquisition path.
 - Do not log the token response, raw authorization headers, or decoded identity claims.
+- The capture snippet is safe only when its output remains assigned in-process. Consumers must retain the expiry check, 401-vs-expiry classification, and no-log rules with the snippet.
+- Service-principal, managed-identity, and workload-federation acquisition remain `not-observed`; production implementation must verify its real credential class.
 
 ## Permission Contract
 
@@ -58,17 +109,19 @@ The Git repository security namespace is `2e9eb7ed-3c0a-47d4-87c1-0ffdd275fd87`.
 
 The test identity's repository ACL entries were inherited and displayed as `Not set`, so the minimum permission boundary was not empirically isolated. Successful operations prove that the identity had effective access through inherited group membership, not that every listed permission is individually required.
 
-| Operation | Azure DevOps permission or scope | Evidence |
-|-----------|----------------------------------|----------|
-| Read repository, PR, commits, diffs, iterations, threads | `GenericRead` / `vso.code` | Behavior verified; minimum bit inferred |
-| Push source commits | `GenericContribute` and `CreateBranch` | Behavior verified; minimum combination inferred |
-| Create the coordination tag | `CreateTag` | Behavior verified |
-| Delete disposable branches and tags | `ForcePush` | Behavior verified; minimum bit inferred |
-| Create/update PRs and reviewer votes | `PullRequestContribute` / `vso.code_write` | Behavior verified; minimum bit inferred |
-| Read/write PR threads | `PullRequestContribute` and/or `vso.threads_full` | Behavior verified; exact minimum inferred |
-| Read/write PR status | `vso.code_status` or `vso.code_write` | Behavior verified; exact minimum inferred |
-| Read build associations | `ViewBuilds` plus repository read | Endpoint reachable; no build observed |
-| Read policy evaluations | Policy evaluation read access | Non-empty behavior verified on a non-draft PR |
+Azure DevOps security permissions and OAuth/PAT scopes are separate enforcement layers, not interchangeable alternatives. The verified Microsoft Entra token did not expose the legacy `vso.*` scope boundary. Scope values below come from endpoint documentation and remain `inferred/not exercised`.
+
+| Operation | Azure DevOps security permission (resource ACL) | OAuth/PAT scope reference (not exercised) | Evidence |
+|-----------|--------------------------------------------------|--------------------------------------------|----------|
+| Read repository, PR, commits, diffs, iterations, threads | `GenericRead` (minimum inferred) | `vso.code` | Behavior verified |
+| Push source commits | `GenericContribute` plus `CreateBranch` (minimum combination inferred) | `vso.code_write` | Behavior verified |
+| Create the coordination tag | `CreateTag` (minimum inferred) | `vso.code_write` | Behavior verified |
+| Delete disposable branches and tags | `ForcePush` (minimum inferred) | `vso.code_write` | Behavior verified |
+| Create/update PRs and reviewer votes | `PullRequestContribute` (minimum inferred) | `vso.code_write` | Behavior verified |
+| Read/write PR threads | `PullRequestContribute` (exact minimum inferred) | `vso.threads_full` or `vso.code_write`, per endpoint docs | Behavior verified |
+| Read/write PR status | Exact ACL permission not isolated | `vso.code_status` or `vso.code_write` | Behavior verified |
+| Read build associations | `ViewBuilds` plus repository read (minimum inferred) | `vso.build` / repository read scopes, per endpoint docs | Endpoint reachable; populated shape not observed |
+| Read policy evaluations | Exact ACL permission not isolated | Endpoint-specific read scope | Non-empty behavior verified for the test configuration |
 
 ### Permission failures
 
@@ -77,25 +130,35 @@ A genuine permission-denied contrast was not available with the single, over-pri
 - Minimum permissions remain `inferred`.
 - A 403 authorization boundary remains `not-observed`.
 - A 404 may mean absent or authorization-masked; the client has no reliable discriminator without an independently authorized existence check.
-- Issues #314-#316 must fail early and describe the missing capability rather than interpreting all 404 responses as absence.
+- For a repository-level 404, fail as ambiguous unless an independently authorized lookup proves absence.
+- For a deterministic child resource under an already verified repository handle, absence can be accepted only when the exact ID/ref came from the run ledger or a prior successful read.
+- Empty build, policy, or status collections also do not prove configuration absence when the production principal's read permission has not been independently established.
+
+!!! warning "Authorization boundary"
+
+    The read/write API shapes are verified. Permission minima, genuine denial behavior, and authorization-masked 404 handling are not. Do not copy a matrix row into a production grant without re-testing the real principal.
 
 ## Read Capability Matrix
 
+**Git base path:** `https://dev.azure.com/{organization}/{project}/_apis/git`
+
+Use the resolved `{repositoryId}` rather than the repository name after target validation.
+
 | Capability | Endpoint and version | State | Observed contract |
 |------------|----------------------|-------|-------------------|
-| Repository metadata | `GET .../repositories/{repository}` 7.1 | `verified` | Repository, project, default branch, and IDs were present and matched the approved target. |
-| PR metadata | `GET .../pullRequests/{id}` 7.1 | `verified` | Source/target refs and commits, draft/status state, reviewers, and `supportsIterations` were available. |
-| PR commits | `GET .../pullRequests/{id}/commits` 7.1 | `verified` | Three source commits were returned for the primary fixture. |
-| Current net diff | `GET .../diffs/commits` 7.1 | `verified` | The final source-to-target tree returned the current net changes. |
-| Iterations | `GET .../pullRequests/{id}/iterations` 7.1 | `verified` | Three iterations were returned after three pushes. |
-| Iteration changes | `GET .../iterations/{id}/changes` 7.1 | `verified` | Exact fixture paths, change types, and `changeTrackingId` values were returned. |
+| Repository metadata | `GET /repositories/{repositoryId}` 7.1 | `verified` | Repository, project, default branch, and IDs were present and matched the approved target. |
+| PR metadata | `GET /repositories/{repositoryId}/pullRequests/{pullRequestId}` 7.1 | `verified` | Source/target refs and commits, draft/status state, reviewers, and `supportsIterations` were available. |
+| PR commits | `GET /repositories/{repositoryId}/pullRequests/{pullRequestId}/commits` 7.1 | `verified` | Three source commits were returned for the primary fixture. |
+| Current net diff | `GET /repositories/{repositoryId}/diffs/commits` 7.1 | `verified` | The final source-to-target tree returned the current net changes. |
+| Iterations | `GET /repositories/{repositoryId}/pullRequests/{pullRequestId}/iterations` 7.1 | `verified` | Three iterations were returned after three pushes. |
+| Iteration changes | `GET /repositories/{repositoryId}/pullRequests/{pullRequestId}/iterations/{iterationId}/changes` 7.1 | `verified` | Exact fixture paths, change types, and `changeTrackingId` values were returned. |
 | Identical-iteration negative control | Same endpoint with `compareTo` equal to the iteration | `verified` | Returned zero changes. |
-| PR threads | `GET .../threads` 7.1 | `verified` | Summary, inline, reply, status, and deletion state were returned. |
-| Iteration-relative thread positions | `GET .../threads?$iteration=N&$baseIteration=M` 7.1 | `verified` | Current position depends on the requested iteration pair. |
+| PR threads | `GET /repositories/{repositoryId}/pullRequests/{pullRequestId}/threads` 7.1 | `verified` | Summary, inline, reply, status, and deletion state were returned. |
+| Iteration-relative thread positions | Same endpoint with `$iteration` and `$baseIteration` | `verified` | Current position depends on the requested iteration pair. |
 | Reviewers and votes | PR metadata and reviewer endpoints 7.1 | `verified` | Reviewer presence and persisted vote were readable. |
 | PR statuses | `GET .../statuses` 7.1 | `verified` | A posted status was returned by context and iteration. |
-| Policy evaluations | `GET .../policy/evaluations` 7.1-preview.1 | `verified` | A non-draft PR produced four policy evaluations in the test repository. |
-| Build associations | `GET .../build/builds` 7.1 | `endpoint-reachable` | Source and merge-ref queries returned the documented envelope with zero builds. |
+| Policy evaluations | `GET /_apis/policy/evaluations` 7.1-preview.1 | `verified` | Endpoint returned a non-empty, configuration-specific snapshot on a non-draft PR; see POLICY-1. |
+| Build associations | `GET /_apis/build/builds` 7.1 | `endpoint-reachable` | Source and merge-ref queries returned `count,value[]` with zero builds; populated build shape remains `not-observed`. |
 
 ### Diff and iteration semantics
 
@@ -124,26 +187,32 @@ Consequences for #314 and #315:
 
 ## Mutation Capability Matrix
 
+!!! danger "Fail-closed target guard required"
+
+    These writes were authorized only for `msdata/Database Systems/devtools-test-repo`. Resolve the canonical organization, project, repository ID, and PR ID once; assemble every mutation URL from that immutable handle; and abort before the request if the reconstructed target differs.
+
 | Capability | Endpoint and version | State | Observed contract |
 |------------|----------------------|-------|-------------------|
-| Create PR | `POST .../pullRequests` 7.1 | `verified` | Returned HTTP 201 with matching source/target refs and draft state. |
-| Update/abandon PR | `PATCH .../pullRequests/{id}` 7.1 | `verified` | Active/abandoned transitions were accepted. |
-| Create summary thread | `POST .../threads` 7.1 | `verified` | Returned a thread and initial comment immediately; there is no pending-review bundle. |
-| Create inline thread | `POST .../threads` 7.1 | `verified` | Required file/line context, `changeTrackingId`, and a valid iteration context. |
+| Create PR | `POST /repositories/{repositoryId}/pullRequests` 7.1 | `verified` | Returned HTTP 201 with matching source/target refs and draft state. |
+| Update/abandon PR | `PATCH /repositories/{repositoryId}/pullRequests/{pullRequestId}` 7.1 | `verified` | Active/abandoned transitions were accepted. |
+| Create summary thread | `POST /repositories/{repositoryId}/pullRequests/{pullRequestId}/threads` 7.1 | `verified` | Returned a thread and initial comment immediately; there is no pending-review bundle. |
+| Create inline thread | Same endpoint with file/iteration context | `verified` | Required file/line context, `changeTrackingId`, and a valid iteration context. |
 | Reply | `POST .../threads/{threadId}/comments` 7.1 | `verified` | Reply creation succeeded. |
-| Update comment | `PATCH .../comments/{commentId}` 7.1 | `verified` | Updated content was returned. |
-| Delete comment | `DELETE .../comments/{commentId}` 7.1 | `verified` | Returned HTTP 200 and soft-deleted the comment. Initial comments were also deleted during cleanup. |
+| Update comment | `PATCH .../threads/{threadId}/comments/{commentId}` 7.1 | `verified` | Updated content was returned. |
+| Delete comment | `DELETE .../threads/{threadId}/comments/{commentId}` 7.1 | `verified` | Returned HTTP 200 and soft-deleted the comment. Initial comments were also deleted during cleanup. |
 | Update thread status | `PATCH .../threads/{threadId}` 7.1 | `verified` | `active -> fixed -> active` round-tripped. |
-| Post PR status | `POST .../statuses` 7.1 | `verified` | Status context, state, iteration, and description persisted. |
+| Post PR status | `POST .../pullRequests/{pullRequestId}/statuses` 7.1 | `verified` | PR status context, state, iteration, and description persisted. |
 | Delete PR status while active | `DELETE .../statuses/{statusId}` 7.1 | `verified` | Cleanup succeeded after temporarily reactivating the disposable PR. |
-| Delete PR status while abandoned | Same endpoint | `unsupported` for that state | Returned 403 `GitPullRequestStatusNotEditableException`. Delete statuses before abandonment. |
+| Delete PR status while abandoned | Same endpoint | `unsupported` | For the abandoned state, returned 403 `GitPullRequestStatusNotEditableException`. Delete PR statuses before abandonment. |
 | Write thread after abandonment | `POST .../threads` 7.1 | `verified` | Azure DevOps accepted a new thread on an abandoned PR. Clients must enforce their own active-state precondition. |
-| Reviewer vote | `PUT .../reviewers/{selfId}` 7.1 | `verified` on non-draft PR | Votes `-10`, `-5`, `5`, `10`, and `0` persisted and read back. |
-| Invalid reviewer vote | Same endpoint with `999` | `verified` failure | Returned 400 `InvalidEnumArgumentException`. |
+| Reviewer vote | `PUT .../reviewers/{selfId}` 7.1 | `verified` | On a non-draft PR, votes `-10`, `-5`, `5`, `10`, and `0` persisted and read back. |
+| Invalid reviewer vote | Same endpoint with `999` | `verified` | Returned 400 `InvalidEnumArgumentException`. |
 
 ### Draft vote constraint
 
-On a draft PR, vote requests returned HTTP 200 but the requested non-zero values did not persist. On a non-draft PR, all documented vote values round-tripped.
+The caller created each fixture PR, added itself as the reviewer through the vote endpoint, and updated its own reviewer slot. Distinct-reviewer behavior remains `inferred`.
+
+On a draft PR, vote requests returned HTTP 200 but each requested non-zero value read back as `0`. On a non-draft PR, all documented vote values round-tripped.
 
 Issue #316 must:
 
@@ -177,25 +246,25 @@ True transport-loss and server-side partial-commit behavior were not safely indu
 
 ## Status, Policy, and Build Contract
 
-The non-draft vote fixture produced four policy evaluations:
+The non-draft vote fixture produced the following point-in-time policy snapshot:
 
 | Policy type | Observed state | Blocking |
 |-------------|----------------|----------|
 | Comment requirements | approved | no |
 | Work item linking | queued | no |
-| Status | queued | yes |
+| PR Status policy | queued | yes |
 | Minimum number of reviewers | queued | yes |
 
-This is repository configuration, not a platform guarantee. #314 must distinguish:
+This snapshot was read immediately after fixture operations; no settle-window conclusion was claimed. It is repository configuration, not a platform guarantee. #314 must distinguish:
 
 - no policy configured (`endpoint-reachable`);
 - policy present but queued/running;
 - policy approved/rejected;
 - policy blocked by missing status/reviewer/work-item data.
 
-No build was associated with either the source branch or PR merge ref during the observation window. The build list API is reachable, but build-shape behavior remains `not-observed` in this repository.
+No pipeline build was associated with either the source branch or PR merge ref during the point-in-time observation. The Build API returned its envelope, but the populated build shape remains `not-observed`; zero rows could reflect configuration, filtering, timing, or the production principal's authorization.
 
-PR status read/write is separately `verified`. A configured status policy does not mean an arbitrary status context satisfies it.
+PR status API read/write is separately `verified`. A configured PR Status policy does not mean an arbitrary status context/genre satisfies it, and neither should be confused with pipeline build status.
 
 ## Failure Contract
 
@@ -203,15 +272,24 @@ PR status read/write is separately `verified`. A configured status policy does n
 |----------|-------------|----------------------|----------------|
 | Missing repository | 404 | JSON `GitRepositoryNotFoundException` | `verified` |
 | Authorization-masked repository | expected 404 | No reliable client-visible discriminator | `inferred` |
-| Unsupported `api-version=0.0` | 404 | HTML, not JSON | `verified` |
+| Unsupported `api-version=0.0` on a resolved repository ID | 404 | HTML, not JSON | `verified` |
 | Invalid inline `firstComparingIteration=0` | 400 | `ArgumentOutOfRangeException` | `verified` |
 | Invalid vote `999` | 400 | `InvalidEnumArgumentException` | `verified` |
 | Stale ref create | 200 | Per-item `success=false`, `staleOldObjectId` | `verified` |
-| Delete status after PR abandonment | 403 | `GitPullRequestStatusNotEditableException` | `verified` state failure, not authorization proof |
+| Delete status after PR abandonment | 403 | `GitPullRequestStatusNotEditableException` | `verified` |
 | Genuine permission denial | not observed | Single identity could not produce a controlled contrast | `inferred` |
 | 409/412 conditional conflict | not observed | No safe endpoint-specific fixture | `not-observed` |
 | 429 throttling | not observed | Deliberate load testing was prohibited | `not-observed` |
 | Expired token/non-JSON sign-in response | not observed | Token was refreshed before expiry | `not-observed` |
+
+The initial broad probe contained an invalid PowerShell interpolation for the unsupported-version URL and accidentally requested a repository named `-version=0.0`, producing the same JSON not-found shape as FAIL-1. That row was invalidated. FAIL-2 records the corrected request against the already resolved repository ID.
+
+For 404 handling:
+
+1. First verify the canonical organization/project/repository handle through a successful read.
+2. Treat repository-level 404 as ambiguous unless an independently authorized lookup proves absence.
+3. Accept a child resource as absent only when its exact ID/ref came from a trusted ledger or prior successful response.
+4. Never create or mutate a replacement resource solely because a 404 was returned.
 
 Clients must inspect:
 
@@ -223,13 +301,13 @@ Clients must inspect:
 
 ## Cleanup Contract and Test Record
 
-Disposable branches and the coordination tag were deleted. Votes were reset to `0`. Custom marker comments were deleted. The three PR records remain abandoned because Azure DevOps PRs are auditable records rather than deletable disposable objects.
+Disposable branches and the coordination tag were deleted. Vote cleanup is defined by the final server read, not by the reset request alone. Custom marker comments were deleted. The three PR records remain abandoned because Azure DevOps PRs are auditable records rather than deletable disposable objects.
 
-| PR | Purpose | Final state |
-|----|---------|-------------|
-| 2211554 | Initial thread API and invalid iteration-context diagnosis | abandoned; branch deleted; marker comments deleted; vote `0` |
-| 2211563 | Primary three-iteration thread/status probe | abandoned; branch deleted; marker comments and PR status deleted; vote `0` |
-| 2211583 | Non-draft reviewer vote probe | abandoned; branch deleted; vote `0` |
+| Fixture | Purpose | Final state |
+|---------|---------|-------------|
+| A | Initial thread API and invalid iteration-context diagnosis | abandoned; branch deleted; marker comments deleted; vote read back as `0` |
+| B | Primary three-iteration thread/status probe | abandoned; branch deleted; marker comments and PR status deleted; vote read back as `0` |
+| C | Non-draft reviewer vote probe | abandoned; branch deleted; vote read back as `0` |
 
 Final verification found:
 
@@ -242,6 +320,10 @@ Final verification found:
 
 Two earlier pre-PR attempts created and deleted only the coordination tag before failing closed. They created no source branch or pull request.
 
+The primary fixture's redundant reset attempt after abandonment failed, but the server already read `0`. The dedicated non-draft fixture confirmed a successful reset request followed by a `0` read-back. #316 must use the read-back as the cleanup oracle.
+
+Abandoned PR records and soft-deleted comments remain subject to Azure DevOps retention. Replays must use fixed non-sensitive markers and a recognizable title prefix so administrators can identify historical fixtures without exposing code or credentials.
+
 Cleanup order matters:
 
 1. Reset vote.
@@ -251,25 +333,27 @@ Cleanup order matters:
 5. Delete source refs.
 6. Verify absence/state through independent list and object reads.
 
+Recovery case: if a PR status remains after abandonment, restore the disposable source ref, reactivate the PR, delete the status, re-abandon the PR, and delete the ref again. This recovery path was verified.
+
 ## Replay Checklist
 
 Use this checklist for re-verification. It is intentionally credential-free and is not a production integration script.
 
-1. Confirm the Azure CLI session, expected tenant/identity, token audience, and remaining lifetime.
-2. Resolve the project and repository once; build every mutation URL from that immutable handle.
-3. Acquire an atomic coordination ref with `oldObjectId = 000...000`; stop if it already exists.
-4. Create a uniquely named source branch and a non-draft PR.
-5. Add deterministic files for edit, move, rename, and delete behavior.
-6. Push at least three iterations and assert exact paths/change types for each iteration.
-7. Create fixed-marker summary and inline threads; exercise reply, update, delete, and status transitions.
-8. Re-list threads with explicit `$iteration` and `$baseIteration`.
-9. Repeat one create request to prove duplicate behavior.
-10. Attempt one stale positional write and confirm whether it is rejected or silently accepted.
-11. Exercise documented vote values on the non-draft PR; read after every write; reset to `0`.
-12. Post/read/delete a PR status before abandonment.
-13. Read policy and build data; label empty envelopes as reachable, not verified.
-14. Abandon the PR and confirm whether terminal-state writes remain possible.
-15. Delete comments, refs, and the coordination tag; verify no live marker content remains.
+1. **AUTH-1:** Confirm the Azure CLI session, expected tenant/identity, token audience, remaining lifetime, and no-log capture behavior.
+2. **REPO-1:** Resolve the canonical organization/project/repository ID once. Reconstruct and compare the approved target before every write; fail closed on mismatch.
+3. **REF-1/REF-2:** Acquire `refs/tags/paw-capability-probe-lease` with `oldObjectId = 000...000`; stop if it already exists.
+4. **PR-1:** Create `refs/heads/paw-capability-probe/{run-id}` and a non-draft PR with fixed non-sensitive markers.
+5. **DIFF-1:** Add `paw-capability-probe-move.txt`, `paw-capability-probe-rename-old.txt`, `paw-capability-probe-delete.txt`, and `paw-capability-probe-edit.txt`.
+6. **DIFF-1/THREAD-4:** Push at least three iterations covering edit, line move, rename, and delete. Record iteration IDs and each path's `changeTrackingId`.
+7. **THREAD-1/THREAD-2:** Create fixed-marker summary and inline threads; exercise reply, update, delete, and `active -> fixed -> active`.
+8. **THREAD-4:** Re-list threads with explicit `$iteration=3` and `$baseIteration=1`; assert the expected left/right positions.
+9. **THREAD-1:** Repeat one create request and assert two distinct matching server threads.
+10. **THREAD-3:** Attempt one stale positional write using the recorded iteration/context and classify rejection vs silent acceptance.
+11. **VOTE-1/VOTE-2:** Exercise documented values on non-draft and draft PRs; read after every write; reset and confirm `0`.
+12. **STATUS-1/STATUS-2:** Post/read/delete a PR status before abandonment. If resuming after abandonment, use the verified reactivate/delete/re-abandon recovery.
+13. **POLICY-1/BUILD-1:** Read policy and Build API data once; record the actual query time; label empty envelopes as reachable, not verified.
+14. **TERMINAL-1:** Abandon the PR and confirm whether terminal-state writes remain possible.
+15. Delete comments, refs, and the coordination tag; verify no live marker content or probe status remains.
 16. Scan durable output for bearer/JWT/token patterns, concrete identities, and replacement characters before commit.
 
 ## Integration Boundaries
@@ -278,7 +362,7 @@ Use this checklist for re-verification. It is intentionally credential-free and 
 
 Implement:
 
-- Azure CLI/Entra preflight before expensive evaluation;
+- authentication preflight under the actual #314 runtime principal before expensive evaluation; the interactive Azure CLI acquisition path is not sufficient proof for a service principal or managed identity;
 - metadata, source/target commits, commit list, net diff, iterations, iteration changes, threads, reviewers, statuses, policies, and build queries;
 - explicit empty/configuration-dependent states;
 - iteration-relative thread reads;
@@ -300,17 +384,19 @@ Implement:
 - re-fetch-before-positional-write;
 - reply/update/delete/status support;
 - active-state precondition even though Azure DevOps accepts threads after abandonment;
-- status cleanup before abandonment.
+- PR status posting/cleanup ownership (read belongs to #314; mutation and cleanup belong to #315);
+- status cleanup before abandonment, including the verified recovery branch for interrupted runs;
+- a final status/head/iteration re-check immediately before each write to handle a PR abandoned or updated between preflight and mutation.
 
 Treat full transport-loss idempotency as a design requirement, not a verified platform guarantee.
 
-### Issue #316: optional vote and status
+### Issue #316: optional reviewer vote
 
 Implement:
 
 - independent explicit authorization for vote mutation;
 - non-draft preflight;
-- caller/reviewer identity verification;
+- caller/reviewer identity verification and self-add/read-back behavior;
 - documented vote enum validation;
 - read-after-write verification;
 - reset/recovery behavior;
@@ -328,15 +414,21 @@ Keep branch-policy gating, distinct-reviewer behavior, and least-privilege vote 
 | Identity/permission behavior | Re-run for every production principal class |
 | Thread anchoring behavior | Re-run before #315 and after iteration API changes |
 | Vote behavior | Re-run before #316 or after draft/policy changes |
+| Token audience/acquisition | Re-run if Azure DevOps deprecates the well-known resource ID or changes `.default` scope guidance |
 
 ## Sources
 
 - [Azure CLI access tokens](https://learn.microsoft.com/cli/azure/account#az-account-get-access-token)
 - [Azure DevOps authentication with Microsoft Entra tokens](https://learn.microsoft.com/azure/devops/integrate/get-started/authentication/entra-oauth)
-- [Azure DevOps Git REST API 7.1](https://learn.microsoft.com/rest/api/azure/devops/git/)
-- [Pull request threads](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-threads/)
-- [Pull request reviewers](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-reviewers/)
-- [Pull request statuses](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-statuses/)
-- [Pull request iterations](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-iterations/)
-- [Policy evaluations](https://learn.microsoft.com/rest/api/azure/devops/policy/evaluations/)
+- [Update Git refs](https://learn.microsoft.com/rest/api/azure/devops/git/refs/update-refs?view=azure-devops-rest-7.1)
+- [Create pull request thread](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1)
+- [List pull request threads](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-threads/list?view=azure-devops-rest-7.1)
+- [Delete pull request comment](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-thread-comments/delete?view=azure-devops-rest-7.1)
+- [Create reviewer or cast vote](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-reviewers/create-pull-request-reviewer?view=azure-devops-rest-7.1)
+- [Create pull request status](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-statuses/create?view=azure-devops-rest-7.1)
+- [Delete pull request status](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-statuses/delete?view=azure-devops-rest-7.1)
+- [Get pull request iteration changes](https://learn.microsoft.com/rest/api/azure/devops/git/pull-request-iteration-changes/get?view=azure-devops-rest-7.1)
+- [List policy evaluations](https://learn.microsoft.com/rest/api/azure/devops/policy/evaluations/list?view=azure-devops-rest-7.1)
+- [List builds](https://learn.microsoft.com/rest/api/azure/devops/build/builds/list?view=azure-devops-rest-7.1)
+- [Evaluate permissions](https://learn.microsoft.com/rest/api/azure/devops/security/permissions/has-permissions?view=azure-devops-rest-7.1)
 - [Security namespace reference](https://learn.microsoft.com/azure/devops/organizations/security/namespace-reference)

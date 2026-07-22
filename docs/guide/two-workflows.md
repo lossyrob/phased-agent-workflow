@@ -122,7 +122,7 @@ The Review Workflow helps you thoroughly review any pull request through three s
 
 1. **Understanding (R1)** — Analyze PR metadata, generate baseline research prompts, and derive specification from implementation
 2. **Evaluation (R2)** — Identify system-wide impacts, breaking changes, and gaps across correctness/safety/testing/quality with Must/Should/Could categorization
-3. **Feedback Generation (R3)** — Transform findings into structured review comments with rationale, create GitHub pending reviews
+3. **Feedback Generation (R3)** — Transform findings into structured review comments with rationale and apply the resolved output policy
 
 ### When to Use It
 
@@ -134,9 +134,9 @@ The Review Workflow helps you thoroughly review any pull request through three s
 ### Key Benefits
 
 - **Understand before critiquing** — Research pre-change system behavior first
-- **Comprehensive findings** — Generate all issues; human filters based on context
+- **Comprehensive findings** — Generate all in-scope findings; explicit user filters can narrow output
 - **Evidence-based feedback** — Every finding includes file:line references and rationale
-- **Full human control** — Nothing posted automatically; edit/delete comments before submitting
+- **Full human control** — GitHub stays pending by default; explicit submission is verified against the exact target, head, review, and event
 
 ## Choosing Between Workflows
 

@@ -258,7 +258,7 @@ status: draft
 ```
 
 **Key Requirements:**
-- Summary must be positive and constructive
+- Default to a positive, constructive summary; honor explicit tone direction that remains professional and evidence-based
 - Every comment has rationale with all four components
 - File:line references for all evidence
 - Code examples for non-trivial suggestions
@@ -379,8 +379,9 @@ Support tone adjustments while preserving evidence and IDs:
 - Final decisions rest with human reviewer
 
 **Comprehensive Coverage:**
-- ALL findings from evaluation artifacts must be transformed into comments
-- No cherry-picking or filtering
+- By default, transform all findings from evaluation artifacts into comments
+- Honor explicit scope or output filters recorded in ReviewContext.md
+- Do not infer filtering from contributor relationship or unstated context
 - Positive observations included in summary
 - Questions documented in dedicated section
 
@@ -395,12 +396,12 @@ Support tone adjustments while preserving evidence and IDs:
 
 Before completing initial pass, verify:
 
-- [ ] All evaluation findings transformed into comments
+- [ ] All in-scope evaluation findings transformed into comments
 - [ ] Related issues batched appropriately (not scattered)
 - [ ] Every comment has complete rationale (Evidence, Baseline Pattern, Impact, Best Practice)
 - [ ] Code examples included for non-trivial suggestions
 - [ ] Inline vs thread distinction applied correctly
-- [ ] Summary comment is positive and constructive
+- [ ] Summary follows the persisted professional tone direction; otherwise it is positive and constructive by default
 - [ ] ReviewComments.md complete with all sections and metadata
 - [ ] ReviewComments.md status is `draft`
 - [ ] No PAW artifact references in comment text

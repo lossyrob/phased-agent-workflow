@@ -14,7 +14,17 @@ Load the `paw-review-workflow` skill to understand orchestration, principles, an
 
 Identify the review target:
 - **GitHub PR**: Extract from URL or number provided by user
+- **Azure DevOps PR**: Extract organization, project, repository, and PR from the URL or supplied context
 - **Local branch**: Use current branch, prompt for base if needed
+
+Before analysis, resolve the output policy:
+- Explicit user direction overrides PAW-owned defaults.
+- GitHub defaults to creating a pending review; Azure DevOps and local contexts default to artifact-only output.
+- Review submission requires explicit authorization and a requested event.
+- Evidence/integrity invariants and unavailable platform capabilities are not overridable.
+- If instructions conflict, authorization is ambiguous, or the requested mutation is unavailable, report it before the Understanding stage.
+
+Pass the resolved platform, capability, output action, authorization, target, head, and event to `paw-review-understanding` so `ReviewContext.md` remains authoritative.
 
 ### Multi-Repository Detection Triggers
 
@@ -62,7 +72,7 @@ The Output stage uses an iterative feedback-critique pattern:
 1. **paw-review-feedback (Initial)**: Generate draft comments in ReviewComments.md
 2. **paw-review-critic**: Assess each comment, add Include/Modify/Skip recommendations
 3. **paw-review-feedback (Critique Response)**: Update comments based on critique, add `**Final**:` markers
-4. **paw-review-github**: Post only finalized comments to GitHub pending review
+4. **paw-review-github**: Post finalized comments to GitHub; leave pending by default or submit only under the verified authorization contract
 
 This flow ensures:
 - Critique insights improve posted comments before they reach GitHub
@@ -71,9 +81,12 @@ This flow ensures:
 
 The workflow skill documents the specific sequence including the Understanding stage's resume pattern for baseline research.
 
-## Human Control Point
+## Authorization Control Point
 
-Pending GitHub reviews are created but NEVER auto-submitted. Human reviewers make final decisions on all feedback.
+- Pending is the GitHub default when submission authorization is absent.
+- Explicit authorization for the exact target, head, pending review, and event is executable after live revalidation.
+- Repeated authorization for the same unsubmitted review confirms the action; a completed submission is terminal and is not replayed.
+- Azure DevOps and local reviews remain artifact-only when executable output capability is unavailable.
 
 ## Error Handling
 
@@ -84,5 +97,5 @@ If any stage fails, report the error to the user and seek guidance on how to pro
 - Evidence-based only—no fabrication or speculation
 - All claims require file:line citations
 - Load skills before executing workflow logic
-- Human authority over all posted feedback
+- Apply explicit user direction unless it conflicts with an integrity invariant or unavailable capability
 - **NEVER manually create artifacts that belong to activity skills.** Each artifact (ReviewContext.md, ResearchQuestions.md, CodeResearch.md, DerivedSpec.md, ImpactAnalysis.md, GapAnalysis.md, REVIEW-SYNTHESIS.md, CrossRepoAnalysis.md, ReviewComments.md) must be produced by its designated skill via subagent delegation. Manual population bypasses defaults, validation, and skill-specific logic.

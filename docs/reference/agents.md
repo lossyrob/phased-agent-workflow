@@ -142,7 +142,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 | `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo) |
 | `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
-| `paw-review-github` | Activity | Output | GitHub pending review |
+| `paw-review-github` | Activity | Output | GitHub pending or authorized submitted review |
 
 **Workflow Stages:**
 
@@ -160,11 +160,11 @@ This preserves conversation flow for interactive work while leveraging fresh con
    - **Initial feedback**: Generates draft comments with rationale
    - **Critique**: Adds assessment sections with Include/Modify/Skip recommendations
    - **Critique response**: Updates comments per recommendations, marks final status
-   - **GitHub posting**: Creates pending review with only approved comments
+   - **GitHub posting**: Creates a pending review by default; explicit submission requires exact target, head, review ID, and event verification
 
 **Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
 
-**Human Control:** Pending review is never auto-submitted. User reviews comments, edits/deletes as needed, consults ReviewComments.md for full context, then submits manually.
+**Human Control:** Explicit user direction overrides PAW defaults, but not integrity checks or unavailable capabilities. GitHub stays pending unless submission is explicitly authorized; Azure DevOps and local reviews remain artifact-only when executable output is unavailable.
 
 **Note:** The six PAW-R* agents (R1A, R1B, R2A, R2B, R3A, R3B) have been replaced by this unified skills-based workflow.
 

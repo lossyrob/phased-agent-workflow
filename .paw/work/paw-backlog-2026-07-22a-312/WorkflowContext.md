@@ -50,7 +50,7 @@ Reconciliation: current
 - `init` | `resolved` | `activity`
 - `planning` | `resolved` | `activity`
 - `planning-docs-review` | `resolved` | `activity`
-- `implementation` | `pending` | `activity`
+- `implementation` | `resolved` | `activity`
 - `final-review` | `pending` | `activity`
 - `final-pr` | `pending` | `activity`
 

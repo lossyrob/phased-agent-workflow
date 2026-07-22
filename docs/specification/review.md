@@ -9,10 +9,10 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 | Property | Description |
 |----------|-------------|
 | **Understanding before critique** | Analyze what changed and why before evaluating quality |
-| **Comprehensive feedback** | Generate all findings; human filters and adjusts based on context |
+| **Comprehensive feedback** | Generate all in-scope findings; explicit user scope can narrow output |
 | **Artifact-based** | Durable markdown documents trace reasoning from changes to comments |
 | **Rewindable** | Any stage can restart if new information changes understanding |
-| **Human-controlled** | Nothing posted automatically; reviewer selects what to post |
+| **Human-controlled** | GitHub reviews remain pending by default; explicit authorized submission is verified before execution |
 
 ## Skills-Based Architecture
 
@@ -39,7 +39,7 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
 | `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections |
-| `paw-review-github` | Activity | Output | GitHub pending review |
+| `paw-review-github` | Activity | Output | GitHub pending or authorized submitted review |
 
 **Skill Delivery:**
 
@@ -49,6 +49,18 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 **Subagent Skill Loading:**
 
 Every subagent MUST load its assigned skill FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load the `paw-review-<skill-name>` skill, then execute the activity."
+
+## Authorization Policy
+
+PAW Review classifies instructions before analysis:
+
+| Classification | Behavior |
+|----------------|----------|
+| **Invariant** | Use evidence, post only finalized comments, keep internal rationale local, and verify the exact target, live head, pending review ID, and event before submission |
+| **Default** | GitHub stays pending; Azure DevOps and local contexts stay artifact-only when executable capability is unavailable |
+| **User-configurable** | Explicit direction can submit a GitHub review with Approve, Request Changes, or Comment, select review mode/specialists, narrow feedback scope, override critique recommendations, and adjust tone |
+
+Explicit direction overrides a PAW default, not an integrity invariant or missing platform capability. PAW Review reports ambiguous instructions or unsupported requested mutations before the Understanding stage. A changed head invalidates authorization and requires fresh analysis. Successful submission is terminal and is not replayed.
 
 ## Cross-Repository Review
 
@@ -71,7 +83,7 @@ PAW Review supports coordinated review of multiple related PRs across repositori
 1. Creates separate artifact directories per repository (`PR-123-api/`, `PR-456-frontend/`)
 2. Analyzes each PR through full review stages
 3. Identifies cross-repository impacts and dependencies
-4. Creates pending reviews on each PR with cross-references
+4. Creates pending reviews on each PR by default, with per-PR authorization boundaries and cross-references
 
 **Artifact additions for multi-repo:**
 
@@ -185,7 +197,7 @@ See [Society-of-Thought Review](../guide/society-of-thought-review.md) for confi
 
 ### Stage R3 — Output
 
-**Goal:** Generate comprehensive review comments, critically assess them, and post to GitHub
+**Goal:** Generate comprehensive review comments, critically assess them, and apply the resolved output policy
 
 **Skills:** `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
 
@@ -197,14 +209,15 @@ See [Society-of-Thought Review](../guide/society-of-thought-review.md) for confi
 **Outputs:**
 
 - `ReviewComments.md` — Complete feedback with full comment history
-- **GitHub pending review** (GitHub context) — Draft review with filtered comments
+- **GitHub review** — Pending by default; submitted only under explicit verified authorization
+- **Azure DevOps/local output** — Finalized artifacts and manual instructions when executable output is unavailable
 
 **Process:**
 
 The Output stage uses an **iterative feedback-critique pattern**:
 
 1. **Initial Feedback Pass** (`paw-review-feedback`)
-    - Transform all findings into review comments with rationale
+    - Transform all in-scope findings into review comments with rationale
     - Incorporate cross-repo gaps for multi-repo reviews
     - Create ReviewComments.md with status: `draft`
     - Does NOT post to GitHub yet
@@ -223,9 +236,11 @@ The Output stage uses an **iterative feedback-critique pattern**:
 
 4. **GitHub Posting** (`paw-review-github`, GitHub only)
     - Filter to only comments marked "Ready for GitHub posting"
-    - Create pending review with filtered comments
+    - Create or reuse the pending review with filtered comments
+    - For explicit submission, revalidate repository, PR, live head, pending review ID, and event immediately before submitting
+    - Preserve the pending review and report any mismatch
     - Skipped comments remain in artifact but are NOT posted
-    - Non-GitHub: provides manual posting instructions
+    - Azure DevOps/local: provide manual posting instructions when executable capability is unavailable
 
 **Comment Evolution in ReviewComments.md:**
 
@@ -248,7 +263,9 @@ Authoritative parameter source for the review workflow.
 **Contents:**
 
 - PR Number/Branch
+- Review platform and output capability
 - Base and Head commits
+- Requested action, authorization, target, pending-review binding, event, and preflight result
 - Changed files summary
 - CI Status and flags
 - Description and metadata
@@ -330,11 +347,11 @@ Complete feedback with full comment history showing evolution from original to p
 1. **Invoke:** Run `/paw-review <PR-number-or-URL>` in Copilot Chat
 2. **Review:** All artifacts created in `.paw/reviews/<identifier>/`
 3. **Consult:** Check ReviewComments.md for full comment history (original → assessment → updated)
-4. **Edit:** Open GitHub pending review, edit/delete comments as needed
+4. **Edit:** Open a GitHub pending review and edit/delete comments as needed
 5. **Recover:** Manually add skipped comments if you disagree with critique
-6. **Submit:** Submit review manually (Approve/Comment/Request Changes)
+6. **Finish:** Leave pending, submit manually, or explicitly authorize PAW Review to submit after target/head/review/event verification
 
-**Key principle:** Comments are filtered by critique before posting. You retain full control: review the pending review, consult the complete history in ReviewComments.md, and manually add any skipped comments you want to include.
+**Key principle:** Pending is the default. Explicit authorization is actionable only for the verified review tuple; failed verification leaves the pending review unchanged.
 
 ## Next Steps
 

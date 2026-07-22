@@ -44,13 +44,14 @@ Understanding and baseline research stages document what exists—they do NOT:
 
 Evaluation and critique happen in designated later stages only.
 
-### 5. Human Control Principle
+### 5. Authorization and Human Control
 
-The review workflow assists human reviewers—it does NOT replace their judgment:
-- Pending reviews are NEVER auto-submitted
-- Final decisions on all comments rest with the human reviewer
-- Generated feedback is advisory, not prescriptive
-- Humans can modify, skip, or override any recommendation
+Apply this precedence:
+1. True invariants protect evidence, target identity, head identity, finalized-comment state, and platform integrity.
+2. Explicit user direction overrides PAW-owned defaults.
+3. Defaults apply when direction is absent or ambiguous.
+
+GitHub reviews are pending by default. Submit only with explicit authorization for the exact target, head, pending review, and event, followed by live revalidation. Generated feedback remains advisory; users can modify, skip, or override recommendations before posting.
 
 ### 6. Artifact Completeness
 
@@ -119,6 +120,23 @@ All review artifacts are stored in a consistent directory structure:
 Example: `acme-corp/my-api-service` → `my-api-service`
 
 **Multi-repo detection**: Use when multiple workspace folders are open in VS Code OR multiple PRs provided.
+
+### Authorization Preflight
+
+Run before the Understanding stage:
+
+1. Classify the review platform as `github`, `azure-devops`, or `local`.
+2. Determine output capability from the available tools and context. Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight.
+3. Resolve the requested output action:
+   - GitHub default: `pending`
+   - Azure DevOps/local default: `artifact-only`
+   - Explicit submission: `submit` with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`
+4. Resolve authorization as `explicit`, `absent`, or `ambiguous`, plus the platform-qualified target and current head.
+5. Detect conflicts across PAW-owned instructions. Explicit user direction overrides a default; it does not override an integrity invariant or create a missing capability.
+6. If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis. Continue artifact-only only after the requested action is resolved.
+7. Pass the resolved fields to `paw-review-understanding` for persistence in ReviewContext.md.
+
+Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
 
 ## Workflow Orchestration
 
@@ -233,29 +251,28 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
 
 4. **Run `paw-review-github` activity (GitHub PRs only)**
    - Input: ReviewComments.md with finalized comments
-   - Output: Pending review created on GitHub, ReviewComments.md updated with post status
+   - Output: Pending review created on GitHub and, when explicitly authorized, the exact pending review submitted after live revalidation
    - Only posts comments marked "Ready for GitHub posting"
    - Skipped comments remain in artifact but NOT posted
-   - **Skipped for non-GitHub contexts** (provides manual posting instructions instead)
+   - **Skipped for Azure DevOps/local contexts without executable output capability** (provides artifact/manual posting instructions instead)
 
 **Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
 
-**Human Control Point**: The pending review is created but NOT submitted. Human reviewer:
-- Reviews generated comments in GitHub UI
-- Can see full comment history in ReviewComments.md (original → assessment → updated)
-- Can manually add skipped comments if they disagree with critique
-- Modifies, adds, or removes comments as needed
-- Submits review when satisfied
+**Output policy**:
+- Without explicit submission authorization, stop with a pending review.
+- With explicit authorization, `paw-review-github` verifies repository, PR, live head, pending review ID, and event immediately before submission.
+- Any missing or mismatched value leaves the pending review untouched and requires fresh authorization; a head mismatch also requires fresh analysis.
+- Successful submission is terminal. Repeated authorization reports the completed state without another mutation.
 
 ## Terminal Behavior
 
 Upon workflow completion, report:
 - Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
-- **GitHub PRs**: Pending review ID and comment counts (e.g., "Pending review created: Review ID 12345678, 6 comments posted, 2 skipped per critique")
-- **Non-GitHub**: Manual posting instructions location
+- **GitHub PRs**: Pending or submitted review ID, event when submitted, and comment counts
+- **Azure DevOps/local**: Capability/preflight result and manual posting instructions location
 - **Multi-repo reviews**: Cross-repo findings summary (interface contracts analyzed, mismatches found, deployment order)
 - Comment evolution summary: original comments generated, modified per critique, skipped per critique
-- Next steps for the human reviewer (review comments in GitHub UI, edit as needed, submit when ready)
+- Next steps only when the review remains pending or artifact-only
 
 ## Cross-Repository Support
 

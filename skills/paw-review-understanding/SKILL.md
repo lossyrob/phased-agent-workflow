@@ -11,7 +11,7 @@ Analyze pull request changes to create comprehensive understanding artifacts. Th
 
 ## Responsibilities
 
-- Gather PR metadata (GitHub API or git diff) and document changed files
+- Gather review metadata from available platform tools or git and document changed files
 - Generate research prompt for baseline codebase analysis
 - Derive specification from PR description, code analysis, and baseline understanding
 - Create ReviewContext.md as authoritative parameter source
@@ -44,14 +44,20 @@ Execute Step 4 only: Derive specification from baseline research.
 
 Determine context type before proceeding:
 
-**GitHub Context**: PR URL or number provided
+**GitHub Context**: GitHub PR URL or number provided
 - Use GitHub MCP tools for metadata retrieval
 - Extract commits, files, description from API
 
-**Non-GitHub Context**: No PR reference
+**Azure DevOps Context**: Azure DevOps PR URL or coordinates provided
+- Use supplied metadata or available platform tools
+- If executable review output is unavailable, retain artifact-only capability; do not probe APIs or permissions to manufacture capability
+
+**Local Context**: No hosted PR reference
 - Verify current branch is checked out
 - Request base branch name from user
 - Use git commands for metadata
+
+Before this activity begins, the orchestrator must resolve authorization preflight. If the preflight is blocked or required fields are missing, report the conflict before creating review artifacts.
 
 ## Multi-Repository Mode
 
@@ -87,11 +93,12 @@ related_prs:
 
 2. **Fetch PR Metadata**:
    - **GitHub**: Use GitHub tools to retrieve PR details (number, title, author, state, description, labels, reviewers, CI status, changed files)
-   - **Non-GitHub**: Use git to determine commits and changed files between base and head
+   - **Azure DevOps**: Use supplied metadata or available platform tools; use git for commit and diff data when hosted metadata capability is unavailable
+   - **Local**: Use git to determine commits and changed files between base and head
 
 3. **Resolve Base Commit**:
    - **GitHub**: Use `base.sha` from PR metadata (GitHub returns the merge-base)
-   - **Non-GitHub**: Run `git merge-base <head-branch> origin/<base-branch>` to find common ancestor
+   - **Azure DevOps/Local**: Run `git merge-base <head-branch> origin/<base-branch>` when platform metadata does not provide the merge-base
    - **CRITICAL**: The base commit must be the merge-base (common ancestor), NOT the current tip of the base branch. Using the tip causes files added to main after branching to appear as "deletions."
    - Record in ReviewContext.md: `Base Commit: <sha>` and `Base Commit Source: github-api | merge-base`
 
@@ -185,6 +192,8 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - Flags section identifies applicable conditions
 - Base and head commit SHAs recorded
 - Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
+- Authorization fields present with `Preflight Status: passed`
+- Explicit submission has an allowed event and target/head authorization; unavailable explicit mutations are blocked before artifact creation
 
 ### ResearchQuestions.md
 - Questions are specific and answerable
@@ -234,7 +243,8 @@ status: complete
 
 # ReviewContext
 
-**PR Number**: <number> (GitHub) OR **Branch**: <branch-slug> (non-GitHub)
+**PR Number**: <number> (hosted PR) OR **Branch**: <branch-slug> (local)
+**Review Platform**: <github | azure-devops | local>
 **Remote**: <remote-name> (default: origin, or "No remote configured")
 **Base Branch**: <base-branch>
 **Head Branch**: <head-branch>
@@ -252,6 +262,18 @@ status: complete
 **Linked Issues**: <issue-urls> (GitHub) OR "Inferred from commits" (non-GitHub)
 **Changed Files**: <count> files, +<additions> -<deletions>
 **Artifact Paths**: .paw/reviews/<identifier>/
+
+## Authorization Preflight
+
+**Output Capability**: <pending-and-submit | pending-only | artifact-only>
+**Requested Output Action**: <pending | submit | artifact-only>
+**Submission Authorization**: <explicit | absent | ambiguous>
+**Submission Event**: <APPROVE | REQUEST_CHANGES | COMMENT | none>
+**Authorized Target**: <platform-qualified repository and PR | local branch | none>
+**Authorized Head Commit**: <sha | none>
+**Authorized Pending Review**: <pending review ID | bind-created-review | none>
+**Authorization Conflict**: <none | concise conflict>
+**Preflight Status**: <passed | blocked: reason>
 
 ## Review Configuration
 

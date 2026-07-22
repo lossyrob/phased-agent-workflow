@@ -7,10 +7,10 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 **Key properties**
 
 * **Understanding before critique** – Analyze what changed and why before evaluating quality
-* **Comprehensive feedback** – Generate all findings; human filters and adjusts based on context
+* **Comprehensive feedback** – Generate all in-scope findings; explicit user scope can narrow output
 * **Artifact-based** – Durable markdown documents trace reasoning from changes to comments
 * **Rewindable** – Any stage can restart if new information changes understanding
-* **Human-controlled** – Nothing posted automatically; reviewer selects what to post and can ask agent to adjust tone
+* **Human-controlled** – GitHub reviews remain pending by default; explicit authorized submission is verified before execution
 
 ---
 
@@ -39,12 +39,30 @@ The review workflow uses a **skills-based architecture** for dynamic, maintainab
 | `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
 | `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
 | `paw-review-critic` | Activity | Output | Assessment sections in ReviewComments.md |
-| `paw-review-github` | Activity | Output | GitHub pending review (GitHub PRs only) |
+| `paw-review-github` | Activity | Output | GitHub pending or authorized submitted review |
 
 **Tool Support:**
 
 - `paw_get_skills` — Retrieves catalog of available skills with metadata
 - `paw_get_skill` — Loads specific skill content by name
+
+---
+
+## Authorization Policy Inventory
+
+This inventory is the source of truth for PAW Review instruction precedence. The audit scope includes `PAW-Review.agent.md`, every `paw-review-*` skill, review prompts, review control-state contracts, specifications, tests, and generated VS Code skill assets.
+
+| Classification | Policies |
+|----------------|----------|
+| **True invariants** | Evidence is not fabricated; only finalized comments are posted; internal rationale and skipped comments stay local; executable submission verifies the exact platform target, live head, pending review ID, and event; failed verification preserves the pending review without mutation |
+| **Defaults** | GitHub creates a pending review; Azure DevOps and local contexts produce artifacts/manual instructions when executable capability is unavailable |
+| **User-configurable** | An explicit request can submit a GitHub review with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
+
+Explicit user direction overrides a PAW-owned default. It does not override a true invariant or create an unavailable platform capability.
+
+Before Stage R1, PAW Review records platform, output capability, requested action, authorization state, target, head, pending-review binding, event, and conflict status in `ReviewContext.md`. Ambiguous requests and authorized-but-unsupported mutations are reported before analysis. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
+
+Azure DevOps uses this policy and preflight contract, but executable Azure DevOps API behavior is outside this specification.
 
 ---
 
@@ -77,7 +95,7 @@ Multi-repository mode activates when:
 1. **Per-repository processing**: Creates separate artifact directories (`PR-123-api/`, `PR-456-frontend/`)
 2. **Independent analysis**: Each PR analyzed through full Understanding, Evaluation stages
 3. **Cross-repo correlation**: Impact and Gap skills identify dependencies between repositories
-4. **Multi-PR pending reviews**: Creates pending reviews on each PR with cross-references
+4. **Multi-PR review output**: Creates pending reviews on each PR by default, with per-PR authorization boundaries and cross-references
 
 ### Cross-Repository Artifacts
 
@@ -273,7 +291,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 ### Stage R3 — Output
 
-**Goal:** Generate comprehensive review comments, critically assess them, and create GitHub pending review
+**Goal:** Generate comprehensive review comments, critically assess them, and apply the resolved output policy
 
 **Skills:** `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
 
@@ -283,7 +301,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
-* **GitHub pending review** (GitHub context only) – Draft review with filtered comments (only those marked ready after critique)
+* **GitHub review** – Pending by default; submitted only under explicit verified authorization
+* **Azure DevOps/local** – Finalized artifacts and manual instructions when executable output is unavailable
 
 **Process:**
 
@@ -291,7 +310,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 
 1. **Initial Feedback Pass** (`paw-review-feedback`)
    - Batch related findings (One Issue, One Comment policy)
-   - Transform all findings from GapAnalysis.md into review comments
+   - Transform all in-scope findings from GapAnalysis.md into review comments
    - Include Must, Should, and Could items; incorporate CrossRepoAnalysis.md gaps for multi-repo
    - Provide specific, actionable suggestions with code examples
    - Add **Rationale sections** to each comment:
@@ -321,22 +340,24 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 
 4. **GitHub Posting** (`paw-review-github`, GitHub PRs only)
    - Filter to only comments marked "Ready for GitHub posting"
-   - Create pending review with filtered comments
-   - Update ReviewComments.md with posted status and review IDs
+   - Create or reuse the exact pending review and update ReviewComments.md with review IDs
+   - If submission is explicitly authorized, revalidate repository, PR, live head, pending review ID, and event immediately before submitting
+   - Preserve the pending review and report any mismatch; a changed head requires fresh analysis and authorization
+   - Treat successful submission as terminal and idempotent
    - Skipped comments remain in artifact for reference but are NOT posted
-   - **Non-GitHub context**: Provides manual posting instructions instead
+   - **Azure DevOps/local context**: Provide manual posting instructions when executable capability is unavailable
 
 **Human Workflow:**
 
 * Agent orchestrates all R3 activities automatically after R2 completion
-* **GitHub context**: 
+* **GitHub context**:
   - Open PR in GitHub Files Changed tab
   - View pending review comments (only those that passed critique)
   - Edit comment text to adjust tone/wording
   - Delete unwanted comments; manually add skipped comments if you disagree with critique
   - Consult ReviewComments.md for full comment history (original → assessment → updated)
-  - Submit review when satisfied (Approve/Comment/Request Changes)
-* **Non-GitHub context**:
+  - Leave pending, or explicitly authorize PAW Review to submit with Approve, Comment, or Request Changes
+* **Azure DevOps/local context**:
   - Use ReviewComments.md to manually post to review platform
   - Post only comment text and suggestions (keep rationale/assessment for reference)
 * **Optional**: Ask agent to adjust tone – regenerates comments with new tone
@@ -665,13 +686,15 @@ Each comment shows its complete history:
 
 ### Feedback Stage
 
-**Human Control:**
-- NEVER submit the review automatically; always create as pending
-- ALWAYS save a reference copy to ReviewComments.md
-- DO NOT filter findings based on assumptions about relationship or context
-- Include ALL findings from GapAnalysis.md organized by Must/Should/Could
+**Authorization Control:**
+- Create a pending GitHub review by default
+- Submit only when ReviewContext.md records explicit authorization for the exact target, head, pending review, and allowed event
+- Revalidate the complete tuple immediately before submission; preserve pending state on mismatch
+- Save a reference copy to ReviewComments.md
+- Default to all findings from GapAnalysis.md organized by Must/Should/Could
+- Honor explicit scope/output filters; do not infer filtering from relationship or unstated context
 - Post all inline comments to the pending review
-- Human will delete, edit, or adjust comments in GitHub's UI before submitting
+- Human can delete, edit, adjust, or explicitly authorize submission
 
 **Pending Review Creation:**
 - Create a new pending (draft) review on the PR using GitHub MCP tools
@@ -680,8 +703,8 @@ Each comment shows its complete history:
   - Specify line number (or line range for multi-line comments)
   - Specify which side of the diff (new code vs old code)
   - Include comment text with suggestion
-- Save the pending review for human to edit and submit
-- Do not submit the review automatically
+- Save the pending review for human editing when submission is not authorized
+- Bind the created review ID before any authorized submission
 
 **Tone Adjustment Support:**
 - If human requests tone changes, delete the pending review and recreate with adjusted tone
@@ -734,7 +757,9 @@ Each stage produces artifacts that should meet these quality standards:
 
 ### Feedback Stage (R3)
 
-- [ ] Pending review created on GitHub (not submitted)
+- [ ] Pending review created or reused on GitHub
+- [ ] Submission absent by default, or explicitly authorized and tuple-verified
+- [ ] Verification failure preserved the pending review and reported the mismatch
 - [ ] `ReviewComments.md` saved as reference copy
 - [ ] All inline comments from GapAnalysis.md posted to pending review
 - [ ] Inline comments specify exact file paths and line numbers
@@ -833,4 +858,3 @@ Each stage produces artifacts that should meet these quality standards:
 - **Post-review:** Can create implementation issues/PRs from Must/Should items using PAW implementation workflow
 - **Artifacts:** Review artifacts can inform future implementation planning
 - **Patterns:** Gap analysis categories can improve future Spec and Implementation Plan quality
-

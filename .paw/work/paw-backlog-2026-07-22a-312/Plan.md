@@ -6,12 +6,12 @@ Replace PAW Review's unconditional pending-only submission language with one pla
 
 ## Work Items
 
-- [ ] Audit the PAW Review agent, every `paw-review-*` skill, review specifications, control-state contracts, prompt surfaces, and generated VS Code skill assets; define one precedence rule plus a durable inventory of true invariants, defaults, and user-configurable policy in `paw-review-specification.md`.
-- [ ] Add pre-analysis authorization and capability preflight across the PAW Review agent, workflow skill, and `ReviewContext.md`, covering GitHub, Azure DevOps, and local contexts without Azure DevOps API or permission probes.
-- [ ] Update the GitHub output skill to support pending-by-default and explicitly authorized submission of an existing pending review, with live target/head/review/event revalidation, fail-closed retention, head-change invalidation, and terminal idempotence.
-- [ ] Align `paw-review-specification.md`, `docs/specification/review.md`, and `docs/reference/agents.md` with the platform-neutral policy inventory and Azure DevOps capability boundary.
-- [ ] Add deterministic skill-level prompt-contract tests for static agent/skill consistency and runtime semantics: pending default, explicit submit, repeated pre-submit confirmation, existing pending-review follow-up, changed-head invalidation, review-ID/event mismatch, fail-closed retention, terminal replay prevention, early instruction conflicts, Azure DevOps capability-only behavior, and local artifact-only behavior.
-- [ ] Render generated VS Code skill assets and run targeted tests, prompt linting with token counts, repository lint, and documentation validation.
+- [x] Audit the PAW Review agent, every `paw-review-*` skill, review specifications, control-state contracts, prompt surfaces, and generated VS Code skill assets; define one precedence rule plus a durable inventory of true invariants, defaults, and user-configurable policy in `paw-review-specification.md`.
+- [x] Add pre-analysis authorization and capability preflight across the PAW Review agent, workflow skill, and `ReviewContext.md`, covering GitHub, Azure DevOps, and local contexts without Azure DevOps API or permission probes.
+- [x] Update the GitHub output skill to support pending-by-default and explicitly authorized submission of an existing pending review, with live target/head/review/event revalidation, fail-closed retention, head-change invalidation, and terminal idempotence.
+- [x] Align `paw-review-specification.md`, `docs/specification/review.md`, and `docs/reference/agents.md` with the platform-neutral policy inventory and Azure DevOps capability boundary.
+- [x] Add deterministic skill-level prompt-contract tests for static agent/skill consistency and runtime semantics: pending default, explicit submit, repeated pre-submit confirmation, existing pending-review follow-up, changed-head invalidation, review-ID/event mismatch, fail-closed retention, terminal replay prevention, early instruction conflicts, Azure DevOps capability-only behavior, and local artifact-only behavior.
+- [x] Render generated VS Code skill assets and run targeted tests, prompt linting with token counts, repository lint, and documentation validation.
 
 ## Key Decisions
 

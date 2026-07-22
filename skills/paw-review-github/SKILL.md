@@ -1,334 +1,195 @@
 ---
 name: paw-review-github
-description: Posts finalized review comments to GitHub as a pending review after critique iteration is complete.
+description: Posts finalized review comments to GitHub, leaving the review pending by default or submitting it under explicit verified authorization.
 ---
 
 # PAW Review GitHub Skill
 
-Post finalized review comments to GitHub as a pending review. This skill only posts comments marked as ready, filtering out skipped comments while preserving the complete review history in ReviewComments.md.
+Post finalized comments to a GitHub review. Pending is the default. Submission is a separate authorized mutation with fail-closed target and head verification.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> **Reference**: Follow Core Review Principles and Authorization Preflight from `paw-review-workflow`.
 
 ## Prerequisites
 
-Verify `ReviewComments.md` exists in `.paw/reviews/<identifier>/` with:
-- Status: `finalized`
-- All comments have `**Final**:` markers
-- At least one comment marked `**Final**: ✓ Ready for GitHub posting`
+Read both artifacts from `.paw/reviews/<identifier>/`:
 
-Also verify:
-- GitHub PR context available (owner, repo, PR number)
-- For multi-repo reviews: PR context available for each repository
+- `ReviewComments.md`
+  - Status is `finalized`
+  - Every comment has a `**Final**:` marker
+  - At least one comment is `Ready for GitHub posting`
+- `ReviewContext.md`
+  - `Review Platform: github`
+  - Repository, PR number, and head commit are present
+  - `Preflight Status: passed`
+  - Authorization fields are complete
 
-If ReviewComments.md is not finalized or missing `**Final**:` markers, report blocked status—Critique Response pass must complete first.
+If these conditions fail, report the exact blocker. Do not create or submit a review.
 
-**Non-GitHub Context**: If this is not a GitHub PR review (e.g., local branch diff), skip GitHub posting and provide manual posting instructions instead.
+For Azure DevOps or local contexts, skip GitHub mutations and use the artifact-only flow.
 
-## Core Responsibilities
+## Output Policy
 
-- Read all comments from finalized ReviewComments.md
-- Filter to only comments marked `**Final**: ✓ Ready for GitHub posting`
-- Create GitHub pending review with filtered comments
-- Update ReviewComments.md with posted status and review IDs
-- Handle multi-PR scenarios (create pending review per PR)
-- Provide manual posting instructions for non-GitHub contexts
+| Condition | Action |
+|-----------|--------|
+| Authorization absent; action `pending` | Create or reuse a pending review, then stop |
+| Explicit authorization; action `submit` | Create or reuse the exact pending review, verify the authorization tuple, then submit |
+| Authorization ambiguous or preflight blocked | Stop before mutation and report the conflict |
+| Requested mutation unavailable | Preserve artifacts and report capability unavailable |
+| Review already submitted | Report the terminal state; do not replay |
 
-## Process Steps
+Allowed submission events are `APPROVE`, `REQUEST_CHANGES`, and `COMMENT`.
 
-### Step 1: Load ReviewComments.md
+## Process
 
-Read the finalized ReviewComments.md and verify:
-- Status field shows `finalized`
-- All comments have `**Final**:` markers
-- Extract GitHub PR context (owner, repo, PR number)
+### 1. Load Policy and Finalized Comments
 
-If not finalized:
-```
-Blocked: ReviewComments.md status is not 'finalized'.
-Run paw-review-feedback in Critique Response Mode first.
-```
+Read the target, head, capability, requested action, authorization, event, and authorized pending-review value from ReviewContext.md.
 
-### Step 2: Filter Postable Comments
+Filter ReviewComments.md:
 
-Identify comments to post:
+- Include comments marked `Ready for GitHub posting`
+- Exclude comments marked `Skipped`
+- Use updated comment/suggestion text when present
+- Posted text contains the final description and suggestion only; keep rationale, assessments, `**Final**:` markers, and PAW artifact names local
 
-**Include** comments where `**Final**:` contains:
-- `✓ Ready for GitHub posting`
-- `Ready for GitHub posting`
+If ReviewComments.md already records a review ID, treat it as the candidate existing review. Do not create a duplicate.
 
-**Exclude** comments where `**Final**:` contains:
-- `Skipped per critique`
-- `Skipped`
-- Any other status not explicitly "Ready for GitHub posting"
+### 2. Resolve Current GitHub State
 
-Build list of postable comments with:
-- File path
-- Line number or range
-- Comment text (use `**Updated Comment:**` if present, otherwise original description)
-- Suggestion code (use `**Updated Suggestion:**` if present, otherwise original)
+Before any mutation, use GitHub read capabilities to resolve:
 
-### Step 3: Create Pending Review (GitHub PRs)
+- Authenticated repository identity
+- PR number and state
+- Live head commit
+- Existing review ID and state, when recorded
 
-Use GitHub MCP tools to create pending review:
+The repository and PR must match ReviewContext.md. A closed PR, missing target, or head mismatch blocks mutation.
 
-**3.1 Create Pending Review:**
-```
-mcp_github_pull_request_review_write(
-  owner: "<owner>",
-  repo: "<repo>",
-  pullNumber: <number>,
-  method: "create",
-  body: "<review-summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)"
-  // Note: event omitted to create pending (draft) review
-)
-```
+If the head changed:
 
-The review body should include a brief summary of the review (number of comments, key themes) followed by the PAW Review attribution footer.
+1. Leave any pending review untouched for manual inspection.
+2. Record `Preflight Status: blocked: head changed` and the observed head in ReviewContext.md.
+3. Report that fresh analysis and authorization are required.
 
-Record the pending review ID.
+### 3. Create or Reuse the Pending Review
 
-**3.2 Add Comments to Pending Review:**
+If no review ID is recorded:
 
-For EACH postable comment:
-```
-mcp_github_add_comment_to_pending_review(
-  owner: "<owner>",
-  repo: "<repo>",
-  pullNumber: <number>,
-  path: "<file-path>",
-  line: <line-number>,  // or startLine/line for multi-line
-  body: "<comment-text-and-suggestion>",
-  side: "RIGHT",
-  subjectType: "LINE"  // or "FILE" for file-level comments
-)
-```
+1. Create one pending review on the verified repository and PR; omit the submission event.
+2. Add each postable inline comment to that pending review.
+3. Record the returned review ID in ReviewComments.md.
+4. If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext.md with the returned ID before any submission attempt.
 
-**Comment Body Construction:**
-- Include description text (updated if modified, original otherwise)
-- Include code suggestion in markdown code block
-- Do NOT include rationale, assessment, or internal markers
-- Do NOT include `**Final**:` or other PAW-specific formatting
-- Do NOT include attribution footer on inline comments (attribution is on the review body only)
+If a review ID is recorded:
 
-**Example Posted Comment:**
-```markdown
-Missing null check before accessing user.profile could cause runtime error.
+- Re-resolve it from GitHub.
+- Reuse it only when it belongs to the verified PR and is still pending.
+- If it is already submitted, update local status and follow the terminal no-op path.
+- Any other state mismatch blocks further mutation and preserves the review.
 
-```suggestion
-if (user?.profile) {
-  return user.profile.name;
-}
-return 'Anonymous';
-```
-```
+Update ReviewComments.md after pending creation:
 
-### Step 4: Update ReviewComments.md
-
-After posting, update each posted comment in ReviewComments.md:
-
-**Add Posted Status:**
-```markdown
-**Final**: ✓ Ready for GitHub posting
-**Posted**: ✓ GitHub pending review (Review ID: 12345678, Comment ID: abc123)
-```
-
-**For Skipped Comments:**
-```markdown
-**Final**: Skipped per critique - stylistic preference
-**Posted**: — (not posted per critique)
-```
-
-Update the file header:
 ```markdown
 **Status**: Posted to GitHub pending review
-**Pending Review ID**: 12345678
-**Comments Posted**: 6 of 8 (2 skipped per critique)
+**Pending Review ID**: <id>
+**Comments Posted**: <posted> of <finalized>
 ```
 
-### Step 5: Multi-PR Pending Reviews
+Each posted comment records its GitHub comment ID. Skipped comments remain unposted in the artifact.
 
-When reviewing PRs across multiple repositories:
+### 4. Apply the Submission Decision
 
-**Detection:**
-Multi-PR mode applies when:
-- Multiple artifact directories exist (`.paw/reviews/PR-<number>-<repo-slug>/`)
-- ReviewComments.md files exist in multiple PR directories
-- ReviewContext.md contains `related_prs` entries
+If `Requested Output Action` is `pending`, stop with the pending review.
 
-**Per-PR Processing:**
+For `submit`, require:
 
-1. **Iterate PRs**: For each PR in the review set:
-   - Read ReviewComments.md from that PR's artifact directory
-   - Filter to postable comments for that PR
-   - Create separate pending review on that PR
-   - Update that PR's ReviewComments.md with posted status
+- `Submission Authorization: explicit`
+- Allowed submission event
+- Authorized target matching the repository and PR
+- Authorized head matching the current live head
+- Authorized pending review ID matching the exact pending review
 
-2. **Cross-Reference in Comments**: When posting cross-repo comments:
-   - Include cross-reference notation from the comment
-   - Example: `(See also: owner/other-repo#456 for related change)`
+Immediately before submission, re-read live GitHub state and verify this tuple:
 
-**GitHub Tool Calls for Multiple PRs:**
-```
-# PR 1: repo-a
-mcp_github_pull_request_review_write(owner, "repo-a", 123, method="create", body="<summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)")
-mcp_github_add_comment_to_pending_review(...)  # postable comments for PR-123
-
-# PR 2: repo-b  
-mcp_github_pull_request_review_write(owner, "repo-b", 456, method="create", body="<summary>\n\n---\n🐾 Review generated with [PAW Review](https://github.com/lossyrob/phased-agent-workflow)")
-mcp_github_add_comment_to_pending_review(...)  # postable comments for PR-456
+```text
+repository + PR + live head + pending review ID + event
 ```
 
-**Error Handling:**
-If pending review creation fails for one PR:
-- Document the failure in that PR's ReviewComments.md
-- Continue with other PRs
-- Provide manual posting instructions for failed PR
-- Report partial success in completion response
+Every value must be present and equal to the authorization recorded in ReviewContext.md. On absence, ambiguity, mismatch, permission failure, or changed state:
 
-### Step 6: Non-GitHub Context
+- Do not submit or recreate the review.
+- Keep the pending review available for inspection.
+- Record the blocked reason in ReviewContext.md and ReviewComments.md.
+- Report the exact mismatch.
 
-For non-GitHub workflows (local branch review):
+When the tuple matches, submit that review with the authorized event. Record the submitted review ID, event, head, and timestamp in both artifacts.
 
-**Skip GitHub Posting:**
-- Do not attempt to call GitHub MCP tools
-- Update ReviewComments.md status to `finalized (non-GitHub)`
+### 5. Enforce Terminal Idempotence
 
-**Provide Manual Posting Instructions:**
+A submitted review is terminal for this workflow run:
 
-Append to ReviewComments.md:
-```markdown
----
+- Repeated authorization before submission confirms the same mutation.
+- Repeated authorization after submission returns the recorded submitted state without creating or submitting another review.
+- A new head requires fresh analysis, a new pending review, and fresh authorization.
 
-## Manual Posting Instructions
+### 6. Multi-PR Reviews
 
-This review was conducted on a non-GitHub context. To post comments manually:
+Treat each PR as a separate authorization boundary:
 
-### Comments Ready for Posting (X total)
+- Use its own ReviewContext.md and ReviewComments.md.
+- Create/reuse and optionally submit one review per PR.
+- Never reuse authorization, head, review ID, or event across PRs.
+- Continue other PRs after a per-PR failure, but report partial success and preserve each failed pending review.
 
-1. **File: auth.ts, Lines 45-50**
-   > Missing null check before accessing user.profile could cause runtime error.
-   
-   Suggestion:
-   ```typescript
-   if (user?.profile) {
-     return user.profile.name;
-   }
-   return 'Anonymous';
-   ```
+### 7. Artifact-Only Contexts
 
-2. **File: db.ts, Lines 120-125**
-   > [Comment text...]
+When the platform is Azure DevOps or local, or executable GitHub capability is unavailable:
 
-### Skipped Comments (Y total)
-These comments were evaluated as low-value by the critique process and are not recommended for posting:
-- File: api.ts L88 - Skipped: stylistic preference
-```
+- Do not call GitHub mutation tools.
+- Keep ReviewComments.md finalized.
+- Add manual posting instructions with final comment text.
+- Record the platform, capability, requested action, and preflight result.
 
-## Guardrails
+An explicit unsupported submission request must have been reported before the Understanding stage. Do not silently convert it to artifact-only output.
 
-**Post Only Finalized Comments:**
-- NEVER post comments without `**Final**: ✓ Ready for GitHub posting`
-- Comments marked Skip must NOT be posted
-- Respect critique recommendations
+## Policy Classification
 
-**Pending Review Only:**
-- NEVER submit the pending review automatically
-- Use `method: "create"` without event parameter
-- Human reviewer must explicitly submit
+**True invariants**
 
-**No Rationale in Posted Comments:**
-- Posted comments contain only description and suggestion
-- Rationale, assessment, and internal markers stay in ReviewComments.md
-- PAW artifacts never referenced in posted comments
+- Post only finalized comments.
+- Keep skipped comments and internal rationale out of external review text.
+- Verify the exact target, live head, pending review ID, and event before submission.
+- Fail closed without mutating the pending review when verification fails.
 
-**Preserve History:**
-- Do not modify original comment text when adding Posted status
-- Keep all history: original → assessment → updated → posted
-- Skipped comments remain in artifact for documentation
+**Defaults**
 
-**Human Control:**
-- Pending review is a draft—reviewer can edit/delete before submitting
-- Reviewer can manually add skipped comments if they disagree with critique
-- Final submission decision rests with human reviewer
+- GitHub output remains pending.
+- Azure DevOps and local output remain artifact-only without executable capability.
 
-## Validation Checklist
+**User-configurable policy**
 
-Before completing, verify:
+- Explicit direction may request GitHub submission and select an allowed event.
+- Users may override critique recommendations by changing final comment status before this skill runs.
 
-- [ ] ReviewComments.md was finalized (had `**Final**:` markers on all comments)
-- [ ] Only comments marked "Ready for GitHub posting" were posted
-- [ ] Skipped comments NOT posted to GitHub
-- [ ] Pending review created (not submitted)
-- [ ] All posted comments have `**Posted**:` status in ReviewComments.md
-- [ ] ReviewComments.md header updated with Pending Review ID and counts
-- [ ] Posted comment bodies contain only description + suggestion (no rationale)
-- [ ] Multi-PR: Each PR has its own pending review
-- [ ] Non-GitHub: Manual posting instructions provided
+## Validation
 
-## Completion Response
+- [ ] ReviewComments.md is finalized and all comments have final markers
+- [ ] ReviewContext.md preflight passed for GitHub
+- [ ] Only ready comments were posted
+- [ ] Pending review ID and comment IDs were recorded
+- [ ] Pending-default runs did not submit
+- [ ] Submit runs revalidated repository, PR, live head, review ID, and event
+- [ ] Verification failures preserved the pending review and reported the mismatch
+- [ ] Submitted runs recorded terminal state and replay prevention
+- [ ] Multi-PR authorization remained isolated per PR
+- [ ] Artifact-only contexts performed no GitHub mutation
 
-**GitHub PRs (Success):**
-```
-Activity complete.
-Artifact updated: .paw/reviews/<identifier>/ReviewComments.md
+## Completion
 
-GitHub Posting Summary:
-- Pending Review Created: Review ID 12345678
-- Comments Posted: 6 of 8 (2 skipped per critique)
-- Status: Pending review awaiting human submission
+Report one of:
 
-Posted comments:
-| Comment | GitHub ID |
-|---------|-----------|
-| auth.ts L45-50 | comment-abc |
-| db.ts L120-125 | comment-def |
-| ... | ... |
-
-Skipped (not posted):
-- api.ts L88 - stylistic preference
-- utils.ts L200 - already addressed
-
-NOTE: The pending review is ready for your review in GitHub.
-Edit or delete any comments, then submit when satisfied.
-```
-
-**Multi-PR (Success):**
-```
-Activity complete.
-
-GitHub Posting Summary:
-- PR repo-a#123: Pending review created (Review ID: 111), 4 comments posted
-- PR repo-b#456: Pending review created (Review ID: 222), 3 comments posted
-- Total: 7 comments posted, 2 skipped
-
-Artifacts updated:
-- .paw/reviews/PR-123-repo-a/ReviewComments.md
-- .paw/reviews/PR-456-repo-b/ReviewComments.md
-
-NOTE: Review pending reviews in GitHub for each PR before submitting.
-```
-
-**Non-GitHub:**
-```
-Activity complete.
-Artifact updated: .paw/reviews/<identifier>/ReviewComments.md
-
-Non-GitHub Context - Manual Posting Required:
-- Comments ready for posting: 6
-- Comments skipped per critique: 2
-- Manual posting instructions added to ReviewComments.md
-
-Review the Manual Posting Instructions section to post comments to your review platform.
-```
-
-**Partial Failure:**
-```
-Activity complete with errors.
-
-GitHub Posting Summary:
-- PR repo-a#123: ✓ Success (Review ID: 111, 4 comments)
-- PR repo-b#456: ✗ Failed - permission denied
-
-Partial success: 1 of 2 PRs posted.
-Manual posting instructions added for failed PR.
-```
+- Pending review ID and posted/skipped counts
+- Submitted review ID, event, verified head, and posted/skipped counts
+- Terminal no-op for an already submitted review
+- Blocked verification/capability result with the preserved pending review ID
+- Artifact-only/manual posting location

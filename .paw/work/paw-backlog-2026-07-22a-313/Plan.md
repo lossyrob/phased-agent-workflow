@@ -6,7 +6,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
 
 ## Work Items
 
-- [ ] **Verify authentication and effective identity**
+- [x] **Verify authentication and effective identity**
   - Preflight `az account show` and fail closed when the existing session is missing, expired, or in the wrong tenant; record whether interactive login was a prerequisite.
   - Capture the Azure DevOps resource token directly into a process variable with output suppressed from the console, never pass it in process arguments, and never write it or raw headers to disk.
   - Compare the runtime tenant and identity to expected operator-provided values without committing those values; an audience-only or non-anonymous check is insufficient for attribution.
@@ -14,7 +14,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
   - Require sufficient remaining token lifetime at the start of each probe phase, reacquire when needed, and cross-check every 401 against token expiry before classifying it as authorization behavior.
   - Record only identity class/role, token lifetime behavior, tooling version, and observation time; redact concrete tenant IDs, object IDs, descriptors, UPNs, and email addresses.
 
-- [ ] **Inventory repository, permission, and API behavior**
+- [x] **Inventory repository, permission, and API behavior**
   - Resolve `devtools-test-repo` once and guard every mutating call with exact organization, project, repository ID, and pull request checks.
   - Read effective Git permissions and map each capability to the observed grant, principal type/role, and whether the current identity is over-privileged. Mark minimum-permission recommendations as inferred unless a lower-privilege identity proves the boundary.
   - Record the exact requested `api-version` per endpoint and whether it is GA or preview. For preview rows, require an observed served version or response-shape fingerprint and a re-verification warning.
@@ -24,7 +24,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
   - Honor any incidental 429 and `Retry-After` with bounded backoff. Do not intentionally load-test the shared service; record throttling behavior as inferred/not-observed unless a safe bounded event occurs.
   - Attempt one safe, non-mutating denial observation. If no genuine denied operation is available to this identity, label authorization-denied behavior as inferred rather than verified.
 
-- [ ] **Exercise pull request read capabilities**
+- [x] **Exercise pull request read capabilities**
   - Before testing, sweep stale prior-run orphans matching a stable family prefix, but reclaim only objects older than a stated age and never objects with a live-run marker. Record swept object IDs.
   - Create a disposable source branch and pull request named `<stable-family-prefix>-<per-run-unique-suffix>`, with an object ledger sufficient for resumable cleanup.
   - Generate at least three iterations containing add, edit, rename, delete, and line-move changes.
@@ -34,7 +34,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
   - Treat immediate-empty policy, build, or status collections as `endpoint-reachable` with no configuration observed. Treat a poll timeout separately as `not-observed (timing)` and record the actual wait, using a conservative minimum window that is explicitly not a production timeout.
   - Distinguish build/status reads from PR-status writes; verify a write only if the test repository safely supports it, otherwise record it as an explicit gap.
 
-- [ ] **Exercise pull request mutation capabilities**
+- [x] **Exercise pull request mutation capabilities**
   - Post only fixed, non-sensitive test markers in summary and inline threads. Test replies, comment/thread updates, resolution, and terminal-state reads/writes.
   - Anchor inline threads in iteration 1 on a moved line, a file that will be renamed, and a file that will be deleted. Push later iterations, then record whether each thread tracks, detaches, becomes outdated, mis-anchors, or errors at deeper iteration depth.
   - Attempt one stale positional write and classify it as `rejected(status/typeKey)` or `silently-misplaced(no-signal)`. Require re-fetching the latest head and iteration before every production positional write regardless of the observed result.
@@ -44,7 +44,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
   - Enumerate Azure DevOps reviewer vote values, labels, caller-own-vote constraint, and observed branch-policy/completion gating effect. Exercise blocking and approval-family values, reset to zero, and one out-of-domain value. Do not generalize this result to a distinct production identity.
   - Run terminal-state probes only after all active-state probes: abandon the PR, then attempt the defined read/write checks before teardown.
 
-- [ ] **Publish the capability contract and follow-up guidance**
+- [x] **Publish the capability contract and follow-up guidance**
   - Read #314, #315, and #316 before drafting the mapping, then add a durable reference document with one row per capability: setup/preconditions, method/path, requested and served API version, maturity, expected status, asserted response content, observed result, evidence class per field, observed-on date, tooling version, identity class/role, observed and inferred permissions, config dependence, failure behavior, retry behavior, required production mitigation, validity window, re-verification trigger, and trigger owner.
   - Separate `verified`, `endpoint-reachable`, `inferred`, `not-observed`, and `unsupported` states so empty/default responses cannot look successful.
   - Include a credential-free replay checklist keyed one-to-one to matrix rows and capable of recreating every setup/precondition; do not commit a token-bearing harness.
@@ -53,7 +53,7 @@ Use the existing Azure CLI sign-in to obtain an in-memory Azure DevOps Entra tok
   - Document token refresh and checkpoint/resume guidance for long-running production mutation batches.
   - Update directly related documentation navigation and authorization language where the new contract replaces the current artifact-only assumption.
 
-- [ ] **Clean up and validate**
+- [x] **Clean up and validate**
   - Reset the reviewer vote, remove test-only comments/threads where the API permits it, abandon the disposable pull request, and delete disposable branches.
   - Re-read each object through independent list and object endpoints with a bounded consistency window. Classify cleanup as `confirmed-absent-after-window`, `pending-within-window`, or `still-present-after-window`; record residual object IDs rather than claiming success.
   - Re-read the abandoned PR's surviving threads, comments, and reviewer state to prove fixed marker content contains no sensitive data and record any non-deletable collaboration-surface residue.

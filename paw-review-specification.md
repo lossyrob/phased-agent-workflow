@@ -62,7 +62,7 @@ Explicit user direction overrides a PAW-owned default. It does not override a tr
 
 Before Stage R1, PAW Review records platform, output capability, requested action, authorization state, target, head, pending-review binding, event, and conflict status in `ReviewContext.md`. Ambiguous requests and authorized-but-unsupported mutations are reported before analysis. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
 
-Azure DevOps uses this policy and preflight contract, but executable Azure DevOps API behavior is outside this specification.
+Azure DevOps uses this policy and preflight contract, but executable Azure DevOps integration remains outside this specification. The verified API, permission, failure, and cleanup boundary for that work is documented in `docs/reference/azure-devops-pr-capabilities.md`.
 
 ---
 

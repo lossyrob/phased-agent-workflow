@@ -164,7 +164,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 **Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
 
-**Human Control:** Explicit user direction overrides PAW defaults, but not integrity checks or unavailable capabilities. GitHub stays pending unless submission is explicitly authorized; Azure DevOps and local reviews remain artifact-only when executable output is unavailable.
+**Human Control:** Explicit user direction overrides PAW defaults, but not integrity checks or unavailable capabilities. GitHub stays pending unless submission is explicitly authorized; Azure DevOps and local reviews remain artifact-only until their executable paths are integrated. The verified Azure DevOps API boundary is documented in [Azure DevOps PR Capabilities](azure-devops-pr-capabilities.md).
 
 **Note:** The six PAW-R* agents (R1A, R1B, R2A, R2B, R3A, R3B) have been replaced by this unified skills-based workflow.
 

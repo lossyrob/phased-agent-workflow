@@ -76,3 +76,4 @@ nav:
   - Reference:
     - Agents: reference/agents.md
     - Artifacts: reference/artifacts.md
+    - Azure DevOps PR Capabilities: reference/azure-devops-pr-capabilities.md

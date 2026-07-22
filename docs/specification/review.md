@@ -62,6 +62,8 @@ PAW Review classifies instructions before analysis:
 
 Explicit direction overrides a PAW default, not an integrity invariant or missing platform capability. PAW Review reports ambiguous instructions or unsupported requested mutations before the Understanding stage. A changed head invalidates authorization and requires fresh analysis. Successful submission is terminal and is not replayed.
 
+Azure DevOps executable integration remains outside this specification. The verified API, permission, failure, and cleanup boundary for that work is documented in [Azure DevOps PR Capabilities](../reference/azure-devops-pr-capabilities.md).
+
 ## Cross-Repository Review
 
 PAW Review supports coordinated review of multiple related PRs across repositories.

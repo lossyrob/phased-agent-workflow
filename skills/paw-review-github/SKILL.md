@@ -84,6 +84,7 @@ If a review ID is recorded:
 
 - Re-resolve it from GitHub.
 - Reuse it only when it belongs to the verified PR and is still pending.
+- If `Authorized Pending Review` is `bind-created-review`, replace it with the re-resolved pending review ID before evaluating submission.
 - If it is already submitted, update local status and follow the terminal no-op path.
 - Any other state mismatch blocks further mutation and preserves the review.
 

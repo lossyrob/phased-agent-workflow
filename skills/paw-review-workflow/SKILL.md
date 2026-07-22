@@ -131,10 +131,11 @@ Run before the Understanding stage:
    - GitHub default: `pending`
    - Azure DevOps/local default: `artifact-only`
    - Explicit submission: `submit` with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`
-4. Resolve authorization as `explicit`, `absent`, or `ambiguous`, plus the platform-qualified target and current head.
-5. Detect conflicts across PAW-owned instructions. Explicit user direction overrides a default; it does not override an integrity invariant or create a missing capability.
-6. If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis. Continue artifact-only only after the requested action is resolved.
-7. Pass the resolved fields to `paw-review-understanding` for persistence in ReviewContext.md.
+4. Resolve feedback scope as `all` by default or the user's explicit scope/output filter.
+5. Resolve authorization as `explicit`, `absent`, or `ambiguous`, plus the platform-qualified target and current head.
+6. Detect conflicts across PAW-owned instructions. Explicit user direction overrides a default; it does not override an integrity invariant or create a missing capability.
+7. If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis. Continue artifact-only only after the requested action is resolved.
+8. Pass the resolved fields to `paw-review-understanding` for persistence in ReviewContext.md.
 
 Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
 

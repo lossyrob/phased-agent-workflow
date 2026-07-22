@@ -83,6 +83,7 @@ describe("PAW Review authorization policy", () => {
       "Review Platform",
       "Output Capability",
       "Requested Output Action",
+      "Feedback Scope Filter",
       "Submission Authorization",
       "Submission Event",
       "Authorized Target",
@@ -104,6 +105,20 @@ describe("PAW Review authorization policy", () => {
     assert.match(github, /fresh analysis and authorization are required/i);
     assert.match(github, /Do not submit or recreate the review/i);
     assert.match(github, /A submitted review is terminal for this workflow run/i);
+  });
+
+  it("reuses one pending review and binds its concrete ID before submission", async () => {
+    const github = await readRepoFile("skills/paw-review-github/SKILL.md");
+
+    assert.match(github, /If ReviewComments\.md already records a review ID.*Do not create a duplicate/is);
+    assert.match(
+      github,
+      /If `Authorized Pending Review` is `bind-created-review`, replace it with the re-resolved pending review ID before evaluating submission/i,
+    );
+    assert.match(
+      github,
+      /If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext\.md with the returned ID before any submission attempt/i,
+    );
   });
 
   it("keeps Azure DevOps and local output capability-aware and artifact-only", async () => {

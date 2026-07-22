@@ -193,6 +193,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - Base and head commit SHAs recorded
 - Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
 - Authorization fields present with `Preflight Status: passed`
+- Feedback scope is recorded as `all` or the explicit user filter
 - Explicit submission has an allowed event and target/head authorization; unavailable explicit mutations are blocked before artifact creation
 
 ### ResearchQuestions.md
@@ -249,17 +250,17 @@ status: complete
 **Base Branch**: <base-branch>
 **Head Branch**: <head-branch>
 **Base Commit**: <sha>
-**Base Commit Source**: remote|local|github-api
+**Base Commit Source**: github-api|platform-metadata|merge-base
 **Head Commit**: <sha>
 **Repository**: <owner>/<repo> OR "Local repository"
 **Author**: <username or git author>
 **Title**: <pr-title or derived from commits>
-**State**: open|closed|draft (GitHub) OR active (non-GitHub)
-**Created**: <date> (GitHub only)
-**CI Status**: <passing|failing|pending> (GitHub) OR "Not available" (non-GitHub)
-**Labels**: <label-list> (GitHub) OR "N/A" (non-GitHub)
-**Reviewers**: <reviewer-list> (GitHub) OR "N/A" (non-GitHub)
-**Linked Issues**: <issue-urls> (GitHub) OR "Inferred from commits" (non-GitHub)
+**State**: <open | closed | draft | active>
+**Created**: <date | N/A>
+**CI Status**: <passing | failing | pending | Not available>
+**Labels**: <label-list | N/A>
+**Reviewers**: <reviewer-list | N/A>
+**Linked Issues**: <issue-urls | inferred from commits | none>
 **Changed Files**: <count> files, +<additions> -<deletions>
 **Artifact Paths**: .paw/reviews/<identifier>/
 
@@ -267,6 +268,7 @@ status: complete
 
 **Output Capability**: <pending-and-submit | pending-only | artifact-only>
 **Requested Output Action**: <pending | submit | artifact-only>
+**Feedback Scope Filter**: <all | explicit user scope/output filter>
 **Submission Authorization**: <explicit | absent | ambiguous>
 **Submission Event**: <APPROVE | REQUEST_CHANGES | COMMENT | none>
 **Authorized Target**: <platform-qualified repository and PR | local branch | none>

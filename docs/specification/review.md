@@ -265,7 +265,7 @@ Authoritative parameter source for the review workflow.
 - PR Number/Branch
 - Review platform and output capability
 - Base and Head commits
-- Requested action, authorization, target, pending-review binding, event, and preflight result
+- Requested action, feedback scope, authorization, target, pending-review binding, event, and preflight result
 - Changed files summary
 - CI Status and flags
 - Description and metadata

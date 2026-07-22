@@ -24,7 +24,7 @@ Before analysis, resolve the output policy:
 - Evidence/integrity invariants and unavailable platform capabilities are not overridable.
 - If instructions conflict, authorization is ambiguous, or the requested mutation is unavailable, report it before the Understanding stage.
 
-Pass the resolved platform, capability, output action, authorization, target, head, and event to `paw-review-understanding` so `ReviewContext.md` remains authoritative.
+Pass the resolved platform, capability, output action, authorization, target, head, event, and feedback scope to `paw-review-understanding` so `ReviewContext.md` remains authoritative.
 
 ### Multi-Repository Detection Triggers
 

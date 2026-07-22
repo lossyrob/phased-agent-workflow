@@ -44,11 +44,11 @@ Additional Inputs: Orchestrated backlog run paw-backlog-2026-07-22a; reviewer ad
 ## Control State
 
 TODO Mirror: active-required-items
-Reconciliation: not_run
+Reconciliation: current
 
 ### Required Workflow Items
 - `init` | `resolved` | `activity`
-- `planning` | `pending` | `activity`
+- `planning` | `resolved` | `activity`
 - `planning-docs-review` | `pending` | `activity`
 - `implementation` | `pending` | `activity`
 - `final-review` | `pending` | `activity`

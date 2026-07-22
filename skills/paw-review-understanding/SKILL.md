@@ -100,7 +100,7 @@ related_prs:
    - **GitHub**: Use `base.sha` from PR metadata (GitHub returns the merge-base)
    - **Azure DevOps/Local**: Run `git merge-base <head-branch> origin/<base-branch>` when platform metadata does not provide the merge-base
    - **CRITICAL**: The base commit must be the merge-base (common ancestor), NOT the current tip of the base branch. Using the tip causes files added to main after branching to appear as "deletions."
-   - Record in ReviewContext.md: `Base Commit: <sha>` and `Base Commit Source: github-api | merge-base`
+   - Record in ReviewContext.md: `Base Commit: <sha>` and `Base Commit Source: github-api | platform-metadata | merge-base`
 
 4. **Create ReviewContext.md**:
    - Write to `.paw/reviews/<identifier>/ReviewContext.md`

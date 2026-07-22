@@ -68,7 +68,8 @@ This ledger preserves the per-row provenance required for re-verification withou
 | FAIL-1 | #314 | `verified` | 2026-07-22 | Missing repository returned 404 JSON `GitRepositoryNotFoundException` | 180 days; owner: #314 |
 | FAIL-2 | #314-#316 | `verified` | 2026-07-22 | Corrected resolved-repository request with `api-version=0.0` returned 404 HTML | 30 days; re-run on routing/version change; owner: each consuming issue |
 | FAIL-3 | #315 | `verified` | 2026-07-22 | `firstComparingIteration=0` returned 400 `ArgumentOutOfRangeException` | 180 days; owner: #315 |
-| AUTHZ-GAP | #314-#316 | `inferred` | 2026-07-22 | No second principal; no genuine controlled 403 or minimum-permission boundary | Re-run for every production principal; owner: each consuming issue |
+| MINPERM-GAP | #314-#316 | `inferred` | 2026-07-22 | One over-privileged principal cannot establish minimum grants; authorization-masked 404 has no discriminator | Re-run with a lower-privilege principal; owner: each consuming issue |
+| DENIAL-GAP | #314-#316 | `not-observed` | 2026-07-22 | No genuine controlled permission-denied 403 was produced | Re-run with a controlled denied operation; owner: each consuming issue |
 | THROTTLE-GAP | #314-#316 | `not-observed` | 2026-07-22 | No deliberate load test; no incidental 429 | Re-run only if safely observed; owner: each consuming issue |
 | TRANSPORT-GAP | #315 | `not-observed` | 2026-07-22 | Duplicate behavior observed; true transport loss/server partial commit not induced | Resolve in client design/tests; owner: #315 |
 | TERMINAL-1 | #314-#315 | `verified` | 2026-07-22 | Abandoned PR remained readable and accepted a new thread | 90 days; owner: #315 |
@@ -277,7 +278,7 @@ PR status API read/write is separately `verified`. A configured PR Status policy
 | Invalid vote `999` | 400 | `InvalidEnumArgumentException` | `verified` |
 | Stale ref create | 200 | Per-item `success=false`, `staleOldObjectId` | `verified` |
 | Delete status after PR abandonment | 403 | `GitPullRequestStatusNotEditableException` | `verified` |
-| Genuine permission denial | not observed | Single identity could not produce a controlled contrast | `inferred` |
+| Genuine controlled permission denial | not observed | Single identity could not produce a controlled contrast | `not-observed` |
 | 409/412 conditional conflict | not observed | No safe endpoint-specific fixture | `not-observed` |
 | 429 throttling | not observed | Deliberate load testing was prohibited | `not-observed` |
 | Expired token/non-JSON sign-in response | not observed | Token was refreshed before expiry | `not-observed` |
@@ -324,6 +325,8 @@ The primary fixture's redundant reset attempt after abandonment failed, but the 
 
 Abandoned PR records and soft-deleted comments remain subject to Azure DevOps retention. Replays must use fixed non-sensitive markers and a recognizable title prefix so administrators can identify historical fixtures without exposing code or credentials.
 
+Deleting initial and reply comments from abandoned fixture PRs returned HTTP 200 and removed all live custom markers. This verifies abandoned-state comment cleanup, but the standard replay should still remove comments before abandonment when possible.
+
 Cleanup order matters:
 
 1. Reset vote.
@@ -352,9 +355,12 @@ Use this checklist for re-verification. It is intentionally credential-free and 
 11. **VOTE-1/VOTE-2:** Exercise documented values on non-draft and draft PRs; read after every write; reset and confirm `0`.
 12. **STATUS-1/STATUS-2:** Post/read/delete a PR status before abandonment. If resuming after abandonment, use the verified reactivate/delete/re-abandon recovery.
 13. **POLICY-1/BUILD-1:** Read policy and Build API data once; record the actual query time; label empty envelopes as reachable, not verified.
-14. **TERMINAL-1:** Abandon the PR and confirm whether terminal-state writes remain possible.
-15. Delete comments, refs, and the coordination tag; verify no live marker content or probe status remains.
-16. Scan durable output for bearer/JWT/token patterns, concrete identities, and replacement characters before commit.
+14. Reset the vote and delete PR statuses and all comments that should not remain while the PR is active.
+15. Abandon the PR, delete source refs and the coordination tag, and verify no live marker content or probe status remains.
+16. **TERMINAL-1 (optional dedicated fixture):** After abandonment, post one fixed non-sensitive marker, delete that comment using the verified abandoned-state delete path, and re-read zero live markers. If deletion fails, record an explicit cleanup failure and accept only the retained non-sensitive marker.
+17. Scan durable output for bearer/JWT/token patterns, concrete identities, and replacement characters before commit.
+
+If the coordination tag already exists, stop. Reclaim it only after an operator confirms no replay is active and independent reads show no remaining probe branches, PR statuses, or live marker comments. Then delete the stale tag and restart from the beginning; never expire or steal the lease automatically.
 
 ## Integration Boundaries
 
@@ -405,6 +411,8 @@ Implement:
 Keep branch-policy gating, distinct-reviewer behavior, and least-privilege vote permissions as explicit gaps until a second principal and controlled policy fixture are available.
 
 ## Re-verification
+
+Row-specific validity governs capability observations and configuration-sensitive behavior. The class-level windows below are fallback guidance for endpoint shapes; when multiple triggers apply, use the earliest one.
 
 | Evidence class | Suggested validity |
 |----------------|--------------------|

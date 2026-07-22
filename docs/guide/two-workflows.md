@@ -134,7 +134,7 @@ The Review Workflow helps you thoroughly review any pull request through three s
 ### Key Benefits
 
 - **Understand before critiquing** — Research pre-change system behavior first
-- **Comprehensive findings** — Generate all issues; human filters based on context
+- **Comprehensive findings** — Generate all in-scope findings; explicit user filters can narrow output
 - **Evidence-based feedback** — Every finding includes file:line references and rationale
 - **Full human control** — GitHub stays pending by default; explicit submission is verified against the exact target, head, review, and event
 

@@ -52,7 +52,13 @@ Filter ReviewComments.md:
 - Use updated comment/suggestion text when present
 - Posted text contains the final description and suggestion only; keep rationale, assessments, `**Final**:` markers, and PAW artifact names local
 
-If ReviewComments.md already records a review ID, treat it as the candidate existing review. Do not create a duplicate.
+Resolve one candidate review ID:
+
+1. Use the ID recorded in ReviewComments.md when present.
+2. Otherwise, use a concrete `Authorized Pending Review` ID from ReviewContext.md.
+3. Treat `bind-created-review` as a sentinel, not a concrete recovery ID.
+
+If both artifacts contain concrete IDs and they differ, block and report the mismatch. Do not create a duplicate.
 
 ### 2. Resolve Current GitHub State
 
@@ -73,22 +79,26 @@ If the head changed:
 
 ### 3. Create or Reuse the Pending Review
 
-If no review ID is recorded:
+If no candidate review ID is recorded:
 
 1. Create one pending review on the verified repository and PR; omit the submission event.
-2. Add each postable inline comment to that pending review.
-3. Record the returned review ID in ReviewComments.md.
-4. If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext.md with the returned ID before any submission attempt.
+2. Immediately record the returned review ID in ReviewComments.md with `Status: Posting in progress`.
+3. If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext.md with the returned ID.
+4. Re-resolve the recorded ID and confirm it is still pending on the verified PR.
+5. Add each missing postable inline comment, recording its comment ID immediately after success.
 
-If a review ID is recorded:
+If a candidate review ID is recorded:
 
 - Re-resolve it from GitHub.
 - Reuse it only when it belongs to the verified PR and is still pending.
 - If `Authorized Pending Review` is `bind-created-review`, replace it with the re-resolved pending review ID before evaluating submission.
+- Record the re-resolved ID in ReviewComments.md before adding comments when the local record was absent or stale.
 - If it is already submitted, update local status and follow the terminal no-op path.
 - Any other state mismatch blocks further mutation and preserves the review.
 
-Update ReviewComments.md after pending creation:
+For either path, compare the finalized comments with locally recorded and live pending-review comment IDs. Add only missing comments and record each returned comment ID before continuing.
+
+Update ReviewComments.md after comment posting completes:
 
 ```markdown
 **Status**: Posted to GitHub pending review

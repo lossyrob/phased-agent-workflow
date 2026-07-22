@@ -110,15 +110,34 @@ describe("PAW Review authorization policy", () => {
   it("reuses one pending review and binds its concrete ID before submission", async () => {
     const github = await readRepoFile("skills/paw-review-github/SKILL.md");
 
-    assert.match(github, /If ReviewComments\.md already records a review ID.*Do not create a duplicate/is);
+    assert.match(
+      github,
+      /Otherwise, use a concrete `Authorized Pending Review` ID from ReviewContext\.md/i,
+    );
+    assert.match(github, /If both artifacts contain concrete IDs and they differ, block/i);
+    assert.match(github, /Do not create a duplicate/i);
     assert.match(
       github,
       /If `Authorized Pending Review` is `bind-created-review`, replace it with the re-resolved pending review ID before evaluating submission/i,
     );
     assert.match(
       github,
-      /If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext\.md with the returned ID before any submission attempt/i,
+      /If `Authorized Pending Review` is `bind-created-review`, replace it in ReviewContext\.md with the returned ID/i,
     );
+  });
+
+  it("persists recoverable review identity before adding comments", async () => {
+    const github = await readRepoFile("skills/paw-review-github/SKILL.md");
+    const createIndex = github.indexOf("1. Create one pending review");
+    const persistIndex = github.indexOf("2. Immediately record the returned review ID");
+    const verifyIndex = github.indexOf("4. Re-resolve the recorded ID");
+    const commentIndex = github.indexOf("5. Add each missing postable inline comment");
+
+    assert.ok(createIndex >= 0);
+    assert.ok(createIndex < persistIndex);
+    assert.ok(persistIndex < verifyIndex);
+    assert.ok(verifyIndex < commentIndex);
+    assert.match(github, /Add only missing comments and record each returned comment ID/i);
   });
 
   it("keeps Azure DevOps and local output capability-aware and artifact-only", async () => {
@@ -143,7 +162,12 @@ describe("PAW Review authorization policy", () => {
     assert.match(feedback, /By default, transform all findings/i);
     assert.match(feedback, /Honor explicit scope or output filters recorded in ReviewContext\.md/i);
     assert.match(feedback, /honor explicit tone direction/i);
+    assert.match(
+      feedback,
+      /Summary follows the persisted professional tone direction; otherwise it is positive and constructive by default/i,
+    );
     assert.doesNotMatch(feedback, /ALL findings from evaluation artifacts must be transformed/i);
     assert.doesNotMatch(feedback, /Summary must be positive and constructive/i);
+    assert.doesNotMatch(feedback, /Summary comment is positive and constructive/i);
   });
 });

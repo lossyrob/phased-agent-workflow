@@ -15,7 +15,7 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
   - Define every required endpoint, API version, pagination mechanism, and completeness oracle: repository, PR metadata, commits, commit diff, iterations, iteration changes, iteration-relative threads, reviewers, PR statuses, policy evaluations, and source/merge-ref builds.
   - Pin the source head, target head, and iteration at acquisition start; revalidate them after all reads and restart or block on a push, retarget, or inconsistent snapshot. Treat `hasMultipleMergeBases` or conflicting common-commit evidence as an ambiguous baseline requiring an actionable block.
   - Validate `Content-Type` before parsing every response, including 2xx. Classify repository-level 404 as ambiguous, child 404 as absent only with prior trusted provenance, 403 as denied, expired 401 separately from authorization, preview/version drift as unsupported or ambiguous, and remaining transport failures as unreachable.
-  - Use runtime states `observed`, `empty-reachable`, `partial`, `unsupported`, `denied`, `ambiguous`, and `unreachable`. Keep capability-report provenance states such as `not-observed` separate from live result states.
+  - Use runtime states `observed`, `empty-reachable`, `partial`, `unsupported`, `denied`, `ambiguous`, `unreachable`, and `credential-unavailable`. Keep capability-report provenance states such as `not-observed` separate from live result states.
   - Never claim an empty collection proves configuration absence without endpoint-specific permission evidence. Preserve policy queued/running/approved/rejected/broken and build observed/empty-reachable distinctions.
   - Apply default-drop mapping at the acquisition boundary: raw responses, tokens, authorization headers, challenges, tenant/principal claims, project/repository IDs, participant identities, and verbatim thread bodies never enter artifacts or logs. Retain thread state, iteration-relative position, and a sanitized review-relevant summary without stable participant pseudonyms.
 - [x] **Wire acquisition into PAW Review**
@@ -30,8 +30,8 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
   - Document the expanded ReviewContext contract, read/output preflight separation, runtime state taxonomy, privacy boundary, and approved validation target.
 - [x] **Add regression coverage and validate**
   - Add fast contract tests for reference loading, endpoint/version/pagination coverage, target/auth/redaction invariants, state semantics, failure mapping, ReviewContext fields, and the no-post/no-vote boundary.
-  - Add workflow tests that give the Understanding skill deterministic synthetic Azure DevOps response fixtures for one successful multi-surface acquisition and one ambiguous repository 404. Assert concrete `ReviewContext.md` output or an actionable pre-artifact block, plus sentinel absence for credentials and identities.
-  - Cover expired-token, empty-reachable, pagination, and 2xx HTML semantics with fast contract assertions; deeper agent-level fixture coverage remains follow-up validation.
+  - Add workflow tests that load the installed-style reference, map one successful multi-surface fixture, classify raw target/auth/content-type/pagination cases, block an ambiguous repository 404, and block when the reference is absent. Assert concrete `ReviewContext.md` output or an actionable pre-artifact block, plus sentinel absence for credentials and identities.
+  - Keep the fast contract tier as a prompt-completeness guard; workflow fixtures cover representative agent behavior.
   - Keep synthetic fixtures credential-free and identity-free; do not commit raw live HTTP recordings.
   - Run targeted integration tests, prompt lint with before/after token counts, repository lint/build checks, and strict documentation validation.
   - Re-run read-only live validation against `devtools-test-repo` as an acceptance gate, not a regression substitute. Record only redacted state classifications and fail explicitly if the approved target is unreachable.
@@ -55,7 +55,7 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
 - Azure DevOps cannot reliably distinguish an authorization-masked repository 404 from absence. Repository 404 remains ambiguous and blocks review.
 - Empty build/policy/status envelopes prove endpoint reachability only. They do not prove no configuration or no CI.
 - Policy evaluation remains a preview API dependency and must surface drift explicitly.
-- Agent-level synthetic fixtures currently cover successful mapping and ambiguous repository 404. Expired-token, multi-page, empty-reachable, and 2xx HTML workflow cases are specified and contract-tested but not separately driven through an LLM session.
+- Agent-level fixtures classify expired-token, pagination, empty-reachable, 2xx HTML, denied access, invalid targets, and trusted/untrusted 404 cases. Populated-build and per-outcome full-artifact mapping remain specified but not separately driven through an LLM session.
 
 ## Open Questions
 

@@ -64,7 +64,7 @@ Before Stage R1, PAW Review resolves output authorization. During Stage R1, Azur
 
 ### Azure DevOps Read Contract
 
-Azure DevOps support is read-only. It acquires repository/PR metadata, source/target/common commits, commit list, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policy evaluations, and source/merge-ref builds. Stable APIs use REST 7.1; required preview surfaces use 7.1-preview.1.
+Azure DevOps support is read-only. It acquires repository/PR metadata, source/target/common commits, commit list, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policy evaluations, and source/merge-ref builds. API versions follow the Understanding skill's Azure DevOps endpoint contract.
 
 The Understanding skill:
 
@@ -73,7 +73,7 @@ The Understanding skill:
 - acquires a `.default` Azure DevOps token in process memory and uses a GET-only endpoint allowlist;
 - pins and revalidates the source/target/iteration snapshot;
 - validates JSON content type on every response;
-- records `observed`, `empty-reachable`, `partial`, `unsupported`, `denied`, `ambiguous`, `unreachable`, or `credential-unavailable` per surface;
+- records the runtime states defined by the Azure DevOps read-context reference;
 - never treats an empty build/policy/status envelope as proof of no configuration or CI;
 - maps only privacy-filtered, platform-neutral data into `ReviewContext.md`.
 
@@ -171,14 +171,14 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
     PR-<number>-<repo-slug>/  # Multi-repo PR (e.g., PR-123-my-api/)
       ...                     # Same structure per repository
       CrossRepoAnalysis.md    # Cross-repository correlation (multi-repo only)
-    <branch-slug>/            # Non-GitHub context
+    <branch-slug>/            # Local context
       ...
 ```
 
 **Naming Scheme**:
-- **Single PR**: `PR-<number>/` (e.g., `PR-123/`)
-- **Multi-repo PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
-- **Non-GitHub**: `<branch-slug>/` (slugified branch name)
+- **Single hosted PR (GitHub or Azure DevOps)**: `PR-<number>/` (e.g., `PR-123/`)
+- **Multi-repo hosted PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Local**: `<branch-slug>/` (slugified branch name)
 
 **Multi-repo detection** triggers naming when:
 - Multiple workspace folders open in VS Code (detected via multiple `.git` directories)
@@ -195,8 +195,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 **Skills:** `paw-review-understanding`, `paw-review-baseline`
 
 **Inputs:**
-* PR URL or number (GitHub context)
-* Base branch name (non-GitHub context, with current branch as head)
+* PR URL or number (GitHub or Azure DevOps context)
+* Base branch name (local context, with current branch as head)
 * Repository context
 
 **Outputs:**
@@ -395,12 +395,12 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 - Repository (owner/repo or local)
 - Author (username or git author)
 - Title (PR title or derived from commits)
-- State (open/closed/draft for GitHub, active for non-GitHub)
-- Created date (GitHub only)
+- State (hosted PR state or active local branch)
+- Created date (hosted PR only)
 - CI Status plus per-surface PR status, policy, and build evidence
 - Labels (GitHub only)
 - Reviewers (GitHub identities; Azure DevOps vote-state counts without identities)
-- Linked Issues (GitHub URLs or "Inferred from commits" for non-GitHub)
+- Linked Issues (hosted references when supplied, or "Inferred from commits" for local)
 - Changed Files summary (count, additions, deletions)
 - Azure DevOps current changes, iteration history/tracking, and iteration-relative discussion positions
 - Azure DevOps machine-checkable read-surface states and snapshot validation
@@ -538,13 +538,13 @@ Complete review feedback with full comment history showing the evolution from or
 ```markdown
 # Review Comments for <PR Number or Branch Slug>
 
-**Context**: GitHub PR #X OR Non-GitHub branch `feature/...`
+**Context**: GitHub PR #X OR Azure DevOps PR #X OR local branch `feature/...`
 **Base Branch**: <base>
 **Head Branch**: <head>
 **Review Date**: <date>
 **Reviewer**: <name>
 **Status**: draft | finalized
-**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (non-GitHub)
+**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (Azure DevOps/local)
 
 ## Summary
 
@@ -643,7 +643,7 @@ Each comment shows its complete history:
 - Complete reference with full comment history for decision-making
 - Shows evolution: original → assessment → updated → posted
 - Human can manually add skipped comments if they disagree with critique
-- For non-GitHub: source for manual posting with instructions
+- For Azure DevOps/local: source for manual posting with instructions
 
 ---
 

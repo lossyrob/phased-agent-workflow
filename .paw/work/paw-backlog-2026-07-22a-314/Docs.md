@@ -72,7 +72,7 @@ Azure DevOps uses the existing PAW Review output configuration. Output remains `
 ### How to Test
 
 - Run the fast Azure DevOps contract and authorization tests under `tests/integration/tests/skills/`.
-- Run the synthetic success and ambiguous-404 workflow tests under `tests/integration/tests/workflows/azure-devops-read-context.test.ts`.
+- Run the synthetic mapping, raw classification, ambiguous-404, and missing-reference workflow tests under `tests/integration/tests/workflows/azure-devops-read-context.test.ts`.
 - Perform the read-only acceptance probe only against `devtools-test-repo`.
 
 ### Edge Cases
@@ -87,5 +87,5 @@ Azure DevOps uses the existing PAW Review output configuration. Output remains `
 
 - The verified authentication path uses the current Azure CLI principal. Minimum permissions and non-interactive credential classes remain unverified.
 - Policy evaluations depend on a preview API and surface version drift explicitly.
-- Populated build behavior is covered synthetically because the approved live repository currently returns empty build collections.
+- Populated build behavior is specified by the contract but is not yet driven through an agent-level fixture because the approved live repository returns empty build collections.
 - Azure DevOps posting and reviewer voting remain deferred to separate work.

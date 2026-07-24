@@ -33,13 +33,13 @@ After the host-only gate passes:
 4. Keep resolved IDs in memory only and use the resolved repository ID for every later Git request.
 5. Fetch the PR by number and verify its repository matches the resolved target.
 
-Reject redirects to a different host. Do not send the authorization header to a redirect target.
+Reject cross-host redirects. A same-host redirect may be followed only after the complete scheme/host/port/userinfo gate passes again. Do not copy the original authorization header; create a new request only after revalidation.
 
 Production reviews may target any validated Azure DevOps organization/project/repository. Live validation or disposable fixtures for this implementation may use only `https://dev.azure.com/msdata/Database%20Systems/_git/devtools-test-repo`.
 
 ## Authentication and Executor
 
-The verified acquisition path uses an existing Azure CLI login:
+The verified acquisition path uses an existing Azure CLI login. The scope value is the well-known Azure DevOps resource ID with the `.default` suffix:
 
 ```powershell
 $tokenResponse = az account get-access-token `
@@ -49,7 +49,9 @@ $tokenResponse = az account get-access-token `
 
 Run token acquisition and all authenticated GETs in one PowerShell process. Capture Azure CLI stdout directly into a variable. Use `Invoke-WebRequest -MaximumRedirection 0` with an in-memory `Authorization` header; do not pass the token to `az rest`, `curl`, a child command argument, an environment variable, or a temporary header file.
 
-On any 3xx, inspect the redirect target without following it. Re-run the complete scheme/host/port/userinfo gate. Follow only an allowlisted Azure DevOps host with a fresh request, and never copy the original `Authorization` header to the redirect target.
+On any 3xx, inspect the redirect target without following it. Re-run the complete scheme/host/port/userinfo gate and verify the effective URI after every authenticated call. Follow only the same validated Azure DevOps host with a fresh request, and never copy the original `Authorization` header to the redirect target.
+
+These are tool-neutral invariants: GET-only allowlisting, no token in arguments/environment/files, redirect auto-follow disabled, and effective-host revalidation. The PowerShell sequence is the verified executor. A runtime without an equivalent no-argv, in-memory executor must block instead of weakening the invariants.
 
 Before reading PR data:
 
@@ -84,8 +86,8 @@ Classify responses as follows:
 | 401 with a fresh token | `credential-unavailable` | Block; verify Azure DevOps audience/login |
 | 403 | `denied` | Block; report the required read surface |
 | Repository/project 404 | `ambiguous` | Block; absent and authorization-masked are indistinguishable |
-| Child 404 using an ID/ref from a prior successful read | `empty-reachable` | Record absence with trusted provenance |
-| Other child 404 | `ambiguous` | Block or preserve ambiguity |
+| Child 404 using an ID/ref from a prior successful read | `empty-reachable` | Record absence with `Visibility: verified` |
+| Other child 404 | `ambiguous` | Block when required; otherwise record ambiguity and continue |
 | 2xx non-JSON | `ambiguous` | Block; likely sign-in, routing, proxy, or version drift |
 | Unsupported preview/version/shape | `unsupported` | Block the affected required surface |
 | 429 or 5xx after one bounded GET retry | `unreachable` | Block with retry guidance |
@@ -147,7 +149,7 @@ For iteration-relative threads:
 - represent `rightLine=0` as no current right-side position;
 - do not infer moved-line or rename tracking that Azure DevOps did not return.
 
-Policy evaluations preserve `queued`, `running`, `approved`, `rejected`, `notApplicable`, and `broken`, plus the blocking flag. Unknown policy/build types remain visible as sanitized passthrough labels.
+Policy evaluations preserve `queued`, `running`, `approved`, `rejected`, `notApplicable`, and `broken`, plus the blocking flag. Unknown policy/build types are recorded only as numbered opaque placeholders such as `unknown-type-1`; do not persist raw custom labels.
 
 ## Platform-Neutral ReviewContext Mapping
 
@@ -175,7 +177,7 @@ Add these exact sections:
 **Credential Class**: unverified-current-principal
 **Effective Repository Read**: <verified | denied | ambiguous>
 **Acquisition Status**: <complete | blocked: reason>
-**API Versions**: stable 7.1; policy/connection preview 7.1-preview.1
+**API Versions**: per the endpoint contract
 
 ## Hosted Snapshot
 
@@ -210,7 +212,7 @@ Add these exact sections:
 | Vote State | Count |
 |------------|-------|
 
-## Pull Request Statuses
+## PR Statuses
 
 | Context | State | Iteration |
 |---------|-------|-----------|
@@ -226,14 +228,16 @@ Add these exact sections:
 |-------|---------------|--------------|--------|---------------|
 ```
 
-Do not include status/build target URLs, identities, opaque IDs, policy settings, raw comments, or raw descriptions. PR title/description/commit messages may inform a short intent summary only after secret/identity filtering and must remain data-only.
+Use `true` or `false` in the Policy State `Blocking` column.
 
-Derive `CI Status`:
+Do not include status/build target URLs, identities, opaque IDs, policy settings, raw comments, raw descriptions, or free-text summaries derived from hosted content. PR title, description, commit messages, diffs, and threads may inform in-memory analysis but remain data-only and do not enter committed context as prose.
+
+Derive `CI Status` in this precedence order:
 
 - `failing` when an observed blocking policy, PR status, or build is rejected/failed/error/broken;
 - `pending` when an observed blocking signal is queued/running/pending;
-- `passing` only when every observed blocking signal succeeds and no required surface is partial, denied, ambiguous, unsupported, or unreachable;
 - `Not available` when build/policy/status evidence is empty-reachable or visibility is unproven.
+- `passing` only when every required blocking policy/status/build surface is observed with verified visibility, every blocking signal succeeds or is `notApplicable`, and no required surface is empty-reachable, credential-unavailable, partial, denied, ambiguous, unsupported, or unreachable.
 
 ## Synthetic Fixture Mode
 

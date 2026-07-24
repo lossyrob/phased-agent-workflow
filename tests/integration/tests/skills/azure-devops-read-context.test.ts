@@ -60,7 +60,7 @@ describe("Azure DevOps read context contract", () => {
     );
 
     assert.match(contract, /Require HTTPS.*no userinfo.*no fragment/is);
-    assert.match(contract, /Do not send the authorization header to a redirect target/i);
+    assert.match(contract, /Do not copy the original authorization header/i);
     assert.match(contract, /499b84ac-1321-427f-aa17-267ca6975798\/\.default/);
     assert.match(contract, /Run token acquisition and all authenticated GETs in one PowerShell process/i);
     assert.match(contract, /Invoke-WebRequest -MaximumRedirection 0/i);
@@ -96,6 +96,8 @@ describe("Azure DevOps read context contract", () => {
     assert.match(contract, /never proves that no configuration or CI exists/i);
     assert.match(contract, /Capability-report provenance.*separate evidence field/i);
     assert.match(contract, /least-complete component dominates/i);
+    assert.match(contract, /Derive `CI Status` in this precedence order/i);
+    assert.match(contract, /no required surface is empty-reachable, credential-unavailable/i);
   });
 
   it("maps platform-neutral ReviewContext sections without persisting sensitive data", async () => {
@@ -111,7 +113,7 @@ describe("Azure DevOps read context contract", () => {
       "Iteration Context",
       "Discussion Context",
       "Reviewer State",
-      "Pull Request Statuses",
+      "PR Statuses",
       "Policy State",
       "Build State",
     ]) {
@@ -123,6 +125,7 @@ describe("Azure DevOps read context contract", () => {
     assert.match(contract, /vote-state counts only/i);
     assert.match(contract, /Do not include status\/build target URLs, identities, opaque IDs/i);
     assert.match(contract, /free-text summaries derived from thread bodies/i);
+    assert.match(contract, /Use `true` or `false` in the Policy State `Blocking` column/i);
     assert.doesNotMatch(contract, /POST\s+https?:/i);
   });
 

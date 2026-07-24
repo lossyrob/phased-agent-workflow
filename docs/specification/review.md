@@ -66,7 +66,7 @@ Explicit direction overrides a PAW default, not an integrity invariant or missin
 
 During Understanding, Azure DevOps reviews authenticate the current runtime principal and read repository/PR metadata, source/target/common commits, commits, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policies, and source/merge-ref builds.
 
-The read path is GET-only, validates the canonical HTTPS target and stable snapshot, checks JSON content type on every response, and records explicit per-surface states. Empty status/policy/build envelopes mean endpoint reachable with unproven visibility, not "no CI." Credentials, runtime identities, opaque platform IDs, participant identities, raw responses, and verbatim discussion are excluded from artifacts. Posting and voting remain unavailable.
+The read path is GET-only, validates the canonical HTTPS target and stable snapshot, checks JSON content type on every response, and uses the runtime-state and privacy contracts defined by the Understanding skill's Azure DevOps reference. Empty status/policy/build envelopes mean endpoint reachable with unproven visibility, not "no CI." Posting and voting remain unavailable.
 
 ## Cross-Repository Review
 

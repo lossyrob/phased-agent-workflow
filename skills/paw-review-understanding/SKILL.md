@@ -97,7 +97,7 @@ related_prs:
 2. **Fetch PR Metadata**:
    - **GitHub**: Use GitHub tools to retrieve PR details (number, title, author, state, description, labels, reviewers, CI status, changed files)
    - **Azure DevOps**: Execute the loaded read-context contract. Required hosted surfaces are repository/PR metadata, commits, net diff, iterations and changes, iteration-relative threads, reviewers, PR statuses, policy evaluations, and source/merge-ref builds.
-   - **Azure DevOps failure**: Block before artifact creation when target validation, credentials, snapshot integrity, or a required surface is `credential-unavailable`, `denied`, `ambiguous`, `partial`, `unsupported`, or `unreachable`.
+   - **Azure DevOps failure**: Apply the reference's authoritative runtime-state dominance rules and block before artifact creation when target validation, credentials, snapshot integrity, or a required surface is incomplete.
    - **Local**: Use git to determine commits and changed files between base and head
 
 3. **Resolve Base Commit**:
@@ -198,7 +198,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - Base and head commit SHAs recorded
 - Azure DevOps contexts include all exact hosted sections from the loaded reference and a complete per-surface state table
 - Azure DevOps `Base Commit` is the validated common commit; `Target Commit` and snapshot validation are recorded separately
-- Azure DevOps artifacts contain no raw tokens, identity claims, opaque platform IDs, participant identities, verbatim thread bodies, or response dumps
+- Azure DevOps artifacts satisfy the authoritative privacy contract in the loaded reference
 - Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
 - Authorization fields present with `Preflight Status: passed`
 - Feedback scope is recorded as `all` or the explicit user filter
@@ -260,7 +260,7 @@ status: complete
 **Base Commit**: <sha>
 **Base Commit Source**: github-api|azure-devops-common-commit|merge-base
 **Head Commit**: <sha>
-**Target Commit**: <sha | same as Base Commit for contexts without a separate target tip>
+**Target Commit**: <sha for Azure DevOps | Not applicable for contexts without a separately observed target tip>
 **Repository**: <owner>/<repo> OR "Local repository"
 **Author**: <username or git author>
 **Title**: <pr-title or derived from commits>
@@ -288,7 +288,7 @@ status: complete
 
 ## Hosted Read Preflight
 
-<Azure DevOps only: use the exact sections and machine-checkable fields from references/azure-devops-read-context.md. Omit for GitHub/local.>
+<Azure DevOps only: include Hosted Read Preflight, Hosted Snapshot, Read Surface Summary, Current Changes, Iteration Context, Discussion Context, Reviewer State, PR Statuses, Policy State, and Build State. The reference owns their exact fields. Omit for GitHub/local.>
 
 ## Review Configuration
 

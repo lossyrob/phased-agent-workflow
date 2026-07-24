@@ -164,6 +164,48 @@ describe("Azure DevOps read context workflow", { timeout: 600_000 }, () => {
     }
   });
 
+  it("blocks a common-commit mismatch before creating artifacts", async () => {
+    const skill = await loadSkill("paw-review-understanding");
+    const reference = await readFile(
+      join(
+        getRepoRoot(),
+        "skills/paw-review-understanding/references/azure-devops-read-context.md",
+      ),
+      "utf-8",
+    );
+    const answerer = new RuleBasedAnswerer([(req) => req.choices?.[0] ?? "proceed"], false);
+    let ctx: TestContext | undefined;
+
+    try {
+      const fixture = await TestFixture.clone("minimal-ts");
+      await installReference(fixture, reference);
+      ctx = await createTestContext({
+        fixture,
+        skillOrAgent: "paw-review-understanding-ado-common-mismatch",
+        systemPrompt: buildFixturePrompt(skill),
+        answerer,
+        toolPolicy: new FixtureOnlyPolicy(fixture.workDir),
+      });
+
+      const response = await ctx.session.sendAndWait(
+        { prompt: commonCommitMismatchFixturePrompt() },
+        240_000,
+      );
+      const text = response?.data?.content ?? "";
+      assert.match(text, /blocked|ambiguous/i);
+      assert.match(text, /common/i);
+      await assert.rejects(
+        access(join(fixture.workDir, ".paw", "reviews", "PR-42", "ReviewContext.md")),
+      );
+      assertReferenceLoaded(ctx.toolLog);
+      assertExternalCallsDenied(ctx.toolLog);
+    } finally {
+      if (ctx) {
+        await destroyTestContext(ctx);
+      }
+    }
+  });
+
   it("classifies raw target and response fixtures without pre-labeled states", async () => {
     const skill = await loadSkill("paw-review-understanding");
     const reference = await readFile(
@@ -204,9 +246,12 @@ describe("Azure DevOps read context workflow", { timeout: 600_000 }, () => {
         ["CASE-H", "blocked"],
         ["CASE-I", "blocked"],
         ["CASE-J", "failing"],
-        ["CASE-K", "passing"],
+        ["CASE-K", "Not available"],
         ["CASE-L", "observed"],
         ["CASE-M", "partial"],
+        ["CASE-N", "Not available"],
+        ["CASE-O", "Not available"],
+        ["CASE-P", "Not available"],
       ]) {
         const line = text.split(/\r?\n/).find((candidate) => candidate.includes(caseId));
         assert.ok(line, `Missing classification line for ${caseId}`);
@@ -320,6 +365,16 @@ function ambiguous404FixturePrompt(): string {
   ].join("\n");
 }
 
+function commonCommitMismatchFixturePrompt(): string {
+  return [
+    "Evaluate this fixture for Azure DevOps PR 42.",
+    "Target validation and credentials succeeded. The PR supports iterations and has one merge base.",
+    "The latest iteration commonRefCommit is 1111111111111111111111111111111111111111.",
+    "The commit-diff commonCommit is 9999999999999999999999999999999999999999.",
+    "Apply the snapshot contract. Do not create ReviewContext.md or ResearchQuestions.md.",
+  ].join("\n");
+}
+
 function rawClassificationFixturePrompt(): string {
   return [
     "Do not create files. Classify each independent fixture using the loaded contract.",
@@ -334,9 +389,12 @@ function rawClassificationFixturePrompt(): string {
     "CASE-H: Target URL is https://dev.azure.com.evil.example/Example/Project/_git/repo/pullrequest/42.",
     "CASE-I: Target URL is https://dev.azure.com@evil.example/Example/Project/_git/repo/pullrequest/42.",
     "CASE-J: The complete blocking-policy set is visible and contains one rejected blocking policy.",
-    "CASE-K: The complete blocking-policy set and all linked status/build surfaces are observed with verified visibility; every blocking signal succeeded.",
+    "CASE-K: Every returned blocking policy and linked status/build succeeded, but live collection completeness remains unproven.",
     "CASE-L: PR commits page 1 has two rows and a continuation token; page 2 has one row and no token; the merged result contains all three rows.",
     "CASE-M: Net diff returns rows but allChangesIncluded=false after the safety cap.",
+    "CASE-N: Latest pinned iteration is 4. A failed PR status belongs to iteration 3, and there is no current failing or pending signal.",
+    "CASE-O: Head Commit is 2222222222222222222222222222222222222222. A failed source build has source commit 1111111111111111111111111111111111111111, and there is no current failing or pending signal.",
+    "CASE-P: The pinned merge commit is 3333333333333333333333333333333333333333. A failed merge build has source commit 4444444444444444444444444444444444444444, and there is no current failing or pending signal.",
   ].join("\n");
 }
 

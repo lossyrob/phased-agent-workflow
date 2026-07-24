@@ -68,6 +68,8 @@ During Understanding, Azure DevOps reviews authenticate the current runtime prin
 
 The read path is GET-only, validates the canonical HTTPS target and stable snapshot, checks JSON content type on every response, and uses the runtime-state and privacy contracts defined by the Understanding skill's Azure DevOps reference. Empty status/policy/build envelopes mean endpoint reachable with unproven visibility, not "no CI." Posting and voting remain unavailable.
 
+Only status/build evidence matching the pinned iteration and source/merge commits affects CI state. Live Azure DevOps reads can report known `failing` or `pending` signals; otherwise CI is `Not available` because collection completeness cannot be proven. They do not report `passing`.
+
 ## Cross-Repository Review
 
 PAW Review supports coordinated review of multiple related PRs across repositories.

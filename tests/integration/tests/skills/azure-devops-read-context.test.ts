@@ -97,7 +97,9 @@ describe("Azure DevOps read context contract", () => {
     assert.match(contract, /Capability-report provenance.*separate evidence field/i);
     assert.match(contract, /least-complete component dominates/i);
     assert.match(contract, /Derive `CI Status` in this precedence order/i);
-    assert.match(contract, /no required surface is empty-reachable, credential-unavailable/i);
+    assert.match(contract, /live Azure DevOps reads do not produce `CI Status: passing`/i);
+    assert.match(contract, /PR status contributes only when its iteration matches the latest pinned iteration/i);
+    assert.match(contract, /source build contributes only when its source commit matches `Head Commit`/i);
   });
 
   it("maps platform-neutral ReviewContext sections without persisting sensitive data", async () => {

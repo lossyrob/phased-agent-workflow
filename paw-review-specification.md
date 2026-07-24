@@ -79,6 +79,8 @@ The Understanding skill:
 
 Posting and voting remain outside this contract.
 
+Only status/build evidence tied to the pinned iteration and source/merge commits contributes to CI state. Production Azure DevOps reads report known `failing` or `pending` signals; otherwise they report `Not available` because collection completeness cannot be proven for the current principal. They do not report `passing`.
+
 ---
 
 ## Cross-Repository Review

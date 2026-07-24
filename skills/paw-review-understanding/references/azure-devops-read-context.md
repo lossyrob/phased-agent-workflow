@@ -98,7 +98,7 @@ Use these machine-checkable surface states in `ReviewContext.md`:
 
 Each surface also records `Visibility: verified | unproven`. `connectionData` proves authentication only, not resource authorization. A successful empty policy/build/status response is `empty-reachable` with `Visibility: unproven`; it never proves that no configuration or CI exists.
 
-Singleton resources and fully-drained paginated data are `Visibility: verified` for the returned resource/data. Policy, PR-status, and build collections remain `Visibility: unproven` unless endpoint-specific permission evidence independently proves the blocking-capable set is complete; a non-empty response proves only the returned items were readable.
+Singleton resources and fully-drained paginated data are `Visibility: verified` for the returned resource/data. Production policy, PR-status, and build collections remain `Visibility: unproven`; Azure DevOps exposes no endpoint-specific completeness proof for the current principal. A non-empty response proves only the returned items were readable. Therefore live Azure DevOps reads do not produce `CI Status: passing`.
 
 For compound reads, the least-complete component dominates:
 
@@ -113,15 +113,16 @@ At acquisition start, record in memory:
 - PR number/state/draft flag;
 - source and target refs;
 - source and target commit SHAs;
+- merge commit SHA when available;
 - `supportsIterations`;
 - `hasMultipleMergeBases`;
 - latest iteration ID and common commit when available.
 
-Block when `hasMultipleMergeBases` is true. For iteration-enabled PRs, the latest iteration's `commonRefCommit` and the commit-diff `commonCommit` must agree. Record that commit as `Base Commit`. Record the source tip as `Head Commit` and the target tip as `Target Commit`.
+Block when `hasMultipleMergeBases` is true. For iteration-enabled PRs, the latest iteration's `commonRefCommit` and the commit-diff `commonCommit` must agree. If they differ, classify the snapshot as `ambiguous`, discard acquired context, and block before creating review artifacts. Record the agreed commit as `Base Commit`. Record the source tip as `Head Commit`, the target tip as `Target Commit`, and the current merge commit when Azure DevOps provides one.
 
 For PRs without iteration support, use the commit-diff `commonCommit`, record iteration context as `unsupported`, and continue only when the diff is complete. Read threads without iteration query parameters; if that shape is unavailable, record Discussion Context as `unsupported`, never empty.
 
-After all surfaces are read, re-fetch PR metadata and iterations. The PR state, source/target refs, source/target SHAs, and latest iteration must match the start snapshot. On drift, discard the data and retry once; repeated drift blocks with `ambiguous`.
+After all surfaces are read, re-fetch PR metadata and iterations. The PR state, source/target refs, source/target/merge SHAs, and latest iteration must match the start snapshot. On drift, discard the data and retry once; repeated drift blocks with `ambiguous`.
 
 ## Endpoint and Pagination Contract
 
@@ -234,10 +235,11 @@ Apply the canonical privacy invariant at the start of this reference. Mapping-sp
 
 Derive `CI Status` in this precedence order:
 
-- `failing` when an observed blocking policy is rejected/broken, or a status/build explicitly linked by a blocking policy is failed/error;
-- `pending` when an observed blocking policy is queued/running/pending, or its linked status/build is pending;
+- First exclude historical evidence. A PR status contributes only when its iteration matches the latest pinned iteration. A source build contributes only when its source commit matches `Head Commit`. A merge build contributes only when its source commit matches the pinned merge commit for the source/target snapshot. Missing or non-matching coordinates are historical and do not affect current CI.
+- `failing` when a current observed blocking policy is rejected/broken, or a current status/build explicitly linked by a blocking policy is failed/error;
+- `pending` when a current observed blocking policy is queued/running/pending, or its current linked status/build is pending;
 - `Not available` when build/policy/status evidence is empty-reachable or visibility is unproven;
-- `passing` only when the complete blocking-policy set and every linked status/build surface are observed with verified visibility, every blocking signal succeeds or is `notApplicable`, and no required surface is empty-reachable, credential-unavailable, partial, denied, ambiguous, unsupported, or unreachable;
+- `passing` is reserved for a future endpoint-specific completeness proof and is not emitted by the current live Azure DevOps acquisition path;
 - any unknown blocking-policy state maps the policy surface to `unsupported` and never contributes to `passing`.
 
 ## Synthetic Fixture Mode

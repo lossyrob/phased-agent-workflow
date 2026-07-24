@@ -44,16 +44,16 @@ Additional Inputs: Canonical capability report at issue #313 comment 5071936021
 ## Control State
 
 TODO Mirror: active-required-items
-Reconciliation: not_run
+Reconciliation: current
 
 ### Required Workflow Items
 - `init` | `resolved` | `activity`
-- `planning` | `pending` | `activity`
-- `planning-docs-review` | `pending` | `activity`
+- `planning` | `resolved` | `activity`
+- `planning-docs-review` | `in_progress` | `activity`
 - `implementation` | `pending` | `activity`
 - `final-review` | `pending` | `activity`
 - `final-pr` | `pending` | `activity`
 
 ### Configured Procedure Items
-- `procedure:planning-review` | `pending` | `procedure`
+- `procedure:planning-review` | `in_progress` | `procedure`
 - `procedure:final-review` | `pending` | `procedure`

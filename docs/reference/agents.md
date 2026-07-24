@@ -148,6 +148,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 1. **Understanding Stage**
    - Analyzes PR changes and creates ReviewContext.md
+   - For Azure DevOps, validates the target/current principal and acquires read-only PR, diff, iteration, discussion, reviewer, status, policy, and build context
    - Researches pre-change baseline at base commit
    - Derives specification from implementation
 
@@ -164,7 +165,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 **Comment Evolution:** ReviewComments.md shows full history for each comment: original → assessment → updated → posted status. Skipped comments remain visible for manual inclusion if reviewer disagrees with critique.
 
-**Human Control:** Explicit user direction overrides PAW defaults, but not integrity checks or unavailable capabilities. GitHub stays pending unless submission is explicitly authorized; Azure DevOps and local reviews remain artifact-only when executable output is unavailable.
+**Human Control:** Explicit user direction overrides PAW defaults, but not integrity checks or unavailable capabilities. GitHub stays pending unless submission is explicitly authorized. Azure DevOps acquires hosted read context but remains artifact-only for output; local reviews remain artifact-only.
 
 **Note:** The six PAW-R* agents (R1A, R1B, R2A, R2B, R3A, R3B) have been replaced by this unified skills-based workflow.
 

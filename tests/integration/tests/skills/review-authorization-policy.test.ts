@@ -60,16 +60,21 @@ describe("PAW Review authorization policy", () => {
     );
   });
 
-  it("requires early conflict and capability preflight for every platform", async () => {
+  it("separates Azure DevOps output preflight from hosted read preflight", async () => {
     const agent = await readRepoFile("agents/PAW-Review.agent.md");
     const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
+    const understanding = await readRepoFile("skills/paw-review-understanding/SKILL.md");
 
     assert.match(agent, /report it before the Understanding stage/i);
     assert.match(workflow, /Classify the review platform as `github`, `azure-devops`, or `local`/i);
     assert.match(
       workflow,
-      /Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight/i,
+      /Do not probe Azure DevOps submission APIs, mutation permissions, or output endpoints solely to manufacture output capability/i,
     );
+    assert.match(workflow, /Output capability and hosted read capability are separate/i);
+    assert.match(workflow, /successful reads never enable posting or voting/i);
+    assert.match(understanding, /references\/azure-devops-read-context\.md/i);
+    assert.match(understanding, /block rather than silently degrading/i);
     assert.match(
       workflow,
       /If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis/i,
@@ -152,7 +157,7 @@ describe("PAW Review authorization policy", () => {
     );
     assert.match(
       docs,
-      /Azure DevOps and local contexts stay artifact-only when executable capability is unavailable/i,
+      /Azure DevOps acquires hosted PR\/CI read context but stays artifact-only for output/i,
     );
   });
 

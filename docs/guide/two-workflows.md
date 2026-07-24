@@ -137,6 +137,7 @@ The Review Workflow helps you thoroughly review any pull request through three s
 - **Comprehensive findings** — Generate all in-scope findings; explicit user filters can narrow output
 - **Evidence-based feedback** — Every finding includes file:line references and rationale
 - **Full human control** — GitHub stays pending by default; explicit submission is verified against the exact target, head, review, and event
+- **Hosted Azure DevOps context** — Read-only authentication captures PR, diff, iteration, discussion, reviewer, policy, status, and build state while output remains artifact-only
 
 ## Choosing Between Workflows
 

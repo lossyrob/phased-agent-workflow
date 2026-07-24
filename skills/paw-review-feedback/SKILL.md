@@ -178,7 +178,7 @@ status: draft
 
 # Review Comments for <PR Number or Branch Slug>
 
-**Context**: GitHub PR #X OR Non-GitHub branch feature/...
+**Context**: GitHub PR #X OR Azure DevOps PR #X OR local branch feature/...
 **Base Branch**: <base>
 **Head Branch**: <head>
 **Review Date**: <date>

@@ -6,7 +6,7 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
 
 ## Work Items
 
-- [ ] **Define the Azure DevOps read contract**
+- [x] **Define the Azure DevOps read contract**
   - Add `skills/paw-review-understanding/references/azure-devops-read-context.md` and an explicit Understanding-skill directive to load it for every Azure DevOps review; block if the reference is unavailable rather than silently degrading.
   - Parse only HTTPS Azure DevOps PR URLs, reject userinfo/authority confusion and unsupported hosts, normalize names/encoding, resolve the target repository in memory, and verify that the resolved repository and PR match the supplied target before attaching a bearer token to follow-up requests.
   - Keep the production target generic within allowlisted Azure DevOps hosts. Restrict this implementation's live validation and disposable fixtures to `https://dev.azure.com/msdata/Database%20Systems/_git/devtools-test-repo`.
@@ -18,19 +18,20 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
   - Use runtime states `observed`, `empty-reachable`, `partial`, `unsupported`, `denied`, `ambiguous`, and `unreachable`. Keep capability-report provenance states such as `not-observed` separate from live result states.
   - Never claim an empty collection proves configuration absence without endpoint-specific permission evidence. Preserve policy queued/running/approved/rejected/broken and build observed/empty-reachable distinctions.
   - Apply default-drop mapping at the acquisition boundary: raw responses, tokens, authorization headers, challenges, tenant/principal claims, project/repository IDs, participant identities, and verbatim thread bodies never enter artifacts or logs. Retain thread state, iteration-relative position, and a sanitized review-relevant summary without stable participant pseudonyms.
-- [ ] **Wire acquisition into PAW Review**
+- [x] **Wire acquisition into PAW Review**
   - Narrow existing "do not probe Azure DevOps" rules to output/mutation capability only. The agent and workflow route Azure DevOps reviews and preserve artifact-only output; `paw-review-understanding` is the single owner of hosted read preflight, acquisition, redaction, and `ReviewContext.md` mapping.
   - Update identifier derivation so hosted Azure DevOps PRs use the same `PR-<number>` / `PR-<number>-<repo-slug>` artifact scheme as GitHub.
   - Expand the `ReviewContext.md` template and validation criteria with platform-neutral read-preflight, snapshot, change, discussion, status, policy, build, and capability sections.
   - Record the platform common commit as `Base Commit`, source tip as `Head Commit`, target tip separately, and the exact source of each value. Preserve ADO-native iteration/policy details in clearly scoped subsections rather than forcing them into lossy generic fields.
   - Record current net changes with paths/change types, iteration history and tracking changes, stale/left-only thread positions, reviewer vote-state counts without identities, PR status contexts, policy blocking/state, and build state. Preserve unknown policy/build types with an explicit passthrough marker.
   - Make downstream review skills consume `ReviewContext.md` as before; no posting or voting skill is added.
-- [ ] **Align specifications and user-facing references**
+- [x] **Align specifications and user-facing references**
   - Update the canonical review specification and mirrored documentation to describe production Azure DevOps read support while retaining artifact-only output.
   - Document the expanded ReviewContext contract, read/output preflight separation, runtime state taxonomy, privacy boundary, and approved validation target.
-- [ ] **Add regression coverage and validate**
+- [x] **Add regression coverage and validate**
   - Add fast contract tests for reference loading, endpoint/version/pagination coverage, target/auth/redaction invariants, state semantics, failure mapping, ReviewContext fields, and the no-post/no-vote boundary.
-  - Add workflow tests that give the Understanding skill deterministic synthetic Azure DevOps response fixtures: one successful multi-surface acquisition and representative expired-token, denied/ambiguous 404, empty-reachable, multi-page, and 200 HTML cases. Assert concrete `ReviewContext.md` output or an actionable pre-artifact block, plus sentinel absence for credentials and identities.
+  - Add workflow tests that give the Understanding skill deterministic synthetic Azure DevOps response fixtures for one successful multi-surface acquisition and one ambiguous repository 404. Assert concrete `ReviewContext.md` output or an actionable pre-artifact block, plus sentinel absence for credentials and identities.
+  - Cover expired-token, empty-reachable, pagination, and 2xx HTML semantics with fast contract assertions; deeper agent-level fixture coverage remains follow-up validation.
   - Keep synthetic fixtures credential-free and identity-free; do not commit raw live HTTP recordings.
   - Run targeted integration tests, prompt lint with before/after token counts, repository lint/build checks, and strict documentation validation.
   - Re-run read-only live validation against `devtools-test-repo` as an acceptance gate, not a regression substitute. Record only redacted state classifications and fail explicitly if the approved target is unreachable.
@@ -54,6 +55,7 @@ Extend the existing PAW Review Understanding stage rather than introducing a sec
 - Azure DevOps cannot reliably distinguish an authorization-masked repository 404 from absence. Repository 404 remains ambiguous and blocks review.
 - Empty build/policy/status envelopes prove endpoint reachability only. They do not prove no configuration or no CI.
 - Policy evaluation remains a preview API dependency and must surface drift explicitly.
+- Agent-level synthetic fixtures currently cover successful mapping and ambiguous repository 404. Expired-token, multi-page, empty-reachable, and 2xx HTML workflow cases are specified and contract-tested but not separately driven through an LLM session.
 
 ## Open Questions
 

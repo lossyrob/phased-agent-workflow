@@ -54,15 +54,30 @@ This inventory is the source of truth for PAW Review instruction precedence. The
 
 | Classification | Policies |
 |----------------|----------|
-| **True invariants** | Evidence is not fabricated; only finalized comments are posted; internal rationale and skipped comments stay local; executable submission verifies the exact platform target, live head, pending review ID, and event; failed verification preserves the pending review without mutation |
-| **Defaults** | GitHub creates a pending review; Azure DevOps and local contexts produce artifacts/manual instructions when executable capability is unavailable |
+| **True invariants** | Evidence is not fabricated; Azure DevOps reads validate the exact target and pinned snapshot, use GET-only authenticated acquisition, and exclude credentials/identities/raw discussion from artifacts; only finalized comments are posted; executable submission verifies the exact platform target, live head, pending review ID, and event; failed verification preserves the pending review without mutation |
+| **Defaults** | GitHub creates a pending review; Azure DevOps acquires hosted PR/CI read context but produces artifact-only output; local contexts produce artifacts/manual instructions |
 | **User-configurable** | An explicit request can submit a GitHub review with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
 
 Explicit user direction overrides a PAW-owned default. It does not override a true invariant or create an unavailable platform capability.
 
-Before Stage R1, PAW Review records platform, output capability, requested action, authorization state, target, head, pending-review binding, event, and conflict status in `ReviewContext.md`. Ambiguous requests and authorized-but-unsupported mutations are reported before analysis. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
+Before Stage R1, PAW Review resolves output authorization. During Stage R1, Azure DevOps separately validates the hosted target, authenticates the current runtime principal, acquires a stable read snapshot, and records per-surface evidence in `ReviewContext.md`. Ambiguous requests, unsupported mutations, target mismatch, unavailable credentials, and incomplete required reads are reported before evaluation. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
 
-Azure DevOps uses this policy and preflight contract, but executable Azure DevOps API behavior is outside this specification.
+### Azure DevOps Read Contract
+
+Azure DevOps support is read-only. It acquires repository/PR metadata, source/target/common commits, commit list, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policy evaluations, and source/merge-ref builds. Stable APIs use REST 7.1; required preview surfaces use 7.1-preview.1.
+
+The Understanding skill:
+
+- loads the Azure DevOps read-context reference;
+- validates canonical HTTPS target coordinates before and after repository resolution;
+- acquires a `.default` Azure DevOps token in process memory and uses a GET-only endpoint allowlist;
+- pins and revalidates the source/target/iteration snapshot;
+- validates JSON content type on every response;
+- records `observed`, `empty-reachable`, `partial`, `unsupported`, `denied`, `ambiguous`, `unreachable`, or `credential-unavailable` per surface;
+- never treats an empty build/policy/status envelope as proof of no configuration or CI;
+- maps only privacy-filtered, platform-neutral data into `ReviewContext.md`.
+
+Posting and voting remain outside this contract.
 
 ---
 
@@ -193,7 +208,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 1. **Fetch PR metadata and create ReviewContext.md**
    - **GitHub**: Use GitHub MCP tools for PR metadata, files, status
-   - **Non-GitHub**: Use git diff for changes, derive from commits
+   - **Azure DevOps**: Run authenticated target/read preflight and acquire hosted PR, diff, iteration, discussion, reviewer, status, policy, and build context
+   - **Local**: Use git diff for changes, derive from commits
    - Document all changed files with additions/deletions
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
@@ -372,19 +388,22 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 **Authoritative parameter source** for the review workflow, analogous to WorkflowContext.md in PAW's implementation workflow.
 
 **Contents:**
-- **PR Number** (GitHub) OR **Branch** (non-GitHub)
+- **PR Number** (GitHub or Azure DevOps) OR **Branch** (local)
+- Review platform, output capability, and hosted read-preflight state
 - Base Branch, Head Branch
-- Base Commit SHA, Head Commit SHA
+- Base/common Commit SHA, Head/source Commit SHA, and Target Commit SHA
 - Repository (owner/repo or local)
 - Author (username or git author)
 - Title (PR title or derived from commits)
 - State (open/closed/draft for GitHub, active for non-GitHub)
 - Created date (GitHub only)
-- CI Status (passing/failing/pending for GitHub, "Not available" for non-GitHub)
+- CI Status plus per-surface PR status, policy, and build evidence
 - Labels (GitHub only)
-- Reviewers (GitHub only)
+- Reviewers (GitHub identities; Azure DevOps vote-state counts without identities)
 - Linked Issues (GitHub URLs or "Inferred from commits" for non-GitHub)
 - Changed Files summary (count, additions, deletions)
+- Azure DevOps current changes, iteration history/tracking, and iteration-relative discussion positions
+- Azure DevOps machine-checkable read-surface states and snapshot validation
 - **Artifact Paths**: auto-derived
 - Description (PR description or "Derived from commit messages")
 - Flags (CI failures present, breaking changes suspected)

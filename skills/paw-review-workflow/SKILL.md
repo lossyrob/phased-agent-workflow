@@ -112,8 +112,8 @@ All review artifacts are stored in a consistent directory structure:
 
 ### Identifier Derivation
 
-- **Single GitHub PR**: `PR-<number>` (e.g., `PR-123`)
-- **Multi-repo GitHub PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Single hosted PR (GitHub or Azure DevOps)**: `PR-<number>` (e.g., `PR-123`)
+- **Multi-repo hosted PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
 - **Local branch**: Slugified branch name (e.g., `feature-new-auth`)
 
 **Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
@@ -126,7 +126,7 @@ Example: `acme-corp/my-api-service` → `my-api-service`
 Run before the Understanding stage:
 
 1. Classify the review platform as `github`, `azure-devops`, or `local`.
-2. Determine output capability from the available tools and context. Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight.
+2. Determine output capability from the available tools and context. Do not probe Azure DevOps submission APIs, mutation permissions, or output endpoints solely to manufacture output capability.
 3. Resolve the requested output action:
    - GitHub default: `pending`
    - Azure DevOps/local default: `artifact-only`
@@ -139,6 +139,15 @@ Run before the Understanding stage:
 
 Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
 
+### Azure DevOps Read Preflight
+
+Output capability and hosted read capability are separate:
+
+- Azure DevOps output remains `artifact-only`; successful reads never enable posting or voting.
+- `paw-review-understanding` owns Azure DevOps target validation, current-principal authentication, GET-only capability checks, snapshot acquisition, redaction, and platform-neutral mapping.
+- The Understanding activity must load its Azure DevOps read-context reference and block before expensive analysis when the reference, target, credentials, snapshot, or required read surface is unavailable or ambiguous.
+- Do not replace missing hosted context with local git data and present it as complete Azure DevOps context.
+
 ## Workflow Orchestration
 
 The workflow executes stages in sequence, with each stage producing artifacts consumed by downstream stages.
@@ -149,8 +158,9 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Sequence**:
 1. Run `paw-review-understanding` activity
-   - Input: PR number/URL or branch context, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
+   - Input: PR number/URL or branch context, resolved output preflight, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
    - Output: `ReviewContext.md`, `ResearchQuestions.md`
+   - Azure DevOps output includes hosted read preflight, pinned snapshot, complete changes/iterations, discussion state, reviewer vote-state counts, PR statuses, policies, builds, and per-surface evidence states
    
 2. Run `paw-review-baseline` activity
    - Input: ReviewContext.md, ResearchQuestions.md

@@ -56,11 +56,17 @@ PAW Review classifies instructions before analysis:
 
 | Classification | Behavior |
 |----------------|----------|
-| **Invariant** | Use evidence, post only finalized comments, keep internal rationale local, and verify the exact target, live head, pending review ID, and event before submission |
-| **Default** | GitHub stays pending; Azure DevOps and local contexts stay artifact-only when executable capability is unavailable |
+| **Invariant** | Use evidence; validate Azure DevOps target/snapshot and keep credentials, identities, and raw discussion out of artifacts; post only finalized comments; verify the exact target, live head, pending review ID, and event before submission |
+| **Default** | GitHub stays pending; Azure DevOps acquires hosted PR/CI read context but stays artifact-only for output; local contexts stay artifact-only |
 | **User-configurable** | Explicit direction can submit a GitHub review with Approve, Request Changes, or Comment, select review mode/specialists, narrow feedback scope, override critique recommendations, and adjust tone |
 
 Explicit direction overrides a PAW default, not an integrity invariant or missing platform capability. PAW Review reports ambiguous instructions or unsupported requested mutations before the Understanding stage. A changed head invalidates authorization and requires fresh analysis. Successful submission is terminal and is not replayed.
+
+### Azure DevOps Read Context
+
+During Understanding, Azure DevOps reviews authenticate the current runtime principal and read repository/PR metadata, source/target/common commits, commits, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policies, and source/merge-ref builds.
+
+The read path is GET-only, validates the canonical HTTPS target and stable snapshot, checks JSON content type on every response, and records explicit per-surface states. Empty status/policy/build envelopes mean endpoint reachable with unproven visibility, not "no CI." Credentials, runtime identities, opaque platform IDs, participant identities, raw responses, and verbatim discussion are excluded from artifacts. Posting and voting remain unavailable.
 
 ## Cross-Repository Review
 
@@ -110,8 +116,8 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Inputs:**
 
-- PR URL or number (GitHub context)
-- Base branch name (non-GitHub context)
+- PR URL or number (GitHub or Azure DevOps context)
+- Base branch name (local context)
 - Repository context
 
 **Outputs:**
@@ -126,6 +132,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 1. **Fetch PR metadata and create ReviewContext.md**
     - Document all changed files with additions/deletions
     - Set flags: CI failures, breaking changes suspected
+    - For Azure DevOps, complete hosted read preflight and snapshot acquisition before baseline research
 
 2. **Research pre-change baseline**
     - Analyze codebase at base commit (pre-change state)
@@ -264,10 +271,11 @@ Authoritative parameter source for the review workflow.
 
 - PR Number/Branch
 - Review platform and output capability
-- Base and Head commits
+- Hosted read-preflight and per-surface state (Azure DevOps)
+- Base/common, Head/source, and Target commits
 - Requested action, feedback scope, authorization, target, pending-review binding, event, and preflight result
-- Changed files summary
-- CI Status and flags
+- Changed files/current net diff plus Azure DevOps iteration and discussion context
+- CI status, PR statuses, policy state, build state, and flags
 - Description and metadata
 
 ### DerivedSpec.md

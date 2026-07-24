@@ -288,7 +288,7 @@ status: complete
 
 ## Hosted Read Preflight
 
-<Azure DevOps only: include Hosted Read Preflight, Hosted Snapshot, Read Surface Summary, Current Changes, Iteration Context, Discussion Context, Reviewer State, PR Statuses, Policy State, and Build State. The reference owns their exact fields. Omit for GitHub/local.>
+<Azure DevOps only: include the exact hosted sections and fields defined by the loaded reference. Omit for GitHub/local.>
 
 ## Review Configuration
 

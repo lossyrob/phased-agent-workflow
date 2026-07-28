@@ -10,7 +10,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 * **Comprehensive feedback** – Generate all in-scope findings; explicit user scope can narrow output
 * **Artifact-based** – Durable markdown documents trace reasoning from changes to comments
 * **Rewindable** – Any stage can restart if new information changes understanding
-* **Human-controlled** – GitHub reviews remain pending by default; explicit authorized submission is verified before execution
+* **Human-controlled** – Output capability is discovered from available tools; every external mutation is explicitly authorized and revalidated before execution
 
 ---
 
@@ -54,9 +54,9 @@ This inventory is the source of truth for PAW Review instruction precedence. The
 
 | Classification | Policies |
 |----------------|----------|
-| **True invariants** | Evidence is not fabricated; Azure DevOps reads validate the exact target and pinned snapshot, use GET-only authenticated acquisition, and exclude credentials/identities/raw discussion from artifacts; only finalized comments are posted; executable submission verifies the exact platform target, live head, pending review ID, and event; failed verification preserves the pending review without mutation |
-| **Defaults** | GitHub creates a pending review; Azure DevOps acquires hosted PR/CI read context but produces artifact-only output; local contexts produce artifacts/manual instructions |
-| **User-configurable** | An explicit request can submit a GitHub review with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
+| **True invariants** | Evidence is not fabricated; Azure DevOps reads validate the exact target and pinned snapshot, use GET-only authenticated acquisition, and exclude credentials/identities/raw discussion from artifacts; only finalized comments are posted; every executable mutation verifies the exact platform target, live head/snapshot, action, and event or output resource when applicable; failed verification leaves external state untouched |
+| **Defaults** | Output is artifact-only when no executable platform action is discovered; GitHub creates a pending review when GitHub output tools are available |
+| **User-configurable** | An explicit request can execute a discovered platform output action under exact authorization; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
 
 Explicit user direction overrides a PAW-owned default. It does not override a true invariant or create an unavailable platform capability.
 
@@ -77,7 +77,7 @@ The Understanding skill:
 - never treats an empty build/policy/status envelope as proof of no configuration or CI;
 - maps only privacy-filtered, platform-neutral data into `ReviewContext.md`.
 
-Posting and voting remain outside this contract.
+Posting and voting remain outside this read contract. Their availability is determined independently from tool operations and authorization; an output activity may guide execution but is not the capability gate. This read contract neither implements nor prohibits them.
 
 Only status/build evidence tied to the pinned iteration and source/merge commits contributes to CI state. Production Azure DevOps reads report known `failing` or `pending` signals; otherwise they report `Not available` because collection completeness cannot be proven for the current principal. They do not report `passing`.
 
@@ -320,7 +320,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
 * **GitHub review** – Pending by default; submitted only under explicit verified authorization
-* **Azure DevOps/local** – Finalized artifacts and manual instructions when executable output is unavailable
+* **Azure DevOps/local** – Executed platform output action when available and authorized; otherwise finalized artifacts and manual instructions
 
 **Process:**
 
@@ -363,7 +363,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
    - Preserve the pending review and report any mismatch; a changed head requires fresh analysis and authorization
    - Treat successful submission as terminal and idempotent
    - Skipped comments remain in artifact for reference but are NOT posted
-   - **Azure DevOps/local context**: Provide manual posting instructions when executable capability is unavailable
+   - **Azure DevOps/local context**: Use a discovered, authorized platform output action when available; otherwise provide manual posting instructions
 
 **Human Workflow:**
 
@@ -376,7 +376,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
   - Consult ReviewComments.md for full comment history (original → assessment → updated)
   - Leave pending, or explicitly authorize PAW Review to submit with Approve, Comment, or Request Changes
 * **Azure DevOps/local context**:
-  - Use ReviewComments.md to manually post to review platform
+  - Use the authorized platform output action when available; otherwise use ReviewComments.md to post manually
   - Post only comment text and suggestions (keep rationale/assessment for reference)
 * **Optional**: Ask agent to adjust tone – regenerates comments with new tone
 * **Optional**: Ask agent questions about findings – answers based on artifacts

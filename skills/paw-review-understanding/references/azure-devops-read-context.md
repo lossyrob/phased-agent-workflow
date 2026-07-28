@@ -1,6 +1,6 @@
 # Azure DevOps Read Context Contract
 
-Load this reference only for Azure DevOps pull requests. It defines read acquisition and `ReviewContext.md` mapping. Posting, voting, comment mutation, status mutation, and ref mutation are out of scope.
+Load this reference only for Azure DevOps pull requests. It defines read acquisition and `ReviewContext.md` mapping. Posting, voting, comment mutation, status mutation, and ref mutation are outside this read contract and are governed independently by discovered output tools and authorization.
 
 ## Invariants
 
@@ -8,7 +8,7 @@ Load this reference only for Azure DevOps pull requests. It defines read acquisi
 - Use only HTTPS Azure DevOps hosts and GET requests from the endpoint allowlist below.
 - Never persist bearer tokens, authorization headers, token responses, connection identities, tenant claims, project/repository IDs, participant identities, stable pseudonyms, opaque IDs/descriptors, status/build target URLs, policy settings, raw responses/error bodies/descriptions/comments, or free-text summaries derived from hosted content.
 - Fail closed before expensive analysis when target, authentication, snapshot, or required read capability is ambiguous.
-- Do not infer output/submission capability from successful reads.
+- Do not infer output capability from successful reads and do not use this read contract to prohibit a separately discovered, authorized output action.
 
 ## Target Validation
 

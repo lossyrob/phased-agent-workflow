@@ -25,7 +25,7 @@ Read both artifacts from `.paw/reviews/<identifier>/`:
 
 If these conditions fail, report the exact blocker. Do not create or submit a review.
 
-For Azure DevOps or local contexts, skip GitHub mutations and use the artifact-only flow.
+For Azure DevOps or local contexts, do not call GitHub mutation tools. Return to the workflow's platform output handling; use artifact-only output only when no executable, authorized platform action is available.
 
 ## Output Policy
 
@@ -158,8 +158,8 @@ When the platform is Azure DevOps or local, or executable GitHub capability is u
 
 - Do not call GitHub mutation tools.
 - Keep ReviewComments.md finalized.
-- Add manual posting instructions with final comment text.
-- Record the platform, capability, requested action, and preflight result.
+- Return the platform, capability, requested action, preflight result, and finalized comments to workflow-level platform output handling.
+- Add manual posting instructions only when no executable platform output action is available.
 
 An explicit unsupported submission request must have been reported before the Understanding stage. Do not silently convert it to artifact-only output.
 
@@ -175,7 +175,7 @@ An explicit unsupported submission request must have been reported before the Un
 **Defaults**
 
 - GitHub output remains pending.
-- Azure DevOps and local output remain artifact-only without executable capability.
+- Non-GitHub output remains artifact-only without executable capability.
 
 **User-configurable policy**
 

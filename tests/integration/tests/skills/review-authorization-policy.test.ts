@@ -32,6 +32,7 @@ describe("PAW Review authorization policy", () => {
     assert.match(agent, /evidence of that broader intent/i);
     assert.match(workflow, /significant, thorough review/i);
     assert.match(workflow, /generic code or PR review.*standard review path/i);
+    assert.match(workflow, /evidence of that broader intent/i);
   });
 
   it("classifies invariants, defaults, and user-configurable policy", async () => {

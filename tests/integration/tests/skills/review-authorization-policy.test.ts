@@ -23,14 +23,15 @@ async function readReviewPromptSurface(): Promise<string> {
 }
 
 describe("PAW Review authorization policy", () => {
-  it("requires explicit opt-in before starting the workflow", async () => {
+  it("guides selection toward significant, thorough reviews", async () => {
     const agent = await readRepoFile("agents/PAW-Review.agent.md");
     const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
 
-    assert.match(agent, /explicitly selects PAW-Review or requests PAW Review by name/i);
-    assert.match(agent, /generic code or PR review request is insufficient/i);
-    assert.match(workflow, /directly invokes this skill or explicitly requests PAW Review by name/i);
-    assert.match(workflow, /generic code or PR review, stop before delegating or creating artifacts/i);
+    assert.match(agent, /significant, thorough review/i);
+    assert.match(agent, /generic code or PR review.*standard review path/i);
+    assert.match(agent, /evidence of that broader intent/i);
+    assert.match(workflow, /significant, thorough review/i);
+    assert.match(workflow, /generic code or PR review.*standard review path/i);
   });
 
   it("classifies invariants, defaults, and user-configurable policy", async () => {

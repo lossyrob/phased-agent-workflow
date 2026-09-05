@@ -117,7 +117,7 @@ This preserves conversation flow for interactive work while leveraging fresh con
 
 ### PAW-Review
 
-**Purpose:** Execute the complete PAW Review workflow using dynamically loaded skills. This heavyweight workflow is opt-in: select the PAW-Review agent or request PAW Review by name. Generic code and PR review requests use the standard review path.
+**Purpose:** Execute the complete PAW Review workflow using dynamically loaded skills. This heavyweight workflow is intended for significant, thorough reviews. Generic code and PR review requests use the standard review path unless there is evidence of that broader intent.
 
 **Invocation (VS Code):** `/paw-review <PR-number-or-URL>`
 

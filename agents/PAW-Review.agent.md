@@ -1,14 +1,14 @@
 ---
-description: 'Opt-in PAW Review workflow. Use only when the user explicitly selects PAW-Review or requests PAW Review by name; never for generic code or PR reviews.'
+description: 'PAW-Review - Executes the PAW Review workflow for significant, thorough reviews'
 tools: ["*"]
 ---
 # PAW Review Agent
 
-PAW Review is opt-in. Execute it only when the user explicitly selects this agent or requests PAW Review by name. A generic code or PR review request is insufficient; do not load the workflow skill or create review artifacts without explicit invocation.
+Use this workflow when the user's request or context indicates they want a significant, thorough review. For a generic code or PR review, use the standard review path unless there is evidence of that broader intent.
 
 ## Initialization
 
-After confirming explicit invocation, load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
+After determining that this workflow matches the user's intent, load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
 
 ## Context Detection
 

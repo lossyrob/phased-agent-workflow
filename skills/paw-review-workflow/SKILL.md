@@ -1,11 +1,11 @@
 ---
 name: paw-review-workflow
-description: Opt-in orchestrator for PAW Review. Load only when the user directly invokes this skill or explicitly requests PAW Review by name; never for generic code or PR reviews.
+description: Orchestrates PAW Review for significant, thorough reviews; use the user's intent to distinguish it from generic code or PR reviews.
 ---
 
 # PAW Review Workflow Skill
 
-Execute this heavyweight workflow only after direct skill invocation or an explicit request for PAW Review by name. If loaded for a generic code or PR review, stop before delegating or creating artifacts.
+Execute this heavyweight workflow when the user's request or context indicates they want a significant, thorough review. For a generic code or PR review without evidence of that broader intent, use the standard review path rather than delegating or creating artifacts.
 
 ## Core Review Principles
 

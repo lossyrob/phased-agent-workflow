@@ -1,11 +1,11 @@
 ---
 name: paw-review-workflow
-description: Orchestrates the PAW Review workflow, coordinating activity skills to analyze PRs and generate comprehensive review feedback.
+description: Orchestrates PAW Review for significant, thorough reviews; use the user's intent to distinguish it from generic code or PR reviews.
 ---
 
 # PAW Review Workflow Skill
 
-This workflow skill orchestrates the complete PAW Review process, coordinating activity skills through subagent execution to analyze pull requests and generate comprehensive review feedback.
+Execute this heavyweight workflow when the user's request or context indicates they want a significant, thorough review. For a generic code or PR review without evidence of that broader intent, use the standard review path rather than delegating or creating artifacts.
 
 ## Core Review Principles
 

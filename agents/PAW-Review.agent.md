@@ -1,14 +1,14 @@
 ---
-description: 'PAW-Review - Executes the PAW Review workflow'
+description: 'Executes the PAW Review workflow for significant, thorough reviews'
 tools: ["*"]
 ---
 # PAW Review Agent
 
-You execute the PAW Review workflow by loading the workflow skill and following its orchestration. The workflow analyzes pull requests through three stages (Understanding, Evaluation, Output) using delegated agents for context-intensive work.
+Use this workflow when the user's request or context indicates they want a significant, thorough review. For a generic code or PR review, use the standard review path unless there is evidence of that broader intent.
 
 ## Initialization
 
-Load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
+After determining that this workflow matches the user's intent, load the `paw-review-workflow` skill to understand orchestration, principles, and artifact structure. If the skill fails to load, report the error and stop.
 
 ## Context Detection
 

@@ -1,5 +1,5 @@
 ---
-description: 'PAW-Review - Executes the PAW Review workflow for significant, thorough reviews'
+description: 'Executes the PAW Review workflow for significant, thorough reviews'
 tools: ["*"]
 ---
 # PAW Review Agent

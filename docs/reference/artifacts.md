@@ -236,11 +236,14 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 
 | Field | Description |
 |-------|-------------|
-| PR Number | GitHub PR number (or branch for non-GitHub) |
-| Base/Head Branch | Before and after branches |
-| Base/Head Commit | Specific commit SHAs |
-| Changed Files | Count, additions, deletions |
-| CI Status | Passing, failing, pending |
+| PR Number | GitHub or Azure DevOps PR number (or branch for local review) |
+| Review Platform / Output | Hosted platform, output capability, requested action, and authorization |
+| Hosted Read Preflight | Azure DevOps target, authentication, effective read, API versions, and acquisition result |
+| Base/Head/Target | Common/base and source/head commits; separately observed target tip when the platform provides it |
+| Read Surface Summary | Machine-checkable state, visibility, count, and notes for every Azure DevOps surface |
+| Changed Files | Count and current net changes; iteration tracking when available |
+| Discussion / Reviewers | Iteration-relative thread state and reviewer vote-state counts without identities |
+| CI Context | Snapshot-matched PR statuses, policy evaluations, and builds; known failing/pending or otherwise Not available for Azure DevOps |
 | Flags | CI failures, breaking changes suspected |
 
 ### ResearchQuestions.md

@@ -10,7 +10,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 * **Comprehensive feedback** – Generate all in-scope findings; explicit user scope can narrow output
 * **Artifact-based** – Durable markdown documents trace reasoning from changes to comments
 * **Rewindable** – Any stage can restart if new information changes understanding
-* **Human-controlled** – GitHub reviews remain pending by default; explicit authorized submission is verified before execution
+* **Human-controlled** – Output capability is discovered from available tools; every external mutation is explicitly authorized and revalidated before execution
 
 ---
 
@@ -54,15 +54,32 @@ This inventory is the source of truth for PAW Review instruction precedence. The
 
 | Classification | Policies |
 |----------------|----------|
-| **True invariants** | Evidence is not fabricated; only finalized comments are posted; internal rationale and skipped comments stay local; executable submission verifies the exact platform target, live head, pending review ID, and event; failed verification preserves the pending review without mutation |
-| **Defaults** | GitHub creates a pending review; Azure DevOps and local contexts produce artifacts/manual instructions when executable capability is unavailable |
-| **User-configurable** | An explicit request can submit a GitHub review with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
+| **True invariants** | Evidence is not fabricated; Azure DevOps reads validate the exact target and pinned snapshot, use GET-only authenticated acquisition, and exclude credentials/identities/raw discussion from artifacts; only finalized comments are posted; every executable mutation verifies the exact platform target, live head/snapshot, action, and event or output resource when applicable; failed verification leaves external state untouched |
+| **Defaults** | Output is artifact-only when no executable platform action is discovered; GitHub creates a pending review when GitHub output tools are available |
+| **User-configurable** | An explicit request can execute a discovered platform output action under exact authorization; users can select review mode/specialists, narrow feedback scope, override critique recommendations before posting, and request tone changes |
 
 Explicit user direction overrides a PAW-owned default. It does not override a true invariant or create an unavailable platform capability.
 
-Before Stage R1, PAW Review records platform, output capability, requested action, authorization state, target, head, pending-review binding, event, and conflict status in `ReviewContext.md`. Ambiguous requests and authorized-but-unsupported mutations are reported before analysis. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
+Before Stage R1, PAW Review resolves output authorization. During Stage R1, Azure DevOps separately validates the hosted target, authenticates the current runtime principal, acquires a stable read snapshot, and records per-surface evidence in `ReviewContext.md`. Ambiguous requests, unsupported mutations, target mismatch, unavailable credentials, and incomplete required reads are reported before evaluation. Repeated authorization for the same unsubmitted tuple confirms the action; successful submission is terminal. A head change invalidates authorization and requires fresh analysis and authorization.
 
-Azure DevOps uses this policy and preflight contract, but executable Azure DevOps API behavior is outside this specification.
+### Azure DevOps Read Contract
+
+Azure DevOps support is read-only. It acquires repository/PR metadata, source/target/common commits, commit list, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policy evaluations, and source/merge-ref builds. API versions follow the Understanding skill's Azure DevOps endpoint contract.
+
+The Understanding skill:
+
+- loads the Azure DevOps read-context reference;
+- validates canonical HTTPS target coordinates before and after repository resolution;
+- acquires a `.default` Azure DevOps token in process memory and uses a GET-only endpoint allowlist;
+- pins and revalidates the source/target/iteration snapshot;
+- validates JSON content type on every response;
+- records the runtime states defined by the Azure DevOps read-context reference;
+- never treats an empty build/policy/status envelope as proof of no configuration or CI;
+- maps only privacy-filtered, platform-neutral data into `ReviewContext.md`.
+
+Posting and voting remain outside this read contract. Their availability is determined independently from tool operations and authorization; an output activity may guide execution but is not the capability gate. This read contract neither implements nor prohibits them.
+
+Only status/build evidence tied to the pinned iteration and source/merge commits contributes to CI state. Production Azure DevOps reads report known `failing` or `pending` signals; otherwise they report `Not available` because collection completeness cannot be proven for the current principal. They do not report `passing`.
 
 ---
 
@@ -156,14 +173,14 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
     PR-<number>-<repo-slug>/  # Multi-repo PR (e.g., PR-123-my-api/)
       ...                     # Same structure per repository
       CrossRepoAnalysis.md    # Cross-repository correlation (multi-repo only)
-    <branch-slug>/            # Non-GitHub context
+    <branch-slug>/            # Local context
       ...
 ```
 
 **Naming Scheme**:
-- **Single PR**: `PR-<number>/` (e.g., `PR-123/`)
-- **Multi-repo PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
-- **Non-GitHub**: `<branch-slug>/` (slugified branch name)
+- **Single hosted PR (GitHub or Azure DevOps)**: `PR-<number>/` (e.g., `PR-123/`)
+- **Multi-repo hosted PRs**: `PR-<number>-<repo-slug>/` per repository (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Local**: `<branch-slug>/` (slugified branch name)
 
 **Multi-repo detection** triggers naming when:
 - Multiple workspace folders open in VS Code (detected via multiple `.git` directories)
@@ -180,8 +197,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 **Skills:** `paw-review-understanding`, `paw-review-baseline`
 
 **Inputs:**
-* PR URL or number (GitHub context)
-* Base branch name (non-GitHub context, with current branch as head)
+* PR URL or number (GitHub or Azure DevOps context)
+* Base branch name (local context, with current branch as head)
 * Repository context
 
 **Outputs:**
@@ -193,7 +210,8 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 
 1. **Fetch PR metadata and create ReviewContext.md**
    - **GitHub**: Use GitHub MCP tools for PR metadata, files, status
-   - **Non-GitHub**: Use git diff for changes, derive from commits
+   - **Azure DevOps**: Run authenticated target/read preflight and acquire hosted PR, diff, iteration, discussion, reviewer, status, policy, and build context
+   - **Local**: Use git diff for changes, derive from commits
    - Document all changed files with additions/deletions
    - Set flags: CI failures, breaking changes suspected
    - **ReviewContext.md becomes authoritative parameter source** for all downstream stages
@@ -302,7 +320,7 @@ Single-PR workflows remain unchanged—multi-repo sections only appear when the 
 **Outputs:**
 * `.paw/reviews/<identifier>/ReviewComments.md` – Complete feedback with full comment history (original → assessment → updated → posted status)
 * **GitHub review** – Pending by default; submitted only under explicit verified authorization
-* **Azure DevOps/local** – Finalized artifacts and manual instructions when executable output is unavailable
+* **Azure DevOps/local** – Executed platform output action when available and authorized; otherwise finalized artifacts and manual instructions
 
 **Process:**
 
@@ -345,7 +363,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
    - Preserve the pending review and report any mismatch; a changed head requires fresh analysis and authorization
    - Treat successful submission as terminal and idempotent
    - Skipped comments remain in artifact for reference but are NOT posted
-   - **Azure DevOps/local context**: Provide manual posting instructions when executable capability is unavailable
+   - **Azure DevOps/local context**: Use a discovered, authorized platform output action when available; otherwise provide manual posting instructions
 
 **Human Workflow:**
 
@@ -358,7 +376,7 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
   - Consult ReviewComments.md for full comment history (original → assessment → updated)
   - Leave pending, or explicitly authorize PAW Review to submit with Approve, Comment, or Request Changes
 * **Azure DevOps/local context**:
-  - Use ReviewComments.md to manually post to review platform
+  - Use the authorized platform output action when available; otherwise use ReviewComments.md to post manually
   - Post only comment text and suggestions (keep rationale/assessment for reference)
 * **Optional**: Ask agent to adjust tone – regenerates comments with new tone
 * **Optional**: Ask agent questions about findings – answers based on artifacts
@@ -372,19 +390,22 @@ The Output stage uses an **iterative feedback-critique pattern** to refine comme
 **Authoritative parameter source** for the review workflow, analogous to WorkflowContext.md in PAW's implementation workflow.
 
 **Contents:**
-- **PR Number** (GitHub) OR **Branch** (non-GitHub)
+- **PR Number** (GitHub or Azure DevOps) OR **Branch** (local)
+- Review platform, output capability, and hosted read-preflight state
 - Base Branch, Head Branch
-- Base Commit SHA, Head Commit SHA
+- Base/common Commit SHA, Head/source Commit SHA, and Target Commit SHA
 - Repository (owner/repo or local)
 - Author (username or git author)
 - Title (PR title or derived from commits)
-- State (open/closed/draft for GitHub, active for non-GitHub)
-- Created date (GitHub only)
-- CI Status (passing/failing/pending for GitHub, "Not available" for non-GitHub)
+- State (hosted PR state or active local branch)
+- Created date (hosted PR only)
+- CI Status plus per-surface PR status, policy, and build evidence
 - Labels (GitHub only)
-- Reviewers (GitHub only)
-- Linked Issues (GitHub URLs or "Inferred from commits" for non-GitHub)
+- Reviewers (GitHub identities; Azure DevOps vote-state counts without identities)
+- Linked Issues (hosted references when supplied, or "Inferred from commits" for local)
 - Changed Files summary (count, additions, deletions)
+- Azure DevOps current changes, iteration history/tracking, and iteration-relative discussion positions
+- Azure DevOps machine-checkable read-surface states and snapshot validation
 - **Artifact Paths**: auto-derived
 - Description (PR description or "Derived from commit messages")
 - Flags (CI failures present, breaking changes suspected)
@@ -519,13 +540,13 @@ Complete review feedback with full comment history showing the evolution from or
 ```markdown
 # Review Comments for <PR Number or Branch Slug>
 
-**Context**: GitHub PR #X OR Non-GitHub branch `feature/...`
+**Context**: GitHub PR #X OR Azure DevOps PR #X OR local branch `feature/...`
 **Base Branch**: <base>
 **Head Branch**: <head>
 **Review Date**: <date>
 **Reviewer**: <name>
 **Status**: draft | finalized
-**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (non-GitHub)
+**Pending Review ID**: <id> (GitHub, after posting) OR "Manual posting required" (Azure DevOps/local)
 
 ## Summary
 
@@ -624,7 +645,7 @@ Each comment shows its complete history:
 - Complete reference with full comment history for decision-making
 - Shows evolution: original → assessment → updated → posted
 - Human can manually add skipped comments if they disagree with critique
-- For non-GitHub: source for manual posting with instructions
+- For Azure DevOps/local: source for manual posting with instructions
 
 ---
 

@@ -72,20 +72,44 @@ describe("PAW Review authorization policy", () => {
     );
   });
 
-  it("requires early conflict and capability preflight for every platform", async () => {
+  it("separates Azure DevOps output preflight from hosted read preflight", async () => {
     const agent = await readRepoFile("agents/PAW-Review.agent.md");
     const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
+    const understanding = await readRepoFile("skills/paw-review-understanding/SKILL.md");
 
     assert.match(agent, /report it before the Understanding stage/i);
     assert.match(workflow, /Classify the review platform as `github`, `azure-devops`, or `local`/i);
     assert.match(
       workflow,
-      /Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight/i,
+      /Determine output capability from available tools and their declared operations/i,
     );
+    assert.match(workflow, /Do not infer capability from platform name/i);
+    assert.match(workflow, /Output capability and hosted read capability are separate/i);
+    assert.match(workflow, /Azure DevOps read capability does not determine output capability/i);
+    assert.match(understanding, /this read activity neither grants nor prohibits posting or voting/i);
+    assert.match(understanding, /references\/azure-devops-read-context\.md/i);
+    assert.match(understanding, /block rather than silently degrading/i);
     assert.match(
       workflow,
       /If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis/i,
     );
+  });
+
+  it("derives output capability from tools instead of platform identity", async () => {
+    const agent = await readRepoFile("agents/PAW-Review.agent.md");
+    const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
+    const understanding = await readRepoFile("skills/paw-review-understanding/SKILL.md");
+
+    assert.match(agent, /available tools expose an executable platform action/i);
+    assert.match(workflow, /output capability is discovered from available tools and their declared operations/i);
+    assert.match(workflow, /do not require one to recognize tool capability/i);
+    assert.match(
+      workflow,
+      /Azure DevOps read capability does not determine output capability/i,
+    );
+    assert.match(understanding, /Output Capability.*platform-qualified executable actions/s);
+    assert.doesNotMatch(agent, /Azure DevOps reviews.*remain artifact-only for output/i);
+    assert.doesNotMatch(workflow, /Azure DevOps output remains `artifact-only`/i);
   });
 
   it("persists the authorization contract in ReviewContext.md", async () => {
@@ -152,7 +176,7 @@ describe("PAW Review authorization policy", () => {
     assert.match(github, /Add only missing comments and record each returned comment ID/i);
   });
 
-  it("keeps Azure DevOps and local output capability-aware and artifact-only", async () => {
+  it("keeps GitHub mutations platform-specific and non-GitHub output capability-aware", async () => {
     const github = await readRepoFile("skills/paw-review-github/SKILL.md");
     const docs = await readRepoFile("docs/specification/review.md");
 
@@ -164,7 +188,7 @@ describe("PAW Review authorization policy", () => {
     );
     assert.match(
       docs,
-      /Azure DevOps and local contexts stay artifact-only when executable capability is unavailable/i,
+      /Output stays artifact-only when no executable platform action is discovered/i,
     );
   });
 

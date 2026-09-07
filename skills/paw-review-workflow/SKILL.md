@@ -51,7 +51,7 @@ Apply this precedence:
 2. Explicit user direction overrides PAW-owned defaults.
 3. Defaults apply when direction is absent or ambiguous.
 
-GitHub reviews are pending by default. Submit only with explicit authorization for the exact target, head, pending review, and event, followed by live revalidation. Generated feedback remains advisory; users can modify, skip, or override recommendations before posting.
+Output capability is discovered from available tools and their declared operations, never inferred from platform name. A loaded output activity may supply platform mechanics but is not the capability gate. Default to artifact-only when no executable action is available. Every external mutation requires explicit authorization for the exact target, live head/snapshot, action, and event or output resource when applicable, followed by live revalidation. GitHub reviews are pending by default when GitHub output is available. Generated feedback remains advisory; users can modify, skip, or override recommendations before posting.
 
 ### 6. Artifact Completeness
 
@@ -112,8 +112,8 @@ All review artifacts are stored in a consistent directory structure:
 
 ### Identifier Derivation
 
-- **Single GitHub PR**: `PR-<number>` (e.g., `PR-123`)
-- **Multi-repo GitHub PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
+- **Single hosted PR (GitHub or Azure DevOps)**: `PR-<number>` (e.g., `PR-123`)
+- **Multi-repo hosted PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
 - **Local branch**: Slugified branch name (e.g., `feature-new-auth`)
 
 **Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
@@ -126,11 +126,11 @@ Example: `acme-corp/my-api-service` → `my-api-service`
 Run before the Understanding stage:
 
 1. Classify the review platform as `github`, `azure-devops`, or `local`.
-2. Determine output capability from the available tools and context. Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight.
+2. Determine output capability from available tools and their declared operations. Load a platform output activity when one exists, but do not require one to recognize tool capability. Do not infer capability from platform name or call mutation endpoints merely to test access.
 3. Resolve the requested output action:
    - GitHub default: `pending`
-   - Azure DevOps/local default: `artifact-only`
-   - Explicit submission: `submit` with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`
+   - Other platforms default: `artifact-only` unless an executable output action is discovered
+   - Explicit mutation: a platform-supported action and event/output resource
 4. Resolve feedback scope as `all` by default or the user's explicit scope/output filter.
 5. Resolve authorization as `explicit`, `absent`, or `ambiguous`, plus the platform-qualified target and current head.
 6. Detect conflicts across PAW-owned instructions. Explicit user direction overrides a default; it does not override an integrity invariant or create a missing capability.
@@ -138,6 +138,15 @@ Run before the Understanding stage:
 8. Pass the resolved fields to `paw-review-understanding` for persistence in ReviewContext.md.
 
 Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
+
+### Azure DevOps Read Preflight
+
+Output capability and hosted read capability are separate:
+
+- Azure DevOps read capability does not determine output capability. Output actions are discovered independently from available tool operations and remain artifact-only only when none are executable and authorized.
+- `paw-review-understanding` owns Azure DevOps target validation, current-principal authentication, GET-only capability checks, snapshot acquisition, redaction, and platform-neutral mapping.
+- The Understanding activity must load its Azure DevOps read-context reference and block before expensive analysis when the reference, target, credentials, snapshot, or required read surface is unavailable or ambiguous.
+- Do not replace missing hosted context with local git data and present it as complete Azure DevOps context.
 
 ## Workflow Orchestration
 
@@ -149,8 +158,9 @@ The workflow executes stages in sequence, with each stage producing artifacts co
 
 **Sequence**:
 1. Run `paw-review-understanding` activity
-   - Input: PR number/URL or branch context, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
+   - Input: PR number/URL or branch context, resolved output preflight, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
    - Output: `ReviewContext.md`, `ResearchQuestions.md`
+   - Azure DevOps output includes hosted read preflight, pinned snapshot, complete changes/iterations, discussion state, reviewer vote-state counts, PR statuses, policies, builds, and per-surface evidence states
    
 2. Run `paw-review-baseline` activity
    - Input: ReviewContext.md, ResearchQuestions.md
@@ -250,27 +260,24 @@ The Output stage uses an iterative feedback-critique pattern to refine comments 
    - Output: Updated comments with `**Final**:` markers (status: finalized)
    - Comments marked: "Ready for GitHub posting" or "Skipped per critique"
 
-4. **Run `paw-review-github` activity (GitHub PRs only)**
-   - Input: ReviewComments.md with finalized comments
-   - Output: Pending review created on GitHub and, when explicitly authorized, the exact pending review submitted after live revalidation
-   - Only posts comments marked "Ready for GitHub posting"
-   - Skipped comments remain in artifact but NOT posted
-   - **Skipped for Azure DevOps/local contexts without executable output capability** (provides artifact/manual posting instructions instead)
+4. **Run platform output**
+   - **GitHub PRs**: Run `paw-review-github` with finalized `ReviewComments.md`. It creates a pending review by default and submits only under explicit verified authorization. Post only comments marked "Ready for GitHub posting"; skipped comments stay local.
+   - **Other platforms**: Use the discovered platform tool operation when explicitly authorized, following a platform output activity when one exists. Otherwise provide artifact/manual posting instructions.
 
-**Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
+**Stage Gate**: Verify all comments have `**Final**:` markers before any external posting.
 
 **Output policy**:
-- Without explicit submission authorization, stop with a pending review.
-- With explicit authorization, `paw-review-github` verifies repository, PR, live head, pending review ID, and event immediately before submission.
-- Any missing or mismatched value leaves the pending review untouched and requires fresh authorization; a head mismatch also requires fresh analysis.
-- Successful submission is terminal. Repeated authorization reports the completed state without another mutation.
+- Without explicit mutation authorization, apply the platform default: GitHub stays pending; other platforms remain non-mutating/artifact-only.
+- With explicit authorization, the platform output execution path verifies the exact target, live head/snapshot, action, and event/output resource immediately before mutation. GitHub additionally verifies the pending review ID.
+- Any missing or mismatched value leaves external state untouched and requires fresh authorization; a head mismatch also requires fresh analysis.
+- Successful mutation is terminal for that action tuple. Repeated authorization reports the completed state without replay.
 
 ## Terminal Behavior
 
 Upon workflow completion, report:
 - Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
 - **GitHub PRs**: Pending or submitted review ID, event when submitted, and comment counts
-- **Azure DevOps/local**: Capability/preflight result and manual posting instructions location
+- **Azure DevOps/local**: Capability/preflight result and executed output action, or manual posting instructions when artifact-only
 - **Multi-repo reviews**: Cross-repo findings summary (interface contracts analyzed, mismatches found, deployment order)
 - Comment evolution summary: original comments generated, modified per critique, skipped per critique
 - Next steps only when the review remains pending or artifact-only

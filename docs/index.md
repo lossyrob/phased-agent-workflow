@@ -73,4 +73,4 @@ PR → Understanding → Evaluation → Feedback Generation
 
 - VS Code with GitHub Copilot
 - Git repository
-- GitHub MCP Tools or Azure DevOps MCP Tools (recommended)
+- GitHub MCP Tools, or Azure CLI authentication for Azure DevOps PAW Review (Azure DevOps MCP Tools optional)

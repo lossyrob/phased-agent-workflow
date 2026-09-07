@@ -12,7 +12,7 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 | **Comprehensive feedback** | Generate all in-scope findings; explicit user scope can narrow output |
 | **Artifact-based** | Durable markdown documents trace reasoning from changes to comments |
 | **Rewindable** | Any stage can restart if new information changes understanding |
-| **Human-controlled** | GitHub reviews remain pending by default; explicit authorized submission is verified before execution |
+| **Human-controlled** | Output capability comes from available tools; every external mutation is explicitly authorized and revalidated |
 
 ## Skills-Based Architecture
 
@@ -56,11 +56,19 @@ PAW Review classifies instructions before analysis:
 
 | Classification | Behavior |
 |----------------|----------|
-| **Invariant** | Use evidence, post only finalized comments, keep internal rationale local, and verify the exact target, live head, pending review ID, and event before submission |
-| **Default** | GitHub stays pending; Azure DevOps and local contexts stay artifact-only when executable capability is unavailable |
-| **User-configurable** | Explicit direction can submit a GitHub review with Approve, Request Changes, or Comment, select review mode/specialists, narrow feedback scope, override critique recommendations, and adjust tone |
+| **Invariant** | Use evidence; validate Azure DevOps target/snapshot and keep credentials, identities, and raw discussion out of artifacts; post only finalized comments; verify the exact target, live head/snapshot, action, and event or output resource before mutation |
+| **Default** | Output stays artifact-only when no executable platform action is discovered; GitHub stays pending when GitHub output is available |
+| **User-configurable** | Explicit direction can execute a discovered platform output action under exact authorization, select review mode/specialists, narrow feedback scope, override critique recommendations, and adjust tone |
 
 Explicit direction overrides a PAW default, not an integrity invariant or missing platform capability. PAW Review reports ambiguous instructions or unsupported requested mutations before the Understanding stage. A changed head invalidates authorization and requires fresh analysis. Successful submission is terminal and is not replayed.
+
+### Azure DevOps Read Context
+
+During Understanding, Azure DevOps reviews authenticate the current runtime principal and read repository/PR metadata, source/target/common commits, commits, current net diff, iterations and changes, iteration-relative threads, reviewer vote states, PR statuses, policies, and source/merge-ref builds.
+
+The read path is GET-only, validates the canonical HTTPS target and stable snapshot, checks JSON content type on every response, and uses the runtime-state and privacy contracts defined by the Understanding skill's Azure DevOps reference. Empty status/policy/build envelopes mean endpoint reachable with unproven visibility, not "no CI." Posting and voting are outside the read contract; their availability is discovered independently from output tools and authorization.
+
+Only status/build evidence matching the pinned iteration and source/merge commits affects CI state. Live Azure DevOps reads can report known `failing` or `pending` signals; otherwise CI is `Not available` because collection completeness cannot be proven. They do not report `passing`.
 
 ## Cross-Repository Review
 
@@ -110,8 +118,8 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 
 **Inputs:**
 
-- PR URL or number (GitHub context)
-- Base branch name (non-GitHub context)
+- PR URL or number (GitHub or Azure DevOps context)
+- Base branch name (local context)
 - Repository context
 
 **Outputs:**
@@ -126,6 +134,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 1. **Fetch PR metadata and create ReviewContext.md**
     - Document all changed files with additions/deletions
     - Set flags: CI failures, breaking changes suspected
+    - For Azure DevOps, complete hosted read preflight and snapshot acquisition before baseline research
 
 2. **Research pre-change baseline**
     - Analyze codebase at base commit (pre-change state)
@@ -210,7 +219,7 @@ See [Society-of-Thought Review](../guide/society-of-thought-review.md) for confi
 
 - `ReviewComments.md` — Complete feedback with full comment history
 - **GitHub review** — Pending by default; submitted only under explicit verified authorization
-- **Azure DevOps/local output** — Finalized artifacts and manual instructions when executable output is unavailable
+- **Azure DevOps/local output** — Executed platform output action when available and authorized; otherwise finalized artifacts and manual instructions
 
 **Process:**
 
@@ -240,7 +249,7 @@ The Output stage uses an **iterative feedback-critique pattern**:
     - For explicit submission, revalidate repository, PR, live head, pending review ID, and event immediately before submitting
     - Preserve the pending review and report any mismatch
     - Skipped comments remain in artifact but are NOT posted
-    - Azure DevOps/local: provide manual posting instructions when executable capability is unavailable
+    - Azure DevOps/local: use a discovered, authorized platform output action when available; otherwise provide manual posting instructions
 
 **Comment Evolution in ReviewComments.md:**
 
@@ -264,10 +273,11 @@ Authoritative parameter source for the review workflow.
 
 - PR Number/Branch
 - Review platform and output capability
-- Base and Head commits
+- Hosted read-preflight and per-surface state (Azure DevOps)
+- Base/common, Head/source, and Target commits
 - Requested action, feedback scope, authorization, target, pending-review binding, event, and preflight result
-- Changed files summary
-- CI Status and flags
+- Changed files/current net diff plus Azure DevOps iteration and discussion context
+- CI status, PR statuses, policy state, build state, and flags
 - Description and metadata
 
 ### DerivedSpec.md

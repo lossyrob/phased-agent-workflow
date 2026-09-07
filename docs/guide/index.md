@@ -12,7 +12,7 @@ Before you begin, ensure you have:
 - **Git repository** for your project
 - One of the following platform integrations (authenticated and configured):
     - **GitHub** with GitHub MCP Tools
-    - **Azure DevOps** with Azure DevOps MCP Tools
+    - **Azure DevOps** with an existing Azure CLI login for PAW Review read context; Azure DevOps MCP Tools remain optional
 
 ## Quick Install (VS Code)
 
@@ -22,7 +22,7 @@ Before you begin, ensure you have:
     - Command Palette: `Extensions: Install from VSIX...`
     - Command line: `code --install-extension paw-workflow-X.X.X.vsix`
 
-3. **Configure MCP Server** (Recommended): Set up the [GitHub MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/github) or [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp-server) in VS Code for optimal agent integration. See the [MCP Server Setup Guide](https://modelcontextprotocol.io/quickstart/user) for configuration instructions.
+3. **Configure Platform Access**: Set up the [GitHub MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/github) for GitHub, or sign in with Azure CLI for Azure DevOps PAW Review reads. The [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp-server) is optional for other Azure DevOps workflows. See the [MCP Server Setup Guide](https://modelcontextprotocol.io/quickstart/user) for MCP configuration.
 
 ## Starting Your First Workflow
 

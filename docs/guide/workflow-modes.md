@@ -10,7 +10,7 @@ PAW supports three workflow modes to match your task scope and development style
 | **Minimal** | Core stages (Code Research → Final PR) | Local only | Bug fixes, small enhancements |
 | **Custom** | User-defined | PRs or Local | Unique workflows |
 
-Workflow mode decides which stages PAW runs. Execution mode, review strategy, and artifact lifecycle are selected separately during initialization.
+Workflow mode decides which stages PAW runs. Execution mode, review strategy, and artifact lifecycle are selected separately during initialization and stored as durable configuration in `WorkflowContext.md`.
 
 ## Full Mode
 
@@ -159,7 +159,7 @@ All commits happen in the selected execution checkout. In dedicated worktree mod
 ## Quality Gates
 
 !!! warning "Important"
-    Quality gates remain **mandatory regardless of workflow mode or review strategy**. Skipping stages or choosing local strategy streamlines the process but never compromises code quality.
+    Quality gates remain **mandatory regardless of workflow mode, review strategy, or review policy**. Skipping stages, choosing local strategy, or reducing human pauses streamlines the process but never compromises code quality.
 
 All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected:
 
@@ -188,6 +188,7 @@ Final Agent Review runs after all implementation phases complete, before the Fin
 - In **smart mode** (default), consensus fixes are auto-applied and ambiguous findings prompt for your decision
 - In **interactive mode**, you confirm each finding before changes are made
 - In **auto-apply mode**, must-fix and should-fix recommendations are applied automatically
+- When Final Agent Review is enabled, the configured review mode is mandatory before final PR creation. When disabled, final PR creation still routes through `paw-pr`.
 
 ## Multi-Model Planning Configuration
 
@@ -225,6 +226,8 @@ Planning Docs Review runs during planning (Stage 02) to validate cross-artifact 
 | Planning Review Perspectives | auto | `none`, `auto`, names | Perspective overlays for SoT mode (CLI only) |
 | Planning Review Perspective Cap | 2 | positive integer | Max perspectives per specialist (CLI only) |
 
+If Planning Docs Review is enabled, it runs before implementation even when the selected Review Policy reduces human pauses. Review Policy does not disable configured review procedures.
+
 ## Selecting Your Mode
 
 When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be prompted to:
@@ -237,4 +240,4 @@ When using the VS Code extension's `PAW: New PAW Workflow` command, you'll be pr
 6. **Select review strategy** (PRs or Local)—automatically set to Local for Minimal mode
 7. **Provide custom instructions** (if Custom mode selected)
 
-Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow.
+Your selections are stored in `WorkflowContext.md` and guide all agents throughout the workflow. `WorkflowContext.md` is durable configuration, not a runtime status database.

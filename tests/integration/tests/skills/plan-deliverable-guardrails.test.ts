@@ -55,7 +55,7 @@ describe("plan deliverable guardrails", () => {
 
     assert.match(
       implementationDoc,
-      /blocks missing or empty planned outputs before pushing\/opening the Phase PR/i,
+      /blocks missing or empty planned outputs before (?:pushing\/opening the Phase PR|the orchestrator handles any push or Phase PR)/i,
     );
   });
 });

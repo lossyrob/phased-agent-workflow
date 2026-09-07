@@ -100,7 +100,7 @@ Map relevant code areas and create a detailed implementation plan broken into ph
 2. `paw-planning` creates detailed plan based on spec and code research
 3. Collaborate iteratively to refine the plan
 4. `paw-plan-review` validates plan feasibility **(mandatory)**
-5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**
+5. `paw-planning-docs-review` reviews all planning artifacts as a holistic bundle **(if enabled)**; Review Policy does not disable this configured gate
 6. Open Planning PR for review from the execution checkout established during initialization/reuse (PRs strategy)
 
 ### Stage 03 — Phased Implementation
@@ -127,11 +127,11 @@ For each phase:
 
 1. `paw-implement` creates the phase branch and implements changes in the execution checkout established during initialization/reuse
 2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
-3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before pushing/opening the Phase PR
-4. `paw-impl-review` pushes and opens Phase PR (PRs strategy)
+3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation, and blocks missing or empty planned outputs before the orchestrator handles any push or Phase PR
+4. The PAW orchestrator uses `paw-git-operations` to push and open the Phase PR (PRs strategy) after `paw-impl-review` returns PASS
 5. Human reviews PR and provides feedback
 6. `paw-implement` addresses review comments
-7. `paw-impl-review` verifies and pushes updates
+7. `paw-impl-review` verifies updates, then the PAW orchestrator handles any required push
 8. Merge when approved, repeat for next phase
 
 **Phase Candidates:**
@@ -181,7 +181,7 @@ Automated review of the complete implementation against specification before Fin
 **Configuration:**
 
 - `Final Agent Review`: `enabled` | `disabled` (default: enabled)
-- `Final Review Mode`: `single-model` | `multi-model` (default: multi-model)
+- `Final Review Mode`: `single-model` | `multi-model` | `society-of-thought` (default: multi-model)
 - `Final Review Interactive`: `true` | `false` | `smart` (default: smart)
 - `Final Review Models`: comma-separated model names (for multi-model)
 
@@ -209,6 +209,8 @@ Open the final PR to main with comprehensive description and pre-flight checks.
 3. `paw-pr` opens the final PR from the target branch in the execution checkout established during initialization/reuse
 4. Address any review comments (using implementation skills)
 5. Merge when approved
+
+Final PR preparation remains owned by `paw-pr`, including pre-flight validation, artifact lifecycle action, push, PR creation, and PR description scaling.
 
 ---
 

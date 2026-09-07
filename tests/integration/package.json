@@ -6,7 +6,12 @@
   "description": "Integration tests for PAW using Copilot SDK",
   "scripts": {
     "test": "npx tsx --test tests/**/*.test.ts",
-    "test:skills": "npx tsx --test tests/skills/*.test.ts",
+    "test:integration:skills": "npm run test:skills",
+    "test:skills": "npm run test:skills:core && npm run test:skills:paw-lite && npm run test:skills:policy && npm run test:skills:guardrails",
+    "test:skills:core": "node --import tsx --test tests/skills/answerer.test.ts tests/skills/execution-contract-content.test.ts tests/skills/harness.test.ts",
+    "test:skills:paw-lite": "node --import tsx --test tests/skills/paw-agent-guardrails.test.ts tests/skills/paw-lite-boundary-content.test.ts",
+    "test:skills:policy": "node --import tsx --test tests/skills/paw-status-about-paw.test.ts tests/skills/tool-policy.test.ts",
+    "test:skills:guardrails": "node --import tsx --test tests/skills/plan-deliverable-guardrails.test.ts tests/skills/scratch-ignore-marker-policy.test.ts tests/skills/workflow-context-guardrails.test.ts",
     "test:workflows": "npx tsx --test tests/workflows/*.test.ts"
   },
   "dependencies": {

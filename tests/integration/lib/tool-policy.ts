@@ -11,13 +11,17 @@ export class ToolPolicy {
   private readonly normalizedRoots: string[];
 
   constructor(private workspaceRoot: string, extraRoots: string[] = []) {
-    this.workspaceRoot = resolve(workspaceRoot);
-    this.allowedRoots = [...new Set([this.workspaceRoot, ...extraRoots.map((root) => resolve(root))])];
+    this.workspaceRoot = this.normalizePath(workspaceRoot);
+    this.allowedRoots = [...new Set([this.workspaceRoot, ...extraRoots.map((root) => this.normalizePath(root))])];
     this.normalizedRoots = this.allowedRoots.map((root) => `${root}/`);
   }
 
+  private normalizePath(filePath: string): string {
+    return resolve(filePath).replace(/\\/g, "/");
+  }
+
   private isInsideWorkspace(filePath: string): boolean {
-    const resolved = resolve(this.workspaceRoot, filePath);
+    const resolved = this.normalizePath(resolve(this.workspaceRoot, filePath));
     return this.allowedRoots.some((root, index) => {
       return resolved === root || resolved.startsWith(this.normalizedRoots[index]);
     });

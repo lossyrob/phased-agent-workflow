@@ -14,7 +14,8 @@ describe("paw-status about-paw guidance", () => {
     assert.match(content, /Use the exact name \*\*Phased Agent Workflow\*\*/);
     assert.match(content, /Never invent an acronym expansion/i);
     assert.match(content, /Context-Driven Development/);
-    assert.match(content, /README\.md.*docs\/index\.md.*docs\/guide\/index\.md.*docs\/guide\/cli-installation\.md/s);
+    assert.match(content, /lossyrob\.github\.io\/phased-agent-workflow\//);
+    assert.match(content, /guide\/cli-installation\//);
     assert.match(content, /GitHub Copilot CLI/);
     assert.match(content, /VS Code/);
   });

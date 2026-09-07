@@ -156,6 +156,15 @@ Your selections are stored in `WorkflowContext.md` and guide all agents througho
 
 All automated verification criteria in implementation plans must pass before work can proceed, regardless of which workflow mode is selected.
 
+### Configured Obligation Surfaces
+
+Resolved configuration values are runtime obligations once written to WorkflowContext.md. Standard PAW and PAW-Lite surface those obligations differently:
+
+- **Standard PAW** delegates stage boundaries to `paw-transition`, which returns a structured `obligation_summary` and queues the next activity plus following transition.
+- **PAW-Lite** runs as a flat agent loop without orchestrator-side `paw-transition`, so it surfaces the same configured obligations through compact boundary checkpoint briefs and named SQL TODOs.
+
+Both surfaces must keep configured planning docs review, final review, review policy, and final PR routing visible at the relevant boundary while keeping WorkflowContext.md durable configuration only.
+
 ### Defaults
 
 When `Workflow Mode` and `Review Strategy` fields are missing from WorkflowContext.md, agents use the following defaults:
@@ -286,7 +295,7 @@ This preserves user collaboration for interactive work while leveraging context 
 | `paw-plan-review` | Validate plan feasibility | Structured feedback |
 | `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
 | `paw-implement` | Execute plan phases, make code changes | Code changes |
-| `paw-impl-review` | Review implementation, open PRs | Phase PRs, Docs.md |
+| `paw-impl-review` | Review implementation and return verdict | Structured feedback, Docs.md |
 | `paw-pr` | Pre-flight validation, create final PR | Final PR |
 | `paw-status` | Diagnose workflow state, explain PAW/onboarding | Status reports |
 | `paw-work-shaping` | Pre-spec ideation and clarification | WorkShaping.md |
@@ -411,10 +420,10 @@ For each phase:
 
 1. `paw-implement` creates phase branch (PRs strategy) and implements changes
 2. `paw-implement` runs automated checks (tests, linting, type checking, build) and verifies the current phase's `Changes Required` deliverables actually exist before marking the phase complete
-3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation improvements, and blocks missing or empty planned outputs before pushing/opening the Phase PR
+3. `paw-impl-review` reviews changes, cross-checks current-phase deliverables against actual repo state, adds documentation improvements, and blocks missing or empty planned outputs before the orchestrator handles any push or Phase PR
 4. Developer reviews PR and provides feedback
 5. `paw-implement` addresses review comments with focused commits
-6. `paw-impl-review` verifies changes and pushes updates
+6. `paw-impl-review` verifies changes, then the PAW orchestrator handles any required push
 7. Merge when approved, repeat for next phase
 
 When the plan includes a documentation phase, `paw-implement` loads the `paw-docs-guidance` utility skill, creates `Docs.md`, and updates project documentation per project conventions.

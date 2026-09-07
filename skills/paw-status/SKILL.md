@@ -163,6 +163,7 @@ For "What is PAW?", "What does PAW stand for?", or similar onboarding questions:
 - Explain briefly:
   - PAW enables **Context-Driven Development**: agents build understanding through durable artifacts (specs, research, plans) before writing code.
   - PAW supports two workflows: implementation and review.
+  - PAW runs in GitHub Copilot CLI and VS Code.
   - Workflow **stages** are top-level milestones; implementation **phases** are subdivisions inside `ImplementationPlan.md`.
 - If the user also asks how to get started:
 {{#cli}}

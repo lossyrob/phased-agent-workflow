@@ -40,6 +40,8 @@ Semantic versioning:
 
 Ask the user to confirm the version number before proceeding.
 
+Before creating the tag, update `plugin.json` plus the marketplace metadata and plugin entry versions in `.github/plugin/marketplace.json` to the release version. Merge that change to `main`.
+
 ### 2. Identify PRs for Release
 
 Find the last `cli-v*` release tag and its date. Search for all merged PRs **targeting `main`** since that date.

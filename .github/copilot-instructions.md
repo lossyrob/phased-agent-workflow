@@ -10,6 +10,10 @@ All code changes must pass the linter before being committed:
 npm run lint
 ```
 
+## CLI Release Versions
+
+Before creating a `cli-v<version>` tag, set `plugin.json`, `.github/plugin/marketplace.json` metadata, and its plugin entry to that same version. The marketplace reads the committed manifest versions, so validate all three match the release tag on `main`.
+
 ## Agent Development
 
 When creating or modifying agent files in `agents/`, ALWAYS run the prompting linter script:

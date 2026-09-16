@@ -69,6 +69,7 @@ nav:
     - Stage Transitions: guide/stage-transitions.md
     - Workflows: guide/two-workflows.md
     - Society-of-Thought Review: guide/society-of-thought-review.md
+    - Experimental System Review: guide/system-review.md
   - Specification:
     - Overview: specification/index.md
     - Implementation Workflow: specification/implementation.md

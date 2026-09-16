@@ -76,4 +76,18 @@ describe('build-dist script', () => {
     assert.ok(specialists.includes('correctness.md'), 'should include correctness.md');
     assert.ok(specialists.length >= 10, `should have at least 10 specialist files (9 + shared rules), found ${specialists.length}`);
   });
+
+  test('packages the standalone system review skill and its reviewer guidance', () => {
+    const skillDir = join(DIST_DIR, 'skills', 'paw-system-review');
+    const skill = readFileSync(join(skillDir, 'SKILL.md'), 'utf-8');
+    assert.match(skill, /^name: paw-system-review$/m);
+    assert.match(skill, /references\/reviewer-guidance\.md/);
+    assert.match(skill, /Both modes are artifact-only/);
+
+    const referencePath = join('skills', 'paw-system-review', 'references', 'reviewer-guidance.md');
+    assert.strictEqual(
+      readFileSync(join(DIST_DIR, referencePath), 'utf-8'),
+      readFileSync(join(CLI_ROOT, '..', referencePath), 'utf-8'),
+    );
+  });
 });

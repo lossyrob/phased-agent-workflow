@@ -89,6 +89,8 @@ All comments are created as a pending review—you edit, delete, or add to them 
 
 For an opt-in, artifact-only alternative, explicitly select [`paw-system-review`](docs/guide/system-review.md). This experimental skill reviews planning proposals or implementation changes with four independent reasoning approaches; quality equivalence and latency improvement have not been established. It leaves PAW Review and `paw-sot` defaults unchanged.
 
+[`paw-review-compare`](docs/guide/review-comparison.md) provides an opt-in, artifact-only comparison of four fixed SoT and system-review configurations on the same pinned target. Independent outputs inform human selection; nothing is posted automatically.
+
 ---
 
 ## Getting Started

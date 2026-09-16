@@ -70,6 +70,7 @@ nav:
     - Workflows: guide/two-workflows.md
     - Society-of-Thought Review: guide/society-of-thought-review.md
     - Experimental System Review: guide/system-review.md
+    - Experimental Review Comparison: guide/review-comparison.md
   - Specification:
     - Overview: specification/index.md
     - Implementation Workflow: specification/implementation.md

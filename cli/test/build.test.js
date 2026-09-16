@@ -90,4 +90,18 @@ describe('build-dist script', () => {
       readFileSync(join(CLI_ROOT, '..', referencePath), 'utf-8'),
     );
   });
+
+  test('packages the comparison skill and its deterministic profile references', () => {
+    const skillDir = join(DIST_DIR, 'skills', 'paw-review-compare');
+    const skill = readFileSync(join(skillDir, 'SKILL.md'), 'utf-8');
+    assert.match(skill, /^name: paw-review-compare$/m);
+    for (const filename of ['profiles.json', 'dispatch.md']) {
+      assert.ok(skill.includes(`references/${filename}`));
+      const referencePath = join('skills', 'paw-review-compare', 'references', filename);
+      assert.strictEqual(
+        readFileSync(join(DIST_DIR, referencePath), 'utf-8'),
+        readFileSync(join(CLI_ROOT, '..', referencePath), 'utf-8'),
+      );
+    }
+  });
 });

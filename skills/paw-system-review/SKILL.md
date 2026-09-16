@@ -65,9 +65,12 @@ Wait until **all four initial reports are durably written and complete** before 
 
 ## 3. Adjudication and bounded remedy assessment
 
-After the barrier, read all initial reports. Give the same simplicity reviewer the other reviewers' reports and proposed remedies, its original report, and the reference's **Remedy assessment** instructions. Reuse its context where supported; otherwise reconstitute that role from its original task and report in an isolated context and record the discontinuity. Do not rerun its first pass.
+After the barrier, read all initial reports and check for proposed remedies from the forward, counterexample, and relational reviewers. The simplicity reviewer's own remedies alone do not trigger a second reviewer call.
 
-Produce `REMEDY-ASSESSMENT.md` separately; never overwrite the original first-pass artifacts. Assess the proposed remedies once, rather than launch another full review or forced debate. If there are no remedies, record that explicitly. If the assessment cannot complete, retain the reports and mark the final result incomplete.
+- **No peer remedies:** The lead writes `REMEDY-ASSESSMENT.md` with status `not-needed`, the reason, references to those three source reports, and explicit attribution to the review lead. Do not wake or reconstitute the simplicity reviewer. Continue adjudication; this status does not imply a clean overall review.
+- **Peer remedies present:** Give the same simplicity reviewer the other reviewers' reports and proposed remedies, its original report, and the reference's **Remedy assessment** instructions. Reuse its context where supported; otherwise reconstitute that role from its original task and report in an isolated context and record the discontinuity. Do not rerun its first pass. Assess the proposed remedies once, rather than launch another full review or forced debate. If the assessment cannot complete, retain the reports and mark the final result incomplete.
+
+Keep `REMEDY-ASSESSMENT.md` separate; never overwrite the original first-pass artifacts.
 
 Adjudicate using evidence:
 

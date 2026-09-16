@@ -39,7 +39,9 @@ These are broad analytical approaches, not separate domain assignments. Every re
 
 Simplicity is a first-class review concern. Material unjustified complexity can receive a MUST-FIX recommendation even when behavior is functionally correct. The reviewer must show the burden, insufficient justification, and a credible simpler complete alternative. Existing patterns are evidence rather than automatic owner approval; explicit owner decisions and mandatory constraints retain their authority. Both specifications and plans can be challenged during planning and implementation review, but recommending reconsideration does not authorize changing an owner's decision.
 
-First-pass reviewers do not see one another's findings. After all four reports are durably complete, the simplicity reviewer performs one bounded assessment of the proposed remedies. It distinguishes a valid defect with an oversized remedy from a finding premised on an unadopted requirement, and from complexity needed to preserve a required guarantee. Original reports remain unchanged. The lead adjudicates factual premises and obligations, preserving disagreement rather than deciding truth by vote or by an unverified security label.
+First-pass reviewers do not see one another's findings. After all four reports are durably complete, the lead checks the forward, counterexample, and relational reports for proposed remedies. If none exist, the lead writes `REMEDY-ASSESSMENT.md` as `not-needed`, with the reason, source-report references, and explicit lead attribution, without waking or reconstituting the simplicity reviewer. Remedies in the simplicity report alone do not trigger another reviewer call.
+
+When peer remedies exist, the simplicity reviewer performs one bounded assessment. It distinguishes a valid defect with an oversized remedy from a finding premised on an unadopted requirement, and from complexity needed to preserve a required guarantee. Original reports remain unchanged in either case. The lead adjudicates factual premises and obligations, preserving disagreement rather than deciding truth by vote or by an unverified security label.
 
 ## Artifacts and limits
 
@@ -52,7 +54,7 @@ Each run produces seven files in the authorized output directory:
 | `REVIEW-COUNTEREXAMPLE.md` | Independent counterexample report |
 | `REVIEW-RELATIONAL.md` | Independent relational report |
 | `REVIEW-SIMPLICITY.md` | Independent simplicity report |
-| `REMEDY-ASSESSMENT.md` | Bounded assessment, separate from first-pass findings |
+| `REMEDY-ASSESSMENT.md` | Bounded simplicity assessment or lead-authored `not-needed` record when no peer remedies exist |
 | `REVIEW-SYNTHESIS.md` | Adjudicated findings, traceable dispositions, participation, method, and limitations |
 
 A partial run preserves available artifacts and identifies what did not complete; missing reports are not fabricated. Reports identify actual revisions and available model settings, leaving unexposed model identity unknown. Mutable inputs are checked for drift before completion. Historical coverage is not presented as coverage of the latest revision.

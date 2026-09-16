@@ -96,20 +96,22 @@ describe("experimental system review static contracts (no live reviewers)", () =
     assert.match(guidance, /comparison-run findings throughout this run/);
   });
 
-  it("gates one separate remedy assessment on durable completion of all initial reports", () => {
+  it("gates one simplicity assessment on complete initial reports and proposed peer remedies", () => {
     const passes = section(skill, "2. Fixed independent passes");
     const adjudication = section(skill, "3. Adjudication and bounded remedy assessment");
+    const peerRemedies = adjudication.match(/- \*\*Peer remedies present:\*\* (.*)/)?.[1];
+    assert.ok(peerRemedies, "Missing peer-remedy assessment branch");
     assert.match(passes, /all four initial reports are durably written and complete/);
     assert.match(passes, /before sharing findings or starting remedy assessment/);
     assert.match(passes, /report is missing or incomplete.*return without claiming completion or crossing this barrier/);
-    assert.match(adjudication, /Give the same simplicity reviewer/);
-    assert.match(adjudication, /Reuse its context where supported/);
-    assert.match(adjudication, /record the discontinuity/);
-    assert.match(adjudication, /Do not rerun its first pass/);
-    assert.match(adjudication, /`REMEDY-ASSESSMENT.md` separately.*never overwrite/);
-    assert.match(adjudication, /Assess the proposed remedies once/);
-    assert.match(adjudication, /no remedies, record that explicitly/);
-    assert.match(adjudication, /assessment cannot complete.*mark the final result incomplete/);
+    assert.match(peerRemedies, /Give the same simplicity reviewer/);
+    assert.match(peerRemedies, /Reuse its context where supported/);
+    assert.match(peerRemedies, /record the discontinuity/);
+    assert.match(peerRemedies, /Do not rerun its first pass/);
+    assert.match(adjudication, /`REMEDY-ASSESSMENT.md` separate.*never overwrite/);
+    assert.match(peerRemedies, /Assess the proposed remedies once/);
+    assert.match(peerRemedies, /assessment cannot complete.*mark the final result incomplete/);
+    assert.match(guidance, /all four initial reports are durably written and complete, and at least one other reviewer proposes a remedy/);
     for (const outcome of [
       "Valid defect, proportionate remedy",
       "Valid defect, oversized remedy",
@@ -118,6 +120,24 @@ describe("experimental system review static contracts (no live reviewers)", () =
     ]) {
       assert.ok(section(guidance, "Remedy assessment").includes(outcome));
     }
+  });
+
+  it("records no peer remedies after the barrier without a no-op simplicity call", () => {
+    const adjudication = section(skill, "3. Adjudication and bounded remedy assessment");
+    const noPeerRemedies = adjudication.match(/- \*\*No peer remedies:\*\* (.*)/)?.[1];
+    assert.ok(noPeerRemedies, "Missing no-peer-remedy branch");
+    assert.match(adjudication, /After the barrier, read all initial reports and check for proposed remedies from the forward, counterexample, and relational reviewers/);
+    assert.match(adjudication, /simplicity reviewer's own remedies alone do not trigger a second reviewer call/);
+    assert.match(noPeerRemedies, /The lead writes `REMEDY-ASSESSMENT.md` with status `not-needed`/);
+    assert.match(noPeerRemedies, /the reason, references to those three source reports/);
+    assert.match(noPeerRemedies, /explicit attribution to the review lead/);
+    assert.match(noPeerRemedies, /Do not wake or reconstitute the simplicity reviewer/);
+    assert.match(noPeerRemedies, /Continue adjudication.*does not imply a clean overall review/);
+    assert.match(guide, /After all four reports are durably complete.*forward, counterexample, and relational reports/);
+    assert.match(guide, /`not-needed`.*reason, source-report references, and explicit lead attribution/);
+    assert.match(guide, /without waking or reconstituting the simplicity reviewer/);
+    assert.match(guide, /Remedies in the simplicity report alone do not trigger another reviewer call/);
+    assert.doesNotMatch(guidance, /Record no proposed remedies if none exist/);
   });
 
   it("makes material unjustified complexity actionable without overriding owner authority", () => {

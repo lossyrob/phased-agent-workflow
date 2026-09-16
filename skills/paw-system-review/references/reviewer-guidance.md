@@ -42,7 +42,7 @@ Independently seek the simplest complete design consistent with actual requireme
 
 ## Remedy assessment
 
-Only after all four initial reports are durably written and complete, examine the other reviewers' proposed remedies using the original target, obligations, and your simplicity analysis. This is one bounded assessment, not another full review, a repeat of your first pass, or forced debate. Preserve all first-pass artifacts.
+Only after all four initial reports are durably written and complete, and at least one other reviewer proposes a remedy, examine those remedies using the original target, obligations, and your simplicity analysis. This is one bounded assessment, not another full review, a repeat of your first pass, or forced debate. Preserve all first-pass artifacts.
 
 Write the separate assigned remedy assessment with references to original finding identifiers and evidence. Distinguish:
 
@@ -51,4 +51,4 @@ Write the separate assigned remedy assessment with references to original findin
 - **Unadopted requirement or stricter posture**: challenge the finding's premise with evidence; distinguish uncertainty about authority from an established absence of obligation.
 - **Justified complexity**: explain which required guarantee a simpler alternative loses and why the additional mechanism is proportionate.
 
-Leave unverified premises unresolved; do not force a classification without evidence. Preserve disagreement and explain what evidence or authority would settle it. An excessive fix does not invalidate a real defect, and an unverified security label does not automatically defeat a supported simplification argument. Record no proposed remedies if none exist, and report completion and limitations.
+Leave unverified premises unresolved; do not force a classification without evidence. Preserve disagreement and explain what evidence or authority would settle it. An excessive fix does not invalidate a real defect, and an unverified security label does not automatically defeat a supported simplification argument. Report completion and limitations.

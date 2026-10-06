@@ -1,6 +1,6 @@
 ---
 name: paw-pr
-description: Final PR activity skill for PAW workflow. Creates comprehensive final PR to base branch with pre-flight validation, scaled descriptions, and merge guidance.
+description: Final PR activity skill for PAW and PAW Lite workflows. Creates comprehensive final PR to base branch with profile-aware pre-flight validation, scaled descriptions, and merge guidance.
 ---
 
 # Final PR
@@ -22,6 +22,13 @@ Create the final PR merging all implementation work to the base branch (from Wor
 ## Pre-flight Validation
 
 Before creating the PR, verify and report status. Block on failures unless user explicitly confirms (except hard blockers — those cannot be overridden).
+
+### Pre-flight Profile
+
+Select one profile; report it and the deciding signal:
+- `Workflow Identity` in WorkflowContext.md, when present: `paw-lite` → **PAW Lite**; other values → **Standard**
+- Else **PAW Lite** if loaded from `paw-lite` Stage 5, or `.paw/work/<work-id>/Plan.md` exists without `ImplementationPlan.md`
+- Else **Standard**: Required Checks and Workflow Mode Handling apply as written
 
 ### Required Checks
 
@@ -56,6 +63,15 @@ Before creating the PR, verify and report status. Block on failures unless user 
 - ImplementationPlan `## Open Questions` → empty
 - Unresolved items → block and report with recommendation
 
+### PAW Lite Profile
+
+Replaces Phase Implementation, Artifacts Exist, and Open Questions Resolved; other Required Checks still apply.
+
+- **Completion**: no open SQL todos for Lite work items (when this session has them); every `Plan.md` work item delivered on the target branch (work-item checkboxes, if any, checked); implementation commits exist. No phase, phase PR, or Phase Candidates checks.
+- **Artifacts**: `Plan.md` required; `WorkShaping.md` and `reviews/` optional. `CodeResearch.md`, `ImplementationPlan.md`, `Spec.md`, `SpecResearch.md`, `Docs.md` not required in any Workflow Mode — never create or backfill them to pass pre-flight.
+- **Workflow Mode** `full` or `minimal`: report a non-blocking warning that Lite requirements were applied.
+- **Open Questions**: `Plan.md` `## Open Questions` (if present) empty or resolved; `WorkShaping.md` open questions resolved in `Plan.md` or code.
+
 ## Workflow Mode Handling
 
 ### Full Mode
@@ -71,6 +87,11 @@ Before creating the PR, verify and report status. Block on failures unless user 
 ### Custom Mode
 - Dynamically check which artifacts exist
 - Adapt references based on Custom Workflow Instructions
+
+### PAW Lite (overrides Workflow Mode)
+- Reference `Plan.md`, plus `WorkShaping.md` when present; summarize review outcomes instead of linking local-only `reviews/`
+- Describe work from commits and `Plan.md` work items (local strategy)
+- `never-commit`: summarize the `Plan.md` approach, work items, and key decisions in the PR body
 
 ## Artifact Lifecycle Handling
 
@@ -168,7 +189,7 @@ After PR creation, provide:
 
 Report back:
 - Final PR URL
-- Pre-flight validation summary
+- Pre-flight validation summary (profile and any warnings)
 - Items for reviewer attention
 - Merge readiness assessment
 

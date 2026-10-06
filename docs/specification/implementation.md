@@ -280,6 +280,8 @@ Diagnoses current workflow state, recommends next steps, explains PAW/onboarding
 
 Opens the **final PR** from the target branch to main and performs comprehensive pre-flight readiness checks to assess completeness.
 
+Pre-flight selects a profile first. The **Standard** profile checks phases, artifacts, and open questions per `Workflow Mode` (full, minimal, custom). The **PAW Lite** profile applies when `WorkflowContext.md` declares `Workflow Identity: paw-lite`, when `paw-pr` is loaded from `paw-lite` Stage 5, or (without an explicit identity) when `Plan.md` exists without `ImplementationPlan.md`. It requires `Plan.md`, treats `WorkShaping.md` and `reviews/` as optional, checks completion against completed work-item todos and `Plan.md` work items, and does not require `CodeResearch.md`, `ImplementationPlan.md`, `Spec.md`, `SpecResearch.md`, or `Docs.md`. A Lite context with `Workflow Mode: full` or `minimal` gets a non-blocking warning and Lite requirements.
+
 ---
 
 ## Quality Gates

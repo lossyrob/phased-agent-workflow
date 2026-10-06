@@ -91,9 +91,9 @@ Review the implementation before PR creation. Configuration comes from WorkflowC
 
 ### Stage 5: PR
 
-Load the `paw-pr` skill and follow its instructions for final PR creation. It handles pre-flight validation, artifact lifecycle (commit-and-clean scoping to the work directory), and PR description scaling.
-
 Before invoking paw-pr, ensure all todos are complete: `SELECT id, status FROM todos WHERE status != 'done'`
+
+Load the `paw-pr` skill and follow its instructions for final PR creation. It handles pre-flight validation, artifact lifecycle (commit-and-clean scoping to the work directory), and PR description scaling. Use its PAW Lite pre-flight profile: completed todos and `Plan.md` are the completion evidence; `Workflow Mode` adds no artifact requirements. Never create standard PAW artifacts (`CodeResearch.md`, `ImplementationPlan.md`, `Spec.md`, `Docs.md`) to pass pre-flight.
 
 ## Artifact Structure
 

@@ -75,7 +75,17 @@ PAW Lite strips the multi-stage pipeline down to what matters:
 - **Plan** → Lightweight plan with approach summary and work items (no rigid spec)
 - **Implement** → Fleet-style parallel dispatch using SQL todos and `task` subagents
 - **Review** → Configurable: single-model, multi-model, or full Society of Thought
-- **PR** → Final pull request with artifact cleanup
+- **PR** → Final pull request via `paw-pr` with artifact cleanup
+
+### Final PR Pre-flight
+
+`paw-pr` validates PAW Lite runs against Lite artifacts, not the full PAW set:
+
+- **Required**: `Plan.md`, with its work items delivered on the target branch (and the run's work-item todos complete)
+- **Optional**: `WorkShaping.md` and `reviews/`
+- **Not required**: `CodeResearch.md`, `ImplementationPlan.md`, `Spec.md`, `SpecResearch.md`, `Docs.md`
+
+`paw-pr` treats a run as PAW Lite when `WorkflowContext.md` declares `Workflow Identity: paw-lite`, when it is invoked from PAW Lite's PR stage, or (without an explicit identity) when `Plan.md` exists without `ImplementationPlan.md`. If the context says `Workflow Mode: full` or `minimal`, for example because a launcher pre-initialized it, `paw-pr` reports a warning and still applies the Lite requirements.
 
 ### When to Use It
 

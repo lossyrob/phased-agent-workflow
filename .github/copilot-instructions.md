@@ -328,6 +328,7 @@ cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
 | `full-local-workflow` | Golden path: spec → plan → implement (local strategy) | ~3-5 min |
 | `minimal-workflow` | Minimal mode: plan → implement (no spec) | ~2-3 min |
 | `transition-review-policy` | Review policy values (legacy + current) and pause behavior | ~1-2 min |
+| `paw-pr-preflight-profiles` | `paw-pr` pre-flight: PAW Lite profile vs unchanged full/minimal checks | ~8-9 min |
 | `paw-spec` | Spec creation from brief | ~1-2 min |
 | `paw-planning` | Plan creation from seeded spec | ~1-2 min |
 | `paw-implement` | Implementation from seeded plan | ~2-3 min |

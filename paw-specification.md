@@ -437,7 +437,7 @@ When the plan includes a documentation phase, `paw-implement` loads the `paw-doc
 **Workflow:**
 
 1. `paw-final-review` reviews the full implementation diff against spec and `ImplementationPlan.md` deliverables (if review enabled). Missing planned deliverables are `should-fix` minimum. Supports three modes: `single-model` (one model), `multi-model` (multiple models with synthesis), or `society-of-thought` (delegates to `paw-sot` for specialist personas with parallel or debate interaction)
-2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions)
+2. `paw-pr` verifies all prerequisites are complete (merged PRs, artifacts, open questions). PAW Lite runs use a Lite pre-flight profile instead: `Plan.md` and completed work items replace `ImplementationPlan.md` phases and the standard artifact set, and `Workflow Mode` adds no artifact requirements
 3. `paw-pr` crafts comprehensive PR description with decision audit trail
 4. `paw-pr` opens the final PR
 5. Address any review comments using `paw-implement` → `paw-impl-review` cycle

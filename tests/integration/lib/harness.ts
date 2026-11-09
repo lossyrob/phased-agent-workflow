@@ -1,3 +1,4 @@
+import { execFileSync } from "child_process";
 import { CopilotClient } from "@github/copilot-sdk";
 import { TestFixture } from "./fixtures.js";
 import { ToolCallLog } from "./trace.js";
@@ -93,6 +94,28 @@ async function startCopilotClient(options: ClientOptions): Promise<CopilotClient
   }
 }
 
+/**
+ * With PAW_TEST_AUTH=gh-token, sign the CLI in with the token from `gh auth token`
+ * instead of its stored credentials. A CLI started as `node index.js` (see
+ * PAW_TEST_CLI_PATH) otherwise reads the OS keychain as "node", which makes macOS
+ * prompt for a password on every run. The token is passed to the CLI process only;
+ * it is never logged or written to disk.
+ */
+function readGhToken(): string | undefined {
+  if (process.env.PAW_TEST_AUTH !== "gh-token") {
+    return undefined;
+  }
+  try {
+    const token = execFileSync("gh", ["auth", "token"], { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    if (token) {
+      return token;
+    }
+  } catch {
+    // fall through
+  }
+  throw new Error("PAW_TEST_AUTH=gh-token requires a working `gh auth token` (run `gh auth login`)");
+}
+
 function getProviderConfig() {
   if (process.env.PAW_TEST_PROVIDER === "azure") {
     const baseUrl = process.env.AZURE_OPENAI_ENDPOINT;
@@ -146,7 +169,11 @@ export async function createTestContext(opts: {
     // PAW_TEST_CLI_PATH runs the tests against an installed Copilot CLI instead of the
     // one bundled with the SDK, which lags behind (for example, it has no write_agent).
     const cliPath = process.env.PAW_TEST_CLI_PATH;
-    client = await startCopilotClient({ useLoggedInUser, ...(cliPath ? { cliPath } : {}) });
+    const githubToken = useLoggedInUser ? readGhToken() : undefined;
+    client = await startCopilotClient({
+      ...(githubToken ? { githubToken, useLoggedInUser: false } : { useLoggedInUser }),
+      ...(cliPath ? { cliPath } : {}),
+    });
 
     const provider = getProviderConfig();
     const model = opts.model || process.env.PAW_TEST_MODEL || undefined;

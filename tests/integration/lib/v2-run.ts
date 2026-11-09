@@ -21,7 +21,7 @@ export const OTHER_WORK_ID = "unrelated-earlier-work";
 
 export const HOST_INSTRUCTIONS = [
   "Project rules for this repository:",
-  `- Every commit message must end with the line \`${COMMIT_TRAILER}\`. This applies to commits made by subagents too.`,
+  `- Every commit message must include the trailer line \`${COMMIT_TRAILER}\`. This applies to commits made by subagents too.`,
   "- Work autonomously. Do not ask the user questions unless you are blocked.",
 ].join("\n");
 

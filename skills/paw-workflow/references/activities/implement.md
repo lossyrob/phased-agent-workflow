@@ -23,7 +23,7 @@ Implement the plan unit named in your brief, or apply the revision you were sent
 - Stage `.paw/` files only if the artifact lifecycle is `commit-and-clean` or `commit-and-persist`. Never stage `.gitignore` files under `.paw/work/`.
 - Check `git diff --cached --name-only` before each commit.
 - Commit messages follow the host instructions in the brief exactly.
-- Do not push, open pull requests, or run `git rm` on `.paw/`.
+- Do not push, open pull requests, run `git rm` on `.paw/`, or rewrite existing commits (`--amend`, `rebase`, `reset --hard`).
 
 ## Return
 

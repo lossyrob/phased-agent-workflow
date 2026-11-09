@@ -8,7 +8,7 @@
     "test": "npx tsx --test tests/**/*.test.ts",
     "test:skills": "npx tsx --test tests/skills/*.test.ts",
     "test:workflows": "npx tsx --test tests/workflows/*.test.ts",
-    "test:v2": "PAW_TEST_V2=1 PAW_TEST_AUTH=gh-token npx tsx --test tests/v2/*.test.ts",
+    "test:v2": "PAW_TEST_V2=1 PAW_TEST_AUTH=gh-token npx tsx --test --test-concurrency=1 tests/v2/*.test.ts",
     "probe:runtime": "PAW_TEST_AUTH=gh-token npx tsx tests/probes/runtime-capabilities.probe.ts"
   },
   "dependencies": {

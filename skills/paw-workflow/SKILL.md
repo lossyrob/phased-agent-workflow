@@ -114,7 +114,7 @@ A failed check is a revision for the same subagent, not a closed todo.
 
 ## Reviews
 
-For `single-model`, delegate one `review` activity. Tell it the target (`plan` or `final`), the output path (`reviews/planning/REVIEW.md` or `reviews/REVIEW.md`), and for `final` the diff range `<base>...<target>`.
+For `single-model` and for `review:<unit>`, delegate one `review` activity. Tell it the target (`plan`, `unit <unit>`, or `final`), the output path (`reviews/planning/REVIEW.md`, `reviews/<unit>/REVIEW.md`, or `reviews/REVIEW.md`), and the diff range: the unit's commits for `unit`, `<base>...<target>` for `final`.
 
 Before the first review, create `.paw/work/<work-id>/reviews/.gitignore` containing `*`. Never stage it.
 

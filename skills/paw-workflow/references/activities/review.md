@@ -22,12 +22,16 @@ Run `git diff <base>...<target>` from the brief, and read the task source and th
 - **Consistency**: does the change follow the codebase's patterns and the host instructions?
 - **Scope**: does the diff contain changes unrelated to the task, including files that belong to the user's uncommitted work?
 
+## Target: unit
+
+As `final`, limited to the diff range in your brief and to that unit's Changes and Tests in the plan. Later units are out of scope.
+
 ## Output
 
 Write the file at the output path in your brief:
 
 ```markdown
-# Review: <plan | final>
+# Review: <plan | unit | final>
 
 **Verdict**: pass | changes-required
 **Reviewed**: <artifact path or diff range>
@@ -49,7 +53,7 @@ Write the file at the output path in your brief:
 ```yaml
 status: complete | blocked | failed
 activity: review
-target: plan | final
+target: plan | unit | final
 verdict: pass | changes-required
 artifacts:
   - path: <review file>

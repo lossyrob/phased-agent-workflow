@@ -74,22 +74,27 @@ Run with `npm run probe:runtime` in `tests/integration`, with `PAW_TEST_CLI_PATH
 | 7 | Do subagents run in parallel, with a per-call model, in the Local harness? | VS Code | Not tested. |
 | 8 | Is there a practical way to run integration tests against Claude Code? | Claude Code | Not tested. |
 
-## Baseline and first v2 run
+## Baseline and v2 runs
 
-The first v2 suite (`npm run test:v2`) runs one autonomous task with a plain host and no `PAW` agent. It was run once against the v1 `paw-workflow` reference skill and once against the v2 skill, on Copilot CLI 1.0.108. These are single runs, not averages.
+All runs use the same task and fixture on Copilot CLI 1.0.108 (`npm run test:v2` in `tests/integration`). The v2 column covers three runs of the default suite; the v1 column is one run of the `PAW` agent and skills from `main` (`v1-baseline.test.ts`).
 
-| Observation | v1 skill | v2 skill |
-|-------------|----------|----------|
-| Checks passed | 8 of 15 | 15 of 16 (the one failure was a test defect, since fixed) |
-| Subagents started | 0 | 4 (plan, plan review, implement, final review) |
-| TODO nodes created | 0 | 7, with dependencies, all closed |
-| Workflow artifacts written | None | Plan and both reviews |
-| Pull request | Not attempted | One, by the host, after final review |
-| User's uncommitted change | Committed with the feature | Left untouched |
-| Project commit-message rule | Not followed | Followed on every commit |
-| Feature implemented, tests pass | Yes | Yes |
-| Wall-clock time | 37 s | 162 s |
-| Model calls (host / subagents) | 7 / 0 | 22 / 23 |
-| Peak host prompt size | 34k tokens | 50k tokens |
+| Observation | v1 `PAW` agent (1 run) | v2 skill (3 runs) |
+|-------------|------------------------|-------------------|
+| Wall-clock time | 106 s | 135–153 s |
+| Peak host prompt size | 74k tokens | 46–49k tokens |
+| Model calls, host | 21 | 19–22 |
+| Model calls, subagents | 4 | 20–24 |
+| Skills loaded by the host | 7 | 1 |
+| Subagents started | 2 | 4 |
+| TODO nodes | 0 | 7, with dependencies, all closed |
+| Pull requests opened | 1 | 1, 1, 2 |
+| User's uncommitted change | Reported in a workflow commit (not verified) | Untouched |
+| Project commit-message rule | Followed | Followed |
 
-The v1 column is not a measure of v1 PAW: it is what a plain host does with the old reference skill and no `PAW` agent. A like-for-like v1 baseline, with the `PAW` agent on the same task, is still to be recorded.
+Notes:
+
+- The v1 run needed an explicit instruction to act as the PAW agent. Without it the host ignored PAW entirely.
+- The second pull request in one v2 run followed a history rewrite by the host. Invariant G12 and a matching rule in the git procedure were added in response; they have not been rerun.
+- Each default-suite run passed 15 of 16 checks. Two failures were a test defect (since fixed); the third was the double pull request.
+
+Three further suites each passed on their last run: plan revision through the same subagent (8 of 8), configured procedures with phase review on a three-unit plan (8 of 8, 263 s), and the `never-commit` lifecycle (5 of 5).

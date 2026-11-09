@@ -12,4 +12,5 @@ Applies to every commit you make as host. Subagent briefs carry the same rules.
 - `.gitignore` files under `.paw/work/<work-id>/` are local markers. Never stage them. If one is tracked, `git rm --cached <path>`.
 - Never touch another work item's directory under `.paw/work/`.
 - Commit messages follow the project and user instructions you hold.
+- Never rewrite existing commits: no `--amend`, `rebase`, `reset --hard`, `commit-tree`, `update-ref`, or force push. Fix a wrong commit with a new commit.
 - Push only in the final PR procedure.

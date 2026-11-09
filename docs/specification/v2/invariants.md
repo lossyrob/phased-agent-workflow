@@ -80,6 +80,7 @@ The observed failures reduce to six classes. Every durable invariant below maps 
 | G9 | Each external side effect has one owner: the host. | F5 | Host (D5). | Single PR created per run. |
 | G10 | Final status is reported from live git and PR state, not from memory. | F6 | Host completion step. | Reported PR URL matches `gh pr view`. |
 | G11 | Rewind and other destructive operations show a preview and require confirmation. | F4 | Rewind procedure. | Rewind without confirmation leaves state unchanged. |
+| G12 | Existing commits are never rewritten (amend, rebase, hard reset, plumbing rewrites, force push). Errors are fixed with new commits. | F4 | Git operation procedure; implementation brief. | Tool-policy check on git commands. Observed in a v2 stability run, where the host rebuilt history with `git commit-tree` to reorder commit trailers. |
 
 ### Content quality
 

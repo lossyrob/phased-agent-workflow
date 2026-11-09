@@ -73,6 +73,10 @@ nav:
     - Overview: specification/index.md
     - Implementation Workflow: specification/implementation.md
     - Review Workflow: specification/review.md
+    - PAW v2 (Draft):
+      - Design: specification/v2/design.md
+      - Invariant Catalogue: specification/v2/invariants.md
+      - Runtime Capabilities: specification/v2/runtime-capabilities.md
   - Reference:
     - Agents: reference/agents.md
     - Artifacts: reference/artifacts.md

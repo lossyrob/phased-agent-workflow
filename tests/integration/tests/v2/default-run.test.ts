@@ -16,39 +16,34 @@
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert";
 import { execSync } from "child_process";
-import { mkdir, readdir, writeFile, appendFile } from "fs/promises";
+import { readdir } from "fs/promises";
 import { join } from "path";
 import { simpleGit } from "simple-git";
-import { createTestContext, destroyTestContext, type TestContext } from "../../lib/harness.js";
-import { RuleBasedAnswerer } from "../../lib/answerer.js";
-import { TestFixture, rewriteGhCommand } from "../../lib/fixtures.js";
+import { destroyTestContext, type TestContext } from "../../lib/harness.js";
 import { getRepoRoot } from "../../lib/skills.js";
-import { readTodoGraph, type TodoGraph } from "../../lib/todos.js";
-import { ToolPolicy } from "../../lib/tool-policy.js";
+import type { TodoGraph } from "../../lib/todos.js";
+import {
+  COMMIT_TRAILER,
+  HOST_INSTRUCTIONS,
+  OTHER_WORK_ID,
+  RUN_TIMEOUT,
+  SOURCE_EDIT_TOOLS,
+  TASK_DESCRIPTION,
+  allBash as allBashFor,
+  runV2Task,
+} from "../../lib/v2-run.js";
 
 const ENABLED = process.env.PAW_TEST_V2 === "1";
-const RUN_TIMEOUT = parseInt(process.env.PAW_TEST_V2_TIMEOUT || "1500000", 10);
 
 const WORKFLOW_SKILL = "paw-workflow";
-const COMMIT_TRAILER = "Team: acme-platform";
-const OTHER_WORK_ID = "unrelated-earlier-work";
-
-const HOST_INSTRUCTIONS = [
-  "Project rules for this repository:",
-  `- Every commit message must end with the line \`${COMMIT_TRAILER}\`. This applies to commits made by subagents too.`,
-  "- Work autonomously. Do not ask the user questions unless you are blocked.",
-].join("\n");
 
 const TASK = [
   `Use the ${WORKFLOW_SKILL} skill to take this task through to a final pull request.`,
   "",
   "Configuration: plan review single-model, final review single-model, no plan checkpoint, everything else default.",
   "",
-  "Task: add request counting to the Express app. Count every request served and expose the total at",
-  "GET /stats as JSON `{ \"requestCount\": N }`. Add a test for the endpoint.",
+  TASK_DESCRIPTION,
 ].join("\n");
-
-const SOURCE_EDIT_TOOLS = new Set(["create", "edit", "apply_patch", "str_replace_editor"]);
 
 function argText(args: Record<string, unknown>): string {
   return JSON.stringify(args);
@@ -61,45 +56,12 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
   let runError: unknown;
 
   before(async () => {
-    const fixture = await TestFixture.clone("minimal-ts");
-    const git = simpleGit(fixture.workDir);
-
-    // A second, unrelated work directory that must survive the run untouched (G3).
-    const otherDir = join(fixture.workDir, ".paw/work", OTHER_WORK_ID);
-    await mkdir(otherDir, { recursive: true });
-    await writeFile(join(otherDir, "ImplementationPlan.md"), "# Earlier work\n\nUnrelated to the current task.\n");
-    await git.add(".paw/");
-    await git.commit("Add unrelated earlier work artifacts");
-
-    execSync("npm install --silent", { cwd: fixture.workDir, stdio: "pipe" });
-    baseHead = (await git.raw(["rev-parse", "HEAD"])).trim();
-
-    // Local bare origin and a stub gh, so the run can push and open its PR offline.
-    await fixture.addLocalRemote();
-    const { stubPath } = await fixture.installGhStub();
-
-    // An uncommitted user change that must not be staged, reverted or committed (G2).
-    await appendFile(join(fixture.workDir, "README.md"), "\nUser note: do not commit this line.\n");
-
-    ctx = await createTestContext({
-      fixture,
-      skillOrAgent: "v2-default-run",
+    ({ ctx, todos, baseHead, runError } = await runV2Task({
+      label: "v2",
       systemPrompt: HOST_INSTRUCTIONS,
-      answerer: new RuleBasedAnswerer([(req) => req.choices?.[0] ?? "proceed"], false),
       skillDirectories: [join(getRepoRoot(), "skills")],
-      toolPolicy: new ToolPolicy(fixture.workDir, [], { allowRemoteWrites: true }),
-      rewriteCommand: (command) => rewriteGhCommand(command, stubPath),
-    });
-
-    try {
-      await ctx.session.sendAndWait({ prompt: TASK }, RUN_TIMEOUT);
-    } catch (err) {
-      runError = err;
-    }
-    todos = readTodoGraph(ctx.session.sessionId);
-
-    console.log("[v2] run summary:", JSON.stringify(ctx.events.summary(), null, 2));
-    console.log("[v2] todo graph:\n" + (todos.describe() || "(empty)"));
+      task: TASK,
+    }));
   });
 
   after(async () => {
@@ -109,11 +71,7 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
   });
 
   const git = () => simpleGit(ctx.fixture.workDir);
-  const allBash = () =>
-    ctx.events
-      .toolStarts()
-      .filter((t) => t.toolName === "bash")
-      .map((t) => ({ command: String(t.arguments.command ?? ""), fromSubagent: !!t.parentToolCallId }));
+  const allBash = () => allBashFor(ctx);
 
   it("completes within the time budget", () => {
     assert.ok(!runError, `Run did not complete: ${runError instanceof Error ? runError.message : String(runError)}`);

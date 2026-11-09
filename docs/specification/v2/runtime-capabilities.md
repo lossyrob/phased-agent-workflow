@@ -74,17 +74,22 @@ Run with `npm run probe:runtime` in `tests/integration`, with `PAW_TEST_CLI_PATH
 | 7 | Do subagents run in parallel, with a per-call model, in the Local harness? | VS Code | Not tested. |
 | 8 | Is there a practical way to run integration tests against Claude Code? | Claude Code | Not tested. |
 
-## Baseline
+## Baseline and first v2 run
 
-The first v2 suite (`npm run test:v2`) was run once against the current `paw-workflow` skill, loaded by a plain host with no `PAW` agent. It is the starting point the v2 skill has to improve on.
+The first v2 suite (`npm run test:v2`) runs one autonomous task with a plain host and no `PAW` agent. It was run once against the v1 `paw-workflow` reference skill and once against the v2 skill, on Copilot CLI 1.0.108. These are single runs, not averages.
 
-| Observation | Result |
-|-------------|--------|
-| Checks passed | 8 of 15 |
-| Subagents started | 0 |
-| TODO nodes created | 0 |
-| Workflow artifacts written | None |
-| Pull request attempted | No |
-| User's uncommitted change | Committed with the feature |
-| Project commit-message rule | Not followed |
-| Feature implemented, tests pass | Yes |
+| Observation | v1 skill | v2 skill |
+|-------------|----------|----------|
+| Checks passed | 8 of 15 | 15 of 16 (the one failure was a test defect, since fixed) |
+| Subagents started | 0 | 4 (plan, plan review, implement, final review) |
+| TODO nodes created | 0 | 7, with dependencies, all closed |
+| Workflow artifacts written | None | Plan and both reviews |
+| Pull request | Not attempted | One, by the host, after final review |
+| User's uncommitted change | Committed with the feature | Left untouched |
+| Project commit-message rule | Not followed | Followed on every commit |
+| Feature implemented, tests pass | Yes | Yes |
+| Wall-clock time | 37 s | 162 s |
+| Model calls (host / subagents) | 7 / 0 | 22 / 23 |
+| Peak host prompt size | 34k tokens | 50k tokens |
+
+The v1 column is not a measure of v1 PAW: it is what a plain host does with the old reference skill and no `PAW` agent. A like-for-like v1 baseline, with the `PAW` agent on the same task, is still to be recorded.

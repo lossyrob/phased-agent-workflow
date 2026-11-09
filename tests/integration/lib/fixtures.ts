@@ -1,4 +1,4 @@
-import { access, cp, mkdir, mkdtemp, readFile, rm } from "fs/promises";
+import { access, chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -6,6 +6,11 @@ import { simpleGit, type SimpleGit } from "simple-git";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const FIXTURES_DIR = resolve(__dirname, "../fixtures");
+
+/** Point every `gh` invocation in a shell command at a stub executable. */
+export function rewriteGhCommand(command: string, stubPath: string): string {
+  return command.replace(/(^|[\s;&|(`])gh(?=\s)/g, (_m, lead: string) => `${lead}"${stubPath}"`);
+}
 
 /** Manages an isolated temp git repository for a single test. */
 export class TestFixture {
@@ -99,6 +104,60 @@ export class TestFixture {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Give the fixture a local bare repository as `origin` so a workflow can push
+   * without touching the network. Returns the bare repository path.
+   */
+  async addLocalRemote(): Promise<string> {
+    const remotePath = join(this.workspaceDir, "origin.git");
+    await simpleGit().raw(["init", "--bare", remotePath]);
+    await this.git.addRemote("origin", remotePath);
+    const branch = await this.getBranch();
+    await this.git.raw(["push", "-u", "origin", branch]);
+    return remotePath;
+  }
+
+  /**
+   * Install a stub `gh` that records its arguments and pretends `gh pr create`
+   * succeeded. Returns the stub's path and the call log path.
+   *
+   * Never put the stub on PATH: the Copilot CLI process inherits PATH and uses the
+   * real `gh` for its own sign-in, and shadowing it makes the CLI fall back to the
+   * OS keychain and prompt the user. Route the agent's shell commands to the stub
+   * with `rewriteGhCommand` and the harness `rewriteCommand` option instead.
+   */
+  async installGhStub(): Promise<{ stubPath: string; logPath: string }> {
+    const binDir = join(this.workspaceDir, "bin");
+    const logPath = join(this.workspaceDir, "gh-calls.log");
+    await mkdir(binDir, { recursive: true });
+    const script = [
+      "#!/bin/sh",
+      `printf '%s\\n' "$*" >> "${logPath}"`,
+      'if [ "$1" = "pr" ] && [ "$2" = "create" ]; then',
+      '  echo "https://github.com/example/fixture/pull/1"',
+      'elif [ "$1" = "pr" ] && [ "$2" = "view" ]; then',
+      "  echo '{\"number\":1,\"state\":\"OPEN\",\"isDraft\":false,\"url\":\"https://github.com/example/fixture/pull/1\"}'",
+      'elif [ "$1" = "pr" ] && [ "$2" = "list" ]; then',
+      '  echo "[]"',
+      "fi",
+      "exit 0",
+      "",
+    ].join("\n");
+    await writeFile(join(binDir, "gh"), script);
+    await chmod(join(binDir, "gh"), 0o755);
+    return { stubPath: join(binDir, "gh"), logPath };
+  }
+
+  /** Read the stub gh call log, one invocation per entry. */
+  async ghCalls(): Promise<string[]> {
+    try {
+      const raw = await readFile(join(this.workspaceDir, "gh-calls.log"), "utf-8");
+      return raw.split("\n").filter(Boolean);
+    } catch {
+      return [];
     }
   }
 

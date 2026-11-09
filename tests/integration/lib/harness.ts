@@ -122,6 +122,8 @@ export async function createTestContext(opts: {
   executionPath?: string;
   availableTools?: string[];
   excludedTools?: string[];
+  /** Rewrite a shell command before it runs (for example, to route `gh` to a stub). */
+  rewriteCommand?: (command: string) => string;
   /** Directories the runtime discovers skills from (host-loaded skill runs). */
   skillDirectories?: string[];
   /** Set to disable automatic compaction or tune its thresholds. */
@@ -219,6 +221,14 @@ export async function createTestContext(opts: {
             call.stubbed = true;
             toolLog.end(call, decision.result);
             return { permissionDecision: "deny" as const, permissionDecisionReason: "stubbed" };
+          }
+          if (opts.rewriteCommand && input.toolName === "bash") {
+            const args = (typeof input.toolArgs === "string" ? JSON.parse(input.toolArgs) : input.toolArgs) as Record<string, unknown>;
+            const original = String(args?.command ?? "");
+            const rewritten = opts.rewriteCommand(original);
+            if (rewritten !== original) {
+              return { permissionDecision: "allow" as const, modifiedArgs: { ...args, command: rewritten } };
+            }
           }
           return { permissionDecision: "allow" as const };
         },

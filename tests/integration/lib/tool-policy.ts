@@ -10,7 +10,16 @@ export class ToolPolicy {
   private readonly allowedRoots: string[];
   private readonly normalizedRoots: string[];
 
-  constructor(private workspaceRoot: string, extraRoots: string[] = []) {
+  /**
+   * @param options.allowRemoteWrites Permit `git push` and `gh pr create`. Only for
+   *   fixtures whose `origin` is a local bare repository and whose `gh` is a stub
+   *   (see TestFixture.addLocalRemote and installGhStub).
+   */
+  constructor(
+    private workspaceRoot: string,
+    extraRoots: string[] = [],
+    private readonly options: { allowRemoteWrites?: boolean } = {},
+  ) {
     this.workspaceRoot = resolve(workspaceRoot);
     this.allowedRoots = [...new Set([this.workspaceRoot, ...extraRoots.map((root) => resolve(root))])];
     this.normalizedRoots = this.allowedRoots.map((root) => `${root}/`);
@@ -62,10 +71,10 @@ export class ToolPolicy {
     if (call.toolName === "bash") {
       const cmd = String(input?.command ?? "");
 
-      if (/\bgit\s+push\b/i.test(cmd)) {
+      if (!this.options.allowRemoteWrites && /\bgit\s+push\b/i.test(cmd)) {
         return { action: "deny", reason: "git push disabled in tests" };
       }
-      if (/\bgh\s+(pr|issue)\s+create\b/i.test(cmd)) {
+      if (!this.options.allowRemoteWrites && /\bgh\s+(pr|issue)\s+create\b/i.test(cmd)) {
         return { action: "deny", reason: "GitHub CLI writes disabled in tests" };
       }
       // Block rm with recursive+force flags in any order (rm -rf, rm -fr, rm -r -f, etc.)

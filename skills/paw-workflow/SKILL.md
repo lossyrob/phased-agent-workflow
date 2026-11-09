@@ -1,159 +1,137 @@
 ---
 name: paw-workflow
-description: Reference documentation for PAW multi-phase implementation workflows. Provides activity tables, artifact structure, stage guidance, and PR routing patterns. Workflow enforcement rules are in PAW.agent.md.
+description: PAW implementation workflow. Takes a scoped task (issue, work item, or prompt) through planning, implementation, configured review, and a final pull request. Load when asked to implement a task with PAW, "paw this", or run the PAW workflow.
 ---
 
-# PAW Implementation Workflow Skill
+# PAW Workflow
 
-**Reference Documentation**: This skill provides guidance on typical patterns, artifact structure, and stage sequences. Workflow enforcement (mandatory transitions, TODO tracking, pause rules) is in the PAW agent, not this skill.
+You are the orchestrator. Your existing project and user instructions stay in force. Activities run in subagents; you track the workflow in your todo store, check every result, and own all external side effects.
 
-Prerequisite: WorkflowContext.md must exist (created by `paw-init`).
+Files referenced below live in `references/` next to this file. Read each one only when its step starts.
 
-## Core Implementation Principles
+## Host rules
 
-These principles apply to ALL implementation stages.
+1. Build the complete todo graph before any other work.
+2. Start any unblocked todo. Delegate activities with a brief; never do an activity's work yourself.
+3. A subagent's return is a claim. Verify it against git and the files on disk before closing the todo.
+4. Close a todo only with its evidence in hand. Cancel one only when the user tells you to: not because it seems redundant, slow, or already covered by an earlier activity.
+5. A configured review runs as configured, through its named provider, or the workflow blocks.
+6. Only you push, open pull requests, or change artifact tracking. Subagents commit locally.
+7. Stop only when the graph is complete, a todo needs a user decision, a configured checkpoint is reached, or the user asks. Otherwise continue to the next unblocked todo.
+8. Report final status from live `git` and PR state.
 
-### 1. Evidence-Based Documentation
+## Setup
 
-Code-related claims in any artifact MUST be supported by:
-- Specific file:line references for code claims
-- Concrete code patterns or test results
-- Direct evidence from the codebase
+Do this directly.
 
-For non-code claims (e.g., requirements or planning decisions), cite the source when available (issue/discussion/user input) and clearly label assumptions.
+1. Derive a work title and a work id (lowercase, hyphens) from the task. The work directory is `.paw/work/<work-id>/`; it must not already exist.
+2. Resolve configuration: defaults below, then any settings the user stated.
+3. Note uncommitted changes with `git status --short`. They belong to the user: never stage, commit, or revert them.
+4. Create the target branch from the base branch.
+5. Write `.paw/work/<work-id>/WorkflowContext.md` with the resolved configuration, task source, base branch, and target branch. It holds configuration only, never progress.
+6. Collect the project and user instructions that apply to code changes and commits (instruction files, rules given to you in this session). They go into every brief.
 
-Do not present speculation, assumptions, or unverified claims as fact.
+| Setting | Values | Default |
+|---------|--------|---------|
+| `plan_review` | `off`, `single-model` | `single-model` |
+| `plan_checkpoint` | `off`, `on` | `off` |
+| `phase_review` | `off`, `on` | `off` |
+| `final_review` | `off`, `single-model` | `single-model` |
+| `artifact_lifecycle` | `commit-and-clean`, `commit-and-persist`, `never-commit` | `commit-and-clean` |
 
-### 2. File:Line Reference Requirement
+## Todo graph
 
-All code-related claims require specific file:line citations:
-- `[src/module.ts:45](src/module.ts#L45)` for single lines
-- `[src/module.ts:45-52](src/module.ts#L45-L52)` for ranges
-- Multiple locations listed explicitly
+Create one todo per row whose condition holds, with the listed dependencies, in your dependency-aware todo store (Copilot CLI: `todos` and `todo_deps` SQL tables). If your store has no dependencies, keep this order and write `blocked by: <id>` in each item. Subagents never edit the store.
 
-### 3. No Fabrication Guardrail
+| Id | Condition | Blocked by | Evidence to close |
+|----|-----------|------------|-------------------|
+| `setup` | always | — | `WorkflowContext.md` exists; on target branch |
+| `plan` | always | `setup` | Accepted `ImplementationPlan.md`, committed per lifecycle |
+| `plan-review` | `plan_review` not `off` | `plan` | `reviews/planning/REVIEW.md`; findings resolved |
+| `plan-checkpoint` | `plan_checkpoint: on` | last of the above | User accepted the plan |
+| `expand-plan` | always | last of the above | `implement:*` todos exist for every plan unit |
+| `final-review` | `final_review` not `off` | `expand-plan` | `reviews/REVIEW.md`; findings resolved |
+| `final-pr` | always | `final-review`, else `expand-plan` | PR URL from live state |
 
-**CRITICAL**: Do not fabricate, invent, or assume information:
-- If information is unavailable, state "Not found" or "Unable to determine"
-- Do not hallucinate file contents, function behaviors, or patterns
-- When uncertain, document the uncertainty explicitly
+Write the configured provider into each review todo's description.
 
-### 4. Artifact Completeness
+**`expand-plan`**: when the plan is accepted, add `implement:<unit>` for each phase or work item with the dependencies the plan states, and make `final-review` (or `final-pr`) depend on all of them. With `phase_review: on`, add `review:<unit>` after each.
 
-Each stage produces complete, well-structured artifacts:
-- No placeholders or "TBD" markers
-- No unresolved questions blocking downstream stages
-- Each artifact is self-contained and traceable to sources
+**During the run**:
 
-### 5. Human Authority
+- Review returns findings → add `revise:<target>` blocked by that review; the reviewed todo's successor waits on it.
+- Return lists `candidates` → add `candidate:<slug>` and make `final-pr` depend on it. Resolve each by implementing it or by recording in the plan why it is deferred.
+- Return is `blocked` or `needs-decision` → the todo stays open. Resolve it from the task, the plan, and the codebase if you can; ask the user only for a real decision.
 
-Humans have final authority over all workflow decisions:
-- Review pauses honor human review preferences
-- Implementation choices can be overridden
-- Artifacts are advisory until human-approved
+## Delegation
 
-## Activities
+Start each activity as a general-purpose subagent with this brief. Do not paste artifact contents; subagents read from disk.
 
-| Skill | Capabilities | Primary Artifacts |
-|-------|--------------|-------------------|
-| `paw-spec` | Create spec, revise spec | Spec.md |
-| `paw-spec-research` | Answer factual questions about existing system | SpecResearch.md |
-| `paw-spec-review` | Review spec for quality, completeness, clarity | Review feedback |
-| `paw-code-research` | Document implementation details with file:line refs | CodeResearch.md |
-| `paw-planning` | Create implementation plan, revise plan (single/multi-model) | ImplementationPlan.md, planning/ |
-| `paw-plan-review` | Review plan for feasibility, spec alignment | Review feedback |
-| `paw-implement` | Execute plan phases, make code changes | Code files, Docs.md |
-| `paw-impl-review` | Review implementation quality, return verdict | Review feedback |
-| `paw-final-review` | Pre-PR review; delegates SoT orchestration to `paw-sot` | REVIEW*.md in reviews/ |
-| `paw-planning-docs-review` | Holistic review of planning artifacts bundle | REVIEW*.md in reviews/planning/ |
-| `paw-pr` | Pre-flight validation, create final PR | Final PR |
-
-**Note**: Phase PR creation is handled by PAW agent (using `paw-git-operations`) after `paw-impl-review` passes.
-
-**Utility skills**: `paw-git-operations` (branching, Phase PRs), `paw-review-response` (PR comments), `paw-docs-guidance` (documentation), `paw-sot` (society-of-thought engine, loaded by `paw-final-review`).
-
-## Artifact Directory Structure
-
-All implementation artifacts are stored in a consistent directory structure:
-
-```
-.paw/work/<work-id>/
-├── WorkflowContext.md      # Configuration and state
-├── WorkShaping.md          # Pre-spec ideation output (optional, from paw-work-shaping)
-├── Spec.md                 # Feature specification
-├── SpecResearch.md         # Research answers (optional)
-├── CodeResearch.md         # Implementation details with file:line refs
-├── ImplementationPlan.md   # Phased implementation plan
-├── Docs.md                 # Technical documentation (created during final implementation phase)
-├── prompts/                # Generated prompt files (optional)
-├── planning/              # Multi-model planning artifacts (gitignored)
-│   └── PLAN-{MODEL}.md          # Per-model plan drafts
-└── reviews/                # Review artifacts (gitignored)
-    ├── planning/           # Planning Documents Review artifacts
-    │   ├── REVIEW.md
-    │   ├── REVIEW-{MODEL}.md
-    │   └── REVIEW-SYNTHESIS.md
-    ├── REVIEW.md           # Final Agent Review: single-model
-    ├── REVIEW-{MODEL}.md   # Final Agent Review: per-model (multi-model)
-    └── REVIEW-SYNTHESIS.md # Final Agent Review: synthesis (multi-model)
+```text
+Activity: <plan | implement | review>
+Brief file: <absolute path to references/activities/<activity>.md> — read it first and follow it.
+Intent: <what the task is for>
+Task source: <issue link or the prompt text>
+Work context: work dir <path>, target branch <branch>, base branch <branch>
+Host instructions: <project and user rules that apply, verbatim>
+Inputs: <artifact paths to read>
+Constraints: <scope limits, decisions already made, what must not change>
+Done when: <observable criteria>
+Limits: commit locally with explicit file paths only; never `git add .`/`-A`/`commit -a`; leave these uncommitted user files untouched: <list>; do not push, open PRs, change artifact tracking, edit todos, or load the paw-workflow skill.
+Return: the return block defined in the brief file.
 ```
 
-**Work ID Derivation**: Normalized from Work Title, lowercase with hyphens (e.g., "Auth System" → "auth-system").
+Start `plan` so it can receive follow-up messages, and keep that subagent for every plan revision (Copilot CLI: `task` with `mode: "background"`, then `read_agent` and `write_agent`). If your runtime has no follow-up, send the revision packet to a new subagent.
 
-## Default Flow Guidance
+Run `implement:*` units one at a time unless the plan marks units as independent; then run those in parallel.
 
-Typical greenfield progression (adapt based on user intent and workflow state):
+### Revision packet
 
-### Specification Stage
-1. `paw-spec`: Create specification from brief/issue
-2. `paw-spec-research` (if needed): Answer factual questions
-3. `paw-spec-review`: Review spec quality
+For every revision, send:
 
-### Planning Stage
-1. `paw-code-research`: Document implementation details with file:line references
-2. `paw-planning`: Create phased implementation plan
-3. `paw-plan-review`: Review plan feasibility
-4. `paw-planning-docs-review` (if enabled): Holistic review of planning bundle
+```text
+Artifact: <path>, last returned at <commit or "uncommitted">
+Requested change: <specific delta>
+Accepted decisions so far: <cumulative list>
+Constraints and intent: <restated>
+Must not regress: <points corrected in earlier rounds>
+```
 
-### Implementation Stage
-Per phase in ImplementationPlan.md:
-1. `paw-implement`: Execute phase, make code changes
-2. `paw-impl-review`: Review changes (returns verdict)
-3. Phase PR created (PRs strategy) or push (local strategy)
+Compare the result with the previous version before accepting it.
 
-**Phase Candidates**: During implementation, new ideas can be captured in the `## Phase Candidates` section of ImplementationPlan.md. When all planned phases complete, `paw-transition` returns `promotion_pending = true` if unresolved candidates exist. The orchestrator presents each candidate to the user with options: Promote (elaborate into a full phase), Skip, or Defer. Terminal markers (`[promoted]`, `[skipped]`, `[deferred]`, `[not feasible]`) resolve candidates.
+## Acceptance
 
-Final phase typically includes documentation (Docs.md, README, CHANGELOG).
+Before closing a todo, check on disk:
 
-### Final Review Stage (if enabled)
-1. `paw-final-review`: Review full implementation against spec
-2. Interactive: apply/skip/discuss findings; Non-interactive: auto-apply
+| Activity | Check |
+|----------|-------|
+| Any | Listed artifacts exist and are non-empty; listed commits exist on the target branch (`git log`); `git status` shows no stray changes and the user's uncommitted files are still uncommitted |
+| `plan` | No placeholders or open blocking questions; covers the whole task; consistent with decisions made in this session |
+| `implement` | Every deliverable the plan names for the unit exists with real content; the stated validation passed; commits follow the host instructions |
+| `review` | The review file exists in the configured location with a verdict |
 
-### Finalization Stage
-1. `paw-pr`: Pre-flight validation, create final PR
+A failed check is a revision for the same subagent, not a closed todo.
 
-## PR Comment Response Routing
+## Reviews
 
-| PR Type | Skill to Load | Notes |
-|---------|--------------|-------|
-| Planning PR | `paw-planning` | Comments on ImplementationPlan.md |
-| Phase PR | `paw-implement` → `paw-impl-review` | Code changes then verify |
-| Final PR | `paw-implement` → `paw-impl-review` | May require code changes |
+For `single-model`, delegate one `review` activity. Tell it the target (`plan` or `final`), the output path (`reviews/planning/REVIEW.md` or `reviews/REVIEW.md`), and for `final` the diff range `<base>...<target>`.
 
-Load `paw-review-response` utility skill for comment mechanics.
+Before the first review, create `.paw/work/<work-id>/reviews/.gitignore` containing `*`. Never stage it.
 
-## Execution Model
+Resolve findings without asking the user:
 
-**Direct execution**: `paw-spec`, `paw-planning`, `paw-implement`, `paw-final-review`, `paw-planning-docs-review`, `paw-pr`, `paw-init`, `paw-status`, `paw-work-shaping`
+- `must-fix` and `should-fix` → send to the subagent that produced the work (plan subagent, or an `implement` subagent) as a revision, then verify the fix.
+- `consider` → apply if cheap and clearly right; otherwise note it for the PR description.
+- A finding that needs a product decision → `needs-decision`; ask the user.
 
-**Subagent delegation**: `paw-spec-research`, `paw-code-research`, `paw-spec-review`, `paw-plan-review`, `paw-impl-review`
+If the review had any `must-fix`, run the review again after the fixes.
 
-**Orchestrator-handled**: Push and Phase PR creation (after `paw-impl-review` passes, using `paw-git-operations`)
+## Git and final PR
 
-Activities may return `blocked` status with open questions. Apply Review Policy to determine resolution approach (`final-pr-only`: research autonomously; `every-stage`/`milestones`: ask user).
+Read `references/procedures/git.md` before your first commit.
 
-## Workflow Mode
+When `final-pr` is unblocked and every other todo is done, read `references/procedures/final-pr.md` and follow it. Create the pull request only through that procedure.
 
-- **Full**: All stages, multiple phases, PRs or local strategy
-- **Minimal**: May skip spec stage, single phase, forces local strategy
-- **Custom**: Read Custom Workflow Instructions from WorkflowContext.md
+## Completion
+
+Confirm no todo is open. Report: PR URL from live state, what was built, validation run, review outcome, and anything deferred.

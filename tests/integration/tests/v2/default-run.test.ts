@@ -177,7 +177,11 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
   it("host instructions stay effective: every workflow commit carries the project trailer", async () => {
     const log = (await git().raw(["log", "--format=%H%x00%B%x01", `${baseHead}..HEAD`])).split("\x01").map((s) => s.trim()).filter(Boolean);
     assert.ok(log.length > 0, "Expected workflow commits");
-    const missing = log.filter((entry) => !entry.split("\x00")[1].trim().endsWith(COMMIT_TRAILER)).map((e) => e.slice(0, 8));
+    // The Copilot runtime itself appends a `Co-authored-by: Copilot` trailer, so the project
+    // trailer is checked as a line of the trailer block rather than as the last line.
+    const missing = log
+      .filter((entry) => !entry.split("\x00")[1].split("\n").some((line) => line.trim() === COMMIT_TRAILER))
+      .map((e) => e.slice(0, 8));
     assert.deepStrictEqual(missing, [], "Commits missing the project trailer");
   });
 

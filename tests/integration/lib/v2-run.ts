@@ -85,6 +85,7 @@ export async function runV2Task(opts: {
   }
   const todos = readTodoGraph(ctx.session.sessionId);
   printRunSummary(opts.label, ctx, todos);
+  await printGitObservations(opts.label, ctx, baseHead);
   return { ctx, todos, baseHead, runError };
 }
 
@@ -101,4 +102,25 @@ export function allBash(ctx: TestContext): Array<{ command: string; fromSubagent
     .toolStarts()
     .filter((t) => t.toolName === "bash")
     .map((t) => ({ command: String(t.arguments.command ?? ""), fromSubagent: !!t.parentToolCallId }));
+}
+
+/** Print commit messages and the shell commands that created them, for diagnosing failures. */
+export async function printGitObservations(label: string, ctx: TestContext, baseHead: string): Promise<void> {
+  const git = simpleGit(ctx.fixture.workDir);
+  const log = await git.raw(["log", "--format=--- %h %s%n%b", `${baseHead}..HEAD`]).catch(() => "(git log failed)");
+  console.log(`[${label}] workflow commits:\n${log}`);
+  const commits = allBash(ctx).filter((c) => /\bgit\s+(-C\s+\S+\s+)?commit\b/.test(c.command));
+  console.log(
+    `[${label}] commit commands:\n` +
+      commits.map((c) => `(${c.fromSubagent ? "subagent" : "host"}) ${c.command}`).join("\n----\n"),
+  );
+  const ghCalls = await ctx.fixture.ghCalls();
+  const prs = ghCalls.filter((c) => c.startsWith("pr create"));
+  console.log(`[${label}] gh pr create calls (stub log): ${prs.length}`);
+  console.log(`[${label}] gh stub log:\n${ghCalls.join("\n")}`);
+  const ghCommands = allBash(ctx).filter((c) => /\bgh"?\s+pr\b/.test(c.command));
+  console.log(
+    `[${label}] gh pr commands:\n` +
+      ghCommands.map((c) => `(${c.fromSubagent ? "subagent" : "host"}) ${c.command.slice(0, 400)}`).join("\n----\n"),
+  );
 }

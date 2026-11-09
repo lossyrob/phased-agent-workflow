@@ -12,7 +12,7 @@ Files referenced below live in `references/` next to this file. Read each one on
 ## Host rules
 
 1. Build the complete todo graph before any other work.
-2. Start any unblocked todo. Delegate activities with a brief; never do an activity's work yourself.
+2. Start any unblocked todo. Mark it in progress when you start it and done as soon as its evidence is in hand, before starting anything it blocks. Delegate activities with a brief; never do an activity's work yourself.
 3. A subagent's return is a claim. Verify it against git and the files on disk before closing the todo.
 4. Close a todo only with its evidence in hand. Cancel one only when the user tells you to: not because it seems redundant, slow, or already covered by an earlier activity.
 5. A configured review runs as configured, through its named provider, or the workflow blocks.
@@ -134,4 +134,4 @@ When `final-pr` is unblocked and every other todo is done, read `references/proc
 
 ## Completion
 
-Confirm no todo is open. Report: PR URL from live state, what was built, validation run, review outcome, and anything deferred.
+Query the todo store for todos not marked done; close or resolve each before reporting. Report: PR URL from live state, what was built, validation run, review outcome, and anything deferred.

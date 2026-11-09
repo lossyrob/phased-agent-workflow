@@ -114,7 +114,8 @@ What the host sends when it starts an activity.
 | Field | Content |
 |-------|---------|
 | Activity | One activity, and the path of its brief file |
-| Intent | What the task is for, in the host's words, including relevant instructions the user gave the host |
+| Intent | What the task is for, in the host's words |
+| Host instructions | Project and user rules that apply to the activity. Subagents do not inherit them; see [probe results](runtime-capabilities.md#probe-results) |
 | Task source | Issue or work item link, or the prompt text |
 | Work context | Work directory, target branch, execution checkout |
 | Inputs | Paths of the artifacts to read |
@@ -179,7 +180,7 @@ What the host sends for each revision round.
 | Constraints and intent | Restated, not assumed |
 | Must not regress | Points corrected earlier that must stay corrected |
 
-The packet goes to the same subagent where the runtime supports follow-up, and to a fresh subagent otherwise. The host compares the result with the previous version before accepting it.
+The packet goes to the same subagent where the runtime supports follow-up, and to a fresh subagent otherwise. On Copilot CLI, follow-up needs the subagent to have been started in background mode, so Specify and Plan are started that way. The host compares the result with the previous version before accepting it.
 
 ## Configuration
 

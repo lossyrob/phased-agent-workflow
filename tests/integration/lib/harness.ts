@@ -3,6 +3,7 @@ import { TestFixture } from "./fixtures.js";
 import { ToolCallLog } from "./trace.js";
 import { ToolPolicy } from "./tool-policy.js";
 import type { Answerer } from "./answerer.js";
+import { SessionEventLog } from "./events.js";
 
 const DEBUG = !!process.env.PAW_TEST_DEBUG;
 const KEEP_WORKSPACE = !!process.env.PAW_TEST_KEEP_WORKSPACE;
@@ -11,6 +12,7 @@ const PROTOCOL_MISMATCH_RE = /SDK protocol version mismatch: SDK expects version
 
 type Session = Awaited<ReturnType<CopilotClient["createSession"]>>;
 type ClientOptions = ConstructorParameters<typeof CopilotClient>[0];
+type SessionConfig = Parameters<CopilotClient["createSession"]>[0];
 type ProtocolAwareClient = {
   ping(message?: string): Promise<{ protocolVersion?: number }>;
   verifyProtocolVersion(): Promise<void>;
@@ -21,6 +23,8 @@ export interface TestContext {
   session: Session;
   fixture: TestFixture;
   toolLog: ToolCallLog;
+  /** SDK session events: skill loads, subagents, usage, compaction. */
+  events: SessionEventLog;
   answerer: Answerer;
   timeout: number;
   workingDirectory: string;
@@ -118,6 +122,10 @@ export async function createTestContext(opts: {
   executionPath?: string;
   availableTools?: string[];
   excludedTools?: string[];
+  /** Directories the runtime discovers skills from (host-loaded skill runs). */
+  skillDirectories?: string[];
+  /** Set to disable automatic compaction or tune its thresholds. */
+  infiniteSessions?: SessionConfig["infiniteSessions"];
 }): Promise<TestContext> {
   const fixture = opts.fixture ?? (opts.fixtureName ? await TestFixture.clone(opts.fixtureName) : undefined);
   if (!fixture) {
@@ -133,7 +141,10 @@ export async function createTestContext(opts: {
     const policy = opts.toolPolicy ?? new ToolPolicy(workingDirectory, extraRoots);
 
     const useLoggedInUser = process.env.PAW_TEST_PROVIDER !== "azure";
-    client = await startCopilotClient({ useLoggedInUser });
+    // PAW_TEST_CLI_PATH runs the tests against an installed Copilot CLI instead of the
+    // one bundled with the SDK, which lags behind (for example, it has no write_agent).
+    const cliPath = process.env.PAW_TEST_CLI_PATH;
+    client = await startCopilotClient({ useLoggedInUser, ...(cliPath ? { cliPath } : {}) });
 
     const provider = getProviderConfig();
     const model = opts.model || process.env.PAW_TEST_MODEL || undefined;
@@ -145,6 +156,8 @@ export async function createTestContext(opts: {
       systemMessage: { content: opts.systemPrompt },
       ...(opts.availableTools ? { availableTools: opts.availableTools } : {}),
       ...(opts.excludedTools ? { excludedTools: opts.excludedTools } : {}),
+      ...(opts.skillDirectories ? { skillDirectories: opts.skillDirectories } : {}),
+      ...(opts.infiniteSessions ? { infiniteSessions: opts.infiniteSessions } : {}),
       workingDirectory,
 
         onPermissionRequest: async (request) => {
@@ -224,7 +237,10 @@ export async function createTestContext(opts: {
       console.log(`[harness] Workspace: ${workingDirectory}`);
     }
 
-    return { client, session, fixture, toolLog, answerer: opts.answerer, timeout: TIMEOUT, workingDirectory };
+    const events = new SessionEventLog();
+    session.on((event) => events.record(event));
+
+    return { client, session, fixture, toolLog, events, answerer: opts.answerer, timeout: TIMEOUT, workingDirectory };
   } catch (err) {
     if (client) {
       try { await client.stop(); } catch { /* best effort */ }

@@ -7,7 +7,6 @@ import {
 } from './commands/initializeWorkItem';
 import { registerGetWorkStatusCommand } from './commands/getWorkStatus';
 import { registerStopTrackingCommand } from './commands/stopTrackingArtifacts';
-import { registerHandoffTool } from './tools/handoffTool';
 import {
   installAgents,
   needsInstallation,
@@ -44,7 +43,6 @@ export interface ActivationDependencies {
   ) => Promise<void>;
   installOptions?: InstallAgentsIfNeededOptions;
   checkForDeprecatedInstructions?: (outputChannel: vscode.OutputChannel) => Promise<void>;
-  registerHandoffTool?: (context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel) => void;
   registerInitializeWorkItemCommand?: (
     context: vscode.ExtensionContext,
     outputChannel: vscode.OutputChannel
@@ -87,9 +85,6 @@ export async function activate(
   await (dependencies.checkForDeprecatedInstructions ?? checkForDeprecatedInstructions)(
     outputChannel
   );
-
-  (dependencies.registerHandoffTool ?? registerHandoffTool)(context, outputChannel);
-  outputChannel.appendLine('[INFO] Registered language model tool: paw_new_session');
 
   const initCommand = dependencies.registerInitializeWorkItemCommand
     ? dependencies.registerInitializeWorkItemCommand(context, outputChannel)

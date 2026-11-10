@@ -130,7 +130,6 @@ suite('Extension Activation Tests', () => {
         createOutputChannel: () => outputChannel,
         installOptions: { allowTestModeInstallation: true },
         checkForDeprecatedInstructions: async () => undefined,
-        registerHandoffTool: () => undefined,
         registerInitializeWorkItemCommand: () => undefined,
         registerGetWorkStatusCommand: () => undefined,
         registerStopTrackingCommand: () => undefined,
@@ -144,7 +143,7 @@ suite('Extension Activation Tests', () => {
       assert.ok(!fs.existsSync(path.join(agentDir, 'paw.prompt.md')), 'Prompt files should not be installed to the agent directory');
 
       const pawAgent = readInstalledAgent(agentDir, 'PAW.agent.md');
-      assert.ok(pawAgent.includes('Consult available skills'));
+      assert.ok(pawAgent.includes('Load the `paw-workflow` skill'));
       assert.ok(!pawAgent.includes('paw_get_skill'));
       assert.ok(!pawAgent.includes('paw_get_skills'));
       assert.ok(!pawAgent.includes('{{#vscode}}'));

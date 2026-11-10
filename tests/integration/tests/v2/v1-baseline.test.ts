@@ -3,7 +3,7 @@
  *
  * Runs the same task, fixture and host instructions as default-run.test.ts, but with
  * v1 PAW: the skills and the PAW agent prompt come from a detached worktree of
- * origin/main. The test asserts only that the run completed and the feature works;
+ * the last v1 commit (V1_REF). The test asserts only that the run completed and the feature works;
  * everything else is printed so the two runs can be compared.
  *
  * Skipped unless PAW_TEST_V2=1. Run with `npm run test:v2` (which also sets
@@ -19,7 +19,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { simpleGit } from "simple-git";
 import { destroyTestContext, type TestContext } from "../../lib/harness.js";
-import { getRepoRoot } from "../../lib/skills.js";
+import { getRepoRoot, renderCliAgentPrompt } from "../../lib/skills.js";
 import type { TodoGraph } from "../../lib/todos.js";
 import {
   COMMIT_TRAILER,
@@ -33,15 +33,11 @@ import {
 
 const ENABLED = process.env.PAW_TEST_V2 === "1";
 
-/** Remove the YAML front matter and resolve CLI/VS Code template blocks (keep CLI, drop VS Code). */
-export function renderCliAgentPrompt(raw: string): string {
-  return raw
-    .replace(/^---\n[\s\S]*?\n---\n/, "")
-    .replace(/\{\{#vscode\}\}[\s\S]*?\{\{\/vscode\}\}\n?/g, "")
-    .replace(/\{\{#cli\}\}\n?/g, "")
-    .replace(/\{\{\/cli\}\}\n?/g, "")
-    .trim();
-}
+/**
+ * The last v1 commit of main (the merge base of the v2 branch). Pinned so the baseline keeps
+ * measuring v1 after v2 lands on main; override with PAW_TEST_V1_REF.
+ */
+const V1_REF = process.env.PAW_TEST_V1_REF || "465a5c9743f66722634cb0fb057b1580169a0661";
 
 const TASK = [
   "Act as the PAW agent: take this task through the full PAW workflow to a final pull request. Initialize the work with the",
@@ -64,7 +60,7 @@ describe("PAW v1 baseline: autonomous run with the same task", { skip: !ENABLED,
 
   before(async () => {
     v1Dir = mkdtempSync(join(tmpdir(), "paw-v1-baseline-"));
-    execSync(`git worktree add --detach "${v1Dir}" origin/main`, { cwd: getRepoRoot(), stdio: "pipe" });
+    execSync(`git worktree add --detach "${v1Dir}" ${V1_REF}`, { cwd: getRepoRoot(), stdio: "pipe" });
     const agentPrompt = renderCliAgentPrompt(readFileSync(join(v1Dir, "agents/PAW.agent.md"), "utf-8"));
 
     ({ ctx, todos, baseHead, runError } = await runV2Task({

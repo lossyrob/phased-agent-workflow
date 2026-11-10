@@ -245,7 +245,7 @@ When prompts reference other agents, skills, or components, verify they still ex
 
 ### Avoid Cross-File References Agents Can't Resolve
 
-Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-transition/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
+Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-status/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
 
 ### Don't Waste Context on Error Handling
 
@@ -325,14 +325,11 @@ cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
 
 | Test | What it validates | Runtime |
 |------|-------------------|---------|
-| `full-local-workflow` | Golden path: spec → plan → implement (local strategy) | ~3-5 min |
-| `minimal-workflow` | Minimal mode: plan → implement (no spec) | ~2-3 min |
-| `transition-review-policy` | Review policy values (legacy + current) and pause behavior | ~1-2 min |
-| `paw-spec` | Spec creation from brief | ~1-2 min |
-| `paw-planning` | Plan creation from seeded spec | ~1-2 min |
-| `paw-implement` | Implementation from seeded plan | ~2-3 min |
-| `spec-review` | Spec review verdict | ~1-2 min |
-| `code-research` | Code research artifact creation | ~1-2 min |
+| `v2/default-run` | v2 golden path: plan → implement → final review → one PR, with the invariant catalogue | ~3-5 min |
+| `v2/paw-agent` | The `PAW` agent loads `paw-workflow` and completes a default run | ~3-5 min |
+| `v2/resume`, `v2/v1-context-resume` | Resume from evidence; a v1 `WorkflowContext.md` is mapped once | ~3-5 min |
+| `v2/paw-lite-alias`, `v2/preset-lite` | `paw-lite` resolves to the `lite` preset; a full lite run | ~1-5 min |
+| `v2/*` (others) | Configured reviews, rewind, worktree, lifecycles, revisions | ~3-8 min |
 | `work-shaping` | Work shaping Q&A flow | ~1-2 min |
-| `git-branching` | Branch operations | ~1-2 min |
+| `sot-perspectives` | Society-of-thought perspectives | ~2-3 min |
 | `tool-policy` | Tool policy enforcement | ~30s |

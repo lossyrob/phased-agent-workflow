@@ -400,3 +400,37 @@ describe('uninstall command', () => {
     assert.ok(!listOutput.includes('claude'), 'list should not show claude');
   });
 });
+
+describe('reinstall over an older version', () => {
+  test('removes files the previous manifest recorded that the new version no longer ships', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync, writeFileSync, readFileSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const home = join(TEST_DIR, 'upgrade-stale');
+    mkdirSync(home, { recursive: true });
+    const env = { ...process.env, HOME: home };
+
+    execSync(`node ${cliPath} install copilot`, { encoding: 'utf-8', env });
+
+    // Simulate a v1 install: a retired skill on disk and in the manifest, plus a user's own skill.
+    const skillsDir = join(home, '.copilot', 'skills');
+    const staleSkill = join(skillsDir, 'paw-transition', 'SKILL.md');
+    const userSkill = join(skillsDir, 'my-own-skill', 'SKILL.md');
+    mkdirSync(join(skillsDir, 'paw-transition'), { recursive: true });
+    mkdirSync(join(skillsDir, 'my-own-skill'), { recursive: true });
+    writeFileSync(staleSkill, '---\nname: paw-transition\n---\n');
+    writeFileSync(userSkill, '---\nname: my-own-skill\n---\n');
+    const manifestPath = join(home, '.paw', 'copilot-cli', 'manifest.json');
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    manifest.files.skills.push(staleSkill);
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    const output = execSync(`node ${cliPath} install copilot --force`, { encoding: 'utf-8', env });
+
+    assert.ok(output.includes('no longer shipped'), 'should report removed stale files');
+    assert.ok(!existsSync(staleSkill), 'retired skill file should be removed');
+    assert.ok(!existsSync(join(skillsDir, 'paw-transition')), 'empty retired skill directory should be removed');
+    assert.ok(existsSync(userSkill), 'files not in the previous manifest must be kept');
+    assert.ok(existsSync(join(skillsDir, 'paw-workflow', 'SKILL.md')), 'current skills stay installed');
+  });
+});

@@ -5,7 +5,7 @@ Continue a work item that already has `.paw/work/<work-id>/WorkflowContext.md`. 
 ## 1. Locate
 
 - The work directory is in this checkout, or on another branch: `git log --all --format=%D -1 -- .paw/work/<work-id>/WorkflowContext.md`; with `execution_mode: worktree`, in the worktree `git worktree list` shows on the target branch.
-- Read `WorkflowContext.md`. Its configuration holds, plus any change the user states now.
+- Read `WorkflowContext.md`. Its configuration holds, plus any change the user states now. Without a `## Configuration` block it is a v1 file: switch to the target branch, then convert it per `references/v1-context.md`.
 - Note `git status --short`: those files are the user's uncommitted changes.
 - Switch to the target branch, or work in its worktree, before anything that writes (`references/procedures/git.md`).
 

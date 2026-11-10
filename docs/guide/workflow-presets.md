@@ -28,7 +28,7 @@ PAW ships with seven presets covering common patterns:
 | **auto-full** | Extends `auto` — adds multi-model planning with perspectives and SoT debate final review. Maximum rigor, zero human interrupts. |
 | **shaping-full** | Extends `auto-full` — starts with interactive work shaping, then burns through the rest autonomously. |
 
-Canonical YAML definitions live in `skills/paw-init/references/presets/`. Fields not specified by a preset use PAW's standard defaults.
+Canonical YAML definitions live in `skills/paw-workflow/references/presets/`. Fields not specified by a preset use PAW's standard defaults.
 
 ## Custom Presets
 

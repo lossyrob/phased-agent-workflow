@@ -18,3 +18,31 @@ export async function loadAgent(name: string): Promise<string> {
 export function getRepoRoot(): string {
   return REPO_ROOT;
 }
+
+/** Agent prompt text for the CLI: front matter removed, `{{#cli}}` blocks kept, `{{#vscode}}` blocks dropped. */
+export function renderCliAgentPrompt(raw: string): string {
+  return raw
+    .replace(/^---\n[\s\S]*?\n---\n/, "")
+    .replace(/\{\{#vscode\}\}[\s\S]*?\{\{\/vscode\}\}\n?/g, "")
+    .replace(/\{\{#cli\}\}\n?/g, "")
+    .replace(/\{\{\/cli\}\}\n?/g, "")
+    .trim();
+}
+
+/** v1 skills that the v2 workflow skill replaced (docs/specification/v2/design.md, Compatibility). */
+export const REMOVED_SKILLS = [
+  "paw-transition",
+  "paw-init",
+  "paw-spec",
+  "paw-spec-research",
+  "paw-spec-review",
+  "paw-code-research",
+  "paw-planning",
+  "paw-plan-review",
+  "paw-planning-docs-review",
+  "paw-implement",
+  "paw-impl-review",
+  "paw-final-review",
+  "paw-pr",
+  "paw-git-operations",
+];

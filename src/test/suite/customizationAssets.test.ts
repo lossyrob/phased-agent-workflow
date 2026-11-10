@@ -135,6 +135,7 @@ suite('VS Code customization assets', () => {
     const toolNames = (packageJson.contributes.languageModelTools ?? []).map(tool => tool.name);
     assert.ok(!toolNames.includes('paw_get_skill'));
     assert.ok(!toolNames.includes('paw_get_skills'));
+    assert.ok(!toolNames.includes('paw_new_session'), 'Session hand-off tool is removed in v2');
   });
 
   test('built VSIX contains contributed prompt, skill, and agent assets but excludes workflow scratch files', async function() {

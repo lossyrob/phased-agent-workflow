@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readdirSync, copyFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, mkdirSync, readdirSync, copyFileSync, unlinkSync, rmdirSync } from 'fs';
+import { dirname, join, resolve, sep } from 'path';
 import {
   getTargetDirs,
   getDistAgentsDir,
@@ -28,6 +28,32 @@ function copyDirectory(srcDir, destDir, fileList) {
       fileList.push(destPath);
     }
   }
+}
+
+function removeEmptyDirs(dir, stopAt) {
+  if (!existsSync(dir) || resolve(dir) === resolve(stopAt)) return;
+  if (readdirSync(dir).length === 0) {
+    rmdirSync(dir);
+    removeEmptyDirs(dirname(dir), stopAt);
+  }
+}
+
+/**
+ * Remove files a previous install recorded that this install no longer ships
+ * (for example, skills retired in a new version), so they cannot be loaded.
+ */
+export function removeStaleFiles(previousFiles, currentFiles, rootDir) {
+  const keep = new Set(currentFiles.map(f => resolve(f)));
+  const root = resolve(rootDir);
+  let removed = 0;
+  for (const filePath of previousFiles ?? []) {
+    const abs = resolve(filePath);
+    if (keep.has(abs) || !abs.startsWith(root + sep) || !existsSync(abs)) continue;
+    unlinkSync(abs);
+    removed++;
+    removeEmptyDirs(dirname(abs), root);
+  }
+  return removed;
 }
 
 export async function installCommand(target, flags = {}) {
@@ -72,6 +98,15 @@ export async function installCommand(target, flags = {}) {
   console.log('  Copying skills...');
   copyDirectory(distSkillsDir, skillsDir, installedFiles.skills);
   
+  // Remove files from the previous install that this version no longer ships
+  if (existingManifest?.files) {
+    const stale = removeStaleFiles(existingManifest.files.agents, installedFiles.agents, agentsDir)
+      + removeStaleFiles(existingManifest.files.skills, installedFiles.skills, skillsDir);
+    if (stale > 0) {
+      console.log(`  Removed ${stale} file(s) no longer shipped`);
+    }
+  }
+
   // Write manifest
   const manifest = createManifest(VERSION, target, installedFiles);
   writeManifest(manifest);

@@ -11,7 +11,7 @@ PAW stores workflow artifacts in `.paw/work/<work-id>/` directories including:
 - `CodeResearch.md` - Code research findings
 - `ImplementationPlan.md` - Implementation plan with phases
 - `Docs.md` - Documentation changes
-- `prompts/` - Generated prompt files for agents
+- `reviews/` - Review output
 
 These artifacts help agents understand context and maintain state across workflow stages. However, some users prefer not to commit them (e.g., contributing to non-PAW repositories).
 
@@ -43,7 +43,7 @@ This pattern ignores all files in the directory, including the `.gitignore` itse
 
 ### 3. Update WorkflowContext.md Lifecycle Field
 
-Update the `Artifact Lifecycle:` field in `.paw/work/{{WORK_ID}}/WorkflowContext.md` to `never-commit`. If the field doesn't exist, add `Artifact Lifecycle: never-commit` near other configuration fields. This makes the lifecycle change durable for any agent that reads the workflow context.
+In `.paw/work/{{WORK_ID}}/WorkflowContext.md`, set `artifact_lifecycle: never-commit` in the `## Configuration` block (in an older file without that block, set the `Artifact Lifecycle:` line, adding it if missing). This makes the lifecycle change durable for any agent that reads the workflow context.
 
 ### 4. Commit the Removal
 

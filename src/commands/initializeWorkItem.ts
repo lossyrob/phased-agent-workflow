@@ -4,12 +4,11 @@ import { access } from 'fs/promises';
 import * as path from 'path';
 import {
   collectUserInputs,
-  type FinalReviewConfig,
   type ArtifactLifecycle,
+  type Preset,
   type WorkItemInputs,
   isWorktreeExecutionEnabled,
 } from '../ui/userInput';
-import type { ReviewPolicy, SessionPolicy } from '../types/workflow';
 import {
   validateGitRepository,
   createWorktree,
@@ -90,13 +89,10 @@ interface ResumePendingWorktreeInitDependencies {
 
 interface PromptArgumentsInput {
   targetBranch: string;
-  workflowMode: { mode: string; workflowCustomization?: string };
+  preset: Preset;
+  planCheckpoint: boolean;
   executionMode: string;
-  reviewStrategy: string;
-  reviewPolicy: ReviewPolicy;
-  sessionPolicy: SessionPolicy;
   artifactLifecycle: ArtifactLifecycle;
-  finalReview: FinalReviewConfig;
   issueUrl?: string;
   executionMetadata?: ExecutionMetadata;
 }
@@ -153,40 +149,28 @@ function getPendingWorktreeInits(
 
 /**
  * Constructs the configuration prompt arguments for the PAW agent.
+ *
+ * Fields use the paw-workflow configuration names. In worktree mode the extension has
+ * already created the execution worktree and opens the chat there.
  */
 export function constructPawPromptArguments(
   inputs: PromptArgumentsInput,
   _workspacePath: string
 ): string {
-  const config: Record<string, string | boolean> = {
+  const config: Record<string, string> = {
+    preset: inputs.preset,
     target_branch: inputs.targetBranch.trim() || 'auto',
-    workflow_mode: inputs.workflowMode.mode,
     execution_mode: inputs.executionMode,
-    review_strategy: inputs.reviewStrategy,
-    review_policy: inputs.reviewPolicy,
-    session_policy: inputs.sessionPolicy,
     artifact_lifecycle: inputs.artifactLifecycle,
-    final_agent_review: inputs.finalReview.enabled ? 'enabled' : 'disabled',
+    plan_checkpoint: inputs.planCheckpoint ? 'on' : 'off',
   };
 
   if (inputs.executionMetadata) {
     config.work_id = inputs.executionMetadata.workId;
-    config.repository_identity = inputs.executionMetadata.repositoryIdentity;
-    config.execution_binding = inputs.executionMetadata.executionBinding;
-  }
-
-  if (inputs.finalReview.enabled) {
-    config.final_review_mode = inputs.finalReview.mode;
-    config.final_review_interactive = inputs.finalReview.interactive;
-    config.final_review_models = 'latest GPT, latest Gemini, latest Claude Opus';
   }
 
   if (inputs.issueUrl) {
-    config.issue_url = inputs.issueUrl;
-  }
-
-  if (inputs.workflowMode.workflowCustomization) {
-    config.custom_instructions = inputs.workflowMode.workflowCustomization;
+    config.task_source = inputs.issueUrl;
   }
 
   let params = '';
@@ -194,7 +178,11 @@ export function constructPawPromptArguments(
     params += `- **${key}**: ${value}\n`;
   }
 
-  return `Load the \`paw-workflow\` skill and execute it.\n\n## Initialization Parameters\n\n${params}`;
+  const worktreeNote = inputs.executionMode === 'worktree'
+    ? '\nThis checkout is the execution worktree, already created on the target branch. Use it; do not create another worktree.\n'
+    : '';
+
+  return `Load the \`paw-workflow\` skill and execute it.\n\n## Initialization Parameters\n\n${params}${worktreeNote}`;
 }
 
 async function openPawChat(
@@ -576,19 +564,9 @@ export async function initializeWorkItemCommand(
         outputChannel.appendLine(`[INFO] Worktree path: ${inputs.worktree.path}`);
       }
     }
-    outputChannel.appendLine(`[INFO] Workflow mode: ${inputs.workflowMode.mode}`);
-    if (inputs.workflowMode.workflowCustomization) {
-      outputChannel.appendLine(`[INFO] Workflow customization: ${inputs.workflowMode.workflowCustomization}`);
-    }
-    outputChannel.appendLine(`[INFO] Review strategy: ${inputs.reviewStrategy}`);
-    outputChannel.appendLine(`[INFO] Review policy: ${inputs.reviewPolicy}`);
-    outputChannel.appendLine(`[INFO] Session policy: ${inputs.sessionPolicy}`);
+    outputChannel.appendLine(`[INFO] Preset: ${inputs.preset}`);
+    outputChannel.appendLine(`[INFO] Plan checkpoint: ${inputs.planCheckpoint ? 'on' : 'off'}`);
     outputChannel.appendLine(`[INFO] Artifact lifecycle: ${inputs.artifactLifecycle}`);
-    outputChannel.appendLine(`[INFO] Final Review: ${inputs.finalReview.enabled ? 'enabled' : 'disabled'}`);
-    if (inputs.finalReview.enabled) {
-      outputChannel.appendLine(`[INFO] Final Review mode: ${inputs.finalReview.mode}`);
-      outputChannel.appendLine(`[INFO] Final Review interactive: ${inputs.finalReview.interactive}`);
-    }
     if (inputs.issueUrl) {
       outputChannel.appendLine(`[INFO] Issue URL: ${inputs.issueUrl}`);
     }

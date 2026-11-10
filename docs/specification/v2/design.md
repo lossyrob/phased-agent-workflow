@@ -1,7 +1,7 @@
 # PAW v2 Design
 
 !!! note "Status: in progress"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–4 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode); compatibility and cutover are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–5 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode) and compatibility and cutover (see [Cutover as implemented](#cutover-as-implemented)). PAW Review alignment and the user-facing docs are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
 
 Companion pages: [Invariant Catalogue](invariants.md) and [Runtime Capabilities](runtime-capabilities.md).
 
@@ -280,7 +280,7 @@ The user asks to go back or to change accepted work. The host previews the targe
 
 Departures from the earlier draft and from v1:
 
-- v1 `paw-rewind` resets the branch to a target commit. v2 never resets (G12); a rewind is reopened nodes plus new commits. The v1 skill is still in `skills/` and was loaded alongside the workflow skill in one test run; Phase 5 must align it with this procedure.
+- v1 `paw-rewind` reset the branch to a target commit. v2 never resets (G12); a rewind is reopened nodes plus new commits. Phase 5 reduced `paw-rewind` to a pointer to this procedure.
 - Reconstruction closes a node only on present evidence, not on a best-effort guess.
 - `WorkflowContext.md` does not record the worktree path; resume finds it with `git worktree list`.
 
@@ -299,6 +299,27 @@ Departures from the earlier draft and from v1:
 | VS Code `src/` | Remove session hand-off; keep initialisation, status and stop-tracking commands |
 
 In-flight v1 work items are finished on v1 or restarted. v2 does not migrate a run in progress.
+
+### Cutover as implemented
+
+| Entry | Outcome |
+|-------|---------|
+| `PAW` agent | Two lines: load `paw-workflow`; route status and "about PAW" questions to `paw-status` |
+| `paw-lite` | Skill alias: load `paw-workflow` with preset `lite`. There was no `paw-lite` agent |
+| `paw-rewind` | Pointer to the workflow's rewind procedure; never resets history (G12) |
+| `paw-status` | Kept, rewritten for v2 configuration, presets and evidence |
+| `paw-work-shaping`, `paw-sot`, `paw-review-*` | Kept. `paw-work-shaping` delegates research to a subagent instead of `paw-code-research` |
+| `paw-review-response`, `paw-docs-guidance` | Kept (not named in the table above); `paw-review-response` no longer points at `paw-git-operations` |
+| `paw-init`, `paw-transition`, `paw-spec`, `paw-spec-research`, `paw-spec-review`, `paw-code-research`, `paw-planning`, `paw-plan-review`, `paw-planning-docs-review`, `paw-implement`, `paw-impl-review`, `paw-final-review` | Deleted; replaced by Setup, configuration and the activity briefs |
+| `paw-pr`, `paw-git-operations` | Deleted; replaced by the `git` and `final-pr` procedures |
+| Old `WorkflowContext.md` | `references/v1-context.md`, read from the resume procedure |
+| VS Code `src/` | `paw_new_session` removed. The init command asks for preset, plan checkpoint, artifact lifecycle and execution mode, and passes v2 field names. Status opens `paw-status` |
+| CLI installer | Reinstall removes files the previous manifest recorded and the new version no longer ships |
+
+Departures:
+
+- v2 resumes a work item that v1 left in progress, instead of requiring it to be finished on v1 or restarted. The mapping converts `WorkflowContext.md` once to the v2 format; `Review Policy` (or `Handoff Mode`) maps to `plan_checkpoint` (`on` unless `final-pr-only`); `Workflow Mode: full` maps to `spec: on`, `research: dedicated`. Work left on `prs` intermediate branches is reported and the host asks before continuing.
+- In VS Code worktree mode the extension still creates the worktree and opens the chat in it; the prompt tells the host that the checkout is the execution worktree. The skill's own worktree setup is used on the CLI.
 
 ## Tests and budgets
 

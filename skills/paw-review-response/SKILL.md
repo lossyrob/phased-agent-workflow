@@ -38,7 +38,7 @@ TODO: Address review comment [link/ID]
 Work through TODOs one at a time. For each:
 
 1. **Make the changes** to address the comment
-2. Follow `paw-git-operations` artifact staging discipline — check artifact lifecycle mode before staging `.paw/` files
+2. Stage `.paw/work/<work-id>/` files only if `WorkflowContext.md` sets `artifact_lifecycle` to `commit-and-persist`; never stage `.gitignore` files under `.paw/work/`
 3. **Stage selectively**: `git add <file1> <file2>` (never `git add .`)
 4. **Verify staged changes**: `git diff --cached`
 5. **Commit** with message referencing the comment

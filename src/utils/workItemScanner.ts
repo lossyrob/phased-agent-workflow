@@ -17,13 +17,13 @@ export interface WorkItem {
 }
 
 /**
- * Parse Work Title from WorkflowContext.md content.
+ * Parse Work Title from WorkflowContext.md content (v2 `- Work title:` or v1 `Work Title:`).
  * 
  * @param content - Content of WorkflowContext.md
  * @returns The Work Title if found, undefined otherwise
  */
 export function parseWorkTitle(content: string): string | undefined {
-  const match = content.match(/^Work Title:\s*(.+)$/m);
+  const match = content.match(/^(?:-\s*)?Work [Tt]itle:\s*(.+)$/m);
   return match?.[1]?.trim();
 }
 

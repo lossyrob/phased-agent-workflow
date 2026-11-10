@@ -7,7 +7,7 @@ description: Systematically identifies gaps in correctness, safety, testing, and
 
 Systematically identify gaps and issues across correctness, safety, testing, and maintainability dimensions, categorizing findings as Must/Should/Could based on evidence.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Responsibilities
 
@@ -621,17 +621,6 @@ Before completing, verify:
 - [ ] Related findings identified for batching
 - [ ] GapAnalysis.md artifact generated with all required sections
 
-## Completion Response
+## Completion
 
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/GapAnalysis.md
-Status: Success
-
-Key findings:
-- Positive observations: X good practices identified
-- Must-address: Y correctness/safety/security findings
-- Should-address: Z quality/completeness findings
-- Could-consider: W optional improvements
-- Test coverage: [Adequate | Needs Improvement | Critical Gaps]
-```
+Return the block in the activity contract. List every Must, Should, and Could finding; put positive observations and the test coverage verdict in the summary.

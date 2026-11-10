@@ -19,6 +19,12 @@ describe("PAW agent is a thin wrapper over paw-workflow", () => {
     assert.ok(content.split("\n").length < 20, "PAW.agent.md should stay a short wrapper");
   });
 
+  it("PAW-Review agent is a thin wrapper over paw-review-workflow", async () => {
+    const content = await readFile(resolve(REPO_ROOT, "agents/PAW-Review.agent.md"), "utf-8");
+    assert.match(content, /Load the `paw-review-workflow` skill/);
+    assert.ok(content.split("\n").length < 12, "PAW-Review.agent.md should stay a short wrapper");
+  });
+
   it("removed v1 skills are gone and no shipped prompt names them", async () => {
     const { readdir } = await import("fs/promises");
     const skills = await readdir(resolve(REPO_ROOT, "skills"));

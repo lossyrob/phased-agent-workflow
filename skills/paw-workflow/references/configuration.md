@@ -34,14 +34,18 @@ Resolve in this order; each step overrides the previous one for the fields it se
 
 Review provider block:
 
-| Field | Values | Default |
-|-------|--------|---------|
-| `mode` | `off`, `single-model`, `multi-model`, `society-of-thought` | per field above |
-| `models` | `multi-model`: two or more models. `society-of-thought`: `none`, a model pool, or `specialist:model` pairs | `multi-model`: the session model and one model from another vendor; `society-of-thought`: `none` |
-| `specialists` | `all`, names, or `adaptive:<N>` (`society-of-thought` only) | `all` |
-| `interaction` | `parallel`, `debate` (`society-of-thought` only) | `parallel` |
-| `perspectives` | `none`, `auto`, or names (`society-of-thought` only) | `auto` |
-| `perspective_cap` | positive integer (`society-of-thought` only) | `2` |
+<!-- shared:review-provider-block -->
+| Field | Values |
+|-------|--------|
+| `mode` | `off`, `single-model`, `multi-model`, `society-of-thought` |
+| `models` | `multi-model`: two or more models. `society-of-thought`: `none`, a model pool, or `specialist:model` pairs |
+| `specialists` | `all`, names, or `adaptive:<N>` (`society-of-thought` only) |
+| `interaction` | `parallel`, `debate` (`society-of-thought` only) |
+| `perspectives` | `none`, `auto`, or names (`society-of-thought` only) |
+| `perspective_cap` | positive integer (`society-of-thought` only) |
+<!-- /shared -->
+
+Block defaults: `mode` per field above; `models` for `multi-model` the session model and one model from another vendor, for `society-of-thought` `none`; `specialists: all`; `interaction: parallel`; `perspectives: auto`; `perspective_cap: 2`.
 
 ## Models
 

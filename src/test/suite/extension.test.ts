@@ -150,7 +150,7 @@ suite('Extension Activation Tests', () => {
       assert.ok(!pawAgent.includes('{{#cli}}'));
 
       const reviewAgent = readInstalledAgent(agentDir, 'PAW-Review.agent.md');
-      assert.ok(reviewAgent.includes('skills catalog'));
+      assert.ok(reviewAgent.includes('Load the `paw-review-workflow` skill'));
       assert.ok(!reviewAgent.includes('paw_get_skill'));
       assert.ok(!reviewAgent.includes('paw_get_skills'));
       assert.ok(!reviewAgent.includes('{{#vscode}}'));

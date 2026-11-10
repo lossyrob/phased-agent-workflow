@@ -1,6 +1,6 @@
 ---
 name: paw-review-response
-description: Shared PR review comment response mechanics for PAW activity skills. Provides TODO workflow, commit patterns, and reply format for addressing reviewer feedback.
+description: PR review comment response mechanics for a PAW pull request. Provides TODO workflow, commit patterns, and reply format for addressing reviewer feedback.
 ---
 
 # Review Response
@@ -41,10 +41,9 @@ Work through TODOs one at a time. For each:
 2. Stage `.paw/work/<work-id>/` files only if `WorkflowContext.md` sets `artifact_lifecycle` to `commit-and-persist`; never stage `.gitignore` files under `.paw/work/`
 3. **Stage selectively**: `git add <file1> <file2>` (never `git add .`)
 4. **Verify staged changes**: `git diff --cached`
-5. **Commit** with message referencing the comment
-6. **Push/Reply timing**: Determined by calling activity skill—some push immediately per-comment, others batch commits and defer push to a verification step
+5. **Commit** with message referencing the comment; never rewrite an existing commit (`--amend`, `rebase`, `reset`, force push)
 
-**CRITICAL**: Complete each TODO's changes and commit before starting the next. Push and reply timing per activity skill instructions.
+**CRITICAL**: Complete each TODO's changes and commit before starting the next. Push and reply once verification passes. A subagent that makes the changes commits only; the host pushes and replies.
 
 ### 4. Verify Completion
 
@@ -62,19 +61,9 @@ Use this format when replying to review comments:
 [What was changed and commit hash reference]
 ```
 
-**Activity names by PR type:**
-- Planning PR: `Implementation Planner`
-- Phase PR: `Implementation Reviewer`
-- Docs PR: `Documenter`
-- Final PR: `Implementation Reviewer`
+Activity: `Implementation Reviewer`.
 
-**Examples:**
-
-```
-**🐾 Implementation Planner 🤖:**
-
-Updated Phase 2 to include error handling tests as suggested. See commit abc1234.
-```
+**Example:**
 
 ```
 **🐾 Implementation Reviewer 🤖:**
@@ -93,17 +82,6 @@ Address review comment: [brief description]
 
 Ref: [PR comment URL or ID]
 ```
-
-## Role Separation
-
-This utility skill handles **mechanics** (how to commit/push/reply). Activity skills handle **domain logic** (what changes to make).
-
-| Responsibility | Handled By |
-|---------------|------------|
-| What to change | Activity skill |
-| How to commit | This utility skill |
-| How to reply | This utility skill |
-| When to push | Activity skill (based on workflow) |
 
 ## Checklist Before Completion
 

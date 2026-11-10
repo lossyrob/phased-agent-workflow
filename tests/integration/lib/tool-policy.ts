@@ -28,7 +28,14 @@ export class ToolPolicy {
   constructor(
     private workspaceRoot: string,
     extraRoots: string[] = [],
-    private readonly options: { allowRemoteWrites?: boolean } = {},
+    private readonly options: {
+      allowRemoteWrites?: boolean;
+      /**
+       * Keep the session off the network: deny MCP and web tools, `curl`/`wget`, and any `gh`
+       * binary other than this stub. For scenarios whose GitHub is a stub (PAW Review).
+       */
+      offlineWithGhStub?: string;
+    } = {},
   ) {
     this.workspaceRoot = resolve(workspaceRoot);
     const roots = [this.workspaceRoot, ...extraRoots.map((root) => resolve(root))];
@@ -80,8 +87,23 @@ export class ToolPolicy {
   check(call: { toolName: string; input: unknown }): Decision {
     const input = this.parseInput(call.input);
 
+    const stub = this.options.offlineWithGhStub;
+    if (stub && (/^(github|mcp|web_fetch|web_search|url)\b/i.test(call.toolName) || /mcp-server/i.test(call.toolName))) {
+      return { action: "deny", reason: "Network and MCP tools are disabled in this test; use the gh CLI" };
+    }
+
     if (call.toolName === "bash") {
       const cmd = String(input?.command ?? "");
+
+      if (stub) {
+        if (/\b(curl|wget)\b|api\.github\.com/.test(cmd)) {
+          return { action: "deny", reason: "Network access is disabled in this test" };
+        }
+        const ghPaths = [...cmd.matchAll(/([^\s"'`;|&()]*\/gh)(?=["'\s;|&)]|$)/g)].map((m) => m[1]);
+        if (ghPaths.some((p) => p !== stub)) {
+          return { action: "deny", reason: "Only the gh on the command line may be used" };
+        }
+      }
 
       if (!this.options.allowRemoteWrites && /\bgit\s+push\b/i.test(cmd)) {
         return { action: "deny", reason: "git push disabled in tests" };

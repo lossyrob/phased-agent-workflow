@@ -7,7 +7,7 @@ description: Critically assesses generated review comments for usefulness, accur
 
 Critically assess generated review comments to help reviewers make informed decisions about what feedback to include, modify, or skip.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Prerequisites
 
@@ -17,12 +17,12 @@ Also verify access to all supporting artifacts:
 - `ReviewContext.md` (PR metadata)
 - `CodeResearch.md` (baseline understanding)
 - `DerivedSpec.md` (PR intent)
-- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+- Evaluation artifacts — **mode-gated** (read `mode` from the Review Configuration in `ReviewContext.md`):
   - If `single-model` or absent: require `ImpactAnalysis.md` + `GapAnalysis.md`
   - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
   - If present artifacts don't match configured mode, report inconsistency
 
-If ReviewComments.md is missing, report blocked status—Feedback Generation must complete first.
+If ReviewComments.md is missing, return `blocked`.
 
 ## Core Responsibilities
 
@@ -358,16 +358,6 @@ Before completing, verify:
 - [ ] Iteration Summary section appended with counts table
 - [ ] Tone is respectful and constructive
 
-## Completion Response
+## Completion
 
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/ReviewComments.md (assessments added)
-Status: Success
-
-Iteration Summary:
-- Include as-is: N comments
-- Modify: M comments (with update guidance in assessments)
-- Skip: K comments (retained in artifact, will not post to GitHub)
-
-Next: Run paw-review-feedback in Critique Response Mode to finalize comments with **Final**: markers.
+Return the block in the activity contract, with the Include, Modify, and Skip counts in the summary.

@@ -134,4 +134,28 @@ describe("ToolPolicy", () => {
     });
     assert.strictEqual(result.action, "allow");
   });
+
+  describe("offline with a gh stub", () => {
+    const stub = "/tmp/paw-test-workspace-ws/bin/gh";
+    const offline = new ToolPolicy("/tmp/paw-test-workspace", [], { offlineWithGhStub: stub });
+    const bash = (command: string) => offline.check({ toolName: "bash", input: { command } }).action;
+
+    it("allows the stub and plain gh", () => {
+      assert.strictEqual(bash(`"${stub}" pr view 7 --json title`), "allow");
+      assert.strictEqual(bash("gh pr diff 7"), "allow");
+    });
+
+    it("denies another gh binary, curl and the GitHub API host", () => {
+      assert.strictEqual(bash("/opt/homebrew/bin/gh api repos/o/r/pulls/7/reviews -X POST"), "deny");
+      assert.strictEqual(bash("curl -s https://example.com"), "deny");
+      assert.strictEqual(bash("echo api.github.com"), "deny");
+    });
+
+    it("denies MCP and web tools", () => {
+      for (const toolName of ["github-mcp-server-pull_request_read", "web_fetch", "mcp", "url"]) {
+        assert.strictEqual(offline.check({ toolName, input: {} }).action, "deny", toolName);
+      }
+      assert.strictEqual(offline.check({ toolName: "view", input: { path: "/tmp/x" } }).action, "allow");
+    });
+  });
 });

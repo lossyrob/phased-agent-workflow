@@ -7,7 +7,7 @@ description: Analyzes PR changes to create ReviewContext.md and DerivedSpec.md a
 
 Analyze pull request changes to create comprehensive understanding artifacts. This activity handles both initial context gathering and specification derivation after baseline research.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Responsibilities
 
@@ -21,43 +21,33 @@ Analyze pull request changes to create comprehensive understanding artifacts. Th
 
 - Quality evaluation or gap identification (Evaluation stage skills)
 - Review comment generation (Output stage skills)
-- Git operations for checkout/restore (handled by paw-review-baseline)
-- Workflow orchestration and stage transitions (handled by workflow skill)
+- Reading the codebase at the base commit (paw-review-baseline)
+- Workflow orchestration (the review host)
 
 ## Execution Modes
 
-This skill operates in two modes based on artifact state:
+Your brief names the mode; if it does not, detect it from the artifact directory.
 
-### Initial Mode (No ReviewContext.md)
-
-Execute Steps 1-3: Context gathering, research prompt generation, signal for baseline research.
-
-**Detection**: ReviewContext.md not found at `.paw/reviews/<identifier>/`
-
-### Resumption Mode (ReviewContext.md + CodeResearch.md exist)
-
-Execute Step 4 only: Derive specification from baseline research.
-
-**Detection**: Both ReviewContext.md AND CodeResearch.md exist at artifact path.
+- **Initial** (no ReviewContext.md): Steps 1-2.
+- **Resume** (ReviewContext.md and CodeResearch.md exist): Step 3 only.
 
 ## Context Detection
 
 Determine context type before proceeding:
 
 **GitHub Context**: GitHub PR URL or number provided
-- Use GitHub MCP tools for metadata retrieval
-- Extract commits, files, description from API
+- Use read-only GitHub tools (`gh` or GitHub MCP, per the host instructions) for metadata
+- Extract commits, files, description
 
 **Azure DevOps Context**: Azure DevOps PR URL or coordinates provided
 - Use supplied metadata or available platform tools
 - If executable review output is unavailable, retain artifact-only capability; do not probe APIs or permissions to manufacture capability
 
 **Local Context**: No hosted PR reference
-- Verify current branch is checked out
-- Request base branch name from user
+- Base branch from the brief; if it is missing, return `needs-decision`
 - Use git commands for metadata
 
-Before this activity begins, the orchestrator must resolve authorization preflight. If the preflight is blocked or required fields are missing, report the conflict before creating review artifacts.
+The brief carries the resolved preflight fields. If they are missing or the preflight is blocked, return `blocked` before creating review artifacts.
 
 ## Multi-Repository Mode
 
@@ -68,7 +58,7 @@ Before this activity begins, the orchestrator must resolve authorization preflig
 
 **Per-PR Processing**:
 - Create separate artifact directories for each PR
-- Run Steps 1-4 independently for each repository
+- Run each mode independently for each repository
 - Cross-reference related PRs in each ReviewContext.md
 
 **Identifier Scheme**:
@@ -121,23 +111,7 @@ related_prs:
    - Research questions organized by changed file/module
    - Clear investigation targets with file:line references
 
-## Step 3: Signal for Research
-
-Report completion of initial phase:
-```
-Research Questions Ready
-
-Created ResearchQuestions.md with questions about pre-change behavior.
-
-Files to investigate at base commit <sha>:
-- [list files]
-
-Waiting for CodeResearch.md from baseline research.
-```
-
-**Activity Status**: Partial (awaiting baseline research)
-
-## Step 4: Derive Specification
+## Step 3: Derive Specification
 
 Execute only when CodeResearch.md exists.
 
@@ -191,7 +165,7 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - All metadata fields populated
 - Flags section identifies applicable conditions
 - Base and head commit SHAs recorded
-- Review Configuration fields present with valid values (Review Mode, Review Specialists, Review Interaction Mode, Review Interactive, Review Specialist Models)
+- Review Configuration block present with the values from the brief
 - Authorization fields present with `Preflight Status: passed`
 - Feedback scope is recorded as `all` or the explicit user filter
 - Explicit submission has an allowed event and target/head authorization; unavailable explicit mutations are blocked before artifact creation
@@ -208,24 +182,9 @@ Branch slug: lowercase, `/` → `-`, remove invalid chars.
 - All file:line references accurate
 - **Zero open questions**
 
-## Completion Response
+## Completion
 
-### After Initial Mode (Steps 1-3):
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/ReviewContext.md
-Artifact saved: .paw/reviews/<identifier>/ResearchQuestions.md
-Status: Partial
-Summary: Context gathered, awaiting baseline research.
-```
-
-### After Resumption Mode (Step 4):
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/DerivedSpec.md
-Status: Success
-Summary: Specification derived with [N] explicit and [M] inferred goals.
-```
+Return the block in the activity contract. Initial: `ReviewContext.md` and `ResearchQuestions.md`, with the files to investigate at the base commit in the summary. Resume: `DerivedSpec.md`, with the counts of explicit and inferred goals.
 
 ---
 
@@ -279,15 +238,17 @@ status: complete
 
 ## Review Configuration
 
-**Review Mode**: <single-model (default) | society-of-thought>
-**Review Specialists**: <all (default) | comma-separated names | adaptive:\<N\>>
-**Review Interaction Mode**: <parallel (default) | debate>
-**Review Interactive**: <false (default) | true | smart>
-**Review Specialist Models**: <none (default) | model pool | pinned:model pairs | mixed>
-**Review Perspectives**: <none (default) | auto | comma-separated names>
-**Review Perspective Cap**: <2 (default) | positive integer>
+```yaml
+mode: <single-model | society-of-thought>
+models: <none | model pool | specialist:model pairs>
+specialists: <all | names | adaptive:N>
+interaction: <parallel | debate>
+perspectives: <none | auto | names>
+perspective_cap: <positive integer>
+interactive: <false | true | smart>
+```
 
-*SoT configuration fields are populated from the orchestrator's delegation context. When the orchestrator includes review configuration in the delegation prompt (e.g., `Review Mode: society-of-thought`), use those values. When not provided, apply defaults shown above. In particular, if `Review Mode` is `society-of-thought` and no `Review Specialists` value is provided, default to `all` — do not select a subset.*
+*Use the values from the brief. Missing fields take the defaults `single-model`, `none`, `all`, `parallel`, `none`, `2`, `false`; never select a subset of specialists.*
 
 ## Description
 
@@ -297,13 +258,6 @@ status: complete
 
 - [x/] CI Failures present
 - [x/] Breaking changes suspected
-
-## Artifacts
-
-- [x/] ReviewContext.md - This file
-- [x/] ResearchQuestions.md - Research questions for baseline analysis
-- [x/] CodeResearch.md - Baseline understanding (paw-review-baseline)
-- [x/] DerivedSpec.md - Derived specification
 
 ## Metadata
 

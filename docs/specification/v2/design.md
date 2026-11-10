@@ -1,7 +1,7 @@
 # PAW v2 Design
 
 !!! note "Status: in progress"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–5 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode) and compatibility and cutover (see [Cutover as implemented](#cutover-as-implemented)). PAW Review alignment and the user-facing docs are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–6 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode), compatibility and cutover (see [Cutover as implemented](#cutover-as-implemented)) and PAW Review alignment (see [PAW Review alignment](#paw-review-alignment)). The user-facing docs are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
 
 Companion pages: [Invariant Catalogue](invariants.md) and [Runtime Capabilities](runtime-capabilities.md).
 
@@ -320,6 +320,30 @@ Departures:
 
 - v2 resumes a work item that v1 left in progress, instead of requiring it to be finished on v1 or restarted. The mapping converts `WorkflowContext.md` once to the v2 format; `Review Policy` (or `Handoff Mode`) maps to `plan_checkpoint` (`on` unless `final-pr-only`); `Workflow Mode: full` maps to `spec: on`, `research: dedicated`. Work left on `prs` intermediate branches is reported and the host asks before continuing.
 - In VS Code worktree mode the extension still creates the worktree and opens the chat in it; the prompt tells the host that the checkout is the execution worktree. The skill's own worktree setup is used on the CLI.
+
+## PAW Review alignment
+
+PAW Review stays a separate workflow (`PAW-Review` agent, `paw-review-workflow` and the `paw-review-*` stage skills) and produces the same artifacts, pending review and human control points as before. It now uses the v2 contracts:
+
+| Concern | As implemented |
+|---------|----------------|
+| `PAW-Review` agent | One line: load `paw-review-workflow`. Selection guidance, preflight and stage routing live only in the skill |
+| Control plane | The review host builds a todo graph (`preflight`, `understanding`, `baseline`, `derived-spec`, `impact` and `gap` or `sot`, `correlation` for multi-repo, `feedback`, `critique`, `finalize`, `post`), closes each todo on the evidence the table names, and follows the v2 host rules. `ReviewContext.md` no longer carries an artifact checklist that stages tick off |
+| Delegation | Each stage runs in a subagent with a brief (stage skill, contract path, target, artifact dir, host instructions, inputs, done-when, limits). Subagents read `paw-review-workflow/references/activity-contract.md` for the review principles, limits and return block, and never load `paw-review-workflow` (#297, D1) |
+| Return contract | Every stage returns the v2 block: `status` (`complete`, `blocked`, `needs-decision`, `failed`), `activity`, `summary`, `artifacts`, `findings` (severity, location, issue, proposed fix; Must, Should and Could map to `must-fix`, `should-fix`, `consider`), `validation`, `blockers`, `decisions_needed`. The old `Success`/`Partial`/`Blocked` responses are gone |
+| Review provider | `ReviewContext.md` records the review provider block (`mode`, `models`, `specialists`, `interaction`, `perspectives`, `perspective_cap`) plus PAW Review's `interactive`. Society-of-thought runs through the same `paw-sot` invocation as `paw-workflow`; if `paw-sot` cannot run, the review blocks (#268) |
+| Side effects | Only the host posts: it loads `paw-review-github` in its own session. Subagents read the PR platform and never commit, push or post. Baseline research reads the base commit through git or a temporary worktree instead of checking it out, so the user's checkout and uncommitted files are never moved |
+
+The provider block table and the `paw-sot` invocation are duplicated between the two skills, inside `<!-- shared:... -->` markers, because a skill cannot rely on reading another skill's `references/` (skills install separately and may come from different discovery paths). `tests/integration/tests/skills/review-shared-contracts.test.ts` fails if the copies differ, or if the review return block's shared entries differ from the `paw-workflow` briefs.
+
+Departures and decisions:
+
+- `PAW-Review` became a thin wrapper, mirroring the `PAW` agent. This page did not say so for PAW Review; the agent duplicated the skill's routing, which the catalogue classes as compensating machinery.
+- PAW Review supports `single-model` (impact and gap analysis) and `society-of-thought`. `multi-model` and `off` are reported as unavailable and the host asks; no substitute runs. Its defaults are unchanged (`perspectives: none`, where `paw-workflow` defaults to `auto`), so the shared table carries values only and each workflow states its defaults.
+- `paw-review-github` moved from a subagent stage to the host (G9 and the #297 rule that one actor owns GitHub side effects). Its behaviour is unchanged.
+- `ReviewComments.md` keeps its `draft`/`finalized`/posted status and recorded review and comment IDs: they describe the comment set and make posting idempotent, not workflow progress.
+- A local review whose base branch is unknown is asked in preflight by the host; the understanding subagent returns `needs-decision` instead of asking.
+- `paw-review-response` is not part of PAW Review; it lost its references to planning, phase and docs PRs and to calling activity skills, and the host pushes and replies.
 
 ## Tests and budgets
 

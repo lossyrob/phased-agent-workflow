@@ -50,6 +50,8 @@ describe('build-dist script', () => {
     for (const rel of ['configuration.md', 'v1-context.md', 'procedures/resume.md', 'activities/plan.md', 'presets/lite.yaml']) {
       assert.ok(existsSync(join(refs, rel)), `dist should include paw-workflow/references/${rel}`);
     }
+    const reviewContract = join(DIST_DIR, 'skills', 'paw-review-workflow', 'references', 'activity-contract.md');
+    assert.ok(existsSync(reviewContract), 'dist should include paw-review-workflow/references/activity-contract.md');
   });
   
   test('processes vscode conditionals correctly', () => {

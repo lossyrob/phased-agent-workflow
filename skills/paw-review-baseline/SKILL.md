@@ -7,7 +7,7 @@ description: Analyzes the codebase at the PR's base commit to establish baseline
 
 Analyze the codebase **at the base commit** (before PR changes) to document how the system worked, what patterns existed, and what context informs understanding of the changes.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## CRITICAL: Baseline Only
 
@@ -20,7 +20,7 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 
 ## Responsibilities
 
-- Checkout base commit safely (with state restoration)
+- Read the codebase at the base commit without moving the checkout
 - Research how affected modules functioned before changes
 - Document integration points and dependencies
 - Identify patterns and conventions in affected areas
@@ -30,7 +30,7 @@ Analyze the codebase **at the base commit** (before PR changes) to document how 
 
 - PR change analysis or before/after comparison (understanding skill)
 - Quality evaluation or recommendations (evaluation skills)
-- Workflow orchestration (handled by workflow skill)
+- Workflow orchestration (the review host)
 
 ## Prerequisites
 
@@ -56,16 +56,7 @@ Process each repository's base commit independently:
    - Read its ReviewContext.md from `.paw/reviews/PR-<number>-<repo-slug>/`
    - Extract base commit SHA and repository path
    
-2. **Checkout and Research**: For each repository:
-   - Navigate to repository root
-   - Checkout base commit
-   - Conduct baseline research
-   - Create CodeResearch.md in that PR's artifact directory
-   - Restore original state before moving to next repository
-
-3. **State Restoration**: Between repositories:
-   - Restore each repository to its original branch/HEAD
-   - Verify clean working state before proceeding
+2. **Research**: For each repository, read its base commit as in Step 2 and create CodeResearch.md in that PR's artifact directory.
 
 ### Cross-Repository Pattern Identification
 
@@ -95,13 +86,11 @@ If one repository fails:
 3. Verify the base commit is reachable locally
 4. If the commit cannot be reached, report the blocker with context
 
-### Step 2: Checkout Base Commit
+### Step 2: Read the Base Commit
 
-**Desired End State**: Working directory is at the base commit, with ability to restore original state.
+**Desired End State**: You can read any file at the base commit, and the checkout's branch, HEAD, and uncommitted files are unchanged.
 
-1. Record current branch/HEAD for later restoration
-2. Checkout the base commit
-3. Confirm the working directory reflects the pre-change state
+Read through git (`git show <base>:<path>`, `git grep <pattern> <base>`, `git ls-tree -r <base>`), or a temporary detached worktree outside the checkout that you remove afterwards. Never check out, stash, reset, or clean in the user's checkout.
 
 **CRITICAL**: All subsequent research must analyze code at this commit.
 
@@ -143,14 +132,6 @@ Write to `.paw/reviews/<identifier>/CodeResearch.md`:
 - Include file:line references (at base commit)
 - Use template structure below
 
-### Step 6: Update ReviewContext.md
-
-Add CodeResearch.md to Artifacts section to signal completion.
-
-### Step 7: Restore Original State
-
-**Desired End State**: Working directory returned to original branch, clean state confirmed.
-
 ## Validation Criteria
 
 Before completing:
@@ -161,19 +142,11 @@ Before completing:
 - [ ] Patterns and conventions identified
 - [ ] File:line references included
 - [ ] CodeResearch.md saved with valid frontmatter
-- [ ] ReviewContext.md updated
-- [ ] Original state restored
+- [ ] Checkout branch, HEAD, and uncommitted files unchanged
 
-## Completion Response
+## Completion
 
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/CodeResearch.md
-Status: Success
-Summary: Baseline documented at commit <sha> - [N] modules analyzed, [M] patterns identified.
-
-Original branch restored: <original-branch>
-```
+Return the block in the activity contract, with the base commit and the number of modules analyzed in the summary.
 
 ---
 

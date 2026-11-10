@@ -12,6 +12,27 @@ export function rewriteGhCommand(command: string, stubPath: string): string {
   return command.replace(/(^|[\s;&|(`])gh(?=\s)/g, (_m, lead: string) => `${lead}"${stubPath}"`);
 }
 
+/** The pull request the PAW Review stub `gh` serves. */
+export interface ReviewStubPr {
+  repository: string;
+  number: number;
+  url: string;
+  title: string;
+  body: string;
+  author: string;
+  baseRefName: string;
+  headRefName: string;
+  baseRefOid: string;
+  headRefOid: string;
+}
+
+export interface ReviewStubState {
+  nextId: number;
+  reviews: Array<{ id: number; state: string; body?: string; commit_id?: string }>;
+  comments: Array<{ id: number; pull_request_review_id: number | null; path?: string; line?: unknown; body?: string }>;
+  writes: Array<Record<string, unknown>>;
+}
+
 /** Manages an isolated temp git repository for a single test. */
 export class TestFixture {
   readonly workspaceDir: string;
@@ -166,6 +187,36 @@ export class TestFixture {
     await writeFile(join(binDir, "gh"), script);
     await chmod(join(binDir, "gh"), 0o755);
     return { stubPath: join(binDir, "gh"), logPath };
+  }
+
+  /**
+   * Install the PAW Review stub `gh` (lib/gh-review-stub.cjs) for one pull request. It
+   * records every call, answers reads (`pr view`, `pr diff`, `api` GETs, GraphQL queries)
+   * from `pr` and git, and records writes (pending reviews, review comments, submissions)
+   * in a state file instead of sending them anywhere. Route commands to it with
+   * `rewriteGhCommand`; never put it on PATH (see installGhStub).
+   */
+  async installReviewGhStub(pr: ReviewStubPr): Promise<{ stubPath: string; logPath: string }> {
+    const binDir = join(this.workspaceDir, "bin");
+    await mkdir(binDir, { recursive: true });
+    await writeFile(join(this.workspaceDir, "gh-review-pr.json"), JSON.stringify(pr, null, 2));
+    const script = [
+      "#!/bin/sh",
+      `PAW_GH_STUB_DIR="${this.workspaceDir}" exec "${process.execPath}" "${join(__dirname, "gh-review-stub.cjs")}" "$@"`,
+      "",
+    ].join("\n");
+    await writeFile(join(binDir, "gh"), script);
+    await chmod(join(binDir, "gh"), 0o755);
+    return { stubPath: join(binDir, "gh"), logPath: join(this.workspaceDir, "gh-calls.log") };
+  }
+
+  /** Writes the PAW Review stub `gh` recorded: reviews, review comments, and raw write calls. */
+  async reviewGhState(): Promise<ReviewStubState> {
+    try {
+      return JSON.parse(await readFile(join(this.workspaceDir, "gh-review-state.json"), "utf-8")) as ReviewStubState;
+    } catch {
+      return { nextId: 0, reviews: [], comments: [], writes: [] };
+    }
   }
 
   /** Read the stub gh call log, one invocation per entry. */

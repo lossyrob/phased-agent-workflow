@@ -144,3 +144,5 @@ PAW Review stays a separate workflow. Three invariants from #297 apply to it and
 - A PAW Review session never delegates the review workflow to another PAW Review agent (same rule as D1).
 - One review job has one owner for GitHub side effects (same rule as G9).
 - A pending review is terminal unless the user asks for a further change.
+
+Phase 6 puts these in `paw-review-workflow`'s host rules. `review-default-run` covers the first two (no subagent loads the review workflow; one pending review, created by the host; no subagent writes to GitHub); `review-sot` covers W5 for PAW Review. The third is not tested.

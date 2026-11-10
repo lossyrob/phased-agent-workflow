@@ -26,23 +26,25 @@ Evidence: one `REVIEW-<model>.md` per model and `REVIEW-SYNTHESIS.md`.
 
 ## society-of-thought
 
-1. Load the `paw-sot` skill and follow it in this session with this review context:
+Review context: `type` `artifacts` for `plan-review`, `diff` for `final-review`; `coordinates` the reviewed items from the table above, as paths and diff range; `output_dir` the output dir; `interactive` `false`.
 
-    | Field | Value |
-    |-------|-------|
-    | `type` | `artifacts` for `plan-review`, `diff` for `final-review` |
-    | `coordinates` | The reviewed items from the table above, as paths and diff range |
-    | `output_dir` | The output dir |
-    | `specialists`, `perspectives`, `perspective_cap` | From the block |
-    | `interaction_mode` | `interaction` from the block |
-    | `specialist_models` | `models` from the block |
-    | `interactive` | `false` |
+<!-- shared:sot-invocation -->
+1. Load the `paw-sot` skill and follow it in this session, never in a subagent, with that review context and these fields from the block:
 
-2. Resolve findings from `REVIEW-SYNTHESIS.md`. Skip `paw-sot` moderator mode.
+    | `paw-sot` field | Block field |
+    |-----------------|-------------|
+    | `specialists`, `perspectives`, `perspective_cap` | Same name |
+    | `interaction_mode` | `interaction` |
+    | `specialist_models` | `models` |
+
+2. Skip `paw-sot` moderator mode.
 
 If `paw-sot` cannot be loaded or does not produce `REVIEW-SYNTHESIS.md`, the todo stays open and the workflow is blocked: report it to the user. Never substitute other reviewers.
 
 Evidence: the per-specialist `REVIEW-<specialist>*.md` files and `REVIEW-SYNTHESIS.md`.
+<!-- /shared -->
+
+Resolve findings from `REVIEW-SYNTHESIS.md`.
 
 ## Resolving findings
 

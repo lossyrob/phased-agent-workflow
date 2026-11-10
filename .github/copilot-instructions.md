@@ -330,6 +330,7 @@ cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
 | `v2/resume`, `v2/v1-context-resume` | Resume from evidence; a v1 `WorkflowContext.md` is mapped once | ~3-5 min |
 | `v2/paw-lite-alias`, `v2/preset-lite` | `paw-lite` resolves to the `lite` preset; a full lite run | ~1-5 min |
 | `v2/*` (others) | Configured reviews, rewind, worktree, lifecycles, revisions | ~3-8 min |
+| `v2/review-default-run`, `v2/review-sot` | PAW Review on a stub-`gh` PR: todo graph, stage subagents with the shared return block, host-only pending review; configured SoT runs through `paw-sot` | ~5-15 min |
 | `work-shaping` | Work shaping Q&A flow | ~1-2 min |
 | `sot-perspectives` | Society-of-thought perspectives | ~2-3 min |
 | `tool-policy` | Tool policy enforcement | ~30s |

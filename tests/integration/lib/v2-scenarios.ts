@@ -141,7 +141,7 @@ export function hostSkillLoads(ctx: TestContext, name: string): number[] {
 export function prCreateTime(ctx: TestContext): number | undefined {
   return ctx.events
     .ofType("tool.execution_start")
-    .find((e) => !e.data.parentToolCallId && e.data.toolName === "bash" && /\bgh"?\s+pr\s+create\b/.test(String((e.data.arguments as Record<string, unknown> | undefined)?.command ?? "")))?.at;
+    .find((e) => !e.data.parentToolCallId && e.data.toolName === "bash" && /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(String((e.data.arguments as Record<string, unknown> | undefined)?.command ?? "")))?.at;
 }
 
 /** Review files (name, creation and modification time) under the work directory's reviews/ subdirectory `sub`. */
@@ -164,10 +164,13 @@ export async function readArtifact(ctx: TestContext, rel: string): Promise<strin
   return readFile(join(await workDir(ctx), rel), "utf-8").catch(() => "");
 }
 
-/** Index of the first SQL statement marking `id` done, or -1. */
+/** Index of the first SQL statement marking `id` done (an UPDATE, or an INSERT that creates it already done), or -1. */
 export function markedDoneAt(ctx: TestContext, id: string): number {
-  const re = new RegExp(`UPDATE\\s+todos\\s+SET\\s+status\\s*=\\s*'done'[^;]*'${id}'`, "i");
-  return ctx.events.toolStarts().findIndex((t) => t.toolName === "sql" && !t.parentToolCallId && re.test(String(t.arguments.query ?? "")));
+  const update = new RegExp(`UPDATE\\s+todos\\s+SET\\s+status\\s*=\\s*'done'[^;]*'${id}'`, "i");
+  const insert = new RegExp(`INSERT\\s+INTO\\s+todos[^;]*\\(\\s*'${id}'\\s*,\\s*'[^']*'\\s*,\\s*'[^']*'\\s*,\\s*'done'\\s*\\)`, "i");
+  return ctx.events
+    .toolStarts()
+    .findIndex((t) => t.toolName === "sql" && !t.parentToolCallId && (update.test(String(t.arguments.query ?? "")) || insert.test(String(t.arguments.query ?? ""))));
 }
 
 /** Every bash command with its position in the trace. */
@@ -180,7 +183,7 @@ export function bashCalls(ctx: TestContext): Array<{ command: string; fromSubage
 }
 
 export function prCreates(ctx: TestContext): Array<{ command: string; fromSubagent: boolean; index: number }> {
-  return bashCalls(ctx).filter((c) => /\bgh"?\s+pr\s+create\b/.test(c.command));
+  return bashCalls(ctx).filter((c) => /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command));
 }
 
 /** Trace index of the first tool call whose arguments mention `pattern`, or -1. */

@@ -159,7 +159,7 @@ describe("PAW v2: resume an in-progress work item", { skip: !ENABLED, timeout: R
   });
 
   it("Unit 2 works: GET /stats returns the count and the tests pass", async () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     const [, , stats] = (await probeApp(ctx.fixture.workDir, ["/", "/", "/stats"])) as Array<Record<string, unknown>>;
     assert.ok(typeof stats?.requestCount === "number" && stats.requestCount >= 2, `GET /stats returned ${JSON.stringify(stats)}`);
   });

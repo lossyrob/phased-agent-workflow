@@ -173,6 +173,8 @@ export async function createTestContext(opts: {
     client = await startCopilotClient({
       ...(githubToken ? { githubToken, useLoggedInUser: false } : { useLoggedInUser }),
       ...(cliPath ? { cliPath } : {}),
+      // The test runner sets NODE_TEST_CONTEXT for its own child; inherited by the CLI, it silences `node --test` in fixture repos.
+      env: { ...process.env, NODE_TEST_CONTEXT: undefined },
     });
 
     const provider = getProviderConfig();

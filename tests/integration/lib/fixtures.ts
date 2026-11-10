@@ -172,7 +172,7 @@ export class TestFixture {
   async ghCalls(): Promise<string[]> {
     try {
       const raw = await readFile(join(this.workspaceDir, "gh-calls.log"), "utf-8");
-      return raw.split("\n").filter(Boolean);
+      return raw.split("\n").filter((line) => line && !/(^| )--help\b/.test(line));
     } catch {
       return [];
     }

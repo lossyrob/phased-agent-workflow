@@ -19,6 +19,7 @@ Files referenced below live in `references/` next to this file. Read each one on
 6. Only you push, open pull requests, or change artifact tracking. Subagents commit locally.
 7. Stop only when the graph is complete, a todo needs a user decision, a configured checkpoint is reached, or the user asks. Otherwise continue to the next unblocked todo.
 8. Report final status from live `git` and PR state.
+9. A request to be fast changes configuration only. Every rule here still holds, and every todo is still tracked.
 
 ## Setup
 

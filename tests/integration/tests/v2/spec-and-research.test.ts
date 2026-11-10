@@ -102,6 +102,6 @@ describe("PAW v2: spec and dedicated research", { skip: !ENABLED, timeout: RUN_T
     assert.strictEqual(prs.length, 1, `Expected one gh pr create, saw ${prs.length}`);
     assert.ok(!prs[0].fromSubagent);
     assert.strictEqual((await ctx.fixture.ghCalls()).filter((c) => c.startsWith("pr create")).length, 1);
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
   });
 });

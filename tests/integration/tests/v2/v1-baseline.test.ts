@@ -93,7 +93,7 @@ describe("PAW v1 baseline: autonomous run with the same task", { skip: !ENABLED,
   });
 
   it("the feature is implemented and its tests pass", () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     const app = execSync("cat src/app.ts", { cwd: ctx.fixture.workDir }).toString();
     assert.match(app, /stats/i);
   });
@@ -133,7 +133,7 @@ describe("PAW v1 baseline: autonomous run with the same task", { skip: !ENABLED,
         .filter((t) => ["create", "edit", "apply_patch", "str_replace_editor"].includes(t.toolName))
         .map((t) => String(t.arguments.path ?? ""))
         .filter((p) => /\/(src|tests)\//.test(p)),
-      subagentPushesOrPrs: bash.filter((c) => c.fromSubagent && /\bgit\s+push\b|\bgh"?\s+pr\s+create\b/.test(c.command)).length,
+      subagentPushesOrPrs: bash.filter((c) => c.fromSubagent && /\bgit\s+push\b|\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command)).length,
       broadStaging: bash.filter((c) => /\bgit\s+add\s+(-A\b|--all\b|\.(\s|$)|-u\b)/.test(c.command) || /\bgit\s+commit\s+[^\n]*-a\b/.test(c.command)).length,
       readmeStatus: status,
       readmeCommittedByWorkflow: readmeCommits !== "",

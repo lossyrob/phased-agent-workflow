@@ -172,7 +172,7 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
 
   it("G4/G9: the host opens exactly one PR, after the final review", async () => {
     const calls = ctx.events.toolStarts();
-    const prIdx = calls.map((t, i) => ({ t, i })).filter(({ t }) => t.toolName === "bash" && /\bgh"?\s+pr\s+create\b/.test(String(t.arguments.command ?? "")));
+    const prIdx = calls.map((t, i) => ({ t, i })).filter(({ t }) => t.toolName === "bash" && /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(String(t.arguments.command ?? "")));
     assert.strictEqual(prIdx.length, 1, `Expected one gh pr create, saw ${prIdx.length}`);
     assert.ok(!prIdx[0].t.parentToolCallId, "PR must be created by the host");
     const reviewWrite = calls.findIndex((t) => /reviews\/REVIEW/.test(argText(t.arguments)));
@@ -201,7 +201,7 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
   });
 
   it("the feature is implemented and its tests pass", () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     const app = execSync("cat src/app.ts", { cwd: ctx.fixture.workDir }).toString();
     assert.match(app, /stats/i);
   });

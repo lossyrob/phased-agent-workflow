@@ -161,7 +161,7 @@ describe("PAW v2: configured procedures with phase review", { skip: !ENABLED, ti
   });
 
   it("the features are implemented and the tests pass", () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     const src = execSync("cat src/*.ts", { cwd: ctx.fixture.workDir }).toString();
     assert.match(src, /stats/);
     assert.match(src, /health/);

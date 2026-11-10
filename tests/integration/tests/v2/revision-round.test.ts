@@ -182,7 +182,7 @@ describe("PAW v2: plan checkpoint with a revision round", { skip: !ENABLED, time
     assert.match(plan, new RegExp(HEADER, "i"));
     const src = execSync("cat src/*.ts", { cwd: ctx.fixture.workDir }).toString();
     assert.match(src, new RegExp(HEADER, "i"));
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
   });
 
   it("the plan-checkpoint todo exists, is blocked by plan review, and is done", () => {

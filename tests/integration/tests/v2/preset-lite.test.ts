@@ -123,7 +123,7 @@ describe("PAW v2: lite preset", { skip: !ENABLED, timeout: RUN_TIMEOUT + 120_000
   });
 
   it("the feature is implemented and the tests pass", () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     assert.match(execSync("cat src/*.ts", { cwd: ctx.fixture.workDir }).toString(), /stats/);
   });
 });

@@ -103,6 +103,6 @@ describe("PAW v2: multi-model final review", { skip: !ENABLED, timeout: RUN_TIME
     assert.ok(prAt, "No host gh pr create in the trace");
     assert.ok(synthesis && synthesis.createdMs < prAt, `REVIEW-SYNTHESIS.md created at ${synthesis?.createdMs}, PR at ${prAt}`);
     assert.strictEqual((await ctx.fixture.ghCalls()).filter((c) => c.startsWith("pr create")).length, 1);
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
   });
 });

@@ -182,7 +182,7 @@ describe("PAW v2: rewind to the plan after a unit is implemented", { skip: !ENAB
   });
 
   it("the revised behaviour holds: GET /stats is not counted, and the tests pass", async () => {
-    execSync("npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
+    execSync("npm run build --silent --if-present && npm test --silent", { cwd: ctx.fixture.workDir, stdio: "pipe" });
     const results = (await probeApp(ctx.fixture.workDir, ["/", "/", "/stats", "/stats"])) as Array<Record<string, unknown>>;
     assert.deepStrictEqual(results[3], { requestCount: 2 }, `Responses: ${JSON.stringify(results)}`);
   });

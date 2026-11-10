@@ -66,6 +66,8 @@ Write the configured provider block into each review todo's description.
 
 Start each activity as a general-purpose subagent with this brief. Do not paste artifact contents; subagents read from disk.
 
+`specify` and `plan` always start in a mode that accepts follow-up messages, never a blocking call (Copilot CLI: `task` with `mode: "background"`, then `read_agent`; never `mode: "sync"`).
+
 ```text
 Activity: <specify | research | plan | implement | review>
 Brief file: <absolute path to references/activities/<activity>.md> — read it first and follow it.
@@ -80,7 +82,7 @@ Limits: work and commit only in the execution checkout, staging explicit file pa
 Return: the return block defined in the brief file.
 ```
 
-Start `specify` and `plan` so they can receive follow-up messages, also when told to be fast, and keep each subagent for every revision of its artifact (Copilot CLI: `task` with `mode: "background"`, then `read_agent` and `write_agent`). If your runtime has no follow-up, send the revision packet to a new subagent.
+Send every revision of an artifact to the subagent that wrote it (Copilot CLI: `write_agent`), never to a new one. Only if your runtime has no follow-up, send the revision packet to a new subagent.
 
 With two or more `planning.models`, start one plan subagent per model with that `model`, each writing `ImplementationPlan-<model>.md`; then send the first a follow-up to merge them into `ImplementationPlan.md`, and keep it for revisions.
 

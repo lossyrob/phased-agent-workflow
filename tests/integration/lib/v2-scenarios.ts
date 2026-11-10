@@ -182,8 +182,14 @@ export function bashCalls(ctx: TestContext): Array<{ command: string; fromSubage
     .map(({ t, index }) => ({ command: String(t.arguments.command ?? ""), fromSubagent: !!t.parentToolCallId, index }));
 }
 
+/** `gh pr create` commands that ran; a command the runtime refused to run ("Command blocked") never reached gh. */
 export function prCreates(ctx: TestContext): Array<{ command: string; fromSubagent: boolean; index: number }> {
-  return bashCalls(ctx).filter((c) => /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command));
+  const starts = ctx.events.toolStarts();
+  const blocked = (index: number) => {
+    const done = ctx.events.ofType("tool.execution_complete").find((e) => String(e.data.toolCallId) === starts[index].toolCallId);
+    return /Command blocked/.test(JSON.stringify(done?.data.error ?? ""));
+  };
+  return bashCalls(ctx).filter((c) => /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command) && !blocked(c.index));
 }
 
 /** Trace index of the first tool call whose arguments mention `pattern`, or -1. */

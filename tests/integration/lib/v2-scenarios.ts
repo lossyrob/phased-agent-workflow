@@ -105,10 +105,15 @@ export function hostTasks(ctx: TestContext, prompt?: RegExp): Array<ToolStart & 
 }
 
 export const PLAN_ACTIVITY = /^Activity:\s*plan\s*$/im;
-export const IMPLEMENT_ACTIVITY = /^Activity:\s*implement\s*$/im;
-export const REVIEW_ACTIVITY = /^Activity:\s*review\s*$/im;
-export const SPECIFY_ACTIVITY = /^Activity:\s*specify\s*$/im;
-export const RESEARCH_ACTIVITY = /^Activity:\s*research\s*$/im;
+export const IMPLEMENT_ACTIVITY = /^Activity:\s*implement\b/im;
+export const REVIEW_ACTIVITY = /^Activity:\s*review\b/im;
+export const SPECIFY_ACTIVITY = /^Activity:\s*specify\b/im;
+export const RESEARCH_ACTIVITY = /^Activity:\s*research\b/im;
+
+/** First lines of every host `task` prompt, for assertion messages. */
+export function taskHeads(ctx: TestContext): string {
+  return hostTasks(ctx).map((t) => `  [${t.index}] ${t.prompt.slice(0, 160).replace(/\n/g, " | ")}`).join("\n");
+}
 
 /** Host `task` calls not started in background mode (and so unreachable for follow-up revisions). */
 export function notBackground(tasks: Array<ToolStart & { prompt: string }>): string[] {

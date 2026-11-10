@@ -24,6 +24,7 @@ import {
   RUN_TIMEOUT,
   firstMention,
   hostTasks,
+  taskHeads,
   logRun,
   prCreates,
   sqlQueries,
@@ -108,7 +109,7 @@ describe("PAW v2: configured procedures with phase review", { skip: !ENABLED, ti
     const unitReviews = hostTasks(ctx).filter((t) => UNIT_REVIEW(t.prompt));
     assert.ok(
       unitReviews.length >= unitReviewTodos().length,
-      `${unitReviewTodos().length} review:* todos but ${unitReviews.length} unit-review subagents`,
+      `${unitReviewTodos().length} review:* todos but ${unitReviews.length} unit-review subagents\n${taskHeads(ctx)}`,
     );
     for (const r of unitReviewTodos()) {
       assert.strictEqual(r.status, "done", `${r.id} is ${r.status}`);
@@ -122,7 +123,7 @@ describe("PAW v2: configured procedures with phase review", { skip: !ENABLED, ti
 
   it("W2/W6: final review ran as its own subagent after all units and wrote reviews/REVIEW.md", async () => {
     const finals = hostTasks(ctx).filter((t) => FINAL_REVIEW(t.prompt));
-    assert.ok(finals.length >= 1, "No final review subagent");
+    assert.ok(finals.length >= 1, `No final review subagent\n${taskHeads(ctx)}`);
     const lastUnitWork = Math.max(...hostTasks(ctx).filter((t) => IMPLEMENT_ACTIVITY.test(t.prompt) || UNIT_REVIEW(t.prompt)).map((t) => t.index));
     assert.ok(finals[0].index > lastUnitWork, "Final review started before the last unit implementation or review");
     const dir = await workDir(ctx);

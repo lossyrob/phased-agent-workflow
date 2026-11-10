@@ -74,7 +74,7 @@ Host instructions: <project and user rules that apply, verbatim>
 Inputs: <artifact paths to read>
 Constraints: <scope limits, decisions already made, what must not change>
 Done when: <observable criteria>
-Limits: commit locally with explicit file paths only; never `git add .`/`-A`/`commit -a`; leave these uncommitted user files untouched: <list>; do not push, open PRs, change artifact tracking, edit todos, or load the paw-workflow skill.
+Limits: commit locally with explicit file paths only; never `git add .`/`-A`/`commit -a`; never rewrite a commit (`--amend`, `rebase`, `reset`) — fix with a new commit; leave these uncommitted user files untouched: <list>; do not push, open PRs, change artifact tracking, edit todos, or load the paw-workflow skill.
 Return: the return block defined in the brief file.
 ```
 

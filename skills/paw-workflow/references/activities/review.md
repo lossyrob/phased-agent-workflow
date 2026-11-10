@@ -4,9 +4,9 @@ Review the target named in your brief and write the review file. Do not change c
 
 ## Target: plan
 
-Read the task source and `ImplementationPlan.md`. Check the plan's claims against the codebase.
+Read the task source, `ImplementationPlan.md`, and `Spec.md` and `CodeResearch.md` if listed. Check the plan's claims against the codebase.
 
-- **Coverage**: does the plan deliver the whole task? Anything missing or out of scope without reason?
+- **Coverage**: does the plan deliver the whole task and every spec requirement? Anything missing or out of scope without reason?
 - **Feasibility**: do the named files, interfaces, and commands exist and behave as the plan assumes?
 - **Verifiability**: does each unit have observable "Done when" criteria and tests?
 - **Structure**: are units sized and ordered sensibly; are "independent" units truly independent?
@@ -26,12 +26,20 @@ Run `git diff <base>...<target>` from the brief, and read the task source and th
 
 As `final`, limited to the diff range in your brief and to that unit's Changes and Tests in the plan. Later units are out of scope.
 
+## Target: synthesis
+
+Read the per-model review files listed in your brief. Do not review the code again. Merge findings that point at the same location and issue; keep each finding's highest severity; note which reviewers raised it. Drop findings you can show are wrong, with the reason under `## Dismissed`.
+
+## Target: recheck
+
+Read the synthesis in your brief and check each `must-fix` and `should-fix` against the current code or plan. Report only findings that are still open.
+
 ## Output
 
 Write the file at the output path in your brief:
 
 ```markdown
-# Review: <plan | unit | final>
+# Review: <plan | unit | final | synthesis | recheck>
 
 **Verdict**: pass | changes-required
 **Reviewed**: <artifact path or diff range>
@@ -53,7 +61,7 @@ Write the file at the output path in your brief:
 ```yaml
 status: complete | blocked | failed
 activity: review
-target: plan | unit | final
+target: plan | unit | final | synthesis | recheck
 verdict: pass | changes-required
 artifacts:
   - path: <review file>

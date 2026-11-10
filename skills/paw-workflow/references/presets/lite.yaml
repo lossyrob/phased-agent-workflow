@@ -1,0 +1,13 @@
+name: lite
+description: Inline research, one implementation unit, single-model reviews
+config:
+  shaping: off
+  spec: off
+  research: inline
+  plan_review:
+    mode: single-model
+  implementation:
+    phases: single
+  phase_review: off
+  final_review:
+    mode: single-model

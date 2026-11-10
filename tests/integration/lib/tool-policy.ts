@@ -1,4 +1,14 @@
+import { realpathSync } from "fs";
 import { resolve } from "path";
+
+/** The path with symlinks resolved (macOS: /var → /private/var), or the path itself if it does not exist. */
+function real(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
+}
 
 type Decision =
   | { action: "allow" }
@@ -21,7 +31,9 @@ export class ToolPolicy {
     private readonly options: { allowRemoteWrites?: boolean } = {},
   ) {
     this.workspaceRoot = resolve(workspaceRoot);
-    this.allowedRoots = [...new Set([this.workspaceRoot, ...extraRoots.map((root) => resolve(root))])];
+    const roots = [this.workspaceRoot, ...extraRoots.map((root) => resolve(root))];
+    // A root is allowed under both its given and its symlink-resolved spelling.
+    this.allowedRoots = [...new Set([...roots, ...roots.map(real)])];
     this.normalizedRoots = this.allowedRoots.map((root) => `${root}/`);
   }
 

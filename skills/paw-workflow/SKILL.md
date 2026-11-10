@@ -25,19 +25,11 @@ Files referenced below live in `references/` next to this file. Read each one on
 Do this directly.
 
 1. Derive a work title and a work id (lowercase, hyphens) from the task. The work directory is `.paw/work/<work-id>/`; it must not already exist.
-2. Resolve configuration: defaults below, then any settings the user stated.
+2. Resolve configuration as `references/configuration.md` describes.
 3. Note uncommitted changes with `git status --short`. They belong to the user: never stage, commit, or revert them.
 4. Create the target branch from the base branch.
-5. Write `.paw/work/<work-id>/WorkflowContext.md` with the resolved configuration, task source, base branch, and target branch. It holds configuration only, never progress.
+5. Write `.paw/work/<work-id>/WorkflowContext.md` in the format `references/configuration.md` gives. It holds configuration only, never progress.
 6. Collect the project and user instructions that apply to code changes and commits (instruction files, rules given to you in this session). They go into every brief.
-
-| Setting | Values | Default |
-|---------|--------|---------|
-| `plan_review` | `off`, `single-model` | `single-model` |
-| `plan_checkpoint` | `off`, `on` | `off` |
-| `phase_review` | `off`, `on` | `off` |
-| `final_review` | `off`, `single-model` | `single-model` |
-| `artifact_lifecycle` | `commit-and-clean`, `commit-and-persist`, `never-commit` | `commit-and-clean` |
 
 ## Todo graph
 
@@ -46,14 +38,19 @@ Create one todo per row whose condition holds, with the listed dependencies, in 
 | Id | Condition | Blocked by | Evidence to close |
 |----|-----------|------------|-------------------|
 | `setup` | always | — | `WorkflowContext.md` exists; on target branch |
-| `plan` | always | `setup` | Accepted `ImplementationPlan.md`, committed per lifecycle |
-| `plan-review` | `plan_review` not `off` | `plan` | `reviews/planning/REVIEW.md`; findings resolved |
+| `shape` | `shaping: on`, or `auto` and the task is vague | `setup` | `WorkShaping.md` the user confirmed |
+| `specify` | `spec: on` | last of the above | Accepted `Spec.md`, committed per lifecycle |
+| `research` | `research: dedicated` | last of the above | `CodeResearch.md`, committed per lifecycle |
+| `plan` | always | last of the above | Accepted `ImplementationPlan.md`, committed per lifecycle |
+| `plan-review` | `plan_review.mode` not `off` | `plan` | Provider's output in `reviews/planning/`; findings resolved |
 | `plan-checkpoint` | `plan_checkpoint: on` | last of the above | User accepted the plan |
 | `expand-plan` | always | last of the above | `implement:*` todos exist for every plan unit |
-| `final-review` | `final_review` not `off` | `expand-plan` | `reviews/REVIEW.md`; findings resolved |
+| `final-review` | `final_review.mode` not `off` | `expand-plan` | Provider's output in `reviews/`; findings resolved |
 | `final-pr` | always | `final-review`, else `expand-plan` | PR URL from live state |
 
-Write the configured provider into each review todo's description.
+Write the configured provider block into each review todo's description.
+
+**`shape`**: load the `paw-work-shaping` skill and run it here, with the user; it writes `WorkShaping.md` in the work directory.
 
 **`expand-plan`**: when the plan is accepted, add `implement:<unit>` for each phase or work item with the dependencies the plan states, and make `final-review` (or `final-pr`) depend on all of them. With `phase_review: on`, add `review:<unit>` after each.
 
@@ -68,7 +65,7 @@ Write the configured provider into each review todo's description.
 Start each activity as a general-purpose subagent with this brief. Do not paste artifact contents; subagents read from disk.
 
 ```text
-Activity: <plan | implement | review>
+Activity: <specify | research | plan | implement | review>
 Brief file: <absolute path to references/activities/<activity>.md> — read it first and follow it.
 Intent: <what the task is for>
 Task source: <issue link or the prompt text>
@@ -81,9 +78,11 @@ Limits: commit locally with explicit file paths only; never `git add .`/`-A`/`co
 Return: the return block defined in the brief file.
 ```
 
-Start `plan` so it can receive follow-up messages, and keep that subagent for every plan revision (Copilot CLI: `task` with `mode: "background"`, then `read_agent` and `write_agent`). If your runtime has no follow-up, send the revision packet to a new subagent.
+Start `specify` and `plan` so they can receive follow-up messages, also when told to be fast, and keep each subagent for every revision of its artifact (Copilot CLI: `task` with `mode: "background"`, then `read_agent` and `write_agent`). If your runtime has no follow-up, send the revision packet to a new subagent.
 
-Run `implement:*` units one at a time unless the plan marks units as independent; then run those in parallel.
+With two or more `planning.models`, start one plan subagent per model with that `model`, each writing `ImplementationPlan-<model>.md`; then send the first a follow-up to merge them into `ImplementationPlan.md`, and keep it for revisions.
+
+Pass `implementation.model` as the `model` of each `implement` subagent. Run `implement:*` units one at a time unless the plan marks units as independent and `implementation.parallel` is `auto`; then run those in parallel.
 
 ### Revision packet
 
@@ -106,25 +105,16 @@ Before closing a todo, check on disk:
 | Activity | Check |
 |----------|-------|
 | Any | Listed artifacts exist and are non-empty; listed commits exist on the target branch (`git log`); `git status` shows no stray changes and the user's uncommitted files are still uncommitted |
-| `plan` | No placeholders or open blocking questions; covers the whole task; consistent with decisions made in this session |
+| `specify`, `plan` | No placeholders or open blocking questions; covers the whole task (and every spec requirement, for `plan`); consistent with decisions made in this session |
+| `research` | Claims carry `file:line` references |
 | `implement` | Every deliverable the plan names for the unit exists with real content; the stated validation passed; commits follow the host instructions |
-| `review` | The review file exists in the configured location with a verdict |
+| `review` | The provider's evidence files exist in the output dir |
 
 A failed check is a revision for the same subagent, not a closed todo.
 
 ## Reviews
 
-For `single-model` and for `review:<unit>`, delegate one `review` activity. Tell it the target (`plan`, `unit <unit>`, or `final`), the output path (`reviews/planning/REVIEW.md`, `reviews/<unit>/REVIEW.md`, or `reviews/REVIEW.md`), and the diff range: the unit's commits for `unit`, `<base>...<target>` for `final`.
-
-Before the first review, create `.paw/work/<work-id>/reviews/.gitignore` containing `*`. Never stage it.
-
-Resolve findings without asking the user:
-
-- `must-fix` and `should-fix` → send to the subagent that produced the work (plan subagent, or an `implement` subagent) as a revision, then verify the fix.
-- `consider` → apply if cheap and clearly right; otherwise note it for the PR description.
-- A finding that needs a product decision → `needs-decision`; ask the user.
-
-If the review had any `must-fix`, run the review again after the fixes.
+When a review todo starts, read `references/review-providers.md` and run the provider named in the todo.
 
 ## Git and final PR
 

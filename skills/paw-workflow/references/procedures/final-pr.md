@@ -5,7 +5,7 @@ Run as host, in order. Stop and report if a step fails.
 ## 1. Pre-flight
 
 - Every todo except `final-pr` is done, including `candidate:*` and `revise:*`.
-- Each configured review left its file: `reviews/planning/REVIEW.md` if plan review is on, `reviews/REVIEW.md` if final review is on.
+- Each configured review left its provider's evidence (`REVIEW.md`, or `REVIEW-SYNTHESIS.md` for `multi-model` and `society-of-thought`) in `reviews/planning/` and `reviews/`.
 - On the target branch. `git status --short` shows only the user's own uncommitted files noted during setup.
 - The project's test, lint, and build commands pass on the current HEAD.
 - Every unit in `ImplementationPlan.md` is delivered in the repository.

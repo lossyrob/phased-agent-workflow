@@ -1,0 +1,18 @@
+name: thorough
+description: Spec, dedicated research, multi-model planning, society-of-thought reviews, phase review
+config:
+  spec: on
+  research: dedicated
+  planning:
+    models: [latest GPT, latest Claude Opus]
+  plan_review:
+    mode: society-of-thought
+    specialists: all
+    interaction: parallel
+    perspectives: auto
+  phase_review: on
+  final_review:
+    mode: society-of-thought
+    specialists: all
+    interaction: debate
+    perspectives: auto

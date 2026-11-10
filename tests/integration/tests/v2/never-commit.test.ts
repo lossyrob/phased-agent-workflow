@@ -80,9 +80,13 @@ describe("PAW v2: never-commit artifact lifecycle", { skip: !ENABLED, timeout: R
 
   it("artifacts exist on disk and are untracked", async () => {
     const dir = await workDir(ctx);
-    for (const f of ["WorkflowContext.md", "ImplementationPlan.md", "reviews/REVIEW.md"]) {
+    for (const f of ["WorkflowContext.md", "ImplementationPlan.md"]) {
       await access(join(dir, f)).catch(() => assert.fail(`Missing artifact ${f}`));
     }
+    // The default final review is multi-model, which leaves a synthesis rather than REVIEW.md.
+    await access(join(dir, "reviews/REVIEW-SYNTHESIS.md"))
+      .catch(() => access(join(dir, "reviews/REVIEW.md")))
+      .catch(() => assert.fail("Missing final review output"));
     assert.strictEqual((await git().raw(["ls-files", ".paw/"])).trim(), "", "No .paw/ file may be tracked");
   });
 

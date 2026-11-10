@@ -1,7 +1,7 @@
 # PAW v2 Design
 
-!!! note "Status: draft for review"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Nothing here is implemented yet. The [decisions](#decisions) at the end were accepted on 2026-11-09.
+!!! note "Status: in progress"
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–3 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)); git lifecycle beyond the final PR, compatibility and cutover are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
 
 Companion pages: [Invariant Catalogue](invariants.md) and [Runtime Capabilities](runtime-capabilities.md).
 
@@ -72,8 +72,8 @@ Nodes are created at load time. Nodes for activities that the configuration turn
 setup
 shape            (if configured)         blocked by: setup
 specify          (if configured)         blocked by: shape | setup
-research         (if dedicated)          blocked by: specify | setup
-plan                                     blocked by: research | specify | setup
+research         (if dedicated)          blocked by: specify | shape | setup
+plan                                     blocked by: research | specify | shape | setup
 plan-review      (if configured)         blocked by: plan
 plan-checkpoint  (if configured)         blocked by: plan-review | plan
 expand-plan                              blocked by: plan-checkpoint | plan-review | plan
@@ -211,10 +211,19 @@ A **review provider block** is used for both plan review and final review:
 | Field | Values |
 |-------|--------|
 | `mode` | `off`, `single-model`, `multi-model`, `society-of-thought` |
-| `models` | model list or specialist model assignment |
+| `models` | model list or specialist model assignment; for `multi-model` the default is the session model plus one model from another vendor |
 | `specialists`, `interaction`, `perspectives`, `perspective_cap` | As `paw-sot` defines them; only for `society-of-thought` |
 
 This replaces 18 paired `final_review_*` and `planning_review_*` fields with one block used twice.
+
+The field reference, preset lookup and `WorkflowContext.md` format live in the skill's `references/configuration.md`; the provider procedures live in `references/review-providers.md`.
+
+Provider behaviour as implemented:
+
+- `multi-model`: the host starts one `review` subagent per model (per-call `model`), each writing `REVIEW-<model>.md`; a further `review` subagent with target `synthesis` writes `REVIEW-SYNTHESIS.md`.
+- `society-of-thought`: the host loads `paw-sot` and runs it with `interactive: false`; moderator mode is not used.
+- Re-review after a `must-fix`: `single-model` runs again; `multi-model` and `society-of-thought` get one `review` subagent with target `recheck` against the synthesis (`REVIEW-RECHECK.md`) instead of a second full fan-out.
+- Several `planning.models`: one plan subagent per model writes `ImplementationPlan-<model>.md`; the first one merges them into `ImplementationPlan.md` and takes all revisions.
 
 ### Removed fields
 
@@ -236,7 +245,7 @@ This replaces 18 paired `final_review_*` and `planning_review_*` fields with one
 | `standard` (default) | Table defaults | `auto`, `standard` |
 | `thorough` | Spec on, dedicated research, multi-model planning, SoT plan review, phase review on, SoT debate final review | `auto-full`, `thorough` |
 
-`shaping: on` and `plan_checkpoint: on` are overrides on any preset, which covers `shaping-full` and the interactive use of `standard`. User presets in `~/.paw/presets/` keep working with the new field names.
+`shaping: on` and `plan_checkpoint: on` are overrides on any preset, which covers `shaping-full` and the interactive use of `standard`. User presets in `~/.paw/presets/` keep working with the new field names; they take precedence over built-in presets of the same name. Old names map as `quick`, `paw-lite` → `lite`; `auto` → `standard`; `auto-full` → `thorough`; `shaping-full` → `thorough` with `shaping: on`; `team` → `standard`, with a notice that PR-per-phase review no longer exists. An unknown preset or field is reported and the host asks before continuing.
 
 ## Artifacts
 

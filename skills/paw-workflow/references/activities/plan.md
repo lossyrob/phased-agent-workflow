@@ -4,8 +4,8 @@ Produce the implementation plan for the task in your brief. You stay available f
 
 ## Do
 
-1. Read the task source and the host instructions in your brief.
-2. Research the codebase yourself: the code the change touches, its tests, conventions, and the commands that build, lint, and test the project. Use parallel read-only subagents only for clearly independent areas.
+1. Read the task source, the host instructions in your brief, and every input listed (`WorkShaping.md`, `Spec.md`, `CodeResearch.md`).
+2. Research the codebase yourself: the code the change touches, its tests, conventions, and the commands that build, lint, and test the project. With `CodeResearch.md`, research only what it does not cover. Use parallel read-only subagents only for clearly independent areas.
 3. Write `<work dir>/ImplementationPlan.md`.
 4. Commit the plan if the brief's artifact lifecycle is `commit-and-clean` or `commit-and-persist`: stage that one file by path. Do not commit under `never-commit`.
 
@@ -16,6 +16,9 @@ Produce the implementation plan for the task in your brief. You stay available f
 
 ## Summary
 <what will be built and the approach, in a short paragraph>
+
+## Sources
+<task source, and the path of each input artifact used>
 
 ## Findings
 <the facts the plan rests on, each with a file:line reference>
@@ -36,7 +39,8 @@ Produce the implementation plan for the task in your brief. You stay available f
 
 Rules:
 
-- One unit unless the work splits into parts that can each be verified on their own. Mark units independent only if they touch different files.
+- With `Spec.md`, name the requirement ids each unit delivers; every requirement maps to a unit.
+- One unit unless the work splits into parts that can each be verified on their own. If the brief says one unit, write exactly one. Mark units independent only if they touch different files.
 - Every code claim carries a file:line reference. State unknowns as unknowns; do not invent.
 - No placeholders and no open questions that block implementation. If a question blocks the plan and the codebase cannot answer it, return `needs-decision`.
 - Describe changes at the level of files, interfaces, and behaviour. Do not write the implementation.

@@ -7,15 +7,15 @@
  * artifacts.
  */
 import { execSync } from "child_process";
-import { readdir } from "fs/promises";
+import { readdir, readFile, stat } from "fs/promises";
 import { join } from "path";
 import { simpleGit } from "simple-git";
 import { createTestContext, type TestContext } from "./harness.js";
-import type { Answerer } from "./answerer.js";
+import { RuleBasedAnswerer, type Answerer } from "./answerer.js";
 import { TestFixture, rewriteGhCommand } from "./fixtures.js";
 import { getRepoRoot } from "./skills.js";
 import type { ToolStart } from "./events.js";
-import type { TodoGraph } from "./todos.js";
+import { readTodoGraph, type TodoGraph } from "./todos.js";
 import { ToolPolicy } from "./tool-policy.js";
 
 export const ENABLED = process.env.PAW_TEST_V2 === "1";
@@ -51,6 +51,34 @@ export async function startScenario(opts: {
   return { ctx, baseHead };
 }
 
+export interface ScenarioRun extends Scenario {
+  todos: TodoGraph;
+  runError: unknown;
+}
+
+/** Start a scenario, send one task prompt, and read the TODO graph afterwards. */
+export async function runScenario(opts: {
+  name: string;
+  hostInstructions: string;
+  task: string;
+  answerer?: Answerer;
+}): Promise<ScenarioRun> {
+  const { ctx, baseHead } = await startScenario({
+    name: opts.name,
+    hostInstructions: opts.hostInstructions,
+    answerer: opts.answerer ?? new RuleBasedAnswerer([(req) => req.choices?.[0] ?? "proceed"], false),
+  });
+  let runError: unknown;
+  try {
+    await ctx.session.sendAndWait({ prompt: opts.task }, RUN_TIMEOUT);
+  } catch (err) {
+    runError = err;
+  }
+  const todos = readTodoGraph(ctx.session.sessionId);
+  logRun(ctx, todos);
+  return { ctx, baseHead, todos, runError };
+}
+
 export function logRun(ctx: TestContext, todos: TodoGraph): void {
   console.log("[v2] run summary:", JSON.stringify(ctx.events.summary(), null, 2));
   console.log("[v2] todo graph:\n" + (todos.describe() || "(empty)"));
@@ -79,6 +107,55 @@ export function hostTasks(ctx: TestContext, prompt?: RegExp): Array<ToolStart & 
 export const PLAN_ACTIVITY = /^Activity:\s*plan\s*$/im;
 export const IMPLEMENT_ACTIVITY = /^Activity:\s*implement\s*$/im;
 export const REVIEW_ACTIVITY = /^Activity:\s*review\s*$/im;
+export const SPECIFY_ACTIVITY = /^Activity:\s*specify\s*$/im;
+export const RESEARCH_ACTIVITY = /^Activity:\s*research\s*$/im;
+
+/** Host `task` calls not started in background mode (and so unreachable for follow-up revisions). */
+export function notBackground(tasks: Array<ToolStart & { prompt: string }>): string[] {
+  return tasks.filter((t) => t.arguments.mode !== "background").map((t) => `mode=${String(t.arguments.mode)}: ${t.prompt.slice(0, 80)}`);
+}
+
+/** Trace index of each host `skill` call that loaded `name`. */
+export function hostSkillLoads(ctx: TestContext, name: string): number[] {
+  return ctx.events
+    .toolStarts()
+    .map((t, index) => ({ t, index }))
+    .filter(({ t }) => !t.parentToolCallId && t.toolName === "skill" && argText(t.arguments).includes(name))
+    .map(({ index }) => index);
+}
+
+/** Wall-clock time of the first host `gh pr create`, or undefined. */
+export function prCreateTime(ctx: TestContext): number | undefined {
+  return ctx.events
+    .ofType("tool.execution_start")
+    .find((e) => !e.data.parentToolCallId && e.data.toolName === "bash" && /\bgh"?\s+pr\s+create\b/.test(String((e.data.arguments as Record<string, unknown> | undefined)?.command ?? "")))?.at;
+}
+
+/** Review files (name, creation and modification time) under the work directory's reviews/ subdirectory `sub`. */
+export async function reviewFiles(
+  ctx: TestContext,
+  sub = "",
+): Promise<Array<{ name: string; path: string; createdMs: number; mtimeMs: number; size: number }>> {
+  const dir = join(await workDir(ctx), "reviews", sub);
+  const names = (await readdir(dir).catch(() => [] as string[])).filter((f) => f.endsWith(".md"));
+  return Promise.all(
+    names.map(async (name) => {
+      const s = await stat(join(dir, name));
+      return { name, path: join(dir, name), createdMs: s.birthtimeMs || s.mtimeMs, mtimeMs: s.mtimeMs, size: s.size };
+    }),
+  );
+}
+
+/** Contents of a work-directory artifact, or "" if it is missing. */
+export async function readArtifact(ctx: TestContext, rel: string): Promise<string> {
+  return readFile(join(await workDir(ctx), rel), "utf-8").catch(() => "");
+}
+
+/** Index of the first SQL statement marking `id` done, or -1. */
+export function markedDoneAt(ctx: TestContext, id: string): number {
+  const re = new RegExp(`UPDATE\\s+todos\\s+SET\\s+status\\s*=\\s*'done'[^;]*'${id}'`, "i");
+  return ctx.events.toolStarts().findIndex((t) => t.toolName === "sql" && !t.parentToolCallId && re.test(String(t.arguments.query ?? "")));
+}
 
 /** Every bash command with its position in the trace. */
 export function bashCalls(ctx: TestContext): Array<{ command: string; fromSubagent: boolean; index: number }> {

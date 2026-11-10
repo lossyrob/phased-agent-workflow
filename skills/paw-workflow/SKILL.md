@@ -22,12 +22,12 @@ Files referenced below live in `references/` next to this file. Read each one on
 
 ## Setup
 
-Do this directly.
+Do this directly. To continue an existing work item, follow `references/procedures/resume.md` instead.
 
 1. Derive a work title and a work id (lowercase, hyphens) from the task. The work directory is `.paw/work/<work-id>/`; it must not already exist.
 2. Resolve configuration as `references/configuration.md` describes.
 3. Note uncommitted changes with `git status --short`. They belong to the user: never stage, commit, or revert them.
-4. Create the target branch from the base branch.
+4. Create the target branch from the base branch; with `execution_mode: worktree`, in a new worktree per `references/procedures/git.md`.
 5. Write `.paw/work/<work-id>/WorkflowContext.md` in the format `references/configuration.md` gives. It holds configuration only, never progress.
 6. Collect the project and user instructions that apply to code changes and commits (instruction files, rules given to you in this session). They go into every brief.
 
@@ -59,6 +59,7 @@ Write the configured provider block into each review todo's description.
 - Review returns findings → add `revise:<target>` blocked by that review; the reviewed todo's successor waits on it.
 - Return lists `candidates` → add `candidate:<slug>` and make `final-pr` depend on it. Resolve each by implementing it or by recording in the plan why it is deferred.
 - Return is `blocked` or `needs-decision` → the todo stays open. Resolve it from the task, the plan, and the codebase if you can; ask the user only for a real decision.
+- User asks to go back or to change accepted work (spec, plan, an implemented unit) → follow `references/procedures/rewind.md` before changing anything.
 
 ## Delegation
 
@@ -69,12 +70,12 @@ Activity: <specify | research | plan | implement | review>
 Brief file: <absolute path to references/activities/<activity>.md> — read it first and follow it.
 Intent: <what the task is for>
 Task source: <issue link or the prompt text>
-Work context: work dir <path>, target branch <branch>, base branch <branch>
+Work context: work dir <path>, execution checkout <path>, target branch <branch>, base branch <branch>
 Host instructions: <project and user rules that apply, verbatim>
 Inputs: <artifact paths to read>
 Constraints: <scope limits, decisions already made, what must not change>
 Done when: <observable criteria>
-Limits: commit locally with explicit file paths only; never `git add .`/`-A`/`commit -a`; never rewrite a commit (`--amend`, `rebase`, `reset`) — fix with a new commit; leave these uncommitted user files untouched: <list>; do not push, open PRs, change artifact tracking, edit todos, or load the paw-workflow skill.
+Limits: work and commit only in the execution checkout, staging explicit file paths only; never `git add .`/`-A`/`commit -a`; never rewrite a commit (`--amend`, `rebase`, `reset`) — fix with a new commit; leave these uncommitted user files untouched: <list>; do not push, open PRs, change artifact tracking, edit todos, or load the paw-workflow skill.
 Return: the return block defined in the brief file.
 ```
 

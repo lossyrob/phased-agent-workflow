@@ -98,3 +98,11 @@ Notes:
 - Each default-suite run passed 15 of 16 checks. Two failures were a test defect (since fixed); the third was the double pull request.
 
 Three further suites each passed on their last run: plan revision through the same subagent (8 of 8), configured procedures with phase review on a three-unit plan (8 of 8, 263 s), and the `never-commit` lifecycle (5 of 5).
+
+Phase 4 suites, last run each: resume from the base branch (11 of 11, 78 s), rewind to the plan after Unit 1 (8 of 8, 147 s), `commit-and-persist` (7 of 7, 120 s) and worktree mode (6 of 6, 99 s). The default suite passed 17 of 17 afterwards (170 s).
+
+Observed in these runs:
+
+- Hosts name unit todos `implement:<unit>` or `implement-<unit>`, even when the skill and the resume procedure give the colon form. Tests match both.
+- With the v1 `skills/` directory on the skill path, a host asked to "go back to the plan" loaded `paw-rewind` as well as the workflow skill in one of two runs. It still followed the v2 rewind procedure (no reset).
+- Test sessions run under `node --test`, so the CLI inherits `NODE_TEST_CONTEXT`, which makes a fixture's own `node --test` report nothing. Hosts and subagents worked around it with `env -u NODE_TEST_CONTEXT`.

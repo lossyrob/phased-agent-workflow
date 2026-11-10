@@ -122,7 +122,9 @@ export class TestFixture {
 
   /**
    * Install a stub `gh` that records its arguments and pretends `gh pr create`
-   * succeeded. Returns the stub's path and the call log path.
+   * succeeded. After a create, `gh pr view` and `gh pr list` report that PR with its
+   * base and head; before one, `view` fails and `list` is empty. Returns the stub's
+   * path and the call log path.
    *
    * Never put the stub on PATH: the Copilot CLI process inherits PATH and uses the
    * real `gh` for its own sign-in, and shadowing it makes the CLI fall back to the
@@ -133,15 +135,30 @@ export class TestFixture {
     const binDir = join(this.workspaceDir, "bin");
     const logPath = join(this.workspaceDir, "gh-calls.log");
     await mkdir(binDir, { recursive: true });
+    const statePath = join(this.workspaceDir, "gh-pr.json");
     const script = [
       "#!/bin/sh",
       `printf '%s\\n' "$*" >> "${logPath}"`,
+      `state="${statePath}"`,
+      'url="https://github.com/example/fixture/pull/1"',
       'if [ "$1" = "pr" ] && [ "$2" = "create" ]; then',
-      '  echo "https://github.com/example/fixture/pull/1"',
+      // Remember base and head so `pr view` and `pr list` can report them.
+      '  base=main; head=$(git branch --show-current)',
+      "  while [ $# -gt 0 ]; do",
+      '    case "$1" in',
+      '      --base|-B) base="$2"; shift ;;',
+      '      --base=*) base="${1#--base=}" ;;',
+      '      --head|-H) head="$2"; shift ;;',
+      '      --head=*) head="${1#--head=}" ;;',
+      "    esac",
+      "    shift",
+      "  done",
+      `  printf '{"number":1,"state":"OPEN","isDraft":false,"url":"%s","baseRefName":"%s","headRefName":"%s"}\\n' "$url" "$base" "$head" > "$state"`,
+      '  echo "$url"',
       'elif [ "$1" = "pr" ] && [ "$2" = "view" ]; then',
-      "  echo '{\"number\":1,\"state\":\"OPEN\",\"isDraft\":false,\"url\":\"https://github.com/example/fixture/pull/1\"}'",
+      '  if [ -f "$state" ]; then cat "$state"; else echo "no pull requests found" >&2; exit 1; fi',
       'elif [ "$1" = "pr" ] && [ "$2" = "list" ]; then',
-      '  echo "[]"',
+      '  if [ -f "$state" ]; then printf \'[%s]\\n\' "$(cat "$state")"; else echo "[]"; fi',
       "fi",
       "exit 0",
       "",

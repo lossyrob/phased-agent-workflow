@@ -27,17 +27,25 @@ export interface Scenario {
   baseHead: string;
 }
 
-/** Clone the fixture, install dependencies, add a local origin and a stub gh, and open a session. */
+/**
+ * Clone the fixture, install dependencies, add a local origin and a stub gh, and open a session.
+ *
+ * `prepare` runs after the origin exists and before the session opens (for seeding state).
+ * `writableRoots` adds paths outside the checkout that file tools may write (for worktrees).
+ */
 export async function startScenario(opts: {
   name: string;
   hostInstructions: string;
   answerer: Answerer;
+  prepare?: (fixture: TestFixture) => Promise<void>;
+  writableRoots?: (fixture: TestFixture) => string[];
 }): Promise<Scenario> {
   const fixture = await TestFixture.clone("minimal-ts");
   execSync("npm install --silent", { cwd: fixture.workDir, stdio: "pipe" });
   const baseHead = (await simpleGit(fixture.workDir).raw(["rev-parse", "HEAD"])).trim();
   await fixture.addLocalRemote();
   const { stubPath } = await fixture.installGhStub();
+  await opts.prepare?.(fixture);
 
   const ctx = await createTestContext({
     fixture,
@@ -45,7 +53,7 @@ export async function startScenario(opts: {
     systemPrompt: opts.hostInstructions,
     answerer: opts.answerer,
     skillDirectories: [join(getRepoRoot(), "skills")],
-    toolPolicy: new ToolPolicy(fixture.workDir, [], { allowRemoteWrites: true }),
+    toolPolicy: new ToolPolicy(fixture.workDir, opts.writableRoots?.(fixture) ?? [], { allowRemoteWrites: true }),
     rewriteCommand: (command) => rewriteGhCommand(command, stubPath),
   });
   return { ctx, baseHead };
@@ -201,4 +209,26 @@ export function sqlQueries(ctx: TestContext): Array<{ query: string; fromSubagen
 /** A todo by its exact id, falling back to a pattern. */
 export function todo(todos: TodoGraph, id: string, fallback: RegExp) {
   return todos.nodes.find((n) => n.id === id) ?? todos.find(fallback);
+}
+
+/** Every host message the model produced, in order. */
+export function assistantMessages(ctx: TestContext): string[] {
+  return ctx.events
+    .ofType("assistant.message")
+    .filter((e) => !e.data.parentToolCallId)
+    .map((e) => String(e.data.content ?? ""));
+}
+
+/** Commands that rewrite history (G12). */
+export const REWRITE_COMMAND =
+  /\bgit\s+(commit-tree|update-ref|rebase|filter-branch)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+reset\s+--hard|\bgit\s+push\b[^\n]*(--force|\s-f\b)/;
+
+/** Host `view` calls (or shell reads) of a skill reference file whose path ends with `rel`. */
+export function referenceReads(ctx: TestContext, rel: string): number[] {
+  const re = new RegExp(rel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return ctx.events
+    .toolStarts()
+    .map((t, index) => ({ t, index }))
+    .filter(({ t }) => !t.parentToolCallId && ["view", "bash"].includes(t.toolName) && re.test(argText(t.arguments)))
+    .map(({ index }) => index);
 }

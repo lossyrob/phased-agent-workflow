@@ -29,6 +29,7 @@ Resolve in this order; each step overrides the previous one for the fields it se
 | `phase_review` | `off`, `on` | `off` |
 | `final_review` | review provider block | `mode: multi-model` |
 | `artifact_lifecycle` | `commit-and-clean`, `commit-and-persist`, `never-commit` | `commit-and-clean` |
+| `execution_mode` | `current-checkout`, `worktree` | `current-checkout` |
 | `instructions` | free text | none |
 
 Review provider block:

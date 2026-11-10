@@ -1,7 +1,7 @@
 # PAW v2 Invariant Catalogue
 
-!!! note "Status: draft for review"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Nothing here is implemented yet.
+!!! note "Status: implemented on `v2`"
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 1–4 implement these rules in the `paw-workflow` skill; behavioural suites are in `tests/integration/tests/v2/`. [Git coverage](#git-coverage) lists which suite covers each G-invariant and what is not tested.
 
 This catalogue classifies the rules PAW carries today, plus the rules proposed in the unmerged hardening PRs, as either:
 
@@ -79,8 +79,25 @@ The observed failures reduce to six classes. Every durable invariant below maps 
 | G8 | In worktree mode all mutations happen in the proven execution checkout. The caller checkout is never mutated. If the checkout cannot be proven, stop. | F4 | Git operation procedure. | Existing `worktree-*` tests, ported. |
 | G9 | Each external side effect has one owner: the host. | F5 | Host (D5). | Single PR created per run. |
 | G10 | Final status is reported from live git and PR state, not from memory. | F6 | Host completion step. | Reported PR URL matches `gh pr view`. |
-| G11 | Rewind and other destructive operations show a preview and require confirmation. | F4 | Rewind procedure. | Rewind without confirmation leaves state unchanged. |
+| G11 | Rewind and other destructive operations show a preview and require confirmation. | F4 | Rewind procedure. | State at the confirmation request equals the state before the rewind. |
 | G12 | Existing commits are never rewritten (amend, rebase, hard reset, plumbing rewrites, force push). Errors are fixed with new commits. | F4 | Git operation procedure; implementation brief. | Tool-policy check on git commands. Observed in a v2 stability run, where the host rebuilt history with `git commit-tree` to reorder commit trailers. |
+
+### Git coverage
+
+| ID | v2 suite | Not covered |
+|----|----------|-------------|
+| G1, G12 | `default-run`; G12 also `resume`, `rewind`, `worktree` | — |
+| G2 | `default-run`, `resume` | — |
+| G3 | `default-run`, `resume` | — |
+| G4, G10 | `commit-and-persist` (procedure read before `gh pr create`; `gh pr view` afterwards; reported URL) | The stub `gh` returns a fixed URL, so the report cannot differ from live state except by omission |
+| G5 | `default-run` (clean), `never-commit`, `commit-and-persist`, `resume` | — |
+| G6 | `commit-and-persist`; under `commit-and-clean`, `default-run` checks no artifact reaches the pushed branch | — |
+| G7 | `resume` (session starts on the base branch), `worktree` | — |
+| G8 | `worktree` | "Cannot prove the checkout, stop": no fixture breaks the worktree mid-run |
+| G9 | Every suite: one `gh pr create`, by the host | — |
+| G11 | `rewind` (confirmation path) | Decline path: not run; the confirmation path shows nothing changed before the answer |
+
+`resume` and `rewind` also cover reconstruction: no re-planning, finished units not redone, and nodes closed on present evidence. Same-session reconstruction (todo store already populated) and survival across compaction are not tested; the SDK cannot force compaction (see [Runtime Capabilities](runtime-capabilities.md#probe-results)).
 
 ### Content quality
 

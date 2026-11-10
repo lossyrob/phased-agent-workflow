@@ -1,7 +1,7 @@
 # PAW v2 Design
 
 !!! note "Status: in progress"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–3 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)); git lifecycle beyond the final PR, compatibility and cutover are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–4 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode); compatibility and cutover are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
 
 Companion pages: [Invariant Catalogue](invariants.md) and [Runtime Capabilities](runtime-capabilities.md).
 
@@ -27,7 +27,7 @@ graph LR
 |-----------|------|
 | Workflow skill | The TODO graph template, the host rules, the contracts on this page |
 | Activity briefs | One file per activity under the skill's `references/`; read by the subagent, not the host |
-| Operation procedures | Git operations, final PR, rewind; loaded by the host when the matching TODO starts |
+| Operation procedures | Git operations, final PR, resume, rewind; loaded by the host when the matching step starts |
 | Review providers | Single-model, multi-model, society-of-thought (`paw-sot`, unchanged) |
 | `PAW` agent | Thin wrapper that loads the skill; kept for compatibility |
 
@@ -257,7 +257,32 @@ Provider behaviour as implemented:
 | `reviews/` | Unchanged |
 | `Docs.md`, `SpecResearch.md` | Not required; written when the plan calls for them |
 
-Reconstruction in a new session reads the task, `WorkflowContext.md`, the plan, `git log` and `reviews/`, and rebuilds the TODO graph on a best-effort basis.
+## Git and lifecycle
+
+Procedures live in the skill's `references/procedures/` (`git.md`, `final-pr.md`, `resume.md`, `rewind.md`).
+
+| Concern | Behaviour |
+|---------|-----------|
+| Branch | Every commit happens on the target branch. If the checkout is elsewhere, the host switches first (`git switch`, which carries the user's uncommitted files) (G7). |
+| `execution_mode: worktree` | Setup runs `git worktree add -b <target> <parent>/<repo>-<work-id> <base>`. All files, git commands and briefs use that path; the caller checkout is never written. The host checks top level and branch before each mutation and stops if either is wrong (G8). |
+| `commit-and-clean` | Artifacts are committed during the run; the final PR procedure stops tracking `.paw/work/<work-id>/` only (G3, G5). |
+| `commit-and-persist` | Artifacts are committed and stay tracked; no stop-tracking step (G5). |
+| `never-commit` | No `.paw/` file is staged (G5). |
+| Ignore markers | `.gitignore` files under the work directory are never staged (G6). |
+
+### Resume
+
+A new session that continues a work item finds `WorkflowContext.md` in the checkout, on another branch (`git log --all`), or in the work item's worktree, switches to the target branch, and rebuilds the TODO graph from the template. A node is closed only when its evidence exists now: the artifact, the review output, commits that deliver every planned deliverable of a unit with validation passing, or an open PR for the branch. Anything partial stays open. The host reports what it closed and continues without re-planning. A todo store that already holds the work item's todos is kept.
+
+### Rewind
+
+The user asks to go back or to change accepted work. The host previews the target node, the nodes it will reopen (the target and everything downstream) and how existing commits will be superseded, and changes nothing until the user confirms (G11). It then sets those nodes to `pending` (never deleting one), revises the target through its activity with a revision packet, and redoes affected units with new commits on top (or `git revert`). History is never rewritten and an existing PR is updated, not duplicated (G9, G12). A reopened node whose output the change does not affect closes again on its existing evidence.
+
+Departures from the earlier draft and from v1:
+
+- v1 `paw-rewind` resets the branch to a target commit. v2 never resets (G12); a rewind is reopened nodes plus new commits. The v1 skill is still in `skills/` and was loaded alongside the workflow skill in one test run; Phase 5 must align it with this procedure.
+- Reconstruction closes a node only on present evidence, not on a best-effort guess.
+- `WorkflowContext.md` does not record the worktree path; resume finds it with `git worktree list`.
 
 ## Compatibility
 

@@ -4,7 +4,7 @@ Implement the plan unit named in your brief, or apply the revision you were sent
 
 ## Do
 
-1. Read `ImplementationPlan.md` and the host instructions in your brief. Run `git status --short` and confirm you are on the target branch.
+1. Read `ImplementationPlan.md` and the host instructions in your brief. Work only in the execution checkout from your brief: run every command there, and confirm with `git status --short` that it is on the target branch.
 2. Make the unit's changes, including the tests it names.
 3. Run the unit's "Done when" commands and the project's lint, build, and test commands. Fix failures you caused.
 4. Commit locally.

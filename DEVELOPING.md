@@ -59,10 +59,8 @@ npm run lint:skills
 
 | File Type | Warning | Error |
 |-----------|---------|-------|
-| Agents (default) | 5,000 tokens | 7,000 tokens |
+| Agents | 5,000 tokens | 7,000 tokens |
 | Skills | 8,000 tokens | 12,000 tokens |
-| Status Agent | 5,000 tokens | 8,000 tokens |
-| Spec Agent | 5,000 tokens | 10,000 tokens |
 
 Skills have higher thresholds since they are loaded on-demand rather than included in every prompt.
 
@@ -82,7 +80,7 @@ The PAW Workflow extension automatically installs PAW agents and provides comman
 
 - Node.js 16.x or later
 - npm 7.x or later
-- VS Code 1.85.0 or later
+- VS Code 1.109.0 or later
 
 ### Setup for Development
 
@@ -220,19 +218,23 @@ mkdocs serve
 ```
 docs/
 ├── index.md                    # Landing page
+├── release-notes.md            # Major-version notes and known limits
 ├── guide/                      # User guides
 │   ├── index.md               # Getting Started
-│   ├── vscode-extension.md    # Extension commands and config
-│   ├── workflow-modes.md      # Full/Minimal/Custom modes
+│   ├── two-workflows.md       # Implementation workflow and PAW Review
+│   ├── workflow-presets.md    # Configuration, presets, review providers
+│   ├── migration.md           # Migrating from v1
 │   └── ...
 ├── specification/              # Technical specifications
 │   ├── index.md               # Overview
-│   ├── implementation.md      # Implementation workflow
-│   └── review.md              # Review workflow
+│   ├── review.md              # Review workflow
+│   └── v2/                    # PAW v2 design, invariants, runtime capabilities
 └── reference/                  # Reference documentation
-    ├── agents.md              # All PAW agents
+    ├── agents.md              # Agents and skills
     └── artifacts.md           # Artifact descriptions
 ```
+
+The root `paw-specification.md` and `paw-review-specification.md` are pointers into `docs/specification/`.
 
 ### Adding New Pages
 
@@ -313,6 +315,16 @@ npm run test:integration:skills
 npm run test:integration:workflows
 ```
 
+PAW v2 behavioural suites (`tests/integration/tests/v2/`) run separately from `tests/integration`, one at a time, against an installed Copilot CLI:
+
+```bash
+cd tests/integration
+PAW_TEST_CLI_PATH=<path to copilot> npm run test:v2
+
+# Runtime capability probe
+PAW_TEST_CLI_PATH=<path to copilot> npm run probe:runtime
+```
+
 ### Architecture
 
 The framework provides five core components:
@@ -342,15 +354,16 @@ PAW_TEST_DEBUG=1 npm run test:integration
 
 ### Writing New Tests
 
-1. **Skill-level tests** (no LLM): Test harness components directly. Place in `tests/integration/tests/skills/`.
-2. **Workflow tests** (LLM required): Drive full PAW stages via SDK sessions. Place in `tests/integration/tests/workflows/`.
+1. **Skill-level tests** (no LLM): Test harness components and skill contracts directly. Place in `tests/integration/tests/skills/`.
+2. **v2 behavioural tests** (LLM required): Drive `paw-workflow` or `paw-review-workflow` runs and assert on tool calls, todo state, git state and artifacts. Place in `tests/integration/tests/v2/`.
+3. **Workflow tests** (LLM required): Older SDK-driven scenarios (work shaping, SoT perspectives, worktree bootstrap). Place in `tests/integration/tests/workflows/`.
 
 Fixture templates live in `tests/integration/fixtures/`. Pre-built workflow artifacts (specs, plans) live in `tests/integration/fixtures/seeds/`.
 
 ## Project Structure
 
 - `agents/` - PAW agent definitions (installed for Copilot CLI and bundled in the VS Code extension)
-- `skills/` - Shared PAW skills consumed directly by Copilot CLI and by VS Code-installed agents
+- `skills/` - PAW skills (`paw-workflow` with its `references/`, `paw-review-*`, utilities), read directly by Copilot CLI and rendered into `vscode-assets/skills/` for the VS Code extension
 - `prompts/` - Shared prompt assets used by PAW runtimes
 - `.github/workflows/` - GitHub Actions workflows for releases and PR checks
 - `scripts/` - Development and utility scripts

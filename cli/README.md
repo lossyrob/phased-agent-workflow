@@ -49,6 +49,8 @@ Check for updates and upgrade all installed targets.
 paw upgrade
 ```
 
+`install` and `upgrade` remove files that the previous install recorded in its manifest and the new version no longer ships (for example, skills removed in PAW v2). Other files in the target directories are not touched.
+
 ### uninstall
 
 Remove all PAW agents and skills from all installed targets.
@@ -65,8 +67,8 @@ paw uninstall --force  # Skip confirmation prompt
 
 ## What Gets Installed
 
-- **Agents**: PAW workflow orchestrators (`PAW.agent.md`, `PAW-Review.agent.md`)
-- **Skills**: Activity and utility skills for specification, planning, implementation, and review workflows
+- **Agents**: `PAW.agent.md` (implementation workflow) and `PAW-Review.agent.md` (PR review workflow), thin wrappers that load the workflow skills
+- **Skills**: `paw-workflow` (with its `references/`), `paw-lite`, `paw-rewind`, `paw-status`, `paw-work-shaping`, `paw-sot`, `paw-docs-guidance`, `paw-review-workflow` and the `paw-review-*` stage skills
 
 Files are installed to:
 

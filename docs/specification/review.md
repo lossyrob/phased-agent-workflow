@@ -14,41 +14,43 @@ PAW Review applies the same principles as the implementation workflow: **traceab
 | **Rewindable** | Any stage can restart if new information changes understanding |
 | **Human-controlled** | GitHub reviews remain pending by default; explicit authorized submission is verified before execution |
 
-## Skills-Based Architecture
+## Architecture
 
-The review workflow uses a **skills-based architecture** for dynamic, maintainable orchestration:
+**Invocation:** `/paw-review <PR-number-or-URL>` in VS Code, or `copilot --agent PAW-Review` and give the PR.
 
-**Invocation:** `/paw-review <PR-number-or-URL>`
+PAW Review follows the same host model as the implementation workflow:
 
-**How it works:**
+1. The **PAW-Review** agent loads the `paw-review-workflow` skill. The session that loads it is the **host**.
+2. The host runs preflight itself, then builds a todo graph before any other work.
+3. Each stage runs in a subagent with a brief: the stage skill and mode, the review target with base and head commits, the artifact directory, the host instructions that apply, inputs, and "done when". Subagents read `paw-review-workflow/references/activity-contract.md` for the review principles, limits and return block.
+4. The host checks each stage's artifacts on disk before closing its todo. A failed check is delegated again with the specific gap.
+5. Society-of-thought evaluation and posting run in the host, never in a subagent. Only the host creates, changes or submits reviews and comments.
 
-1. The **PAW Review** agent loads the `paw-review-workflow` skill
-2. The workflow skill orchestrates **activity skills** via subagent execution
-3. Each activity skill produces specific artifacts
-4. Complete review runs without manual pauses
+Subagents never commit, push or post, never load `paw-review-workflow`, and leave the checkout on the branch and commit they found it on. Baseline research reads the base commit without checking it out.
 
-**Bundled Skills:**
+**Todo graph:**
 
-| Skill | Type | Stage | Output |
-|-------|------|-------|--------|
-| `paw-review-workflow` | Workflow | — | Orchestration logic |
-| `paw-review-understanding` | Activity | Understanding | ReviewContext.md, ResearchQuestions.md, DerivedSpec.md |
-| `paw-review-baseline` | Activity | Understanding | CodeResearch.md |
-| `paw-review-impact` | Activity | Evaluation | ImpactAnalysis.md |
-| `paw-review-gap` | Activity | Evaluation | GapAnalysis.md |
-| `paw-review-correlation` | Activity | Evaluation | CrossRepoAnalysis.md (multi-repo only) |
-| `paw-review-feedback` | Activity | Output | ReviewComments.md (draft → finalized) |
-| `paw-review-critic` | Activity | Output | Assessment sections |
-| `paw-review-github` | Activity | Output | GitHub pending or authorized submitted review |
+| Todo | Runs when | Evidence |
+|------|-----------|----------|
+| `preflight` | Always (host) | Target, head, output action, authorization and configuration resolved |
+| `understanding` | Always | `ReviewContext.md` with `Preflight Status: passed`; `ResearchQuestions.md` |
+| `baseline` | Always | `CodeResearch.md` |
+| `derived-spec` | Always | `DerivedSpec.md` with no open questions |
+| `impact`, `gap` | `single-model` | `ImpactAnalysis.md`, `GapAnalysis.md` |
+| `sot` | `society-of-thought` (host) | `REVIEW-<specialist>*.md`, `REVIEW-SYNTHESIS.md` |
+| `correlation` | Multi-repo | `CrossRepoAnalysis.md` |
+| `feedback` | Always | `ReviewComments.md`, status `draft` |
+| `critique` | Always | An assessment for every comment |
+| `finalize` | Always | Status `finalized`; every comment has a `**Final**:` marker |
+| `post` | Always (host) | GitHub: pending review ID read back and recorded. Otherwise: manual posting instructions |
 
-**Skill Delivery:**
+For multi-repo reviews, the todos from `understanding` to `post` exist once per PR.
 
-- VS Code contributes review skills natively through `chatSkills`
-- Copilot CLI reads installed review skill files directly
+**Return contract:** every stage returns `status` (`complete`, `blocked`, `needs-decision`, `failed`), `activity`, `summary`, `artifacts`, and where relevant `findings` (severity, location, issue, proposed fix), `validation`, `blockers` and `decisions_needed`. Must, Should and Could findings map to `must-fix`, `should-fix` and `consider`. A `blocked` or `needs-decision` return leaves the todo open; the host resolves it or asks you.
 
-**Subagent Skill Loading:**
+**Review configuration:** `ReviewContext.md` records the review provider block (`mode`, `models`, `specialists`, `interaction`, `perspectives`, `perspective_cap`) and `interactive`. PAW Review supports `single-model` (default) and `society-of-thought`. For `multi-model` or `off`, the host tells you the mode is unavailable and asks; it does not substitute another mode. If `paw-sot` cannot run, the review is blocked.
 
-Every subagent MUST load its assigned skill FIRST before executing any work. The workflow skill requires delegation prompts to include: "First load the `paw-review-<skill-name>` skill, then execute the activity."
+**Skill delivery:** VS Code contributes the review skills through `chatSkills`; Copilot CLI reads the installed skill files.
 
 ## Authorization Policy
 
@@ -145,7 +147,7 @@ PR → Understanding (R1) → Evaluation (R2) → Feedback Generation (R3)
 **Review Modes:**
 
 - **Single-model** (default): `paw-review-impact`, `paw-review-gap`
-- **Society-of-thought**: `paw-sot` engine (replaces both impact and gap analysis). Supports perspective overlays for additional evaluative diversity.
+- **Society-of-thought**: `paw-sot` engine, run by the host (replaces both impact and gap analysis). Supports perspective overlays for additional evaluative diversity.
 
 **Inputs:**
 
@@ -234,7 +236,7 @@ The Output stage uses an **iterative feedback-critique pattern**:
     - Mark each comment with `**Final**:` status
     - Update ReviewComments.md status to: `finalized`
 
-4. **GitHub Posting** (`paw-review-github`, GitHub only)
+4. **GitHub Posting** (`paw-review-github`, loaded by the host; GitHub only)
     - Filter to only comments marked "Ready for GitHub posting"
     - Create or reuse the pending review with filtered comments
     - For explicit submission, revalidate repository, PR, live head, pending review ID, and event immediately before submitting
@@ -344,7 +346,7 @@ Complete feedback with full comment history showing evolution from original to p
 
 ## Human Workflow Summary
 
-1. **Invoke:** Run `/paw-review <PR-number-or-URL>` in Copilot Chat
+1. **Invoke:** Run `/paw-review <PR-number-or-URL>` in Copilot Chat, or start `copilot --agent PAW-Review` and give the PR
 2. **Review:** All artifacts created in `.paw/reviews/<identifier>/`
 3. **Consult:** Check ReviewComments.md for full comment history (original → assessment → updated)
 4. **Edit:** Open a GitHub pending review and edit/delete comments as needed
@@ -355,5 +357,6 @@ Complete feedback with full comment history showing evolution from original to p
 
 ## Next Steps
 
-- [Implementation Workflow](implementation.md) — The complementary implementation workflow
-- [Agents Reference](../reference/agents.md) — Complete agent documentation
+- [Workflows](../guide/two-workflows.md) — The implementation workflow and PAW Review
+- [Design: PAW Review alignment](v2/design.md#paw-review-alignment) — What changed in v2
+- [Agents and Skills Reference](../reference/agents.md)

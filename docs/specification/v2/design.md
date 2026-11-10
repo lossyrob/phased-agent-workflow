@@ -1,7 +1,7 @@
 # PAW v2 Design
 
-!!! note "Status: in progress"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–6 are implemented on the `v2` branch (draft PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode), compatibility and cutover (see [Cutover as implemented](#cutover-as-implemented)) and PAW Review alignment (see [PAW Review alignment](#paw-review-alignment)). The user-facing docs are not. The [decisions](#decisions) at the end were accepted on 2026-11-09.
+!!! note "Status: implemented"
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 0–7 are implemented on the `v2` branch (PR [#331](https://github.com/lossyrob/phased-agent-workflow/pull/331)), including git and lifecycle (resume, rewind, `commit-and-persist`, worktree mode), compatibility and cutover (see [Cutover as implemented](#cutover-as-implemented)), PAW Review alignment (see [PAW Review alignment](#paw-review-alignment)) and the user-facing docs. Runtime coverage is recorded in [Runtime Capabilities](runtime-capabilities.md). The [decisions](#decisions) at the end were accepted on 2026-11-09.
 
 Companion pages: [Invariant Catalogue](invariants.md) and [Runtime Capabilities](runtime-capabilities.md).
 
@@ -298,7 +298,7 @@ Departures from the earlier draft and from v1:
 | Old preset names | Mapped per the table above, with a notice |
 | VS Code `src/` | Remove session hand-off; keep initialisation, status and stop-tracking commands |
 
-In-flight v1 work items are finished on v1 or restarted. v2 does not migrate a run in progress.
+The original plan was that in-flight v1 work items are finished on v1 or restarted. As implemented, v2 resumes them; see the departures under [Cutover as implemented](#cutover-as-implemented).
 
 ### Cutover as implemented
 

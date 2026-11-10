@@ -57,7 +57,7 @@ All three runtimes read resource files from the skill directory. The VS Code ext
 Review providers fan out (multi-model, SoT). If the review activity runs in a subagent, the fan-out is nested. VS Code disables nesting by default.
 
 - The review activity is the one activity the host may run directly as a fan-out, so that reviewers are first-level subagents on every runtime.
-- VS Code today falls back to single-model review. v2 keeps that fallback until multi-model review is tested there.
+- Multi-model and society-of-thought reviews have not been run in VS Code. The skill has no fallback: a configured review that cannot run blocks the workflow.
 
 ## Probe results
 

@@ -65,20 +65,16 @@ The marketplace plugin is managed by Copilot CLI and exposes PAW agents and skil
 
 ### Agents
 
-Two agent files are provided:
-
-- **PAW.agent.md** - The main PAW workflow orchestrator for implementation workflows
-- **PAW-Review.agent.md** - The PAW Review workflow orchestrator for code review
+- **PAW.agent.md** — loads the `paw-workflow` skill (implementation workflow); routes status and "about PAW" questions to `paw-status`
+- **PAW-Review.agent.md** — loads the `paw-review-workflow` skill (PR review workflow)
 
 ### Skills
 
-Activity and utility skills are provided, including:
+- Implementation: `paw-workflow` (with its activity briefs, procedures and presets under `references/`), `paw-lite` (the `lite` preset), `paw-rewind` (the rewind procedure)
+- Utility: `paw-status`, `paw-work-shaping`, `paw-sot`, `paw-docs-guidance`
+- Review: `paw-review-workflow` and the `paw-review-*` stage skills, plus `paw-review-response`
 
-- Specification skills: `paw-spec`, `paw-spec-research`, `paw-spec-review`
-- Planning skills: `paw-planning`, `paw-plan-review`, `paw-code-research`
-- Implementation skills: `paw-implement`, `paw-impl-review`, `paw-git-operations`
-- Review skills: `paw-review-*` (9 skills for the review workflow)
-- Utility skills: `paw-status`, `paw-workflow`, `paw-docs-guidance`, `paw-rewind`, `paw-work-shaping`, `paw-transition`
+See the [Agents and Skills reference](../reference/agents.md).
 
 ## Using PAW After Installation
 
@@ -94,7 +90,7 @@ copilot --agent PAW-Review
 
 Or use `/agent` inside an existing session to select a PAW agent.
 
-See [Two Workflows](two-workflows.md) for detailed usage instructions.
+Describe the task, or give an issue URL, after the agent starts. See [Getting Started](index.md#start-a-work-item) and [Workflows](two-workflows.md).
 
 ## Updating
 
@@ -116,6 +112,8 @@ Or reinstall the NPM CLI copy to get the latest version:
 ```bash
 npx @paw-workflow/cli install copilot --force
 ```
+
+Reinstalling or upgrading removes files that the previous version installed and the new version no longer ships (recorded in the install manifest), so skills deleted in PAW v2 do not linger in `~/.copilot/skills/` or `~/.claude/skills/`. Files you added yourself are not touched.
 
 ## Uninstalling
 

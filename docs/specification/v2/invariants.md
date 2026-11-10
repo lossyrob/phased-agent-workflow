@@ -1,7 +1,7 @@
 # PAW v2 Invariant Catalogue
 
 !!! note "Status: implemented on `v2`"
-    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 1–4 implement these rules in the `paw-workflow` skill; behavioural suites are in `tests/integration/tests/v2/`. [Git coverage](#git-coverage) lists which suite covers each G-invariant and what is not tested.
+    Phase 0 output for [#322](https://github.com/lossyrob/phased-agent-workflow/issues/322). Phases 1–6 implement these rules in the `paw-workflow` and `paw-review-workflow` skills; behavioural suites are in `tests/integration/tests/v2/`. [Git coverage](#git-coverage) lists which suite covers each G-invariant and what is not tested.
 
 This catalogue classifies the rules PAW carries today, plus the rules proposed in the unmerged hardening PRs, as either:
 

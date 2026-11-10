@@ -9,7 +9,7 @@
 
 site_name: Phased Agent Workflow (PAW)
 site_url: https://lossyrob.github.io/phased-agent-workflow
-site_description: VS Code extension for coordinating multi-stage AI agent workflows
+site_description: Agent workflow for taking tasks from issue to reviewed pull request, and for reviewing pull requests, in GitHub Copilot CLI and VS Code
 site_author: PAW Contributors
 
 repo_url: https://github.com/lossyrob/phased-agent-workflow
@@ -62,21 +62,19 @@ nav:
   - Home: index.md
   - User Guide:
     - Getting Started: guide/index.md
-    - VS Code Extension: guide/vscode-extension.md
     - CLI Installation: guide/cli-installation.md
-    - Workflow Modes: guide/workflow-modes.md
-    - Workflow Presets: guide/workflow-presets.md
-    - Stage Transitions: guide/stage-transitions.md
+    - VS Code Extension: guide/vscode-extension.md
     - Workflows: guide/two-workflows.md
+    - Configuration and Presets: guide/workflow-presets.md
     - Society-of-Thought Review: guide/society-of-thought-review.md
+    - Migrating from v1: guide/migration.md
   - Specification:
     - Overview: specification/index.md
-    - Implementation Workflow: specification/implementation.md
+    - PAW v2 Design: specification/v2/design.md
+    - Invariant Catalogue: specification/v2/invariants.md
+    - Runtime Capabilities: specification/v2/runtime-capabilities.md
     - Review Workflow: specification/review.md
-    - PAW v2 (Draft):
-      - Design: specification/v2/design.md
-      - Invariant Catalogue: specification/v2/invariants.md
-      - Runtime Capabilities: specification/v2/runtime-capabilities.md
   - Reference:
-    - Agents: reference/agents.md
+    - Agents and Skills: reference/agents.md
     - Artifacts: reference/artifacts.md
+  - Release Notes: release-notes.md

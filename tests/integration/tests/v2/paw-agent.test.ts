@@ -18,6 +18,7 @@ import { REMOVED_SKILLS, getRepoRoot, renderCliAgentPrompt } from "../../lib/ski
 import type { TodoGraph } from "../../lib/todos.js";
 import { HOST_INSTRUCTIONS, RUN_TIMEOUT, TASK_DESCRIPTION, allBash, runV2Task } from "../../lib/v2-run.js";
 import { IMPLEMENT_ACTIVITY, PLAN_ACTIVITY, WORKFLOW_SKILL, hostTasks, prCreates, sqlQueries, taskHeads } from "../../lib/v2-scenarios.js";
+import { gitCmd } from "../../lib/shell-match.js";
 
 const ENABLED = process.env.PAW_TEST_V2 === "1";
 
@@ -83,7 +84,7 @@ describe("PAW v2: the PAW agent wraps paw-workflow", { skip: !ENABLED, timeout: 
     const prs = prCreates(ctx);
     assert.strictEqual(prs.length, 1, `Expected one gh pr create, saw ${prs.length}`);
     assert.ok(!prs[0].fromSubagent, "PR must be created by the host");
-    assert.deepStrictEqual(allBash(ctx).filter((c) => c.fromSubagent && /\bgit\s+push\b/.test(c.command)).map((c) => c.command), []);
+    assert.deepStrictEqual(allBash(ctx).filter((c) => c.fromSubagent && gitCmd("push\\b").test(c.command)).map((c) => c.command), []);
     assert.strictEqual((await ctx.fixture.ghCalls()).filter((c) => c.startsWith("pr create")).length, 1);
   });
 

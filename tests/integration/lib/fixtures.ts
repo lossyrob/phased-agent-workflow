@@ -7,10 +7,7 @@ import { simpleGit, type SimpleGit } from "simple-git";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const FIXTURES_DIR = resolve(__dirname, "../fixtures");
 
-/** Point every `gh` invocation in a shell command at a stub executable. */
-export function rewriteGhCommand(command: string, stubPath: string): string {
-  return command.replace(/(^|[\s;&|(`])gh(?=\s)/g, (_m, lead: string) => `${lead}"${stubPath}"`);
-}
+export { rewriteGhCommand } from "./shell-match.js";
 
 /** The pull request the PAW Review stub `gh` serves. */
 export interface ReviewStubPr {

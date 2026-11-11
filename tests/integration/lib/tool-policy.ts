@@ -1,5 +1,6 @@
 import { realpathSync } from "fs";
 import { resolve } from "path";
+import { evasiveGh, gitCmd } from "./shell-match.js";
 
 /** The path with symlinks resolved (macOS: /var → /private/var), or the path itself if it does not exist. */
 function real(path: string): string {
@@ -105,10 +106,15 @@ export class ToolPolicy {
         }
       }
 
-      if (!this.options.allowRemoteWrites && /\bgit\s+push\b/i.test(cmd)) {
+      // `\gh`, `g"h"` and the like reach the real gh on PATH past the stub rewrite.
+      if (evasiveGh(cmd).length > 0) {
+        return { action: "deny", reason: "Call gh as plain `gh`" };
+      }
+
+      if (!this.options.allowRemoteWrites && gitCmd("push\\b", "i").test(cmd)) {
         return { action: "deny", reason: "git push disabled in tests" };
       }
-      if (!this.options.allowRemoteWrites && /\bgh\s+(pr|issue)\s+create\b/i.test(cmd)) {
+      if (!this.options.allowRemoteWrites && /\bgh["']?\s+(pr|issue)\s+create\b/i.test(cmd)) {
         return { action: "deny", reason: "GitHub CLI writes disabled in tests" };
       }
       // Block rm with recursive+force flags in any order (rm -rf, rm -fr, rm -r -f, etc.)

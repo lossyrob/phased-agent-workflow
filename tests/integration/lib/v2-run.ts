@@ -14,6 +14,7 @@ import { RuleBasedAnswerer } from "./answerer.js";
 import { TestFixture, rewriteGhCommand } from "./fixtures.js";
 import { readTodoGraph, type TodoGraph } from "./todos.js";
 import { ToolPolicy } from "./tool-policy.js";
+import { gitCmd } from "./shell-match.js";
 
 export const RUN_TIMEOUT = parseInt(process.env.PAW_TEST_V2_TIMEOUT || "1500000", 10);
 export const COMMIT_TRAILER = "Team: acme-platform";
@@ -109,7 +110,7 @@ export async function printGitObservations(label: string, ctx: TestContext, base
   const git = simpleGit(ctx.fixture.workDir);
   const log = await git.raw(["log", "--format=--- %h %s%n%b", `${baseHead}..HEAD`]).catch(() => "(git log failed)");
   console.log(`[${label}] workflow commits:\n${log}`);
-  const commits = allBash(ctx).filter((c) => /\bgit\s+(-C\s+\S+\s+)?commit\b/.test(c.command));
+  const commits = allBash(ctx).filter((c) => gitCmd("commit\\b").test(c.command));
   console.log(
     `[${label}] commit commands:\n` +
       commits.map((c) => `(${c.fromSubagent ? "subagent" : "host"}) ${c.command}`).join("\n----\n"),

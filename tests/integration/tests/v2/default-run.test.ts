@@ -32,6 +32,7 @@ import {
   allBash as allBashFor,
   runV2Task,
 } from "../../lib/v2-run.js";
+import { BROAD_STAGING, REWRITE_COMMAND, gitCmd } from "../../lib/shell-match.js";
 
 const ENABLED = process.env.PAW_TEST_V2 === "1";
 
@@ -139,20 +140,18 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
 
   it("D5: subagents never push, open PRs or change artifact tracking", () => {
     const bad = allBash().filter(
-      (c) => c.fromSubagent && /\bgit\s+push\b|\bgh"?\s+pr\s+create\b|\bgit\s+rm\b[^\n]*\.paw/.test(c.command),
+      (c) => c.fromSubagent && (gitCmd("push\\b").test(c.command) || /\bgh"?\s+pr\s+create\b/.test(c.command) || gitCmd("rm\\b[^\\n]*\\.paw").test(c.command)),
     );
     assert.deepStrictEqual(bad.map((c) => c.command), []);
   });
 
   it("G1: staging is always selective", () => {
-    const bad = allBash().filter((c) => /\bgit\s+add\s+(-A\b|--all\b|\.(\s|$)|-u\b)/.test(c.command) || /\bgit\s+commit\s+[^\n]*-a\b/.test(c.command));
+    const bad = allBash().filter((c) => BROAD_STAGING.test(c.command));
     assert.deepStrictEqual(bad.map((c) => c.command), []);
   });
 
   it("G12: commits are never rewritten", () => {
-    const bad = allBash().filter((c) =>
-      /\bgit\s+(commit-tree|update-ref|rebase|filter-branch)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+reset\s+--hard|\bgit\s+push\b[^\n]*(--force|\s-f\b)/.test(c.command),
-    );
+    const bad = allBash().filter((c) => REWRITE_COMMAND.test(c.command));
     assert.deepStrictEqual(bad.map((c) => c.command.slice(0, 200)), []);
   });
 
@@ -166,7 +165,7 @@ describe("PAW v2: autonomous default run", { skip: !ENABLED, timeout: RUN_TIMEOU
   it("G3: other work directories are untouched", async () => {
     const tracked = (await git().raw(["ls-files", `.paw/work/${OTHER_WORK_ID}`])).trim();
     assert.strictEqual(tracked, `.paw/work/${OTHER_WORK_ID}/ImplementationPlan.md`);
-    const unscoped = allBash().filter((c) => /\bgit\s+rm\b/.test(c.command) && !/\.paw\/work\/[\w.-]+/.test(c.command));
+    const unscoped = allBash().filter((c) => gitCmd("rm\\b").test(c.command) && !/\.paw\/work\/[\w.-]+/.test(c.command));
     assert.deepStrictEqual(unscoped.map((c) => c.command), [], "git rm must be scoped to one work directory");
   });
 

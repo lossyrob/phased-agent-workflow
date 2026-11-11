@@ -228,9 +228,7 @@ export function assistantMessages(ctx: TestContext): string[] {
     .map((e) => String(e.data.content ?? ""));
 }
 
-/** Commands that rewrite history (G12). */
-export const REWRITE_COMMAND =
-  /\bgit\s+(commit-tree|update-ref|rebase|filter-branch)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+reset\s+--hard|\bgit\s+push\b[^\n]*(--force|\s-f\b)/;
+export { BROAD_STAGING, REWRITE_COMMAND, gitCmd } from "./shell-match.js";
 
 /** Host `view` calls (or shell reads) of a skill reference file whose path ends with `rel`. */
 export function referenceReads(ctx: TestContext, rel: string): number[] {

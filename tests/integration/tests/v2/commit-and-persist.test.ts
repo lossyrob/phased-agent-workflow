@@ -27,6 +27,7 @@ import {
   startScenario,
   workDir,
 } from "../../lib/v2-scenarios.js";
+import { gitCmd } from "../../lib/shell-match.js";
 
 const STUB_PR_URL = "https://github.com/example/fixture/pull/1";
 
@@ -91,7 +92,7 @@ describe("PAW v2: commit-and-persist artifact lifecycle", { skip: !ENABLED, time
   });
 
   it("G5: no stop-tracking step ran: no git rm on .paw/ and no commit removed an artifact", async () => {
-    const rms = bashCalls(ctx).filter((c) => /\bgit\s+rm\b[^\n]*\.paw/.test(c.command));
+    const rms = bashCalls(ctx).filter((c) => gitCmd("rm\\b[^\\n]*\\.paw").test(c.command));
     assert.deepStrictEqual(rms.map((c) => c.command), []);
     const deleted = (await git().raw(["log", "--format=%h %s", "--diff-filter=D", `${baseHead}..HEAD`, "--", ".paw/"])).trim();
     assert.strictEqual(deleted, "", "A commit removed workflow artifacts");

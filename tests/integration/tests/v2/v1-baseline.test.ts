@@ -30,6 +30,7 @@ import {
   allBash as allBashFor,
   runV2Task,
 } from "../../lib/v2-run.js";
+import { BROAD_STAGING, gitCmd } from "../../lib/shell-match.js";
 
 const ENABLED = process.env.PAW_TEST_V2 === "1";
 
@@ -129,8 +130,8 @@ describe("PAW v1 baseline: autonomous run with the same task", { skip: !ENABLED,
         .filter((t) => ["create", "edit", "apply_patch", "str_replace_editor"].includes(t.toolName))
         .map((t) => String(t.arguments.path ?? ""))
         .filter((p) => /\/(src|tests)\//.test(p)),
-      subagentPushesOrPrs: bash.filter((c) => c.fromSubagent && /\bgit\s+push\b|\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command)).length,
-      broadStaging: bash.filter((c) => /\bgit\s+add\s+(-A\b|--all\b|\.(\s|$)|-u\b)/.test(c.command) || /\bgit\s+commit\s+[^\n]*-a\b/.test(c.command)).length,
+      subagentPushesOrPrs: bash.filter((c) => c.fromSubagent && (gitCmd("push\\b").test(c.command) || /\bgh"?\s+pr\s+create\b(?!\s+--help)/.test(c.command))).length,
+      broadStaging: bash.filter((c) => BROAD_STAGING.test(c.command)).length,
       readmeStatus: status,
       readmeCommittedByWorkflow: readmeCommits !== "",
       workflowCommits: log.length,

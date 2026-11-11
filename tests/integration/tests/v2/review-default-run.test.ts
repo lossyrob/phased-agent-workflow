@@ -36,6 +36,7 @@ import {
   type ReviewRun,
 } from "../../lib/review-scenario.js";
 import { ENABLED, bashCalls, hostSkillLoads, hostTasks, sqlQueries, taskHeads } from "../../lib/v2-scenarios.js";
+import { gitCmd } from "../../lib/shell-match.js";
 
 const TASK = `Do a thorough PAW review of ${PR_URL}.`;
 
@@ -143,7 +144,7 @@ describe("PAW Review: default run through the PAW-Review agent", { skip: !ENABLE
   it("G12/D5: nothing is committed or pushed; the checkout and the user's change are untouched", async () => {
     const { ctx, refsBefore } = run;
     assert.deepStrictEqual(await refs(ctx.fixture), refsBefore, "Refs changed in the checkout or on origin");
-    assert.deepStrictEqual(bashCalls(ctx).filter((c) => /\bgit\s+(push|commit|stash|reset)\b/.test(c.command)).map((c) => c.command), []);
+    assert.deepStrictEqual(bashCalls(ctx).filter((c) => gitCmd("(push|commit|stash|reset)\\b").test(c.command)).map((c) => c.command), []);
     assert.strictEqual(await ctx.fixture.getBranch(), PR_BRANCH);
     const status = await ctx.fixture.getStatus();
     const withoutReviews = (st: string) => st.split("\n").filter((l) => !/^\?\? \.paw\//.test(l));

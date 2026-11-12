@@ -7,7 +7,7 @@ description: Transforms evaluation findings into structured review comments with
 
 Transform evaluation findings into structured review comments with comprehensive rationale sections that cite evidence, baseline patterns, impact, and best practices.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Prerequisites
 
@@ -15,17 +15,17 @@ Verify these artifacts exist in `.paw/reviews/<identifier>/`:
 - `ReviewContext.md` (PR metadata and parameters)
 - `CodeResearch.md` (baseline codebase understanding)
 - `DerivedSpec.md` (what the PR is trying to achieve)
-- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+- Evaluation artifacts — **mode-gated** (read `mode` from the Review Configuration in `ReviewContext.md`):
   - If `single-model` or absent: require `ImpactAnalysis.md` + `GapAnalysis.md`
   - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
   - If present artifacts don't match configured mode, report inconsistency
 - `CrossRepoAnalysis.md` (optional—only for multi-repo reviews)
 
-If any required artifact is missing, report blocked status—earlier stages must complete first.
+If any required artifact is missing, return `blocked`.
 
 **SoT mode input mapping**: When `REVIEW-SYNTHESIS.md` is the evaluation source, map findings to the comment pipeline as follows:
 - Severity: must-fix → Must, should-fix → Should, consider → Could
-- Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix (note: this mapping is active only when `Review Interactive` is `true` or `smart`; with `false` default, trade-offs are auto-resolved by paw-sot and appear as regular findings)
+- Trade-offs from "Trade-offs Requiring Decision" section → Should-tier with `[Trade-off]` prefix (only when `interactive` is `true` or `smart`; with `false`, paw-sot resolves trade-offs and they appear as regular findings)
 - Observations section → excluded from comment generation (contextual-tier, not actionable)
 - File:line references from specialist citations map to comment File+lines fields. If a synthesis finding lacks specific file:line references, generate a thread-level comment instead of inline
 - Impact evidence is embedded in synthesis findings (no separate ImpactAnalysis.md)
@@ -41,7 +41,7 @@ If any required artifact is missing, report blocked status—earlier stages must
 - **Critique Response Mode**: Update comments based on critic assessment, marking each with `**Final**:` status
 - Enable tone adjustment while preserving evidence and IDs
 
-**Note**: GitHub posting is handled by the `paw-review-github` skill after critique iteration completes.
+**Note**: The review host posts comments. Never post them yourself.
 
 ## Process Steps
 
@@ -417,29 +417,6 @@ Before completing critique response, verify:
 - [ ] ReviewComments.md status updated to `finalized`
 - [ ] Comment counts accurate: Include as-is, Modified, Skipped
 
-## Completion Response
+## Completion
 
-**Initial Pass (Draft):**
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
-Status: Draft - awaiting critique
-
-Summary:
-- Total comments generated: N
-- Must: X, Should: Y, Could: Z
-- Awaiting paw-review-critic assessment
-```
-
-**Critique Response (Finalized):**
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/ReviewComments.md
-Status: Finalized - ready for GitHub posting
-
-Summary:
-- Comments ready for posting: X
-- Comments modified per critique: Y
-- Comments skipped per critique: Z
-
-Next: Run paw-review-github to post finalized comments to GitHub pending review.
+Return the block in the activity contract. Initial pass: total comments and Must, Should, Could counts in the summary. Critique response: ready, modified, and skipped counts in the summary.

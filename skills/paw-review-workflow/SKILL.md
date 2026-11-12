@@ -3,284 +3,155 @@ name: paw-review-workflow
 description: Orchestrates PAW Review for significant, thorough reviews; use the user's intent to distinguish it from generic code or PR reviews.
 ---
 
-# PAW Review Workflow Skill
+# PAW Review Workflow
 
 Execute this heavyweight workflow when the user's request or context indicates they want a significant, thorough review. For a generic code or PR review without evidence of that broader intent, use the standard review path rather than delegating or creating artifacts.
 
-## Core Review Principles
+You are the orchestrator. Your project and user instructions stay in force. Stages run in subagents; you track the review in your todo store, check every result, and own every action on the PR platform.
 
-These principles apply to ALL review stages. Activity skills reference these principles rather than duplicating them.
+Files referenced below live in `references/` next to this file.
 
-### 1. Evidence-Based Documentation
+## Host rules
 
-Every observation, finding, or claim MUST be supported by:
-- Specific file:line references
-- Concrete code patterns or test results
-- Direct evidence from the codebase
+1. Build the complete todo graph before any other work.
+2. Start any unblocked todo. Mark it in progress when you start it and done as soon as its evidence is in hand, before starting anything it blocks. Delegate each stage with the brief below; never write a stage's artifact yourself.
+3. A subagent's return is a claim. Verify it against the files on disk before closing the todo.
+4. Close a todo only with its evidence in hand. Cancel one only when the user tells you to.
+5. The configured review mode runs as configured, through its provider, or the review blocks.
+6. Only you create, change, or submit reviews and comments on the PR platform. Subagents read only: they never commit, push, or post.
+7. Never hand the review to another PAW Review agent or session. Subagents run one stage each and never load this skill.
+8. Stop only when the graph is complete, a todo needs a user decision, or the user asks. A pending review is terminal unless the user asks for a further change.
+9. Report final status from live platform state.
 
-**NEVER** include speculation, assumptions, or subjective preferences without evidence.
+## Preflight
 
-### 2. File:Line Reference Requirement
+Do this directly, as the `preflight` todo.
 
-All code-related claims require specific file:line citations:
-- `[src/module.ts:45](src/module.ts#L45)` for single lines
-- `[src/module.ts:45-52](src/module.ts#L45-L52)` for ranges
-- Multiple locations should be listed explicitly
-
-### 3. No Fabrication Guardrail
-
-**CRITICAL**: Do not fabricate, invent, or assume information:
-- If information is unavailable, state "Not found" or "Unable to determine"
-- Do not hallucinate file contents, function behaviors, or patterns
-- When uncertain, document the uncertainty explicitly
-
-### 4. Document, Don't Critique (Early Stages)
-
-Understanding and baseline research stages document what exists—they do NOT:
-- Evaluate quality or suggest improvements
-- Identify issues or bugs
-- Make recommendations
-- Critique implementation decisions
-
-Evaluation and critique happen in designated later stages only.
-
-### 5. Authorization and Human Control
-
-Apply this precedence:
-1. True invariants protect evidence, target identity, head identity, finalized-comment state, and platform integrity.
-2. Explicit user direction overrides PAW-owned defaults.
-3. Defaults apply when direction is absent or ambiguous.
-
-GitHub reviews are pending by default. Submit only with explicit authorization for the exact target, head, pending review, and event, followed by live revalidation. Generated feedback remains advisory; users can modify, skip, or override recommendations before posting.
-
-### 6. Artifact Completeness
-
-Each stage produces complete, well-structured artifacts:
-- No placeholders or "TBD" markers
-- No unresolved questions blocking downstream stages
-- Each artifact is self-contained and traceable to sources
-
-## Subagent Contract
-
-Activity skills are executed via delegated agent sessions.
-
-### Skill Loading (CRITICAL)
-
-**Every subagent MUST load their skill FIRST before executing any work**:
-
-1. Load the skill by name (e.g., `paw-review-understanding`)
-2. Read and internalize the skill instructions
-3. Only then begin executing the activity
-
-**Delegation prompt must include**: "First load the `paw-review-<skill-name>` skill, then execute the activity."
-
-### Response Format
-
-Upon completion, respond with artifact path and status (Success, Partial, or Blocked).
-
-### Artifact Path Confirmation
-
-Always confirm the exact path where artifacts were written. Downstream stages depend on this.
-
-### Artifact Ownership (CRITICAL)
-
-The orchestrating agent MUST NOT manually create artifacts that belong to activity skills. Each stage's artifacts must be produced by delegating to the designated skill. Manual population bypasses defaults, validation, and skill-specific logic (e.g., specialist selection defaults, ReviewContext field normalization).
-
-## Artifact Directory Structure
-
-All review artifacts are stored in a consistent directory structure:
-
-```
-.paw/reviews/<identifier>/
-├── ReviewContext.md          # Stage: Understanding (initial)
-├── ResearchQuestions.md      # Stage: Understanding (initial)
-├── CodeResearch.md           # Stage: Baseline Research
-├── DerivedSpec.md            # Stage: Understanding (after research)
-├── ImpactAnalysis.md         # Stage: Evaluation (single-model mode)
-├── GapAnalysis.md            # Stage: Evaluation (single-model mode)
-├── REVIEW-{SPECIALIST}.md   # Stage: Evaluation (SoT mode, per specialist)
-├── REVIEW-SYNTHESIS.md       # Stage: Evaluation (SoT mode, synthesized findings)
-├── CrossRepoAnalysis.md      # Stage: Correlation (multi-repo only)
-└── ReviewComments.md         # Stage: Output (evolves: draft → assessed → finalized → posted)
-```
-
-**ReviewComments.md Evolution:**
-1. **Draft**: Initial comments generated by feedback skill
-2. **Assessed**: Assessment sections added by critic skill
-3. **Finalized**: `**Final**:` markers added by feedback skill (critique response)
-4. **Posted**: `**Posted**:` status added by github skill
-
-### Identifier Derivation
-
-- **Single GitHub PR**: `PR-<number>` (e.g., `PR-123`)
-- **Multi-repo GitHub PRs**: `PR-<number>-<repo-slug>` per PR (e.g., `PR-123-my-api/`, `PR-456-my-frontend/`)
-- **Local branch**: Slugified branch name (e.g., `feature-new-auth`)
-
-**Repo-slug derivation**: Last path segment of repository name, lowercase, special chars removed.
-Example: `acme-corp/my-api-service` → `my-api-service`
-
-**Multi-repo detection**: Use when multiple workspace folders are open in VS Code OR multiple PRs provided.
-
-### Authorization Preflight
-
-Run before the Understanding stage:
-
-1. Classify the review platform as `github`, `azure-devops`, or `local`.
-2. Determine output capability from the available tools and context. Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight.
-3. Resolve the requested output action:
-   - GitHub default: `pending`
-   - Azure DevOps/local default: `artifact-only`
-   - Explicit submission: `submit` with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`
-4. Resolve feedback scope as `all` by default or the user's explicit scope/output filter.
-5. Resolve authorization as `explicit`, `absent`, or `ambiguous`, plus the platform-qualified target and current head.
-6. Detect conflicts across PAW-owned instructions. Explicit user direction overrides a default; it does not override an integrity invariant or create a missing capability.
+1. Identify each target: GitHub PR (URL or number), Azure DevOps PR (organization, project, repository, PR), or local branch (ask for the base branch if you cannot determine it). Multi-repo: two or more PRs, PR links to different repositories, or several repositories in the workspace.
+2. Classify the review platform as `github`, `azure-devops`, or `local`.
+3. Determine output capability from the available tools and context. Do not probe Azure DevOps APIs, identities, permissions, or submission endpoints solely for this preflight.
+4. Resolve the requested output action: GitHub default `pending`; Azure DevOps and local default `artifact-only`; explicit submission is `submit` with `APPROVE`, `REQUEST_CHANGES`, or `COMMENT`.
+5. Resolve feedback scope: `all` by default, or the user's explicit scope or output filter.
+6. Resolve authorization as `explicit`, `absent`, or `ambiguous`, with the platform-qualified target and current head.
 7. If authorization is ambiguous or an explicitly requested mutation is unavailable, report the conflict before analysis. Continue artifact-only only after the requested action is resolved.
-8. Pass the resolved fields to `paw-review-understanding` for persistence in ReviewContext.md.
+8. Resolve the review configuration below and collect the project and user instructions that apply; both go into briefs.
 
-Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
+Precedence: integrity invariants (evidence, target and head identity, finalized-comment state, platform integrity) first; then explicit user direction; then defaults. GitHub reviews are pending by default. Submit only with explicit authorization for the exact target, head, pending review, and event, followed by live revalidation. Repeating the same authorization for the same target, head, and event confirms it. A head change invalidates authorization and requires fresh analysis and authorization.
 
-## Workflow Orchestration
+Artifact directory: `.paw/reviews/<identifier>/`. Identifier: `PR-<number>`; multi-repo `PR-<number>-<repo-slug>` (last segment of the repository name, lowercase, special characters removed); local: the branch name, lowercase, `/` → `-`.
 
-The workflow executes stages in sequence, with each stage producing artifacts consumed by downstream stages.
+## Review configuration
 
-### Understanding Stage
+The review provider block, shared with `paw-workflow`:
 
-**Skills**: `paw-review-understanding`, `paw-review-baseline`
+<!-- shared:review-provider-block -->
+| Field | Values |
+|-------|--------|
+| `mode` | `off`, `single-model`, `multi-model`, `society-of-thought` |
+| `models` | `multi-model`: two or more models. `society-of-thought`: `none`, a model pool, or `specialist:model` pairs |
+| `specialists` | `all`, names, or `adaptive:<N>` (`society-of-thought` only) |
+| `interaction` | `parallel`, `debate` (`society-of-thought` only) |
+| `perspectives` | `none`, `auto`, or names (`society-of-thought` only) |
+| `perspective_cap` | positive integer (`society-of-thought` only) |
+<!-- /shared -->
 
-**Sequence**:
-1. Run `paw-review-understanding` activity
-   - Input: PR number/URL or branch context, plus any review configuration parameters (e.g., Review Mode, Review Specialists) from the user's invocation
-   - Output: `ReviewContext.md`, `ResearchQuestions.md`
-   
-2. Run `paw-review-baseline` activity
-   - Input: ReviewContext.md, ResearchQuestions.md
-   - Output: `CodeResearch.md`
-   
-3. Run `paw-review-understanding` activity (resume)
-   - Input: ReviewContext.md, CodeResearch.md
-   - Detects CodeResearch.md exists → skips to specification derivation
-   - Output: `DerivedSpec.md`
+PAW Review runs `single-model` (default) and `society-of-thought`. For any other mode, tell the user it is unavailable here and ask; never substitute. Defaults: `models: none`, `specialists: all` (never choose a subset yourself), `interaction: parallel`, `perspectives: none`, `perspective_cap: 2`. Also resolve `interactive`: `false` (default), `true`, or `smart` — whether `paw-sot` pauses for the user on trade-offs.
 
-**Stage Gate**: Verify ReviewContext.md, CodeResearch.md, DerivedSpec.md exist before proceeding.
+## Todo graph
 
-### Evaluation Stage
+Create one todo per row whose condition holds, with the listed dependencies, in your dependency-aware todo store (Copilot CLI: `todos` and `todo_deps` SQL tables). If your store has no dependencies, keep this order and write `blocked by: <id>` in each item. Write the review configuration into the evaluation todo's description.
 
-Read `Review Mode` from ReviewContext.md to determine the evaluation path. If the value is not `single-model`, `society-of-thought`, or absent, report an error (`Unknown Review Mode: <value>`) and do not proceed.
+| Id | Condition | Blocked by | Evidence to close |
+|----|-----------|------------|-------------------|
+| `preflight` | always | — | Target, head, output action, authorization and configuration resolved; conflicts reported |
+| `understanding` | always | `preflight` | `ReviewContext.md` with `Preflight Status: passed`; `ResearchQuestions.md` |
+| `baseline` | always | `understanding` | `CodeResearch.md` |
+| `derived-spec` | always | `baseline` | `DerivedSpec.md` with no open questions |
+| `impact` | `single-model` | `derived-spec` | `ImpactAnalysis.md` |
+| `gap` | `single-model` | `impact` | `GapAnalysis.md` |
+| `sot` | `society-of-thought` | `derived-spec` | `REVIEW-<specialist>*.md` per specialist and `REVIEW-SYNTHESIS.md` |
+| `correlation` | multi-repo | every PR's `gap` or `sot` | `CrossRepoAnalysis.md` in the primary PR's directory |
+| `feedback` | always | last of the above | `ReviewComments.md` with status `draft` |
+| `critique` | always | `feedback` | An assessment for every comment |
+| `finalize` | always | `critique` | Status `finalized`; every comment has a `**Final**:` marker |
+| `post` | always | `finalize` | GitHub: pending review ID read back from GitHub and recorded in `ReviewComments.md` (plus submitted ID and event when authorized). Otherwise: manual posting instructions in `ReviewComments.md` |
 
-#### Single-Model Mode (default)
+Multi-repo: create the todos from `understanding` to `post` once per PR, suffixed `:<identifier>`; every `feedback` is also blocked by `correlation`.
 
-**Skills**: `paw-review-impact`, `paw-review-gap`
+## Stages
 
-**Sequence**:
-1. Run `paw-review-impact` activity
-   - Input: All understanding artifacts
-   - Output: `ImpactAnalysis.md`
-   
-2. Run `paw-review-gap` activity
-   - Input: All understanding + impact artifacts
-   - Output: `GapAnalysis.md`
+| Todo | Skill | Mode | Inputs |
+|------|-------|------|--------|
+| `understanding` | `paw-review-understanding` | initial | Target, preflight fields, review configuration |
+| `baseline` | `paw-review-baseline` | | `ReviewContext.md`, `ResearchQuestions.md` |
+| `derived-spec` | `paw-review-understanding` | resume | `ReviewContext.md`, `CodeResearch.md` |
+| `impact` | `paw-review-impact` | | Understanding artifacts |
+| `gap` | `paw-review-gap` | | Understanding artifacts, `ImpactAnalysis.md` |
+| `correlation` | `paw-review-correlation` | | Every PR's artifact directory |
+| `feedback` | `paw-review-feedback` | initial | All prior artifacts |
+| `critique` | `paw-review-critic` | | `ReviewComments.md`, all prior artifacts |
+| `finalize` | `paw-review-feedback` | critique response | `ReviewComments.md` with assessments, all prior artifacts |
 
-**Stage Gate**: Verify ImpactAnalysis.md, GapAnalysis.md exist before proceeding.
+`sot` and `post` run in this session, never in a subagent: see the sections below.
 
-#### Society-of-Thought Mode
+## Delegation
 
-**Engine**: `paw-sot` (loaded into orchestrator session, not as subagent)
+Start each stage as a general-purpose subagent with this brief. Do not paste artifact contents; subagents read from disk.
 
-When `Review Mode` is `society-of-thought`, load the `paw-sot` skill directly and invoke it with a review context constructed from ReviewContext.md fields and understanding artifacts:
+```text
+Activity: <skill name> (<mode>)
+Load the `<skill name>` skill first and follow it, with the contract in <absolute path to references/activity-contract.md>.
+Review target: <platform, repository and PR, or local branch>; base <branch> at <commit>; head <branch> at <commit>
+Artifact dir: <absolute path to .paw/reviews/<identifier>/>
+Host instructions: <project and user rules that apply, verbatim>
+Inputs: <artifact paths>
+Configuration: <preflight fields and review configuration; for understanding>
+Done when: <the todo's evidence>
+Limits: read the PR platform only — never create, edit, or submit reviews or comments; do not commit, push, edit todos, or load the paw-review-workflow skill; leave the checkout on the branch and commit you found it on, with uncommitted files untouched.
+Return: the return block in activity-contract.md.
+```
 
-| Review Context Field | Source |
-|---------------------|--------|
-| `type` | `diff` |
-| `coordinates` | Diff: `git diff <base-commit>...<head-commit>`; Artifacts: ReviewContext.md, CodeResearch.md, DerivedSpec.md paths |
-| `output_dir` | `.paw/reviews/<identifier>/` |
-| `specialists` | `Review Specialists` value from ReviewContext.md |
-| `interaction_mode` | `Review Interaction Mode` value from ReviewContext.md |
-| `interactive` | `Review Interactive` value from ReviewContext.md |
-| `specialist_models` | `Review Specialist Models` value from ReviewContext.md |
-| `perspectives` | `Review Perspectives` value from ReviewContext.md |
-| `perspective_cap` | `Review Perspective Cap` value from ReviewContext.md |
+## Acceptance
 
-After paw-sot completes orchestration and synthesis, proceed to the Output stage.
+Before closing a todo, check on disk:
 
-**Error handling**: If paw-sot skill cannot be loaded, report error to user — do not fall back to single-model silently.
+- Listed artifacts exist, are non-empty, and meet the todo's evidence.
+- The checkout is on the branch and commit it was on before the stage, and the user's uncommitted files are unchanged.
+- `derived-spec`: no open questions. `finalize`: every comment has a `**Final**:` marker.
 
-**Stage Gate**: Verify REVIEW-SYNTHESIS.md exists before proceeding.
+A failed check is a revision: delegate the stage again with the specific gap. A `blocked` or `needs-decision` return leaves the todo open; resolve it from the target and the artifacts if you can, and ask the user only for a real decision.
 
-### Cross-Repository Correlation Stage (Multi-Repo Only)
+## Society-of-thought
 
-**Skill**: `paw-review-correlation`
+Review context: `type` `diff`; `coordinates` `git diff <base commit>...<head commit>` and the paths of `ReviewContext.md`, `CodeResearch.md`, `DerivedSpec.md`; `output_dir` the artifact directory; `interactive` from the configuration.
 
-**Condition**: Only run when multiple PRs/repositories detected. Skip for single-repo reviews.
+<!-- shared:sot-invocation -->
+1. Load the `paw-sot` skill and follow it in this session, never in a subagent, with that review context and these fields from the block:
 
-**Detection Criteria** (any of):
-- Multiple PR artifact directories exist (e.g., `PR-123-repo-a/`, `PR-456-repo-b/`)
-- Multiple workspace folders open (detected via multiple `.git` directories)
-- ReviewContext.md contains `related_prs` entries
+    | `paw-sot` field | Block field |
+    |-----------------|-------------|
+    | `specialists`, `perspectives`, `perspective_cap` | Same name |
+    | `interaction_mode` | `interaction` |
+    | `specialist_models` | `models` |
 
-**Sequence**:
-1. Run `paw-review-correlation` activity
-   - Input: All per-repo evaluation artifacts (ImpactAnalysis.md + GapAnalysis.md in single-model mode, or REVIEW-SYNTHESIS.md in SoT mode)
-   - Output: `CrossRepoAnalysis.md` (in primary repo's artifact directory)
+2. Skip `paw-sot` moderator mode.
 
-**Stage Gate**: Verify CrossRepoAnalysis.md exists before proceeding to Output stage.
+If `paw-sot` cannot be loaded or does not produce `REVIEW-SYNTHESIS.md`, the todo stays open and the workflow is blocked: report it to the user. Never substitute other reviewers.
 
-**Skip Behavior**: For single-repo reviews, proceed directly to Output stage without running correlation.
+Evidence: the per-specialist `REVIEW-<specialist>*.md` files and `REVIEW-SYNTHESIS.md`.
+<!-- /shared -->
 
-### Output Stage
+## Posting
 
-**Skills**: `paw-review-feedback`, `paw-review-critic`, `paw-review-github`
+For `post`, load the `paw-review-github` skill and follow it in this session. It posts only comments marked ready, leaves the review pending without explicit authorization, revalidates repository, PR, live head, pending review ID, and event immediately before any authorized submission, and treats a submitted review as terminal. For Azure DevOps or local reviews without executable capability, it writes manual posting instructions instead. Multi-repo: one review per PR, each its own authorization boundary.
 
-The Output stage uses an iterative feedback-critique pattern to refine comments before posting to GitHub.
+## Completion
 
-**Sequence**:
+Query the todo store for todos not marked done; close or resolve each before reporting. Report:
 
-1. **Run `paw-review-feedback` activity (Initial Pass)**
-   - Input: All prior artifacts — ReviewContext, CodeResearch, DerivedSpec, and evaluation artifacts (ImpactAnalysis + GapAnalysis in single-model mode, or REVIEW-SYNTHESIS in SoT mode), optionally CrossRepoAnalysis
-   - Output: `ReviewComments.md` with draft comments (status: draft)
-   - Does NOT post to GitHub in this pass
-   
-2. **Run `paw-review-critic` activity**
-   - Input: ReviewComments.md + all prior artifacts
-   - Output: Assessment sections added to `ReviewComments.md`
-   - Generates Iteration Summary with Include/Modify/Skip recommendations
-
-3. **Run `paw-review-feedback` activity (Critique Response)**
-   - Input: ReviewComments.md (with assessments) + all prior artifacts
-   - Detects Assessment sections → enters Critique Response Mode
-   - Output: Updated comments with `**Final**:` markers (status: finalized)
-   - Comments marked: "Ready for GitHub posting" or "Skipped per critique"
-
-4. **Run `paw-review-github` activity (GitHub PRs only)**
-   - Input: ReviewComments.md with finalized comments
-   - Output: Pending review created on GitHub and, when explicitly authorized, the exact pending review submitted after live revalidation
-   - Only posts comments marked "Ready for GitHub posting"
-   - Skipped comments remain in artifact but NOT posted
-   - **Skipped for Azure DevOps/local contexts without executable output capability** (provides artifact/manual posting instructions instead)
-
-**Stage Gate**: Verify all comments have `**Final**:` markers before GitHub posting.
-
-**Output policy**:
-- Without explicit submission authorization, stop with a pending review.
-- With explicit authorization, `paw-review-github` verifies repository, PR, live head, pending review ID, and event immediately before submission.
-- Any missing or mismatched value leaves the pending review untouched and requires fresh authorization; a head mismatch also requires fresh analysis.
-- Successful submission is terminal. Repeated authorization reports the completed state without another mutation.
-
-## Terminal Behavior
-
-Upon workflow completion, report:
-- Artifact locations (all generated files in `.paw/reviews/<identifier>/`)
-- **GitHub PRs**: Pending or submitted review ID, event when submitted, and comment counts
-- **Azure DevOps/local**: Capability/preflight result and manual posting instructions location
-- **Multi-repo reviews**: Cross-repo findings summary (interface contracts analyzed, mismatches found, deployment order)
-- Comment evolution summary: original comments generated, modified per critique, skipped per critique
+- Artifact locations
+- GitHub: pending or submitted review ID (from live state), event when submitted, comment counts
+- Azure DevOps or local: preflight result and where the manual posting instructions are
+- Multi-repo: cross-repo findings (contracts analyzed, mismatches, deployment order)
+- Comments generated, modified per critique, and skipped per critique
 - Next steps only when the review remains pending or artifact-only
-
-## Cross-Repository Support
-
-If multiple repositories or PRs are detected:
-1. Identify which repositories have changes
-2. Determine the primary repository (where changes originate)
-3. For each repository, run the Understanding and Evaluation stages independently
-4. Run Cross-Repository Correlation stage to synthesize findings across repos
-5. In the Output stage, incorporate cross-repo findings into review comments
-6. Note cross-repo dependencies in comments using notation: `(See also: owner/other-repo#NNN)`

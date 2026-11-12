@@ -41,8 +41,9 @@ npm run lint:skills
 
 When implementing features or making changes that affect user-facing behavior, consider updating:
 
-- **User Guide** (`docs/guide/`) - For user-facing features, commands, or workflows
-- **Specification** (`docs/specification/`) - For changes to workflow stages or agent behavior
+- **User Guide** (`docs/guide/`) - For user-facing features, commands, configuration, or workflows
+- **Specification** (`docs/specification/`, `docs/specification/v2/`) - For changes to activities, contracts, invariants, or agent behavior
+- **Release notes** (`docs/release-notes.md`) - For breaking changes and known limits
 - **Reference** (`docs/reference/`) - For new agents, artifacts, or configuration options
 
 ### Validation
@@ -85,14 +86,16 @@ IMPORTANT: **PAW Architecture Philosophy** - tools provide procedural operations
 
 ## Skill Development
 
-This project has two skill locations with different capabilities:
+This project has two skill locations:
 
-| Location | Loaded Via | Bundled Resources |
-|----------|------------|-------------------|
-| `.github/skills/` | VS Code skills system | ✅ Supported (`scripts/`, `references/`, `assets/`) |
-| `skills/` | `paw_get_skill` tool | ⚠️ SKILL.md via tool; `references/` via filesystem |
+| Location | Used by | Bundled Resources |
+|----------|---------|-------------------|
+| `.github/skills/` | Agents working in this repo | ✅ Supported (`scripts/`, `references/`, `assets/`) |
+| `skills/` | Shipped PAW skills: Copilot CLI plugin and npm installer; VS Code `chatSkills` (rendered to `vscode-assets/skills/`) | `references/` only |
 
-**When creating skills in `skills/`**: The `paw_get_skill` tool returns only SKILL.md content as text. Skills may include a `references/` subdirectory for supplementary content that subagents load via filesystem tools (`view`, `glob`, `grep`) — these files are NOT accessible through `paw_get_skill`. Do not create `scripts/` or `assets/` subdirectories.
+**When creating skills in `skills/`**: `references/` files are read from the installed skill directory on disk (e.g. `paw-workflow/references/activities/*.md`, read by subagents). A skill cannot rely on reading another skill's `references/`. Do not create `scripts/` or `assets/` subdirectories.
+
+**Shared blocks**: text inside `<!-- shared:... -->` markers is duplicated between `paw-workflow` and `paw-review-workflow`; edit both copies (`tests/integration/tests/skills/review-shared-contracts.test.ts` fails if they differ).
 
 **When creating skills in `.github/skills/`**: Full Agent Skills spec is supported, including bundled resources that Claude can read or execute.
 
@@ -245,7 +248,7 @@ When prompts reference other agents, skills, or components, verify they still ex
 
 ### Avoid Cross-File References Agents Can't Resolve
 
-Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-transition/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
+Prompt content (agents, skills) is delivered to the target agent as text—the agent has no access to other source files in the repository. References like "see PAW.agent.md" or "refer to paw-status/SKILL.md" are meaningless at runtime because the agent only sees the content loaded into its context. Instead, inline the essential information or describe the behavior directly. When reviewing prompts, ask: "Can the agent act on this without reading another file?"
 
 ### Don't Waste Context on Error Handling
 
@@ -255,11 +258,11 @@ Let agents determine how to handle errors and report to users. Explicit error ha
 
 When reviewing implementation changes, verify cross-artifact consistency:
 
-- Changes to `paw-specification.md` → verify `paw-status` skill reflects updated stages, modes, or strategies
-- Changes to `paw-status` skill → verify it aligns with specification definitions
-- Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match specification
+- Changes to `paw-workflow` configuration, presets or procedures → verify `paw-status`, `docs/guide/workflow-presets.md` and `docs/specification/v2/design.md` match
+- Changes to `paw-status` skill → verify it aligns with `paw-workflow` configuration and presets
+- Changes to workflow skills → verify artifact locations, branch patterns, and agent responsibilities match the specification
 
-**Source of truth**: `paw-specification.md` → skills reflect the spec for user guidance.
+**Source of truth**: `docs/specification/v2/` (design, invariants) and `skills/paw-workflow/references/` → user docs reflect them. Root `paw-specification.md` and `paw-review-specification.md` are pointers.
 
 ### Agent Content vs Human Documentation
 
@@ -287,7 +290,8 @@ Not every change needs its own integration test. The goal is to **run the test t
 
 ### When to Add/Update Tests
 
-- **New or changed skill behavior** → Add or update a workflow test in `tests/integration/tests/workflows/`
+- **New or changed `paw-workflow` or `paw-review-workflow` behavior** → Add or update a v2 test in `tests/integration/tests/v2/`
+- **Other skill behavior** → Add or update a workflow test in `tests/integration/tests/workflows/`
 - **New harness capability** (answerer, policy, assertion) → Add skill-level test in `tests/integration/tests/skills/`
 - **Bug fix in workflow behavior** → Add regression test covering the fix
 - **Behavioral rename or value change** → Add or update test validating both old (backward compat) and new values
@@ -296,7 +300,8 @@ Not every change needs its own integration test. The goal is to **run the test t
 
 ### Test Types
 
-- **Skill-level tests** (`tests/integration/tests/skills/`): No LLM, fast. Test harness components (answerer rules, tool policy, assertions).
+- **Skill-level tests** (`tests/integration/tests/skills/`): No LLM, fast. Test harness components and skill contracts (shared blocks, policy text).
+- **v2 tests** (`tests/integration/tests/v2/`): Drive `paw-workflow` / `paw-review-workflow` runs; assert on tool calls, todo state, git state and artifacts per `docs/specification/v2/invariants.md`. Need an installed Copilot CLI (`PAW_TEST_CLI_PATH`).
 - **Workflow tests** (`tests/integration/tests/workflows/`): Drive SDK sessions against skills. Use `createTestContext()`, `RuleBasedAnswerer`, structural assertions, and optionally `Judge` for qualitative evaluation.
 
 ### Key Patterns
@@ -316,6 +321,7 @@ Not every change needs its own integration test. The goal is to **run the test t
 cd tests/integration && npm install  # first time only
 npm run test:integration:skills      # fast, no LLM
 npm run test:integration:workflows   # slow, requires Copilot auth
+cd tests/integration && npm run test:v2   # v2 suites, sequential; set PAW_TEST_CLI_PATH
 
 # Run a specific test file
 cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
@@ -325,14 +331,12 @@ cd tests/integration && npx tsx --test tests/workflows/<test-file>.test.ts
 
 | Test | What it validates | Runtime |
 |------|-------------------|---------|
-| `full-local-workflow` | Golden path: spec → plan → implement (local strategy) | ~3-5 min |
-| `minimal-workflow` | Minimal mode: plan → implement (no spec) | ~2-3 min |
-| `transition-review-policy` | Review policy values (legacy + current) and pause behavior | ~1-2 min |
-| `paw-spec` | Spec creation from brief | ~1-2 min |
-| `paw-planning` | Plan creation from seeded spec | ~1-2 min |
-| `paw-implement` | Implementation from seeded plan | ~2-3 min |
-| `spec-review` | Spec review verdict | ~1-2 min |
-| `code-research` | Code research artifact creation | ~1-2 min |
+| `v2/default-run` | v2 golden path: plan → implement → final review → one PR, with the invariant catalogue | ~3-5 min |
+| `v2/paw-agent` | The `PAW` agent loads `paw-workflow` and completes a default run | ~3-5 min |
+| `v2/resume`, `v2/v1-context-resume` | Resume from evidence; a v1 `WorkflowContext.md` is mapped once | ~3-5 min |
+| `v2/paw-lite-alias`, `v2/preset-lite` | `paw-lite` resolves to the `lite` preset; a full lite run | ~1-5 min |
+| `v2/*` (others) | Configured reviews, rewind, worktree, lifecycles, revisions | ~3-8 min |
+| `v2/review-default-run`, `v2/review-sot` | PAW Review on a stub-`gh` PR: todo graph, stage subagents with the shared return block, host-only pending review; configured SoT runs through `paw-sot` | ~5-15 min |
 | `work-shaping` | Work shaping Q&A flow | ~1-2 min |
-| `git-branching` | Branch operations | ~1-2 min |
+| `sot-perspectives` | Society-of-thought perspectives | ~2-3 min |
 | `tool-policy` | Tool policy enforcement | ~30s |

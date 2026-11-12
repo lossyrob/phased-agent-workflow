@@ -153,7 +153,7 @@ describe('install output', () => {
     
     const output = execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: freshHome },
+      env: { ...process.env, HOME: freshHome, USERPROFILE: freshHome },
     });
     
     assert.ok(output.includes('Quick Start'), 'should show Quick Start section');
@@ -173,7 +173,7 @@ describe('install output', () => {
     
     const output = execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: freshHome },
+      env: { ...process.env, HOME: freshHome, USERPROFILE: freshHome },
     });
     
     assert.ok(output.includes('Quick Start'), 'should show Quick Start section');
@@ -192,13 +192,13 @@ describe('install output', () => {
     // First install
     execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: upgradeHome },
+      env: { ...process.env, HOME: upgradeHome, USERPROFILE: upgradeHome },
     });
     
     // Second install (upgrade) with --force to skip prompt
     const output = execSync(`node ${cliPath} install copilot --force`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: upgradeHome },
+      env: { ...process.env, HOME: upgradeHome, USERPROFILE: upgradeHome },
     });
     
     assert.ok(!output.includes('Quick Start'), 'should not show quickstart on repeat install');
@@ -216,13 +216,13 @@ describe('install output', () => {
 
     execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: versionHome },
+      env: { ...process.env, HOME: versionHome, USERPROFILE: versionHome },
     });
 
     // Verify via list command output
     const listOutput = execSync(`node ${cliPath} list`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: versionHome },
+      env: { ...process.env, HOME: versionHome, USERPROFILE: versionHome },
     });
 
     assert.ok(listOutput.includes(`PAW v${pkgJson.version}`),
@@ -250,7 +250,7 @@ describe('install output', () => {
 
     execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: claudeHome },
+      env: { ...process.env, HOME: claudeHome, USERPROFILE: claudeHome },
     });
 
     assert.ok(existsSync(join(claudeHome, '.claude', 'agents')), '.claude/agents should exist');
@@ -267,11 +267,11 @@ describe('install output', () => {
 
     execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
     execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
 
     // Both should exist
@@ -281,7 +281,7 @@ describe('install output', () => {
     // List should show both
     const listOutput = execSync(`node ${cliPath} list`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
     assert.ok(listOutput.includes('copilot'), 'list should show copilot target');
     assert.ok(listOutput.includes('claude'), 'list should show claude target');
@@ -294,9 +294,9 @@ describe('list command', () => {
     const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
     
     // Use a temp HOME to ensure no manifest exists
-    const output = execSync(`HOME=${TEST_DIR}/empty node ${cliPath} list`, { 
+    const output = execSync(`node ${cliPath} list`, { 
       encoding: 'utf-8',
-      env: { ...process.env, HOME: join(TEST_DIR, 'empty') },
+      env: { ...process.env, HOME: join(TEST_DIR, 'empty'), USERPROFILE: join(TEST_DIR, 'empty') },
     });
     
     assert.ok(output.includes('not installed'));
@@ -314,14 +314,14 @@ describe('uninstall command', () => {
     // Install claude
     execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: uninstallHome },
+      env: { ...process.env, HOME: uninstallHome, USERPROFILE: uninstallHome },
     });
     assert.ok(existsSync(join(uninstallHome, '.claude', 'agents')), 'agents should exist after install');
 
     // Uninstall
     const output = execSync(`node ${cliPath} uninstall --force`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: uninstallHome },
+      env: { ...process.env, HOME: uninstallHome, USERPROFILE: uninstallHome },
     });
 
     assert.ok(output.includes('Removed'), 'should show removal summary');
@@ -340,17 +340,17 @@ describe('uninstall command', () => {
     // Install both
     execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
     execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
 
     // Uninstall
     execSync(`node ${cliPath} uninstall --force`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: dualHome },
+      env: { ...process.env, HOME: dualHome, USERPROFILE: dualHome },
     });
 
     assert.ok(!existsSync(join(dualHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should be removed');
@@ -371,17 +371,17 @@ describe('uninstall command', () => {
     // Install both
     execSync(`node ${cliPath} install copilot`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: selectiveHome },
+      env: { ...process.env, HOME: selectiveHome, USERPROFILE: selectiveHome },
     });
     execSync(`node ${cliPath} install claude`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: selectiveHome },
+      env: { ...process.env, HOME: selectiveHome, USERPROFILE: selectiveHome },
     });
 
     // Uninstall only claude
     execSync(`node ${cliPath} uninstall claude --force`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: selectiveHome },
+      env: { ...process.env, HOME: selectiveHome, USERPROFILE: selectiveHome },
     });
 
     assert.ok(existsSync(join(selectiveHome, '.paw', 'copilot-cli', 'manifest.json')), 'copilot manifest should still exist');
@@ -394,9 +394,43 @@ describe('uninstall command', () => {
     // List should only show copilot
     const listOutput = execSync(`node ${cliPath} list`, {
       encoding: 'utf-8',
-      env: { ...process.env, HOME: selectiveHome },
+      env: { ...process.env, HOME: selectiveHome, USERPROFILE: selectiveHome },
     });
     assert.ok(listOutput.includes('copilot'), 'list should still show copilot');
     assert.ok(!listOutput.includes('claude'), 'list should not show claude');
+  });
+});
+
+describe('reinstall over an older version', () => {
+  test('removes files the previous manifest recorded that the new version no longer ships', async () => {
+    const { execSync } = await import('child_process');
+    const { mkdirSync, existsSync, writeFileSync, readFileSync } = await import('fs');
+    const cliPath = join(import.meta.dirname, '..', 'bin', 'paw.js');
+    const home = join(TEST_DIR, 'upgrade-stale');
+    mkdirSync(home, { recursive: true });
+    const env = { ...process.env, HOME: home, USERPROFILE: home };
+
+    execSync(`node ${cliPath} install copilot`, { encoding: 'utf-8', env });
+
+    // Simulate a v1 install: a retired skill on disk and in the manifest, plus a user's own skill.
+    const skillsDir = join(home, '.copilot', 'skills');
+    const staleSkill = join(skillsDir, 'paw-transition', 'SKILL.md');
+    const userSkill = join(skillsDir, 'my-own-skill', 'SKILL.md');
+    mkdirSync(join(skillsDir, 'paw-transition'), { recursive: true });
+    mkdirSync(join(skillsDir, 'my-own-skill'), { recursive: true });
+    writeFileSync(staleSkill, '---\nname: paw-transition\n---\n');
+    writeFileSync(userSkill, '---\nname: my-own-skill\n---\n');
+    const manifestPath = join(home, '.paw', 'copilot-cli', 'manifest.json');
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+    manifest.files.skills.push(staleSkill);
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+
+    const output = execSync(`node ${cliPath} install copilot --force`, { encoding: 'utf-8', env });
+
+    assert.ok(output.includes('no longer shipped'), 'should report removed stale files');
+    assert.ok(!existsSync(staleSkill), 'retired skill file should be removed');
+    assert.ok(!existsSync(join(skillsDir, 'paw-transition')), 'empty retired skill directory should be removed');
+    assert.ok(existsSync(userSkill), 'files not in the previous manifest must be kept');
+    assert.ok(existsSync(join(skillsDir, 'paw-workflow', 'SKILL.md')), 'current skills stay installed');
   });
 });

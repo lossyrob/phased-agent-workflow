@@ -1,8 +1,10 @@
+import { execFileSync } from "child_process";
 import { CopilotClient } from "@github/copilot-sdk";
 import { TestFixture } from "./fixtures.js";
 import { ToolCallLog } from "./trace.js";
 import { ToolPolicy } from "./tool-policy.js";
 import type { Answerer } from "./answerer.js";
+import { SessionEventLog } from "./events.js";
 
 const DEBUG = !!process.env.PAW_TEST_DEBUG;
 const KEEP_WORKSPACE = !!process.env.PAW_TEST_KEEP_WORKSPACE;
@@ -11,6 +13,7 @@ const PROTOCOL_MISMATCH_RE = /SDK protocol version mismatch: SDK expects version
 
 type Session = Awaited<ReturnType<CopilotClient["createSession"]>>;
 type ClientOptions = ConstructorParameters<typeof CopilotClient>[0];
+type SessionConfig = Parameters<CopilotClient["createSession"]>[0];
 type ProtocolAwareClient = {
   ping(message?: string): Promise<{ protocolVersion?: number }>;
   verifyProtocolVersion(): Promise<void>;
@@ -21,6 +24,8 @@ export interface TestContext {
   session: Session;
   fixture: TestFixture;
   toolLog: ToolCallLog;
+  /** SDK session events: skill loads, subagents, usage, compaction. */
+  events: SessionEventLog;
   answerer: Answerer;
   timeout: number;
   workingDirectory: string;
@@ -89,6 +94,28 @@ async function startCopilotClient(options: ClientOptions): Promise<CopilotClient
   }
 }
 
+/**
+ * With PAW_TEST_AUTH=gh-token, sign the CLI in with the token from `gh auth token`
+ * instead of its stored credentials. A CLI started as `node index.js` (see
+ * PAW_TEST_CLI_PATH) otherwise reads the OS keychain as "node", which makes macOS
+ * prompt for a password on every run. The token is passed to the CLI process only;
+ * it is never logged or written to disk.
+ */
+function readGhToken(): string | undefined {
+  if (process.env.PAW_TEST_AUTH !== "gh-token") {
+    return undefined;
+  }
+  try {
+    const token = execFileSync("gh", ["auth", "token"], { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    if (token) {
+      return token;
+    }
+  } catch {
+    // fall through
+  }
+  throw new Error("PAW_TEST_AUTH=gh-token requires a working `gh auth token` (run `gh auth login`)");
+}
+
 function getProviderConfig() {
   if (process.env.PAW_TEST_PROVIDER === "azure") {
     const baseUrl = process.env.AZURE_OPENAI_ENDPOINT;
@@ -118,6 +145,12 @@ export async function createTestContext(opts: {
   executionPath?: string;
   availableTools?: string[];
   excludedTools?: string[];
+  /** Rewrite a shell command before it runs (for example, to route `gh` to a stub). */
+  rewriteCommand?: (command: string) => string;
+  /** Directories the runtime discovers skills from (host-loaded skill runs). */
+  skillDirectories?: string[];
+  /** Set to disable automatic compaction or tune its thresholds. */
+  infiniteSessions?: SessionConfig["infiniteSessions"];
 }): Promise<TestContext> {
   const fixture = opts.fixture ?? (opts.fixtureName ? await TestFixture.clone(opts.fixtureName) : undefined);
   if (!fixture) {
@@ -133,7 +166,16 @@ export async function createTestContext(opts: {
     const policy = opts.toolPolicy ?? new ToolPolicy(workingDirectory, extraRoots);
 
     const useLoggedInUser = process.env.PAW_TEST_PROVIDER !== "azure";
-    client = await startCopilotClient({ useLoggedInUser });
+    // PAW_TEST_CLI_PATH runs the tests against an installed Copilot CLI instead of the
+    // one bundled with the SDK, which lags behind (for example, it has no write_agent).
+    const cliPath = process.env.PAW_TEST_CLI_PATH;
+    const githubToken = useLoggedInUser ? readGhToken() : undefined;
+    client = await startCopilotClient({
+      ...(githubToken ? { githubToken, useLoggedInUser: false } : { useLoggedInUser }),
+      ...(cliPath ? { cliPath } : {}),
+      // The test runner sets NODE_TEST_CONTEXT for its own child; inherited by the CLI, it silences `node --test` in fixture repos.
+      env: { ...process.env, NODE_TEST_CONTEXT: undefined },
+    });
 
     const provider = getProviderConfig();
     const model = opts.model || process.env.PAW_TEST_MODEL || undefined;
@@ -145,6 +187,8 @@ export async function createTestContext(opts: {
       systemMessage: { content: opts.systemPrompt },
       ...(opts.availableTools ? { availableTools: opts.availableTools } : {}),
       ...(opts.excludedTools ? { excludedTools: opts.excludedTools } : {}),
+      ...(opts.skillDirectories ? { skillDirectories: opts.skillDirectories } : {}),
+      ...(opts.infiniteSessions ? { infiniteSessions: opts.infiniteSessions } : {}),
       workingDirectory,
 
         onPermissionRequest: async (request) => {
@@ -207,6 +251,14 @@ export async function createTestContext(opts: {
             toolLog.end(call, decision.result);
             return { permissionDecision: "deny" as const, permissionDecisionReason: "stubbed" };
           }
+          if (opts.rewriteCommand && input.toolName === "bash") {
+            const args = (typeof input.toolArgs === "string" ? JSON.parse(input.toolArgs) : input.toolArgs) as Record<string, unknown>;
+            const original = String(args?.command ?? "");
+            const rewritten = opts.rewriteCommand(original);
+            if (rewritten !== original) {
+              return { permissionDecision: "allow" as const, modifiedArgs: { ...args, command: rewritten } };
+            }
+          }
           return { permissionDecision: "allow" as const };
         },
         onPostToolUse: async (input) => {
@@ -224,7 +276,10 @@ export async function createTestContext(opts: {
       console.log(`[harness] Workspace: ${workingDirectory}`);
     }
 
-    return { client, session, fixture, toolLog, answerer: opts.answerer, timeout: TIMEOUT, workingDirectory };
+    const events = new SessionEventLog();
+    session.on((event) => events.record(event));
+
+    return { client, session, fixture, toolLog, events, answerer: opts.answerer, timeout: TIMEOUT, workingDirectory };
   } catch (err) {
     if (client) {
       try { await client.stop(); } catch { /* best effort */ }

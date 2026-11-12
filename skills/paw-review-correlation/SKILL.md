@@ -7,7 +7,7 @@ description: Synthesizes findings across multiple PRs to identify cross-reposito
 
 Synthesize findings across multiple PRs to identify cross-repository dependencies, interface mismatches, and coordination gaps that wouldn't be visible when analyzing PRs in isolation.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Applicability
 
@@ -25,12 +25,12 @@ For each `PR-<number>-<repo-slug>/` directory in `.paw/reviews/`:
 - `ReviewContext.md` (includes `related_prs` entries)
 - `CodeResearch.md` (baseline understanding per repo)
 - `DerivedSpec.md` (intent per PR)
-- Evaluation artifacts — **mode-gated** (read `Review Mode` from `ReviewContext.md`):
+- Evaluation artifacts — **mode-gated** (read `mode` from the Review Configuration in `ReviewContext.md`):
   - If `single-model` or absent: require `ImpactAnalysis.md` (includes Cross-Repository Dependencies section) + `GapAnalysis.md` (includes Cross-Repository Consistency findings)
   - If `society-of-thought`: require `REVIEW-SYNTHESIS.md`
   - If present artifacts don't match configured mode, report inconsistency
 
-If any artifact is missing, report blocked status—earlier stages must complete first.
+If any artifact is missing, return `blocked`.
 
 ## Core Responsibilities
 
@@ -45,7 +45,7 @@ If any artifact is missing, report blocked status—earlier stages must complete
 
 - Generating review comments (handled by paw-review-feedback)
 - Individual PR analysis (handled by impact/gap skills)
-- Workflow orchestration (handled by workflow skill)
+- Workflow orchestration (the review host)
 
 ## Process Steps
 
@@ -308,8 +308,4 @@ If analysis finds no shared interfaces:
 
 ## Completion
 
-Report:
-- Artifact path: `.paw/reviews/<primary-identifier>/CrossRepoAnalysis.md`
-- Interface contracts analyzed count
-- Mismatches found count
-- Recommended deployment order summary
+Return the block in the activity contract. List each mismatch as a finding; put contracts analyzed and the recommended deployment order in the summary.

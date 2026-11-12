@@ -31,8 +31,27 @@ describe('build-dist script', () => {
     const skillsDir = join(DIST_DIR, 'skills');
     assert.ok(existsSync(skillsDir), 'dist/skills should exist');
     
-    const skills = readdirSync(skillsDir);
-    assert.ok(skills.length >= 27, `should have at least 27 skills, found ${skills.length}`);
+    const skills = readdirSync(skillsDir).sort();
+    const sourceSkills = readdirSync(join(CLI_ROOT, '..', 'skills'), { withFileTypes: true })
+      .filter(e => e.isDirectory() && existsSync(join(CLI_ROOT, '..', 'skills', e.name, 'SKILL.md')))
+      .map(e => e.name)
+      .sort();
+    assert.deepStrictEqual(skills, sourceSkills, 'dist should ship exactly the repository skills');
+    for (const name of ['paw-workflow', 'paw-lite', 'paw-status', 'paw-rewind', 'paw-sot', 'paw-work-shaping', 'paw-review-workflow']) {
+      assert.ok(skills.includes(name), `should include ${name}`);
+    }
+    for (const name of ['paw-transition', 'paw-init', 'paw-spec', 'paw-planning', 'paw-implement', 'paw-final-review', 'paw-pr', 'paw-git-operations']) {
+      assert.ok(!skills.includes(name), `should not ship removed v1 skill ${name}`);
+    }
+  });
+
+  test('copies the paw-workflow references (activities, procedures, presets)', () => {
+    const refs = join(DIST_DIR, 'skills', 'paw-workflow', 'references');
+    for (const rel of ['configuration.md', 'v1-context.md', 'procedures/resume.md', 'activities/plan.md', 'presets/lite.yaml']) {
+      assert.ok(existsSync(join(refs, rel)), `dist should include paw-workflow/references/${rel}`);
+    }
+    const reviewContract = join(DIST_DIR, 'skills', 'paw-review-workflow', 'references', 'activity-contract.md');
+    assert.ok(existsSync(reviewContract), 'dist should include paw-review-workflow/references/activity-contract.md');
   });
   
   test('processes vscode conditionals correctly', () => {

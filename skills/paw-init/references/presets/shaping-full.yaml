@@ -1,4 +1,0 @@
-name: shaping-full
-description: Interactive work shaping then full auto workflow
-extends: auto-full
-initial_activity: work-shaping

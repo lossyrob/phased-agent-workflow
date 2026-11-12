@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
-import { join, resolve } from 'path';
+import { join } from 'path';
 import {
   buildExecutionRegistryEntry,
   clearPendingWorktreeInit,
@@ -75,17 +75,10 @@ function createWorkspaceFolder(fsPath: string): vscode.WorkspaceFolder {
 function createCurrentCheckoutInputs(): WorkItemInputs {
   return {
     targetBranch: '',
-    workflowMode: { mode: 'minimal' },
+    preset: 'lite',
+    planCheckpoint: false,
     executionMode: 'current-checkout',
-    reviewStrategy: 'local',
-    reviewPolicy: 'final-pr-only',
-    sessionPolicy: 'continuous',
     artifactLifecycle: 'commit-and-clean',
-    finalReview: {
-      enabled: true,
-      mode: 'single-model',
-      interactive: 'smart',
-    },
   };
 }
 
@@ -102,21 +95,35 @@ function createDedicatedWorktreeInputs(path?: string): WorkItemInputs {
 }
 
 suite('Initialize Work Item Helpers', () => {
-  test('constructPawPromptArguments includes execution contract for paw-init worktree sessions', () => {
+  test('constructPawPromptArguments passes v2 configuration fields to paw-workflow', () => {
     const prompt = constructPawPromptArguments({
       targetBranch: '',
-      workflowMode: { mode: 'minimal' },
-      executionMode: 'worktree',
-      reviewStrategy: 'local',
-      reviewPolicy: 'final-pr-only',
-      sessionPolicy: 'continuous',
-      artifactLifecycle: 'commit-and-clean',
-      finalReview: {
-        enabled: true,
-        mode: 'single-model',
-        interactive: 'smart',
-      },
+      preset: 'thorough',
+      planCheckpoint: true,
+      executionMode: 'current-checkout',
+      artifactLifecycle: 'never-commit',
       issueUrl: 'https://github.com/example/repo/issues/123',
+    }, '/tmp/repo');
+
+    assert.ok(prompt.includes('Load the `paw-workflow` skill and execute it.'));
+    assert.ok(prompt.includes('- **preset**: thorough'));
+    assert.ok(prompt.includes('- **target_branch**: auto'));
+    assert.ok(prompt.includes('- **execution_mode**: current-checkout'));
+    assert.ok(prompt.includes('- **artifact_lifecycle**: never-commit'));
+    assert.ok(prompt.includes('- **plan_checkpoint**: on'));
+    assert.ok(prompt.includes('- **task_source**: https://github.com/example/repo/issues/123'));
+    for (const removed of ['workflow_mode', 'review_strategy', 'review_policy', 'session_policy', 'final_agent_review', 'execution worktree']) {
+      assert.ok(!prompt.includes(removed), `prompt should not include ${removed}`);
+    }
+  });
+
+  test('constructPawPromptArguments tells the agent to use the prepared worktree', () => {
+    const prompt = constructPawPromptArguments({
+      targetBranch: 'feature/test-worktree',
+      preset: 'standard',
+      planCheckpoint: false,
+      executionMode: 'worktree',
+      artifactLifecycle: 'commit-and-clean',
       executionMetadata: {
         workId: 'test-worktree',
         repositoryIdentity: 'github.com/example/repo@abc123',
@@ -124,36 +131,10 @@ suite('Initialize Work Item Helpers', () => {
       },
     }, '/tmp/repo');
 
-    assert.ok(prompt.includes('Load the `paw-workflow` skill and execute it.'));
-    assert.ok(prompt.includes('- **target_branch**: auto'));
     assert.ok(prompt.includes('- **execution_mode**: worktree'));
-    assert.ok(prompt.includes('- **issue_url**: https://github.com/example/repo/issues/123'));
     assert.ok(prompt.includes('- **work_id**: test-worktree'));
-    assert.ok(prompt.includes('- **repository_identity**: github.com/example/repo@abc123'));
-    assert.ok(prompt.includes('- **execution_binding**: worktree:test-worktree:feature/test-worktree'));
-  });
-
-  test('paw-init skill template persists execution contract fields in WorkflowContext', () => {
-    const skillContent = readFileSync(
-      resolve(__dirname, '../../../skills/paw-init/SKILL.md'),
-      'utf8'
-    );
-
-    assert.ok(skillContent.includes('| `work_id` |'));
-    assert.ok(skillContent.includes('| `repository_identity` |'));
-    assert.ok(skillContent.includes('| `execution_binding` |'));
-    assert.ok(skillContent.includes('Work ID: <work_id or generated_work_id>'));
-    assert.ok(skillContent.includes('Execution Mode: <execution_mode>'));
-    assert.ok(skillContent.includes('Repository Identity: <repository_identity or "none">'));
-    assert.ok(skillContent.includes('Execution Binding: <execution_binding or "none">'));
-    assert.ok(skillContent.includes('<normalized-origin-slug>@<root-commit-sha>'));
-    assert.ok(skillContent.includes('worktree:<work_id>:<target_branch>'));
-    assert.ok(skillContent.includes('Write these strings exactly in `WorkflowContext.md` and compare them literally.'));
-    assert.ok(skillContent.includes('Do not assume a registry or automatic handoff into another checkout.'));
-    assert.ok(skillContent.includes('session cwd may differ from the execution checkout'));
-    assert.ok(skillContent.includes('treat it as `current-checkout`'));
-    assert.ok(skillContent.includes('local execution registry'));
-    assert.ok(skillContent.includes('`git worktree list`'));
+    assert.ok(prompt.includes('- **plan_checkpoint**: off'));
+    assert.ok(prompt.includes('This checkout is the execution worktree, already created on the target branch.'));
   });
 
   test('deriveWorkIdFromTargetBranch normalizes branch suffixes', () => {

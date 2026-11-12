@@ -4,26 +4,24 @@
 <img src="https://raw.githubusercontent.com/lossyrob/phased-agent-workflow/main/img/paw-logo.png" alt="PAW Logo" width="200"/>
 </div>
 
-**PAW** works with **GitHub Copilot CLI** and **VS Code** to coordinate multi-stage AI agent workflows for feature implementation and code review. It transforms complex development tasks into structured, verifiable phases with clear handoffs between specialized agents.
+**PAW** works with **GitHub Copilot CLI** and **VS Code** to take a task from an issue or prompt to a reviewed pull request, and to help you review other people's pull requests.
 
 ## Why PAW?
 
-Building features with AI coding agents is powerful, but without structure, it's easy to lose track of decisions, introduce inconsistencies, or struggle to iterate when things go wrong.
+AI coding agents work best with clear, accumulated context. PAW gives them that context through durable artifacts and keeps the work checkable:
 
-PAW provides:
-
-- **Structured phases** — Move from spec to implementation to docs with clear checkpoints
-- **Durable artifacts** — Every decision is captured in version-controlled Markdown
-- **Rewindability** — Fix upstream problems and regenerate downstream work
-- **Human oversight** — You approve specs, plans, and PRs at critical decision points
-- **Two workflows** — Build new features OR review existing pull requests
+- **Plan before code** — Research and a written plan (and optionally a spec) come before implementation
+- **Nothing skipped** — Every configured step is a todo created up front; each closes only with evidence on disk
+- **Configured review** — Single-model, multi-model or society-of-thought review of the plan and the final change
+- **Git discipline** — Selective staging, your uncommitted changes untouched, history never rewritten, one final PR
+- **Resumable and rewindable** — Continue in a new session from evidence; go back to the plan without losing history
 
 ## Quick Start
 
-1. Install PAW for your platform: [CLI installation](guide/cli-installation.md) or [VS Code extension setup](guide/index.md#quick-install-vs-code)
-2. Open a Git repository in your tool of choice
+1. Install PAW: [CLI installation](guide/cli-installation.md) or [VS Code extension](guide/index.md#quick-install-vs-code)
+2. Open a Git repository
 3. Start PAW: `copilot --agent PAW` (CLI) or `PAW: New PAW Workflow` (VS Code)
-4. Follow the guided workflow through each stage
+4. Describe the task or give an issue URL
 
 [Get Started →](guide/index.md){ .md-button .md-button--primary }
 
@@ -31,46 +29,33 @@ PAW provides:
 
 ### Implementation Workflow
 
-Build features from scratch through structured phases:
-
 ```
-Specification → Planning → Implementation → Finalization
+Task → Plan → Implement → Review → Final PR
 ```
 
-**Use for:** New features, enhancements, refactors, and bug fixes.
+Optional shaping, spec and dedicated research before the plan, and reviews at the plan, each unit and the end, as configured by the `lite`, `standard` or `thorough` preset.
 
-[Learn more →](guide/two-workflows.md#paw-implementation-workflow)
+[Learn more →](guide/two-workflows.md#implementation-workflow)
 
 ### Review Workflow
 
-Thoroughly review pull requests with evidence-based feedback:
-
 ```
-PR → Understanding → Evaluation → Feedback Generation
+PR → Understanding → Evaluation → Feedback → Pending review
 ```
 
-**Use for:** Reviewing any PR—especially large or poorly-documented ones.
+**Use for:** Significant, thorough reviews of a pull request, especially large or poorly documented ones.
 
-[Learn more →](guide/two-workflows.md#paw-review-workflow)
-
-## Key Concepts
-
-| Concept | Description |
-|---------|-------------|
-| **Stages** | Workflow milestones (Specification, Planning, Implementation, Finalization) |
-| **Phases** | Discrete implementation chunks within the Implementation stage |
-| **Agents** | Specialized AI chat modes that handle specific stages |
-| **Artifacts** | Durable Markdown documents produced at each stage |
+[Learn more →](guide/two-workflows.md#paw-review)
 
 ## Documentation
 
-- **[Getting Started](guide/index.md)** — Install PAW and start your first workflow
-- **[Workflow Modes](guide/workflow-modes.md)** — Configure Full, Minimal, or Custom modes
-- **[Specification](specification/index.md)** — Deep dive into PAW's workflow design
-- **[Agents Reference](reference/agents.md)** — All PAW agents and their purposes
+- **[Getting Started](guide/index.md)** — Install PAW and start your first work item
+- **[Configuration and Presets](guide/workflow-presets.md)** — Presets, fields, review providers
+- **[Migrating from v1](guide/migration.md)** — What changed in PAW v2
+- **[Specification](specification/index.md)** — How PAW v2 works and what it guarantees
+- **[Release Notes](release-notes.md)** — Changes and known limits
 
 ## Requirements
 
-- VS Code with GitHub Copilot
-- Git repository
-- GitHub MCP Tools or Azure DevOps MCP Tools (recommended)
+- GitHub Copilot CLI, or VS Code 1.109+ with GitHub Copilot
+- A Git repository; the GitHub CLI (`gh`) for the final pull request

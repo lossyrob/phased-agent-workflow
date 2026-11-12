@@ -40,19 +40,17 @@ npx @paw-workflow/cli install claude    # Claude Code
 
 ## What is PAW?
 
-**Phased Agent Workflow** (PAW) enables **Context-Driven Development**—a practice where AI agents build understanding through structured research and planning phases before writing code. Each phase produces durable artifacts (specs, research docs, implementation plans) that accumulate context and feed the next phase. By the time code is written, both agent and human share deep, documented understanding of what's being built and why.
+**Phased Agent Workflow** (PAW) enables **Context-Driven Development**—a practice where AI agents build understanding through research and planning before writing code. Each step produces durable artifacts (plan, and optionally a spec and code research) that feed the next. By the time code is written, both agent and human share a documented understanding of what's being built and why.
 
-PAW integrates with GitHub Pull Requests at every implementation step, enabling human review and iteration on AI-generated code. Every phase is traceable, rewindable, and version-controlled.
-
-**Why context-driven?** AI agents work best when given clear, accumulated context rather than open-ended prompts. PAW's phased approach ensures agents have the specification, codebase understanding, and implementation plan they need before touching code—reducing hallucination, improving quality, and making the work auditable.
+The agent you talk to orchestrates: it builds a todo graph of every configured step up front, runs each activity (specify, research, plan, implement, review) in a subagent, checks each result against git and the files on disk, and opens one pull request at the end.
 
 ## Key Benefits
 
-- **PR-integrated workflow** — Every implementation phase can create a PR for human review. Unlike local-only approaches, PAW fits into real team code review workflows.
-- **Dedicated research phases** — Spec Research and Code Research skills build documented understanding of existing behavior and code before planning begins.
-- **Rewindable at any layer** — Artifacts are checkpoints. If context drifts or requirements change, restart from spec, plan, or any phase.
-- **AI-assisted code review** — The Review workflow helps human reviewers by analyzing PRs, surfacing impacts, and drafting evidence-based comments. You control what gets posted.
-- **Extensible skills architecture** — Compact orchestrator agents delegate to specialized skills. Add or customize skills for your workflow.
+- **Nothing skipped** — Every configured step is a todo created before work starts; a todo closes only with evidence.
+- **Configurable rigor** — Three presets (`lite`, `standard`, `thorough`) and user presets choose spec, research, planning models, and review providers (single-model, multi-model, society-of-thought).
+- **Git discipline** — Selective staging, your uncommitted changes untouched, history never rewritten, one final PR.
+- **Resumable and rewindable** — A new session continues from evidence; a rewind reopens the affected steps and adds new commits.
+- **AI-assisted code review** — PAW Review helps human reviewers by analyzing PRs, surfacing impacts, and drafting evidence-based comments as a pending review. You control what gets posted.
 
 ## Two Platforms
 
@@ -62,20 +60,20 @@ PAW works with both **GitHub Copilot CLI** (terminal) and **VS Code** (GUI):
 |----------|--------------|----------|
 | **Copilot CLI** (Plugin) | `copilot plugin marketplace add lossyrob/phased-agent-workflow` then `copilot plugin install paw-workflow@paw-workflow` | Terminal workflows, quick iteration |
 | **Copilot CLI** (NPM) | `npx @paw-workflow/cli install copilot` | Fallback, or if you also use Claude Code |
-| **VS Code Extension** | Download `.vsix` from [Releases](https://github.com/lossyrob/phased-agent-workflow/releases) | IDE integration, visual workflow |
+| **VS Code Extension** | Download `.vsix` from [Releases](https://github.com/lossyrob/phased-agent-workflow/releases) | IDE integration |
 
-Both platforms use the same PAW agents and skills—choose based on your preferred workflow.
+Both platforms use the same PAW agents and skills. PAW v2 has been verified on Copilot CLI; VS Code and Claude Code are not yet verified end to end (see [Known limits](docs/release-notes.md#known-limits)).
 
 ---
 
 ## Implementation Workflow
 
-The **PAW agent** guides features from issue to merged PR through four stages:
+The **PAW agent** takes a task from an issue or prompt to one pull request:
 
-1. **Specification** — Translates issues into measurable specs; researches existing system behavior
-2. **Planning** — Maps relevant code areas; creates phased implementation plans
-3. **Implementation** — Executes each phase, with optional PRs for human review at each step
-4. **Finalization** — Opens final PR to main with comprehensive description
+1. **Setup** — Resolves the configuration, creates the target branch (or a worktree), and writes `WorkflowContext.md`
+2. **Plan** — Researches the code and writes `ImplementationPlan.md`; optional shaping, spec, dedicated research, plan review and a plan checkpoint come first
+3. **Implement** — One subagent per plan unit (independent units may run in parallel), each checked against the plan; optional review after each unit
+4. **Final review and PR** — Runs the configured final review, then opens one PR to the base branch
 
 ## Review Workflow
 
@@ -130,23 +128,21 @@ npx @paw-workflow/cli uninstall         # Remove PAW
 2. Install via `Extensions: Install from VSIX...` in the Command Palette
 3. Run `PAW: New PAW Workflow` to start
 
-The extension manages workflow directories, git branches, and provides status commands. See the [PAW Specification](paw-specification.md) for details.
+The extension asks for preset, plan checkpoint, artifact lifecycle and execution mode, then opens a PAW chat. It also provides status and stop-tracking commands. See the [VS Code guide](docs/guide/vscode-extension.md).
 
 ---
 
 ## Configuration
 
-**Workflow Modes** control which stages are included:
-- **Full** — Spec → Research → Planning → Implementation → Final PR
-- **Minimal** — Code Research → Implementation → Final PR (faster for small changes)
+Name a preset or setting when you start: `paw this with thorough, plan checkpoint on`.
 
-**Review Policies** control when the workflow pauses for human input:
-- **milestones** — Pause at spec, plan, and PR completion (recommended)
-- **every-stage** — Pause after every artifact
-- **planning-only** — Pause at spec and plan only
-- **final-pr-only** — Auto-proceed through all stages, pause at final PR
+| Preset | What it does |
+|--------|--------------|
+| `lite` | Inline research, one implementation unit, single-model reviews |
+| `standard` (default) | Single-model plan review, multi-model final review |
+| `thorough` | Spec, dedicated research, multi-model planning, society-of-thought reviews, phase review |
 
-Configuration is set in `WorkflowContext.md` during initialization. See the [PAW Specification](paw-specification.md) for details.
+Configuration is recorded in `.paw/work/<work-id>/WorkflowContext.md` at setup. See [Configuration and Presets](docs/guide/workflow-presets.md). Upgrading from PAW v1? See [Migrating from v1](docs/guide/migration.md).
 
 ## Credits
 

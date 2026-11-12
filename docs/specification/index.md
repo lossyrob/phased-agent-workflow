@@ -1,95 +1,41 @@
 # PAW Specification Overview
 
-The **Phased Agent Workflow (PAW)** streamlines development of GitHub Copilot chat modes and features by moving work through **staged, reviewable milestones** with **clear artifacts**.
+**Phased Agent Workflow (PAW)** supports Context-Driven Development: agents build understanding through durable artifacts (spec, research, plan) before they write code, and every step is recorded in git.
 
-## Key Properties
+This section specifies PAW v2. The user guide describes how to use it; these pages describe how it works and what it guarantees.
 
-PAW separates the lifecycle into **workflow stages** (Specification → Planning → Implementation → Documentation → Integration) and, inside the Implementation stage, **implementation phases** (Phase 1…N) that ship incremental, reviewable PRs.
+## Implementation Workflow
 
-| Property | Description |
-|----------|-------------|
-| **Traceable** | Every stage produces durable Markdown artifacts committed to Git and reviewed via PRs |
-| **Rewindable** | Any stage can restart. If agents are implementing incorrectly, go back to the spec or plan, fix it, and re-run downstream stages |
-| **Agentic** | Purpose-built chat modes ("agents") own the work of each stage |
-| **Human-in-the-loop** | Humans approve specs/plans, review PRs, and decide when to rewind |
-| **Consistent surfaces** | Issues and PRs stay in sync via a lightweight Status agent |
+One workflow skill, `paw-workflow`, loaded by a host agent. The host builds a todo graph from the resolved configuration, runs each activity (specify, research, plan, implement, review) in a subagent with a brief, checks every result against git and the files on disk, and opens one final pull request.
 
-!!! note "Terminology"
-    In PAW, **Stages** refer to workflow milestones (e.g., Specification Stage). Within the **Implementation Stage**, work is split into **Implementation Phases** (Phase 1, Phase 2, …) to keep PRs small and reviewable.
-    
-    *PAW is staged, and its implementation is phased.*
+| Page | Contents |
+|------|----------|
+| [Design](v2/design.md) | Shape, activities, host rules, todo graph, delegation and return contracts, configuration model, presets, artifacts, git and lifecycle, compatibility, PAW Review alignment, decisions |
+| [Invariant Catalogue](v2/invariants.md) | The rules learned from past failures that v2 guarantees, their owners and regression tests, and the v1 machinery v2 dropped |
+| [Runtime Capabilities](v2/runtime-capabilities.md) | What Copilot CLI, Claude Code and VS Code offer (subagent follow-up, parallelism, todo store, skill files), probe results, and baseline runs |
 
-## Two Workflows
+The workflow's own reference files are in `skills/paw-workflow/references/`: `configuration.md`, `review-providers.md`, `presets/`, `activities/`, `procedures/` and `v1-context.md`.
 
-PAW provides two complementary workflows:
+## Review Workflow
 
-### Implementation Workflow
-
-The core workflow for building features: turns GitHub Issues into production-ready code through structured phases. Each phase produces durable artifacts that feed the next, with human oversight at critical decision points.
-
-**Stages:** Specification → Research → Planning → Implementation (including Documentation phase) → Final Review (if enabled) → Final PR
-
-[Learn more about the Implementation Workflow →](implementation.md)
-
-### Review Workflow
-
-A structured three-stage process for thorough code review: systematically understands PR changes, evaluates impacts and gaps, and generates comprehensive evidence-based feedback with full human control over what gets posted.
-
-**Stages:** Understanding → Evaluation → Feedback Generation
-
-[Learn more about the Review Workflow →](review.md)
+PAW Review is a separate workflow for reviewing pull requests: understanding, evaluation and feedback, ending in a pending review that you control. It uses the same host model and return contract. See [Review Workflow](review.md).
 
 ## Repository Layout
 
-PAW artifacts are organized in a consistent directory structure:
-
 ```
 .paw/
-  work/                         # Implementation workflow artifacts
-    <work-id>/                  # e.g., add-authentication
-      WorkflowContext.md        # Centralized parameter file
-      prompts/
-        spec-research.prompt.md # Generated research prompts
-        code-research.prompt.md # Code research guidance
-      Spec.md                   # Feature specification
-      SpecResearch.md           # Spec research findings
-      CodeResearch.md           # Code research findings
-      ImplementationPlan.md     # Implementation plan
-      Docs.md                   # Documentation
-  
-  reviews/                      # Review workflow artifacts
-    PR-<number>/                # e.g., PR-123
-      ReviewContext.md          # Review parameters
-      prompts/
-        code-research.prompt.md # Baseline research questions
-      CodeResearch.md           # Pre-change baseline
-      DerivedSpec.md           # Reverse-engineered spec
-      ImpactAnalysis.md        # System-wide effects
-      GapAnalysis.md           # Categorized findings
-      ReviewComments.md        # Complete feedback
+  work/<work-id>/       # Implementation workflow artifacts
+  reviews/<identifier>/ # PAW Review artifacts
 ```
 
-## Branching Conventions
+See the [Artifacts Reference](../reference/artifacts.md) for the files in each.
 
-| Branch Type | Naming Pattern | Example |
-|-------------|----------------|---------|
-| Target Branch | Your project conventions | `feature/auth-system` |
-| Planning Branch | `<target>_plan` | `feature/auth-system_plan` |
-| Phase Branch | `<target>_phase<N>` | `feature/auth-system_phase1` |
-| Docs Branch | `<target>_docs` | `feature/auth-system_docs` |
+## Branches and Pull Requests
 
-## PR Conventions
+| Item | Convention |
+|------|------------|
+| Target branch | Your project's conventions; derived from the task if you do not give one |
+| Worktree (`execution_mode: worktree`) | `<parent of repo root>/<repo dir name>-<work-id>`, on the target branch |
+| Pull request | One, from the target branch to the base branch |
 
-| PR Type | Source → Target |
-|---------|-----------------|
-| Planning PR | `<target>_plan` → `<target>` |
-| Phase PR | `<target>_phase<N>` → `<target>` |
-| Docs PR | `<target>_docs` → `<target>` |
-| Final PR | `<target>` → `main` |
-
-## Next Steps
-
-- [Implementation Workflow](implementation.md) — Detailed implementation stages
-- [Review Workflow](review.md) — Detailed review stages
-- [Agents Reference](../reference/agents.md) — All PAW agents
-- [Artifacts Reference](../reference/artifacts.md) — Artifact descriptions
+Every commit is made on the target branch. PAW v2 creates no planning, phase or docs branches.

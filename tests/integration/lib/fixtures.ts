@@ -1,4 +1,4 @@
-import { access, cp, mkdir, mkdtemp, readFile, rm } from "fs/promises";
+import { access, chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -6,6 +6,29 @@ import { simpleGit, type SimpleGit } from "simple-git";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const FIXTURES_DIR = resolve(__dirname, "../fixtures");
+
+export { rewriteGhCommand } from "./shell-match.js";
+
+/** The pull request the PAW Review stub `gh` serves. */
+export interface ReviewStubPr {
+  repository: string;
+  number: number;
+  url: string;
+  title: string;
+  body: string;
+  author: string;
+  baseRefName: string;
+  headRefName: string;
+  baseRefOid: string;
+  headRefOid: string;
+}
+
+export interface ReviewStubState {
+  nextId: number;
+  reviews: Array<{ id: number; state: string; body?: string; commit_id?: string }>;
+  comments: Array<{ id: number; pull_request_review_id: number | null; path?: string; line?: unknown; body?: string }>;
+  writes: Array<Record<string, unknown>>;
+}
 
 /** Manages an isolated temp git repository for a single test. */
 export class TestFixture {
@@ -99,6 +122,107 @@ export class TestFixture {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Give the fixture a local bare repository as `origin` so a workflow can push
+   * without touching the network. Returns the bare repository path.
+   */
+  async addLocalRemote(): Promise<string> {
+    const remotePath = join(this.workspaceDir, "origin.git");
+    await simpleGit().raw(["init", "--bare", remotePath]);
+    await this.git.addRemote("origin", remotePath);
+    const branch = await this.getBranch();
+    await this.git.raw(["push", "-u", "origin", branch]);
+    return remotePath;
+  }
+
+  /**
+   * Install a stub `gh` that records its arguments and pretends `gh pr create`
+   * succeeded. After a create, `gh pr view` and `gh pr list` report that PR with its
+   * base and head; before one, `view` fails and `list` is empty. Returns the stub's
+   * path and the call log path.
+   *
+   * Never put the stub on PATH: the Copilot CLI process inherits PATH and uses the
+   * real `gh` for its own sign-in, and shadowing it makes the CLI fall back to the
+   * OS keychain and prompt the user. Route the agent's shell commands to the stub
+   * with `rewriteGhCommand` and the harness `rewriteCommand` option instead.
+   */
+  async installGhStub(): Promise<{ stubPath: string; logPath: string }> {
+    const binDir = join(this.workspaceDir, "bin");
+    const logPath = join(this.workspaceDir, "gh-calls.log");
+    await mkdir(binDir, { recursive: true });
+    const statePath = join(this.workspaceDir, "gh-pr.json");
+    const script = [
+      "#!/bin/sh",
+      `printf '%s\\n' "$*" >> "${logPath}"`,
+      `state="${statePath}"`,
+      'url="https://github.com/example/fixture/pull/1"',
+      'if [ "$1" = "pr" ] && [ "$2" = "create" ]; then',
+      // Remember base and head so `pr view` and `pr list` can report them.
+      '  base=main; head=$(git branch --show-current)',
+      "  while [ $# -gt 0 ]; do",
+      '    case "$1" in',
+      '      --base|-B) base="$2"; shift ;;',
+      '      --base=*) base="${1#--base=}" ;;',
+      '      --head|-H) head="$2"; shift ;;',
+      '      --head=*) head="${1#--head=}" ;;',
+      "    esac",
+      "    shift",
+      "  done",
+      `  printf '{"number":1,"state":"OPEN","isDraft":false,"url":"%s","baseRefName":"%s","headRefName":"%s"}\\n' "$url" "$base" "$head" > "$state"`,
+      '  echo "$url"',
+      'elif [ "$1" = "pr" ] && [ "$2" = "view" ]; then',
+      '  if [ -f "$state" ]; then cat "$state"; else echo "no pull requests found" >&2; exit 1; fi',
+      'elif [ "$1" = "pr" ] && [ "$2" = "list" ]; then',
+      '  if [ -f "$state" ]; then printf \'[%s]\\n\' "$(cat "$state")"; else echo "[]"; fi',
+      "fi",
+      "exit 0",
+      "",
+    ].join("\n");
+    await writeFile(join(binDir, "gh"), script);
+    await chmod(join(binDir, "gh"), 0o755);
+    return { stubPath: join(binDir, "gh"), logPath };
+  }
+
+  /**
+   * Install the PAW Review stub `gh` (lib/gh-review-stub.cjs) for one pull request. It
+   * records every call, answers reads (`pr view`, `pr diff`, `api` GETs, GraphQL queries)
+   * from `pr` and git, and records writes (pending reviews, review comments, submissions)
+   * in a state file instead of sending them anywhere. Route commands to it with
+   * `rewriteGhCommand`; never put it on PATH (see installGhStub).
+   */
+  async installReviewGhStub(pr: ReviewStubPr): Promise<{ stubPath: string; logPath: string }> {
+    const binDir = join(this.workspaceDir, "bin");
+    await mkdir(binDir, { recursive: true });
+    await writeFile(join(this.workspaceDir, "gh-review-pr.json"), JSON.stringify(pr, null, 2));
+    const script = [
+      "#!/bin/sh",
+      `PAW_GH_STUB_DIR="${this.workspaceDir}" exec "${process.execPath}" "${join(__dirname, "gh-review-stub.cjs")}" "$@"`,
+      "",
+    ].join("\n");
+    await writeFile(join(binDir, "gh"), script);
+    await chmod(join(binDir, "gh"), 0o755);
+    return { stubPath: join(binDir, "gh"), logPath: join(this.workspaceDir, "gh-calls.log") };
+  }
+
+  /** Writes the PAW Review stub `gh` recorded: reviews, review comments, and raw write calls. */
+  async reviewGhState(): Promise<ReviewStubState> {
+    try {
+      return JSON.parse(await readFile(join(this.workspaceDir, "gh-review-state.json"), "utf-8")) as ReviewStubState;
+    } catch {
+      return { nextId: 0, reviews: [], comments: [], writes: [] };
+    }
+  }
+
+  /** Read the stub gh call log, one invocation per entry. */
+  async ghCalls(): Promise<string[]> {
+    try {
+      const raw = await readFile(join(this.workspaceDir, "gh-calls.log"), "utf-8");
+      return raw.split("\n").filter((line) => line && !/(^| )--help\b/.test(line));
+    } catch {
+      return [];
     }
   }
 

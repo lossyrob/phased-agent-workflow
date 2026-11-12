@@ -139,16 +139,16 @@ describe("assertions", () => {
 });
 
 describe("skill loader", () => {
-  it("loads paw-spec skill", async () => {
-    const content = await loadSkill("paw-spec");
+  it("loads the paw-workflow skill", async () => {
+    const content = await loadSkill("paw-workflow");
     assert.ok(content.length > 0, "Skill content should not be empty");
-    assert.ok(content.includes("Specification"), "Should contain Specification keyword");
+    assert.ok(content.includes("name: paw-workflow"));
   });
 
-  it("loads paw-planning skill", async () => {
-    const content = await loadSkill("paw-planning");
+  it("loads the paw-sot skill", async () => {
+    const content = await loadSkill("paw-sot");
     assert.ok(content.length > 0);
-    assert.ok(content.includes("Planning") || content.includes("Implementation"));
+    assert.ok(content.includes("name: paw-sot"));
   });
 
   it("throws for nonexistent skill", async () => {

@@ -7,7 +7,7 @@ description: Analyzes system-wide impact of PR changes including integration eff
 
 Analyze system-wide impact of PR changes using understanding artifacts from the Understanding stage.
 
-> **Reference**: Follow Core Review Principles from `paw-review-workflow` skill.
+> Follow the activity contract named in your brief.
 
 ## Responsibilities
 
@@ -552,16 +552,6 @@ Before completing, verify:
 - [ ] ImpactAnalysis.md artifact generated with all required sections
 - [ ] Baseline state from CodeResearch.md included
 
-## Completion Response
+## Completion
 
-```
-Activity complete.
-Artifact saved: .paw/reviews/<identifier>/ImpactAnalysis.md
-Status: Success
-
-Key findings:
-- X integration points identified
-- Y potential breaking changes
-- Security risk: [Low|Medium|High]
-- Deployment complexity: [Low|Medium|High]
-```
+Return the block in the activity contract. List each breaking change and each medium or high risk as a finding; put integration point and breaking change counts, security risk, and deployment complexity in the summary.

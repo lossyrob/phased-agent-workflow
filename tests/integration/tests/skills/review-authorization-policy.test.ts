@@ -27,9 +27,9 @@ describe("PAW Review authorization policy", () => {
     const agent = await readRepoFile("agents/PAW-Review.agent.md");
     const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
 
-    assert.match(agent, /significant, thorough review/i);
-    assert.match(agent, /generic code or PR review.*standard review path/i);
-    assert.match(agent, /evidence of that broader intent/i);
+    assert.match(agent, /significant, thorough reviews/i);
+    assert.match(agent, /Load the `paw-review-workflow` skill/);
+    assert.ok(agent.split("\n").length < 12, "PAW-Review.agent.md should stay a thin wrapper");
     assert.match(workflow, /significant, thorough review/i);
     assert.match(workflow, /generic code or PR review.*standard review path/i);
     assert.match(workflow, /evidence of that broader intent/i);
@@ -73,10 +73,8 @@ describe("PAW Review authorization policy", () => {
   });
 
   it("requires early conflict and capability preflight for every platform", async () => {
-    const agent = await readRepoFile("agents/PAW-Review.agent.md");
     const workflow = await readRepoFile("skills/paw-review-workflow/SKILL.md");
 
-    assert.match(agent, /report it before the Understanding stage/i);
     assert.match(workflow, /Classify the review platform as `github`, `azure-devops`, or `local`/i);
     assert.match(
       workflow,

@@ -43,7 +43,7 @@ Agent-led Q&A to build understanding:
 - Success definition: How will we know it works?
 - Constraints: Performance, security, compatibility requirements?
 
-**Codebase research**: When questions arise about existing system behavior, patterns, or integration points, delegate to `paw-code-research` skill via subagent with specific questions. Request findings returned in chat summary rather than full artifact generation. Integrate findings into the conversation.
+**Codebase research**: When questions arise about existing system behavior, patterns, or integration points, delegate to a research subagent with specific questions. Request findings with `file:line` references returned in chat rather than an artifact. Integrate findings into the conversation.
 
 ### 3. Completion Detection
 

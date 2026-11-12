@@ -6,7 +6,7 @@ The PAW VS Code extension automates workflow initialization and provides quick a
 
 ### PAW: New PAW Workflow
 
-Creates a complete PAW workflow structure with all necessary files and directories.
+Starts a PAW work item with your choices and opens a PAW chat to run it.
 
 **How to use:**
 
@@ -14,36 +14,22 @@ Creates a complete PAW workflow structure with all necessary files and directori
 2. Type **"PAW: New PAW Workflow"**
 3. Follow the prompts:
      - **Issue URL** (optional): GitHub Issue or Azure DevOps Work Item URL
-     - **Execution mode**: Current Checkout or Dedicated Worktree
-     - **Branch name**: Optional auto-derive in Current Checkout mode, explicit in Dedicated Worktree mode
-     - **Worktree strategy** (Dedicated Worktree only): Create New Worktree or Reuse Existing Worktree
-     - **Workflow mode**: Full, Minimal, or Custom
-     - **Review strategy**: PRs or Local (Minimal enforces Local)
-     - **Review policy**: Every Stage, Milestones, Planning-Only, or Final PR Only
-     - **Session policy**: Per-Stage or Continuous
+     - **Execution mode**: Current Checkout or Dedicated Worktree (shown only when `paw.enableWorktreeExecution` is on)
+     - **Branch name**: optional in Current Checkout mode (empty means PAW derives one), required in Dedicated Worktree mode
+     - **Worktree strategy** (Dedicated Worktree only): Create New Worktree (with an optional path) or Reuse Existing Worktree
+     - **Preset**: Standard (default), Lite, or Thorough
+     - **Plan checkpoint**: Run to Final PR (default) or Pause to Review the Plan
      - **Artifact lifecycle**: Commit & Clean (default), Commit & Persist, or Never Commit
-     - **Final Agent Review**: Enabled or Disabled, then interaction mode if enabled
 
-**What gets created:**
+The extension opens a new chat with the **PAW** agent and passes these as `preset`, `target_branch`, `execution_mode`, `artifact_lifecycle`, `plan_checkpoint` and, if given, `task_source`. The agent then runs setup: it creates the target branch and writes `.paw/work/<work-id>/WorkflowContext.md`. If you gave no issue URL, describe the task in the chat.
 
-```
-.paw/work/<feature-slug>/
-  WorkflowContext.md    # Workflow parameters and configuration
-```
+Other settings (spec, research, review providers, models) are not prompted for. State them in the chat, or use a [user preset](workflow-presets.md#user-presets).
 
-The workflow directory is created in the **execution checkout**. In Current Checkout mode this is the open workspace. In Dedicated Worktree mode it is the created or reused worktree.
-
-The extension:
-
-- Normalizes your branch name into a valid feature slug
-- Handles slug conflicts (prompts for alternatives if directory exists)
-- Creates and checks out the target branch in the execution checkout
-- Opens `WorkflowContext.md` for review
-- In Dedicated Worktree mode, creates or validates a separate worktree, opens that folder in a new VS Code window, and starts the PAW chat there without changing the caller checkout
+In Dedicated Worktree mode the extension creates or validates the worktree on the target branch, opens it in a new VS Code window, and starts the PAW chat there without changing the caller checkout.
 
 ### PAW: Get Work Status
 
-Provides a comprehensive status report of your current workflow progress.
+Opens a PAW chat that loads the `paw-status` skill.
 
 **How to use:**
 
@@ -55,17 +41,17 @@ Provides a comprehensive status report of your current workflow progress.
 
 **What you get:**
 
-The Status Agent analyzes your workflow and reports:
+- Configuration from `WorkflowContext.md` (a v1 file is reported as written)
+- Artifacts present, and which plan units commits on the target branch deliver
+- Git state: current and target branch, uncommitted changes, commits ahead of or behind the remote
+- The pull request for the target branch, its checks and unresolved review comments
+- A recommended next step, usually to continue the work item with the PAW agent
 
-- Completed artifacts (Spec.md, ImplementationPlan.md, etc.)
-- Current phase progress in implementation
-- Git branch status and divergence from target
-- PR states with review comment analysis (if PRs strategy)
-- Actionable next steps
+The status check is read-only unless you ask it to post an update to the issue or PR.
 
 ### PAW: Stop Tracking Artifacts
 
-Switches a workflow's artifact lifecycle to `never-commit`, removing artifacts from git while keeping local copies. This is a mid-workflow escape hatch—note that `commit-and-clean` workflows handle cleanup automatically at PR time.
+Switches a work item's artifact lifecycle to `never-commit`, removing artifacts from git while keeping local copies. This is a mid-workflow escape hatch—note that `commit-and-clean` workflows handle cleanup automatically at PR time.
 
 **How to use:**
 
@@ -78,7 +64,7 @@ Switches a workflow's artifact lifecycle to `never-commit`, removing artifacts f
 
 - Artifacts are untracked from git index (files remain locally)
 - A local-only `.gitignore` file is created in the workflow directory and remains untracked
-- WorkflowContext.md `Artifact Lifecycle` field is updated to `never-commit`
+- `artifact_lifecycle` in `WorkflowContext.md` is set to `never-commit` (in a v1 file, the `Artifact Lifecycle` line)
 - Future commits won't include workflow artifacts
 
 **When to use:**
@@ -207,7 +193,7 @@ Dedicated Worktree mode fails fast when PAW cannot prove it is running in the co
 2. Reopen that worktree in VS Code if it still exists
 3. If the worktree was removed manually, re-run initialization and create or reuse a valid worktree
 
-PAW stores only portable execution metadata in `WorkflowContext.md`. The machine-specific worktree path stays in VS Code local state, so moving or deleting a worktree outside PAW requires reopening or re-initializing it.
+`WorkflowContext.md` does not record the worktree path. The extension keeps it in VS Code local state, and a resumed session finds the worktree with `git worktree list`. Moving or deleting a worktree outside PAW requires reopening or re-initializing it.
 
 ### WSL (Windows Subsystem for Linux)
 

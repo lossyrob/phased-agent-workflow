@@ -3,14 +3,11 @@ import * as vscode from 'vscode';
 import { 
   collectUserInputs,
   isValidBranchName, 
-  WorkflowMode,
+  ArtifactLifecycle,
   ExecutionMode,
+  Preset,
   WorktreeStrategy,
   WorktreeConfig,
-  ReviewStrategy,
-  ArtifactLifecycle,
-  WorkflowModeSelection,
-  FinalReviewConfig,
   WORKTREE_EXECUTION_FEATURE_FLAG
 } from '../../ui/userInput';
 
@@ -76,9 +73,6 @@ function overrideWorktreeExecutionFlag(enabled: boolean): () => void {
  * These unit tests verify the input validation logic used in the work item initialization flow.
  * Tests cover:
  * - Git branch name validation (alphanumeric, hyphens, underscores, slashes only)
- * - Workflow mode type validation
- * - Review strategy type validation
- * - WorkflowModeSelection interface usage
  * 
  * Note: Issue URL validation was removed - agents now interpret input contextually
  * (URL, issue number, or identifier) and handle errors gracefully.
@@ -119,54 +113,12 @@ suite('User Input Validation', () => {
 });
 
 /**
- * Workflow mode type tests.
- * 
- * Verify that WorkflowMode type accepts valid values and the WorkflowModeSelection
- * interface works correctly with and without custom instructions.
+ * Preset type tests.
  */
-suite('Workflow Mode Types', () => {
-  test('WorkflowMode accepts valid values', () => {
-    const fullMode: WorkflowMode = 'full';
-    const minimalMode: WorkflowMode = 'minimal';
-    const customMode: WorkflowMode = 'custom';
-    
-    assert.strictEqual(fullMode, 'full');
-    assert.strictEqual(minimalMode, 'minimal');
-    assert.strictEqual(customMode, 'custom');
-  });
-
-  test('WorkflowModeSelection works without custom instructions', () => {
-    const selection: WorkflowModeSelection = {
-      mode: 'full'
-    };
-    
-    assert.strictEqual(selection.mode, 'full');
-    assert.strictEqual(selection.workflowCustomization, undefined);
-  });
-
-  test('WorkflowModeSelection works with workflow customization', () => {
-    const selection: WorkflowModeSelection = {
-      mode: 'custom',
-      workflowCustomization: 'skip docs, single branch'
-    };
-    
-    assert.strictEqual(selection.mode, 'custom');
-    assert.strictEqual(selection.workflowCustomization, 'skip docs, single branch');
-  });
-});
-
-/**
- * Review strategy type tests.
- * 
- * Verify that ReviewStrategy type accepts valid values (prs, local).
- */
-suite('Review Strategy Types', () => {
-  test('ReviewStrategy accepts valid values', () => {
-    const prsStrategy: ReviewStrategy = 'prs';
-    const localStrategy: ReviewStrategy = 'local';
-    
-    assert.strictEqual(prsStrategy, 'prs');
-    assert.strictEqual(localStrategy, 'local');
+suite('Preset Types', () => {
+  test('Preset accepts the three built-in presets', () => {
+    const presets: Preset[] = ['lite', 'standard', 'thorough'];
+    assert.deepStrictEqual(presets, ['lite', 'standard', 'thorough']);
   });
 });
 
@@ -223,16 +175,12 @@ suite('Execution Mode Types', () => {
             return findQuickPickValue(quickPickItems, 'worktree');
           case 'Dedicated Worktree':
             return findQuickPickValue(quickPickItems, 'create');
-          case 'Workflow Mode Selection':
-            return findQuickPickValue(quickPickItems, 'minimal');
-          case 'Review Policy Selection':
-            return findQuickPickValue(quickPickItems, 'final-pr-only');
-          case 'Session Policy Selection':
-            return findQuickPickValue(quickPickItems, 'continuous');
+          case 'Workflow Preset':
+            return findQuickPickValue(quickPickItems, 'standard');
+          case 'Plan Checkpoint':
+            return findQuickPickValue(quickPickItems, false);
           case 'Artifact Lifecycle':
             return findQuickPickValue(quickPickItems, 'commit-and-clean');
-          case 'Final Agent Review':
-            return findQuickPickValue(quickPickItems, false);
           default:
             throw new Error(`Unexpected quick pick title: ${title}`);
         }
@@ -280,10 +228,8 @@ suite('Execution Mode Types', () => {
         executionModeIndex < branchInputIndex,
         `Expected execution mode prompt before branch input, saw: ${promptOrder.join(' -> ')}`
       );
-      assert.ok(
-        !promptOrder.includes('pick:Review Strategy Selection'),
-        'Minimal mode should auto-select the local review strategy'
-      );
+      assert.strictEqual(inputs?.preset, 'standard');
+      assert.strictEqual(inputs?.planCheckpoint, false);
     } finally {
       mutableWindow.showQuickPick = originalShowQuickPick;
       mutableWindow.showInputBox = originalShowInputBox;
@@ -310,16 +256,12 @@ suite('Execution Mode Types', () => {
         promptOrder.push(`pick:${title}`);
 
         switch (title) {
-          case 'Workflow Mode Selection':
-            return findQuickPickValue(items, 'minimal');
-          case 'Review Policy Selection':
-            return findQuickPickValue(items, 'final-pr-only');
-          case 'Session Policy Selection':
-            return findQuickPickValue(items, 'continuous');
+          case 'Workflow Preset':
+            return findQuickPickValue(items, 'lite');
+          case 'Plan Checkpoint':
+            return findQuickPickValue(items, true);
           case 'Artifact Lifecycle':
             return findQuickPickValue(items, 'commit-and-clean');
-          case 'Final Agent Review':
-            return findQuickPickValue(items, false);
           default:
             throw new Error(`Unexpected quick pick title: ${title}`);
         }
@@ -346,6 +288,12 @@ suite('Execution Mode Types', () => {
       assert.ok(inputs, 'Expected collectUserInputs to succeed');
       assert.strictEqual(inputs?.executionMode, 'current-checkout');
       assert.strictEqual(inputs?.targetBranch, '');
+      assert.strictEqual(inputs?.preset, 'lite');
+      assert.strictEqual(inputs?.planCheckpoint, true);
+      assert.deepStrictEqual(
+        promptOrder.filter((entry) => entry.startsWith('pick:')),
+        ['pick:Workflow Preset', 'pick:Plan Checkpoint', 'pick:Artifact Lifecycle']
+      );
       assert.ok(
         !promptOrder.includes('pick:Execution Mode Selection'),
         'Execution mode prompt should stay hidden while the feature flag is disabled'
@@ -355,60 +303,6 @@ suite('Execution Mode Types', () => {
       mutableWindow.showInputBox = originalShowInputBox;
       restoreConfiguration();
     }
-  });
-});
-
-/**
- * Final Review configuration type tests.
- * 
- * Verify that FinalReviewConfig interface accepts valid configurations.
- */
-suite('Final Review Config Types', () => {
-  test('FinalReviewConfig works when disabled', () => {
-    const config: FinalReviewConfig = {
-      enabled: false,
-      mode: 'single-model',
-      interactive: true
-    };
-    
-    assert.strictEqual(config.enabled, false);
-    assert.strictEqual(config.mode, 'single-model');
-    assert.strictEqual(config.interactive, true);
-  });
-
-  test('FinalReviewConfig works with single-model mode', () => {
-    const config: FinalReviewConfig = {
-      enabled: true,
-      mode: 'single-model',
-      interactive: true
-    };
-    
-    assert.strictEqual(config.enabled, true);
-    assert.strictEqual(config.mode, 'single-model');
-  });
-
-  test('FinalReviewConfig works with multi-model mode', () => {
-    const config: FinalReviewConfig = {
-      enabled: true,
-      mode: 'multi-model',
-      interactive: false
-    };
-    
-    assert.strictEqual(config.enabled, true);
-    assert.strictEqual(config.mode, 'multi-model');
-    assert.strictEqual(config.interactive, false);
-  });
-
-  test('FinalReviewConfig works with smart interactive mode', () => {
-    const config: FinalReviewConfig = {
-      enabled: true,
-      mode: 'multi-model',
-      interactive: 'smart'
-    };
-    
-    assert.strictEqual(config.enabled, true);
-    assert.strictEqual(config.mode, 'multi-model');
-    assert.strictEqual(config.interactive, 'smart');
   });
 });
 

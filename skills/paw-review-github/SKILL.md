@@ -7,7 +7,7 @@ description: Posts finalized review comments to GitHub, leaving the review pendi
 
 Post finalized comments to a GitHub review. Pending is the default. Submission is a separate authorized mutation with fail-closed target and head verification.
 
-> **Reference**: Follow Core Review Principles and Authorization Preflight from `paw-review-workflow`.
+Run this in the review host session, never in a subagent; you are the only actor that changes the review on GitHub. Apply the preflight rules of `paw-review-workflow`.
 
 ## Prerequisites
 

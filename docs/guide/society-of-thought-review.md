@@ -2,21 +2,15 @@
 
 Society-of-thought is a review mode that uses **specialist personas** — each with a unique cognitive strategy and behavioral rules — to review code from genuinely different perspectives. Instead of running the same review prompt through multiple models, a panel of specialists independently analyzes the code, then a synthesis step merges their findings into a single prioritized report.
 
-The society-of-thought engine is implemented as the `paw-sot` utility skill, which `paw-planning-docs-review` (planning workflow), `paw-final-review` (implementation workflow), and `paw-review-workflow` (review workflow) can delegate to. This shared engine handles specialist discovery, selection, execution, and synthesis — while each calling workflow handles its own configuration source and post-synthesis flow.
+The society-of-thought engine is the `paw-sot` skill. Both workflows load it in the host session when a review is configured with `mode: society-of-thought`; it handles specialist discovery, selection, execution and synthesis, and the calling workflow handles the findings.
 
-### Three Integration Points
+| Workflow | Review | Review type | After synthesis |
+|----------|--------|-------------|-----------------|
+| **Implementation** | `plan_review` | `artifacts` (`ImplementationPlan.md`, plus `Spec.md` and `CodeResearch.md` if present) | Must-fix and should-fix findings go back to the plan or spec subagent as revisions |
+| **Implementation** | `final_review` | `diff` (`git diff <base>...<target>` and the plan) | Must-fix and should-fix findings go back to an implement subagent as revisions |
+| **PAW Review** | Evaluation | `diff` | Findings feed the feedback, critique and posting stages |
 
-| Workflow | Calling Skill | Config Source | Post-Synthesis Flow |
-|----------|--------------|---------------|---------------------|
-| **Planning** | `paw-planning-docs-review` | WorkflowContext.md | Apply-to-spec/apply-to-plan routing |
-| **Implementation** | `paw-final-review` | WorkflowContext.md | Apply/skip/discuss resolution |
-| **Review** | `paw-review-workflow` | ReviewContext.md | Feedback → critic → GitHub comment pipeline |
-
-In the **planning workflow**, SoT is one of three Planning Review modes (alongside single-model and multi-model). Specialists review design documents (Spec.md, ImplementationPlan.md, CodeResearch.md) using the `artifacts` review type, which frames analysis around design decisions and feasibility rather than code. Findings route to `paw-spec` or `paw-planning` based on affected artifact.
-
-In the **implementation workflow**, SoT is one of three Final Review modes (alongside single-model and multi-model). After synthesis, findings go through an interactive resolution phase where changes are applied directly.
-
-In the **review workflow**, SoT replaces the Evaluation Stage's impact analysis and gap identification with unified specialist evaluation. Findings from `REVIEW-SYNTHESIS.md` flow into the existing output pipeline for comment generation and GitHub posting.
+In the implementation workflow, findings are resolved without asking you; a finding that needs a product decision or a trade-off comes to you as a decision. In PAW Review, society-of-thought replaces impact and gap analysis.
 
 ## Why Perspective Diversity Matters
 
@@ -38,9 +32,9 @@ PAW ships with three built-in perspectives:
 
 Perspectives are configured at three tiers:
 
-- **Auto** (default for final review): The engine analyzes your diff and selects relevant perspectives — temporal for operational changes, adversarial for security-sensitive code
+- **Auto** (default in the implementation workflow): The engine analyzes your diff and selects relevant perspectives — temporal for operational changes, adversarial for security-sensitive code
 - **Guided**: Specify perspectives by name (e.g., `premortem, red-team`)
-- **None** (default for PR review): No perspective overlays — standard present-tense review only
+- **None** (default in PAW Review): No perspective overlays — standard present-tense review only
 
 The `perspective_cap` setting (default: 2) limits how many perspectives each specialist runs, controlling cost. With 3 specialists and 2 perspectives each, you get 6 specialist-perspective runs instead of 3.
 
@@ -48,54 +42,46 @@ Each finding in the review output includes a `**Perspective**` attribution showi
 
 ## Configuration
 
-### Planning Workflow (Planning Docs Review)
+### Implementation Workflow
 
-Society-of-thought for planning review is configured during workflow initialization (`paw-init`). The key fields in `WorkflowContext.md`:
+Set `plan_review` or `final_review` to a society-of-thought provider block in a preset or in your request:
 
-| Field | Values | Default |
-|-------|--------|---------|
-| Planning Review Mode | `society-of-thought` | `multi-model` |
-| Planning Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
-| Planning Review Interaction Mode | `parallel` or `debate` | `parallel` |
-| Planning Review Interactive | `true`, `false`, or `smart` | `smart` |
-| Planning Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
-| Planning Review Perspectives | `none`, `auto`, or comma-separated names | `auto` |
-| Planning Review Perspective Cap | positive integer | `2` |
-
-When Planning Review Mode is `society-of-thought`, `paw-planning-docs-review` invokes `paw-sot` with `type: artifacts` (not `diff`), framing specialists for design and planning document analysis. Findings route to `paw-spec` or `paw-planning` based on affected artifact. When `planning_review_models` is set, it is ignored in SoT mode — use `planning_review_specialist_models` for model diversity.
-
-### Implementation Workflow (Final Review)
-
-Society-of-thought is configured during workflow initialization (`paw-init`). The key fields in `WorkflowContext.md`:
+```yaml
+final_review:
+  mode: society-of-thought
+  specialists: adaptive:4
+  interaction: debate
+  perspectives: auto
+  perspective_cap: 2
+  models: none
+```
 
 | Field | Values | Default |
 |-------|--------|---------|
-| Final Review Mode | `society-of-thought` | `multi-model` |
-| Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
-| Final Review Interaction Mode | `parallel` or `debate` | `parallel` |
-| Final Review Interactive | `true`, `false`, or `smart` | `smart` |
-| Final Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
-| Final Review Perspectives | `none`, `auto`, or comma-separated names | `auto` |
-| Final Review Perspective Cap | positive integer | `2` |
+| `specialists` | `all`, names, or `adaptive:<N>` | `all` |
+| `interaction` | `parallel` or `debate` | `parallel` |
+| `models` | `none`, model pool, `specialist:model` pairs, or mixed | `none` |
+| `perspectives` | `none`, `auto`, or names | `auto` |
+| `perspective_cap` | positive integer | `2` |
 
-### Review Workflow (PR Review)
+The `thorough` preset uses society-of-thought for both reviews: `parallel` for the plan, `debate` for the final review. The engine runs non-interactively and moderator mode is skipped. See [Review Providers](workflow-presets.md#review-providers).
 
-Society-of-thought for PR review is configured in `ReviewContext.md` (populated from invocation parameters):
+### PAW Review
 
-| Field | Values | Default |
-|-------|--------|---------|
-| Review Mode | `society-of-thought` | `single-model` |
-| Review Specialists | `all`, comma-separated names, or `adaptive:<N>` | `all` |
-| Review Interaction Mode | `parallel` or `debate` | `parallel` |
-| Review Interactive | `true`, `false`, or `smart` | `false` |
-| Review Specialist Models | `none`, model pool, pinned pairs, or mixed | `none` |
-| Review Perspectives | `none`, `auto`, or comma-separated names | `none` |
-| Review Perspective Cap | positive integer | `2` |
+PAW Review records the same provider block in `ReviewContext.md`, with `mode: single-model` (default) or `society-of-thought`, plus `interactive`:
 
-When Review Mode is `society-of-thought`, the Evaluation Stage invokes `paw-sot` instead of running `paw-review-impact` and `paw-review-gap` separately. Findings from `REVIEW-SYNTHESIS.md` are then mapped into the output pipeline with severity mapping: must-fix → Must, should-fix → Should, consider → Could.
+| Field | Default |
+|-------|---------|
+| `specialists` | `all` |
+| `interaction` | `parallel` |
+| `models` | `none` |
+| `perspectives` | `none` |
+| `perspective_cap` | `2` |
+| `interactive` | `false` (`true` or `smart` pause for your decision on trade-offs) |
 
-!!! note "CLI Only"
-    Society-of-thought is CLI-only for v1. In VS Code, configuring `society-of-thought` falls back to `multi-model` mode with a notification.
+Findings from `REVIEW-SYNTHESIS.md` map into the comment pipeline as must-fix → Must, should-fix → Should, consider → Could. Moderator mode is skipped.
+
+If `paw-sot` cannot be loaded or produces no `REVIEW-SYNTHESIS.md`, the review is blocked and reported; no other reviewers are substituted.
 
 ## Built-in Specialists
 
@@ -151,16 +137,16 @@ All discovered specialists participate. With only the built-in roster, this mean
 
 Specify exactly which specialists to use:
 
-```
-Final Review Specialists: security, performance, testing
+```yaml
+specialists: security, performance, testing
 ```
 
 ### Adaptive Selection
 
 Let the agent analyze your diff and select the most relevant specialists:
 
-```
-Final Review Specialists: adaptive:3
+```yaml
+specialists: adaptive:3
 ```
 
 The agent examines the change content, matches it against specialist domains, and selects up to N specialists. The selection rationale is documented in `REVIEW-SYNTHESIS.md`.
@@ -346,17 +332,7 @@ Key synthesis behaviors:
 - **Grounding validation** — Findings referencing code not in the diff are flagged as ungrounded and demoted
 - **Evidence-based adjudication** — When specialists disagree, the synthesis examines reasoning traces rather than counting votes
 
-The output is `REVIEW-SYNTHESIS.md` in `.paw/work/<work-id>/reviews/`.
-
-## Interactive Moderator Mode
-
-When `Final Review Interactive` is `true` or `smart`, you can interact with specialists after the review completes:
-
-- **Summon** a specialist by name for follow-up on a specific area
-- **Challenge** a finding — the specialist must respond with independent evidence
-- **Request deeper analysis** on a particular file or function
-
-With `smart` mode, interactive sessions activate only when significant findings (must-fix or should-fix) are present. If the review produces only `consider` items that don't qualify as quick wins, it completes without interruption — though quick-win consider items are still auto-applied.
+The output is `REVIEW-SYNTHESIS.md` in the review's output directory: `.paw/work/<work-id>/reviews/planning/` (plan review), `.paw/work/<work-id>/reviews/` (final review), or `.paw/reviews/<identifier>/` (PAW Review).
 
 ## Model Assignment
 
@@ -364,24 +340,24 @@ By default, all specialists use the session's default model. You can add model-a
 
 ### Workflow-Level Configuration
 
-Set `Final Review Specialist Models` in WorkflowContext.md (configured during `paw-init`):
+Set `models` in the society-of-thought provider block:
 
 **Model pool** — distribute models round-robin across specialists:
 
-```
-Final Review Specialist Models: gpt-5.3-codex, claude-opus-4.6, gemini-3-pro-preview
+```yaml
+models: [gpt-5.3-codex, claude-opus-4.6, gemini-3-pro-preview]
 ```
 
 **Explicit pinning** — assign specific models to specific specialists:
 
-```
-Final Review Specialist Models: security:claude-opus-4.6, architecture:gpt-5.3-codex
+```yaml
+models: [security:claude-opus-4.6, architecture:gpt-5.3-codex]
 ```
 
 **Mixed** — pin some specialists, pool the rest:
 
-```
-Final Review Specialist Models: security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview
+```yaml
+models: [security:claude-opus-4.6, gpt-5.3-codex, gemini-3-pro-preview]
 ```
 
 In mixed mode, pinned specialists get their assigned model. Unpinned specialists are sorted alphabetically and assigned models from the pool list round-robin.
@@ -401,12 +377,11 @@ model: claude-opus-4.6
 When multiple sources specify a model, the most specific wins:
 
 1. **Specialist frontmatter** `model:` field (highest priority)
-2. **WorkflowContext pinning** (`specialist:model` pair)
-3. **WorkflowContext pool** (round-robin distribution)
+2. **Provider block pinning** (`specialist:model` pair)
+3. **Provider block pool** (round-robin distribution)
 4. **Session default** (fallback)
 
 ## Next Steps
 
-- [Stage Transitions](stage-transitions.md) — How review policies affect the workflow
-- [Workflow Modes](workflow-modes.md) — Configure Full, Minimal, or Custom modes
+- [Configuration and Presets](workflow-presets.md#review-providers) — Review provider blocks
 - [Artifacts Reference](../reference/artifacts.md) — All PAW artifacts including REVIEW-SYNTHESIS.md

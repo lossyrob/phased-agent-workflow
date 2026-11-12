@@ -1,6 +1,6 @@
 # PAW Artifacts Reference
 
-PAW workflows produce durable Markdown artifacts that trace reasoning and decisions through each stage. By default (`commit-and-clean` lifecycle), artifacts are committed during development and removed at PR time.
+PAW workflows write durable Markdown artifacts that record what was decided and why. `WorkflowContext.md` holds configuration only; progress lives in the host's todo graph and in git. How artifacts are tracked in git depends on the [artifact lifecycle](../guide/workflow-presets.md#artifact-lifecycle).
 
 ## Directory Structure
 
@@ -8,33 +8,32 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 .paw/
   work/                         # Implementation workflow
     <work-id>/
-      WorkflowContext.md        # Required: workflow parameters
-      ResearchQuestions.md      # Research questions for spec research
-      Spec.md                   # Feature specification
-      SpecResearch.md           # Spec research findings
-      CodeResearch.md           # Code research findings
-      ImplementationPlan.md     # Implementation plan
-      Docs.md                   # Documentation
-      WorkShaping.md            # Pre-spec ideation (optional)
-      planning/                 # Multi-model planning artifacts (gitignored)
-        PLAN-{MODEL}.md         # Per-model plan drafts
-      reviews/                  # Review artifacts (gitignored)
-        planning/               # Planning Documents Review artifacts
-        REVIEW-SYNTHESIS.md     # Final review synthesis (society-of-thought / multi-model)
-      Plan.md                   # Lightweight plan (PAW Lite only)
-  
-  reviews/                      # Review workflow
+      WorkflowContext.md        # Always: configuration
+      WorkShaping.md            # When shaping runs
+      Spec.md                   # When spec: on
+      CodeResearch.md           # When research: dedicated
+      ImplementationPlan.md     # Always: the plan
+      ImplementationPlan-<model>.md  # Per-model drafts, with two or more planning.models
+      Docs.md                   # Only when the plan calls for it
+      reviews/                  # Review output; never committed
+        planning/               # Plan review
+        <unit>/                 # Phase review, per unit
+        REVIEW*.md              # Final review
+
+  reviews/                      # PAW Review
     PR-<number>/                # Single-repo: PR-123
     PR-<number>-<repo-slug>/    # Multi-repo: PR-123-my-repo
-      ReviewContext.md          # Review parameters
-      ResearchQuestions.md      # Research questions for baseline analysis
+    <branch-slug>/              # Local branch review
+      ReviewContext.md          # Review parameters and preflight
+      ResearchQuestions.md      # Questions for baseline research
       CodeResearch.md           # Pre-change baseline
       DerivedSpec.md            # Reverse-engineered spec
       ImpactAnalysis.md         # Impact analysis (single-model mode)
       GapAnalysis.md            # Gap analysis (single-model mode)
-      REVIEW-{SPECIALIST}.md   # Per-specialist findings (SoT mode, no perspectives)
+      REVIEW-{SPECIALIST}.md    # Per-specialist findings (SoT mode, no perspectives)
       REVIEW-{SPECIALIST}-{PERSPECTIVE}.md  # Per-specialist-perspective findings (SoT with perspectives)
       REVIEW-SYNTHESIS.md       # Synthesized findings (SoT mode)
+      CrossRepoAnalysis.md      # Multi-repo only, in the primary PR's directory
       ReviewComments.md         # Review comments
 ```
 
@@ -44,183 +43,95 @@ PAW workflows produce durable Markdown artifacts that trace reasoning and decisi
 
 ### WorkflowContext.md
 
-**Purpose:** Centralized parameter file that all agents read at startup.
+**Purpose:** The work item's configuration, written once at setup. It never records progress.
 
-**Contents:**
+**Format:**
 
-| Field | Description |
-|-------|-------------|
-| Work Title | Short name for PR titles |
-| Work ID | Normalized slug for artifact paths |
-| Target Branch | Branch where implementation merges |
-| Execution Mode | `current-checkout` or `worktree`; older files that omit this field default to `current-checkout` |
-| Repository Identity | Portable repository proof: normalized `origin` slug plus root commit SHA |
-| Execution Binding | Portable execution proof: `worktree:<work-id>:<target-branch>` |
-| Workflow Mode | `full`, `minimal`, or `custom` |
-| Review Strategy | `prs` or `local` |
-| Review Policy | `every-stage`, `milestones`, `planning-only`, or `final-pr-only` |
-| Session Policy | `per-stage` or `continuous` |
-| Issue URL | GitHub Issue or Azure DevOps Work Item |
-| Remote | Git remote name (default: "origin") |
-| Artifact Paths | Usually "auto-derived" |
-| Additional Inputs | Extra parameters |
-| Artifact Lifecycle | `commit-and-clean`, `commit-and-persist`, or `never-commit` |
-| Final Agent Review | `enabled` or `disabled` |
-| Final Review Mode | `single-model`, `multi-model`, or `society-of-thought` |
-| Final Review Interactive | `true`, `false`, or `smart` |
-| Final Review Models | Comma-separated model names |
-| Final Review Specialists | `all`, comma-separated names, or `adaptive:<N>` (society-of-thought only) |
-| Final Review Interaction Mode | `parallel` or `debate` (society-of-thought only) |
-| Planning Docs Review | `enabled` or `disabled` |
-| Plan Generation Mode | `single-model` or `multi-model` |
-| Plan Generation Models | Comma-separated model names |
-| Planning Review Mode | `single-model`, `multi-model`, or `society-of-thought` |
-| Planning Review Interactive | `true`, `false`, or `smart` |
-| Planning Review Models | Comma-separated model names |
-| Planning Review Specialists | `all`, comma-separated names, or `adaptive:<N>` |
-| Planning Review Interaction Mode | `parallel` or `debate` |
-| Planning Review Specialist Models | `none`, model pool, pinned pairs, or mixed |
-| Planning Review Perspectives | `none`, `auto`, or comma-separated perspective names |
-| Planning Review Perspective Cap | Positive integer |
+~~~markdown
+# WorkflowContext
 
-**Execution-mode notes:**
+- Work title: <title>
+- Work id: <work-id>
+- Task source: <issue link or "prompt">
+- Base branch: <branch>
+- Target branch: <branch>
+- Preset: <name>
 
-- `Execution Mode`, `Repository Identity`, and `Execution Binding` let PAW and companion tooling establish and re-prove the correct execution checkout during initialization, reuse, and resume before mutating repository state
-- `Artifact Lifecycle` controls git tracking for `.paw/work/` files only; it does **not** manage worktree creation, retention, or cleanup
-- `WorkflowContext.md` deliberately stores portable metadata only; VS Code may keep machine-specific worktree paths in local extension state, while Copilot CLI sessions rely on the committed metadata plus git/worktree evidence instead
+## Configuration
+
+```yaml
+<every configuration field with its resolved value; review blocks in full>
+```
+~~~
+
+The fields are listed in [Configuration and Presets](../guide/workflow-presets.md#fields). The worktree path is not recorded; in worktree mode PAW finds it with `git worktree list`.
+
+A file without a `## Configuration` block was written by PAW v1. PAW converts it once when you resume the work item; see [Migrating from v1](../guide/migration.md#in-flight-v1-work-items).
+
+### WorkShaping.md
+
+**Purpose:** The outcome of an interactive shaping session for a vague task: intent, scope and constraints you confirmed. Written by `paw-work-shaping` in the host session.
 
 ### Spec.md
 
-**Purpose:** Testable requirements document defining what the feature must do.
+**Purpose:** Testable requirements, written by the specify activity when `spec: on`.
 
-**Created by:** `paw-spec` skill
-
-**Contents:**
-
-- **Overview** — Brief summary of feature purpose
-- **Functional Requirements** — What the feature must do
-- **Non-Functional Requirements** — Performance, security, usability constraints
-- **Data Requirements** — New entities, validation rules
-- **Acceptance Criteria** — Measurable conditions that define "done"
-- **Out of Scope** — What this feature will NOT do
-
-**Quality Standard:** Every requirement must be testable—measurable, observable, unambiguous.
-
-### ResearchQuestions.md
-
-**Purpose:** Research questions to guide spec research.
-
-**Created by:** `paw-spec` skill
-
-**Contents:**
-
-- Questions about current system behavior
-- Areas needing clarification for specification
-- Optional external/context questions for user input
-
-### SpecResearch.md
-
-**Purpose:** Factual documentation of how the current system works.
-
-**Created by:** `paw-spec-research` skill
-
-**Contents:**
-
-- Answers to questions from `ResearchQuestions.md`
-- Current system behavior (conceptual, not code-level)
-- Component interactions and data flows
-- User-facing workflows and business rules
-
-**Key Distinction:** Behavioral view for specification writing, not implementation details.
+**Contents:** Overview; requirements (`FR-001`…); acceptance criteria (`AC-001`…) traced to requirements; edge cases; assumptions; out of scope. It describes behaviour, not implementation.
 
 ### CodeResearch.md
 
-**Purpose:** Technical mapping of where and how relevant code works.
+**Purpose:** How the code the task touches works today, written by the research activity when `research: dedicated`.
 
-**Created by:** `paw-code-research` skill
-
-**Contents:**
-
-- File paths and code locations
-- Patterns and conventions
-- Integration points and dependencies
-- Architecture documentation references
-
-**Key Distinction:** Implementation view for planning with specific file paths.
+**Contents:** Summary; findings by area, each with a `file:line` reference; tests; the project's build, lint, test and docs commands. It documents what exists and does not propose changes. With `research: inline`, this research happens inside planning and no file is written.
 
 ### ImplementationPlan.md
 
-**Purpose:** Detailed plan with discrete phases that can be reviewed and merged independently.
-
-**Created by:** `paw-planning` skill
+**Purpose:** The plan the implement subagents follow. It records decisions, not progress.
 
 **Contents:**
 
-- **Overview** — What the plan accomplishes
-- **Current State Analysis** — Relevant findings from research
-- **Phase Status** — Checkbox list of all phases with objectives
-- **Phase Candidates** — Lightweight capture of potential phases (see below)
-- **Phase Details** — For each phase:
-    - Changes required (files, components)
-    - Success criteria (automated and manual)
-    - Implementation notes (after completion)
+- **Summary** and **Sources**
+- **Findings** — facts the plan rests on, with `file:line` references
+- **Decisions** — choices made and why
+- **Units** — for each unit: dependencies, changes, tests, and "done when" criteria with the commands that prove them. With `Spec.md`, each unit names the requirements it delivers
+- **Out of scope**
 
-**Checkboxes:** Implementer marks items complete as work progresses.
+The host adds one `implement:<unit>` todo per unit. A unit is accepted when every deliverable it names exists in the repository and its validation passes. Related work noticed during implementation becomes a candidate todo; if it is deferred, the reason is recorded in the plan.
 
-**Phase Candidates Section:**
-
-During implementation, new work ideas may surface. Instead of interrupting to define a full phase, the agent captures a one-liner in this section:
-
-```markdown
-## Phase Candidates
-
-- [ ] Refactor X to use new pattern
-- [ ] Add caching for frequently accessed data
-```
-
-When all planned phases complete, `paw-transition` detects unresolved candidates and the orchestrator presents each for user decision:
-
-| Decision | Result |
-|----------|--------|
-| **Promote** | Candidate elaborated into full phase via code research + planning |
-| **Skip** | Marked `- [x] [skipped]`, excluded from future checks |
-| **Defer** | Marked `- [x] [deferred]`, excluded from future checks |
-
-This decouples intent capture from phase elaboration, preserving implementer momentum while ensuring ideas aren't lost.
+v1 work items may have `ImplementationPlan.md` with `## Phase N:` sections, or `Plan.md` from v1 PAW Lite. PAW uses them as they are.
 
 ### Docs.md
 
-**Purpose:** Authoritative technical reference for the implemented work.
+**Purpose:** A technical reference for the implemented work, written only when the plan calls for it (`paw-docs-guidance` gives its conventions).
 
-**Created by:** `paw-docs-guidance` skill (via `paw-implement` / `paw-impl-review`)
+### Review Output
 
-**Contents:**
+Each configured review writes to its output directory:
 
-- What was built and why
-- Architecture and design decisions
-- How to use and test the feature
-- Integration points and dependencies
+| Review | Directory | Files |
+|--------|-----------|-------|
+| Plan review | `reviews/planning/` | Per [provider](../guide/workflow-presets.md#review-providers) |
+| Phase review | `reviews/<unit>/` | `REVIEW.md` |
+| Final review | `reviews/` | Per provider |
 
-**Note:** Focuses on concepts and user-facing behavior, not code reproduction.
+Provider files: `single-model` → `REVIEW.md`; `multi-model` → `REVIEW-<model>.md` per model and `REVIEW-SYNTHESIS.md`; `society-of-thought` → `REVIEW-<specialist>*.md` per specialist and `REVIEW-SYNTHESIS.md`; a recheck after fixes → `REVIEW-RECHECK.md`. Each finding has a severity (`must-fix`, `should-fix`, `consider`), a location and a proposed fix.
 
-### REVIEW-SYNTHESIS.md
+`reviews/.gitignore` contains `*`, so review output stays local in every lifecycle.
 
-**Purpose:** Synthesized review findings from society-of-thought or multi-model review.
+### REVIEW-SYNTHESIS.md (society-of-thought)
 
-**Created by:** `paw-final-review` skill (implementation workflow) or `paw-review-workflow` (review workflow), both via `paw-sot` engine for society-of-thought mode
-
-**Location:** `.paw/work/<work-id>/reviews/REVIEW-SYNTHESIS.md` (implementation) or `.paw/reviews/<identifier>/REVIEW-SYNTHESIS.md` (review workflow)
+**Created by:** `paw-sot`, in both workflows.
 
 **Contents:**
 
 - **Review metadata** — Mode, participating specialists/models, selection rationale, perspectives applied
-- **Perspective Diversity** — Which perspectives were applied to which specialists, selection rationale, perspectives skipped (when perspectives are active)
+- **Perspective Diversity** — Which perspectives were applied to which specialists, and why (when perspectives are active)
 - **Prioritized findings** — Must-fix, should-fix, consider classifications with specialist and perspective attribution
 - **Confidence levels** — HIGH, MEDIUM, LOW per finding with supporting evidence
-- **Disagreement resolution** — How conflicting specialist perspectives were reconciled, including inter-perspective conflicts
+- **Disagreement resolution** — How conflicting specialist findings were reconciled
 - **Grounding status** — Flags for findings referencing code not in the diff
 
-When perspectives are active, each finding includes a `**Perspective**` field indicating which lens surfaced it (`baseline` for findings without a perspective overlay).
+When perspectives are active, each finding includes a `**Perspective**` field (`baseline` for findings without an overlay).
 
 ---
 
@@ -228,20 +139,17 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 
 ### ReviewContext.md
 
-**Purpose:** Authoritative parameter source for review workflow.
+**Purpose:** Authoritative parameter source for the review.
 
 **Created by:** `paw-review-understanding` skill
 
 **Contents:**
 
-| Field | Description |
-|-------|-------------|
-| PR Number | GitHub PR number (or branch for non-GitHub) |
-| Base/Head Branch | Before and after branches |
-| Base/Head Commit | Specific commit SHAs |
-| Changed Files | Count, additions, deletions |
-| CI Status | Passing, failing, pending |
-| Flags | CI failures, breaking changes suspected |
+- Target: PR number or branch, platform (`github`, `azure-devops`, `local`), repository, base and head branches and commits
+- PR metadata: author, title, state, CI status, labels, linked issues, changed-file counts
+- Authorization preflight: output capability, requested action, feedback scope, authorization, event, authorized target and head, pending review binding, `Preflight Status`
+- Review configuration: the provider block (`mode`, `models`, `specialists`, `interaction`, `perspectives`, `perspective_cap`) and `interactive`
+- Flags: CI failures, breaking changes suspected
 
 ### ResearchQuestions.md
 
@@ -254,8 +162,6 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 - Questions about pre-change behavior
 - Areas needing investigation for baseline understanding
 - Specific patterns or behaviors to document
-
-**Note:** This artifact replaces the previous `prompts/code-research.prompt.md` approach, simplifying the review artifact structure by storing research questions directly in the review directory.
 
 ### DerivedSpec.md
 
@@ -324,11 +230,14 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 
 **Created by:** `paw-review-feedback` skill, `paw-review-critic` skill
 
+**Status:** `draft`, then `finalized`; after posting it records the pending (or submitted) review ID.
+
 **For each comment:**
 
 - **Comment text** — What gets posted
 - **Rationale** — Evidence, baseline pattern, impact, best practice
 - **Assessment** — Usefulness, accuracy, trade-offs (never posted)
+- **Final** — Ready for posting, or skipped per critique
 
 ---
 
@@ -343,13 +252,10 @@ When perspectives are active, each finding includes a `**Perspective**` field in
 
 ### Version Control
 
-- Artifacts committed to Git during development (unless `never-commit` lifecycle)
-- Scratch ignore markers (`.gitignore` files created to keep workflow or scratch directories local-only) are lifecycle markers, not repository artifacts, and should remain untracked
-- Changes tracked through PRs
-- History preserved for traceability
+- Artifacts are committed on the target branch unless the lifecycle is `never-commit`
+- `.gitignore` files under `.paw/work/<work-id>/` are local markers and are never committed
+- With `commit-and-clean`, the final PR shows no `.paw/` changes and links to the artifacts at the last commit that had them
 
-### Rewindability
+### Changing Accepted Artifacts
 
-- Any artifact can be updated to fix errors
-- Downstream artifacts regenerated as needed
-- Clear chain of dependencies between artifacts
+- A change to an accepted spec, plan or unit is a [rewind](../guide/two-workflows.md#rewind): PAW previews what it will reopen and adds new commits; history is never rewritten

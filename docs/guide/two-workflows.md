@@ -1,169 +1,113 @@
 # Workflows
 
-PAW provides three workflows for different development scenarios:
+PAW has two workflows:
 
-1. **Implementation Workflow** — Building new features through structured phases
-2. **PAW Lite** — Lightweight workflow for frontier models that reason well in the moment
-3. **Review Workflow** — Thoroughly reviewing existing pull requests
+- **Implementation** (`PAW` agent, `paw-workflow` skill) — takes a task from an issue or prompt to one pull request.
+- **PAW Review** (`PAW-Review` agent, `paw-review-workflow` skill) — helps you review an existing pull request and drafts comments as a pending review.
 
-All workflows use a **skills-based architecture** with compact orchestrator agents that delegate to specialized activity skills.
+PAW Lite is no longer a separate workflow. It is the `lite` [preset](workflow-presets.md#presets) of the implementation workflow; the `paw-lite` skill loads `paw-workflow` with that preset.
 
-## PAW Implementation Workflow
-
-The core workflow for building features: turns GitHub Issues into production-ready code through structured phases.
+## Implementation Workflow
 
 ```mermaid
 graph LR
-    A[Issue] --> B[Specification]
-    B --> C[Research]
-    C --> D[Planning]
-    D --> E[Implementation]
-    E --> F[Final PR]
+    S[Setup] --> SH[Shape]
+    SH --> SP[Specify]
+    SP --> R[Research]
+    R --> P[Plan]
+    P --> PR[Plan review]
+    PR --> CP[Plan checkpoint]
+    CP --> I[Implement units]
+    I --> FR[Final review]
+    FR --> F[Final PR]
+    style SH stroke-dasharray: 5 5
+    style SP stroke-dasharray: 5 5
+    style R stroke-dasharray: 5 5
+    style PR stroke-dasharray: 5 5
+    style CP stroke-dasharray: 5 5
+    style FR stroke-dasharray: 5 5
 ```
 
-### What It Does
+Dashed steps run only when the configuration turns them on.
 
-The Implementation Workflow transforms feature ideas into production-ready code by moving through staged, reviewable milestones with clear artifacts:
+### The Agent and the Todo Graph
 
-- **Specification** → Turn rough ideas into testable requirements
-- **Research** → Understand the codebase and system behavior  
-- **Planning** → Create detailed implementation plans with phases
-- **Implementation** → Execute plans with automated verification (includes documentation when appropriate)
-- **Final PR** → Open the pull request to main
+The agent you talk to is the **host**. It orchestrates; it does not write the spec, plan or code itself. Before any other work, it builds a todo graph from the resolved configuration and then works through it:
 
-### Architecture
+| Todo | Runs when | Output |
+|------|-----------|--------|
+| `setup` | Always | `WorkflowContext.md`, target branch |
+| `shape` | `shaping: on`, or `auto` and the task is vague | `WorkShaping.md`, written with you in the host session |
+| `specify` | `spec: on` | `Spec.md` |
+| `research` | `research: dedicated` | `CodeResearch.md` |
+| `plan` | Always | `ImplementationPlan.md` |
+| `plan-review` | `plan_review.mode` is not `off` | Review files in `reviews/planning/` |
+| `plan-checkpoint` | `plan_checkpoint: on` | Your acceptance of the plan |
+| `expand-plan` | Always | One `implement:<unit>` todo per plan unit |
+| `final-review` | `final_review.mode` is not `off` | Review files in `reviews/` |
+| `final-pr` | Always | The pull request |
 
-The **PAW agent** orchestrates the workflow by:
+During the run the host adds todos as needed:
 
-1. Loading the `paw-workflow` skill for guidance
-2. Loading available skills through the platform's native skill system
-3. Delegating activities to specialized skills (e.g., `paw-spec`, `paw-planning`, `paw-implement`)
-4. Applying Review Policy for pause decisions at artifact boundaries
+- `implement:<unit>` for each unit of the accepted plan, and `review:<unit>` after each when `phase_review: on`.
+- `revise:<target>` when a review returns findings.
+- `candidate:<slug>` when a subagent reports related work it noticed. Each candidate is implemented or recorded in the plan as deferred before the final PR.
 
-### When to Use It
+The host closes a todo only with evidence on disk: the artifact, the commits, or the review output. It cancels a todo only when you tell it to. It stops only when the graph is complete, a todo needs your decision, the plan checkpoint is reached, or you ask it to stop. Asking it to go faster changes configuration, not these rules.
 
-- Building new features, enhancements, or refactors
-- Bug fixes (especially complex ones)
-- Any work that benefits from structured phases and clear artifacts
-- Projects where traceability and documentation are important
+### Activities
 
-### Key Benefits
+Specify, research, plan, implement and review each run in a subagent with a brief: the task, the project and user instructions that apply, the inputs to read, and what "done" means. Subagents commit locally on the target branch. Only the host pushes, opens the pull request, or changes artifact tracking.
 
-- **Traceable** — Every stage produces durable artifacts committed to Git
-- **Rewindable** — Any stage can restart if upstream documents need fixes
-- **Transparent** — All outputs are text-based and version-controlled
-- **Collaborative** — Humans guide, agents execute and record progress
+- **Specify** writes testable requirements and acceptance criteria. It does not ask you questions; low-impact unknowns become assumptions, and a blocking product question comes back to you as a decision.
+- **Research** documents how the relevant code works today, with `file:line` references. With `research: inline` (the default), the plan subagent does this research itself.
+- **Plan** writes `ImplementationPlan.md`: findings, decisions, units of work with their changes, tests and "done when" checks, and what is out of scope. With two or more `planning.models`, one plan is drafted per model and the first planner merges them.
+- **Implement** runs one subagent per unit, in order; units the plan marks as independent may run in parallel (`implementation.parallel: auto`). A unit is accepted only when every deliverable the plan names for it exists and its validation passes.
+- **Review** runs through the configured [review provider](workflow-presets.md#review-providers). Findings marked `must-fix` or `should-fix` go back to the subagent that produced the work; findings that need a product decision come to you.
 
-## PAW Lite
+Uncommitted changes you had before the run are never staged, committed or reverted.
 
-A lightweight workflow that keeps PAW's most valuable components — work shaping, SoT review, git discipline, artifact lifecycle — while replacing the rigid spec→plan→phased-implement pipeline with a flow that trusts frontier models to make implementation decisions in the moment.
+### Plan Checkpoint
 
-```mermaid
-graph LR
-    A[Work Shaping] --> B[Plan]
-    B --> C[Implement]
-    C --> D[Review]
-    D --> E[PR]
-    style A stroke-dasharray: 5 5
-```
+With `plan_checkpoint: on`, the host stops after the plan (and plan review, if configured) and waits for you. Ask for changes and the host sends them to the subagent that wrote the plan, with the decisions accepted so far and the points that must not regress. Say you accept the plan and implementation starts.
 
-### What It Does
+With the default `plan_checkpoint: off`, the host accepts the plan itself after its checks and continues.
 
-PAW Lite strips the multi-stage pipeline down to what matters:
+### Final Pull Request
 
-- **Work Shaping** (optional) → Clarify vague ideas through interactive Q&A
-- **Plan** → Lightweight plan with approach summary and work items (no rigid spec)
-- **Implement** → Fleet-style parallel dispatch using SQL todos and `task` subagents
-- **Review** → Configurable: single-model, multi-model, or full Society of Thought
-- **PR** → Final pull request with artifact cleanup
+When every other todo is done, the host runs the final PR procedure:
 
-### When to Use It
+1. Checks that every configured review left its output, the project's test, lint and build commands pass, and every plan unit is delivered.
+2. With `commit-and-clean`, stops tracking `.paw/work/<work-id>/` in a separate commit (see [Artifact lifecycle](workflow-presets.md#artifact-lifecycle)).
+3. Pushes the target branch and opens one pull request to the base branch with `gh pr create`. If a PR for the branch already exists, it updates that PR instead.
 
-- Tasks where frontier models can reason about implementation without a formal spec
-- Bug fixes and small-to-medium features where the goal is clear
-- When you want PAW's review quality and git discipline without the overhead
-- When you trust the model to make good implementation decisions given a light plan
+The PR description covers the summary, the task, the changes, validation, review outcome (including findings deferred and why), a link to the artifacts, and breaking changes.
 
-### Key Differences from Full PAW
+### Resume
 
-| Aspect | Full PAW | PAW Lite |
-|--------|----------|----------|
-| Specification | Formal Spec.md with requirements | Skipped (or captured in work shaping) |
-| Planning | Detailed phased ImplementationPlan.md | Light Plan.md with approach and work items |
-| Implementation | Sequential phases with per-phase review | Fleet-style parallel dispatch via SQL todos |
-| Review | Configurable per-phase + final | Single review gate (configurable mode) |
-| Best for | Complex features, formal requirements | Clear tasks, frontier model capabilities |
+To continue a work item in a new session, ask the PAW agent to continue it by work id or branch. The host finds `WorkflowContext.md` (in the checkout, on another branch, or in the work item's worktree), switches to the target branch, and rebuilds the todo graph. It closes a todo only when its evidence exists now: an artifact, review output, commits that deliver every planned deliverable of a unit with validation passing, or an open PR for the branch. Anything partial stays open. It tells you what it closed and continues without re-planning.
 
-### Configuration
+A work item started with PAW v1 can be resumed too; see [Migrating from v1](migration.md#in-flight-v1-work-items).
 
-PAW Lite uses `custom` workflow mode with lighter defaults:
+### Rewind
 
-| Field | Default |
-|-------|---------|
-| Workflow Mode | `custom` |
-| Review Strategy | `local` |
-| Review Policy | `final-pr-only` |
-| Artifact Lifecycle | `commit-and-clean` |
+To go back to an earlier activity or change accepted work (spec, plan, or an implemented unit), say so: "go back to the plan and split unit 2". The `paw-rewind` skill routes to the same procedure.
 
-## PAW Review Workflow
+1. The host shows a preview: the earliest todo whose output changes, every todo it will reopen, and how each affected commit will be superseded. Nothing changes until you confirm.
+2. It reopens those todos, revises the target artifact through the subagent that owns it, and redoes affected units with new commits on top (or `git revert` for work the change removes).
 
-A structured three-stage process for thorough code review: systematically understands PR changes, evaluates impacts and gaps, and generates comprehensive evidence-based feedback.
+A rewind never rewrites history: no reset, rebase, amend or force push. An existing pull request is updated by pushing, never duplicated.
 
-```mermaid
-graph LR
-    A[PR] --> B[Understanding]
-    B --> C[Evaluation]
-    C --> D[Feedback Generation]
-```
+## PAW Review
 
-### What It Does
+PAW Review is a separate workflow for reviewing someone else's pull request (GitHub or Azure DevOps) or a local branch. Start it with `copilot --agent PAW-Review`, or `/paw-review <PR>` in VS Code, and give the PR.
 
-The Review Workflow helps you thoroughly review any pull request through three stages:
+It works backward from the change: understanding (context, baseline research at the base commit, derived spec), evaluation (impact and gap analysis, or society-of-thought), then feedback, critique and a finalized comment set. On GitHub the comments are posted as a **pending** review you edit and submit yourself; PAW Review submits only when you explicitly authorize it for the exact PR, head commit and event. Azure DevOps and local reviews produce artifacts and manual posting instructions.
 
-1. **Understanding (R1)** — Analyze PR metadata, generate baseline research prompts, and derive specification from implementation
-2. **Evaluation (R2)** — Identify system-wide impacts, breaking changes, and gaps across correctness/safety/testing/quality with Must/Should/Could categorization
-3. **Feedback Generation (R3)** — Transform findings into structured review comments with rationale and apply the resolved output policy
-
-### When to Use It
-
-- Reviewing any pull request—especially large or poorly-documented PRs
-- When you want comprehensive, evidence-based feedback
-- When you need to understand complex changes before providing feedback
-- When thorough review is important for quality
-
-### Key Benefits
-
-- **Understand before critiquing** — Research pre-change system behavior first
-- **Comprehensive findings** — Generate all in-scope findings; explicit user filters can narrow output
-- **Evidence-based feedback** — Every finding includes file:line references and rationale
-- **Full human control** — GitHub stays pending by default; explicit submission is verified against the exact target, head, review, and event
-
-## Choosing Between Workflows
-
-| Scenario | Use This Workflow |
-|----------|-------------------|
-| Large feature with formal requirements | Implementation |
-| Complex refactoring needing phased review | Implementation |
-| Clear task, frontier model available | PAW Lite |
-| Bug fix or small-to-medium feature | PAW Lite |
-| Reviewing someone else's PR | Review |
-| Doing a thorough code review | Review |
-
-## Workflow Characteristics
-
-All workflows share PAW's core principles:
-
-| Characteristic | Description |
-|----------------|-------------|
-| **Layered, iterative flow** | Each artifact feeds the next |
-| **Rewindable** | Any phase can restart cleanly if an upstream document is wrong |
-| **Transparent** | Every output is text-based and version-controlled in Git |
-| **Collaborative** | Humans guide, agents execute and record progress |
-| **Human-in-the-loop** | Humans approve specs/plans, review PRs, and decide when to rewind |
+PAW Review uses the same host model as the implementation workflow: a todo graph, one subagent per stage, and only the host posts to the PR platform. It supports the `single-model` (default) and `society-of-thought` review modes. See the [Review Workflow specification](../specification/review.md).
 
 ## Next Steps
 
-- [Workflow Modes](workflow-modes.md) — Configure Full, Minimal, or Custom modes for implementation
-- [Society-of-Thought Review](society-of-thought-review.md) — Multi-perspective review engine used by PAW Lite's review stage
-- [Implementation Workflow Specification](../specification/implementation.md) — Deep dive into implementation stages
-- [Review Workflow Specification](../specification/review.md) — Deep dive into review stages
+- [Configuration and Presets](workflow-presets.md) — Every setting and its default
+- [Society-of-Thought Review](society-of-thought-review.md) — The specialist review engine
+- [Artifacts Reference](../reference/artifacts.md) — What each file contains

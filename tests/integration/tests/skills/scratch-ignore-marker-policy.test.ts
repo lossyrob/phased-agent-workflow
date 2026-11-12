@@ -25,41 +25,24 @@ describe("scratch ignore marker policy", () => {
   });
 
   it("adds commit and PR guardrails for scratch ignore markers", async () => {
-    const gitOps = await readFile(resolve(REPO_ROOT, "skills/paw-git-operations/SKILL.md"), "utf-8");
-    const pawPr = await readFile(resolve(REPO_ROOT, "skills/paw-pr/SKILL.md"), "utf-8");
+    const git = await readFile(resolve(REPO_ROOT, "skills/paw-workflow/references/procedures/git.md"), "utf-8");
+    const finalPr = await readFile(resolve(REPO_ROOT, "skills/paw-workflow/references/procedures/final-pr.md"), "utf-8");
 
     assert.match(
-      gitOps,
-      /Scratch ignore markers are always local-only/i,
-      "paw-git-operations should call out scratch ignore markers as always local-only",
+      git,
+      /`\.gitignore` files under `\.paw\/work\/<work-id>\/` are local markers\. Never stage them\./,
+      "git procedure should forbid staging ignore markers under the work directory",
     );
 
     assert.match(
-      gitOps,
-      /Do NOT stage or commit them in normal commits/i,
-      "paw-git-operations should forbid staging scratch ignore markers",
-    );
-
-    assert.match(
-      pawPr,
-      /Scratch ignore markers are local-only lifecycle markers/i,
-      "paw-pr should treat scratch ignore markers as local-only lifecycle markers",
-    );
-
-    assert.match(
-      pawPr,
-      /Scratch ignore markers are not tracked in the final PR diff/i,
-      "paw-pr quality checklist should check that scratch ignore markers are absent from the final PR diff",
+      finalPr,
+      /Write `\.paw\/work\/<work-id>\/\.gitignore` containing `\*`\. Do not stage it\./,
+      "final PR procedure should leave the stop-tracking marker unstaged",
     );
   });
 
   it("marks scratch-directory .gitignore files as untracked local-only markers at creation sites", async () => {
-    for (const relPath of [
-      "skills/paw-planning/SKILL.md",
-      "skills/paw-final-review/SKILL.md",
-      "skills/paw-planning-docs-review/SKILL.md",
-      "skills/paw-sot/SKILL.md",
-    ]) {
+    for (const relPath of ["skills/paw-sot/SKILL.md"]) {
       const content = await readFile(resolve(REPO_ROOT, relPath), "utf-8");
       assert.match(
         content,

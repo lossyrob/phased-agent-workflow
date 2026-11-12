@@ -104,8 +104,33 @@ PAW Review keeps its stages, artifacts, pending-review default and authorization
 
 ## Upgrading
 
-- **Copilot CLI plugin:** `copilot plugin marketplace update paw-workflow`, then `copilot plugin update paw-workflow`.
-- **npm CLI:** `npx @paw-workflow/cli upgrade`, or `npx @paw-workflow/cli install copilot --force`. The installer removes files the previous version installed and v2 no longer ships.
-- **VS Code:** install the new `.vsix` and reload the window.
+v2 is plugin version `2.0.0`; v1 was `0.4.0`. `copilot plugin list` shows which one you have.
 
-If you copied v1 skills into a project or a skills directory yourself, remove them; a stale `paw-transition` or `paw-pr` skill on the skill path can be loaded alongside v2.
+Upgrade between work items where you can. A work item started on v1 can be resumed on v2 (see [In-flight v1 Work Items](#in-flight-v1-work-items)), but a session that is already running keeps the v1 skills it loaded, so do not continue it after upgrading.
+
+1. Finish or pause the current activity and close every running PAW session.
+2. Upgrade:
+    - **Copilot CLI plugin:** `copilot plugin marketplace update paw-workflow`, then `copilot plugin update paw-workflow`.
+    - **npm CLI:** `npx @paw-workflow/cli upgrade`, or `npx @paw-workflow/cli install copilot --force`. The installer removes files the previous version installed and v2 no longer ships.
+    - **VS Code:** install the new `.vsix` and reload the window.
+3. Remove stale v1 skills. The plugin and the npm installer clean up their own files. If you copied v1 skills into a project or a skills directory yourself (`.github/skills/`, `~/.copilot/skills/`, `~/.claude/skills/`), delete them: a stale `paw-transition` or `paw-pr` on the skill path is loaded alongside v2. If you installed PAW both as a plugin and with the npm CLI, upgrade both or uninstall one.
+4. Start a new session. Never mix versions in one session: v1 skill names such as `paw-init` or `paw-pr` do not exist in v2, and a v1 session does not know the v2 todo graph.
+
+!!! warning "The plugin follows `main`"
+    The marketplace you added with `copilot plugin marketplace add lossyrob/phased-agent-workflow` reads the default branch, `main`, which is v2. `copilot plugin update paw-workflow` therefore moves you to v2. To stay on v1, switch to the v1 channel below before you update.
+
+## Staying on v1, or rolling back
+
+v1 is kept on the `v1` branch. It gets no new features. To install from it, replace the marketplace registration with one that points at that branch:
+
+```bash
+copilot plugin marketplace remove paw-workflow --force
+copilot plugin marketplace add lossyrob/phased-agent-workflow#v1
+copilot plugin install paw-workflow@paw-workflow
+```
+
+`--force` uninstalls the PAW plugin installed from the old registration. Start a new session afterwards. To return to v2, run the same three commands with `lossyrob/phased-agent-workflow` and no `#v1`.
+
+For the npm CLI, install the last v1 release: `npx @paw-workflow/cli@0.5.0 install copilot --force`. For VS Code, install the `v0.14.0` `.vsix` from the releases page.
+
+Rolling back does not convert work items. One created by v2, or a v1 item you resumed on v2, has a v2 `WorkflowContext.md` that v1 does not read; finish it on v2, or start it again on v1.

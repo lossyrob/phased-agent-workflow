@@ -101,6 +101,8 @@ copilot plugin marketplace update paw-workflow
 copilot plugin update paw-workflow
 ```
 
+Updating from v1 (plugin `0.4.0`) to v2 (`2.0.0`) is a breaking change: read the [Migration Guide](migration.md#upgrading) first. It also covers staying on the `v1` branch and rolling back.
+
 For NPM CLI installs:
 
 ```bash
